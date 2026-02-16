@@ -637,7 +637,7 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
         <circle cx={currentChartX} cy={currentChartY} r="8" fill="#EC4899" stroke="#ffffff" strokeWidth="2" filter="url(#pointGlow)" />
 
         {/* Educational labels */}
-        <text x={skaterCenterX} y="15" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">Angular Momentum Conservation</text>
+        <text x={skaterCenterX} y="38" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">Angular Momentum Conservation</text>
         <text x={skaterCenterX} y={size + 35} textAnchor="middle" fill="#94a3b8" fontSize="11">Rotation Axis</text>
         <text x={skaterCenterX + 70} y={centerY - 30} textAnchor="start" fill="#EC4899" fontSize="11">Arm Extension</text>
 
@@ -1079,7 +1079,7 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
                 padding: '16px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: currentOmega > 10 ? colors.error : currentOmega > 7 ? colors.warning : colors.success }}>{currentOmega.toFixed(2)}</div>
+                <div style={{ ...typo.h3, color: currentOmega > 10 ? colors.error : currentOmega > 7 ? colors.warning : colors.success }} data-status={currentOmega > 10 ? 'error' : currentOmega > 7 ? 'warning' : 'success'}>{currentOmega.toFixed(2)}</div>
                 <div style={{ ...typo.small, color: colors.textMuted }}>Angular Velocity (omega)</div>
               </div>
               <div style={{
@@ -2101,4 +2101,4 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
   );
 };
 
-export default MomentOfInert
+export default MomentOfInertiaRenderer;

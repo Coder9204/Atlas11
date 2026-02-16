@@ -753,17 +753,24 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
   function renderVoltageGraph(history: { time: number; voltage: number }[], maxVoltage: number, isCharge: boolean) {
     const width = 240;
     const height = 120;
-    const padding = 25;
+    const padding = 30;
 
     // Calculate max time for x-axis (5 time constants)
     const maxTime = timeConstant * 5;
 
-    // Generate path from history
-    const pathPoints = history.map(point => {
-      const x = padding + (point.time / maxTime) * (width - 2 * padding);
-      const y = height - padding - (point.voltage / maxVoltage) * (height - 2 * padding);
-      return `${x},${y}`;
-    }).join(' ');
+    // Generate smooth curve with more data points if needed
+    let pathData = '';
+    if (history.length > 1) {
+      // Use actual history if we have enough points
+      const points = history.map(point => {
+        const x = padding + (point.time / maxTime) * (width - 2 * padding);
+        const y = height - padding - (point.voltage / maxVoltage) * (height - 2 * padding);
+        return { x, y };
+      });
+
+      // Create smooth path
+      pathData = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+    }
 
     // Generate time constant markers
     const tauMarkers = [1, 2, 3, 4, 5].map(n => {
@@ -782,6 +789,29 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
         <rect x={padding} y={padding} width={width - 2 * padding} height={height - 2 * padding}
           fill="url(#rctcGraphBg)" stroke="url(#rctcVoltageGradient)" strokeWidth="1" rx="3" />
 
+        {/* Axes */}
+        <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding}
+          stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
+        <line x1={padding} y1={padding} x2={padding} y2={height - padding}
+          stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
+
+        {/* Axis labels */}
+        <text x={width / 2} y={height - 5} textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="9">
+          X: Time (s)
+        </text>
+        <text x={10} y={height / 2} textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="9"
+          transform={`rotate(-90 10 ${height / 2})`}>
+          Y: Voltage (V)
+        </text>
+
+        {/* Voltage scale markers */}
+        <text x={padding - 3} y={padding + 5} textAnchor="end" fill="rgba(255,255,255,0.5)" fontSize="8">
+          {maxVoltage}V
+        </text>
+        <text x={padding - 3} y={height - padding + 3} textAnchor="end" fill="rgba(255,255,255,0.5)" fontSize="8">
+          0V
+        </text>
+
         {/* Time constant vertical lines */}
         {tauMarkers.map(marker => (
           <g key={marker.n}>
@@ -790,22 +820,66 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
           </g>
         ))}
 
-        {/* 63% line for charging */}
+        {/* 63% line for charging (reference marker) */}
         {isCharge && (
           <g>
             <line x1={padding} y1={height - padding - 0.632 * (height - 2 * padding)}
               x2={width - padding} y2={height - padding - 0.632 * (height - 2 * padding)}
               stroke={premiumDesign.colors.success} strokeWidth="1.5" strokeDasharray="4,4" opacity="0.7"
               filter="url(#rctcSoftGlow)" />
+            <text x={padding + 2} y={height - padding - 0.632 * (height - 2 * padding) - 2}
+              fill={premiumDesign.colors.success} fontSize="8" fontWeight="bold">
+              63%
+            </text>
+          </g>
+        )}
+
+        {/* Baseline reference marker (starting point) */}
+        {history.length === 0 && (
+          <circle cx={padding} cy={height - padding} r="3" fill={premiumDesign.colors.warning} opacity="0.8">
+            <title>Start: 0V</title>
+          </circle>
+        )}
+
+        {/* Preview curve when no data (shows expected exponential curve) */}
+        {history.length === 0 && (
+          <g opacity="0.3">
+            <path
+              d={(() => {
+                const previewPoints = [];
+                for (let i = 0; i <= 20; i++) {
+                  const t = (i / 20) * maxTime;
+                  const v = isCharge
+                    ? maxVoltage * (1 - Math.exp(-t / timeConstant))
+                    : maxVoltage * Math.exp(-t / timeConstant);
+                  const x = padding + (t / maxTime) * (width - 2 * padding);
+                  const y = height - padding - (v / maxVoltage) * (height - 2 * padding);
+                  previewPoints.push(`${i === 0 ? 'M' : 'L'} ${x} ${y}`);
+                }
+                return previewPoints.join(' ');
+              })()}
+              fill="none"
+              stroke="rgba(139, 92, 246, 0.5)"
+              strokeWidth="2"
+              strokeDasharray="5,5"
+            />
           </g>
         )}
 
         {/* Voltage curve with glow */}
         {history.length > 1 && (
           <g filter="url(#rctcVoltageGlowFilter)">
-            <polyline points={pathPoints} fill="none" stroke="url(#rctcVoltageGradient)"
+            <path d={pathData} fill="none" stroke="url(#rctcVoltageGradient)"
               strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           </g>
+        )}
+
+        {/* Current voltage marker */}
+        {history.length > 0 && (
+          <circle
+            cx={padding + (history[history.length - 1].time / maxTime) * (width - 2 * padding)}
+            cy={height - padding - (history[history.length - 1].voltage / maxVoltage) * (height - 2 * padding)}
+            r="3" fill={premiumDesign.colors.capacitor} filter="url(#rctcCapacitorGlowFilter)" />
         )}
       </svg>
     );
@@ -953,6 +1027,70 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
           </p>
         </div>
 
+        {/* Static preview circuit diagram */}
+        <div style={{
+          background: premiumDesign.colors.background.card,
+          borderRadius: premiumDesign.radius.xl,
+          padding: premiumDesign.spacing.lg,
+          border: '1px solid rgba(255,255,255,0.1)',
+          marginBottom: premiumDesign.spacing.lg,
+          maxWidth: 600,
+          margin: '0 auto 24px auto',
+        }}>
+          <svg viewBox="0 0 300 200" style={{ width: '100%', maxHeight: 240 }}>
+            {renderSVGDefs()}
+
+            {/* Lab background */}
+            <rect width="300" height="200" fill="url(#rctcLabBg)" rx="4" />
+            <rect width="300" height="200" fill="url(#rctcLabGrid)" rx="4" />
+
+            {/* Circuit wire path */}
+            <path d="M 25,60 L 25,30 L 275,30 L 275,170 L 25,170 L 25,100"
+              fill="none" stroke="url(#rctcWireCopper)" strokeWidth="3" strokeLinecap="round" />
+
+            {/* Battery with label */}
+            <g transform="translate(10, 60)">
+              <rect x="0" y="0" width="18" height="40" fill="url(#rctcBatteryGradient)" rx="2"
+                stroke="#a16207" strokeWidth="1" />
+              <rect x="5" y="-3" width="8" height="4" fill="#fbbf24" rx="1" />
+              <text x="9" y="22" textAnchor="middle" fill="#78350f" fontSize="10" fontWeight="bold">+</text>
+              <text x="9" y="35" textAnchor="middle" fill="#78350f" fontSize="10" fontWeight="bold">-</text>
+              <text x="9" y="58" textAnchor="middle" fill="#fbbf24" fontSize="12" fontWeight="bold">Battery</text>
+            </g>
+
+            {/* Resistor with label */}
+            <g transform="translate(80, 20)">
+              <line x1="-10" y1="10" x2="0" y2="10" stroke="url(#rctcWireCopper)" strokeWidth="2.5" />
+              <line x1="80" y1="10" x2="90" y2="10" stroke="url(#rctcWireCopper)" strokeWidth="2.5" />
+              <rect x="0" y="0" width="80" height="20" fill="url(#rctcResistorBands)" rx="4"
+                stroke="#991b1b" strokeWidth="1.5" />
+              <rect x="0" y="0" width="80" height="4" fill="rgba(255,255,255,0.2)" rx="4" />
+              <text x="40" y="40" textAnchor="middle" fill="#ef4444" fontSize="13" fontWeight="bold">Resistor</text>
+            </g>
+
+            {/* Capacitor with label */}
+            <g transform="translate(250, 20)">
+              <rect x="0" y="0" width="6" height="30" fill="url(#rctcCapacitorPlate)" rx="1" />
+              <rect x="18" y="0" width="6" height="30" fill="url(#rctcCapacitorPlate)" rx="1" />
+              <line x1="3" y1="-10" x2="3" y2="0" stroke="url(#rctcWireCopper)" strokeWidth="2.5" />
+              <line x1="21" y1="30" x2="21" y2="40" stroke="url(#rctcWireCopper)" strokeWidth="2.5" />
+              <text x="12" y="72" textAnchor="middle" fill="#06b6d4" fontSize="13" fontWeight="bold">Capacitor</text>
+            </g>
+
+            {/* Question mark */}
+            <text x="150" y="120" textAnchor="middle" fill={premiumDesign.colors.capacitor} fontSize="48" fontWeight="bold">?</text>
+            <text x="150" y="145" textAnchor="middle" fill={premiumDesign.colors.text.secondary} fontSize="14">What will the voltage curve look like?</text>
+
+            {/* Axes for upcoming graph */}
+            <g transform="translate(40, 165)">
+              <line x1="0" y1="0" x2="220" y2="0" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" />
+              <line x1="0" y1="0" x2="0" y2="-60" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" />
+              <text x="110" y="18" textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="11">X: Time</text>
+              <text x="-18" y="-30" textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="11" transform="rotate(-90 -18 -30)">Y: Voltage</text>
+            </g>
+          </svg>
+        </div>
+
         <div style={{
           display: 'flex',
           flexDirection: 'column',
@@ -1040,15 +1178,15 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
               padding: premiumDesign.spacing.lg,
               border: '1px solid rgba(255,255,255,0.1)',
             }}>
-              <svg viewBox="0 0 300 120" style={{ width: '100%', maxHeight: 140 }}>
+              <svg viewBox="0 0 300 180" style={{ width: '100%', maxHeight: 200 }}>
                 {renderSVGDefs()}
 
                 {/* Lab background */}
-                <rect width="300" height="120" fill="url(#rctcLabBg)" rx="4" />
-                <rect width="300" height="120" fill="url(#rctcLabGrid)" rx="4" />
+                <rect width="300" height="180" fill="url(#rctcLabBg)" rx="4" />
+                <rect width="300" height="180" fill="url(#rctcLabGrid)" rx="4" />
 
                 {/* Circuit wire path with copper gradient */}
-                <path d="M 25,35 L 25,20 L 275,20 L 275,100 L 25,100 L 25,65"
+                <path d="M 25,60 L 25,30 L 275,30 L 275,140 L 25,140 L 25,100"
                   fill="none" stroke="url(#rctcWireCopper)" strokeWidth="2.5" strokeLinecap="round" />
 
                 {/* Current flow particles (animated when charging) */}
@@ -1059,16 +1197,16 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
                   let x, y;
                   if (pos < 0.25) {
                     x = 25 + (pos / 0.25) * 250;
-                    y = 20;
+                    y = 30;
                   } else if (pos < 0.5) {
                     x = 275;
-                    y = 20 + ((pos - 0.25) / 0.25) * 80;
+                    y = 30 + ((pos - 0.25) / 0.25) * 110;
                   } else if (pos < 0.75) {
                     x = 275 - ((pos - 0.5) / 0.25) * 250;
-                    y = 100;
+                    y = 140;
                   } else {
                     x = 25;
-                    y = 100 - ((pos - 0.75) / 0.25) * 80;
+                    y = 140 - ((pos - 0.75) / 0.25) * 110;
                   }
                   return (
                     <circle key={i} cx={x} cy={y} r="3"
@@ -1076,54 +1214,59 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
                   );
                 })}
 
-                {/* Battery with gradient */}
-                <g transform="translate(10, 35)">
-                  <rect x="0" y="0" width="18" height="30" fill="url(#rctcBatteryGradient)" rx="2"
+                {/* Battery with gradient and label */}
+                <g transform="translate(10, 60)">
+                  <rect x="0" y="0" width="18" height="40" fill="url(#rctcBatteryGradient)" rx="2"
                     stroke="#a16207" strokeWidth="1" />
                   <rect x="5" y="-3" width="8" height="4" fill="#fbbf24" rx="1" />
-                  <text x="9" y="18" textAnchor="middle" fill="#78350f" fontSize="8" fontWeight="bold">+</text>
-                  <text x="9" y="28" textAnchor="middle" fill="#78350f" fontSize="8" fontWeight="bold">-</text>
+                  <text x="9" y="22" textAnchor="middle" fill="#78350f" fontSize="8" fontWeight="bold">+</text>
+                  <text x="9" y="35" textAnchor="middle" fill="#78350f" fontSize="8" fontWeight="bold">-</text>
+                  <text x="9" y="52" textAnchor="middle" fill="#fbbf24" fontSize="11" fontWeight="bold">{supplyVoltage}V</text>
                 </g>
 
-                {/* Resistor with colored bands */}
-                <g transform="translate(90, 10)">
+                {/* Resistor with colored bands and label */}
+                <g transform="translate(80, 20)">
                   {/* Lead wires */}
                   <line x1="-10" y1="10" x2="0" y2="10" stroke="url(#rctcWireCopper)" strokeWidth="2" />
-                  <line x1="60" y1="10" x2="70" y2="10" stroke="url(#rctcWireCopper)" strokeWidth="2" />
+                  <line x1="80" y1="10" x2="90" y2="10" stroke="url(#rctcWireCopper)" strokeWidth="2" />
                   {/* Resistor body */}
-                  <rect x="0" y="2" width="60" height="16" fill="url(#rctcResistorBands)" rx="3"
+                  <rect x="0" y="0" width="80" height="20" fill="url(#rctcResistorBands)" rx="3"
                     stroke="#991b1b" strokeWidth="1" />
                   {/* 3D effect */}
-                  <rect x="0" y="2" width="60" height="3" fill="rgba(255,255,255,0.2)" rx="3" />
+                  <rect x="0" y="0" width="80" height="4" fill="rgba(255,255,255,0.2)" rx="3" />
+                  {/* Label */}
+                  <text x="40" y="35" textAnchor="middle" fill="#ef4444" fontSize="11" fontWeight="bold">R={resistance}kΩ</text>
                 </g>
 
-                {/* Capacitor with charge visualization */}
-                <g transform="translate(235, 10)">
+                {/* Capacitor with charge visualization and label */}
+                <g transform="translate(235, 20)">
                   {/* Capacitor plates */}
-                  <rect x="0" y="0" width="4" height="20" fill="url(#rctcCapacitorPlate)" rx="1"
+                  <rect x="0" y="0" width="6" height="30" fill="url(#rctcCapacitorPlate)" rx="1"
                     filter={chargePercent > 20 ? "url(#rctcCapacitorGlowFilter)" : undefined} />
-                  <rect x="12" y="0" width="4" height="20" fill="url(#rctcCapacitorPlate)" rx="1"
+                  <rect x="18" y="0" width="6" height="30" fill="url(#rctcCapacitorPlate)" rx="1"
                     filter={chargePercent > 20 ? "url(#rctcCapacitorGlowFilter)" : undefined} />
                   {/* Charge glow between plates */}
                   {chargePercent > 5 && (
-                    <ellipse cx="8" cy="10" rx={3 + chargePercent / 30} ry={8}
+                    <ellipse cx="12" cy="15" rx={3 + chargePercent / 30} ry={12}
                       fill="url(#rctcCapacitorGlow)" opacity={Math.min(0.8, chargePercent / 100)} />
                   )}
                   {/* Electric field lines when charging */}
                   {chargePercent > 10 && isCharging && (
                     <g opacity={chargePercent / 150}>
-                      <line x1="5" y1="5" x2="11" y2="5" stroke="#67e8f9" strokeWidth="0.5" strokeDasharray="2,2" />
-                      <line x1="5" y1="10" x2="11" y2="10" stroke="#67e8f9" strokeWidth="0.5" strokeDasharray="2,2" />
-                      <line x1="5" y1="15" x2="11" y2="15" stroke="#67e8f9" strokeWidth="0.5" strokeDasharray="2,2" />
+                      <line x1="7" y1="8" x2="17" y2="8" stroke="#67e8f9" strokeWidth="0.5" strokeDasharray="2,2" />
+                      <line x1="7" y1="15" x2="17" y2="15" stroke="#67e8f9" strokeWidth="0.5" strokeDasharray="2,2" />
+                      <line x1="7" y1="22" x2="17" y2="22" stroke="#67e8f9" strokeWidth="0.5" strokeDasharray="2,2" />
                     </g>
                   )}
                   {/* Lead wires */}
-                  <line x1="2" y1="-10" x2="2" y2="0" stroke="url(#rctcWireCopper)" strokeWidth="2" />
-                  <line x1="14" y1="20" x2="14" y2="30" stroke="url(#rctcWireCopper)" strokeWidth="2" />
+                  <line x1="3" y1="-10" x2="3" y2="0" stroke="url(#rctcWireCopper)" strokeWidth="2" />
+                  <line x1="21" y1="30" x2="21" y2="40" stroke="url(#rctcWireCopper)" strokeWidth="2" />
+                  {/* Label */}
+                  <text x="12" y="62" textAnchor="middle" fill="#06b6d4" fontSize="11" fontWeight="bold">C={capacitance}μF</text>
                 </g>
 
-                {/* Switch with premium styling */}
-                <g transform="translate(260, 55)">
+                {/* Switch with premium styling and label */}
+                <g transform="translate(260, 85)">
                   <circle cx="0" cy="0" r="5" fill={isCharging ? "url(#rctcSwitchContact)" : '#4b5563'}
                     stroke={isCharging ? '#059669' : '#374151'} strokeWidth="1.5" />
                   <line x1="0" y1="0" x2={isCharging ? "18" : "12"} y2={isCharging ? "0" : "-12"}
@@ -1134,7 +1277,16 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
                   {isCharging && (
                     <circle cx="9" cy="0" r="2" fill="#fef08a" filter="url(#rctcCurrentGlowFilter)" opacity="0.8" />
                   )}
+                  {/* Label */}
+                  <text x="9" y="18" textAnchor="middle" fill={isCharging ? '#10b981' : '#9ca3af'} fontSize="10" fontWeight="bold">
+                    {isCharging ? 'CLOSED' : 'OPEN'}
+                  </text>
                 </g>
+
+                {/* Observation guidance */}
+                <text x="150" y="165" textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="10">
+                  {isCharging ? '▶ Watch how voltage rises fast then slows' : '▶ Adjust sliders, then click Start to observe charging'}
+                </text>
               </svg>
 
               {/* Labels outside SVG using typo system */}
@@ -1236,7 +1388,8 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
                 max="50"
                 value={resistance}
                 onChange={(e) => { setResistance(Number(e.target.value)); resetCharging(); }}
-                style={{ width: '100%', accentColor: premiumDesign.colors.resistor }}
+                onInput={(e) => { setResistance(Number((e.target as HTMLInputElement).value)); resetCharging(); }}
+                style={{ width: '100%', accentColor: premiumDesign.colors.resistor, touchAction: 'pan-y' } as React.CSSProperties}
                 disabled={isCharging}
               />
             </div>
@@ -1257,7 +1410,8 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
                 step="10"
                 value={capacitance}
                 onChange={(e) => { setCapacitance(Number(e.target.value)); resetCharging(); }}
-                style={{ width: '100%', accentColor: premiumDesign.colors.capacitor }}
+                onInput={(e) => { setCapacitance(Number((e.target as HTMLInputElement).value)); resetCharging(); }}
+                style={{ width: '100%', accentColor: premiumDesign.colors.capacitor, touchAction: 'pan-y' } as React.CSSProperties}
                 disabled={isCharging}
               />
             </div>
@@ -1557,7 +1711,7 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
               padding: premiumDesign.spacing.lg,
               border: '1px solid rgba(255,255,255,0.1)',
             }}>
-              <svg viewBox="0 0 280 120" style={{ width: '100%', maxHeight: 140 }}>
+              <svg viewBox="0 0 280 170" style={{ width: '100%', maxHeight: 190 }}>
                 {renderSVGDefs()}
 
                 {/* Additional gradient for discharge/purple theme */}
@@ -1584,11 +1738,11 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
                 </defs>
 
                 {/* Lab background */}
-                <rect width="280" height="120" fill="url(#rctcLabBg)" rx="4" />
-                <rect width="280" height="120" fill="url(#rctcLabGrid)" rx="4" />
+                <rect width="280" height="170" fill="url(#rctcLabBg)" rx="4" />
+                <rect width="280" height="170" fill="url(#rctcLabGrid)" rx="4" />
 
                 {/* Circuit wire path */}
-                <path d="M 55,60 L 55,20 L 225,20 L 225,100 L 55,100 L 55,60"
+                <path d="M 55,80 L 55,30 L 225,30 L 225,130 L 55,130 L 55,80"
                   fill="none" stroke="url(#rctcWireCopper)" strokeWidth="2.5" strokeLinecap="round" />
 
                 {/* Current flow particles (animated when discharging) */}
@@ -1599,16 +1753,16 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
                   let x, y;
                   if (pos < 0.25) {
                     x = 55;
-                    y = 60 - (pos / 0.25) * 40;
+                    y = 80 - (pos / 0.25) * 50;
                   } else if (pos < 0.5) {
                     x = 55 + ((pos - 0.25) / 0.25) * 170;
-                    y = 20;
+                    y = 30;
                   } else if (pos < 0.75) {
                     x = 225;
-                    y = 20 + ((pos - 0.5) / 0.25) * 80;
+                    y = 30 + ((pos - 0.5) / 0.25) * 100;
                   } else {
                     x = 225 - ((pos - 0.75) / 0.25) * 170;
-                    y = 100;
+                    y = 130;
                   }
                   return (
                     <circle key={i} cx={x} cy={y} r={2 + dischargePercent / 50}
@@ -1617,60 +1771,73 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
                   );
                 })}
 
-                {/* Resistor with colored bands */}
-                <g transform="translate(100, 10)">
+                {/* Resistor with colored bands and label */}
+                <g transform="translate(90, 20)">
                   <line x1="-10" y1="10" x2="0" y2="10" stroke="url(#rctcWireCopper)" strokeWidth="2" />
-                  <line x1="50" y1="10" x2="60" y2="10" stroke="url(#rctcWireCopper)" strokeWidth="2" />
-                  <rect x="0" y="2" width="50" height="16" fill="url(#rctcResistorBands)" rx="3"
+                  <line x1="70" y1="10" x2="80" y2="10" stroke="url(#rctcWireCopper)" strokeWidth="2" />
+                  <rect x="0" y="0" width="70" height="20" fill="url(#rctcResistorBands)" rx="3"
                     stroke="#991b1b" strokeWidth="1" />
-                  <rect x="0" y="2" width="50" height="3" fill="rgba(255,255,255,0.2)" rx="3" />
+                  <rect x="0" y="0" width="70" height="4" fill="rgba(255,255,255,0.2)" rx="3" />
+                  <text x="35" y="35" textAnchor="middle" fill="#ef4444" fontSize="11" fontWeight="bold">R={resistance}kΩ</text>
                 </g>
 
-                {/* Capacitor with discharge visualization */}
-                <g transform="translate(195, 10)">
-                  <rect x="0" y="0" width="4" height="20" fill="url(#rctcDischargeCapacitor)" rx="1"
+                {/* Capacitor with discharge visualization and label */}
+                <g transform="translate(195, 20)">
+                  <rect x="0" y="0" width="6" height="28" fill="url(#rctcDischargeCapacitor)" rx="1"
                     filter={dischargePercent > 20 ? "url(#rctcCapacitorGlowFilter)" : undefined} />
-                  <rect x="12" y="0" width="4" height="20" fill="url(#rctcDischargeCapacitor)" rx="1"
+                  <rect x="18" y="0" width="6" height="28" fill="url(#rctcDischargeCapacitor)" rx="1"
                     filter={dischargePercent > 20 ? "url(#rctcCapacitorGlowFilter)" : undefined} />
                   {/* Remaining charge glow */}
                   {dischargePercent > 5 && (
-                    <ellipse cx="8" cy="10" rx={2 + dischargePercent / 40} ry={6}
+                    <ellipse cx="12" cy="14" rx={2 + dischargePercent / 40} ry={10}
                       fill="url(#rctcDischargeGlow)" opacity={dischargePercent / 120} />
                   )}
                   {/* Charge level indicator */}
-                  <rect x="5" y={20 - dischargePercent * 0.18} width="6" height={dischargePercent * 0.18}
+                  <rect x="7" y={28 - dischargePercent * 0.25} width="10" height={dischargePercent * 0.25}
                     fill="#c084fc" opacity="0.4" rx="1" />
+                  <text x="12" y="58" textAnchor="middle" fill="#8b5cf6" fontSize="11" fontWeight="bold">C={capacitance}μF</text>
                 </g>
 
-                {/* Light bulb with glow effect */}
-                <g transform="translate(55, 60)">
+                {/* Light bulb with glow effect and label */}
+                <g transform="translate(55, 80)">
                   {/* Outer glow when lit */}
                   {dischargePercent > 10 && (
-                    <circle cx="0" cy="0" r={14 + dischargePercent / 20} fill="url(#rctcBulbGlow)"
+                    <circle cx="0" cy="0" r={16 + dischargePercent / 20} fill="url(#rctcBulbGlow)"
                       opacity={dischargePercent / 200} filter="url(#rctcSoftGlow)" />
                   )}
                   {/* Bulb glass */}
-                  <circle cx="0" cy="0" r="12" fill={`rgba(254, 240, 138, ${dischargePercent / 150})`}
+                  <circle cx="0" cy="0" r="14" fill={`rgba(254, 240, 138, ${dischargePercent / 150})`}
                     stroke="#ca8a04" strokeWidth="1.5" />
                   {/* Filament */}
-                  <path d="M -4,-2 Q 0,-6 4,-2 Q 0,2 -4,-2" fill="none"
+                  <path d="M -5,-2 Q 0,-7 5,-2 Q 0,3 -5,-2" fill="none"
                     stroke={dischargePercent > 20 ? '#fef08a' : '#78350f'} strokeWidth="1.5"
                     filter={dischargePercent > 30 ? "url(#rctcCurrentGlowFilter)" : undefined} />
                   {/* Base */}
-                  <rect x="-5" y="8" width="10" height="6" fill="#78350f" rx="1" />
-                  <line x1="-4" y1="10" x2="4" y2="10" stroke="#a16207" strokeWidth="1" />
-                  <line x1="-4" y1="12" x2="4" y2="12" stroke="#a16207" strokeWidth="1" />
+                  <rect x="-6" y="10" width="12" height="8" fill="#78350f" rx="1" />
+                  <line x1="-5" y1="12" x2="5" y2="12" stroke="#a16207" strokeWidth="1" />
+                  <line x1="-5" y1="15" x2="5" y2="15" stroke="#a16207" strokeWidth="1" />
+                  <text x="0" y="32" textAnchor="middle" fill={dischargePercent > 10 ? '#fbbf24' : '#9ca3af'} fontSize="10" fontWeight="bold">
+                    BULB
+                  </text>
                 </g>
 
-                {/* Switch with premium styling */}
-                <g transform="translate(180, 95)">
+                {/* Switch with premium styling and label */}
+                <g transform="translate(170, 125)">
                   <circle cx="0" cy="0" r="4" fill={isDischarging ? "url(#rctcSwitchContact)" : '#4b5563'}
                     stroke={isDischarging ? '#059669' : '#374151'} strokeWidth="1" />
                   <line x1="0" y1="0" x2={isDischarging ? "16" : "10"} y2={isDischarging ? "0" : "-8"}
                     stroke={isDischarging ? "url(#rctcSwitchContact)" : '#6b7280'} strokeWidth="2" strokeLinecap="round" />
                   <circle cx="16" cy="0" r="4" fill={isDischarging ? "url(#rctcSwitchContact)" : '#4b5563'}
                     stroke={isDischarging ? '#059669' : '#374151'} strokeWidth="1" />
+                  <text x="8" y="13" textAnchor="middle" fill={isDischarging ? '#10b981' : '#9ca3af'} fontSize="9" fontWeight="bold">
+                    {isDischarging ? 'ON' : 'OFF'}
+                  </text>
                 </g>
+
+                {/* Observation guidance */}
+                <text x="140" y="158" textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="10">
+                  {isDischarging ? '▶ Watch exponential decay - voltage drops fast then slows' : '▶ Click Start to discharge through bulb'}
+                </text>
               </svg>
 
               {/* Labels outside SVG using typo system */}
@@ -2086,9 +2253,10 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
                 const newCompleted = new Set(completedApps);
                 newCompleted.add(activeApp);
                 setCompletedApps(newCompleted);
+                onGameEvent?.({ type: 'app_explored', data: { appIndex: activeApp } });
               }}
             >
-              ✓ Mark as Read
+              ✓ Got It
             </button>
           ) : activeApp < applications.length - 1 ? (
             <button
@@ -2110,7 +2278,27 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
             >
               Next Application →
             </button>
-          ) : null}
+          ) : (
+            <button
+              style={{
+                display: 'block',
+                width: '100%',
+                marginTop: premiumDesign.spacing.lg,
+                padding: premiumDesign.spacing.md,
+                borderRadius: premiumDesign.radius.md,
+                border: '1px solid rgba(16, 185, 129, 0.5)',
+                background: 'rgba(16, 185, 129, 0.2)',
+                color: premiumDesign.colors.success,
+                fontSize: '16px',
+                fontWeight: 600,
+                cursor: 'default',
+                zIndex: 10,
+              }}
+              disabled
+            >
+              ✓ All Applications Complete
+            </button>
+          )}
         </div>
 
         <div style={{

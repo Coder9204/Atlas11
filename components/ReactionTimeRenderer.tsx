@@ -184,6 +184,23 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
     }, 400);
   }, [emitEvent]);
 
+  // Navigation functions
+  const currentPhaseIndex = PHASES.indexOf(phase);
+  const canGoBack = currentPhaseIndex > 0;
+  const canGoNext = currentPhaseIndex < PHASES.length - 1;
+
+  const goBack = useCallback(() => {
+    if (canGoBack) {
+      goToPhase(PHASES[currentPhaseIndex - 1]);
+    }
+  }, [canGoBack, currentPhaseIndex, goToPhase]);
+
+  const goNext = useCallback(() => {
+    if (canGoNext) {
+      goToPhase(PHASES[currentPhaseIndex + 1]);
+    }
+  }, [canGoNext, currentPhaseIndex, goToPhase]);
+
   // ─────────────────────────────────────────────────────────────────────────
   // PHYSICS CALCULATIONS
   // ─────────────────────────────────────────────────────────────────────────
@@ -936,6 +953,67 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
           </p>
         </div>
 
+        {/* Static ruler visualization */}
+        <div style={{ marginBottom: typo.sectionGap, background: colors.bgCard, borderRadius: '12px', padding: typo.cardPadding, border: `1px solid ${colors.border}` }}>
+          <svg viewBox="0 0 300 240" style={{ width: '100%', maxWidth: '400px', height: 'auto', display: 'block', margin: '0 auto' }}>
+            <defs>
+              <linearGradient id="predictRuler" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#fbbf24" />
+                <stop offset="100%" stopColor="#f59e0b" />
+              </linearGradient>
+              <linearGradient id="predictHand" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#fcd34d" />
+                <stop offset="100%" stopColor="#f59e0b" />
+              </linearGradient>
+              <filter id="predictGlow">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            <rect x="0" y="0" width="300" height="240" fill="#1e293b" rx="8" />
+
+            {/* Top hand */}
+            <g transform="translate(150, 40)">
+              <ellipse cx="0" cy="0" rx="25" ry="15" fill="url(#predictHand)" stroke="#c9a87c" strokeWidth="1" />
+              <ellipse cx="-12" cy="8" rx="6" ry="4" fill="url(#predictHand)" />
+              <ellipse cx="12" cy="8" rx="6" ry="4" fill="url(#predictHand)" />
+            </g>
+
+            {/* Ruler */}
+            <g transform="translate(150, 70)">
+              <rect x="-12" y="0" width="24" height="100" fill="url(#predictRuler)" rx="2" />
+              <rect x="-12" y="0" width="24" height="100" fill="none" stroke="#d97706" strokeWidth="1.5" rx="2" />
+
+              {/* Ruler marks */}
+              {Array.from({length: 7}, (_, i) => (
+                <g key={i} transform={`translate(0, ${i * 16})`}>
+                  <line x1="-12" y1="0" x2="-6" y2="0" stroke="#78350f" strokeWidth="1" />
+                  <line x1="12" y1="0" x2="6" y2="0" stroke="#78350f" strokeWidth="1" />
+                  <text x="20" y="4" textAnchor="start" fill="#cbd5e1" fontSize="11" fontWeight="600">{i * 5}cm</text>
+                </g>
+              ))}
+            </g>
+
+            {/* Bottom hand */}
+            <g transform="translate(150, 195)">
+              <ellipse cx="0" cy="0" rx="30" ry="18" fill="url(#predictHand)" stroke="#c9a87c" strokeWidth="1.5" />
+              <ellipse cx="-18" cy="-10" rx="8" ry="5" fill="url(#predictHand)" />
+              <ellipse cx="18" cy="-10" rx="8" ry="5" fill="url(#predictHand)" />
+            </g>
+
+            {/* Label */}
+            <text x="150" y="25" textAnchor="middle" fill="#a78bfa" fontSize="12" fontWeight="bold" filter="url(#predictGlow)">STATIC VIEW</text>
+            <text x="150" y="225" textAnchor="middle" fill="#94a3b8" fontSize="11">Ruler Drop Test</text>
+          </svg>
+          <p style={{ fontSize: typo.small, color: colors.textMuted, textAlign: 'center', margin: '8px 0 0 0', lineHeight: 1.5 }}>
+            This shows the ruler drop test. You'll catch the falling ruler to measure your reaction time using physics!
+          </p>
+        </div>
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: typo.elementGap, marginBottom: typo.sectionGap }}>
           {predictionOptions.map(option => (
             <button
@@ -1004,6 +1082,17 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
     <div style={{ padding: typo.pagePadding, maxWidth: '700px', margin: '0 auto' }}>
       {renderSectionHeader('Step 2 • Experiment', 'Ruler Drop Test', 'Catch it as fast as you can!')}
 
+      {/* Educational Context */}
+      <div className="bg-indigo-50 rounded-xl p-4 mb-4 border border-indigo-200">
+        <p className="text-indigo-900 text-sm leading-relaxed">
+          <strong style={{ color: '#4f46e5', fontWeight: 700 }}>What you're seeing:</strong> This visualization shows a falling ruler. Watch how the ruler drops and try to catch it by clicking when you see it fall. The distance it travels reveals your reaction time through the physics equation <strong style={{ color: '#6366f1', fontWeight: 600 }}>d = ½gt²</strong>.
+          <br /><br />
+          <strong style={{ color: '#4f46e5', fontWeight: 700 }}>Why it matters:</strong> Reaction time (the delay between seeing something and responding) is crucial in sports, driving, gaming, and medical diagnostics. This experiment uses <strong style={{ color: '#6366f1', fontWeight: 600 }}>free fall physics</strong> to precisely measure that delay—the same principle used by professional athletes and Formula 1 teams to optimize performance.
+          <br /><br />
+          <strong style={{ color: '#4f46e5', fontWeight: 700 }}>Cause and effect:</strong> When you change <span style={{ color: '#f59e0b', fontWeight: 600 }}>gravity</span>, the ruler falls faster or slower. Higher gravity → faster fall → same reaction time covers less distance. When you change <span style={{ color: '#3b82f6', fontWeight: 600 }}>ruler length</span>, you have more distance to work with, making it easier to catch.
+        </p>
+      </div>
+
       {/* Interactive Controls Panel */}
       <div className="bg-slate-800/50 rounded-xl p-4 mb-4 border border-slate-700/50">
         <div className="flex items-center justify-between mb-3">
@@ -1032,7 +1121,9 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
                 step="0.1"
                 value={gravity}
                 onChange={(e) => setGravity(parseFloat(e.target.value))}
+                onInput={(e) => setGravity(parseFloat((e.target as HTMLInputElement).value))}
                 className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                style={{ accentColor: "#f59e0b", cursor: "pointer", touchAction: "pan-y", WebkitAppearance: "none", MozAppearance: "none", appearance: "none" }}
                 disabled={rulerState !== 'ready'}
               />
               <div className="flex justify-between mt-2 gap-2">
@@ -1067,7 +1158,9 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
                 step="5"
                 value={rulerLength}
                 onChange={(e) => setRulerLength(parseInt(e.target.value))}
+                onInput={(e) => setRulerLength(parseInt((e.target as HTMLInputElement).value))}
                 className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                style={{ accentColor: "#3b82f6", cursor: "pointer", touchAction: "pan-y", WebkitAppearance: "none", MozAppearance: "none", appearance: "none" }}
                 disabled={rulerState !== 'ready'}
               />
             </div>
@@ -1177,9 +1270,29 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
     </div>
   );
 
-  const renderReview = () => (
+  const renderReview = () => {
+    const getPredictionLabel = (pred: string | null) => {
+      const options: Record<string, string> = {
+        fast: 'Less than 100ms',
+        medium: '150-250ms',
+        slow: '300-500ms',
+        very_slow: 'More than 500ms'
+      };
+      return pred ? options[pred] : 'unknown';
+    };
+
+    return (
     <div style={{ padding: typo.pagePadding, maxWidth: '600px', margin: '0 auto' }}>
       {renderSectionHeader('Step 3 • Understand', 'The Physics of Reaction Time', 'Free fall as a stopwatch')}
+
+      {/* Prediction Callback */}
+      {prediction && (
+        <div className="bg-amber-50 rounded-xl p-4 mb-4 border border-amber-200">
+          <p className="text-amber-900 text-sm">
+            <strong style={{ color: '#b45309', fontWeight: 700 }}>Your Prediction:</strong> You predicted reaction times would be <strong style={{ color: '#d97706', fontWeight: 600 }}>{getPredictionLabel(prediction)}</strong>. Let's see how the physics reveals the truth! Typical human reaction time is actually 150-300ms.
+          </p>
+        </div>
+      )}
 
       <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-5 mb-5">
         <div className="text-center mb-4">
@@ -1238,7 +1351,8 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
 
       {renderBottomBar(() => goToPhase('twist_predict'), true, 'Try Distraction Twist')}
     </div>
-  );
+    );
+  };
 
   const renderTwistPredict = () => {
     const twistOptions = [
@@ -1258,6 +1372,58 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
             <br /><br />
             <span className="font-semibold">How do distractions affect reaction time?</span>
           </p>
+        </div>
+
+        {/* Static visualization showing distraction effect */}
+        <div style={{ marginBottom: typo.sectionGap, background: colors.bgCard, borderRadius: '12px', padding: typo.cardPadding, border: `1px solid ${colors.border}` }}>
+          <svg viewBox="0 0 320 180" style={{ width: '100%', maxWidth: '400px', height: 'auto', display: 'block', margin: '0 auto' }}>
+            <defs>
+              <linearGradient id="twistBrain" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#818cf8" />
+                <stop offset="100%" stopColor="#a78bfa" />
+              </linearGradient>
+            </defs>
+
+            <rect x="0" y="0" width="320" height="180" fill="#1e293b" rx="8" />
+
+            {/* Brain processing center */}
+            <circle cx="160" cy="90" r="35" fill="url(#twistBrain)" opacity="0.9" />
+            <text x="160" y="95" textAnchor="middle" fill="#1e1b4b" fontSize="11" fontWeight="bold">BRAIN</text>
+
+            {/* Visual distraction */}
+            <g transform="translate(60, 50)">
+              <circle cx="0" cy="0" r="15" fill="#ef4444" opacity="0.6" />
+              <text x="0" y="30" textAnchor="middle" fill="#f87171" fontSize="11" fontWeight="600">Visual</text>
+            </g>
+
+            {/* Math problem */}
+            <g transform="translate(260, 50)">
+              <rect x="-18" y="-12" width="36" height="24" fill="#f59e0b" opacity="0.6" rx="4" />
+              <text x="0" y="2" textAnchor="middle" fill="#78350f" fontSize="11" fontWeight="bold">3+7?</text>
+              <text x="0" y="32" textAnchor="middle" fill="#fbbf24" fontSize="11" fontWeight="600">Math</text>
+            </g>
+
+            {/* Audio distraction */}
+            <g transform="translate(60, 130)">
+              <path d="M-8,-8 L-8,8 L0,8 L8,0 L0,-8 Z" fill="#8b5cf6" opacity="0.6" />
+              <text x="0" y="28" textAnchor="middle" fill="#a78bfa" fontSize="11" fontWeight="600">Audio</text>
+            </g>
+
+            {/* Motor response */}
+            <g transform="translate(260, 130)">
+              <ellipse cx="0" cy="0" rx="18" ry="12" fill="#10b981" opacity="0.6" />
+              <text x="0" y="25" textAnchor="middle" fill="#34d399" fontSize="11" fontWeight="600">Hand</text>
+            </g>
+
+            {/* Connection arrows with delay indicators */}
+            <line x1="75" y1="50" x2="130" y2="75" stroke="#ef4444" strokeWidth="2" strokeDasharray="4,2" opacity="0.6" />
+            <line x1="245" y1="50" x2="190" y2="75" stroke="#f59e0b" strokeWidth="2" strokeDasharray="4,2" opacity="0.6" />
+            <line x1="75" y1="130" x2="130" y2="105" stroke="#8b5cf6" strokeWidth="2" strokeDasharray="4,2" opacity="0.6" />
+            <line x1="190" y1="105" x2="242" y2="125" stroke="#10b981" strokeWidth="2" opacity="0.6" />
+
+            <text x="160" y="25" textAnchor="middle" fill="#a78bfa" fontSize="12" fontWeight="bold">DISTRACTION EFFECT</text>
+            <text x="160" y="165" textAnchor="middle" fill="#94a3b8" fontSize="11">Multiple inputs slow processing</text>
+          </svg>
         </div>
 
         <div className="grid grid-cols-1 gap-3 mb-6">
@@ -1806,12 +1972,20 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
       <div style={{ padding: typo.pagePadding, maxWidth: '600px', margin: '0 auto' }}>
         {renderSectionHeader('Step 8 • Test', 'Knowledge Check', `${testAnswers.filter(a => a !== null).length}/10 answered`)}
 
-        <div className="space-y-6 max-h-96 overflow-y-auto mb-4">
+        <div className="space-y-6 max-h-96 overflow-y-auto mb-4" style={{ padding: '4px' }}>
           {testQuestions.map((q, qIndex) => (
-            <div key={qIndex} className="bg-white rounded-xl p-4 shadow-sm border">
-              <p className="text-sm text-gray-500 mb-1 italic">{q.scenario}</p>
-              <p className="font-semibold text-gray-800 mb-3">{qIndex + 1}. {q.question}</p>
-              <div className="grid grid-cols-1 gap-2">
+            <div key={qIndex} className="bg-white rounded-xl p-4 shadow-sm border" style={{ borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#6366f1', background: '#eef2ff', padding: '4px 12px', borderRadius: '12px' }}>
+                  Question {qIndex + 1} of {testQuestions.length}
+                </span>
+                {testAnswers[qIndex] !== null && (
+                  <span style={{ fontSize: '18px' }}>✓</span>
+                )}
+              </div>
+              <p className="text-sm text-gray-500 mb-1 italic" style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px' }}>{q.scenario}</p>
+              <p className="font-semibold text-gray-800 mb-3" style={{ fontWeight: 600, fontSize: '15px', color: '#1e293b', marginBottom: '12px', lineHeight: 1.5 }}>{q.question}</p>
+              <div className="grid grid-cols-1 gap-2" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {q.options.map((opt, oIndex) => (
                   <button
                     key={oIndex}
@@ -1824,8 +1998,21 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
                         ? 'bg-indigo-100 border-2 border-indigo-500'
                         : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
                     }`}
+                    style={{
+                      padding: '10px 14px',
+                      borderRadius: '8px',
+                      textAlign: 'left',
+                      fontSize: '14px',
+                      transition: 'all 0.2s ease',
+                      border: testAnswers[qIndex] === oIndex ? '2px solid #6366f1' : '2px solid transparent',
+                      background: testAnswers[qIndex] === oIndex ? '#eef2ff' : '#f8fafc',
+                      color: testAnswers[qIndex] === oIndex ? '#4f46e5' : '#475569',
+                      fontWeight: testAnswers[qIndex] === oIndex ? 600 : 400,
+                      cursor: 'pointer'
+                    }}
                   >
                     {opt.text}
+                    {testAnswers[qIndex] === oIndex && <span style={{ marginLeft: '8px', color: '#6366f1' }}>✓</span>}
                   </button>
                 ))}
               </div>
@@ -1945,22 +2132,31 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+    <div style={{
+      minHeight: '100dvh',
+      height: '100dvh',
+      display: 'flex',
+      flexDirection: 'column',
+      background: '#0a0f1a',
+      color: 'white',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
       {/* Premium background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/3 rounded-full blur-3xl" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" style={{ filter: 'blur(80px)' }} />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" style={{ filter: 'blur(80px)' }} />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/3 rounded-full blur-3xl" style={{ filter: 'blur(100px)' }} />
 
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Reaction Time</span>
-          <div className="flex items-center gap-1.5">
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50" style={{ borderBottom: '1px solid rgba(148, 163, 184, 0.2)' }}>
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto" style={{ maxWidth: '1024px', padding: '12px 24px', margin: '0 auto' }}>
+          <span className="text-sm font-semibold text-white/80 tracking-wide" style={{ fontSize: '14px', fontWeight: '600' }}>Reaction Time</span>
+          <div className="flex items-center gap-1.5" style={{ display: 'flex', gap: '6px' }}>
             {PHASES.map((p) => (
               <button
                 key={p}
-                onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={() => goToPhase(p)}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-indigo-400 w-6 shadow-lg shadow-indigo-400/30'
@@ -1969,27 +2165,36 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
                 title={p}
+                style={{ cursor: 'pointer', transition: 'all 0.3s ease' }}
               />
             ))}
           </div>
-          <span className="text-sm font-medium text-indigo-400 capitalize">{phase.replace('_', ' ')}</span>
+          <span className="text-sm font-medium text-indigo-400 capitalize" style={{ fontSize: '14px' }}>{phase.replace('_', ' ')}</span>
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="relative pt-16 pb-12">
-        <div className="max-w-2xl mx-auto px-4">
+      {/* Main content - scrollable */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        paddingTop: '72px',
+        paddingBottom: '90px',
+        position: 'relative'
+      }}>
+        <div className="max-w-2xl mx-auto px-4" style={{ maxWidth: '672px', padding: '0 16px', margin: '0 auto' }}>
           {showCoachMessage && (
-            <div className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 text-white rounded-xl p-4 mb-4 backdrop-blur-xl">
-              <div className="flex items-start gap-3">
+            <div className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 text-white rounded-xl p-4 mb-4 backdrop-blur-xl" style={{ borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+              <div className="flex items-start gap-3" style={{ display: 'flex', gap: '12px' }}>
                 <span className="text-2xl">🧑‍🏫</span>
-                <p className="flex-1 text-slate-200">{coachMessages[phase]}</p>
+                <p className="flex-1 text-slate-200" style={{ flex: 1, lineHeight: 1.6 }}>{coachMessages[phase]}</p>
                 <button
                   onPointerDown={(e) => {
                     e.preventDefault();
                     setShowCoachMessage(false);
                   }}
                   className="text-white/60 hover:text-white"
+                  style={{ cursor: 'pointer' }}
                 >
                   ✕
                 </button>
@@ -2010,6 +2215,80 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
             {phase === 'mastery' && renderMastery()}
           </div>
         </div>
+      </div>
+
+      {/* Bottom Navigation Bar */}
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: '16px 20px',
+        background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))',
+        borderTop: '1px solid rgba(148, 163, 184, 0.2)',
+        zIndex: 1000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        boxShadow: '0 -2px 10px rgba(0,0,0,0.3)'
+      }}>
+        <button
+          onClick={goBack}
+          disabled={!canGoBack}
+          style={{
+            minHeight: '44px',
+            padding: '10px 16px',
+            background: canGoBack ? 'rgba(71, 85, 105, 0.5)' : 'transparent',
+            border: `1px solid ${canGoBack ? '#334155' : 'transparent'}`,
+            borderRadius: '8px',
+            color: canGoBack ? '#e2e8f0' : 'transparent',
+            fontSize: '14px',
+            fontWeight: 600,
+            cursor: canGoBack ? 'pointer' : 'default',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          ← Back
+        </button>
+
+        {/* Navigation dots */}
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          {PHASES.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => goToPhase(p)}
+              title={p}
+              style={{
+                width: phase === p ? '24px' : '8px',
+                height: '8px',
+                borderRadius: '4px',
+                background: PHASES.indexOf(phase) >= i ? '#6366f1' : '#475569',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}
+            />
+          ))}
+        </div>
+
+        <button
+          onClick={goNext}
+          disabled={!canGoNext || (phase === 'predict' && !prediction) || (phase === 'twist_predict' && !twistPrediction) || (phase === 'test' && !showTestResults)}
+          style={{
+            minHeight: '44px',
+            padding: '10px 16px',
+            background: (canGoNext && !((phase === 'predict' && !prediction) || (phase === 'twist_predict' && !twistPrediction) || (phase === 'test' && !showTestResults))) ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'rgba(71, 85, 105, 0.5)',
+            border: 'none',
+            borderRadius: '8px',
+            color: (canGoNext && !((phase === 'predict' && !prediction) || (phase === 'twist_predict' && !twistPrediction) || (phase === 'test' && !showTestResults))) ? 'white' : '#94a3b8',
+            fontSize: '14px',
+            fontWeight: 600,
+            cursor: (canGoNext && !((phase === 'predict' && !prediction) || (phase === 'twist_predict' && !twistPrediction) || (phase === 'test' && !showTestResults))) ? 'pointer' : 'not-allowed',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          Next →
+        </button>
       </div>
     </div>
   );

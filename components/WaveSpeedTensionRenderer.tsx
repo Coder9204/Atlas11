@@ -81,9 +81,9 @@ const realWorldApps = [
   }
 ];
 
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+type Phase = 'hook' | 'intro' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
-const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const phaseOrder: Phase[] = ['hook', 'intro', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
 type GameEventType =
   | 'phase_change'
@@ -103,6 +103,7 @@ interface GameEvent {
 
 const phaseLabels: Record<Phase, string> = {
   'hook': 'Hook',
+  'intro': 'Intro',
   'predict': 'Predict',
   'play': 'Lab',
   'review': 'Review',
@@ -687,6 +688,53 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
         </div>
       );
     }
+
+    
+    // INTRO
+    if (phase === 'intro') {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[80vh] px-6 py-8" style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <h2 className="text-3xl font-black text-white mb-6 text-center">Understanding Wave Speed</h2>
+          <div className="space-y-6 w-full">
+            <div className="p-6 rounded-xl bg-slate-800/50 border border-slate-700/50">
+              <h3 className="text-xl font-bold text-amber-400 mb-3">The Physics</h3>
+              <p className="text-slate-300 leading-relaxed mb-4">
+                When you send a pulse down a rope, how fast does it travel? The answer depends on two key factors: how tightly the rope is stretched (tension) and how heavy the rope is per unit length (linear density).
+              </p>
+              <p className="text-slate-300 leading-relaxed">
+                Higher tension means the rope snaps back faster when disturbed, increasing wave speed. More mass means more inertia to overcome, decreasing wave speed.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center">
+              <p className="text-sm font-bold text-amber-400 mb-3">THE FORMULA</p>
+              <p className="text-3xl font-serif text-white mb-3">
+                v = sqrt(T / u)
+              </p>
+              <p className="text-sm text-slate-400">
+                <span className="text-amber-400 font-semibold">T</span> = tension force (N) | <span className="text-yellow-400 font-semibold">u</span> = linear density (kg/m)
+              </p>
+            </div>
+
+            <div className="p-6 rounded-xl bg-slate-800/50 border border-slate-700/50">
+              <h3 className="text-xl font-bold text-emerald-400 mb-3">Real-World Impact</h3>
+              <p className="text-slate-300 leading-relaxed">
+                This principle governs guitar strings producing perfect pitch, suspension bridge cables resisting oscillation, and seismic waves revealing Earth's interior structure.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => goToPhase('predict')}
+            className="mt-8 px-10 py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-lg shadow-lg shadow-amber-500/30"
+            style={{ zIndex: 10, minHeight: '44px', cursor: 'pointer' }}
+          >
+            Make Your Prediction
+          </button>
+        </div>
+      );
+    }
+
 
     // PREDICT
     if (phase === 'predict') {

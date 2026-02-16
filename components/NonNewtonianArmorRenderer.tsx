@@ -82,7 +82,7 @@ type Phase =
 // Questions with LOCAL correct answers for development fallback
 const testQuestions = [
   {
-    scenario: "You have a bowl of oobleck made from cornstarch and water.",
+    scenario: "You have a bowl of oobleck made from cornstarch and water. It looks like a milky liquid but behaves strangely when you interact with it. If you move your hand slowly through it, it feels like any normal liquid. But if you try to punch it or move quickly, it suddenly feels rock solid!",
     question: "What is a non-Newtonian fluid?",
     options: [
       { id: 'space', label: "A fluid that only flows in space (zero gravity)" },
@@ -93,7 +93,7 @@ const testQuestions = [
     explanation: "Non-Newtonian fluids have viscosity that changes with applied stress or shear rate. Unlike water (Newtonian), oobleck's resistance to flow depends on how fast you try to move it."
   },
   {
-    scenario: "You slowly push your finger into a bowl of oobleck.",
+    scenario: "You slowly push your finger into a bowl of oobleck at a gentle, steady pace. You're taking your time, applying constant gentle pressure without any sudden movements. The oobleck appears calm and liquid-like as your finger approaches the surface.",
     question: "What happens when you slowly poke oobleck?",
     options: [
       { id: 'shatter', label: "It shatters like glass" },
@@ -319,6 +319,25 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 };
 
 // ============================================================
+// PHASE CONFIGURATION
+// ============================================================
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'New Variable',
+  twist_play: 'Twist Explore',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery'
+};
+
+// ============================================================
 // MAIN COMPONENT
 // ============================================================
 
@@ -334,7 +353,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
   gamePhase
 }) => {
   // Phase management
-  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const validPhases: Phase[] = phaseOrder;
   const getInitialPhase = (): Phase => {
     if (gamePhase && validPhases.includes(gamePhase as Phase)) {
       return gamePhase as Phase;
@@ -592,6 +611,34 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
           {/* Background */}
           <rect x="0" y="0" width={width} height={height} fill={colors.bgDark} rx="12" />
 
+          {/* Grid lines for reference */}
+          <g opacity="0.15">
+            {[0, 1, 2, 3, 4].map(i => (
+              <line
+                key={`h-${i}`}
+                x1="20"
+                y1={60 + (height - 80) * i / 4}
+                x2={width - 20}
+                y2={60 + (height - 80) * i / 4}
+                stroke={colors.textSecondary}
+                strokeWidth="1"
+                strokeDasharray="4,4"
+              />
+            ))}
+            {[0, 1, 2, 3, 4].map(i => (
+              <line
+                key={`v-${i}`}
+                x1={40 + (width - 80) * i / 4}
+                y1="60"
+                x2={40 + (width - 80) * i / 4}
+                y2={height - 20}
+                stroke={colors.textSecondary}
+                strokeWidth="1"
+                strokeDasharray="4,4"
+              />
+            ))}
+          </g>
+
           {/* Title */}
           <text x={cx} y="28" textAnchor="middle" fill={colors.textPrimary} fontSize={isMobile ? 16 : 20} fontWeight="bold">
             Non-Newtonian Fluid: Oobleck
@@ -660,7 +707,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
             <circle cx="-10" cy="0" r="6" fill={colors.water} opacity="0.8" />
             <circle cx="10" cy="5" r="5" fill={colors.water} opacity="0.6" />
             <circle cx="0" cy="12" r="4" fill={colors.water} opacity="0.7" />
-            <text x="0" y="35" textAnchor="middle" fill={colors.textSecondary} fontSize="9">H₂O</text>
+            <text x="0" y="35" textAnchor="middle" fill={colors.textSecondary} fontSize="11">H₂O</text>
           </g>
 
           {/* Viscosity meter (in interactive mode) */}
@@ -688,14 +735,73 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
 
           {/* Physics formula */}
           <g transform={`translate(${isMobile ? 15 : 25}, ${height - (isMobile ? 35 : 45)})`}>
-            <text fill={colors.textSecondary} fontSize={isMobile ? 10 : 12} fontWeight="600">
+            <text fill={colors.textSecondary} fontSize={isMobile ? 11 : 12} fontWeight="600">
               <tspan fill={colors.primaryLight}>η</tspan> = η₀ × (1 + (λ × <tspan fill={colors.accent}>γ̇</tspan>)ⁿ)
             </text>
-            <text y="14" fill={colors.textMuted} fontSize={isMobile ? 8 : 10}>
+            <text y="14" fill={colors.textMuted} fontSize={isMobile ? 11 : 12}>
               Viscosity increases with shear rate (γ̇)
             </text>
           </g>
         </svg>
+      </div>
+    );
+  };
+
+  // ============================================================
+  // PROGRESS BAR WITH NAVIGATION DOTS
+  // ============================================================
+
+  const renderProgressBar = () => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '12px 16px',
+        borderBottom: `1px solid ${colors.border}`,
+        backgroundColor: colors.bgDark,
+        gap: '16px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div role="tablist" aria-label="Phase navigation" style={{ display: 'flex', gap: '6px' }}>
+            {phaseOrder.map((p, i) => (
+              <button
+                key={p}
+                role="tab"
+                onClick={() => i <= currentIdx && goToPhase(p)}
+                aria-label={phaseLabels[p]}
+                aria-selected={i === currentIdx}
+                className="nav-dot"
+                style={{
+                  height: '12px',
+                  width: '12px',
+                  borderRadius: '50%',
+                  backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : 'rgba(255,255,255,0.2)',
+                  cursor: i <= currentIdx ? 'pointer' : 'default',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  border: 'none',
+                  padding: 0,
+                }}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span style={{ fontSize: '12px', fontWeight: 700, color: colors.textPrimary }}>
+            {currentIdx + 1} <span style={{ color: colors.textMuted }}>/</span> {phaseOrder.length}
+          </span>
+          <span style={{ fontSize: '10px', color: colors.textMuted, marginLeft: '4px' }}>phases</span>
+        </div>
+        <div style={{
+          padding: '4px 12px',
+          borderRadius: '12px',
+          background: `${colors.accent}20`,
+          color: colors.accent,
+          fontSize: '11px',
+          fontWeight: 700
+        }}>
+          {phaseLabels[phase]}
+        </div>
       </div>
     );
   };
@@ -727,22 +833,25 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
     };
 
     return (
-      <div style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        zIndex: 1000,
-        minHeight: '72px',
-        background: colors.bgCard,
-        borderTop: `1px solid ${colors.border}`,
-        boxShadow: '0 -4px 20px rgba(0,0,0,0.5)',
-        padding: '12px 20px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        gap: '12px'
-      }}>
+      <nav
+        role="navigation"
+        aria-label="Game navigation"
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000,
+          minHeight: '72px',
+          background: colors.bgCard,
+          borderTop: `1px solid ${colors.border}`,
+          boxShadow: '0 -4px 20px rgba(0,0,0,0.5)',
+          padding: '12px 20px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
         {showBack ? (
           <button
             onClick={handleBack}
@@ -755,7 +864,8 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
               fontSize: '14px',
               fontWeight: 600,
               cursor: 'pointer',
-              minHeight: '48px'
+              minHeight: '48px',
+              transition: 'all 0.2s ease'
             }}
           >
             ← Back
@@ -776,7 +886,8 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
               cursor: 'pointer',
               minHeight: '52px',
               minWidth: '160px',
-              boxShadow: `0 4px 15px ${colors.primary}40`
+              boxShadow: `0 4px 15px ${colors.primary}40`,
+              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
             }}
           >
             {nextLabel}
@@ -796,7 +907,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
             Select an option above
           </div>
         )}
-      </div>
+      </nav>
     );
   };
 
@@ -813,6 +924,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderProgressBar()}
         <div style={{
           flex: 1,
           overflowY: 'auto',
@@ -909,6 +1021,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderProgressBar()}
         {/* Scrollable content */}
         <div style={{
           flex: 1,
@@ -1049,6 +1162,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderProgressBar()}
         <div style={{
           flex: 1,
           overflowY: 'auto',
@@ -1110,10 +1224,11 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
                   onInput={(e) => setShearRate(Number((e.target as HTMLInputElement).value))}
                   style={{
                     width: '100%',
-                    height: '8px',
+                    height: '20px',
                     borderRadius: '4px',
                     cursor: 'pointer',
-                    accentColor: shearRate > 50 ? colors.jammedParticles : colors.flowingParticles
+                    accentColor: shearRate > 50 ? colors.jammedParticles : colors.flowingParticles,
+                    touchAction: 'pan-y'
                   }}
                 />
                 <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '8px', textAlign: 'center' }}>
@@ -1197,6 +1312,22 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
                 <div><span style={{ color: colors.textMuted }}>n &gt; 1</span> = Shear-thickening behavior</div>
               </div>
             </div>
+
+            {/* Why this matters */}
+            <div style={{
+              background: `${colors.primary}15`,
+              borderRadius: '12px',
+              padding: '16px',
+              border: `1px solid ${colors.primary}40`,
+              marginTop: '20px'
+            }}>
+              <h4 style={{ color: colors.primary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
+                🎯 Why This Matters:
+              </h4>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                This shear-thickening behavior isn't just fun science — it's being used to create next-generation <strong style={{ color: colors.primaryLight }}>body armor that's flexible like fabric</strong> but instantly hardens on bullet impact. The same principle protects athletes in sports gear and enables smart dampers in earthquake-resistant buildings!
+              </p>
+            </div>
           </div>
         </div>
 
@@ -1220,6 +1351,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderProgressBar()}
         <div style={{
           flex: 1,
           overflowY: 'auto',
@@ -1384,6 +1516,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderProgressBar()}
         <div style={{
           flex: 1,
           overflowY: 'auto',
@@ -1407,9 +1540,11 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
               borderRadius: '16px',
               padding: '24px',
               marginBottom: '20px',
-              border: `1px solid ${colors.border}`
+              border: `1px solid ${colors.border}`,
+              overflow: 'hidden'
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', flexWrap: 'wrap' }}>
+              {renderOobleckVisualization(false)}
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', flexWrap: 'wrap', marginTop: '20px' }}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '40px', marginBottom: '8px' }}>🥣</div>
                   <p style={{ color: colors.starch, fontWeight: 600 }}>Standard (2:1)</p>
@@ -1511,6 +1646,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderProgressBar()}
         <div style={{
           flex: 1,
           overflowY: 'auto',
@@ -1554,9 +1690,10 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
                   onInput={(e) => setStarchRatio(Number((e.target as HTMLInputElement).value))}
                   style={{
                     width: '100%',
-                    height: '8px',
+                    height: '20px',
                     borderRadius: '4px',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    touchAction: 'pan-y'
                   }}
                 />
                 <div style={{
@@ -1654,6 +1791,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderProgressBar()}
         <div style={{
           flex: 1,
           overflowY: 'auto',
@@ -1778,6 +1916,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderProgressBar()}
         <div style={{
           flex: 1,
           overflowY: 'auto',
@@ -2019,6 +2158,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderProgressBar()}
         <div style={{
           flex: 1,
           overflowY: 'auto',
@@ -2259,6 +2399,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderProgressBar()}
         <div style={{
           flex: 1,
           overflowY: 'auto',

@@ -8,11 +8,29 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 // Vapor layer insulates and reduces friction - only above Leidenfrost point (~200C)
 // ============================================================================
 
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Hook',
+  predict: 'Predict',
+  play: 'Play',
+  review: 'Review',
+  twist_predict: 'Twist Predict',
+  twist_play: 'Twist Play',
+  twist_review: 'Twist Review',
+  transfer: 'Transfer',
+  test: 'Test',
+  mastery: 'Mastery'
+};
+
 interface LeidenfrostRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: number) => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onBack?: () => void;
 }
 
 const realWorldApps = [
@@ -91,11 +109,15 @@ const realWorldApps = [
 ];
 
 const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
-  phase,
+  gamePhase,
   onPhaseComplete,
   onCorrectAnswer,
-  onIncorrectAnswer
+  onIncorrectAnswer,
+  onBack
 }) => {
+  // Phase management
+  const [phase, setPhase] = useState<Phase>('hook');
+
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -127,6 +149,13 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
   const lastClickRef = useRef(0);
 
   const [isMobile, setIsMobile] = useState(false);
+
+  // Sync external gamePhase prop with internal phase state
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
+    }
+  }, [gamePhase, phase]);
 
   // Responsive detection
   useEffect(() => {
@@ -419,21 +448,21 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
   };
 
   const testQuestions = [
-    { question: "What is the Leidenfrost effect?", options: [
+    { question: "A chef notices that when they flick water droplets onto their cast iron pan, the droplets behave very differently at different temperatures. At moderate heat, droplets sizzle and evaporate quickly. But when the pan is extremely hot, droplets seem to dance and skate across the surface, lasting much longer. What phenomenon is the chef observing?", options: [
       { text: "Water freezing on hot surfaces", correct: false },
-      { text: "Water droplet hovering on a vapor layer over a very hot surface", correct: true },
+      { text: "The Leidenfrost effect - water droplets hovering on a vapor layer over a very hot surface", correct: true },
       { text: "Water boiling violently", correct: false },
       { text: "Water turning directly to steam", correct: false }
     ]},
-    { question: "At what approximate temperature does the Leidenfrost effect begin for water?", options: [
+    { question: "In metallurgy, understanding the Leidenfrost effect is critical for heat treatment processes. Steel parts heated to 800°C are quenched in water to achieve desired hardness. At what approximate water-surface temperature threshold does the Leidenfrost effect begin, where a stable vapor film forms between the water and hot metal?", options: [
       { text: "100C (boiling point)", correct: false },
       { text: "150C", correct: false },
       { text: "200C (Leidenfrost point)", correct: true },
       { text: "500C", correct: false }
     ]},
-    { question: "Why does the droplet hover instead of touching the surface?", options: [
+    { question: "When a water droplet is placed on a surface heated above the Leidenfrost point, it appears to levitate and can glide around with almost no friction. Scientists have measured this gap to be less than 0.1mm thick. What physical mechanism allows the droplet to hover without touching the surface?", options: [
       { text: "Magnetic repulsion", correct: false },
-      { text: "A thin vapor layer forms underneath that supports it", correct: true },
+      { text: "A thin vapor layer continuously forms underneath the droplet, supporting it like a hovercraft", correct: true },
       { text: "Air pressure from below", correct: false },
       { text: "The surface repels water", correct: false }
     ]},
@@ -672,7 +701,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
           <rect x="50" y="190" width="220" height="8" rx="4" fill="#ffffff" opacity="0.1" />
 
           {/* Surface label */}
-          <text x="160" y="250" textAnchor="middle" fontSize="9" fill="#94a3b8" fontWeight="500">
+          <text x="160" y="250" textAnchor="middle" fontSize="11" fill="#94a3b8" fontWeight="500">
             HOT SURFACE
           </text>
         </g>
@@ -857,7 +886,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
               <text
                 x="22"
                 y={118 - (temp / 400) * 105}
-                fontSize="7"
+                fontSize="11"
                 fill={temp === 200 ? '#f59e0b' : '#94a3b8'}
                 fontWeight={temp === 200 ? 'bold' : 'normal'}
               >
@@ -869,7 +898,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
           {/* Leidenfrost point indicator */}
           <g transform={`translate(-25, ${115 - (LEIDENFROST_POINT / 400) * 105})`}>
             <polygon points="0,0 8,-4 8,4" fill="#f59e0b" />
-            <text x="-35" y="3" fontSize="6" fill="#f59e0b" fontWeight="bold">L.P.</text>
+            <text x="-35" y="3" fontSize="11" fill="#f59e0b" fontWeight="bold">L.P.</text>
           </g>
 
           {/* Temperature display */}
@@ -885,7 +914,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
           <circle cx="12" cy="14" r="4" fill={isAboveLeidenfrost ? '#10b981' : '#f97316'}>
             <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />
           </circle>
-          <text x="22" y="18" fontSize="10" fill={isAboveLeidenfrost ? '#10b981' : '#f97316'} fontWeight="bold">
+          <text x="22" y="18" fontSize="11" fill={isAboveLeidenfrost ? '#10b981' : '#f97316'} fontWeight="bold">
             {!isDropped ? 'READY - Drop water to test' :
               isAboveLeidenfrost ? 'LEIDENFROST ACTIVE - Hovering!' :
                 dropletState === 'sizzling' ? 'RAPID SIZZLE - Direct Contact' :
@@ -894,7 +923,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
         </g>
 
         {/* Labels */}
-        <text x="200" y="268" textAnchor="middle" fontSize="8" fill="#64748b">
+        <text x="200" y="268" textAnchor="middle" fontSize="11" fill="#64748b">
           {isAboveLeidenfrost ? 'Vapor cushion insulates droplet from surface' : 'Direct contact causes rapid heat transfer'}
         </text>
       </svg>
@@ -1010,7 +1039,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
           </text>
 
           {/* Timer label */}
-          <text x="0" y="38" textAnchor="middle" fontSize="9" fill="#94a3b8" fontWeight="500">
+          <text x="0" y="38" textAnchor="middle" fontSize="11" fill="#94a3b8" fontWeight="500">
             EVAPORATION TIME
           </text>
         </g>
@@ -1159,7 +1188,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
             <text x="0" y="0" textAnchor="middle" fontSize="14" fill="#94a3b8" fontWeight="bold">
               FULLY EVAPORATED
             </text>
-            <text x="0" y="16" textAnchor="middle" fontSize="10" fill="#64748b">
+            <text x="0" y="16" textAnchor="middle" fontSize="11" fill="#64748b">
               in {evaporationTime.toFixed(1)} seconds
             </text>
           </g>
@@ -1167,7 +1196,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
 
         {/* Status message */}
         <g transform="translate(200, 240)">
-          <text x="0" y="0" textAnchor="middle" fontSize="10" fill="#94a3b8">
+          <text x="0" y="0" textAnchor="middle" fontSize="11" fill="#94a3b8">
             {isEvaporating ? (isAboveLeidenfrost ? 'Hovering on vapor cushion — slow evaporation' : 'Direct surface contact — rapid evaporation!') :
               twistDropletRadius <= 0 ? 'Experiment complete — try a different temperature' : 'Ready to start experiment'}
           </text>
@@ -1175,6 +1204,30 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
       </svg>
     );
   };
+
+  // Phase navigation functions
+  const currentPhaseIndex = phaseOrder.indexOf(phase);
+
+  const goToPhase = useCallback((newPhase: Phase) => {
+    setPhase(newPhase);
+    playSound('transition');
+  }, [playSound]);
+
+  const goToNextPhase = useCallback(() => {
+    const nextIndex = currentPhaseIndex + 1;
+    if (nextIndex < phaseOrder.length) {
+      setPhase(phaseOrder[nextIndex]);
+      onPhaseComplete?.(nextIndex);
+      playSound('transition');
+    }
+  }, [currentPhaseIndex, onPhaseComplete, playSound]);
+
+  const goToPreviousPhase = useCallback(() => {
+    if (currentPhaseIndex > 0) {
+      setPhase(phaseOrder[currentPhaseIndex - 1]);
+      playSound('click');
+    }
+  }, [currentPhaseIndex, playSound]);
 
   // Navigation bar - fixed position with proper z-index
   const renderNavBar = () => (
@@ -1190,14 +1243,68 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
       boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
       padding: '12px 20px',
       display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center'
+      flexDirection: 'column',
+      gap: '8px'
     }}>
-      <div style={{ color: '#e2e8f0', fontSize: '16px', fontWeight: 'bold' }}>
-        Leidenfrost Effect
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ color: '#e2e8f0', fontSize: '16px', fontWeight: 'bold' }}>
+          Leidenfrost Effect
+        </div>
+        <div style={{ color: '#e2e8f0', fontSize: '14px' }}>
+          Phase: {phaseLabels[phase]}
+        </div>
       </div>
-      <div style={{ color: '#e2e8f0', fontSize: '14px' }}>
-        Phase: {phase}
+      {/* Navigation dots */}
+      <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', alignItems: 'center' }}>
+        {phaseOrder.map((p, idx) => (
+          <button
+            key={p}
+            onClick={() => idx <= currentPhaseIndex && goToPhase(p)}
+            aria-label={phaseLabels[p]}
+            title={phaseLabels[p]}
+            style={{
+              minHeight: '44px',
+              minWidth: '44px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 0,
+              border: 'none',
+              background: 'transparent',
+              cursor: idx <= currentPhaseIndex ? 'pointer' : 'default',
+              opacity: idx <= currentPhaseIndex ? 1 : 0.5
+            }}
+          >
+            <div style={{
+              width: p === phase ? '24px' : '10px',
+              height: '10px',
+              borderRadius: '9999px',
+              background: idx < currentPhaseIndex ? '#10b981' : p === phase ? '#ef4444' : '#475569',
+              transition: 'all 0.3s ease'
+            }} />
+          </button>
+        ))}
+      </div>
+      {/* Progress bar */}
+      <div
+        role="progressbar"
+        aria-valuenow={currentPhaseIndex + 1}
+        aria-valuemin={1}
+        aria-valuemax={phaseOrder.length}
+        style={{
+          width: '100%',
+          height: '4px',
+          background: 'rgba(71, 85, 105, 0.3)',
+          borderRadius: '2px',
+          overflow: 'hidden'
+        }}
+      >
+        <div style={{
+          width: `${((currentPhaseIndex + 1) / phaseOrder.length) * 100}%`,
+          height: '100%',
+          background: 'linear-gradient(to right, #ef4444, #dc2626)',
+          transition: 'width 0.3s ease'
+        }} />
       </div>
     </div>
   );
@@ -1219,11 +1326,25 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
       justifyContent: 'space-between',
       alignItems: 'center'
     }}>
-      <div style={{ color: '#e2e8f0', fontSize: '14px' }}>
-        Leidenfrost Effect
-      </div>
       <button
-        onClick={onPhaseComplete}
+        onClick={goToPreviousPhase}
+        disabled={currentPhaseIndex === 0}
+        style={{
+          padding: '12px 24px',
+          borderRadius: '8px',
+          border: '1px solid #64748b',
+          background: 'transparent',
+          color: currentPhaseIndex === 0 ? '#64748b' : '#e2e8f0',
+          fontWeight: '500',
+          cursor: currentPhaseIndex === 0 ? 'not-allowed' : 'pointer',
+          fontSize: '16px',
+          minHeight: '44px'
+        }}
+      >
+        ← Back
+      </button>
+      <button
+        onClick={goToNextPhase}
         disabled={!canProceed}
         style={{
           padding: '12px 32px',
@@ -1474,6 +1595,26 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
               </div>
             </div>
 
+            {/* Droplet Size Control */}
+            <div style={{ marginTop: '12px' }}>
+              <label style={{ color: '#94a3b8', fontSize: '14px', display: 'block', marginBottom: '8px' }}>
+                Droplet Size: {dropletSize} mm
+              </label>
+              <input
+                type="range"
+                min="2"
+                max="10"
+                step="1"
+                value={dropletSize}
+                onChange={(e) => { setDropletSize(parseInt(e.target.value)); resetExperiment(); }}
+                style={{ width: '100%', accentColor: '#3b82f6' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b' }}>
+                <span>2mm (Small)</span>
+                <span>10mm (Large)</span>
+              </div>
+            </div>
+
             <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
               <button
                 onPointerDown={(e) => { e.preventDefault(); dropWater(); }}
@@ -1528,6 +1669,16 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
                 <strong>Below Leidenfrost Point:</strong> The water makes direct contact with the surface, causing rapid heat transfer and quick evaporation through sizzling and boiling.
               </p>
             )}
+          </div>
+
+          {/* Key Physics Terms */}
+          <div style={{ marginTop: '16px', padding: '16px', borderRadius: '12px', background: 'rgba(30, 41, 59, 0.5)', maxWidth: '500px', width: '100%' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '12px' }}>Key Physics Terms</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', color: '#e2e8f0' }}>
+              <div><strong style={{ color: '#10b981' }}>Leidenfrost Point</strong> is the minimum surface temperature (~200°C for water) at which a liquid droplet levitates on its own vapor layer.</div>
+              <div><strong style={{ color: '#10b981' }}>Vapor Cushion</strong> is a thin layer of vapor that forms between the droplet and hot surface, acting as thermal insulation.</div>
+              <div><strong style={{ color: '#10b981' }}>Film Boiling</strong> is a vaporization regime where a continuous vapor film separates the liquid from the heating surface.</div>
+            </div>
           </div>
         </div>
         {renderFooter(true, 'Learn the Science →')}
@@ -1585,6 +1736,22 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
         {renderNavBar()}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px', overflowY: 'auto' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '24px' }}>The Temperature Paradox</h2>
+
+          {/* Preview visualization */}
+          <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '400px', marginBottom: '24px' }}>
+            <rect width="400" height="200" fill="#0f172a" rx="8" />
+            <text x="200" y="30" textAnchor="middle" fontSize="14" fill="#94a3b8" fontWeight="bold">Droplet Lifetime vs Temperature</text>
+            <line x1="60" y1="160" x2="340" y2="160" stroke="#475569" strokeWidth="2" />
+            <line x1="60" y1="40" x2="60" y2="160" stroke="#475569" strokeWidth="2" />
+            <text x="200" y="185" textAnchor="middle" fontSize="11" fill="#94a3b8">Temperature (°C)</text>
+            <text x="35" y="100" textAnchor="middle" fontSize="11" fill="#94a3b8" transform="rotate(-90 35 100)">Lifetime (s)</text>
+            <text x="80" y="175" textAnchor="middle" fontSize="11" fill="#94a3b8">100</text>
+            <text x="200" y="175" textAnchor="middle" fontSize="11" fill="#94a3b8">200</text>
+            <text x="320" y="175" textAnchor="middle" fontSize="11" fill="#94a3b8">400</text>
+            <circle cx="200" cy="100" r="8" fill="#f59e0b" opacity="0.5" />
+            <text x="200" y="120" textAnchor="middle" fontSize="12" fill="#f59e0b">?</text>
+          </svg>
+
           <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '24px', maxWidth: '640px', marginBottom: '24px' }}>
             <p style={{ fontSize: '18px', color: '#e2e8f0', marginBottom: '16px' }}>
               You graph "droplet lifetime" vs "surface temperature" from 100C to 400C.
@@ -1742,6 +1909,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
 
   // Render transfer phase
   if (phase === 'transfer') {
+    const currentApp = realWorldApps[activeAppTab];
     return (
       <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px', paddingTop: '80px' }}>
         {renderNavBar()}
@@ -1749,7 +1917,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}>Real-World Applications</h2>
 
           <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
-            {applications.map((app, index) => (
+            {realWorldApps.map((app, index) => (
               <button
                 key={index}
                 onPointerDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
@@ -1765,18 +1933,57 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
                   minHeight: '44px'
                 }}
               >
-                {app.icon} {app.title.split(' ')[0]}
+                {app.icon} {app.short}
               </button>
             ))}
           </div>
 
           <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '24px', maxWidth: '640px', width: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-              <span style={{ fontSize: '36px' }}>{applications[activeAppTab].icon}</span>
-              <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white' }}>{applications[activeAppTab].title}</h3>
+              <span style={{ fontSize: '36px' }}>{currentApp.icon}</span>
+              <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white' }}>{currentApp.title}</h3>
             </div>
-            <p style={{ fontSize: '16px', color: '#e2e8f0', marginBottom: '12px' }}>{applications[activeAppTab].description}</p>
-            <p style={{ fontSize: '14px', color: '#e2e8f0' }}>{applications[activeAppTab].details}</p>
+            <p style={{ fontSize: '16px', color: '#e2e8f0', marginBottom: '12px', fontStyle: 'italic', fontWeight: '600' }}>{currentApp.tagline}</p>
+            <p style={{ fontSize: '16px', color: '#e2e8f0', marginBottom: '12px' }}>{currentApp.description}</p>
+            <p style={{ fontSize: '14px', color: '#e2e8f0', marginBottom: '16px' }}>{currentApp.howItWorks}</p>
+
+            {/* Statistics */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px' }}>
+              {currentApp.stats.map((stat, i) => (
+                <div key={i} style={{ background: 'rgba(15, 23, 42, 0.7)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ fontSize: '18px', fontWeight: 'bold', color: currentApp.color }}>{stat.value}</div>
+                  <div style={{ fontSize: '12px', color: '#94a3b8' }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Companies */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ fontSize: '14px', fontWeight: '600', color: '#94a3b8', marginBottom: '8px' }}>Industry Leaders:</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {currentApp.companies.map((company, i) => (
+                  <span key={i} style={{ background: 'rgba(71, 85, 105, 0.3)', padding: '4px 12px', borderRadius: '6px', fontSize: '13px', color: '#e2e8f0' }}>
+                    {company}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Examples */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ fontSize: '14px', fontWeight: '600', color: '#94a3b8', marginBottom: '8px' }}>Applications:</div>
+              <ul style={{ margin: 0, paddingLeft: '20px', color: '#e2e8f0', fontSize: '14px' }}>
+                {currentApp.examples.map((example, i) => (
+                  <li key={i} style={{ marginBottom: '4px' }}>{example}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `4px solid ${currentApp.color}` }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#94a3b8', marginBottom: '4px' }}>Future Impact:</div>
+              <div style={{ fontSize: '14px', color: '#e2e8f0' }}>{currentApp.futureImpact}</div>
+            </div>
 
             <button
               onPointerDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}

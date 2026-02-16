@@ -543,13 +543,13 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
           </text>
 
           {/* === TRUE WHEEL SECTION (Left) === */}
-          <g transform={`translate(175, 185)`}>
+          <g transform={`translate(160, 185)`}>
             {/* Section label */}
-            <text x={0} y={-wheelRadius - 35} textAnchor="middle" fill={colors.textPrimary} fontSize={15} fontWeight="bold">
-              ACTUAL MOTION
+            <text x={0} y={-wheelRadius - 32} textAnchor="middle" fill={colors.textPrimary} fontSize={13} fontWeight="bold">
+              ACTUAL
             </text>
-            <text x={0} y={-wheelRadius - 18} textAnchor="middle" fill={colors.textSecondary} fontSize={11}>
-              Continuous Reality
+            <text x={0} y={-wheelRadius - 20} textAnchor="middle" fill={colors.textSecondary} fontSize={11}>
+              True Motion
             </text>
 
             {/* Outer tire */}
@@ -604,10 +604,20 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
             </g>
 
             {/* Speed display */}
-            <rect x={-55} y={wheelRadius + 25} width={110} height={28} rx={6} fill="rgba(16, 185, 129, 0.2)" stroke={colors.success} strokeWidth={1} />
-            <text x={0} y={wheelRadius + 44} textAnchor="middle" fill={colors.success} fontSize={13} fontWeight="bold">
+            <rect x={-50} y={wheelRadius + 28} width={100} height={24} rx={6} fill="rgba(16, 185, 129, 0.2)" stroke={colors.success} strokeWidth={1} />
+            <text x={0} y={wheelRadius + 45} textAnchor="middle" fill={colors.success} fontSize={12} fontWeight="bold">
               {rotationSpeed.toFixed(1)} rot/s
             </text>
+
+            {/* Interactive marker - reference spoke */}
+            <circle
+              cx={(wheelRadius - 14) * Math.cos(0)}
+              cy={(wheelRadius - 14) * Math.sin(0)}
+              r={8}
+              fill={colors.success}
+              opacity={0.6}
+              filter="url(#wwaWheelGlow)"
+            />
           </g>
 
           {/* === CAMERA / SAMPLING VISUALIZATION (Center) === */}
@@ -628,18 +638,18 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
             </circle>
 
             {/* Frame rate display panel */}
-            <rect x={-50} y={-15} width={100} height={50} rx={6} fill="rgba(30, 41, 59, 0.9)" stroke="#475569" strokeWidth={1} />
-            <text x={0} y={2} textAnchor="middle" fill={colors.accent} fontSize={10} fontWeight="bold">
+            <rect x={-50} y={-20} width={100} height={45} rx={6} fill="rgba(30, 41, 59, 0.9)" stroke="#475569" strokeWidth={1} />
+            <text x={0} y={-3} textAnchor="middle" fill={colors.accent} fontSize={11} fontWeight="bold">
               FRAME RATE
             </text>
-            <text x={0} y={20} textAnchor="middle" fill={colors.textPrimary} fontSize={16} fontWeight="bold">
+            <text x={0} y={15} textAnchor="middle" fill={colors.textPrimary} fontSize={15} fontWeight="bold">
               {frameRate} fps
             </text>
 
             {/* Sampling timeline visualization */}
-            <g transform="translate(0, 55)">
-              <rect x={-60} y={-8} width={120} height={40} rx={4} fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth={1} />
-              <text x={0} y={4} textAnchor="middle" fill={colors.textMuted} fontSize={9}>
+            <g transform="translate(0, 60)">
+              <rect x={-60} y={-8} width={120} height={38} rx={4} fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth={1} />
+              <text x={0} y={5} textAnchor="middle" fill={colors.textMuted} fontSize={11}>
                 SAMPLES PER SECOND
               </text>
               {/* Sampling ticks */}
@@ -647,9 +657,9 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
                 <rect
                   key={i}
                   x={-55 + i * (110 / Math.min(frameRate / 4, 12))}
-                  y={10}
+                  y={13}
                   width={3}
-                  height={15}
+                  height={12}
                   fill={colors.accent}
                   opacity={0.7 + (i % 2) * 0.3}
                 />
@@ -665,13 +675,13 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
           </g>
 
           {/* === SAMPLED/APPARENT WHEEL (Right) === */}
-          <g transform={`translate(525, 185)`}>
+          <g transform={`translate(540, 185)`}>
             {/* Section label */}
-            <text x={0} y={-wheelRadius - 35} textAnchor="middle" fill={colors.textPrimary} fontSize={15} fontWeight="bold">
-              APPARENT MOTION
+            <text x={0} y={-wheelRadius - 32} textAnchor="middle" fill={colors.textPrimary} fontSize={13} fontWeight="bold">
+              APPARENT
             </text>
-            <text x={0} y={-wheelRadius - 18} textAnchor="middle" fill={colors.textSecondary} fontSize={11}>
-              What Camera Captures
+            <text x={0} y={-wheelRadius - 20} textAnchor="middle" fill={colors.textSecondary} fontSize={11}>
+              Camera View
             </text>
 
             {/* Outer tire - red tinted */}
@@ -750,10 +760,10 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
 
             {/* Apparent speed display */}
             <rect
-              x={-65}
-              y={wheelRadius + 25}
-              width={130}
-              height={28}
+              x={-60}
+              y={wheelRadius + 28}
+              width={120}
+              height={24}
               rx={6}
               fill={motionDirection === 'forward' ? 'rgba(16, 185, 129, 0.2)' : motionDirection === 'backward' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)'}
               stroke={motionDirection === 'forward' ? colors.success : motionDirection === 'backward' ? colors.error : colors.warning}
@@ -761,41 +771,51 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
             />
             <text
               x={0}
-              y={wheelRadius + 44}
+              y={wheelRadius + 45}
               textAnchor="middle"
               fill={motionDirection === 'forward' ? colors.success : motionDirection === 'backward' ? colors.error : colors.warning}
-              fontSize={12}
+              fontSize={11}
               fontWeight="bold"
             >
-              {motionDirection === 'stopped' ? 'STOPPED' : `${Math.abs(apparentSpeed).toFixed(1)} rot/s ${motionDirection === 'backward' ? 'BACKWARD' : ''}`}
+              {motionDirection === 'stopped' ? 'STOPPED' : `${Math.abs(apparentSpeed).toFixed(1)} rot/s ${motionDirection === 'backward' ? 'BACK' : ''}`}
             </text>
+
+            {/* Interactive marker - sampled spoke */}
+            <circle
+              cx={(wheelRadius - 14) * Math.cos((apparentAngle * Math.PI) / 180)}
+              cy={(wheelRadius - 14) * Math.sin((apparentAngle * Math.PI) / 180)}
+              r={8}
+              fill={colors.error}
+              opacity={0.8}
+              filter="url(#wwaSampledGlow)"
+            />
           </g>
 
           {/* === BOTTOM INFO PANEL === */}
-          <g transform={`translate(${width / 2}, ${height - 45})`}>
-            <rect x={-280} y={-25} width={560} height={50} rx={8} fill="rgba(30, 41, 59, 0.95)" stroke="#475569" strokeWidth={1} />
+          <g transform={`translate(${width / 2}, ${height - 30})`}>
+            <rect x={-280} y={-30} width={560} height={60} rx={8} fill="rgba(30, 41, 59, 0.95)" stroke="#475569" strokeWidth={1} />
 
             {/* Left info: Spoke spacing */}
-            <g transform="translate(-200, 0)">
-              <text x={0} y={-8} textAnchor="middle" fill={colors.textMuted} fontSize={9}>SPOKE SPACING</text>
-              <text x={0} y={10} textAnchor="middle" fill={colors.textSecondary} fontSize={14} fontWeight="bold">{(360 / numSpokes).toFixed(0)}deg</text>
+            <g transform="translate(-200, -5)">
+              <text x={0} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={11}>SPOKE SPACING</text>
+              <text x={0} y={18} textAnchor="middle" fill={colors.textSecondary} fontSize={13} fontWeight="bold">{(360 / numSpokes).toFixed(0)}deg</text>
             </g>
 
             {/* Center info: Movement per frame */}
-            <g transform="translate(0, 0)">
-              <text x={0} y={-8} textAnchor="middle" fill={colors.textMuted} fontSize={9}>MOVEMENT/FRAME</text>
-              <text x={0} y={10} textAnchor="middle" fill={colors.accent} fontSize={14} fontWeight="bold">{((rotationSpeed * 360) / frameRate).toFixed(1)}deg</text>
+            <g transform="translate(0, -5)">
+              <text x={0} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={11}>MOVEMENT/FRAME</text>
+              <text x={0} y={18} textAnchor="middle" fill={colors.accent} fontSize={13} fontWeight="bold">{((rotationSpeed * 360) / frameRate).toFixed(1)}deg</text>
             </g>
 
             {/* Right info: Aliased movement */}
-            <g transform="translate(200, 0)">
-              <text x={0} y={-8} textAnchor="middle" fill={colors.textMuted} fontSize={9}>ALIASED SHIFT</text>
+            <g transform="translate(200, -5)">
+              <text x={0} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={11}>ALIASED SHIFT</text>
               <text
                 x={0}
-                y={10}
+                y={18}
                 textAnchor="middle"
                 fill={motionDirection === 'forward' ? colors.success : motionDirection === 'backward' ? colors.error : colors.warning}
-                fontSize={14}
+                fontSize={13}
                 fontWeight="bold"
               >
                 {(() => {
@@ -870,7 +890,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
           step="0.5"
           value={rotationSpeed}
           onChange={(e) => setRotationSpeed(parseFloat(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
         />
       </div>
 
@@ -885,7 +905,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
           step="1"
           value={frameRate}
           onChange={(e) => setFrameRate(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
         />
       </div>
 
@@ -947,25 +967,40 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
       </button>
 
       <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-        {phaseOrder.map((p, i) => (
-          <button
-            key={p}
-            aria-label={`Phase ${i + 1}: ${p}`}
-            onClick={() => {
-              // Navigation dot click - would need parent handling
-            }}
-            style={{
-              width: '10px',
-              height: '10px',
-              minHeight: '10px',
-              borderRadius: '50%',
-              border: 'none',
-              background: i === currentPhaseIndex ? colors.accent : i < currentPhaseIndex ? colors.success : 'rgba(255,255,255,0.3)',
-              cursor: 'pointer',
-              padding: 0,
-            }}
-          />
-        ))}
+        {phaseOrder.map((p, i) => {
+          const getPhaseLabel = (phase: string) => {
+            if (phase === 'hook') return 'explore';
+            if (phase === 'predict') return 'predict';
+            if (phase === 'play') return 'experiment';
+            if (phase === 'review') return 'review';
+            if (phase === 'twist_predict') return 'predict';
+            if (phase === 'twist_play') return 'experiment';
+            if (phase === 'twist_review') return 'review';
+            if (phase === 'transfer') return 'apply';
+            if (phase === 'test') return 'quiz';
+            if (phase === 'mastery') return 'mastery';
+            return phase;
+          };
+          return (
+            <button
+              key={p}
+              aria-label={getPhaseLabel(p)}
+              onClick={() => {
+                // Navigation dot click - would need parent handling
+              }}
+              style={{
+                width: '10px',
+                height: '10px',
+                minHeight: '10px',
+                borderRadius: '50%',
+                border: 'none',
+                background: i === currentPhaseIndex ? colors.accent : i < currentPhaseIndex ? colors.success : 'rgba(148,163,184,0.7)',
+                cursor: 'pointer',
+                padding: 0,
+              }}
+            />
+          );
+        })}
       </div>
 
       <button
@@ -1052,7 +1087,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, paddingTop: '48px' }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
@@ -1101,7 +1136,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, paddingTop: '48px' }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           {renderVisualization(false)}
 
@@ -1152,7 +1187,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, paddingTop: '48px' }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Temporal Aliasing</h2>
@@ -1189,7 +1224,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
     const wasCorrect = prediction === 'backward';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, paddingTop: '48px' }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1239,7 +1274,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, paddingTop: '48px' }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>🔄 The Twist</h2>
@@ -1297,7 +1332,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, paddingTop: '48px' }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Frame Rate Effects</h2>
@@ -1333,7 +1368,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
     const wasCorrect = twistPrediction === 'different';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, paddingTop: '48px' }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1383,7 +1418,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
   // TRANSFER PHASE
   if (phase === 'transfer') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, paddingTop: '48px' }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1423,7 +1458,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, paddingTop: '48px' }}>
           <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
             <div style={{ background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)', margin: '16px', padding: '24px', borderRadius: '12px', textAlign: 'center' }}>
               <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>{testScore >= 8 ? '🎉 Excellent!' : '📚 Keep Learning!'}</h2>
@@ -1451,7 +1486,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, paddingTop: '48px' }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -1486,7 +1521,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, paddingTop: '48px' }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>

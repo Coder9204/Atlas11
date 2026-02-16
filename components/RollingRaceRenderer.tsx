@@ -711,7 +711,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
               )}
             </g>
             <rect x={8} y={0} width={32} height={24} fill="none" stroke="#64748b" strokeWidth={1} />
-            <text x={24} y={38} textAnchor="middle" fill="#22c55e" fontSize={9} fontWeight="bold">FINISH</text>
+            <text x={24} y={38} textAnchor="middle" fill="#22c55e" fontSize={11} fontWeight="bold">FINISH</text>
           </g>
 
           {/* ========== MOTION TRAILS ========== */}
@@ -816,7 +816,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
                   />
                 ))}
                 {coinCount > 5 && (
-                  <text x={0} y={-8} fill="#fbbf24" fontSize={9} textAnchor="middle" fontWeight="bold">+{coinCount - 5}</text>
+                  <text x={0} y={-8} fill="#fbbf24" fontSize={11} textAnchor="middle" fontWeight="bold">+{coinCount - 5}</text>
                 )}
               </g>
             )}
@@ -824,8 +824,8 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
 
           {/* ========== LABELS ========== */}
           <g filter="url(#rraceLabelShadow)">
-            <rect x={rampStartX - 5} y={12} width={95} height={18} rx={4} fill="rgba(59, 130, 246, 0.2)" />
-            <text x={rampStartX} y={26} fill="#60a5fa" fontSize={12} fontWeight="bold">
+            <rect x={rampStartX - 5} y={32} width={95} height={18} rx={4} fill="rgba(59, 130, 246, 0.2)" />
+            <text x={rampStartX} y={46} fill="#60a5fa" fontSize={12} fontWeight="bold">
               Solid Cylinder
             </text>
           </g>
@@ -883,23 +883,31 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
           {/* Physics info badge */}
           <g transform={`translate(15, ${height - 35})`}>
             <rect x={0} y={0} width={130} height={22} rx={5} fill="rgba(139, 92, 246, 0.2)" stroke="#8b5cf6" strokeWidth={1} />
-            <text x={65} y={15} fill="#a78bfa" fontSize={9} textAnchor="middle" fontWeight="bold">
+            <text x={65} y={15} fill="#a78bfa" fontSize={11} textAnchor="middle" fontWeight="bold">
               I = {winner === 'solid' || !raceFinished ? '1/2' : '1'} MR squared
             </text>
           </g>
+
+          {/* Axis labels */}
+          <text x={width / 2} y={height - 8} fill={colors.textMuted} fontSize={11} textAnchor="middle">
+            Distance (horizontal)
+          </text>
+          <text x={15} y={height / 2} fill={colors.textMuted} fontSize={11} textAnchor="middle" transform={`rotate(-90, 15, ${height / 2})`}>
+            Height (vertical)
+          </text>
         </svg>
 
         {/* Energy Bars */}
-        <div style={{ display: 'flex', gap: '16px', width: '100%', maxWidth: '500px', padding: '0 16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'row', gap: '16px', width: '100%', maxWidth: '500px', padding: '0 16px' }}>
           {/* Solid Energy Bar */}
           <div style={{ flex: 1 }}>
             <div style={{ color: colors.solidCylinder, fontSize: '11px', marginBottom: '4px' }}>Solid Cylinder Energy</div>
             <div style={{ display: 'flex', height: '20px', borderRadius: '4px', overflow: 'hidden', border: `1px solid ${colors.textMuted}` }}>
               <div style={{ width: `${solidEnergy.translational * 100}%`, background: colors.success, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontSize: '9px', color: colors.bgPrimary, fontWeight: 'bold' }}>Trans</span>
+                <span style={{ fontSize: '11px', color: colors.bgPrimary, fontWeight: 'bold' }}>Trans</span>
               </div>
               <div style={{ width: `${solidEnergy.rotational * 100}%`, background: colors.warning, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontSize: '9px', color: colors.bgPrimary, fontWeight: 'bold' }}>Rot</span>
+                <span style={{ fontSize: '11px', color: colors.bgPrimary, fontWeight: 'bold' }}>Rot</span>
               </div>
             </div>
             <div style={{ color: colors.textMuted, fontSize: '10px', marginTop: '2px' }}>
@@ -912,10 +920,10 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
             <div style={{ color: colors.hollowHoop, fontSize: '11px', marginBottom: '4px' }}>Hollow Hoop Energy</div>
             <div style={{ display: 'flex', height: '20px', borderRadius: '4px', overflow: 'hidden', border: `1px solid ${colors.textMuted}` }}>
               <div style={{ width: `${hollowEnergy.translational * 100}%`, background: colors.success, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontSize: '9px', color: colors.bgPrimary, fontWeight: 'bold' }}>Trans</span>
+                <span style={{ fontSize: '11px', color: colors.bgPrimary, fontWeight: 'bold' }}>Trans</span>
               </div>
               <div style={{ width: `${hollowEnergy.rotational * 100}%`, background: colors.warning, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontSize: '9px', color: colors.bgPrimary, fontWeight: 'bold' }}>Rot</span>
+                <span style={{ fontSize: '11px', color: colors.bgPrimary, fontWeight: 'bold' }}>Rot</span>
               </div>
             </div>
             <div style={{ color: colors.textMuted, fontSize: '10px', marginTop: '2px' }}>
@@ -938,6 +946,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                transition: 'all 0.2s ease',
               }}
             >
               {isRacing ? 'Stop' : 'Release!'}
@@ -953,6 +962,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                transition: 'all 0.2s ease',
               }}
             >
               Reset
@@ -976,7 +986,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
           step="5"
           value={rampAngle}
           onChange={(e) => { setRampAngle(parseInt(e.target.value)); resetRace(); }}
-          style={{ width: '100%' }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' } as React.CSSProperties}
         />
       </div>
 
@@ -991,7 +1001,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
           step="0.5"
           value={objectMass}
           onChange={(e) => setObjectMass(parseFloat(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' } as React.CSSProperties}
         />
       </div>
 
@@ -1007,7 +1017,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
             step="1"
             value={coinCount}
             onChange={(e) => { setCoinCount(parseInt(e.target.value)); setCoinsAdded(parseInt(e.target.value) > 0); resetRace(); }}
-            style={{ width: '100%' }}
+            style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' } as React.CSSProperties}
           />
         </div>
       )}
@@ -1028,6 +1038,16 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
     </div>
   );
 
+  const phases = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const currentPhaseIndex = phases.indexOf(phase);
+  const canGoBack = currentPhaseIndex > 0;
+  const canGoNext = true; // Will be overridden by specific phase logic
+
+  const handleBack = () => {
+    // This would need to be implemented by parent component
+    // For now, just a placeholder
+  };
+
   const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
     <div style={{
       position: 'fixed',
@@ -1038,25 +1058,66 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
       background: colors.bgDark,
       borderTop: `1px solid rgba(255,255,255,0.1)`,
       display: 'flex',
-      justifyContent: 'flex-end',
+      flexDirection: 'column',
+      gap: '12px',
       zIndex: 1000,
     }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-        }}
-      >
-        {buttonText}
-      </button>
+      {/* Progress dots */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+        {phases.map((p, i) => (
+          <div
+            key={p}
+            aria-label={`${p} phase`}
+            style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              background: i === currentPhaseIndex ? colors.accent : 'rgba(148, 163, 184, 0.7)',
+              transition: 'all 0.2s ease',
+              cursor: 'pointer',
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Navigation buttons */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <button
+          onClick={handleBack}
+          disabled={!canGoBack}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '8px',
+            border: `1px solid ${canGoBack ? colors.textSecondary : colors.textMuted}`,
+            background: 'transparent',
+            color: canGoBack ? colors.textSecondary : colors.textMuted,
+            fontWeight: 'bold',
+            cursor: canGoBack ? 'pointer' : 'not-allowed',
+            fontSize: '16px',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          Back
+        </button>
+
+        <button
+          onClick={onPhaseComplete}
+          disabled={disabled && !canProceed}
+          style={{
+            padding: '12px 32px',
+            borderRadius: '8px',
+            border: 'none',
+            background: canProceed ? `linear-gradient(135deg, ${colors.accent}, #a78bfa)` : 'rgba(255,255,255,0.1)',
+            color: canProceed ? 'white' : colors.textMuted,
+            fontWeight: 'bold',
+            cursor: canProceed ? 'pointer' : 'not-allowed',
+            fontSize: '16px',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          {buttonText}
+        </button>
+      </div>
     </div>
   );
 
@@ -1515,7 +1576,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <span style={{ color: colors.textSecondary }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
             </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (

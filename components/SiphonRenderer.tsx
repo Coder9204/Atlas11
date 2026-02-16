@@ -976,16 +976,32 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
     const canFlow = heightDiff > 0 && siphonPrimed && waterLevel > 0;
 
     return (
-      <div style={{ padding: isMobile ? '16px' : '24px' }}>
-        {renderProgressBar()}
-        {renderSectionHeader("🎮", "Siphon Simulator", "Control the height difference")}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh',
+        paddingTop: '48px',
+        paddingBottom: '100px'
+      }}>
+        <div style={{ padding: isMobile ? '16px' : '24px' }}>
+          {renderProgressBar()}
+          {renderSectionHeader("🎮", "Siphon Simulator", "Control the height difference")}
+        </div>
 
         <div style={{
-          background: colors.card,
-          borderRadius: '16px',
-          padding: '20px',
-          marginBottom: '20px'
+          flex: 1,
+          overflowY: 'auto',
+          paddingLeft: isMobile ? '16px' : '24px',
+          paddingRight: isMobile ? '16px' : '24px',
+          paddingBottom: '80px',
+          paddingTop: '44px'
         }}>
+          <div style={{
+            background: colors.card,
+            borderRadius: '16px',
+            padding: '20px',
+            marginBottom: '20px'
+          }}>
           {/* Siphon visualization */}
           <div style={{ background: colors.background, borderRadius: '12px', padding: '10px', marginBottom: '16px' }}>
             <svg width="100%" height="220" viewBox="0 0 400 220">
@@ -1172,8 +1188,18 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
                 max="100"
                 value={upperTankHeight}
                 onChange={(e) => setUpperTankHeight(Number(e.target.value))}
-                style={{ width: '100%', accentColor: colors.water }}
+                style={{
+                  width: '100%',
+                  height: '20px',
+                  accentColor: '#3b82f6',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none'
+                }}
               />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: colors.textSecondary, marginTop: '4px' }}>
+                <span>20</span>
+                <span>100</span>
+              </div>
             </div>
 
             {/* Lower tank height */}
@@ -1188,8 +1214,18 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
                 max="90"
                 value={lowerTankHeight}
                 onChange={(e) => setLowerTankHeight(Number(e.target.value))}
-                style={{ width: '100%', accentColor: colors.secondary }}
+                style={{
+                  width: '100%',
+                  height: '20px',
+                  accentColor: '#3b82f6',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none'
+                }}
               />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: colors.textSecondary, marginTop: '4px' }}>
+                <span>10</span>
+                <span>90</span>
+              </div>
             </div>
 
             {/* Action buttons */}
@@ -1265,6 +1301,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
         {renderKeyTakeaway("Siphon flow requires: 1) Primed tube (full of liquid), 2) Outlet below source surface. Flow rate depends on height difference!")}
 
         {renderBottomBar(() => onPhaseComplete?.())}
+        </div>
       </div>
     );
   };
@@ -1617,9 +1654,26 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
     const works = siphonWorks(apexHeight, vacuumMode);
 
     return (
-      <div style={{ padding: isMobile ? '16px' : '24px' }}>
-        {renderProgressBar()}
-        {renderSectionHeader("🎮", "Height Limit Lab", "Find the breaking point")}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh',
+        paddingTop: '48px',
+        paddingBottom: '100px'
+      }}>
+        <div style={{ padding: isMobile ? '16px' : '24px' }}>
+          {renderProgressBar()}
+          {renderSectionHeader("🎮", "Height Limit Lab", "Find the breaking point")}
+        </div>
+
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingLeft: isMobile ? '16px' : '24px',
+          paddingRight: isMobile ? '16px' : '24px',
+          paddingBottom: '80px',
+          paddingTop: '44px'
+        }}>
 
         <div style={{
           background: colors.card,
@@ -1820,9 +1874,15 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
                 max="15"
                 value={apexHeight}
                 onChange={(e) => setApexHeight(Number(e.target.value))}
-                style={{ width: '100%', accentColor: works ? colors.success : colors.accent }}
+                style={{
+                  width: '100%',
+                  height: '20px',
+                  accentColor: '#3b82f6',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none'
+                }}
               />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: colors.textSecondary }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: colors.textSecondary, marginTop: '4px' }}>
                 <span>1m</span>
                 <span style={{ color: colors.accent }}>← Limit ~10m →</span>
                 <span>15m</span>
@@ -1844,6 +1904,74 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
             >
               {vacuumMode ? '✓ In Vacuum (no atmosphere)' : '○ In Vacuum (no atmosphere)'}
             </button>
+          </div>
+
+          {/* Observation guidance */}
+          <div style={{
+            marginTop: '16px',
+            padding: '16px',
+            background: `${colors.primary}15`,
+            borderRadius: '12px',
+            border: `1px solid ${colors.primary}30`
+          }}>
+            <p style={{ color: colors.primary, fontSize: '14px', fontWeight: '600', margin: '0 0 8px 0' }}>
+              👁️ What to Watch:
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0, lineHeight: 1.5 }}>
+              Adjust the apex height slider and observe how the status indicator at the tube's peak changes from green (works) to red (broken) at around 10 meters. Notice the water tube color changes too. Try enabling vacuum mode to see what happens when there's no atmospheric pressure.
+            </p>
+          </div>
+
+          {/* Before/After comparison */}
+          <div style={{
+            marginTop: '16px',
+            padding: '16px',
+            background: colors.background,
+            borderRadius: '12px',
+            border: `1px solid ${works ? colors.success : colors.accent}30`
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: '600', margin: '0 0 8px 0' }}>
+              📊 Before vs Current:
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '8px' }}>
+              <div>
+                <p style={{ color: colors.textSecondary, fontSize: '12px', margin: '0 0 4px 0' }}>Low apex (5m):</p>
+                <p style={{ color: colors.success, fontSize: '13px', margin: 0 }}>✓ Always works</p>
+              </div>
+              <div>
+                <p style={{ color: colors.textSecondary, fontSize: '12px', margin: '0 0 4px 0' }}>Current ({apexHeight}m):</p>
+                <p style={{ color: works ? colors.success : colors.accent, fontSize: '13px', margin: 0 }}>
+                  {works ? '✓ Works fine' : '✗ Siphon broken'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Color legend */}
+          <div style={{
+            marginTop: '16px',
+            padding: '12px',
+            background: colors.background,
+            borderRadius: '12px',
+            border: '1px solid #444'
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '12px', fontWeight: '600', margin: '0 0 6px 0' }}>
+              🎨 Color Guide:
+            </p>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#10b981' }}></div>
+                <span style={{ fontSize: '11px', color: colors.textSecondary }}>Green = Working siphon</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#ef4444' }}></div>
+                <span style={{ fontSize: '11px', color: colors.textSecondary }}>Red = Broken/Failed</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#3b82f6' }}></div>
+                <span style={{ fontSize: '11px', color: colors.textSecondary }}>Blue = Water flow</span>
+              </div>
+            </div>
           </div>
 
           {/* Explanation */}
@@ -1873,6 +2001,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
         {renderKeyTakeaway("Siphon height is limited by atmospheric pressure: P_atm = ρgh → h_max ≈ 10.3m for water at sea level. In vacuum, siphons don't work at all!")}
 
         {renderBottomBar(() => onPhaseComplete?.())}
+        </div>
       </div>
     );
   };

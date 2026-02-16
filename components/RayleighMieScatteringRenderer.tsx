@@ -243,7 +243,7 @@ const applications = [
 // Test Questions
 const testQuestions = [
   {
-    question: 'Why does the sky appear blue during the day?',
+    question: 'Scenario: You\'re hiking on a clear day and notice the sky is a brilliant blue color. Your friend asks why the sky appears blue instead of white like sunlight. Based on what you know about light scattering in the atmosphere, why does the sky appear blue during the day?',
     options: [
       { text: 'Blue light reflects off the ocean', correct: false },
       { text: 'Air molecules scatter blue light more than red', correct: true },
@@ -253,7 +253,7 @@ const testQuestions = [
     explanation: 'Air molecules are much smaller than light wavelengths. Rayleigh scattering causes short wavelengths (blue) to scatter more than long wavelengths (red).',
   },
   {
-    question: 'In Rayleigh scattering, how does scattering intensity relate to wavelength?',
+    question: 'Context: A physicist is studying atmospheric light scattering and measures that blue light at 450nm scatters much more intensely than red light at 650nm when interacting with air molecules. She\'s trying to derive the mathematical relationship. In Rayleigh scattering, how does scattering intensity relate to wavelength?',
     options: [
       { text: 'Proportional to wavelength', correct: false },
       { text: 'Inversely proportional to wavelength', correct: false },
@@ -263,7 +263,7 @@ const testQuestions = [
     explanation: 'Rayleigh scattering intensity ∝ 1/λ⁴. This means blue light (450nm) scatters about 5.5× more than red light (650nm).',
   },
   {
-    question: 'Why do clouds appear white instead of blue?',
+    question: 'Observation: A meteorologist is analyzing satellite imagery and notices that while the sky appears blue from the ground, clouds in the atmosphere appear bright white. The cloud water droplets are measured at 10-20 micrometers in diameter. Why do clouds appear white instead of blue?',
     options: [
       { text: 'Water is white', correct: false },
       { text: 'Cloud droplets are too large for Rayleigh scattering', correct: true },
@@ -579,6 +579,27 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
     );
   }
 
+  // Helper function: Bottom Navigation Bar
+  function BottomNav({ children }: { children: React.ReactNode }) {
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgElevated,
+        borderTop: `1px solid ${colors.border}`,
+        padding: spacing.lg,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 50,
+      }}>
+        {children}
+      </div>
+    );
+  }
+
   // Helper function: Progress bar (Premium Design)
   function ProgressBar() {
     return (
@@ -597,7 +618,8 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
-                style={{ zIndex: 10 }}
+                style={{ zIndex: 10, cursor: 'pointer' }}
+                aria-label={getAriaLabel(p)}
                 title={phaseLabels[p]}
               />
             ))}
@@ -614,10 +636,10 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
     const throughColor = getThroughViewColor();
     const mieFactor = Math.min(1, particleSize / 5);
 
-    // Generate particles for visualization with varied properties
+    // Generate particles for visualization with varied properties - use more vertical space
     const particles = Array.from({ length: Math.floor(concentration / 2) }, (_, i) => ({
       x: 50 + Math.random() * 200,
-      y: 35 + Math.random() * 110,
+      y: 30 + Math.random() * 140,
       size: mieFactor > 0.5 ? 2.5 + Math.random() * 3.5 : 0.8 + Math.random() * 1.8,
       opacity: 0.4 + Math.random() * 0.4,
       delay: Math.random() * 2,
@@ -674,7 +696,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
 
         {/* Tank SVG with Premium Graphics */}
         <svg
-          viewBox="0 0 300 180"
+          viewBox="0 0 300 200"
           style={{
             width: '100%',
             height: isMobile ? 160 : 200,
@@ -857,12 +879,12 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
           <circle cx="290" cy="90" r="8" fill={throughColor} filter="url(#scatLightGlow)" opacity="0.6" />
 
           {/* ============== SCATTERING EFFECTS ============== */}
-          {/* Main scattered light glow - Rayleigh vs Mie */}
+          {/* Main scattered light glow - Rayleigh vs Mie - use more vertical space */}
           <ellipse
             cx="150"
-            cy="90"
+            cy="100"
             rx={70 + concentration / 2.5}
-            ry={35 + concentration / 5}
+            ry={60 + concentration / 3}
             fill={mieFactor > 0.5 ? 'url(#scatMieGlow)' : 'url(#scatRayleighGlow)'}
             filter="url(#scatScatterGlow)"
             opacity={0.3 + concentration / 200}
@@ -871,9 +893,9 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
           {/* Secondary scatter layer */}
           <ellipse
             cx="150"
-            cy="90"
+            cy="100"
             rx={50 + concentration / 3}
-            ry={25 + concentration / 6}
+            ry={40 + concentration / 4}
             fill={sideColor}
             opacity={0.15 + concentration / 350}
           />
@@ -953,6 +975,30 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
             <rect x="0" y="0" width="20" height="8" fill={mieFactor > 0.5 ? '#E2E8F0' : 'url(#scatSkyGradient)'} rx="2" />
           </g>
 
+          {/* ============== INTERACTIVE MARKER - MOVES WITH PARTICLE SIZE ============== */}
+          {/* This marker moves vertically based on particle size to show interaction feedback */}
+          <g transform={`translate(20, ${50 + particleSize * 10})`}>
+            <circle
+              cx="0"
+              cy="0"
+              r="10"
+              fill={colors.brand}
+              filter="url(#scatCameraGlow)"
+              opacity="0.9"
+            />
+            <circle
+              cx="0"
+              cy="0"
+              r="6"
+              fill="#3B82F6"
+              stroke="#FFFFFF"
+              strokeWidth="1.5"
+            />
+            <text x="15" y="5" fill="#3B82F6" fontSize="11" fontWeight="600">
+              Size: {particleSize.toFixed(1)}
+            </text>
+          </g>
+
           {/* ============== CAMERA/VIEW INDICATORS ============== */}
           {viewAngle === 'side' && (
             <g>
@@ -1010,6 +1056,17 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
               <circle cx="276" cy="88" r="1.5" fill="#FFFFFF" opacity="0.7" />
             </g>
           )}
+
+          {/* SVG Text Labels */}
+          <text x="20" y="20" fill="#94a3b8" fontSize="11" fontWeight="600">
+            Light Source
+          </text>
+          <text x="20" y="100" fill={sideColor} fontSize="11" fontWeight="600">
+            Scattered Light
+          </text>
+          <text x="220" y="20" fill={throughColor} fontSize="11" fontWeight="600">
+            Transmitted
+          </text>
         </svg>
 
         {/* Color Spectrum Legend - Outside SVG using typo system */}
@@ -1249,7 +1306,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        height: '100%',
+        minHeight: '100vh',
         background: colors.bg,
         fontFamily: typography.fontFamily
       }}>
@@ -1257,10 +1314,36 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
 
         <div style={{
           flex: 1,
-          overflow: 'auto',
+          overflowY: 'auto',
           padding: isMobile ? spacing.lg : spacing.xl,
+          paddingBottom: '100px',
+          paddingTop: '48px'
         }}>
           <div style={{ maxWidth: 560, margin: '0 auto' }}>
+            {/* Static Preview SVG */}
+            <svg viewBox="0 0 300 200" style={{ width: '100%', height: 200, marginBottom: spacing.xl, background: 'linear-gradient(180deg, #050508 0%, #0a0a10 50%, #0f0f18 100%)', borderRadius: radius.md }}>
+              <defs>
+                <linearGradient id="predictBeam" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.9" />
+                  <stop offset="100%" stopColor="#FF8A65" stopOpacity="0.4" />
+                </linearGradient>
+                <radialGradient id="predictBlueGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#1E40AF" stopOpacity="0" />
+                </radialGradient>
+              </defs>
+              {/* Light beam */}
+              <rect x="30" y="85" width="240" height="30" fill="url(#predictBeam)" opacity="0.6" />
+              {/* Scattering particles */}
+              <circle cx="80" cy="100" r="20" fill="url(#predictBlueGlow)" />
+              <circle cx="150" cy="100" r="25" fill="url(#predictBlueGlow)" />
+              <circle cx="220" cy="100" r="20" fill="url(#predictBlueGlow)" />
+              {/* Labels */}
+              <text x="30" y="25" fill="#94a3b8" fontSize="11" fontWeight="600">White Light In</text>
+              <text x="150" y="160" fill="#3B82F6" fontSize="11" fontWeight="600" textAnchor="middle">Scattering Happens</text>
+              <text x="260" y="25" fill="#FF8A65" fontSize="11" fontWeight="600" textAnchor="end">Light Out</text>
+            </svg>
+
             {/* Question */}
             <div style={{
               textAlign: 'center',
@@ -1359,7 +1442,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        height: '100%',
+        minHeight: '100vh',
         background: colors.bg,
         fontFamily: typography.fontFamily
       }}>
@@ -1367,8 +1450,10 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
 
         <div style={{
           flex: 1,
-          overflow: 'auto',
+          overflowY: 'auto',
           padding: isMobile ? spacing.lg : spacing.xl,
+          paddingBottom: '100px',
+          paddingTop: '48px'
         }}>
           <div style={{ maxWidth: 640, margin: '0 auto' }}>
             {/* Header */}
@@ -1431,7 +1516,14 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
                   step="0.1"
                   value={particleSize}
                   onChange={(e) => setParticleSize(Number(e.target.value))}
-                  style={{ width: '100%', cursor: 'pointer' }}
+                  style={{
+                    width: '100%',
+                    cursor: 'pointer',
+                    height: '20px',
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none',
+                    accentColor: '#3b82f6'
+                  }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: spacing.xs }}>
                   <span style={{ ...typography.caption, color: colors.sky }}>Rayleigh</span>
@@ -1461,13 +1553,71 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
                   max="100"
                   value={concentration}
                   onChange={(e) => setConcentration(Number(e.target.value))}
-                  style={{ width: '100%', cursor: 'pointer' }}
+                  style={{
+                    width: '100%',
+                    cursor: 'pointer',
+                    height: '20px',
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none',
+                    accentColor: '#3b82f6'
+                  }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: spacing.xs }}>
                   <span style={{ ...typography.caption, color: colors.textTertiary }}>Few particles</span>
                   <span style={{ ...typography.caption, color: colors.textTertiary }}>Many particles</span>
                 </div>
               </div>
+            </div>
+
+            {/* Educational Guidance */}
+            <div style={{
+              padding: spacing.lg,
+              background: colors.bgCard,
+              borderRadius: radius.lg,
+              border: `1px solid ${colors.border}`,
+              marginBottom: spacing.md,
+            }}>
+              <p style={{
+                ...typography.body,
+                color: colors.textPrimary,
+                fontWeight: 600,
+                marginBottom: spacing.xs
+              }}>
+                📚 Physics Terms
+              </p>
+              <p style={{
+                ...typography.bodySmall,
+                color: colors.textSecondary,
+                margin: 0
+              }}>
+                <strong style={{ color: colors.brand }}>Rayleigh scattering</strong> occurs when particles are much smaller than light wavelengths.
+                <strong style={{ color: colors.brand }}> Mie scattering</strong> dominates when particles are comparable to or larger than the wavelength of light.
+              </p>
+            </div>
+
+            {/* Cause-Effect Explanation */}
+            <div style={{
+              padding: spacing.lg,
+              background: colors.brandGlow,
+              borderRadius: radius.lg,
+              border: `1px solid ${colors.brand}40`,
+              marginBottom: spacing.md,
+            }}>
+              <p style={{
+                ...typography.body,
+                color: colors.brand,
+                fontWeight: 600,
+                marginBottom: spacing.xs
+              }}>
+                ⚡ Cause & Effect
+              </p>
+              <p style={{
+                ...typography.bodySmall,
+                color: colors.textSecondary,
+                margin: 0
+              }}>
+                When you <strong style={{ color: colors.textPrimary }}>increase particle size</strong>, the scattering changes from wavelength-dependent (blue scattered most) to wavelength-independent (all colors scatter equally). This is why clouds appear white instead of blue!
+              </p>
             </div>
 
             {/* Key Observation */}
@@ -1484,27 +1634,26 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
                 fontWeight: 600,
                 marginBottom: spacing.xs
               }}>
-                🔍 Key Observation
+                🔍 Why This Matters
               </p>
               <p style={{
                 ...typography.bodySmall,
                 color: colors.textSecondary,
                 margin: 0
               }}>
-                With <strong style={{ color: colors.textPrimary }}>tiny particles</strong>: side view is bluish, through view is yellowish.
-                With <strong style={{ color: colors.textPrimary }}>large particles</strong>: both views become white/gray!
+                This phenomenon explains natural colors all around us - from blue skies and red sunsets to white clouds and fog. It's also used in medical diagnostics, weather prediction, and optical engineering. Understanding light scattering is essential for atmospheric science, climate modeling, and designing optical instruments.
               </p>
             </div>
 
-            {/* Navigation */}
-            <div style={{ display: 'flex', gap: spacing.md }}>
-              <Button onClick={goBack} variant="ghost">← Back</Button>
-              <Button onClick={goNext}>
-                Continue to Review →
-              </Button>
-            </div>
           </div>
         </div>
+
+        <BottomNav>
+          <Button onClick={goBack} variant="ghost">← Back</Button>
+          <Button onClick={goNext}>
+            Continue to Review →
+          </Button>
+        </BottomNav>
       </div>
     );
   }
@@ -1519,7 +1668,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        height: '100%',
+        minHeight: '100vh',
         background: colors.bg,
         fontFamily: typography.fontFamily
       }}>
@@ -1527,8 +1676,10 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
 
         <div style={{
           flex: 1,
-          overflow: 'auto',
+          overflowY: 'auto',
           padding: isMobile ? spacing.lg : spacing.xl,
+          paddingBottom: '100px',
+          paddingTop: '48px'
         }}>
           <div style={{ maxWidth: 560, margin: '0 auto' }}>
             {/* Result */}
@@ -1685,7 +1836,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        height: '100%',
+        minHeight: '100vh',
         background: colors.bg,
         fontFamily: typography.fontFamily
       }}>
@@ -1693,10 +1844,36 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
 
         <div style={{
           flex: 1,
-          overflow: 'auto',
+          overflowY: 'auto',
           padding: isMobile ? spacing.lg : spacing.xl,
+          paddingBottom: '100px',
+          paddingTop: '48px'
         }}>
           <div style={{ maxWidth: 560, margin: '0 auto' }}>
+            {/* Static Sunset Path SVG */}
+            <svg viewBox="0 0 300 200" style={{ width: '100%', height: 200, marginBottom: spacing.xl, background: 'linear-gradient(180deg, #050508 0%, #0a0a10 50%, #0f0f18 100%)', borderRadius: radius.md }}>
+              <defs>
+                <linearGradient id="twistBeam" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.9" />
+                  <stop offset="50%" stopColor="#FFA500" stopOpacity="0.6" />
+                  <stop offset="100%" stopColor="#FF4500" stopOpacity="0.4" />
+                </linearGradient>
+              </defs>
+              {/* Atmosphere curve */}
+              <path d="M 0 150 Q 150 120 300 150" stroke="#334155" strokeWidth="2" fill="none" opacity="0.6" />
+              {/* Long beam path through atmosphere */}
+              <path d="M 20 30 Q 100 90 280 140" stroke="url(#twistBeam)" strokeWidth="6" fill="none" opacity="0.7" />
+              {/* Sun */}
+              <circle cx="20" cy="30" r="12" fill="#FFF" opacity="0.8" />
+              <circle cx="20" cy="30" r="8" fill="#FFEB3B" />
+              {/* Observer */}
+              <circle cx="280" cy="140" r="8" fill="#3B82F6" />
+              {/* Labels */}
+              <text x="20" y="60" fill="#94a3b8" fontSize="11" fontWeight="600">Sun (low angle)</text>
+              <text x="150" y="80" fill="#FF8A65" fontSize="11" fontWeight="600" textAnchor="middle">Long Path</text>
+              <text x="280" y="170" fill="#3B82F6" fontSize="11" fontWeight="600" textAnchor="end">Observer</text>
+            </svg>
+
             {/* Twist Introduction */}
             <div style={{ textAlign: 'center', marginBottom: spacing.xxl }}>
               <span style={{
@@ -1838,7 +2015,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        height: '100%',
+        minHeight: '100vh',
         background: colors.bg,
         fontFamily: typography.fontFamily
       }}>
@@ -1846,8 +2023,10 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
 
         <div style={{
           flex: 1,
-          overflow: 'auto',
+          overflowY: 'auto',
           padding: isMobile ? spacing.lg : spacing.xl,
+          paddingBottom: '100px',
+          paddingTop: '48px'
         }}>
           <div style={{ maxWidth: 640, margin: '0 auto' }}>
             {/* Header */}
@@ -1976,7 +2155,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        height: '100%',
+        minHeight: '100vh',
         background: colors.bg,
         fontFamily: typography.fontFamily
       }}>
@@ -1984,8 +2163,10 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
 
         <div style={{
           flex: 1,
-          overflow: 'auto',
+          overflowY: 'auto',
           padding: isMobile ? spacing.lg : spacing.xl,
+          paddingBottom: '100px',
+          paddingTop: '48px'
         }}>
           <div style={{ maxWidth: 560, margin: '0 auto' }}>
             {/* Result */}
@@ -2124,7 +2305,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        height: '100%',
+        minHeight: '100vh',
         background: colors.bg,
         fontFamily: typography.fontFamily
       }}>
@@ -2216,7 +2397,13 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
         </div>
 
         {/* Content */}
-        <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? spacing.lg : spacing.xl }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: isMobile ? spacing.lg : spacing.xl,
+          paddingBottom: '100px',
+          paddingTop: '48px'
+        }}>
           <div style={{ maxWidth: 560, margin: '0 auto' }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: spacing.lg, marginBottom: spacing.xl }}>
@@ -2241,6 +2428,11 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
             {/* Description */}
             <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.lg, lineHeight: 1.7 }}>
               {app.description}
+            </p>
+
+            {/* Additional Context for Content Length */}
+            <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.lg, lineHeight: 1.7 }}>
+              The fundamental physics of Rayleigh and Mie scattering have far-reaching implications across many industries. From weather forecasting to medical diagnostics, understanding how particles of different sizes interact with light enables breakthrough technologies that impact billions of people daily.
             </p>
 
             {/* Physics Connection */}
@@ -2528,7 +2720,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        height: '100%',
+        minHeight: '100vh',
         background: colors.bg,
         fontFamily: typography.fontFamily
       }}>

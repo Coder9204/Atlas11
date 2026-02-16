@@ -303,7 +303,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
 
   const testQuestions = [
     {
-      question: 'What is the Rayleigh criterion for optical resolution?',
+      question: 'A semiconductor fab wants to calculate the minimum feature size they can print. Their lithography system uses 193nm light with NA=1.35 and k1=0.4. What is the Rayleigh criterion formula they should use?',
       options: [
         { text: 'Resolution = wavelength x NA', correct: false },
         { text: 'Resolution = k1 x wavelength / NA', correct: true },
@@ -312,7 +312,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
       ],
     },
     {
-      question: 'Why did the industry move from 248nm to 193nm DUV light?',
+      question: 'In the 1990s, chip manufacturers transitioned from KrF (248nm) to ArF (193nm) lithography tools despite the massive cost of retooling entire fabs. Why did the industry move from 248nm to 193nm DUV light?',
       options: [
         { text: 'It was cheaper to produce', correct: false },
         { text: 'Shorter wavelength enables smaller feature sizes', correct: true },
@@ -321,7 +321,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
       ],
     },
     {
-      question: 'What is the wavelength of EUV light used in advanced lithography?',
+      question: 'TSMC and Samsung invested billions in ASML\'s most advanced lithography machines for their 3nm and 2nm nodes. What is the wavelength of EUV light used in these advanced lithography systems?',
       options: [
         { text: '193nm', correct: false },
         { text: '50nm', correct: false },
@@ -330,7 +330,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
       ],
     },
     {
-      question: 'How does immersion lithography improve resolution?',
+      question: 'Intel and TSMC use "immersion lithography" where purified water fills the gap between the final lens and the silicon wafer during exposure. How does immersion lithography improve resolution?',
       options: [
         { text: 'Water cools the wafer allowing higher power', correct: false },
         { text: 'Water between lens and wafer increases effective NA', correct: true },
@@ -339,7 +339,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
       ],
     },
     {
-      question: 'What is "multiple patterning" in lithography?',
+      question: 'Before EUV became available, foundries had to print 14nm and 10nm features using 193nm DUV light—features far smaller than the theoretical single-exposure limit. What technique did they use called "multiple patterning"?',
       options: [
         { text: 'Printing multiple chips at once', correct: false },
         { text: 'Using multiple exposures to create features smaller than single-exposure limit', correct: true },
@@ -348,7 +348,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
       ],
     },
     {
-      question: 'Why is EUV lithography performed in vacuum?',
+      question: 'ASML\'s EUV machines require the entire beam path from light source to wafer to operate in vacuum, adding enormous complexity and cost. Why is EUV lithography performed in vacuum?',
       options: [
         { text: 'To prevent wafer contamination', correct: false },
         { text: 'EUV light is absorbed by air', correct: true },
@@ -357,7 +357,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
       ],
     },
     {
-      question: 'What is numerical aperture (NA) in lithography?',
+      question: 'When spec\'ing a lithography system, engineers evaluate the "numerical aperture" (NA) as a key performance metric that directly affects achievable resolution. What is numerical aperture (NA) in lithography?',
       options: [
         { text: 'The number of lenses in the system', correct: false },
         { text: 'A measure of light-gathering ability related to acceptance angle', correct: true },
@@ -366,7 +366,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
       ],
     },
     {
-      question: 'Why do modern masks require Optical Proximity Correction (OPC)?',
+      question: 'Modern photomask patterns look bizarre—with extra shapes, serifs, and corrections that don\'t match the final desired circuit pattern. Computational lithography software deliberately distorts the mask design. Why do modern masks require Optical Proximity Correction (OPC)?',
       options: [
         { text: 'To correct for lens aberrations only', correct: false },
         { text: 'To pre-distort patterns to account for diffraction effects', correct: true },
@@ -375,7 +375,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
       ],
     },
     {
-      question: 'What limits how small k1 factor can be in practice?',
+      question: 'In theory, the k1 factor in the Rayleigh equation can be pushed toward 0.25 or even lower for ultimate resolution. However, real fabs typically operate around k1=0.35-0.4. What limits how small k1 factor can be in practice?',
       options: [
         { text: 'The speed of the exposure system', correct: false },
         { text: 'Process complexity and yield considerations', correct: true },
@@ -384,7 +384,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
       ],
     },
     {
-      question: 'Approximately how much does an ASML EUV lithography machine cost?',
+      question: 'ASML is the only company in the world that manufactures EUV lithography equipment. Each machine is the size of a bus, weighs 180 tons, and contains over 100,000 parts. Approximately how much does an ASML EUV lithography machine cost?',
       options: [
         { text: '$1 million', correct: false },
         { text: '$10 million', correct: false },
@@ -733,7 +733,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
             <line x1={5} y1={28} x2={195} y2={28} stroke="#1f2937" strokeWidth="0.5" />
 
             {/* Label */}
-            <text x={100} y={-6} fill={colors.textSecondary} fontSize={8} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
+            <text x={100} y={-6} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
               PHOTOMASK (RETICLE)
             </text>
           </g>
@@ -770,12 +770,12 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
 
             {/* NA indicator */}
             <rect x={68} y={45} width={50} height={20} rx={4} fill="#111827" stroke="#334155" strokeWidth="0.5" />
-            <text x={93} y={58} fill={colors.textSecondary} fontSize={8} textAnchor="middle" fontFamily="monospace">
+            <text x={93} y={58} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontFamily="monospace">
               NA={numericalAperture.toFixed(2)}
             </text>
 
             {/* Label */}
-            <text x={30} y={-8} fill={colors.textSecondary} fontSize={8} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
+            <text x={30} y={-8} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
               PROJECTION OPTICS
             </text>
           </g>
@@ -870,17 +870,17 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
               <line x1={0} y1={0} x2={Math.max(8, featureWidth)} y2={0} stroke={colors.accent} strokeWidth="2" />
               <line x1={0} y1={-3} x2={0} y2={3} stroke={colors.accent} strokeWidth="1" />
               <line x1={Math.max(8, featureWidth)} y1={-3} x2={Math.max(8, featureWidth)} y2={3} stroke={colors.accent} strokeWidth="1" />
-              <text x={Math.max(8, featureWidth) / 2} y={-6} fill={colors.accent} fontSize={8} textAnchor="middle" fontWeight="bold" fontFamily="monospace">
+              <text x={Math.max(8, featureWidth) / 2} y={-6} fill={colors.accent} fontSize={11} textAnchor="middle" fontWeight="bold" fontFamily="monospace">
                 {output.effectiveResolution.toFixed(0)}nm
               </text>
             </g>
 
             {/* Labels */}
-            <text x={100} y={-25} fill={colors.textSecondary} fontSize={8} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
+            <text x={100} y={-25} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
               WAFER WITH PHOTORESIST
             </text>
-            <text x={220} y={20} fill={colors.photoresist} fontSize={7} fontFamily="system-ui, sans-serif">Photoresist</text>
-            <text x={220} y={45} fill={colors.silicon} fontSize={7} fontFamily="system-ui, sans-serif">Silicon</text>
+            <text x={220} y={20} fill={colors.photoresist} fontSize={11} fontFamily="system-ui, sans-serif">Photoresist</text>
+            <text x={220} y={50} fill={colors.silicon} fontSize={11} fontFamily="system-ui, sans-serif">Silicon</text>
           </g>
 
           {/* ============================================ */}
@@ -891,13 +891,13 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
               <rect x={0} y={0} width={110} height={70} rx={8} fill="rgba(245, 158, 11, 0.15)" stroke={colors.accent} strokeWidth="1" strokeOpacity="0.5" />
               <rect x={3} y={3} width={104} height={64} rx={6} fill="rgba(0,0,0,0.3)" />
 
-              <text x={55} y={22} fill={colors.accent} fontSize={10} textAnchor="middle" fontWeight="bold" fontFamily="system-ui, sans-serif">
+              <text x={55} y={22} fill={colors.accent} fontSize={11} textAnchor="middle" fontWeight="bold" fontFamily="system-ui, sans-serif">
                 MULTI-PATTERN
               </text>
-              <text x={55} y={40} fill={colors.textSecondary} fontSize={10} textAnchor="middle" fontFamily="system-ui, sans-serif">
+              <text x={55} y={40} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontFamily="system-ui, sans-serif">
                 {patterningSteps}x exposures
               </text>
-              <text x={55} y={58} fill={colors.textMuted} fontSize={9} textAnchor="middle" fontFamily="system-ui, sans-serif">
+              <text x={55} y={58} fill={colors.textMuted} fontSize={11} textAnchor="middle" fontFamily="system-ui, sans-serif">
                 Cost: {output.costFactor.toFixed(1)}x
               </text>
             </g>
@@ -911,36 +911,36 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
             <rect x={2} y={2} width={456} height={126} rx={7} fill="rgba(0,0,0,0.2)" />
 
             {/* Panel title */}
-            <text x={230} y={20} fill={colors.textPrimary} fontSize={10} textAnchor="middle" fontWeight="bold" fontFamily="system-ui, sans-serif">
+            <text x={230} y={22} fill={colors.textPrimary} fontSize={12} textAnchor="middle" fontWeight="bold" fontFamily="system-ui, sans-serif">
               SYSTEM PARAMETERS
             </text>
-            <line x1={20} y1={28} x2={440} y2={28} stroke="#334155" strokeWidth="0.5" />
+            <line x1={20} y1={30} x2={440} y2={30} stroke="#334155" strokeWidth="0.5" />
 
             {/* Left column */}
-            <text x={25} y={50} fill={colors.textSecondary} fontSize={10} fontFamily="system-ui, sans-serif">
+            <text x={25} y={52} fill={colors.textSecondary} fontSize={11} fontFamily="system-ui, sans-serif">
               Resolution: <tspan fill={colors.textPrimary} fontWeight="bold">{output.effectiveResolution.toFixed(1)}nm</tspan>
             </text>
-            <text x={25} y={70} fill={colors.textSecondary} fontSize={10} fontFamily="system-ui, sans-serif">
+            <text x={25} y={74} fill={colors.textSecondary} fontSize={11} fontFamily="system-ui, sans-serif">
               Diffraction limit: <tspan fill={colors.textPrimary}>{output.diffractionLimit.toFixed(1)}nm</tspan>
             </text>
-            <text x={25} y={90} fill={colors.textSecondary} fontSize={10} fontFamily="system-ui, sans-serif">
+            <text x={25} y={96} fill={colors.textSecondary} fontSize={11} fontFamily="system-ui, sans-serif">
               Depth of focus: <tspan fill={colors.textPrimary}>{output.depthOfFocus.toFixed(1)}nm</tspan>
             </text>
 
             {/* Right column */}
-            <text x={250} y={50} fill={colors.textSecondary} fontSize={10} fontFamily="system-ui, sans-serif">
+            <text x={250} y={52} fill={colors.textSecondary} fontSize={11} fontFamily="system-ui, sans-serif">
               Process node: <tspan fill={colors.textPrimary} fontWeight="bold">~{output.processNode}nm</tspan>
             </text>
-            <text x={250} y={70} fill={colors.textSecondary} fontSize={10} fontFamily="system-ui, sans-serif">
+            <text x={250} y={74} fill={colors.textSecondary} fontSize={11} fontFamily="system-ui, sans-serif">
               7nm capable: <tspan fill={output.canReach7nm ? colors.success : colors.error} fontWeight="bold">{output.canReach7nm ? 'YES' : 'NO'}</tspan>
             </text>
-            <text x={250} y={90} fill={colors.textSecondary} fontSize={10} fontFamily="system-ui, sans-serif">
+            <text x={250} y={96} fill={colors.textSecondary} fontSize={11} fontFamily="system-ui, sans-serif">
               5nm capable: <tspan fill={output.canReach5nm ? colors.success : colors.error} fontWeight="bold">{output.canReach5nm ? 'YES' : 'NO'}</tspan>
             </text>
 
             {/* Formula display */}
-            <rect x={25} y={100} width={410} height={22} rx={4} fill="#0f172a" stroke="#334155" strokeWidth="0.5" />
-            <text x={230} y={115} fill={colors.accent} fontSize={9} textAnchor="middle" fontFamily="monospace" fontWeight="bold">
+            <rect x={25} y={104} width={410} height={22} rx={4} fill="#0f172a" stroke="#334155" strokeWidth="0.5" />
+            <text x={230} y={118} fill={colors.accent} fontSize={11} textAnchor="middle" fontFamily="monospace" fontWeight="bold">
               Resolution = k1 x {'\u03BB'} / NA = {k1Factor.toFixed(2)} x {wavelength}nm / {numericalAperture.toFixed(2)} = {output.effectiveResolution.toFixed(1)}nm
             </text>
           </g>
@@ -948,7 +948,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
           {/* Technology badge */}
           <g transform="translate(400, 35)">
             <rect x={0} y={0} width={70} height={28} rx={6} fill={output.isEUV ? 'rgba(6, 182, 212, 0.2)' : 'rgba(139, 92, 246, 0.2)'} stroke={output.isEUV ? colors.euv : colors.uv} strokeWidth="1" />
-            <text x={35} y={18} fill={output.isEUV ? colors.euv : colors.uv} fontSize={12} textAnchor="middle" fontWeight="bold" fontFamily="system-ui, sans-serif">
+            <text x={35} y={19} fill={output.isEUV ? colors.euv : colors.uv} fontSize={14} textAnchor="middle" fontWeight="bold" fontFamily="system-ui, sans-serif">
               {output.isEUV ? 'EUV' : 'DUV'}
             </text>
           </g>
@@ -1001,8 +1001,8 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
     return (
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <div>
-          <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-            Wavelength: {wavelength}nm ({wavelength <= 13.5 ? 'EUV' : wavelength < 300 ? 'DUV' : 'UV'})
+          <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+            💡 Wavelength: {wavelength}nm ({wavelength <= 13.5 ? 'EUV' : wavelength < 300 ? 'DUV' : 'UV'})
           </label>
           <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
             <button onClick={() => setWavelength(365)} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: wavelength === 365 ? `2px solid ${colors.uv}` : '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: colors.textPrimary, cursor: 'pointer', fontSize: '12px', WebkitTapHighlightColor: 'transparent' }}>365nm (i-line)</button>
@@ -1013,8 +1013,8 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
         </div>
 
         <div>
-          <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-            Numerical Aperture (NA): {numericalAperture.toFixed(2)}
+          <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+            📐 Numerical Aperture (NA): {numericalAperture.toFixed(2)}
           </label>
           <input
             type="range"
@@ -1023,9 +1023,40 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
             step="0.05"
             value={numericalAperture}
             onChange={(e) => setNumericalAperture(parseFloat(e.target.value))}
-            style={{ width: '100%' }}
+            style={{
+              width: '100%',
+              height: '8px',
+              borderRadius: '4px',
+              background: `linear-gradient(to right, ${colors.accent} 0%, ${colors.accent} ${((numericalAperture - 0.5) / (1.5 - 0.5)) * 100}%, ${colors.border} ${((numericalAperture - 0.5) / (1.5 - 0.5)) * 100}%, ${colors.border} 100%)`,
+              outline: 'none',
+              appearance: 'none',
+              WebkitAppearance: 'none',
+              touchAction: 'none',
+              cursor: 'pointer'
+            }}
           />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: colors.textMuted }}>
+          <style>{`
+            input[type="range"]::-webkit-slider-thumb {
+              appearance: none;
+              -webkit-appearance: none;
+              width: 20px;
+              height: 20px;
+              border-radius: 50%;
+              background: ${colors.accent};
+              cursor: pointer;
+              box-shadow: 0 2px 8px rgba(245, 158, 11, 0.5);
+            }
+            input[type="range"]::-moz-range-thumb {
+              width: 20px;
+              height: 20px;
+              border-radius: 50%;
+              background: ${colors.accent};
+              cursor: pointer;
+              border: none;
+              box-shadow: 0 2px 8px rgba(245, 158, 11, 0.5);
+            }
+          `}</style>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: colors.textMuted, marginTop: '4px' }}>
             <span>0.5 (air)</span>
             <span>1.0 (air limit)</span>
             <span>1.35+ (immersion)</span>
@@ -1033,8 +1064,8 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
         </div>
 
         <div>
-          <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-            k1 Factor: {k1Factor.toFixed(2)} (process complexity)
+          <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+            🎯 k1 Factor: {k1Factor.toFixed(2)} (process complexity)
           </label>
           <input
             type="range"
@@ -1043,9 +1074,19 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
             step="0.01"
             value={k1Factor}
             onChange={(e) => setK1Factor(parseFloat(e.target.value))}
-            style={{ width: '100%' }}
+            style={{
+              width: '100%',
+              height: '8px',
+              borderRadius: '4px',
+              background: `linear-gradient(to right, ${colors.accent} 0%, ${colors.accent} ${((k1Factor - 0.25) / (0.6 - 0.25)) * 100}%, ${colors.border} ${((k1Factor - 0.25) / (0.6 - 0.25)) * 100}%, ${colors.border} 100%)`,
+              outline: 'none',
+              appearance: 'none',
+              WebkitAppearance: 'none',
+              touchAction: 'none',
+              cursor: 'pointer'
+            }}
           />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: colors.textMuted }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: colors.textMuted, marginTop: '4px' }}>
             <span>0.25 (aggressive)</span>
             <span>0.35 (typical)</span>
             <span>0.6 (relaxed)</span>
@@ -1071,8 +1112,8 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
           </label>
           {useMultiplePatterning && (
             <div>
-              <label style={{ color: colors.textMuted, fontSize: '12px' }}>
-                Patterning Steps: {patterningSteps}x
+              <label style={{ color: colors.textMuted, fontSize: '13px', fontWeight: 600 }}>
+                🔁 Patterning Steps: {patterningSteps}x
               </label>
               <input
                 type="range"
@@ -1081,7 +1122,17 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
                 step="1"
                 value={patterningSteps}
                 onChange={(e) => setPatterningSteps(parseInt(e.target.value))}
-                style={{ width: '100%' }}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: `linear-gradient(to right, ${colors.accent} 0%, ${colors.accent} ${((patterningSteps - 2) / (4 - 2)) * 100}%, ${colors.border} ${((patterningSteps - 2) / (4 - 2)) * 100}%, ${colors.border} 100%)`,
+                  outline: 'none',
+                  appearance: 'none',
+                  WebkitAppearance: 'none',
+                  touchAction: 'none',
+                  cursor: 'pointer'
+                }}
               />
             </div>
           )}
@@ -1189,6 +1240,8 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
       }}>
         <button
           onClick={handleBack}
+          onMouseEnter={(e) => canBack && (e.currentTarget.style.transform = 'scale(1.03)')}
+          onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
           style={{
             padding: isMobile ? '10px 16px' : '10px 20px',
             borderRadius: '10px',
@@ -1199,10 +1252,13 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
             border: `1px solid ${colors.border}`,
             cursor: canBack ? 'pointer' : 'not-allowed',
             opacity: canBack ? 1 : 0.3,
-            minHeight: '44px'
+            minHeight: '44px',
+            transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease-in-out, opacity 0.2s ease-in-out',
+            transform: 'scale(1)',
+            WebkitTapHighlightColor: 'transparent'
           }}
         >
-          Back
+          Go Back
         </button>
 
         <span style={{
@@ -1215,6 +1271,8 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
 
         <button
           onClick={handleNext}
+          onMouseEnter={(e) => canGoNext && (e.currentTarget.style.transform = 'scale(1.05)')}
+          onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
           style={{
             padding: isMobile ? '10px 20px' : '10px 24px',
             borderRadius: '10px',
@@ -1226,7 +1284,10 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
             cursor: canGoNext ? 'pointer' : 'not-allowed',
             opacity: canGoNext ? 1 : 0.4,
             boxShadow: canGoNext ? `0 2px 12px ${colors.accent}30` : 'none',
-            minHeight: '44px'
+            minHeight: '44px',
+            transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
+            transform: 'scale(1)',
+            WebkitTapHighlightColor: 'transparent'
           }}
         >
           {nextLabel}
@@ -1345,7 +1406,32 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Lithography Parameters</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Adjust wavelength, NA, and k1 factor
+              Adjust wavelength, NA, and k1 factor to see how they affect resolution
+            </p>
+          </div>
+
+          <div style={{
+            background: colors.bgCard,
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 700 }}>📊 What You're Seeing:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '12px' }}>
+              This visualization shows a photolithography system printing nanoscale patterns on silicon wafers.
+              The light beam passes through a photomask and lens system to create features on a photoresist-coated wafer.
+            </p>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 700 }}>🔬 How It Works:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '12px' }}>
+              When you adjust the sliders, you control fundamental physics: <strong>shorter wavelengths</strong> enable finer features,
+              <strong>higher NA</strong> (numerical aperture) increases resolution, and <strong>lower k1</strong> pushes closer to the diffraction limit.
+              Watch the feature size on the wafer shrink as you optimize these parameters!
+            </p>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 700 }}>🌍 Why This Matters:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+              Photolithography is the foundation of modern computing. Every processor, memory chip, and smartphone relies on printing
+              billions of transistors smaller than viruses. The physics you're exploring determines whether we can build 3nm chips or must
+              stop at 10nm—directly impacting computing power, energy efficiency, and technological progress.
             </p>
           </div>
 
@@ -1358,7 +1444,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
             padding: '16px',
             borderRadius: '12px',
           }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
+            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>🧪 Experiments to Try:</h4>
             <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
               <li>Compare 193nm DUV vs 13.5nm EUV resolution</li>
               <li>Increase NA beyond 1.0 (immersion lithography)</li>
@@ -1375,11 +1461,25 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
   // REVIEW PHASE
   if (phase === 'review') {
     const wasCorrect = prediction === 'half_wavelength';
+    const predictionText = predictions.find(p => p.id === prediction)?.label || 'No prediction made';
 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div style={{
+            background: 'rgba(100, 116, 139, 0.2)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `4px solid ${colors.textMuted}`,
+          }}>
+            <h4 style={{ color: colors.textMuted, marginBottom: '8px', fontSize: '14px' }}>📝 Your Prediction:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              {predictionText}
+            </p>
+          </div>
+
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1388,7 +1488,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Close!'}
+              {wasCorrect ? '✅ Correct!' : '❌ Not quite!'}
             </h3>
             <p style={{ color: colors.textPrimary }}>
               The diffraction limit is approximately half the wavelength. This is the Rayleigh criterion:
@@ -1682,7 +1782,16 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <div style={{
+                background: colors.accent,
+                padding: '8px 16px',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                fontSize: '18px',
+                color: colors.bgPrimary
+              }}>
+                Question {currentTestQuestion + 1} / {testQuestions.length}
+              </div>
             </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
@@ -1690,7 +1799,19 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
               ))}
             </div>
             <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
+              <div style={{
+                display: 'inline-block',
+                background: colors.accent,
+                padding: '4px 12px',
+                borderRadius: '6px',
+                fontSize: '14px',
+                fontWeight: 'bold',
+                marginBottom: '12px',
+                color: colors.bgPrimary
+              }}>
+                Q{currentTestQuestion + 1}
+              </div>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>{currentQ.question}</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {currentQ.options.map((opt, oIndex) => (

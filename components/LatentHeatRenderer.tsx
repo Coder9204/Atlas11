@@ -555,7 +555,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
         </g>
 
         {/* Title */}
-        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+        <text x={width/2} y="35" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
           Heating Curve: Temperature vs Heat Added
         </text>
 
@@ -661,19 +661,19 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
         </g>
 
         {/* Stats box */}
-        <g transform={`translate(${width - 130}, 55)`}>
-          <rect x="0" y="0" width="115" height="95" rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
+        <g transform={`translate(${width - 130}, 150)`}>
+          <rect x="0" y="0" width="115" height="115" rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
           <text x="57" y="18" textAnchor="middle" fill={colors.textMuted} fontSize="11">Current State</text>
-          <text x="57" y="36" textAnchor="middle" fill={colors.accent} fontSize="16" fontWeight="700">
+          <text x="57" y="52" textAnchor="middle" fill={colors.accent} fontSize="16" fontWeight="700">
             {temperature.toFixed(1)}C
           </text>
-          <text x="57" y="54" textAnchor="middle" fill={colors.textMuted} fontSize="11">
+          <text x="57" y="70" textAnchor="middle" fill={colors.textMuted} fontSize="11">
             Phase: {materialPhase}
           </text>
-          <text x="57" y="69" textAnchor="middle" fill={colors.success} fontSize="11">
+          <text x="57" y="88" textAnchor="middle" fill={colors.success} fontSize="11">
             Q: {heatAdded.toFixed(1)} kJ
           </text>
-          <text x="57" y="87" textAnchor="middle" fill={colors.warning} fontSize="11">
+          <text x="57" y="106" textAnchor="middle" fill={colors.warning} fontSize="11">
             Power: {heatingPower}W
           </text>
         </g>

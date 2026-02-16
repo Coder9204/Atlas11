@@ -739,6 +739,68 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
     </div>
   );
 
+  // Bottom navigation bar
+  const renderBottomNav = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+    const canGoNext = currentIndex < phaseOrder.length - 1;
+
+    // Don't show during test phase
+    if (phase === 'test' && !testSubmitted) return null;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgCard,
+        borderTop: `1px solid ${colors.border}`,
+        padding: '16px 24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 50,
+      }}>
+        <button
+          onClick={() => canGoBack && goToPhase(phaseOrder[currentIndex - 1])}
+          disabled={!canGoBack}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.border}`,
+            background: 'transparent',
+            color: canGoBack ? colors.textSecondary : colors.textMuted,
+            cursor: canGoBack ? 'pointer' : 'not-allowed',
+            fontSize: '14px',
+            fontWeight: 500,
+            opacity: canGoBack ? 1 : 0.5,
+          }}
+        >
+          ← Back
+        </button>
+
+        {canGoNext && (
+          <button
+            onClick={() => nextPhase()}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: 'none',
+              background: colors.accent,
+              color: 'white',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 600,
+            }}
+          >
+            Next →
+          </button>
+        )}
+      </div>
+    );
+  };
+
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, #D97706)`,
@@ -852,58 +914,100 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
         background: colors.bgPrimary,
-        padding: '24px',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
         <style>{keyframes}</style>
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.accent}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.accent}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              Make Your Prediction
-            </p>
-          </div>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
+            <div style={{
+              background: `${colors.accent}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.accent}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                Make Your Prediction
+              </p>
+            </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            When a high-energy cosmic ray passes through a computer chip, what happens?
-          </h2>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              When a high-energy cosmic ray passes through a computer chip, what happens?
+            </h2>
 
-          {/* Visual demonstration */}
+          {/* SVG Visualization */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
             marginBottom: '24px',
-            textAlign: 'center',
-            position: 'relative',
-            overflow: 'hidden',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px', animation: 'pulse 1.5s infinite' }}>☢️</div>
-                <p style={{ ...typo.small, color: colors.radiation }}>Cosmic Ray</p>
-              </div>
-              <div style={{ fontSize: '32px', color: colors.textMuted }}>→</div>
-              <div style={{
-                background: colors.bgSecondary,
-                padding: '20px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.border}`,
-              }}>
-                <div style={{ fontFamily: 'monospace', fontSize: '24px', color: colors.bitOne }}>
-                  1 0 1 <span style={{ color: colors.error }}>?</span> 0 1
-                </div>
-                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>Memory Cell</p>
-              </div>
-            </div>
+            <svg viewBox="0 0 600 300" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block', margin: '0 auto' }}>
+              <defs>
+                <linearGradient id="chipBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#1e293b" />
+                  <stop offset="100%" stopColor="#0f172a" />
+                </linearGradient>
+                <filter id="shadowFilter">
+                  <feDropShadow dx="0" dy="2" stdDeviation="4" floodOpacity="0.3"/>
+                </filter>
+              </defs>
+
+              {/* Cosmic Ray */}
+              <g>
+                <line x1="100" y1="20" x2="200" y2="120" stroke={colors.radiation} strokeWidth="4" opacity="0.8" />
+                <circle cx="200" cy="120" r="6" fill={colors.radiation} />
+                <text x="100" y="15" fill={colors.radiation} fontSize="14" fontWeight="600">Cosmic Ray</text>
+                <text x="100" y="35" fill={colors.textMuted} fontSize="11">(High Energy)</text>
+              </g>
+
+              {/* Memory Chip */}
+              <rect x="180" y="110" width="240" height="140" rx="12" fill="url(#chipBg)" stroke={colors.border} strokeWidth="2" filter="url(#shadowFilter)" />
+              <text x="300" y="135" textAnchor="middle" fill={colors.textSecondary} fontSize="13" fontWeight="600">Memory Chip</text>
+
+              {/* Memory bits */}
+              <g>
+                <rect x="210" y="160" width="30" height="30" rx="4" fill={colors.bitOne} stroke={colors.border} />
+                <text x="225" y="182" textAnchor="middle" fill="white" fontSize="16" fontWeight="700" fontFamily="monospace">1</text>
+
+                <rect x="250" y="160" width="30" height="30" rx="4" fill={colors.bitZero} stroke={colors.border} />
+                <text x="265" y="182" textAnchor="middle" fill="white" fontSize="16" fontWeight="700" fontFamily="monospace">0</text>
+
+                <rect x="290" y="160" width="30" height="30" rx="4" fill={colors.bitOne} stroke={colors.border} />
+                <text x="305" y="182" textAnchor="middle" fill="white" fontSize="16" fontWeight="700" fontFamily="monospace">1</text>
+
+                <rect x="330" y="160" width="30" height="30" rx="4" fill={colors.bitOne} stroke={colors.error} strokeWidth="2" />
+                <text x="345" y="182" textAnchor="middle" fill={colors.error} fontSize="20" fontWeight="700">?</text>
+
+                <rect x="370" y="160" width="30" height="30" rx="4" fill={colors.bitZero} stroke={colors.border} />
+                <text x="385" y="182" textAnchor="middle" fill="white" fontSize="16" fontWeight="700" fontFamily="monospace">0</text>
+              </g>
+
+              <text x="300" y="215" textAnchor="middle" fill={colors.textMuted} fontSize="12">
+                What happens to the fourth bit?
+              </text>
+
+              {/* Question mark indicator */}
+              <g>
+                <circle cx="470" y="180" r="25" fill={colors.accent + '22'} stroke={colors.accent} strokeWidth="2" />
+                <text x="470" y="192" textAnchor="middle" fill={colors.accent} fontSize="28" fontWeight="700">?</text>
+              </g>
+
+              <text x="300" y="280" textAnchor="middle" fill={colors.textSecondary} fontSize="14" fontStyle="italic">
+                Make your prediction below
+              </text>
+            </svg>
           </div>
 
           {/* Options */}
@@ -946,13 +1050,15 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
           {prediction && (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
+              style={{ ...primaryButtonStyle, width: '100%' }}
             >
               See the Reality
             </button>
           )}
+          </div>
         </div>
 
+        {renderBottomNav()}
         {renderNavDots()}
       </div>
     );
@@ -964,205 +1070,403 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
         background: colors.bgPrimary,
-        padding: '24px',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
         <style>{keyframes}</style>
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Radiation Fault Injection Lab
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Watch how cosmic rays corrupt memory, and how different protection schemes save the mission
-          </p>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            position: 'relative',
-          }}>
-            {isSimulationRunning && <CosmicRayAnimation />}
-
-            {/* Memory Display */}
-            <h3 style={{ ...typo.small, color: colors.textMuted, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              Spacecraft Memory (32 bits)
-            </h3>
-
-            {protectionMode === 'tmr' ? <TMRVisualization /> : <MemoryVisualization />}
-
-            {/* Protection Mode Selector */}
-            <div style={{ marginTop: '24px' }}>
-              <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '12px' }}>
-                Protection Mode:
-              </div>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                {[
-                  { id: 'none', label: 'No Protection', color: colors.error },
-                  { id: 'ecc', label: 'ECC Memory', color: colors.warning },
-                  { id: 'tmr', label: 'Triple Redundancy (TMR)', color: colors.success },
-                ].map(mode => (
-                  <button
-                    key={mode.id}
-                    onClick={() => {
-                      playSound('click');
-                      setProtectionMode(mode.id as 'none' | 'ecc' | 'tmr');
-                      resetSimulation();
-                    }}
-                    style={{
-                      padding: '10px 16px',
-                      borderRadius: '8px',
-                      border: `2px solid ${protectionMode === mode.id ? mode.color : colors.border}`,
-                      background: protectionMode === mode.id ? mode.color + '22' : 'transparent',
-                      color: protectionMode === mode.id ? mode.color : colors.textSecondary,
-                      cursor: 'pointer',
-                      fontWeight: protectionMode === mode.id ? 600 : 400,
-                      fontSize: '14px',
-                    }}
-                  >
-                    {mode.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Fault Rate Slider */}
-            <div style={{ marginTop: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Radiation Intensity</span>
-                <span style={{ ...typo.small, color: colors.radiation, fontWeight: 600 }}>
-                  {faultRate < 0.3 ? 'Low (Inner Planets)' : faultRate < 0.7 ? 'Medium (Deep Space)' : 'High (Solar Storm)'}
-                </span>
-              </div>
-              <input
-                type="range"
-                min="0.1"
-                max="1"
-                step="0.1"
-                value={faultRate}
-                onChange={(e) => setFaultRate(parseFloat(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.success}, ${colors.warning}, ${colors.error})`,
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Statistics */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '12px',
-              marginTop: '20px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.textPrimary }}>{totalErrors}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Total Events</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.success }}>{correctedErrors}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Corrected</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.error }}>{uncorrectedErrors}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Corrupted</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: missionSuccessProb > 90 ? colors.success : missionSuccessProb > 50 ? colors.warning : colors.error }}>
-                  {missionSuccessProb.toFixed(0)}%
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Success Prob.</div>
-              </div>
-            </div>
-
-            {/* Controls */}
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '20px' }}>
-              <button
-                onClick={() => {
-                  playSound('click');
-                  setIsSimulationRunning(!isSimulationRunning);
-                }}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: isSimulationRunning ? colors.error : colors.success,
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  fontSize: '14px',
-                }}
-              >
-                {isSimulationRunning ? 'Stop Simulation' : 'Start Radiation'}
-              </button>
-              <button
-                onClick={() => {
-                  playSound('click');
-                  resetSimulation();
-                }}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                }}
-              >
-                Reset
-              </button>
-            </div>
-          </div>
-
-          {/* Hint */}
-          <div style={{
-            background: `${colors.accent}11`,
-            border: `1px solid ${colors.accent}33`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-          }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              <strong style={{ color: colors.accent }}>Try this:</strong> Start with "No Protection" and watch bits flip red. Then switch to ECC and TMR to see how they correct errors!
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '900px', margin: '0 auto', padding: '0 24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Radiation Fault Injection Lab
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Watch how cosmic rays corrupt memory. <strong style={{ color: colors.accent }}>As radiation intensity increases, more bits flip.</strong> ECC and TMR protection schemes automatically detect and correct errors, keeping the mission alive.
             </p>
-          </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); setIsSimulationRunning(false); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Physics
-          </button>
+            {/* SVG Visualization */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <h3 style={{ ...typo.small, color: colors.textMuted, marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                Memory Corruption Visualization
+              </h3>
+
+              <svg
+                viewBox="0 0 800 400"
+                style={{ width: '100%', maxWidth: '800px', height: 'auto', display: 'block' }}
+                preserveAspectRatio="xMidYMid meet"
+              >
+                <defs>
+                  <linearGradient id="memoryGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor={colors.bitOne} stopOpacity="0.3" />
+                    <stop offset="100%" stopColor={colors.bitOne} stopOpacity="0.1" />
+                  </linearGradient>
+                  <filter id="glow">
+                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                  <linearGradient id="chipGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#1e293b" />
+                    <stop offset="100%" stopColor="#0f172a" />
+                  </linearGradient>
+                </defs>
+
+                {/* Spacecraft */}
+                <g>
+                  <rect x="50" y="50" width="300" height="200" rx="20" fill="url(#chipGrad)" stroke={colors.border} strokeWidth="2" />
+                  <text x="200" y="85" textAnchor="middle" fill={colors.textSecondary} fontSize="14" fontWeight="600">
+                    Spacecraft Computer
+                  </text>
+
+                  {/* Memory cells grid */}
+                  {memoryBits.slice(0, 16).map((bit, i) => {
+                    const row = Math.floor(i / 8);
+                    const col = i % 8;
+                    const isFlipping = bitFlipPositions.includes(i);
+                    const isCorrected = correctedBits.includes(i);
+                    return (
+                      <g key={i}>
+                        <rect
+                          x={80 + col * 28}
+                          y={110 + row * 45}
+                          width="24"
+                          height="24"
+                          rx="4"
+                          fill={isFlipping ? (isCorrected ? colors.corrected : colors.corrupted) : (bit === 1 ? colors.bitOne : colors.bitZero)}
+                          stroke={isFlipping ? (isCorrected ? colors.corrected : colors.corrupted) : colors.border}
+                          strokeWidth={isFlipping ? "2" : "1"}
+                          filter={isFlipping ? "url(#glow)" : "none"}
+                        />
+                        <text
+                          x={92 + col * 28}
+                          y={127 + row * 45}
+                          textAnchor="middle"
+                          fill="white"
+                          fontSize="12"
+                          fontWeight="700"
+                          fontFamily="monospace"
+                        >
+                          {bit}
+                        </text>
+                      </g>
+                    );
+                  })}
+                </g>
+
+                {/* Cosmic rays - varies with radiation intensity */}
+                <g>
+                  {[...Array(Math.ceil(faultRate * 5))].map((_, i) => (
+                    <g key={i}>
+                      <line
+                        x1={100 + i * 80}
+                        y1={isSimulationRunning && animationFrame % 20 < 10 ? 0 : -20}
+                        x2={120 + i * 80}
+                        y2={isSimulationRunning && animationFrame % 20 < 10 ? 80 : 60}
+                        stroke={colors.radiation}
+                        strokeWidth="3"
+                        opacity={isSimulationRunning ? 0.7 : 0.3}
+                      />
+                      <circle
+                        cx={120 + i * 80}
+                        cy={80}
+                        r="4"
+                        fill={colors.radiation}
+                        filter="url(#glow)"
+                        opacity={isSimulationRunning ? 1 : 0.3}
+                      />
+                    </g>
+                  ))}
+                  {/* Intensity indicator */}
+                  <text x="400" y="30" fill={colors.radiation} fontSize="12" fontWeight="600">
+                    Intensity: {(faultRate * 10).toFixed(1)}/10
+                  </text>
+                </g>
+
+                {/* Protection Mode Indicator */}
+                <g>
+                  <rect x="420" y="50" width="330" height="200" rx="20" fill="url(#chipGrad)" stroke={colors.border} strokeWidth="2" />
+                  <text x="585" y="85" textAnchor="middle" fill={colors.textSecondary} fontSize="14" fontWeight="600">
+                    Protection: {protectionMode === 'none' ? 'None' : protectionMode === 'ecc' ? 'ECC' : 'TMR'}
+                  </text>
+
+                  {protectionMode === 'none' && (
+                    <text x="585" y="150" textAnchor="middle" fill={colors.error} fontSize="16">
+                      ⚠️ No Protection
+                    </text>
+                  )}
+
+                  {protectionMode === 'ecc' && (
+                    <g>
+                      <rect x="480" y="120" width="200" height="40" rx="8" fill={colors.warning + '22'} stroke={colors.warning} strokeWidth="2" />
+                      <text x="580" y="145" textAnchor="middle" fill={colors.warning} fontSize="14" fontWeight="600">
+                        Single-bit correction active
+                      </text>
+                    </g>
+                  )}
+
+                  {protectionMode === 'tmr' && (
+                    <g>
+                      <circle cx="520" cy="140" r="15" fill={colors.success + '44'} stroke={colors.success} strokeWidth="2" />
+                      <circle cx="585" cy="140" r="15" fill={colors.success + '44'} stroke={colors.success} strokeWidth="2" />
+                      <circle cx="650" cy="140" r="15" fill={colors.success + '44'} stroke={colors.success} strokeWidth="2" />
+                      <text x="585" y="180" textAnchor="middle" fill={colors.success} fontSize="12">
+                        Triple redundancy voting
+                      </text>
+                    </g>
+                  )}
+
+                  {/* Stats */}
+                  <text x="460" y="220" fill={colors.textMuted} fontSize="12">
+                    Errors: {totalErrors} | Corrected: {correctedErrors}
+                  </text>
+                </g>
+
+                {/* Legend */}
+                <g>
+                  <text x="50" y="290" fill={colors.textMuted} fontSize="12" fontWeight="600">Legend:</text>
+                  <rect x="50" y="300" width="20" height="20" rx="4" fill={colors.bitZero} stroke={colors.border} />
+                  <text x="75" y="315" fill={colors.textSecondary} fontSize="12">Bit = 0</text>
+
+                  <rect x="150" y="300" width="20" height="20" rx="4" fill={colors.bitOne} stroke={colors.border} />
+                  <text x="175" y="315" fill={colors.textSecondary} fontSize="12">Bit = 1</text>
+
+                  <rect x="250" y="300" width="20" height="20" rx="4" fill={colors.corrupted} stroke={colors.corrupted} strokeWidth="2" filter="url(#glow)" />
+                  <text x="275" y="315" fill={colors.textSecondary} fontSize="12">Corrupted</text>
+
+                  <rect x="370" y="300" width="20" height="20" rx="4" fill={colors.corrected} stroke={colors.corrected} strokeWidth="2" filter="url(#glow)" />
+                  <text x="395" y="315" fill={colors.textSecondary} fontSize="12">Corrected</text>
+
+                  <line x1="550" y1="305" x2="570" y2="315" stroke={colors.radiation} strokeWidth="3" opacity="0.7" />
+                  <text x="575" y="315" fill={colors.textSecondary} fontSize="12">Cosmic Ray</text>
+                </g>
+
+                <text x="50" y="360" fill={colors.textMuted} fontSize="14" fontStyle="italic">
+                  Key Insight: {protectionMode === 'none' ? 'Without protection, each radiation hit causes permanent data corruption.' :
+                    protectionMode === 'ecc' ? 'ECC detects and fixes single-bit errors automatically.' :
+                    'TMR uses voting — if one copy is corrupted, the other two outvote it.'}
+                </text>
+              </svg>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              {isSimulationRunning && <CosmicRayAnimation />}
+
+              {/* Protection Mode Selector */}
+              <div>
+                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '12px' }}>
+                  <strong>Protection Mode:</strong> Choose how the spacecraft defends against radiation
+                </div>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {[
+                    { id: 'none', label: 'No Protection', color: colors.error },
+                    { id: 'ecc', label: 'ECC Memory', color: colors.warning },
+                    { id: 'tmr', label: 'Triple Redundancy (TMR)', color: colors.success },
+                  ].map(mode => (
+                    <button
+                      key={mode.id}
+                      onClick={() => {
+                        playSound('click');
+                        setProtectionMode(mode.id as 'none' | 'ecc' | 'tmr');
+                        resetSimulation();
+                      }}
+                      style={{
+                        padding: '10px 16px',
+                        borderRadius: '8px',
+                        border: `2px solid ${protectionMode === mode.id ? mode.color : colors.border}`,
+                        background: protectionMode === mode.id ? mode.color + '22' : 'transparent',
+                        color: protectionMode === mode.id ? mode.color : colors.textSecondary,
+                        cursor: 'pointer',
+                        fontWeight: protectionMode === mode.id ? 600 : 400,
+                        fontSize: '14px',
+                      }}
+                    >
+                      {mode.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Fault Rate Slider */}
+              <div style={{ marginTop: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}><strong>Radiation Intensity:</strong> Solar storms vs deep space</span>
+                  <span style={{ ...typo.small, color: colors.radiation, fontWeight: 600 }}>
+                    {faultRate.toFixed(1)} faults/sec ({faultRate < 0.3 ? 'Low' : faultRate < 0.7 ? 'Medium' : 'High'})
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="1"
+                  step="0.1"
+                  value={faultRate}
+                  onChange={(e) => setFaultRate(parseFloat(e.target.value))}
+                  onInput={(e) => setFaultRate(parseFloat((e.target.value)))}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '4px',
+                    background: `linear-gradient(to right, ${colors.success}, ${colors.warning}, ${colors.error})`,
+                    cursor: 'pointer',
+                    accentColor: colors.radiation,
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none',
+                  } as React.CSSProperties}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.success }}>0.1 Low</span>
+                  <span style={{ ...typo.small, color: colors.error }}>1.0 High</span>
+                </div>
+              </div>
+
+              {/* Formula Display */}
+              <div style={{
+                background: `${colors.accent}11`,
+                borderRadius: '8px',
+                padding: '12px',
+                marginTop: '16px',
+                border: `1px solid ${colors.accent}33`,
+              }}>
+                <p style={{ ...typo.small, color: colors.accent, marginBottom: '4px', fontWeight: 600 }}>
+                  Error Rate Formula:
+                </p>
+                <div style={{
+                  fontFamily: 'monospace',
+                  fontSize: '14px',
+                  color: colors.textPrimary,
+                  marginBottom: '4px',
+                }}>
+                  P(failure) = 1 - e<sup>-λt</sup>
+                </div>
+                <p style={{ ...typo.small, color: colors.textMuted, margin: 0 }}>
+                  Where λ = fault rate × (1/Q<sub>crit</sub>), and protection reduces λ by 10x (ECC) or 100x (TMR)
+                </p>
+              </div>
+
+              {/* Statistics */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: '12px',
+                marginTop: '20px',
+              }}>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.textPrimary }}>{totalErrors}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Total Events</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.success }}>{correctedErrors}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Corrected</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.error }}>{uncorrectedErrors}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Corrupted</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: missionSuccessProb > 90 ? colors.success : missionSuccessProb > 50 ? colors.warning : colors.error }}>
+                    {missionSuccessProb.toFixed(0)}%
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Success Prob.</div>
+                </div>
+              </div>
+
+              {/* Controls */}
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '20px' }}>
+                <button
+                  onClick={() => {
+                    playSound('click');
+                    setIsSimulationRunning(!isSimulationRunning);
+                  }}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: isSimulationRunning ? colors.error : colors.success,
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    fontSize: '14px',
+                  }}
+                >
+                  {isSimulationRunning ? 'Stop Simulation' : 'Start Radiation'}
+                </button>
+                <button
+                  onClick={() => {
+                    playSound('click');
+                    resetSimulation();
+                  }}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: colors.textSecondary,
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                  }}
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+
+            {/* Educational Hint */}
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.accent }}>Try this:</strong> Start with "No Protection" and high radiation. Watch bits flip red and stay corrupted. Then switch to ECC — see how it detects and fixes single-bit errors. Finally, try TMR for maximum reliability!
+              </p>
+            </div>
+          </div>
         </div>
 
+        {renderBottomNav()}
         {renderNavDots()}
       </div>
     );
@@ -1170,19 +1474,48 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
 
   // REVIEW PHASE
   if (phase === 'review') {
+    const options = [
+      { id: 'a', text: 'Cosmic rays pass through electronics without any effect' },
+      { id: 'b', text: 'Cosmic rays deposit charge in transistors, potentially flipping stored bits' },
+      { id: 'c', text: 'Cosmic rays only affect solar panels, not computer chips' },
+    ];
+
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
         background: colors.bgPrimary,
-        padding: '24px',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
         <style>{keyframes}</style>
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            The Physics of Single Event Upsets
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
+              The Physics of Single Event Upsets
+            </h2>
+
+            {/* Connection to prediction */}
+            <div style={{
+              background: prediction === 'b' ? `${colors.success}22` : `${colors.warning}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${prediction === 'b' ? colors.success : colors.warning}44`,
+            }}>
+              <p style={{ ...typo.small, color: prediction === 'b' ? colors.success : colors.textSecondary, margin: 0 }}>
+                {prediction === 'b'
+                  ? '✓ You predicted correctly! Cosmic rays DO deposit charge in transistors and flip bits.'
+                  : `You predicted: "${options.find(o => o.id === prediction)?.text}". Here's what actually happens...`}
+              </p>
+            </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1196,7 +1529,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
 
             <div style={{ ...typo.body, color: colors.textSecondary }}>
               <p style={{ marginBottom: '16px' }}>
-                When a high-energy particle (cosmic ray or solar proton) passes through silicon, it ionizes atoms along its path, creating a trail of free electrons and holes.
+                When a high-energy particle (cosmic ray or solar proton) passes through silicon, it ionizes atoms along its path, creating a trail of free electrons and holes. This is the <strong>mechanism</strong> you observed in the simulation.
               </p>
 
               <div style={{
@@ -1211,9 +1544,58 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
                 </div>
               </div>
 
-              <p>
-                If enough charge (called the <strong style={{ color: colors.accent }}>critical charge</strong>) is deposited in a memory cell, it can change a stored 0 to 1 or vice versa. This is a <strong style={{ color: colors.error }}>Single Event Upset (SEU)</strong>.
+              <p style={{ marginBottom: '16px' }}>
+                If enough charge (called the <strong style={{ color: colors.accent }}>critical charge Q<sub>crit</sub></strong>) is deposited in a memory cell, it can change a stored 0 to 1 or vice versa. This is a <strong style={{ color: colors.error }}>Single Event Upset (SEU)</strong>.
               </p>
+
+              {/* Formula */}
+              <div style={{
+                background: `${colors.accent}11`,
+                borderRadius: '8px',
+                padding: '16px',
+                marginTop: '16px',
+                border: `1px solid ${colors.accent}33`,
+              }}>
+                <p style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                  Critical Charge Formula:
+                </p>
+                <div style={{
+                  fontFamily: 'monospace',
+                  fontSize: isMobile ? '16px' : '18px',
+                  color: colors.textPrimary,
+                  textAlign: 'center',
+                  marginBottom: '8px',
+                }}>
+                  Q<sub>crit</sub> = C × V<sub>DD</sub>
+                </div>
+                <p style={{ ...typo.small, color: colors.textMuted, margin: 0 }}>
+                  Where C is the node capacitance and V<sub>DD</sub> is the supply voltage. Smaller transistors have lower C, making them more vulnerable.
+                </p>
+              </div>
+
+              <div style={{
+                background: `${colors.accent}11`,
+                borderRadius: '8px',
+                padding: '16px',
+                marginTop: '16px',
+                border: `1px solid ${colors.accent}33`,
+              }}>
+                <p style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                  SEU Rate Relationship:
+                </p>
+                <div style={{
+                  fontFamily: 'monospace',
+                  fontSize: isMobile ? '16px' : '18px',
+                  color: colors.textPrimary,
+                  textAlign: 'center',
+                  marginBottom: '8px',
+                }}>
+                  SEU Rate ∝ Flux × Cross-section / Q<sub>crit</sub>
+                </div>
+                <p style={{ ...typo.small, color: colors.textMuted, margin: 0 }}>
+                  Error rate increases with particle flux and sensitive area, but decreases with higher critical charge (better shielding).
+                </p>
+              </div>
             </div>
           </div>
 
@@ -1285,8 +1667,10 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
           >
             Explore Process Node Effects
           </button>
+          </div>
         </div>
 
+        {renderBottomNav()}
         {renderNavDots()}
       </div>
     );
@@ -1332,43 +1716,54 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '40px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{
-                  width: '80px',
-                  height: '80px',
-                  background: colors.bitOne,
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 8px',
-                }}>
-                  <span style={{ fontSize: '32px', fontWeight: 700, color: 'white' }}>45</span>
-                </div>
-                <p style={{ ...typo.small, color: colors.textSecondary }}>45nm Node</p>
-                <p style={{ ...typo.small, color: colors.textMuted }}>(2007 era)</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{
-                  width: '40px',
-                  height: '40px',
-                  background: colors.error,
-                  borderRadius: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 8px',
-                }}>
-                  <span style={{ fontSize: '16px', fontWeight: 700, color: 'white' }}>7</span>
-                </div>
-                <p style={{ ...typo.small, color: colors.textSecondary }}>7nm Node</p>
-                <p style={{ ...typo.small, color: colors.textMuted }}>(2020 era)</p>
-              </div>
-            </div>
+            <svg viewBox="0 0 600 300" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block', margin: '0 auto' }}>
+              <defs>
+                <linearGradient id="trans45" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor={colors.bitOne} />
+                  <stop offset="100%" stopColor={colors.success} />
+                </linearGradient>
+                <linearGradient id="trans7" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor={colors.error} />
+                  <stop offset="100%" stopColor={colors.warning} />
+                </linearGradient>
+              </defs>
+
+              {/* 45nm transistor */}
+              <g>
+                <rect x="80" y="80" width="160" height="160" rx="12" fill="url(#trans45)" stroke={colors.border} strokeWidth="2" />
+                <text x="160" y="170" textAnchor="middle" fill="white" fontSize="48" fontWeight="700">45</text>
+                <text x="160" y="195" textAnchor="middle" fill="white" fontSize="14" opacity="0.9">nm</text>
+                <text x="160" y="260" textAnchor="middle" fill={colors.textSecondary} fontSize="13">2007 Technology</text>
+                <text x="160" y="278" textAnchor="middle" fill={colors.textMuted} fontSize="11">Larger charge capacity</text>
+              </g>
+
+              {/* VS */}
+              <text x="300" y="165" textAnchor="middle" fill={colors.textMuted} fontSize="24" fontWeight="600">VS</text>
+
+              {/* 7nm transistor */}
+              <g>
+                <rect x="360" y="110" width="100" height="100" rx="8" fill="url(#trans7)" stroke={colors.border} strokeWidth="2" />
+                <text x="410" y="165" textAnchor="middle" fill="white" fontSize="32" fontWeight="700">7</text>
+                <text x="410" y="185" textAnchor="middle" fill="white" fontSize="12" opacity="0.9">nm</text>
+                <text x="410" y="235" textAnchor="middle" fill={colors.textSecondary} fontSize="13">2020 Technology</text>
+                <text x="410" y="253" textAnchor="middle" fill={colors.textMuted} fontSize="11">Less charge = more vulnerable</text>
+              </g>
+
+              {/* Cosmic ray impact illustration */}
+              <g>
+                <line x1="40" y1="30" x2="160" y2="100" stroke={colors.radiation} strokeWidth="3" opacity="0.6" />
+                <circle cx="160" cy="100" r="5" fill={colors.radiation} />
+                <text x="40" y="25" fill={colors.radiation} fontSize="12">Cosmic Ray</text>
+              </g>
+
+              <g>
+                <line x1="500" y1="30" x2="410" y2="120" stroke={colors.radiation} strokeWidth="3" opacity="0.6" />
+                <circle cx="410" cy="120" r="5" fill={colors.radiation} />
+                <text x="500" y="25" fill={colors.radiation} fontSize="12" textAnchor="end">Same Energy</text>
+              </g>
+            </svg>
             <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginTop: '16px' }}>
-              Smaller transistors = more transistors per chip = more computing power
+              Same particle energy hits different size transistors. Which is more vulnerable?
             </p>
           </div>
 
@@ -1462,7 +1857,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
             {/* Process Node Slider */}
             <div style={{ marginTop: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Process Node Size</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}><strong>Process Node Size (Transistor Size):</strong> Smaller = less charge storage</span>
                 <span style={{ ...typo.small, color: processNode <= 10 ? colors.error : processNode <= 22 ? colors.warning : colors.success, fontWeight: 600 }}>
                   {processNode}nm
                 </span>
@@ -1474,17 +1869,21 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
                 step="1"
                 value={processNode}
                 onChange={(e) => setProcessNode(parseInt(e.target.value))}
+                onInput={(e) => setProcessNode(parseInt((e.target as HTMLInputElement).value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   background: `linear-gradient(to right, ${colors.error}, ${colors.warning}, ${colors.success})`,
                   cursor: 'pointer',
-                }}
+                  accentColor: colors.warning,
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                } as React.CSSProperties}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.error }}>5nm (Modern, Vulnerable)</span>
-                <span style={{ ...typo.small, color: colors.success }}>45nm (Old, Robust)</span>
+                <span style={{ ...typo.small, color: colors.error }}>5nm Modern</span>
+                <span style={{ ...typo.small, color: colors.success }}>45nm Old</span>
               </div>
             </div>
 
@@ -1608,6 +2007,30 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
                 Reset
               </button>
             </div>
+          </div>
+
+          {/* Formula Display */}
+          <div style={{
+            background: `${colors.accent}11`,
+            borderRadius: '8px',
+            padding: '16px',
+            marginBottom: '16px',
+            border: `1px solid ${colors.accent}33`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+              Process Node Scaling Formula:
+            </p>
+            <div style={{
+              fontFamily: 'monospace',
+              fontSize: '14px',
+              color: colors.textPrimary,
+              marginBottom: '4px',
+            }}>
+              SEU Rate ∝ (45nm / Node Size)²
+            </div>
+            <p style={{ ...typo.small, color: colors.textMuted, margin: 0 }}>
+              Smaller transistors have less critical charge (Q<sub>crit</sub> ∝ Node Size), so fault rate increases quadratically.
+            </p>
           </div>
 
           {/* Observation prompt */}
@@ -1779,17 +2202,29 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
         background: colors.bgPrimary,
-        padding: '24px',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
         <style>{keyframes}</style>
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
+
+            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '24px' }}>
+              Explored {completedApps.filter(c => c).length} of {realWorldApps.length} applications
+            </p>
 
           {/* App selector */}
           <div style={{
@@ -1880,6 +2315,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1894,6 +2330,31 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
                 </div>
               ))}
             </div>
+
+            {/* Got It button */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+              }}
+              disabled={completedApps[selectedApp]}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '8px',
+                border: 'none',
+                background: completedApps[selectedApp] ? colors.success : app.color,
+                color: 'white',
+                cursor: completedApps[selectedApp] ? 'default' : 'pointer',
+                fontWeight: 600,
+                fontSize: '14px',
+                opacity: completedApps[selectedApp] ? 0.7 : 1,
+              }}
+            >
+              {completedApps[selectedApp] ? '✓ Understood' : 'Got It'}
+            </button>
           </div>
 
           {allAppsCompleted && (
@@ -1904,8 +2365,10 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
               Take the Knowledge Test
             </button>
           )}
+          </div>
         </div>
 
+        {renderBottomNav()}
         {renderNavDots()}
       </div>
     );
@@ -1917,54 +2380,132 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          height: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
           background: colors.bgPrimary,
-          padding: '24px',
+          overflow: 'hidden',
         }}>
           {renderProgressBar()}
           <style>{keyframes}</style>
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
-            <div style={{
-              fontSize: '80px',
-              marginBottom: '24px',
-            }}>
-              {passed ? '🛰️' : '📚'}
-            </div>
-            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
-              {passed ? 'Mission Success!' : 'Needs More Training'}
-            </h2>
-            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
-              {testScore} / 10
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
-              {passed
-                ? 'You\'ve mastered Space Radiation and Fault Tolerance!'
-                : 'Review the concepts and try again.'}
-            </p>
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            paddingTop: '60px',
+            paddingBottom: '100px',
+          }}>
+            <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
+              <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                <div style={{
+                  fontSize: '80px',
+                  marginBottom: '24px',
+                }}>
+                  {passed ? '🛰️' : '📚'}
+                </div>
+                <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+                  {passed ? 'Mission Success!' : 'Needs More Training'}
+                </h2>
+                <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+                  {testScore} / 10
+                </p>
+                <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+                  {passed
+                    ? 'You\'ve mastered Space Radiation and Fault Tolerance!'
+                    : 'Review the concepts and try again.'}
+                </p>
+              </div>
 
-            {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
-                Complete Lesson
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
-                }}
-                style={primaryButtonStyle}
-              >
-                Review & Try Again
-              </button>
-            )}
+              {/* Answer Review */}
+              <div style={{ marginBottom: '32px' }}>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
+                  Answer Review
+                </h3>
+                {testQuestions.map((q, i) => {
+                  const userAnswer = testAnswers[i];
+                  const correctAnswer = q.options.find(o => o.correct)?.id;
+                  const isCorrect = userAnswer === correctAnswer;
+                  return (
+                    <div
+                      key={i}
+                      style={{
+                        background: colors.bgCard,
+                        borderRadius: '12px',
+                        padding: '16px',
+                        marginBottom: '12px',
+                        border: `2px solid ${isCorrect ? colors.success : colors.error}`,
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                        <div style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          background: isCorrect ? colors.success : colors.error,
+                          color: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: 700,
+                          fontSize: '18px',
+                        }}>
+                          {isCorrect ? '✓' : '✗'}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <p style={{ ...typo.small, color: colors.textMuted, margin: 0 }}>
+                            Question {i + 1}
+                          </p>
+                          <p style={{ ...typo.small, color: colors.textPrimary, margin: 0, fontWeight: 600 }}>
+                            {q.question}
+                          </p>
+                        </div>
+                      </div>
+
+                      {!isCorrect && (
+                        <div style={{ marginTop: '12px' }}>
+                          <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>
+                            Your answer: {q.options.find(o => o.id === userAnswer)?.label}
+                          </p>
+                          <p style={{ ...typo.small, color: colors.success, marginBottom: '8px' }}>
+                            Correct answer: {q.options.find(o => o.id === correctAnswer)?.label}
+                          </p>
+                          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+                            {q.explanation}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div style={{ textAlign: 'center' }}>
+                {passed ? (
+                  <button
+                    onClick={() => { playSound('complete'); nextPhase(); }}
+                    style={primaryButtonStyle}
+                  >
+                    Complete Lesson
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setTestSubmitted(false);
+                      setTestAnswers(Array(10).fill(null));
+                      setCurrentQuestion(0);
+                      setTestScore(0);
+                      goToPhase('hook');
+                    }}
+                    style={primaryButtonStyle}
+                  >
+                    Review & Try Again
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
+
+          {renderBottomNav()}
           {renderNavDots()}
         </div>
       );

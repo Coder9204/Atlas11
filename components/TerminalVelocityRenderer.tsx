@@ -604,15 +604,15 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
           {[0, 1, 2, 3, 4, 5, 6].map((i) => (
             <g key={`height-${i}`}>
               <line
-                x1="25"
+                x1="22"
                 y1={35 + i * 45}
-                x2="35"
+                x2="32"
                 y2={35 + i * 45}
                 stroke="rgba(255,255,255,0.7)"
                 strokeWidth="2"
               />
               <text
-                x="18"
+                x="15"
                 y={39 + i * 45}
                 fill="white"
                 fontSize="11"
@@ -782,7 +782,7 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
                     x="26"
                     y={-17 - dragArrowLength / 2}
                     fill="white"
-                    fontSize="10"
+                    fontSize="11"
                     fontWeight="bold"
                     textAnchor="middle"
                   >
@@ -794,7 +794,7 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
           </g>
 
           {/* ========== VELOCITY VS TIME GRAPH ========== */}
-          <g transform={`translate(${width - graphWidth - 50}, 25)`} filter="url(#tvelPanelShadow)">
+          <g transform={`translate(${width - graphWidth - 50}, 30)`} filter="url(#tvelPanelShadow)">
             {/* Graph background panel */}
             <rect
               x="0"
@@ -810,7 +810,7 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
             {/* Graph title */}
             <text
               x={graphWidth / 2}
-              y="20"
+              y="22"
               fill="#f8fafc"
               fontSize="13"
               textAnchor="middle"
@@ -876,7 +876,7 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
               x={graphWidth / 2 + 10}
               y={graphHeight + 5}
               fill="#94a3b8"
-              fontSize="10"
+              fontSize="11"
               textAnchor="middle"
             >
               Time (s)
@@ -885,7 +885,7 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
               x="12"
               y={(graphHeight - 15 + 30) / 2}
               fill="#94a3b8"
-              fontSize="10"
+              fontSize="11"
               textAnchor="middle"
               transform={`rotate(-90, 12, ${(graphHeight - 15 + 30) / 2})`}
             >
@@ -914,7 +914,7 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
               x={graphWidth - 24}
               y={graphHeight - 13 - (terminalVelocity / graphMaxV) * (graphHeight - 45)}
               fill="white"
-              fontSize="9"
+              fontSize="11"
               fontWeight="bold"
               textAnchor="middle"
             >
@@ -940,15 +940,15 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
             )}
 
             {/* Y-axis values */}
-            <text x="30" y={graphHeight - 12} fill="#64748b" fontSize="9" textAnchor="end">0</text>
-            <text x="30" y="35" fill="#64748b" fontSize="9" textAnchor="end">{graphMaxV.toFixed(1)}</text>
-            <text x="30" y={(graphHeight - 15 + 30) / 2 + 3} fill="#64748b" fontSize="9" textAnchor="end">
+            <text x="28" y={graphHeight - 12} fill="#64748b" fontSize="11" textAnchor="end">0</text>
+            <text x="28" y="38" fill="#64748b" fontSize="11" textAnchor="end">{graphMaxV.toFixed(1)}</text>
+            <text x="28" y={(graphHeight - 15 + 30) / 2 + 5} fill="#64748b" fontSize="11" textAnchor="end">
               {(graphMaxV / 2).toFixed(1)}
             </text>
           </g>
 
           {/* ========== INFO PANEL ========== */}
-          <g transform={`translate(${width - graphWidth - 50}, ${graphHeight + 50})`} filter="url(#tvelPanelShadow)">
+          <g transform={`translate(${width - graphWidth - 50}, ${graphHeight + 55})`} filter="url(#tvelPanelShadow)">
             <rect
               x="0"
               y="0"
@@ -965,9 +965,9 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
             <rect x="0" y="14" width={graphWidth} height="14" fill="#1e293b" />
             <text
               x={graphWidth / 2}
-              y="18"
+              y="19"
               fill="#f8fafc"
-              fontSize="12"
+              fontSize="11"
               textAnchor="middle"
               fontWeight="bold"
             >
@@ -975,20 +975,20 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
             </text>
 
             {/* Current velocity */}
-            <text x="15" y="48" fill="#94a3b8" fontSize="10">Current:</text>
-            <text x={graphWidth - 15} y="48" fill="#22c55e" fontSize="14" fontWeight="bold" textAnchor="end">
+            <text x="15" y="50" fill="#94a3b8" fontSize="11">Current:</text>
+            <text x={graphWidth - 15} y="50" fill="#22c55e" fontSize="13" fontWeight="bold" textAnchor="end">
               v = {velocity.toFixed(2)} m/s
             </text>
 
             {/* Terminal velocity */}
-            <text x="15" y="68" fill="#94a3b8" fontSize="10">Terminal:</text>
-            <text x={graphWidth - 15} y="68" fill="#a855f7" fontSize="14" fontWeight="bold" textAnchor="end">
+            <text x="15" y="70" fill="#94a3b8" fontSize="11">Terminal:</text>
+            <text x={graphWidth - 15} y="70" fill="#a855f7" fontSize="13" fontWeight="bold" textAnchor="end">
               vt = {terminalVelocity.toFixed(2)} m/s
             </text>
 
             {/* Time elapsed */}
-            <text x="15" y="88" fill="#94a3b8" fontSize="10">Time:</text>
-            <text x={graphWidth - 15} y="88" fill="#60a5fa" fontSize="14" fontWeight="bold" textAnchor="end">
+            <text x="15" y="90" fill="#94a3b8" fontSize="11">Time:</text>
+            <text x={graphWidth - 15} y="90" fill="#60a5fa" fontSize="13" fontWeight="bold" textAnchor="end">
               t = {time.toFixed(2)} s
             </text>
           </g>
@@ -997,9 +997,9 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
           <g transform={`translate(${width - graphWidth - 50}, ${height - 45})`}>
             <rect x="0" y="0" width={graphWidth} height="38" fill="url(#tvelInfoPanelGradient)" rx="8" stroke="#334155" strokeWidth="1" />
             <circle cx="20" cy="12" r="5" fill="url(#tvelGravityGradient)" />
-            <text x="32" y="16" fill="#f8fafc" fontSize="9">Weight (W = mg)</text>
+            <text x="32" y="16" fill="#f8fafc" fontSize="11">Weight (W = mg)</text>
             <circle cx="20" cy="28" r="5" fill="url(#tvelDragGradient)" />
-            <text x="32" y="32" fill="#f8fafc" fontSize="9">Drag (Fd = 1/2 rho v^2 Cd A)</text>
+            <text x="32" y="32" fill="#f8fafc" fontSize="11">Drag (Fd = 1/2 rho v^2 Cd A)</text>
           </g>
 
           {/* ========== DROP ZONE LABEL ========== */}
@@ -1068,8 +1068,17 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
           step="1"
           value={numFilters}
           onChange={(e) => { setNumFilters(parseInt(e.target.value)); resetSimulation(); }}
-          style={{ width: '100%' }}
+          style={{
+            width: '100%',
+            height: '20px',
+            touchAction: 'pan-y',
+            WebkitAppearance: 'none',
+            accentColor: '#3b82f6'
+          } as React.CSSProperties}
         />
+        <div style={{ color: colors.textMuted, fontSize: '12px', marginTop: '4px' }}>
+          Increasing filters increases mass. More mass means terminal velocity increases by the square root of the number of filters (v ∝ √n).
+        </div>
       </div>
 
       <div>
@@ -1083,12 +1092,21 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
           step="0.1"
           value={airDensity}
           onChange={(e) => { setAirDensity(parseFloat(e.target.value)); resetSimulation(); }}
-          style={{ width: '100%' }}
+          style={{
+            width: '100%',
+            height: '20px',
+            touchAction: 'pan-y',
+            WebkitAppearance: 'none',
+            accentColor: '#3b82f6'
+          } as React.CSSProperties}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px', marginTop: '4px' }}>
           <span>High altitude</span>
           <span>Sea level</span>
           <span>Dense</span>
+        </div>
+        <div style={{ color: colors.textMuted, fontSize: '12px', marginTop: '4px' }}>
+          Higher air density increases drag force, which reduces terminal velocity. At high altitude, objects fall faster due to thinner air.
         </div>
       </div>
 
@@ -1308,6 +1326,19 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
               <li>Lower air density (high altitude) - faster or slower?</li>
               <li>Notice the drag arrow grows until it matches the weight arrow</li>
             </ul>
+          </div>
+
+          <div style={{
+            background: 'rgba(16, 185, 129, 0.2)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `3px solid ${colors.success}`,
+          }}>
+            <h4 style={{ color: colors.success, marginBottom: '8px' }}>Why This Matters:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+              Terminal velocity determines parachute design, raindrop speeds, seed dispersal, and skydiving safety. Understanding how mass and area affect fall speed is critical for aerospace engineering, weather prediction, and recreational aviation.
+            </p>
           </div>
         </div>
         {renderBottomBar(false, true, 'Continue to Review')}

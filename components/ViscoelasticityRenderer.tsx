@@ -100,11 +100,13 @@ const realWorldApps = [
 ];
 
 const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
-  phase,
+  phase: propPhase,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Default to hook if phase is invalid or undefined
+  const phase = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'].includes(propPhase) ? propPhase : 'hook';
   // Simulation state
   const [strainRate, setStrainRate] = useState(50); // 0 = very slow, 100 = very fast
   const [temperature, setTemperature] = useState(50); // 0 = cold, 100 = hot
@@ -601,6 +603,7 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
               fill={behaviorRatio > 0.5 ? "url(#viscMaterialElastic)" : "url(#viscMaterialViscous)"}
               stroke={behaviorRatio > 0.5 ? "#818cf8" : "#fb923c"}
               strokeWidth={2}
+              data-de={De.toFixed(2)}
             />
 
             {/* Inner highlight */}
@@ -802,10 +805,10 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
 
               {/* Grid lines */}
               {[...Array(6)].map((_, i) => (
-                <line key={`h${i}`} x1="60" y1={20 + i * 26} x2="660" y2={20 + i * 26} stroke="#1e293b" strokeWidth="1" />
+                <line key={`h${i}`} x1="60" y1={20 + i * 26} x2="660" y2={20 + i * 26} stroke="#1e293b" strokeWidth="1" opacity="0.4" />
               ))}
               {[...Array(7)].map((_, i) => (
-                <line key={`v${i}`} x1={60 + i * 100} y1="20" x2={60 + i * 100} y2="150" stroke="#1e293b" strokeWidth="1" />
+                <line key={`v${i}`} x1={60 + i * 100} y1="20" x2={60 + i * 100} y2="150" stroke="#1e293b" strokeWidth="1" opacity="0.4" />
               ))}
 
               {/* Axes */}
@@ -922,7 +925,7 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
           step="5"
           value={strainRate}
           onChange={(e) => setStrainRate(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', touchAction: 'pan-y' } as React.CSSProperties}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
           <span>Slow (flows)</span>
@@ -941,7 +944,7 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
           step="5"
           value={temperature}
           onChange={(e) => setTemperature(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', touchAction: 'pan-y' } as React.CSSProperties}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
           <span>Cold (brittle)</span>
@@ -1653,8 +1656,8 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
+            <h1 style={{ color: colors.success, marginBottom: '8px' }}>🎉 Mastery Achieved! 🎉</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered viscoelasticity and time-dependent material behavior</p>
           </div>
           <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>

@@ -125,13 +125,20 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 // MAIN COMPONENT
 // ============================================================================
 
-const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onGameEvent }) => {
+const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onGameEvent, gamePhase }) => {
   // Phase management
   type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
-  const [phase, setPhase] = useState<Phase>('hook');
+  const [phase, setPhase] = useState<Phase>((gamePhase as Phase) || 'hook');
   const [isMobile, setIsMobile] = useState(false);
+
+  // Handle gamePhase prop changes (for testing)
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
+      setPhase(gamePhase as Phase);
+    }
+  }, [gamePhase]);
 
   // Game state
   const [prediction, setPrediction] = useState<string | null>(null);
@@ -1202,15 +1209,46 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
       height: '100%',
       display: 'flex',
       flexDirection: 'column',
-      padding: isMobile ? '20px' : '40px'
+      padding: isMobile ? '20px' : '40px',
+      overflowY: 'auto'
     }}>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', maxWidth: '600px', margin: '0 auto' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', maxWidth: '600px', margin: '0 auto', width: '100%' }}>
         <span style={{ fontSize: '11px', color: colors.primary, fontWeight: 600, marginBottom: '8px' }}>
           Step 2 of 10 • Make Your Prediction
         </span>
         <h2 style={{ fontSize: isMobile ? '22px' : '28px', color: colors.textPrimary, marginBottom: '24px', lineHeight: 1.3 }}>
           What happens when you place your phone off-center on a wireless charger?
         </h2>
+
+        {/* SVG diagram showing wireless charging concept */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+          <svg width={isMobile ? '300' : '400'} height={isMobile ? '200' : '260'} style={{ background: colors.bgSurface, borderRadius: '12px', padding: '12px' }}>
+            <defs>
+              <radialGradient id="predCoilGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor={colors.coilTx} stopOpacity="0.6" />
+                <stop offset="100%" stopColor={colors.coilTx} stopOpacity="0" />
+              </radialGradient>
+            </defs>
+            {/* Charging pad */}
+            <rect x={isMobile ? '50' : '80'} y={isMobile ? '120' : '160'} width={isMobile ? '200' : '240'} height={isMobile ? '60' : '80'} rx="8" fill={colors.bgElevated} stroke={colors.border} strokeWidth="2" />
+            {/* Coil in pad */}
+            <circle cx={isMobile ? '150' : '200'} cy={isMobile ? '150' : '200'} r={isMobile ? '25' : '35'} fill="none" stroke={colors.coilTx} strokeWidth="3" />
+            <circle cx={isMobile ? '150' : '200'} cy={isMobile ? '150' : '200'} r={isMobile ? '18' : '25'} fill="none" stroke={colors.coilTx} strokeWidth="2" strokeOpacity="0.6" />
+            <circle cx={isMobile ? '150' : '200'} cy={isMobile ? '150' : '200'} r={isMobile ? '40' : '55'} fill="url(#predCoilGlow)" />
+            {/* Phone */}
+            <rect x={isMobile ? '110' : '150'} y={isMobile ? '40' : '60'} width={isMobile ? '80' : '100'} height={isMobile ? '60' : '80'} rx="8" fill={colors.bgElevated} stroke={colors.textSecondary} strokeWidth="2" />
+            {/* Phone coil */}
+            <circle cx={isMobile ? '150' : '200'} cy={isMobile ? '70' : '100'} r={isMobile ? '18' : '25'} fill="none" stroke={colors.coilRx} strokeWidth="2" />
+            {/* Question mark for misalignment */}
+            <text x={isMobile ? '230' : '280'} y={isMobile ? '80' : '110'} textAnchor="middle" fill={colors.warning} fontSize={isMobile ? '32' : '40'} fontWeight="bold">?</text>
+            {/* Magnetic field lines */}
+            <path d={isMobile ? 'M150,110 Q140,120 150,130' : 'M200,140 Q185,160 200,180'} fill="none" stroke={colors.accent} strokeWidth="2" strokeDasharray="4,4" strokeOpacity="0.5" />
+            <path d={isMobile ? 'M150,110 Q160,120 150,130' : 'M200,140 Q215,160 200,180'} fill="none" stroke={colors.accent} strokeWidth="2" strokeDasharray="4,4" strokeOpacity="0.5" />
+            {/* Labels */}
+            <text x={isMobile ? '150' : '200'} y={isMobile ? '25' : '40'} textAnchor="middle" fill={colors.textSecondary} fontSize={isMobile ? '11' : '13'} fontWeight="600">Phone (RX Coil)</text>
+            <text x={isMobile ? '150' : '200'} y={isMobile ? '192' : '252'} textAnchor="middle" fill={colors.textSecondary} fontSize={isMobile ? '11' : '13'} fontWeight="600">Charger (TX Coil)</text>
+          </svg>
+        </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {[
@@ -1242,13 +1280,6 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
             </button>
           ))}
         </div>
-      </div>
-
-      <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between' }}>
-        <Button variant="ghost" onClick={goBack}>← Back</Button>
-        <Button onClick={goNext} disabled={!prediction}>
-          Test My Prediction →
-        </Button>
       </div>
     </div>
   );
@@ -1654,9 +1685,10 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
       height: '100%',
       display: 'flex',
       flexDirection: 'column',
-      padding: isMobile ? '20px' : '40px'
+      padding: isMobile ? '20px' : '40px',
+      overflowY: 'auto'
     }}>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', maxWidth: '600px', margin: '0 auto' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', maxWidth: '600px', margin: '0 auto', width: '100%' }}>
         <div style={{
           padding: '12px 16px',
           background: `${colors.warning}20`,
@@ -1664,7 +1696,8 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
           marginBottom: '16px',
           display: 'inline-flex',
           alignItems: 'center',
-          gap: '8px'
+          gap: '8px',
+          width: 'fit-content'
         }}>
           <span style={{ fontSize: '20px' }}>🌀</span>
           <span style={{ color: colors.warning, fontWeight: 600, fontSize: '13px' }}>TWIST: New Variable!</span>
@@ -1676,6 +1709,47 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
         <p style={{ color: colors.textSecondary, marginBottom: '24px', fontSize: '15px' }}>
           Many people use protective cases 3-8mm thick. Some even use wallet cases with cards inside.
         </p>
+
+        {/* SVG diagram showing distance effect */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+          <svg width={isMobile ? '300' : '400'} height={isMobile ? '220' : '280'} style={{ background: colors.bgSurface, borderRadius: '12px', padding: '12px' }}>
+            <defs>
+              <radialGradient id="twistCoilGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor={colors.coilTx} stopOpacity="0.4" />
+                <stop offset="100%" stopColor={colors.coilTx} stopOpacity="0" />
+              </radialGradient>
+            </defs>
+            {/* Charging pad */}
+            <rect x={isMobile ? '50' : '80'} y={isMobile ? '140' : '180'} width={isMobile ? '200' : '240'} height={isMobile ? '60' : '80'} rx="8" fill={colors.bgElevated} stroke={colors.border} strokeWidth="2" />
+            {/* Coil in pad */}
+            <circle cx={isMobile ? '150' : '200'} cy={isMobile ? '170' : '220'} r={isMobile ? '25' : '35'} fill="none" stroke={colors.coilTx} strokeWidth="3" />
+            <circle cx={isMobile ? '150' : '200'} cy={isMobile ? '170' : '220'} r={isMobile ? '18' : '25'} fill="none" stroke={colors.coilTx} strokeWidth="2" strokeOpacity="0.6" />
+            <circle cx={isMobile ? '150' : '200'} cy={isMobile ? '170' : '220'} r={isMobile ? '40' : '55'} fill="url(#twistCoilGlow)" />
+
+            {/* Thick phone case - emphasized */}
+            <rect x={isMobile ? '110' : '150'} y={isMobile ? '70' : '90'} width={isMobile ? '80' : '100'} height={isMobile ? '50' : '70'} rx="8" fill={colors.warning} fillOpacity="0.3" stroke={colors.warning} strokeWidth="3" />
+            <text x={isMobile ? '150' : '200'} y={isMobile ? '100' : '130'} textAnchor="middle" fill={colors.warning} fontSize={isMobile ? '12' : '14'} fontWeight="bold">THICK CASE</text>
+
+            {/* Phone inside case */}
+            <rect x={isMobile ? '115' : '157'} y={isMobile ? '50' : '65'} width={isMobile ? '70' : '86'} height={isMobile ? '42' : '58'} rx="6" fill={colors.bgElevated} stroke={colors.textSecondary} strokeWidth="2" />
+            {/* Phone coil */}
+            <circle cx={isMobile ? '150' : '200'} cy={isMobile ? '71' : '94'} r={isMobile ? '15' : '20'} fill="none" stroke={colors.coilRx} strokeWidth="2" />
+
+            {/* Distance annotation with arrow */}
+            <line x1={isMobile ? '220' : '270'} y1={isMobile ? '120' : '160'} x2={isMobile ? '220' : '270'} y2={isMobile ? '140' : '180'} stroke={colors.error} strokeWidth="2" />
+            <line x1={isMobile ? '215' : '265'} y1={isMobile ? '120' : '160'} x2={isMobile ? '225' : '275'} y2={isMobile ? '120' : '160'} stroke={colors.error} strokeWidth="2" />
+            <line x1={isMobile ? '215' : '265'} y1={isMobile ? '140' : '180'} x2={isMobile ? '225' : '275'} y2={isMobile ? '140' : '180'} stroke={colors.error} strokeWidth="2" />
+            <text x={isMobile ? '240' : '290'} y={isMobile ? '133' : '173'} fill={colors.error} fontSize={isMobile ? '11' : '13'} fontWeight="600">Gap?</text>
+
+            {/* Weak magnetic field lines */}
+            <path d={isMobile ? 'M150,92 Q140,110 150,128' : 'M200,114 Q185,150 200,186'} fill="none" stroke={colors.accent} strokeWidth="2" strokeDasharray="4,4" strokeOpacity="0.3" />
+            <path d={isMobile ? 'M150,92 Q160,110 150,128' : 'M200,114 Q215,150 200,186'} fill="none" stroke={colors.accent} strokeWidth="2" strokeDasharray="4,4" strokeOpacity="0.3" />
+
+            {/* Labels */}
+            <text x={isMobile ? '150' : '200'} y={isMobile ? '35' : '50'} textAnchor="middle" fill={colors.textSecondary} fontSize={isMobile ? '11' : '13'} fontWeight="600">Phone + Case</text>
+            <text x={isMobile ? '150' : '200'} y={isMobile ? '212' : '272'} textAnchor="middle" fill={colors.textSecondary} fontSize={isMobile ? '11' : '13'} fontWeight="600">Charger</text>
+          </svg>
+        </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {[
@@ -1707,13 +1781,6 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
             </button>
           ))}
         </div>
-      </div>
-
-      <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between' }}>
-        <Button variant="ghost" onClick={goBack}>← Back</Button>
-        <Button onClick={goNext} disabled={!twistPrediction}>
-          Test My Prediction →
-        </Button>
       </div>
     </div>
   );
@@ -2948,47 +3015,135 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
   };
 
   // ============================================================================
+  // BOTTOM NAVIGATION BAR
+  // ============================================================================
+
+  const currentPhaseIndex = phaseOrder.indexOf(phase);
+  const isFirstPhase = currentPhaseIndex === 0;
+  const isLastPhase = currentPhaseIndex === phaseOrder.length - 1;
+  const canAdvance = !isLastPhase && phase !== 'test';
+
+  const renderBottomBar = () => (
+    <nav style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: '12px 20px',
+      borderTop: `1px solid ${colors.border}`,
+      background: colors.bgSurface,
+      zIndex: 1000,
+    }}>
+      <button
+        onClick={() => !isFirstPhase && goToPhase(phaseOrder[currentPhaseIndex - 1])}
+        style={{
+          minHeight: '48px',
+          padding: '12px 20px',
+          borderRadius: '8px',
+          border: `1px solid ${colors.border}`,
+          background: 'transparent',
+          color: isFirstPhase ? 'rgba(148, 163, 184, 0.6)' : colors.textPrimary,
+          cursor: isFirstPhase ? 'not-allowed' : 'pointer',
+          opacity: isFirstPhase ? 0.4 : 1,
+          transition: 'all 0.3s ease',
+          fontWeight: 600,
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+        }}
+      >
+        ← Back
+      </button>
+      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+        {phaseOrder.map((p, i) => (
+          <button
+            key={p}
+            onClick={() => i <= currentPhaseIndex && goToPhase(p)}
+            aria-label={phaseLabels[p]}
+            title={phaseLabels[p]}
+            style={{
+              minHeight: '44px',
+              minWidth: '44px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: 'none',
+              background: 'transparent',
+              cursor: i <= currentPhaseIndex ? 'pointer' : 'default',
+              padding: '0',
+            }}
+          >
+            <span style={{
+              width: p === phase ? '20px' : '10px',
+              height: '10px',
+              borderRadius: '5px',
+              background: p === phase ? colors.primary : i < currentPhaseIndex ? colors.success : colors.bgElevated,
+              transition: 'all 0.3s ease',
+              display: 'block',
+            }} />
+          </button>
+        ))}
+      </div>
+      <button
+        onClick={() => canAdvance && goToPhase(phaseOrder[currentPhaseIndex + 1])}
+        style={{
+          minHeight: '48px',
+          padding: '12px 20px',
+          borderRadius: '8px',
+          border: 'none',
+          background: canAdvance ? `linear-gradient(135deg, ${colors.primary}, ${colors.accent})` : colors.bgElevated,
+          color: colors.textPrimary,
+          cursor: canAdvance ? 'pointer' : 'not-allowed',
+          opacity: canAdvance ? 1 : 0.4,
+          transition: 'all 0.3s ease',
+          fontWeight: 600,
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+        }}
+      >
+        Next →
+      </button>
+    </nav>
+  );
+
+  // ============================================================================
   // MAIN RENDER
   // ============================================================================
 
   return (
     <div style={{
-      height: '100%',
+      height: '100vh',
+      overflow: 'hidden',
       background: colors.bgDeep,
-      color: colors.textPrimary,
-      fontFamily: 'system-ui, -apple-system, sans-serif',
       display: 'flex',
       flexDirection: 'column',
-      overflow: 'hidden'
+      color: colors.textPrimary,
+      fontFamily: 'system-ui, -apple-system, sans-serif',
     }}>
       {/* Progress bar */}
       <div style={{
-        padding: '10px 16px',
-        borderBottom: `1px solid ${colors.bgElevated}`,
-        flexShrink: 0,
-        background: colors.bgSurface
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '4px',
+        background: colors.bgSurface,
+        zIndex: 100,
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-          <span style={{ fontSize: '12px', color: colors.textMuted }}>{phaseLabels[phase]}</span>
-          <span style={{ fontSize: '12px', color: colors.textMuted }}>
-            {phaseOrder.indexOf(phase) + 1}/10
-          </span>
-        </div>
-        <div style={{ height: '4px', background: colors.bgElevated, borderRadius: '2px' }}>
-          <div style={{
-            height: '100%',
-            width: `${((phaseOrder.indexOf(phase) + 1) / 10) * 100}%`,
-            background: `linear-gradient(90deg, ${colors.primary}, ${colors.accent})`,
-            borderRadius: '2px',
-            transition: 'width 0.3s'
-          }} />
-        </div>
+        <div style={{
+          height: '100%',
+          width: `${((currentPhaseIndex + 1) / phaseOrder.length) * 100}%`,
+          background: `linear-gradient(90deg, ${colors.primary}, ${colors.accent})`,
+          transition: 'width 0.3s ease',
+        }} />
       </div>
 
-      {/* Content */}
-      <div style={{ flex: 1, overflow: 'hidden' }}>
+      {/* Main content - scrollable */}
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '4px', paddingBottom: '80px' }}>
         {renderContent()}
       </div>
+
+      {renderBottomBar()}
     </div>
   );
 };

@@ -76,7 +76,7 @@ const realWorldApps = [
 ];
 
 interface SleepingTopRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
@@ -109,7 +109,7 @@ interface TopState {
 }
 
 const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
-  phase,
+  phase = 'hook',
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
@@ -842,7 +842,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
           </g>
 
           {/* Premium stats panel */}
-          <g transform={`translate(${width - 120}, 15)`}>
+          <g transform={`translate(${width - 120}, 70)`}>
             <rect
               x={0}
               y={0}
@@ -854,22 +854,22 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               stroke="#334155"
               strokeWidth={1}
             />
-            <text x={8} y={18} fill="#94a3b8" fontSize={10} fontWeight="600">
+            <text x={8} y={18} fill="#94a3b8" fontSize={11} fontWeight="600">
               Spin
             </text>
-            <text x={102} y={18} textAnchor="end" fill="#38bdf8" fontSize={11} fontWeight="bold">
+            <text x={102} y={18} textAnchor="end" fill="#38bdf8" fontSize={12} fontWeight="bold">
               {top.psiDot.toFixed(0)} rad/s
             </text>
-            <text x={8} y={35} fill="#94a3b8" fontSize={10} fontWeight="600">
+            <text x={8} y={35} fill="#94a3b8" fontSize={11} fontWeight="600">
               Tilt
             </text>
-            <text x={102} y={35} textAnchor="end" fill="#fbbf24" fontSize={11} fontWeight="bold">
-              {(top.theta * 180 / Math.PI).toFixed(1)}deg
+            <text x={102} y={35} textAnchor="end" fill="#fbbf24" fontSize={12} fontWeight="bold">
+              {(top.theta * 180 / Math.PI).toFixed(1)}°
             </text>
-            <text x={8} y={52} fill="#94a3b8" fontSize={10} fontWeight="600">
-              Precession
+            <text x={8} y={52} fill="#94a3b8" fontSize={11} fontWeight="600">
+              Prec
             </text>
-            <text x={102} y={52} textAnchor="end" fill="#34d399" fontSize={11} fontWeight="bold">
+            <text x={102} y={52} textAnchor="end" fill="#34d399" fontSize={12} fontWeight="bold">
               {top.phiDot.toFixed(1)} rad/s
             </text>
           </g>
@@ -947,9 +947,16 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
           step="5"
           value={initialSpin}
           onChange={(e) => setInitialSpin(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          onInput={(e) => setInitialSpin(parseInt((e.target as HTMLInputElement).value))}
+          style={{
+            width: '100%',
+            height: '20px',
+            touchAction: 'pan-y',
+            WebkitAppearance: 'none',
+            accentColor: '#3b82f6'
+          } as React.CSSProperties}
         />
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: colors.textMuted }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: colors.textMuted }}>
           <span>Slow (falls)</span>
           <span>Fast (stable)</span>
         </div>
@@ -966,7 +973,14 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
           step="0.05"
           value={initialTilt}
           onChange={(e) => setInitialTilt(parseFloat(e.target.value))}
-          style={{ width: '100%' }}
+          onInput={(e) => setInitialTilt(parseFloat((e.target as HTMLInputElement).value))}
+          style={{
+            width: '100%',
+            height: '20px',
+            touchAction: 'pan-y',
+            WebkitAppearance: 'none',
+            accentColor: '#3b82f6'
+          } as React.CSSProperties}
         />
       </div>
 
@@ -1025,7 +1039,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               🌀 The Defiant Top
@@ -1075,7 +1089,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           {renderVisualization(false)}
 
           <div style={{
@@ -1126,7 +1140,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore the Sleeping Top</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1163,7 +1177,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1214,7 +1228,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>🔄 The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1272,7 +1286,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Spin Rate Effects</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1308,7 +1322,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1358,7 +1372,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
   if (phase === 'transfer') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               🌍 Real-World Applications
@@ -1439,7 +1453,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     if (testSubmitted) {
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1507,7 +1521,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -1633,7 +1647,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>

@@ -82,10 +82,10 @@ const realWorldApps = [
 // TYPES & INTERFACES
 // ===============================================================================
 interface MagneticMappingRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phaseIndex: number) => void;
+  onGameEvent?: (event: { type: string; data?: Record<string, unknown> }) => void;
+  onBack?: () => void;
 }
 
 interface Magnet {
@@ -198,28 +198,8 @@ const TEST_QUESTIONS = [
   }
 ];
 
-const TRANSFER_APPS = [
-  {
-    title: 'Compass Navigation',
-    description: 'Compass needles are tiny magnets that align with Earth\'s field, pointing toward magnetic north.',
-    icon: '🧭'
-  },
-  {
-    title: 'MRI Machines',
-    description: 'Powerful magnets create precise fields. Field mapping ensures accurate medical imaging.',
-    icon: '🏥'
-  },
-  {
-    title: 'Particle Accelerators',
-    description: 'Mapped magnetic fields steer particles at near-light speeds in exact circular paths.',
-    icon: '⚛️'
-  },
-  {
-    title: 'Magnetic Shielding',
-    description: 'Understanding field patterns helps design shields for sensitive electronics.',
-    icon: '🛡️'
-  }
-];
+// Use realWorldApps for transfer phase
+const TRANSFER_APPS = realWorldApps;
 
 // ===============================================================================
 // HELPER FUNCTIONS
@@ -249,12 +229,25 @@ function calculateField(px: number, py: number, magnets: Magnet[]): { bx: number
 // ===============================================================================
 // MAIN COMPONENT
 // ===============================================================================
-const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
-  phase,
-  onPhaseComplete,
-  onCorrectAnswer,
-  onIncorrectAnswer
-}) => {
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Explore',
+  review: 'Understanding',
+  twist_predict: 'Twist Predict',
+  twist_play: 'Twist Play',
+  twist_review: 'Twist Review',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery'
+};
+
+const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({ gamePhase, onPhaseComplete, onGameEvent, onBack }) => {
+  const [phase, setPhase] = useState<Phase>('hook');
   const [isMobile, setIsMobile] = useState(false);
 
   // Responsive detection
@@ -264,6 +257,13 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Phase sync from props
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
+    }
+  }, [gamePhase, phase]);
 
   // Responsive typography
   const typo = {
@@ -349,6 +349,14 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
       oscillator.stop(audioContext.currentTime + sound.duration);
     } catch { /* Audio not available */ }
   }, []);
+
+  const goToPhase = useCallback((newPhase: Phase) => {
+    playSound('transition');
+    setPhase(newPhase);
+    const phaseIndex = phaseOrder.indexOf(newPhase);
+    onPhaseComplete?.(phaseIndex);
+    onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
+  }, [playSound, onPhaseComplete, onGameEvent]);
 
   useEffect(() => {
     if (phase === 'play') {
@@ -1760,7 +1768,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-full mb-8">
@@ -1830,7 +1838,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
             <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
@@ -1886,7 +1894,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div className="flex flex-col items-center p-6">
             <h2 className="text-2xl font-bold text-white mb-4">Magnetic Field Mapper</h2>
@@ -1913,7 +1921,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
                   value={magnetStrength}
                   onChange={(e) => setMagnetStrength(Number(e.target.value))}
                   className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500"
-                  style={{ zIndex: 10 }}
+                  style={{ zIndex: 10, touchAction: 'pan-y' }}
                 />
                 <div className="flex justify-between text-xs mt-1" style={{ color: colors.textSecondary }}>
                   <span>Weak</span>
@@ -1934,7 +1942,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
                   value={probeDistance}
                   onChange={(e) => setProbeDistance(Number(e.target.value))}
                   className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                  style={{ zIndex: 10 }}
+                  style={{ zIndex: 10, touchAction: 'pan-y' }}
                 />
                 <div className="flex justify-between text-xs mt-1" style={{ color: colors.textSecondary }}>
                   <span>Close</span>
@@ -2040,7 +2048,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
   // REVIEW PHASE
   if (phase === 'review') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div className="flex flex-col items-center p-6">
             <h2 className="text-2xl font-bold text-white mb-6">Reading Magnetic Field Maps</h2>
@@ -2124,7 +2132,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
             <h2 className="text-2xl font-bold text-amber-400 mb-6">The Earth Question</h2>
@@ -2180,7 +2188,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div className="flex flex-col items-center p-6">
             <h2 className="text-2xl font-bold text-amber-400 mb-4">Advanced Magnetic Fields</h2>
@@ -2277,7 +2285,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
                       value={earthFieldIntensity}
                       onChange={(e) => setEarthFieldIntensity(Number(e.target.value))}
                       className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-green-500"
-                      style={{ zIndex: 10 }}
+                      style={{ zIndex: 10, touchAction: 'pan-y' }}
                     />
                     <p className="text-slate-500 text-xs mt-2 text-center">
                       Earth&apos;s field varies from ~25 uT (equator) to ~65 uT (poles)
@@ -2313,7 +2321,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
                     value={electromagnetCurrent}
                     onChange={(e) => setElectromagnetCurrent(Number(e.target.value))}
                     className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-yellow-500"
-                    style={{ zIndex: 10 }}
+                    style={{ zIndex: 10, touchAction: 'pan-y' }}
                   />
                   <div className="flex justify-between text-xs text-slate-500 mt-1">
                     <span>Off</span>
@@ -2364,7 +2372,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div className="flex flex-col items-center p-6">
             <h2 className="text-2xl font-bold text-amber-400 mb-6">Earth&apos;s Magnetic Shield</h2>
@@ -2421,7 +2429,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
   // TRANSFER PHASE
   if (phase === 'transfer') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div className="flex flex-col items-center p-6">
             <h2 className="text-2xl font-bold text-white mb-6">Real-World Applications</h2>
@@ -2444,20 +2452,52 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
             <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full">
               <div className="flex items-center gap-3 mb-4">
                 <span className="text-3xl">{TRANSFER_APPS[activeAppTab].icon}</span>
-                <h3 className="text-xl font-bold text-white">{TRANSFER_APPS[activeAppTab].title}</h3>
+                <div>
+                  <h3 className="text-xl font-bold text-white">{TRANSFER_APPS[activeAppTab].title}</h3>
+                  <p style={{ fontSize: typo.small, color: colors.textMuted }}>{TRANSFER_APPS[activeAppTab].tagline}</p>
+                </div>
               </div>
               <p style={{ fontSize: typo.bodyLarge, color: colors.textSecondary }} className="mt-4">{TRANSFER_APPS[activeAppTab].description}</p>
+
+              {/* Stats */}
+              {TRANSFER_APPS[activeAppTab].stats && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginTop: '20px' }}>
+                  {TRANSFER_APPS[activeAppTab].stats.map((stat: any, i: number) => (
+                    <div key={i} style={{ padding: '16px', borderRadius: '12px', background: 'rgba(6, 182, 212, 0.1)', border: '1px solid rgba(6, 182, 212, 0.3)' }}>
+                      <div style={{ fontSize: '24px', marginBottom: '4px' }}>{stat.icon}</div>
+                      <div style={{ fontSize: '18px', fontWeight: 700, color: colors.accent }}>{stat.value}</div>
+                      <div style={{ fontSize: '12px', color: colors.textMuted }}>{stat.label}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Companies */}
+              {TRANSFER_APPS[activeAppTab].companies && (
+                <div style={{ marginTop: '20px' }}>
+                  <p style={{ fontSize: typo.small, color: colors.textMuted, marginBottom: '8px' }}>Key Players:</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {TRANSFER_APPS[activeAppTab].companies.map((company: string, i: number) => (
+                      <span key={i} style={{ padding: '6px 12px', borderRadius: '6px', background: 'rgba(139, 92, 246, 0.1)', border: '1px solid rgba(139, 92, 246, 0.3)', fontSize: typo.small, color: colors.secondary }}>
+                        {company}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {!completedApps.has(activeAppTab) && (
                 <button
                   onPointerDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
-                  style={{ minHeight: '44px', padding: '12px 24px', background: '#10b981', color: 'white', borderRadius: '8px', fontWeight: 600, border: 'none', cursor: 'pointer', marginTop: '16px' }}
+                  style={{ minHeight: '48px', padding: '12px 24px', background: `linear-gradient(135deg, ${colors.accent}, ${colors.secondary})`, color: 'white', borderRadius: '8px', fontWeight: 700, border: 'none', cursor: 'pointer', marginTop: '20px', width: '100%', transition: 'all 0.3s ease', boxShadow: '0 4px 12px rgba(6, 182, 212, 0.3)' }}
                 >
-                  Got It
+                  Mark as Explored ✓
                 </button>
               )}
               {completedApps.has(activeAppTab) && (
-                <div className="mt-4 flex items-center gap-2 text-emerald-400">
-                  <span>Completed</span>
+                <div className="mt-4 flex items-center gap-2 text-emerald-400 justify-center" style={{ padding: '12px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px' }}>
+                  <span style={{ fontSize: '20px' }}>✓</span>
+                  <span style={{ fontWeight: 600 }}>Explored</span>
                 </div>
               )}
             </div>
@@ -2477,7 +2517,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
   if (phase === 'test') {
     if (showTestResults) {
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
           <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
             <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mx-auto mt-8 text-center">
               <div className="text-6xl mb-4">{testScore >= 7 ? '🎉' : '📚'}</div>

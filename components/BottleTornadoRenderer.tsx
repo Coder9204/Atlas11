@@ -825,19 +825,23 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
           </div>
 
           <button
-            onClick={goToNextPhase}
+            onClick={(phase === 'test' && !testSubmitted) ? undefined : goToNextPhase}
+            disabled={phase === 'test' && !testSubmitted}
             aria-label="Next"
             style={{
               minHeight: '44px',
               minWidth: '44px',
               padding: '8px 16px',
-              background: 'linear-gradient(135deg, #22d3ee, #06b6d4)',
+              background: (phase === 'test' && !testSubmitted)
+                ? 'rgba(71, 85, 105, 0.5)'
+                : 'linear-gradient(135deg, #22d3ee, #06b6d4)',
               border: 'none',
               borderRadius: '8px',
-              color: colors.textPrimary,
+              color: (phase === 'test' && !testSubmitted) ? colors.textMuted : colors.textPrimary,
               fontSize: '14px',
               fontWeight: '600',
-              cursor: 'pointer',
+              cursor: (phase === 'test' && !testSubmitted) ? 'not-allowed' : 'pointer',
+              opacity: (phase === 'test' && !testSubmitted) ? 0.4 : 1,
               display: 'flex',
               alignItems: 'center',
               gap: '4px',

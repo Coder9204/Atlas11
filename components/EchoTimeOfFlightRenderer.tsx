@@ -2441,7 +2441,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
   // ==================== MAIN RENDER ====================
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       {/* Premium background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
@@ -2457,6 +2457,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
               <button
                 key={p}
                 onClick={(e) => { e.preventDefault(); goToPhase(p); }}
+                aria-label={phaseLabels[p]}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
@@ -2465,7 +2466,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
                 title={phaseLabels[p]}
-                style={{ zIndex: 10 }}
+                style={{ zIndex: 10, cursor: 'pointer' }}
               />
             ))}
           </div>
@@ -2473,18 +2474,26 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="relative pt-16 pb-12 max-w-4xl mx-auto px-4">
-        {phase === 'hook' && renderHookPhase()}
-        {phase === 'predict' && renderPredictPhase()}
-        {phase === 'play' && renderPlayPhase()}
-        {phase === 'review' && renderReviewPhase()}
-        {phase === 'twist_predict' && renderTwistPredictPhase()}
-        {phase === 'twist_play' && renderTwistPlayPhase()}
-        {phase === 'twist_review' && renderTwistReviewPhase()}
-        {phase === 'transfer' && renderTransferPhase()}
-        {phase === 'test' && renderTestPhase()}
-        {phase === 'mastery' && renderMasteryPhase()}
+      {/* Main scrollable content */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        paddingTop: '48px',
+        paddingBottom: '100px',
+        position: 'relative'
+      }}>
+        <div className="max-w-4xl mx-auto px-4">
+          {phase === 'hook' && renderHookPhase()}
+          {phase === 'predict' && renderPredictPhase()}
+          {phase === 'play' && renderPlayPhase()}
+          {phase === 'review' && renderReviewPhase()}
+          {phase === 'twist_predict' && renderTwistPredictPhase()}
+          {phase === 'twist_play' && renderTwistPlayPhase()}
+          {phase === 'twist_review' && renderTwistReviewPhase()}
+          {phase === 'transfer' && renderTransferPhase()}
+          {phase === 'test' && renderTestPhase()}
+          {phase === 'mastery' && renderMasteryPhase()}
+        </div>
       </div>
     </div>
   );

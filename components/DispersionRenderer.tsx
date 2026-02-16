@@ -523,13 +523,14 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
     const toX = (wl: number) => padL + ((wl - xMin) / (xMax - xMin)) * plotW;
     const toY = (n: number) => padT + plotH - ((n - yMin) / (yMax - yMin)) * plotH;
 
+    // Cauchy approximation constants: n = A + B/lambda^2
+    const A = 1.505;
+    const B = 4200;
+
     // Generate dispersion curve points using Cauchy approximation
     const curvePoints: { x: number; y: number; wl: number; n: number }[] = [];
     for (let wl = xMin; wl <= xMax; wl += 5) {
-      // Cauchy approximation: n = A + B/lambda^2
-      const A = 1.505;
-      const B = 4200;
-      const n = A + B / (wl * wl) * dispersionFactor * 1000;
+      const n = A + (B / (wl * wl)) * dispersionFactor;
       curvePoints.push({ x: toX(wl), y: toY(n), wl, n });
     }
 
@@ -540,9 +541,10 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
     const currentAngle = prismAngle;
     const currentWl = 400 + ((currentAngle - 30) / 60) * 300;
     const clampedWl = Math.max(xMin, Math.min(xMax, currentWl));
-    const currentN = 1.505 + 4200 / (clampedWl * clampedWl) * dispersionFactor * 1000;
+    const currentN = A + (B / (clampedWl * clampedWl)) * dispersionFactor;
+    const clampedN = Math.max(yMin, Math.min(yMax, currentN));
     const interactiveX = toX(clampedWl);
-    const interactiveY = toY(currentN);
+    const interactiveY = toY(clampedN);
 
     // Grid lines
     const gridLinesY = [1.515, 1.520, 1.525, 1.530];
@@ -591,7 +593,7 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
         {gridLinesX.map(wl => (
           <g key={wl}>
             <line x1={toX(wl)} y1={padT} x2={toX(wl)} y2={height - padB} stroke={colors.border} strokeDasharray="4 4" opacity={0.3} />
-            <text x={toX(wl)} y={height - padB + 18} fill={colors.textMuted} fontSize="11" textAnchor="middle" fontFamily="sans-serif">{wl}</text>
+            <text x={toX(wl)} y={height - padB + 18} fill={colors.textMuted} fontSize="11" textAnchor="middle" fontFamily="sans-serif">{wl.toFixed(0)}</text>
           </g>
         ))}
 
@@ -617,8 +619,8 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
           const py = toY(c.n);
           return (
             <g key={c.key}>
-              <circle cx={px} cy={py} r={5} fill={c.color} stroke="rgba(255,255,255,0.5)" strokeWidth={1} />
-              <text x={px} y={py - 10} fill={c.color} fontSize="11" textAnchor="middle" fontFamily="sans-serif" fontWeight="600">{c.name}</text>
+              <circle cx={px.toFixed(1)} cy={py.toFixed(1)} r={5} fill={c.color} stroke="rgba(255,255,255,0.5)" strokeWidth={1} />
+              <text x={px.toFixed(1)} y={(py - 10).toFixed(1)} fill={c.color} fontSize="11" textAnchor="middle" fontFamily="sans-serif" fontWeight="600">{c.name}</text>
             </g>
           );
         })}
@@ -626,8 +628,8 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
         {/* Interactive highlight point */}
         {interactive && (
           <g>
-            <circle cx={interactiveX} cy={interactiveY} r={16} fill="url(#dispPointGlow)" />
-            <circle cx={interactiveX} cy={interactiveY} r={8} fill={colors.primary} filter="url(#glow)" stroke="#fff" strokeWidth={2} />
+            <circle cx={interactiveX.toFixed(1)} cy={interactiveY.toFixed(1)} r={16} fill="url(#dispPointGlow)" />
+            <circle cx={interactiveX.toFixed(1)} cy={interactiveY.toFixed(1)} r={8} fill={colors.primary} filter="url(#glow)" stroke="#fff" strokeWidth={2} />
           </g>
         )}
 
@@ -639,7 +641,7 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
         {/* Legend */}
         <g transform={`translate(${width - padR - 120}, ${padT + 10})`}>
           <rect x={0} y={0} width={110} height={36} rx={6} fill="rgba(30,41,59,0.9)" stroke="rgba(255,255,255,0.1)" />
-          <text x={10} y={16} fill={colors.textSecondary} fontSize="11" fontFamily="sans-serif">Dispersion: {dispersionFactor}×</text>
+          <text x={10} y={16} fill={colors.textSecondary} fontSize="11" fontFamily="sans-serif">Dispersion: {dispersionFactor.toFixed(1)}×</text>
           <text x={10} y={30} fill={colors.warning} fontSize="11" fontFamily="sans-serif" fontWeight="600">Spread: {totalSpread.toFixed(1)}°</text>
         </g>
       </svg>
@@ -705,7 +707,7 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
         {[0.5, 1.0, 1.5, 2.0, 2.5].map(m => (
           <g key={m}>
             <line x1={padL + (m / 3) * plotW} y1={padT} x2={padL + (m / 3) * plotW} y2={height - padB} stroke={colors.border} strokeDasharray="4 4" opacity={0.3} />
-            <text x={padL + (m / 3) * plotW} y={height - padB + 18} fill={colors.textMuted} fontSize="11" textAnchor="middle" fontFamily="sans-serif">{m}</text>
+            <text x={padL + (m / 3) * plotW} y={height - padB + 18} fill={colors.textMuted} fontSize="11" textAnchor="middle" fontFamily="sans-serif">{m.toFixed(1)}</text>
           </g>
         ))}
         {[15, 30, 45, 60].map(angle => {
@@ -736,15 +738,15 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
           const xx = padL + (1 / 3) * plotW;
           return (
             <g key={c.key}>
-              <circle cx={xx} cy={yy} r={4} fill={c.color} />
-              <text x={xx + 8} y={yy + 4} fill={c.color} fontSize="11" fontFamily="sans-serif">{c.name}</text>
+              <circle cx={xx.toFixed(1)} cy={yy.toFixed(1)} r={4} fill={c.color} />
+              <text x={(xx + 8).toFixed(1)} y={(yy + 4).toFixed(1)} fill={c.color} fontSize="11" fontFamily="sans-serif">{c.name}</text>
             </g>
           );
         })}
 
         {/* Interactive point */}
-        <circle cx={ix} cy={iy} r={16} fill="url(#cdGlow)" />
-        <circle cx={ix} cy={iy} r={8} fill={colors.warning} filter="url(#cdGlowFilter)" stroke="#fff" strokeWidth={2} />
+        <circle cx={ix.toFixed(1)} cy={iy.toFixed(1)} r={16} fill="url(#cdGlow)" />
+        <circle cx={ix.toFixed(1)} cy={iy.toFixed(1)} r={8} fill={colors.warning} filter="url(#cdGlowFilter)" stroke="#fff" strokeWidth={2} />
 
         <text x={width / 2} y={padT - 10} fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontFamily="sans-serif" fontWeight="700">
           CD Diffraction: d = {gratingSpacing.toFixed(1)}μm
@@ -902,7 +904,7 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ color: colors.textMuted, fontSize: '13px' }}>30°</span>
-                  <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>Prism Angle: {prismAngle}°</span>
+                  <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>Prism Angle: {prismAngle.toFixed(0)}°</span>
                   <span style={{ color: colors.primary, fontSize: '13px' }}>90°</span>
                 </div>
                 <input type="range" min="30" max="90" value={prismAngle} onChange={(e) => setPrismAngle(Number(e.target.value))} style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as any, accentColor: '#3b82f6', borderRadius: '4px', cursor: 'pointer' }} />
@@ -922,7 +924,7 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
                       cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s ease',
                     }}>
                       <div style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 600 }}>{mat.name}</div>
-                      <div style={{ color: colors.warning, fontSize: '12px' }}>{mat.dispersion}×</div>
+                      <div style={{ color: colors.warning, fontSize: '12px' }}>{mat.dispersion.toFixed(1)}×</div>
                     </button>
                   ))}
                 </div>
@@ -943,11 +945,11 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
             <div style={{ background: `${colors.primary}10`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.primary}20` }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', textAlign: 'center' }}>
                 <div>
-                  <div style={{ color: colors.primary, fontSize: '20px', fontWeight: 700 }}>{prismAngle}°</div>
+                  <div style={{ color: colors.primary, fontSize: '20px', fontWeight: 700 }}>{prismAngle.toFixed(0)}°</div>
                   <div style={{ color: colors.textMuted, fontSize: '12px' }}>Prism Angle</div>
                 </div>
                 <div>
-                  <div style={{ color: colors.warning, fontSize: '20px', fontWeight: 700 }}>{dispersionFactor}×</div>
+                  <div style={{ color: colors.warning, fontSize: '20px', fontWeight: 700 }}>{dispersionFactor.toFixed(1)}×</div>
                   <div style={{ color: colors.textMuted, fontSize: '12px' }}>Dispersion</div>
                 </div>
                 <div>
@@ -1001,6 +1003,11 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
               <p style={{ color: colors.textMuted, fontSize: '12px', margin: '8px 0 0 0' }}>
                 The refractive index n depends on wavelength λ — this is dispersion
               </p>
+            </div>
+
+            {/* Visual diagram */}
+            <div style={{ width: '100%', maxWidth: '700px', margin: '0 auto 20px auto', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, padding: '16px' }}>
+              {renderDispersionSVG(false)}
             </div>
 
             {/* Explanation cards */}
@@ -1230,6 +1237,11 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
               <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, lineHeight: 1.6 }}>
                 CD grooves act as a diffraction grating because light waves from adjacent grooves interfere. Different wavelengths constructively interfere at different angles. This demonstrates that dispersion and diffraction are two distinct physical mechanisms for separating colors.
               </p>
+            </div>
+
+            {/* Visual diagram */}
+            <div style={{ width: '100%', maxWidth: '700px', margin: '0 auto 20px auto', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, padding: '16px' }}>
+              {renderCDSVG()}
             </div>
 
             {/* Comparison cards */}
@@ -1484,6 +1496,25 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
               <p style={{ color: colors.textSecondary, fontSize: '16px', margin: 0 }}>{score} of 10 correct</p>
               <div style={{ height: '8px', background: colors.bgDark, borderRadius: '4px', marginTop: '20px', overflow: 'hidden' }}>
                 <div style={{ width: `${percentage}%`, height: '100%', background: passed ? `linear-gradient(90deg, ${colors.success} 0%, ${colors.successLight} 100%)` : `linear-gradient(90deg, ${colors.primary} 0%, ${colors.accent} 100%)`, borderRadius: '4px' }} />
+              </div>
+            </div>
+
+            {/* Answer review section */}
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', textAlign: 'left' as const, marginBottom: '24px', maxHeight: '400px', overflowY: 'auto' }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: 700, marginBottom: '16px' }}>📊 Answer Review:</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {testQuestions.map((q, i) => {
+                  const userAnswer = testAnswers[i];
+                  const correctAnswer = q.options.find(o => (o as any).correct)?.id;
+                  const isCorrect = userAnswer === correctAnswer;
+                  return (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px', borderRadius: '8px', background: isCorrect ? `${colors.success}10` : `${colors.error}10` }}>
+                      <span style={{ fontSize: '20px' }}>{isCorrect ? '✓' : '✗'}</span>
+                      <span style={{ color: colors.textSecondary, fontSize: '14px', flex: 1 }}>Question {i + 1}</span>
+                      <span style={{ color: isCorrect ? colors.success : colors.error, fontSize: '14px', fontWeight: 600 }}>{isCorrect ? 'Correct' : 'Incorrect'}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 

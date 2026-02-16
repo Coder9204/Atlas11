@@ -9,7 +9,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 // ============================================================================
 
 interface SupercoolingRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  gamePhase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
@@ -91,11 +92,33 @@ const realWorldApps = [
 ];
 
 const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
-  phase,
+  phase: propPhase,
+  gamePhase,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer
 }) => {
+  // Phase management - support both external and self-managed modes
+  const PHASES: Array<'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery'> =
+    ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  const externalPhase = propPhase || gamePhase;
+  const [internalPhase, setInternalPhase] = useState<typeof PHASES[number]>('hook');
+  const phase = externalPhase || internalPhase;
+
+  const phaseLabels: Record<typeof PHASES[number], string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understand',
+    twist_predict: 'Twist',
+    twist_play: 'Explore',
+    twist_review: 'Deep Dive',
+    transfer: 'Real World',
+    test: 'Test',
+    mastery: 'Master'
+  };
+
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -366,66 +389,116 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
   };
 
   const testQuestions = [
-    { question: "What is supercooling?", options: [
-      { text: "Extremely cold freezing", correct: false },
-      { text: "A liquid cooled below its freezing point without solidifying", correct: true },
-      { text: "Rapid cooling process", correct: false },
-      { text: "Cooling with superconductors", correct: false }
-    ]},
-    { question: "Why can water stay liquid below 0C?", options: [
-      { text: "It's a different type of water", correct: false },
-      { text: "Without nucleation sites, ice crystals can't form", correct: true },
-      { text: "Water doesn't freeze at 0C", correct: false },
-      { text: "The thermometer is wrong", correct: false }
-    ]},
-    { question: "What triggers instant freezing in supercooled water?", options: [
-      { text: "More cooling", correct: false },
-      { text: "Adding salt", correct: false },
-      { text: "A nucleation site (like a seed crystal or impurity)", correct: true },
-      { text: "Shaking violently", correct: false }
-    ]},
-    { question: "The freezing point on a phase diagram represents:", options: [
-      { text: "The coldest a liquid can get", correct: false },
-      { text: "Temperature where solid and liquid phases are in equilibrium", correct: true },
-      { text: "When water becomes a gas", correct: false },
-      { text: "Maximum supercooling", correct: false }
-    ]},
-    { question: "A 'metastable' state means:", options: [
-      { text: "Completely stable", correct: false },
-      { text: "Temporarily stable but can change with a small trigger", correct: true },
-      { text: "Completely unstable", correct: false },
-      { text: "Cannot change state", correct: false }
-    ]},
-    { question: "When supercooled water freezes, it releases:", options: [
-      { text: "Energy (latent heat)", correct: true },
-      { text: "Bubbles", correct: false },
-      { text: "Sound waves only", correct: false },
-      { text: "Nothing", correct: false }
-    ]},
-    { question: "Supercooled water is most likely to freeze spontaneously:", options: [
-      { text: "At exactly 0C", correct: false },
-      { text: "At around -40C (homogeneous nucleation limit)", correct: true },
-      { text: "At any temperature below 0C", correct: false },
-      { text: "Never without a seed", correct: false }
-    ]},
-    { question: "Which of these would trigger nucleation?", options: [
-      { text: "Adding more water", correct: false },
-      { text: "Heating the water", correct: false },
-      { text: "Tapping the container or adding an ice crystal", correct: true },
-      { text: "Covering the container", correct: false }
-    ]},
-    { question: "In nature, supercooled clouds produce:", options: [
-      { text: "Normal rain", correct: false },
-      { text: "Freezing rain and ice storms", correct: true },
-      { text: "Only snow", correct: false },
-      { text: "No precipitation", correct: false }
-    ]},
-    { question: "Reusable hand warmers using sodium acetate exploit:", options: [
-      { text: "Chemical combustion", correct: false },
-      { text: "Supercooling and triggered crystallization", correct: true },
-      { text: "Nuclear reactions", correct: false },
-      { text: "Electric heating", correct: false }
-    ]}
+    {
+      scenario: "You place a bottle of pure distilled water in a freezer set to -10°C. After carefully removing it 30 minutes later, the water is still completely liquid despite being well below freezing.",
+      question: "What phenomenon is occurring, and why hasn't the water frozen?",
+      options: [
+        { text: "The thermometer is broken - water always freezes at 0°C", correct: false },
+        { text: "Supercooling - without nucleation sites (impurities/disturbances), ice crystals can't form despite being below freezing", correct: true },
+        { text: "The distilled water has different properties that prevent freezing", correct: false },
+        { text: "The pressure inside the bottle is preventing crystallization", correct: false }
+      ],
+      explanation: "This is supercooling. Pure water below 0°C remains liquid because ice crystal formation requires nucleation sites - either impurities (heterogeneous nucleation) or sufficient energy fluctuations (homogeneous nucleation at -40°C). The water is metastable."
+    },
+    {
+      scenario: "A meteorologist observes clouds at -15°C containing liquid water droplets rather than ice crystals. This creates dangerous conditions for aircraft flying through the cloud layer.",
+      question: "What happens when an aircraft wing passes through these supercooled droplets?",
+      options: [
+        { text: "The droplets bounce off harmlessly", correct: false },
+        { text: "The wing surface provides nucleation sites, causing instant freezing and dangerous ice accumulation", correct: true },
+        { text: "The droplets evaporate from friction heat", correct: false },
+        { text: "Nothing - the droplets remain liquid", correct: false }
+      ],
+      explanation: "Supercooled cloud droplets freeze instantly upon contact with aircraft surfaces. The metal wing provides nucleation sites, triggering rapid crystallization. This ice accumulation adds weight, disrupts airflow, and makes flight extremely dangerous."
+    },
+    {
+      scenario: "You're using a reusable hand warmer containing clear sodium acetate solution at room temperature. When you click the metal disc inside, the entire pack instantly crystallizes and becomes hot (54°C).",
+      question: "What energy transformation is occurring during this crystallization?",
+      options: [
+        { text: "Chemical combustion releases energy", correct: false },
+        { text: "The metal disc heats up electrically", correct: false },
+        { text: "Crystallization releases stored latent heat (264 kJ/kg) from the supersaturated metastable state", correct: true },
+        { text: "Friction from crystallization generates heat", correct: false }
+      ],
+      explanation: "The supersaturated sodium acetate solution stores energy in its metastable liquid state. Crystallization releases this energy as latent heat (264 kJ/kg), heating the pack to 54°C. The metal disc provides nucleation sites that trigger the phase change."
+    },
+    {
+      scenario: "A cryobiologist is freezing embryos for long-term storage. She's concerned that ice crystal formation will rupture cell membranes and destroy the samples.",
+      question: "How does controlled supercooling help preserve the biological samples?",
+      options: [
+        { text: "It prevents all freezing", correct: false },
+        { text: "Slow, controlled supercooling with cryoprotectants minimizes ice crystal size and formation, reducing cellular damage", correct: true },
+        { text: "Supercooling makes cells indestructible", correct: false },
+        { text: "It converts water to a different substance", correct: false }
+      ],
+      explanation: "Controlled supercooling combined with cryoprotectants allows water to remain liquid or form only tiny ice crystals at very low temperatures. This minimizes membrane rupture. The key is controlling nucleation to avoid large destructive ice crystals."
+    },
+    {
+      scenario: "On a phase diagram, you see the freezing point line at 0°C for water at 1 atm pressure. However, the diagram also shows a dotted region extending below this line labeled 'metastable liquid'.",
+      question: "What does this metastable region represent?",
+      options: [
+        { text: "An error in the diagram", correct: false },
+        { text: "The region where supercooled liquid water can exist temporarily below the equilibrium freezing point", correct: true },
+        { text: "A different form of ice", correct: false },
+        { text: "The boiling point at low pressure", correct: false }
+      ],
+      explanation: "The metastable region shows conditions where liquid water can exist temporarily below its equilibrium freezing point. This supercooled state is thermodynamically unfavorable but kinetically stable without nucleation sites. Any disturbance triggers rapid transition to the stable ice phase."
+    },
+    {
+      scenario: "A chef making artisanal ice cream uses liquid nitrogen (-196°C) to achieve extreme rapid freezing. The result is exceptionally smooth, creamy texture compared to conventional freezing.",
+      question: "Why does faster freezing through extreme supercooling produce smoother ice cream?",
+      options: [
+        { text: "The nitrogen reacts with the cream", correct: false },
+        { text: "Rapid freezing creates numerous tiny ice crystals simultaneously, preventing large crystal growth that causes iciness", correct: true },
+        { text: "The extreme cold changes the chemical structure", correct: false },
+        { text: "Nitrogen adds air to the mixture", correct: false }
+      ],
+      explanation: "When supercooling and then freezing rapidly, many nucleation sites form simultaneously, creating numerous tiny ice crystals. Slow freezing allows fewer, larger crystals to grow, creating a grainy, icy texture. Smooth ice cream = small crystals (rapid freeze). Icy texture = large crystals (slow freeze)."
+    },
+    {
+      scenario: "Scientists measure that pure water can remain liquid down to approximately -40°C before it will freeze spontaneously without any external trigger or impurity.",
+      question: "What causes spontaneous freezing at -40°C when it doesn't occur at -10°C?",
+      options: [
+        { text: "Water changes chemical composition at -40°C", correct: false },
+        { text: "At -40°C, thermal fluctuations provide enough energy for homogeneous nucleation - ice forms from molecular motion alone", correct: true },
+        { text: "Air pressure changes at this temperature", correct: false },
+        { text: "The container always has impurities at this temperature", correct: false }
+      ],
+      explanation: "At -40°C, the thermal energy fluctuations in the liquid are sufficient to spontaneously form ice crystal nuclei without external nucleation sites. This is called homogeneous nucleation - the absolute limit of supercooling for water. Above -40°C, supercooling requires avoiding external nucleation sites."
+    },
+    {
+      scenario: "A bottle of supercooled water at -8°C sits perfectly still. When you tap the bottle sharply, ice crystals instantly propagate throughout the liquid, and the temperature rises toward 0°C.",
+      question: "Why does the temperature rise as the supercooled water freezes?",
+      options: [
+        { text: "Tapping generates friction heat", correct: false },
+        { text: "Crystallization releases latent heat (334 J/g for water), warming the ice-water mixture toward equilibrium temperature", correct: true },
+        { text: "The bottle was warming naturally", correct: false },
+        { text: "Ice is always warmer than liquid water", correct: false }
+      ],
+      explanation: "Freezing is exothermic - it releases latent heat of fusion (334 J/g for water). The supercooled liquid at -8°C is storing this energy. As crystals form, this energy is released, warming the mixture toward 0°C (the equilibrium freezing point). Supercooled water is like a loaded spring of thermal energy."
+    },
+    {
+      scenario: "Weather modification teams use aircraft to release silver iodide particles into supercooled clouds over drought-stricken farmland. Within minutes, precipitation begins falling.",
+      question: "How do silver iodide particles trigger precipitation from supercooled clouds?",
+      options: [
+        { text: "Silver iodide chemically reacts with water to form rain", correct: false },
+        { text: "The hexagonal crystal structure of silver iodide mimics ice, providing perfect nucleation sites for frozen crystal growth", correct: true },
+        { text: "Silver iodide heats the cloud", correct: false },
+        { text: "The particles are heavy and pull water down", correct: false }
+      ],
+      explanation: "Silver iodide has a hexagonal crystal structure nearly identical to ice. It serves as an ideal template for ice crystal nucleation in supercooled clouds. Once crystals form, they grow at the expense of surrounding supercooled droplets and fall as snow or rain. This is cloud seeding."
+    },
+    {
+      scenario: "You reset a sodium acetate hand warmer by boiling it to redissolve all crystals, then let it cool slowly to room temperature. The solution remains clear and liquid even though it's supersaturated and should crystallize.",
+      question: "What allows the supersaturated solution to remain stable at room temperature?",
+      options: [
+        { text: "The solution isn't actually supersaturated", correct: false },
+        { text: "Without nucleation sites (seeds/disturbances) and with smooth cooling, the metastable supersaturated state can persist indefinitely", correct: true },
+        { text: "Chemical additives prevent crystallization", correct: false },
+        { text: "The sealed container maintains high pressure", correct: false }
+      ],
+      explanation: "After boiling and slow cooling, the sodium acetate solution becomes supersaturated - it contains more dissolved solute than normal saturation allows. Like supercooled water, this is metastable. Without vibrations or seed crystals providing nucleation sites, it remains liquid until triggered. The metal disc click provides that trigger."
+    }
   ];
 
   const calculateScore = () => testAnswers.reduce((score, answer, index) => {
@@ -1464,44 +1537,146 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
     );
   };
 
-  // Fixed footer navigation
-  const renderFooter = (canProceed: boolean, buttonText: string) => (
+  // Navigation handlers
+  const handleNext = () => {
+    const currentIndex = PHASES.indexOf(phase);
+    if (currentIndex < PHASES.length - 1) {
+      const nextPhase = PHASES[currentIndex + 1];
+      if (!externalPhase) {
+        setInternalPhase(nextPhase);
+      }
+      onPhaseComplete?.();
+      playSound('transition');
+    }
+  };
+
+  const handleBack = () => {
+    const currentIndex = PHASES.indexOf(phase);
+    if (currentIndex > 0) {
+      const prevPhase = PHASES[currentIndex - 1];
+      if (!externalPhase) {
+        setInternalPhase(prevPhase);
+      }
+      playSound('click');
+    }
+  };
+
+  const handlePhaseSelect = (selectedPhase: typeof PHASES[number]) => {
+    if (!externalPhase) {
+      setInternalPhase(selectedPhase);
+    }
+    playSound('click');
+  };
+
+  // Navigation dots render
+  const renderNavigationDots = () => (
     <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      zIndex: 1000,
-      minHeight: '72px',
-      background: 'rgba(30, 41, 59, 0.98)',
-      borderTop: '1px solid rgba(148, 163, 184, 0.2)',
-      boxShadow: '0 -4px 20px rgba(0,0,0,0.5)',
-      padding: '16px 20px',
       display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center'
+      gap: '8px',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexWrap: 'wrap',
+      padding: '8px 0'
     }}>
-      <div style={{ color: '#94a3b8', fontSize: '14px' }}>
-        Supercooling
-      </div>
-      <button
-        onClick={onPhaseComplete}
-        disabled={!canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? 'linear-gradient(to right, #06b6d4, #0891b2)' : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : '#64748b',
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px'
-        }}
-      >
-        {buttonText}
-      </button>
+      {PHASES.map((p, idx) => {
+        const isActive = p === phase;
+        const phaseIndex = PHASES.indexOf(phase);
+        const isCompleted = idx < phaseIndex;
+
+        return (
+          <button
+            key={p}
+            onClick={() => handlePhaseSelect(p)}
+            aria-label={phaseLabels[p]}
+            title={phaseLabels[p]}
+            style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              border: 'none',
+              background: isActive ? '#06b6d4' : isCompleted ? '#10b981' : 'rgba(148, 163, 184, 0.3)',
+              cursor: 'pointer',
+              padding: 0,
+              transition: 'all 0.2s ease',
+              boxShadow: isActive ? '0 0 8px rgba(6, 182, 212, 0.6)' : 'none'
+            }}
+          />
+        );
+      })}
     </div>
   );
+
+  // Fixed footer navigation
+  const renderFooter = (canProceed: boolean, buttonText: string) => {
+    const currentIndex = PHASES.indexOf(phase);
+    const isFirstPhase = currentIndex === 0;
+    const isLastPhase = currentIndex === PHASES.length - 1;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+        minHeight: '80px',
+        background: 'rgba(15, 23, 42, 0.98)',
+        borderTop: '1px solid rgba(148, 163, 184, 0.2)',
+        boxShadow: '0 -4px 20px rgba(0,0,0,0.5)',
+        backdropFilter: 'blur(10px)'
+      }}>
+        {renderNavigationDots()}
+        <div style={{
+          padding: '12px 20px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <button
+            onClick={handleBack}
+            disabled={isFirstPhase}
+            style={{
+              padding: '10px 20px',
+              borderRadius: '8px',
+              border: '1px solid rgba(148, 163, 184, 0.3)',
+              background: isFirstPhase ? 'transparent' : 'rgba(30, 41, 59, 0.8)',
+              color: isFirstPhase ? '#64748b' : 'white',
+              fontWeight: '600',
+              cursor: isFirstPhase ? 'not-allowed' : 'pointer',
+              fontSize: '15px',
+              transition: 'all 0.2s ease',
+              opacity: isFirstPhase ? 0.4 : 1
+            }}
+          >
+            ← Back
+          </button>
+
+          <div style={{ color: '#94a3b8', fontSize: '13px', textAlign: 'center' }}>
+            {phaseLabels[phase]}
+          </div>
+
+          <button
+            onClick={handleNext}
+            disabled={!canProceed || isLastPhase}
+            style={{
+              padding: '10px 24px',
+              borderRadius: '8px',
+              border: 'none',
+              background: canProceed && !isLastPhase ? 'linear-gradient(to right, #06b6d4, #0891b2)' : 'rgba(100, 116, 139, 0.3)',
+              color: canProceed && !isLastPhase ? 'white' : '#64748b',
+              fontWeight: '600',
+              cursor: canProceed && !isLastPhase ? 'pointer' : 'not-allowed',
+              fontSize: '15px',
+              transition: 'all 0.2s ease',
+              boxShadow: canProceed && !isLastPhase ? '0 4px 12px rgba(6, 182, 212, 0.4)' : 'none'
+            }}
+          >
+            {buttonText || 'Next →'}
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   // Render hook phase
   if (phase === 'hook') {
@@ -2058,23 +2233,41 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
                   background: 'rgba(30, 41, 59, 0.5)',
                   borderRadius: '12px',
                   padding: '16px',
-                  marginBottom: '12px',
+                  marginBottom: '16px',
                   maxWidth: '640px',
                   width: '100%',
                   borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}`
                 }}>
-                  <p style={{ color: 'white', fontWeight: '500', marginBottom: '12px' }}>{qIndex + 1}. {q.question}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '20px' }}>{isCorrect ? '✓' : '✗'}</span>
+                    <span style={{ color: '#94a3b8', fontSize: '14px', fontWeight: '600' }}>Question {qIndex + 1}</span>
+                  </div>
+                  <p style={{ color: 'white', fontWeight: '500', marginBottom: '12px', fontSize: '15px' }}>{q.question}</p>
                   {q.options.map((opt, oIndex) => (
                     <div key={oIndex} style={{
                       padding: '8px 12px',
                       marginBottom: '4px',
                       borderRadius: '6px',
                       background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
-                      color: opt.correct ? '#10b981' : userAnswer === oIndex ? '#ef4444' : '#94a3b8'
+                      color: opt.correct ? '#10b981' : userAnswer === oIndex ? '#ef4444' : '#94a3b8',
+                      fontSize: '14px'
                     }}>
                       {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}
                     </div>
                   ))}
+                  {q.explanation && !isCorrect && (
+                    <div style={{
+                      marginTop: '12px',
+                      padding: '12px',
+                      background: 'rgba(59, 130, 246, 0.1)',
+                      borderRadius: '8px',
+                      borderLeft: '3px solid #3b82f6'
+                    }}>
+                      <p style={{ color: '#60a5fa', fontSize: '13px', lineHeight: 1.5 }}>
+                        <strong>Explanation:</strong> {q.explanation}
+                      </p>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -2110,7 +2303,12 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
           </div>
 
           <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px', padding: '20px', marginBottom: '16px', maxWidth: '640px', width: '100%' }}>
-            <p style={{ color: 'white', fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
+            {currentQ.scenario && (
+              <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.6, marginBottom: '16px', fontStyle: 'italic' }}>
+                {currentQ.scenario}
+              </p>
+            )}
+            <p style={{ color: 'white', fontSize: '16px', lineHeight: 1.6, fontWeight: '500' }}>{currentQ.question}</p>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '640px' }}>

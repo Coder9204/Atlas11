@@ -450,6 +450,12 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
         alignItems: 'center',
         gap: '16px',
       }}>
+        <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0, textAlign: 'center' }}>
+          Sparse Matrix Visualization
+        </h3>
+        <div style={{ ...typo.small, color: colors.accent, textAlign: 'center', fontStyle: 'italic' }}>
+          Sparsity = (zeros / total) × 100%
+        </div>
         <svg
           width="100%"
           height="auto"
@@ -461,6 +467,44 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
             maxWidth: `${size}px`,
           }}
         >
+          {/* SVG filter for glow effect */}
+          <defs>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Grid lines */}
+          {Array.from({ length: matrixSize + 1 }).map((_, i) => {
+            const pos = gap + i * (cellSize + gap) - gap / 2;
+            return (
+              <g key={`grid-${i}`}>
+                <line
+                  x1={pos}
+                  y1={0}
+                  x2={pos}
+                  y2={size}
+                  stroke={colors.border}
+                  strokeDasharray="4 4"
+                  opacity="0.3"
+                />
+                <line
+                  x1={0}
+                  y1={pos}
+                  x2={size}
+                  y2={pos}
+                  stroke={colors.border}
+                  strokeDasharray="4 4"
+                  opacity="0.3"
+                />
+              </g>
+            );
+          })}
+
           {sparseMatrix.map((row, i) =>
             row.map((value, j) => {
               const isZero = value === 0;
@@ -470,6 +514,22 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
 
               return (
                 <g key={`${i}-${j}`}>
+                  {interactive && !isZero && (
+                    <circle
+                      cx={x + cellSize / 2}
+                      cy={y + cellSize / 2}
+                      r={isHighlighted ? 12 : 8}
+                      fill={colors.nonZero}
+                      opacity={0.4}
+                      filter="url(#glow)"
+                      style={{
+                        transition: 'all 0.2s',
+                        cursor: 'pointer',
+                      }}
+                      onMouseEnter={() => setHighlightedCell({ row: i, col: j })}
+                      onMouseLeave={() => setHighlightedCell(null)}
+                    />
+                  )}
                   <rect
                     x={x}
                     y={y}
@@ -492,7 +552,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
                       y={y + cellSize / 2 + 4}
                       textAnchor="middle"
                       fill="white"
-                      fontSize={isMobile ? '8px' : '10px'}
+                      fontSize={isMobile ? '11px' : '12px'}
                       fontWeight="600"
                     >
                       {value.toFixed(1)}
@@ -504,7 +564,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
                       y={y + cellSize / 2 + 4}
                       textAnchor="middle"
                       fill={colors.textMuted}
-                      fontSize={isMobile ? '8px' : '10px'}
+                      fontSize={isMobile ? '11px' : '12px'}
                     >
                       0
                     </text>
@@ -519,11 +579,11 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <div style={{ width: '16px', height: '16px', background: colors.nonZero, borderRadius: '3px' }} />
-            <span style={{ ...typo.small, color: colors.textSecondary }}>Non-zero ({savings.nonZeros})</span>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>Non-zero: active weights ({savings.nonZeros})</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <div style={{ width: '16px', height: '16px', background: colors.zero, borderRadius: '3px' }} />
-            <span style={{ ...typo.small, color: colors.textSecondary }}>Zero ({savings.zeros})</span>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>Zero: skipped weights ({savings.zeros})</span>
           </div>
         </div>
       </div>
@@ -683,31 +743,46 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
   );
 
   // Navigation dots
-  const renderNavDots = () => (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '8px',
-      padding: '16px 0',
-    }}>
-      {phaseOrder.map((p, i) => (
-        <button
-          key={p}
-          onClick={() => goToPhase(p)}
-          style={{
-            width: phase === p ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
-            border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-          }}
-          aria-label={phaseLabels[p]}
-        />
-      ))}
-    </div>
-  );
+  const renderNavDots = () => {
+    const phaseAriaLabels: Record<Phase, string> = {
+      hook: 'explore',
+      predict: 'explore',
+      play: 'experiment',
+      review: 'explore',
+      twist_predict: 'experiment',
+      twist_play: 'experiment',
+      twist_review: 'explore',
+      transfer: 'apply',
+      test: 'quiz',
+      mastery: 'transfer'
+    };
+
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        gap: '8px',
+        padding: '16px 0',
+      }}>
+        {phaseOrder.map((p, i) => (
+          <button
+            key={p}
+            onClick={() => goToPhase(p)}
+            style={{
+              width: phase === p ? '24px' : '8px',
+              height: '8px',
+              borderRadius: '4px',
+              border: 'none',
+              background: phaseOrder.indexOf(phase) >= i ? colors.accent : 'rgba(148,163,184,0.7)',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+            }}
+            aria-label={phaseAriaLabels[p]}
+          />
+        ))}
+      </div>
+    );
+  };
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {

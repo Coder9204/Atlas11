@@ -987,7 +987,7 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
             {[0, 1, 2, 3, 4, 5].map(i => (
               <line key={i} x1="0" y1={i * 7 + 7} x2="16" y2={i * 7 + 7} stroke="#64748b" strokeWidth="0.5" />
             ))}
-            <text x="8" y="52" textAnchor="middle" fill="#64748b" fontSize="7" fontWeight="bold">RAD</text>
+            <text x="8" y="56" textAnchor="middle" fill="#64748b" fontSize="7" fontWeight="bold">RAD</text>
           </g>
 
           {/* === LOUVERS (Adjustable thermal control) === */}
@@ -1007,8 +1007,8 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
                 transform={`rotate(${(louversOpen / 100) * 45}, 18, ${i * 7 + 2.5})`}
               />
             ))}
-            <text x="18" y="52" textAnchor="middle" fill="#64748b" fontSize="7" fontWeight="bold">LOUVERS</text>
-            <text x="18" y="60" textAnchor="middle" fill="#94a3b8" fontSize="6">{louversOpen}% OPEN</text>
+            <text x="18" y="56" textAnchor="middle" fill="#64748b" fontSize="7" fontWeight="bold">LOUVERS</text>
+            <text x="18" y="64" textAnchor="middle" fill="#94a3b8" fontSize="6">{louversOpen}% OPEN</text>
           </g>
 
           {/* === HEATER INDICATOR === */}
@@ -1030,7 +1030,7 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
           <circle cx="0" cy="-48" r="4" fill="#475569" stroke="#64748b" strokeWidth="1" />
 
           {/* Satellite label */}
-          <text x="0" y="45" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold" letterSpacing="0.5">
+          <text x="0" y="52" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold" letterSpacing="0.5">
             SPACECRAFT
           </text>
         </g>
@@ -1092,33 +1092,33 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
           </text>
 
           {/* Data rows */}
-          <text x="12" y="45" fill="#94a3b8" fontSize="9">Solar Absorbed:</text>
-          <text x="163" y="45" textAnchor="end" fill="#fcd34d" fontSize="9" fontWeight="bold">{thermal.qAbsorbed} W</text>
+          <text x="12" y="46" fill="#94a3b8" fontSize="9">Solar Absorbed:</text>
+          <text x="163" y="46" textAnchor="end" fill="#fcd34d" fontSize="9" fontWeight="bold">{thermal.qAbsorbed} W</text>
 
-          <text x="12" y="60" fill="#94a3b8" fontSize="9">Internal Heat:</text>
-          <text x="163" y="60" textAnchor="end" fill="#f97316" fontSize="9" fontWeight="bold">{thermal.qInternal} W</text>
+          <text x="12" y="63" fill="#94a3b8" fontSize="9">Internal Heat:</text>
+          <text x="163" y="63" textAnchor="end" fill="#f97316" fontSize="9" fontWeight="bold">{thermal.qInternal} W</text>
 
-          <text x="12" y="75" fill="#94a3b8" fontSize="9">Heaters:</text>
-          <text x="163" y="75" textAnchor="end" fill={heatersOn ? '#ef4444' : '#475569'} fontSize="9" fontWeight="bold">{thermal.qHeater} W</text>
+          <text x="12" y="80" fill="#94a3b8" fontSize="9">Heaters:</text>
+          <text x="163" y="80" textAnchor="end" fill={heatersOn ? '#ef4444' : '#475569'} fontSize="9" fontWeight="bold">{thermal.qHeater} W</text>
 
-          <text x="12" y="90" fill="#94a3b8" fontSize="9">Radiated Out:</text>
-          <text x="163" y="90" textAnchor="end" fill="#3b82f6" fontSize="9" fontWeight="bold">{thermal.qRadiated} W</text>
+          <text x="12" y="97" fill="#94a3b8" fontSize="9">Radiated Out:</text>
+          <text x="163" y="97" textAnchor="end" fill="#3b82f6" fontSize="9" fontWeight="bold">{thermal.qRadiated} W</text>
 
-          <line x1="12" y1="98" x2="163" y2="98" stroke="#334155" strokeWidth="1" />
+          <line x1="12" y1="107" x2="163" y2="107" stroke="#334155" strokeWidth="1" />
 
           {/* Temperature display */}
-          <text x="12" y="115" fill="#e2e8f0" fontSize="10" fontWeight="bold">Temperature:</text>
-          <text x="163" y="115" textAnchor="end" fill={tempColor} fontSize="12" fontWeight="bold">{thermal.tempC}°C</text>
+          <text x="12" y="126" fill="#e2e8f0" fontSize="10" fontWeight="bold">Temperature:</text>
+          <text x="163" y="126" textAnchor="end" fill={tempColor} fontSize="12" fontWeight="bold">{thermal.tempC}°C</text>
 
           {/* Temperature gauge */}
-          <rect x="12" y="122" width="151" height="10" rx="5" fill="#1e293b" stroke="#334155" strokeWidth="0.5" />
-          <rect x="12" y="122" width="151" height="10" rx="5" fill="url(#satthTempGauge)" opacity="0.3" />
-          <rect x="12" y="122" width={151 * tempPercent / 100} height="10" rx="5" fill="url(#satthTempGauge)" />
+          <rect x="12" y="136" width="151" height="10" rx="5" fill="#1e293b" stroke="#334155" strokeWidth="0.5" />
+          <rect x="12" y="136" width="151" height="10" rx="5" fill="url(#satthTempGauge)" opacity="0.3" />
+          <rect x="12" y="136" width={151 * tempPercent / 100} height="10" rx="5" fill="url(#satthTempGauge)" />
 
           {/* Gauge markers */}
-          <text x="12" y="143" fill="#3b82f6" fontSize="6">-100°C</text>
-          <text x="87" y="143" textAnchor="middle" fill="#22c55e" fontSize="6">0°C</text>
-          <text x="163" y="143" textAnchor="end" fill="#ef4444" fontSize="6">+100°C</text>
+          <text x="12" y="156" fill="#3b82f6" fontSize="6">-100°C</text>
+          <text x="87" y="156" textAnchor="middle" fill="#22c55e" fontSize="6">0°C</text>
+          <text x="163" y="156" textAnchor="end" fill="#ef4444" fontSize="6">+100°C</text>
 
           {/* Status indicator */}
           <rect x="45" y="148" width="85" height="18" rx="9" fill={tempColor} opacity="0.2" stroke={tempColor} strokeWidth="1" />
@@ -1138,22 +1138,22 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
             PARAMETERS
           </text>
 
-          <text x="10" y="42" fill="#94a3b8" fontSize="8">Absorptivity (alpha):</text>
-          <text x="155" y="42" textAnchor="end" fill="#f59e0b" fontSize="9" fontWeight="bold">{absorptivity.toFixed(2)}</text>
+          <text x="10" y="44" fill="#94a3b8" fontSize="8">Absorptivity (alpha):</text>
+          <text x="155" y="44" textAnchor="end" fill="#f59e0b" fontSize="9" fontWeight="bold">{absorptivity.toFixed(2)}</text>
 
-          <text x="10" y="58" fill="#94a3b8" fontSize="8">Base Emissivity (eps):</text>
-          <text x="155" y="58" textAnchor="end" fill="#3b82f6" fontSize="9" fontWeight="bold">{emissivity.toFixed(2)}</text>
+          <text x="10" y="61" fill="#94a3b8" fontSize="8">Base Emissivity (eps):</text>
+          <text x="155" y="61" textAnchor="end" fill="#3b82f6" fontSize="9" fontWeight="bold">{emissivity.toFixed(2)}</text>
 
-          <text x="10" y="74" fill="#94a3b8" fontSize="8">Effective Emissivity:</text>
-          <text x="155" y="74" textAnchor="end" fill="#22d3ee" fontSize="9" fontWeight="bold">{thermal.effectiveEmissivity}</text>
+          <text x="10" y="78" fill="#94a3b8" fontSize="8">Effective Emissivity:</text>
+          <text x="155" y="78" textAnchor="end" fill="#22d3ee" fontSize="9" fontWeight="bold">{thermal.effectiveEmissivity}</text>
 
-          <line x1="10" y1="82" x2="155" y2="82" stroke="#334155" strokeWidth="0.5" />
+          <line x1="10" y1="88" x2="155" y2="88" stroke="#334155" strokeWidth="0.5" />
 
-          <text x="10" y="96" fill="#94a3b8" fontSize="8">Solar Constant:</text>
-          <text x="155" y="96" textAnchor="end" fill="#fcd34d" fontSize="8" fontWeight="bold">{solarInput} W/m²</text>
+          <text x="10" y="103" fill="#94a3b8" fontSize="8">Solar Constant:</text>
+          <text x="155" y="103" textAnchor="end" fill="#fcd34d" fontSize="8" fontWeight="bold">{solarInput} W/m²</text>
 
-          <text x="10" y="112" fill="#94a3b8" fontSize="8">Stefan-Boltzmann:</text>
-          <text x="155" y="112" textAnchor="end" fill="#94a3b8" fontSize="7">5.67×10⁻⁸ W/m²K⁴</text>
+          <text x="10" y="119" fill="#94a3b8" fontSize="8">Stefan-Boltzmann:</text>
+          <text x="155" y="119" textAnchor="end" fill="#94a3b8" fontSize="7">5.67×10⁻⁸ W/m²K⁴</text>
         </g>
 
         {/* === TITLE LABEL === */}
@@ -1168,9 +1168,10 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
   };
 
   const renderControls = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
-      <div className="bg-slate-800/50 p-4 rounded-xl">
-        <label className="text-slate-300 text-sm block mb-2">Louvers: {louversOpen}% open</label>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 w-full max-w-2xl">
+      <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
+        <label className="text-slate-300 text-sm font-semibold block mb-1">Louver Opening</label>
+        <p className="text-slate-400 text-xs mb-3">Controls how much surface area radiates heat</p>
         <input
           type="range"
           min="0"
@@ -1178,11 +1179,23 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
           step="10"
           value={louversOpen}
           onChange={(e) => setLouversOpen(parseInt(e.target.value))}
-          className="w-full"
+          style={{
+            width: '100%',
+            accentColor: '#f97316',
+            touchAction: 'pan-y',
+            WebkitAppearance: 'none',
+            appearance: 'none',
+            height: '6px',
+            borderRadius: '3px',
+            background: 'linear-gradient(90deg, #475569, #f97316)',
+            outline: 'none'
+          }}
         />
+        <div className="text-orange-400 font-bold mt-2">{louversOpen}% Open</div>
       </div>
-      <div className="bg-slate-800/50 p-4 rounded-xl">
-        <label className="text-slate-300 text-sm block mb-2">Surface Absorptivity: {absorptivity}</label>
+      <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
+        <label className="text-slate-300 text-sm font-semibold block mb-1">Surface Absorptivity (α)</label>
+        <p className="text-slate-400 text-xs mb-3">Fraction of solar energy absorbed</p>
         <input
           type="range"
           min="0.1"
@@ -1190,25 +1203,38 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
           step="0.1"
           value={absorptivity}
           onChange={(e) => setAbsorptivity(parseFloat(e.target.value))}
-          className="w-full"
+          style={{
+            width: '100%',
+            accentColor: '#eab308',
+            touchAction: 'pan-y',
+            WebkitAppearance: 'none',
+            appearance: 'none',
+            height: '6px',
+            borderRadius: '3px',
+            background: 'linear-gradient(90deg, #475569, #eab308)',
+            outline: 'none'
+          }}
         />
+        <div className="text-yellow-400 font-bold mt-2">{absorptivity.toFixed(1)}</div>
       </div>
-      <div className="bg-slate-800/50 p-4 rounded-xl flex items-center gap-4">
+      <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 flex flex-col justify-center">
+        <label className="text-slate-300 text-sm font-semibold block mb-2">Electric Heaters</label>
         <button
           onClick={() => setHeatersOn(!heatersOn)}
-          style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
-          className={`px-4 py-2 rounded-lg font-bold ${heatersOn ? 'bg-red-600 text-white' : 'bg-slate-700 text-slate-300'}`}
+          style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10, transition: 'all 0.2s ease' }}
+          className={`px-6 py-3 rounded-lg font-bold ${heatersOn ? 'bg-red-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
         >
-          Heaters {heatersOn ? 'ON' : 'OFF'}
+          {heatersOn ? '🔥 ON' : 'OFF'}
         </button>
       </div>
-      <div className="bg-slate-800/50 p-4 rounded-xl flex items-center gap-4">
+      <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 flex flex-col justify-center">
+        <label className="text-slate-300 text-sm font-semibold block mb-2">Sun Exposure</label>
         <button
           onClick={() => setInShadow(!inShadow)}
-          style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
-          className={`px-4 py-2 rounded-lg font-bold ${inShadow ? 'bg-slate-900 text-blue-400' : 'bg-yellow-600 text-white'}`}
+          style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10, transition: 'all 0.2s ease' }}
+          className={`px-6 py-3 rounded-lg font-bold ${inShadow ? 'bg-slate-900 text-blue-400 hover:bg-slate-800' : 'bg-yellow-600 text-white hover:bg-yellow-500'}`}
         >
-          {inShadow ? 'In Eclipse' : 'In Sunlight'}
+          {inShadow ? '🌑 Eclipse' : '☀️ Sunlight'}
         </button>
       </div>
     </div>
@@ -1249,9 +1275,13 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-orange-400 mb-6">Make Your Prediction</h2>
-            <p className="text-lg text-slate-200 mb-6 text-center max-w-lg">
+            <p className="text-lg text-slate-200 mb-4 text-center max-w-lg">
               A satellite in orbit generates 100 watts of internal heat from its electronics. Without any air around it, how does it get rid of this heat?
             </p>
+
+            <div className="bg-slate-800/60 rounded-2xl p-4 max-w-lg border border-slate-700/50 mb-6">
+              {renderVisualization()}
+            </div>
 
             <div className="grid grid-cols-1 gap-3 w-full max-w-md mb-6">
               {[
@@ -1312,6 +1342,15 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
 
             {renderControls()}
 
+            <div className="bg-blue-900/20 border border-blue-500/30 rounded-xl p-4 max-w-lg mt-4">
+              <p className="text-blue-300 text-sm mb-2">
+                <strong>How it works:</strong> Changing absorptivity affects how much solar energy the satellite absorbs. Higher emissivity means it radiates heat faster. Louvers adjust how much surface area can radiate heat away.
+              </p>
+              <p className="text-blue-300 text-sm">
+                <strong>Why it matters:</strong> Real satellites use this exact physics to survive extreme space temperatures. NASA engineers carefully design thermal control systems using these principles to keep spacecraft operational for decades!
+              </p>
+            </div>
+
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 max-w-lg mt-4">
               <p className="text-amber-400 text-sm">
                 <strong>Try this:</strong> Put the satellite in eclipse and watch temperature drop. Then turn on heaters to compensate!
@@ -1331,7 +1370,15 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
       case 'review':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
-            <h2 className="text-2xl font-bold text-orange-400 mb-6">The Physics of Space Thermal Control</h2>
+            <h2 className="text-2xl font-bold text-orange-400 mb-4">The Physics of Space Thermal Control</h2>
+
+            {selectedPrediction && (
+              <div className={`mb-6 p-4 rounded-xl max-w-lg ${selectedPrediction === 'radiation' ? 'bg-green-900/20 border border-green-500/30' : 'bg-orange-900/20 border border-orange-500/30'}`}>
+                <p className={`text-sm ${selectedPrediction === 'radiation' ? 'text-green-300' : 'text-orange-300'}`}>
+                  You predicted: {selectedPrediction === 'radiation' ? '✓ Radiation' : '✗ ' + selectedPrediction}. {selectedPrediction === 'radiation' ? 'You were exactly right!' : 'Remember - only radiation works in vacuum!'}
+                </p>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mb-6">
               <div className="bg-slate-800 p-5 rounded-xl">
@@ -1388,13 +1435,17 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-purple-400 mb-6">The Cold Space Problem</h2>
-            <div className="bg-slate-800 p-5 rounded-xl mb-6 max-w-lg">
+            <div className="bg-slate-800 p-5 rounded-xl mb-4 max-w-lg">
               <p className="text-slate-200 text-center mb-4">
                 Space is incredibly cold (-270 C background). You might think cooling is easy. But surprisingly...
               </p>
               <p className="text-xl text-purple-300 text-center font-bold">
                 Why do satellites often need heaters in the freezing void of space?
               </p>
+            </div>
+
+            <div className="bg-slate-800/60 rounded-2xl p-4 max-w-lg border border-slate-700/50 mb-6">
+              {renderVisualization()}
             </div>
 
             <div className="grid grid-cols-1 gap-3 w-full max-w-md mb-6">
@@ -1529,11 +1580,11 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
 
       case 'transfer':
         return (
-          <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
-            <h2 className="text-2xl font-bold text-green-400 mb-6">Real-World Applications</h2>
+          <div className="flex flex-col items-center p-6" style={{ minHeight: '400px', maxHeight: '80vh' }}>
+            <h2 className="text-2xl font-bold text-green-400 mb-4">Real-World Applications</h2>
 
             <div className="flex gap-2 mb-4 flex-wrap justify-center">
-              {transferApps.map((app, index) => (
+              {realWorldApps.map((app, index) => (
                 <button
                   key={index}
                   onClick={() => setActiveAppTab(index)}
@@ -1544,64 +1595,99 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
                       : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                   }`}
                 >
-                  {completedApps.has(index) && '+ '}{app.short}
+                  {completedApps.has(index) && '✓ '}{app.short}
                 </button>
               ))}
             </div>
 
-            <div className="bg-gradient-to-r from-orange-600 to-yellow-600 p-1 rounded-xl w-full max-w-2xl">
-              <div className="bg-slate-900 p-6 rounded-lg">
-                <h3 className="text-xl font-bold text-white mb-2">{transferApps[activeAppTab].title}</h3>
-                <p className="text-slate-300 mb-4">{transferApps[activeAppTab].description}</p>
+            <div style={{ flex: 1, overflowY: 'auto', width: '100%', maxWidth: '800px' }}>
+              <div className="bg-gradient-to-r from-orange-600 to-yellow-600 p-1 rounded-xl w-full">
+                <div className="bg-slate-900 p-6 rounded-lg">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                    <span style={{ fontSize: '32px' }}>{realWorldApps[activeAppTab].icon}</span>
+                    <h3 className="text-xl font-bold text-white">{realWorldApps[activeAppTab].title}</h3>
+                  </div>
+                  <p className="text-slate-300 mb-4">{realWorldApps[activeAppTab].description}</p>
 
-                <div className="bg-slate-800/50 p-4 rounded-lg mb-4">
-                  <h4 className="text-orange-400 font-bold mb-2">Thermal Connection</h4>
-                  <p className="text-slate-300 text-sm">{transferApps[activeAppTab].connection}</p>
+                  <div className="bg-slate-800/50 p-4 rounded-lg mb-4">
+                    <h4 className="text-orange-400 font-bold mb-2">How it Connects</h4>
+                    <p className="text-slate-300 text-sm">{realWorldApps[activeAppTab].connection}</p>
+                  </div>
+
+                  <div className="bg-slate-800/50 p-4 rounded-lg mb-4">
+                    <h4 className="text-blue-400 font-bold mb-2">How It Works</h4>
+                    <p className="text-slate-300 text-sm">{realWorldApps[activeAppTab].howItWorks}</p>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                    {realWorldApps[activeAppTab].stats.map((stat, i) => (
+                      <div key={i} className="bg-slate-800/70 p-3 rounded-lg text-center">
+                        <div className="text-2xl mb-1">{stat.icon}</div>
+                        <div className="text-lg font-bold text-orange-400">{stat.value}</div>
+                        <div className="text-xs text-slate-400">{stat.label}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="bg-slate-800/50 p-3 rounded-lg mb-4">
+                    <p className="text-xs text-slate-400 mb-1">Key Examples:</p>
+                    <p className="text-sm text-slate-300">{realWorldApps[activeAppTab].examples.join(' • ')}</p>
+                  </div>
+
+                  <div className="bg-slate-800/50 p-3 rounded-lg mb-4">
+                    <p className="text-xs text-slate-400 mb-1">Leading Organizations:</p>
+                    <p className="text-sm text-slate-300">{realWorldApps[activeAppTab].companies.join(', ')}</p>
+                  </div>
+
+                  {!completedApps.has(activeAppTab) ? (
+                    <button
+                      onClick={() => handleAppComplete(activeAppTab)}
+                      style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
+                      className="w-full py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg"
+                    >
+                      Mark as Understood
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        const nextIncomplete = realWorldApps.findIndex((_, i) => !completedApps.has(i));
+                        if (nextIncomplete !== -1) {
+                          setActiveAppTab(nextIncomplete);
+                        }
+                      }}
+                      style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
+                      className="w-full py-3 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-lg"
+                    >
+                      Next Application →
+                    </button>
+                  )}
                 </div>
-
-                {!completedApps.has(activeAppTab) ? (
-                  <button
-                    onClick={() => handleAppComplete(activeAppTab)}
-                    style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
-                    className="w-full py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg"
-                  >
-                    Mark as Understood
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      const nextIncomplete = transferApps.findIndex((_, i) => !completedApps.has(i));
-                      if (nextIncomplete !== -1) {
-                        setActiveAppTab(nextIncomplete);
-                      }
-                    }}
-                    style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
-                    className="w-full py-3 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-lg"
-                  >
-                    Next Application &rarr;
-                  </button>
-                )}
               </div>
             </div>
 
-            <p className="text-slate-400 mt-4">Completed: {completedApps.size} / {transferApps.length}</p>
+            <div style={{ marginTop: '16px', textAlign: 'center' }}>
+              <p className="text-slate-400 mb-3">Completed: {completedApps.size} / {realWorldApps.length}</p>
 
-            {completedApps.size >= 3 && (
-              <button
-                onClick={() => goToPhase('test')}
-                style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
-                className="mt-4 px-8 py-3 bg-gradient-to-r from-orange-600 to-yellow-600 text-white font-bold rounded-xl"
-              >
-                Take the Test
-              </button>
-            )}
+              {completedApps.size >= 3 && (
+                <button
+                  onClick={() => goToPhase('test')}
+                  style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
+                  className="px-8 py-3 bg-gradient-to-r from-orange-600 to-yellow-600 text-white font-bold rounded-xl"
+                >
+                  Take the Test
+                </button>
+              )}
+            </div>
           </div>
         );
 
       case 'test':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
-            <h2 className="text-2xl font-bold text-orange-400 mb-6">Knowledge Test</h2>
+            <h2 className="text-2xl font-bold text-orange-400 mb-2">Knowledge Test</h2>
+            <p className="text-slate-400 text-sm mb-6">
+              {testAnswers.filter(a => a !== -1).length} of {testQuestions.length} answered
+            </p>
 
             <div className="w-full max-w-2xl space-y-4 max-h-[60vh] overflow-y-auto pr-2">
               {testQuestions.map((q, qIndex) => (
@@ -1713,38 +1799,51 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
   const currentIndex = phaseOrder.indexOf(phase);
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-yellow-500/5 rounded-full blur-3xl" />
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      minHeight: '100dvh',
+      height: '100dvh',
+      overflow: 'hidden',
+      background: 'linear-gradient(135deg, #0a0f1a 0%, #0f172a 50%, #1e293b 100%)',
+      color: '#ffffff',
+      position: 'relative'
+    }}>
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: '25%',
+        width: '384px',
+        height: '384px',
+        background: 'radial-gradient(circle, rgba(249,115,22,0.05) 0%, transparent 70%)',
+        filter: 'blur(60px)',
+        pointerEvents: 'none'
+      }} />
+      <div style={{
+        position: 'absolute',
+        bottom: 0,
+        right: '25%',
+        width: '384px',
+        height: '384px',
+        background: 'radial-gradient(circle, rgba(234,179,8,0.05) 0%, transparent 70%)',
+        filter: 'blur(60px)',
+        pointerEvents: 'none'
+      }} />
 
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/90 backdrop-blur-xl border-b border-slate-700/50">
-        <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-medium text-orange-400">Thermal Control</span>
-          <div className="flex gap-1.5">
-            {phaseOrder.map((p, i) => (
-              <button
-                key={p}
-                onClick={() => goToPhase(p)}
-                style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-gradient-to-r from-orange-400 to-yellow-400 w-6'
-                    : currentIndex > i
-                    ? 'bg-emerald-500 w-2'
-                    : 'bg-slate-600 w-2 hover:bg-slate-500'
-                }`}
-                title={phaseNames[p]}
-              />
-            ))}
-          </div>
-          <span className="text-sm text-slate-400 font-medium">{phaseNames[phase]}</span>
-        </div>
-      </div>
+      {renderProgressBar()}
 
-      <div className="relative z-10 pt-16 pb-8">
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        position: 'relative',
+        zIndex: 1,
+        WebkitOverflowScrolling: 'touch'
+      }}>
         {renderPhaseContent()}
       </div>
+
+      {renderBottomBar()}
     </div>
   );
 };

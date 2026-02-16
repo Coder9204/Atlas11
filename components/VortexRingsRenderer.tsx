@@ -1,10 +1,43 @@
+'use client';
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
+type GameEventType =
+  | 'phase_change'
+  | 'prediction_made'
+  | 'simulation_started'
+  | 'parameter_changed'
+  | 'twist_prediction_made'
+  | 'app_explored'
+  | 'test_answered'
+  | 'test_completed'
+  | 'mastery_achieved';
+
+interface GameEvent {
+  type: GameEventType;
+  data?: Record<string, unknown>;
+}
+
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'New Variable',
+  twist_play: 'Observer Effect',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery'
+};
+
 interface VortexRingsRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
 }
 
 const colors = {
@@ -111,11 +144,13 @@ interface VortexRing {
 }
 
 const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
-  phase,
-  onPhaseComplete,
-  onCorrectAnswer,
-  onIncorrectAnswer,
+  onGameEvent,
+  gamePhase,
 }) => {
+  // Self-managed phase state
+  const [currentPhase, setCurrentPhase] = useState<Phase>('hook');
+  const phase = (gamePhase as Phase) || currentPhase;
+
   // Simulation state
   const [apertureSize, setApertureSize] = useState(40);
   const [tapStrength, setTapStrength] = useState(5);
@@ -133,6 +168,26 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
+
+  // Phase navigation
+  const advancePhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      const nextPhase = phaseOrder[currentIndex + 1];
+      setCurrentPhase(nextPhase);
+      if (onGameEvent) {
+        onGameEvent({ type: 'phase_change', data: { from: phase, to: nextPhase } });
+      }
+    }
+  }, [phase, onGameEvent]);
+
+  const goToPreviousPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      const prevPhase = phaseOrder[currentIndex - 1];
+      setCurrentPhase(prevPhase);
+    }
+  }, [phase]);
 
   // Create a vortex ring
   const createRing = useCallback(() => {
@@ -343,10 +398,12 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
-    if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
+    if (onGameEvent) {
+      onGameEvent({ type: 'test_completed', data: { score, total: testQuestions.length } });
+    }
   };
 
-  const renderVisualization = (interactive: boolean) => {
+  const renderVisualization = (interactive: boolean, showTitle: boolean = false) => {
     const width = 400;
     const height = 350;
 
@@ -675,6 +732,11 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+        {showTitle && (
+          <h3 style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0', textAlign: 'center' }}>
+            Vortex Ring Formation
+          </h3>
+        )}
         <svg
           width="100%"
           height={height}
@@ -682,6 +744,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
           preserveAspectRatio="xMidYMid meet"
           style={{ background: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)', borderRadius: '12px', maxWidth: '500px' }}
         >
+          <title>Vortex Ring Visualization</title>
           {/* === COMPREHENSIVE DEFS SECTION === */}
           <defs>
             {/* --- LINEAR GRADIENTS WITH 4-6 COLOR STOPS --- */}
@@ -940,6 +1003,20 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
           </pattern>
           <rect width={width} height={height} fill="url(#vrtxGrid)" />
 
+          {/* Horizontal grid lines for reference */}
+          {[0, 1, 2, 3, 4, 5, 6].map(i => (
+            <line
+              key={`hgrid-${i}`}
+              x1={0}
+              y1={50 + i * 50}
+              x2={width}
+              y2={50 + i * 50}
+              stroke="#334155"
+              strokeWidth={0.5}
+              strokeOpacity={0.15}
+            />
+          ))}
+
           {/* Background flow indicators */}
           {Array.from({ length: 8 }).map((_, i) => (
             <line
@@ -978,16 +1055,16 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
           )}
 
           {/* Premium info panel background */}
-          <rect x={10} y={10} width={150} height={55} rx={8} fill="#0f172a" fillOpacity={0.8} stroke="#334155" strokeWidth={1} />
+          <rect x={10} y={10} width={160} height={65} rx={8} fill="#0f172a" fillOpacity={0.8} stroke="#334155" strokeWidth={1} />
 
           {/* Labels with improved styling */}
           <text x={20} y={28} fill={colors.textSecondary} fontSize={11} fontWeight="600">
             Aperture: <tspan fill={colors.accent}>{apertureSize}mm</tspan>
           </text>
-          <text x={20} y={44} fill={colors.textSecondary} fontSize={11} fontWeight="600">
+          <text x={20} y={47} fill={colors.textSecondary} fontSize={11} fontWeight="600">
             Tap strength: <tspan fill={colors.velocity}>{tapStrength}</tspan>
           </text>
-          <text x={20} y={60} fill={colors.textSecondary} fontSize={11} fontWeight="600">
+          <text x={20} y={66} fill={colors.textSecondary} fontSize={11} fontWeight="600">
             Viscosity: <tspan fill={airViscosity === 'high' ? colors.error : colors.success}>{airViscosity}</tspan>
           </text>
 
@@ -1045,6 +1122,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
                 fontSize: '14px',
                 boxShadow: `0 4px 15px ${colors.accentGlow}`,
                 transition: 'all 0.2s ease',
+                minHeight: '44px',
               }}
             >
               Tap Membrane
@@ -1061,6 +1139,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
                 cursor: 'pointer',
                 fontSize: '14px',
                 transition: 'all 0.2s ease',
+                minHeight: '44px',
               }}
             >
               Reset
@@ -1084,7 +1163,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
           step="5"
           value={apertureSize}
           onChange={(e) => setApertureSize(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', touchAction: 'pan-y', appearance: 'none', WebkitAppearance: 'none' } as React.CSSProperties}
         />
         <div style={{ color: colors.textMuted, fontSize: '11px', marginTop: '4px' }}>
           Larger aperture = larger ring diameter
@@ -1102,7 +1181,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
           step="1"
           value={tapStrength}
           onChange={(e) => setTapStrength(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', touchAction: 'pan-y', appearance: 'none', WebkitAppearance: 'none' } as React.CSSProperties}
         />
         <div style={{ color: colors.textMuted, fontSize: '11px', marginTop: '4px' }}>
           Stronger tap = faster ring velocity
@@ -1124,6 +1203,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
               background: airViscosity === 'low' ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
               color: colors.textPrimary,
               cursor: 'pointer',
+              minHeight: '44px',
             }}
           >
             Low (Normal Air)
@@ -1138,6 +1218,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
               background: airViscosity === 'high' ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
               color: colors.textPrimary,
               cursor: 'pointer',
+              minHeight: '44px',
             }}
           >
             High (Humid/Dense)
@@ -1161,64 +1242,95 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     </div>
   );
 
-  const renderNavBar = (showBack: boolean = true, canProceed: boolean = true, buttonText: string = 'Next') => (
-    <nav
-      aria-label="Game navigation"
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        padding: '12px 24px',
-        background: colors.bgDark,
-        borderBottom: `1px solid rgba(255,255,255,0.1)`,
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        zIndex: 1001,
-      }}
-    >
-      {showBack ? (
-        <button
-          onClick={() => window.history.back()}
-          aria-label="Back"
-          style={{
-            padding: '10px 20px',
-            minHeight: '44px',
-            borderRadius: '8px',
-            border: `1px solid ${colors.textMuted}`,
-            background: 'transparent',
-            color: colors.textPrimary,
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            fontSize: '14px',
-          }}
-        >
-          Back
-        </button>
-      ) : (
-        <div style={{ width: '80px' }} />
-      )}
-      <button
-        onClick={onPhaseComplete}
-        disabled={!canProceed}
-        aria-label={buttonText}
+  const renderNavBar = (showBack: boolean = true, canProceed: boolean = true, buttonText: string = 'Next') => {
+    const currentIndex = phaseOrder.indexOf(phase);
+
+    return (
+      <nav
+        aria-label="Game navigation"
         style={{
-          padding: '10px 24px',
-          minHeight: '44px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '14px',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          padding: '12px 24px',
+          background: colors.bgDark,
+          borderBottom: `1px solid rgba(255,255,255,0.1)`,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          alignItems: 'center',
+          zIndex: 1001,
         }}
       >
-        {buttonText}
-      </button>
-    </nav>
-  );
+        {/* Navigation dots */}
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center' }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => setCurrentPhase(p)}
+              aria-label={phaseLabels[p]}
+              title={phaseLabels[p]}
+              style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                border: 'none',
+                background: i === currentIndex ? colors.accent : i < currentIndex ? colors.success : 'rgba(255,255,255,0.3)',
+                cursor: 'pointer',
+                padding: 0,
+                minHeight: 'unset',
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Back/Next buttons */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+          {showBack ? (
+            <button
+              onClick={goToPreviousPhase}
+              aria-label="Back"
+              style={{
+                padding: '10px 20px',
+                minHeight: '44px',
+                borderRadius: '8px',
+                border: `1px solid ${colors.textMuted}`,
+                background: 'transparent',
+                color: colors.textPrimary,
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '14px',
+              }}
+            >
+              Back
+            </button>
+          ) : (
+            <div style={{ width: '80px' }} />
+          )}
+          <button
+            onClick={advancePhase}
+            disabled={!canProceed}
+            aria-label={buttonText}
+            style={{
+              padding: '10px 24px',
+              minHeight: '44px',
+              borderRadius: '8px',
+              border: 'none',
+              background: canProceed ? `linear-gradient(135deg, ${colors.accent} 0%, #7c3aed 100%)` : 'rgba(255,255,255,0.1)',
+              color: canProceed ? 'white' : colors.textMuted,
+              fontWeight: 'bold',
+              cursor: canProceed ? 'pointer' : 'not-allowed',
+              fontSize: '14px',
+              boxShadow: canProceed ? `0 4px 15px ${colors.accentGlow}` : 'none',
+            }}
+          >
+            {buttonText}
+          </button>
+        </div>
+      </nav>
+    );
+  };
 
   const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
     <div style={{
@@ -1234,18 +1346,19 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
       zIndex: 1001,
     }}>
       <button
-        onClick={onPhaseComplete}
+        onClick={advancePhase}
         disabled={disabled && !canProceed}
         style={{
           padding: '12px 32px',
           minHeight: '44px',
           borderRadius: '8px',
           border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
+          background: canProceed ? `linear-gradient(135deg, ${colors.accent} 0%, #7c3aed 100%)` : 'rgba(255,255,255,0.1)',
           color: canProceed ? 'white' : colors.textMuted,
           fontWeight: 'bold',
           cursor: canProceed ? 'pointer' : 'not-allowed',
           fontSize: '16px',
+          boxShadow: canProceed ? `0 4px 15px ${colors.accentGlow}` : 'none',
         }}
       >
         {buttonText}
@@ -1258,7 +1371,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar(false, true, 'Make a Prediction')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Vortex Rings
@@ -1309,7 +1422,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar(true, !!prediction, 'Test My Prediction')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '100px' }}>
           {renderVisualization(false)}
 
           <div style={{
@@ -1364,7 +1477,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar(true, true, 'Continue to Review')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Vortex Rings</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1384,8 +1497,33 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
             </p>
           </div>
 
-          {renderVisualization(true)}
+          {renderVisualization(true, true)}
           {renderControls()}
+
+          <div style={{
+            background: 'rgba(139, 92, 246, 0.2)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 'bold' }}>Comparison</h4>
+            <div style={{ display: 'flex', gap: '16px', flexDirection: 'row', flexWrap: 'wrap' }}>
+              <div style={{ flex: '1 1 200px' }}>
+                <div style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '4px' }}>Current:</div>
+                <div style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 'bold' }}>
+                  {apertureSize}mm aperture<br/>
+                  Strength: {tapStrength}
+                </div>
+              </div>
+              <div style={{ flex: '1 1 200px' }}>
+                <div style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '4px' }}>Ring velocity:</div>
+                <div style={{ color: colors.velocity, fontSize: '16px', fontWeight: 'bold' }}>
+                  {(tapStrength * 0.5 * (airViscosity === 'low' ? 1 : 0.6)).toFixed(1)} m/s
+                </div>
+              </div>
+            </div>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1401,6 +1539,19 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
               <li>Rapid tapping = multiple rings that may interact!</li>
             </ul>
           </div>
+
+          <div style={{
+            background: 'rgba(139, 92, 246, 0.15)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 'bold' }}>Why This Matters</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+              Vortex rings appear everywhere in nature and technology. Squid use them for jet propulsion, achieving remarkable efficiency. Your heart creates vortex rings with every beat to optimize blood flow. Understanding vortex dynamics is crucial for designing efficient underwater vehicles, heart valve replacements, and industrial mixing systems.
+            </p>
+          </div>
         </div>
         {renderBottomBar(false, true, 'Continue to Review')}
       </div>
@@ -1414,7 +1565,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar(true, true, 'Next: A Twist!')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1426,7 +1577,9 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
             <p style={{ color: colors.textPrimary }}>
-              A donut-shaped vortex ring forms and travels forward, carrying momentum efficiently!
+              {wasCorrect
+                ? 'You correctly predicted that a donut-shaped vortex ring would form! The circular aperture and sharp impulse create the perfect conditions for this rotating toroidal structure.'
+                : `Your prediction was "${predictions.find(p => p.id === prediction)?.label}". Actually, a donut-shaped vortex ring forms and travels forward, carrying momentum efficiently! The circular aperture creates the conditions for this stable rotating structure.`}
             </p>
           </div>
 
@@ -1448,11 +1601,27 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
                 creates a self-sustaining structure. Each part of the ring induces motion in adjacent
                 parts, maintaining the shape as it travels.
               </p>
-              <p>
+              <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Energy Transport:</strong> Vortex rings
                 carry kinetic energy and momentum through the fluid without significant mass transfer -
                 they're remarkably efficient at moving impulse over distance.
               </p>
+              <div style={{
+                background: 'rgba(139, 92, 246, 0.2)',
+                padding: '12px',
+                borderRadius: '8px',
+                marginTop: '12px',
+              }}>
+                <div style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>
+                  Ring Velocity Formula:
+                </div>
+                <div style={{ color: colors.accent, fontSize: '15px', fontFamily: 'monospace', fontWeight: 'bold' }}>
+                  v ∝ Impulse / Diameter
+                </div>
+                <div style={{ color: colors.textSecondary, fontSize: '12px', marginTop: '4px' }}>
+                  Smaller rings travel faster; stronger taps give more impulse
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1466,7 +1635,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar(true, !!twistPrediction, 'Test My Prediction')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1526,7 +1695,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar(true, true, 'See the Explanation')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Fog Visualization</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1546,7 +1715,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
             </p>
           </div>
 
-          {renderVisualization(true)}
+          {renderVisualization(true, true)}
 
           <div style={{ padding: '16px' }}>
             <button
@@ -1597,7 +1766,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar(true, true, 'Apply This Knowledge')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1651,7 +1820,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar(true, transferCompleted.size >= 4, 'Take the Test')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1667,6 +1836,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
           {transferApplications.map((app, index) => (
             <div
               key={index}
+              id={`transfer-app-${index}`}
               style={{
                 background: colors.bgCard,
                 margin: '16px',
@@ -1686,7 +1856,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
               {!transferCompleted.has(index) ? (
                 <button
                   onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ padding: '8px 16px', minHeight: '44px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
+                  style={{ padding: '8px 16px', minHeight: '44px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}
                 >
                   Reveal Answer
                 </button>
@@ -1706,7 +1876,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
                         minHeight: '44px',
                         borderRadius: '6px',
                         border: 'none',
-                        background: colors.accent,
+                        background: `linear-gradient(135deg, ${colors.accent} 0%, #7c3aed 100%)`,
                         color: 'white',
                         cursor: 'pointer',
                         fontSize: '14px',
@@ -1732,7 +1902,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderNavBar(true, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '100px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1772,7 +1942,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar(true, false, 'Submit')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -1812,9 +1982,9 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar(true, true, 'Complete Game')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>MASTERY</div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered vortex ring physics and fluid dynamics</p>
           </div>

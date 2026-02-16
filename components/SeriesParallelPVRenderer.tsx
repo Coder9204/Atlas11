@@ -421,6 +421,21 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
 
       return (
         <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+          {/* Filter definitions for glow effects */}
+          <defs>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+            <linearGradient id="wireGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={colors.accent} stopOpacity="0.6"/>
+              <stop offset="50%" stopColor={colors.accent} stopOpacity="1"/>
+              <stop offset="100%" stopColor={colors.accent} stopOpacity="0.6"/>
+            </linearGradient>
+          </defs>
           {/* Wires - top rail */}
           <line
             x1={startX - 20}
@@ -466,6 +481,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
                   stroke={isShaded ? colors.warning : colors.border}
                   strokeWidth="2"
                   rx="4"
+                  filter={isShaded ? "url(#glow)" : undefined}
                   style={{ cursor: 'pointer' }}
                   onClick={() => setShadedPanel(shadedPanel === i ? null : i)}
                 />
@@ -487,17 +503,24 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
                   />
                 )}
                 {/* Panel label */}
-                <text x={x + panelW / 2} y={startY + panelH + 16} fill={colors.textSecondary} fontSize="10" textAnchor="middle">
+                <text x={x + panelW / 2} y={startY + panelH + 16} fill={colors.textSecondary} fontSize="11" textAnchor="middle">
                   P{i + 1}
                 </text>
                 {isShaded && (
-                  <text x={x + panelW / 2} y={startY + panelH / 2} fill={colors.warning} fontSize="10" textAnchor="middle" fontWeight="600">
+                  <text x={x + panelW / 2} y={startY + panelH / 2} fill={colors.warning} fontSize="11" textAnchor="middle" fontWeight="600">
                     {(panelEfficiency * 100).toFixed(0)}%
                   </text>
                 )}
               </g>
             );
           })}
+
+          {/* Axis labels */}
+          <text x="20" y={height / 2} fill={colors.textMuted} fontSize="11" textAnchor="start">V</text>
+          <text x={width / 2} y={height - 5} fill={colors.textMuted} fontSize="11" textAnchor="middle">Panels →</text>
+
+          {/* Grid lines for reference */}
+          <line x1={startX - 20} y1={startY + panelH / 2} x2={startX + numPanels * panelW + (numPanels - 1) * gap + 20} y2={startY + panelH / 2} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
 
           {/* Current flow animation */}
           {showCurrentFlow && (
@@ -593,7 +616,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
                   />
                 )}
                 {/* Panel label */}
-                <text x={startX + panelW + 45} y={y + miniH / 2 + 4} fill={colors.textSecondary} fontSize="10">
+                <text x={startX + panelW + 45} y={y + miniH / 2 + 4} fill={colors.textSecondary} fontSize="11">
                   P{i + 1}: {isShaded ? ((100 - shadeLevel) / 100 * panelCurrent).toFixed(1) : panelCurrent}A
                 </text>
               </g>
@@ -733,11 +756,13 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        paddingTop: '48px',
+        paddingBottom: '100px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px',
+        padding: '48px 24px 100px 24px',
         textAlign: 'center',
       }}>
         {renderProgressBar()}
@@ -807,7 +832,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
         {[0, 1, 2, 3].map(i => (
           <g key={`s-${i}`}>
             <rect x={60 + i * 50} y={40} width={40} height={30} fill={colors.bgSecondary} stroke={colors.border} strokeWidth="2" rx="3" />
-            <text x={80 + i * 50} y={60} fill={colors.accent} fontSize="10" textAnchor="middle">40V</text>
+            <text x={80 + i * 50} y={60} fill={colors.accent} fontSize="11" textAnchor="middle">40V</text>
             {i < 3 && <line x1={100 + i * 50} y1={55} x2={110 + i * 50} y2={55} stroke={colors.accent} strokeWidth="2" />}
           </g>
         ))}
@@ -818,7 +843,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
         {[0, 1, 2, 3].map(i => (
           <g key={`p-${i}`}>
             <rect x={60 + i * 50} y={95} width={40} height={30} fill={colors.bgSecondary} stroke={colors.border} strokeWidth="2" rx="3" />
-            <text x={80 + i * 50} y={115} fill={colors.accent} fontSize="10" textAnchor="middle">10A</text>
+            <text x={80 + i * 50} y={115} fill={colors.accent} fontSize="11" textAnchor="middle">10A</text>
           </g>
         ))}
         {/* Parallel bus bars */}
@@ -833,8 +858,8 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
         <text x={280} y={115} fill={colors.textPrimary} fontSize="11" fontWeight="600">= 40A</text>
 
         {/* Bottom labels */}
-        <text x={width / 4} y={165} fill={colors.warning} fontSize="10" textAnchor="middle">160V x 10A = 1600W</text>
-        <text x={3 * width / 4} y={165} fill={colors.success} fontSize="10" textAnchor="middle">40V x 40A = 1600W</text>
+        <text x={width / 4} y={165} fill={colors.warning} fontSize="11" textAnchor="middle">160V x 10A = 1600W</text>
+        <text x={3 * width / 4} y={165} fill={colors.success} fontSize="11" textAnchor="middle">40V x 40A = 1600W</text>
       </svg>
     );
   };
@@ -851,10 +876,18 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingBottom: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
+        {renderProgressBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+        }}>
+        <div style={{ padding: '0 24px', maxWidth: '700px', margin: '0 auto' }}>
         {renderProgressBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
@@ -933,7 +966,8 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
             </button>
           )}
         </div>
-
+        </div>
+        </div>
         {renderNavDots()}
       </div>
     );
@@ -945,16 +979,27 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+        }}>
+        <div style={{ padding: '0 24px', maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Compare Series vs Parallel
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '12px' }}>
             Toggle between configurations to see how voltage and current change
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '24px', fontStyle: 'italic' }}>
+            Watch how: Series adds voltages (V₁+V₂+...), while Parallel adds currents (I₁+I₂+...). Notice the power calculation remains constant.
           </p>
 
           {/* Mode toggle */}
@@ -1004,6 +1049,8 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
               <CircuitDiagram showCurrentFlow={true} />
             </div>
+
+            {renderLegend()}
 
             {/* Number of panels slider */}
             <div style={{ marginBottom: '24px' }}>
@@ -1079,12 +1126,26 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
             </p>
           </div>
 
+          {/* Educational guidance */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              💡 <strong style={{ color: colors.accent }}>Why this matters:</strong> Understanding series vs parallel is crucial for solar system design, battery configurations, and electrical safety. The wiring choice affects voltage requirements, current capacity, and system resilience.
+            </p>
+          </div>
+
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
             Understand the Math →
           </button>
+        </div>
         </div>
 
         {renderNavDots()}
@@ -1098,11 +1159,19 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+        }}>
+        <div style={{ padding: '0 24px', maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Why Total Power Stays the Same
           </h2>
@@ -1114,6 +1183,9 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
             marginBottom: '24px',
           }}>
             <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>Because power depends on both voltage and current:</strong> When you increase one, you proportionally decrease the other. This is why P = V × I gives the same result regardless of configuration.
+              </p>
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: '1fr 1fr',
@@ -1144,7 +1216,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
                 </div>
               </div>
               <p>
-                Energy is conserved! You're trading voltage for current (or vice versa), but the total power—what actually does work—remains constant.
+                <strong style={{ color: colors.textPrimary }}>The reason this works:</strong> Energy is conserved! You're trading voltage for current (or vice versa), but the total power—what actually does work—remains constant. {prediction === 'c' ? <span style={{ color: colors.success }}>You predicted this correctly! ✓</span> : ''}
               </p>
             </div>
           </div>
@@ -1171,6 +1243,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
             Explore the Shading Problem →
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -1189,11 +1262,19 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+        }}>
+        <div style={{ padding: '0 24px', maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1267,6 +1348,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
             </button>
           )}
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -1279,16 +1361,27 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+        }}>
+        <div style={{ padding: '0 24px', maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Shading Impact: Series vs Parallel
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '12px' }}>
             Click a panel to shade it, then compare configurations
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '24px', fontStyle: 'italic' }}>
+            Observe: In series, watch how one shaded panel limits the entire string's current. In parallel, notice each panel operates independently.
           </p>
 
           {/* Mode toggle */}
@@ -1339,6 +1432,8 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
               <CircuitDiagram showCurrentFlow={true} />
             </div>
 
+            {renderLegend()}
+
             {/* Shade level slider */}
             {shadedPanel !== null && (
               <div style={{ marginBottom: '20px' }}>
@@ -1352,11 +1447,15 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
                   max="100"
                   value={shadeLevel}
                   onChange={(e) => setShadeLevel(parseInt(e.target.value))}
+                  onInput={(e) => setShadeLevel(parseInt((e.target as HTMLInputElement).value))}
                   style={{
                     width: '100%',
-                    height: '8px',
+                    height: '20px',
                     borderRadius: '4px',
                     cursor: 'pointer',
+                    touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                    accentColor: '#3b82f6',
                   }}
                 />
               </div>
@@ -1447,6 +1546,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
             Understand Why →
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -1459,11 +1559,19 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+        }}>
+        <div style={{ padding: '0 24px', maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Current Bottleneck Problem
           </h2>
@@ -1542,6 +1650,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
             See Real-World Solutions →
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -1557,14 +1666,25 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+        }}>
+        <div style={{ padding: '0 24px', maxWidth: '800px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length}
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1646,8 +1766,20 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
               <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
                 Series/Parallel in This Application:
               </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: '0 0 12px 0' }}>
                 {app.connection}
+              </p>
+              <h4 style={{ ...typo.small, color: colors.success, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: '0 0 12px 0' }}>
+                {app.howItWorks}
+              </p>
+              <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 600 }}>
+                Future Impact:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.futureImpact}
               </p>
             </div>
 
@@ -1671,6 +1803,22 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
             </div>
           </div>
 
+          {/* Progress indicator */}
+          {!allAppsCompleted && (
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                👆 Explore all {realWorldApps.length} applications to continue
+              </p>
+            </div>
+          )}
+
           {allAppsCompleted && (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
@@ -1679,6 +1827,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
               Take the Knowledge Test →
             </button>
           )}
+        </div>
         </div>
 
         {renderNavDots()}
@@ -1694,11 +1843,19 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}>
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            paddingTop: '48px',
+            paddingBottom: '100px',
+          }}>
+          <div style={{ padding: '0 24px', maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1716,6 +1873,43 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
                 ? 'You\'ve mastered Series vs Parallel PV Wiring!'
                 : 'Review the concepts and try again.'}
             </p>
+
+            {/* Answer Review */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '24px',
+              textAlign: 'left',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
+                Answer Review
+              </h3>
+              {testQuestions.map((q, i) => {
+                const userAnswer = testAnswers[i];
+                const correctAnswer = q.options.find(o => o.correct)?.id;
+                const isCorrect = userAnswer === correctAnswer;
+                return (
+                  <div key={i} style={{
+                    marginBottom: '12px',
+                    paddingBottom: '12px',
+                    borderBottom: i < testQuestions.length - 1 ? `1px solid ${colors.border}` : 'none',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{
+                        fontSize: '18px',
+                        color: isCorrect ? colors.success : colors.error
+                      }}>
+                        {isCorrect ? '✓' : '✗'}
+                      </span>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>
+                        Question {i + 1}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
 
             {passed ? (
               <button
@@ -1739,6 +1933,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
               </button>
             )}
           </div>
+          </div>
           {renderNavDots()}
         </div>
       );
@@ -1750,11 +1945,19 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+        }}>
+        <div style={{ padding: '0 24px', maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1904,6 +2107,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
             )}
           </div>
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -1916,11 +2120,13 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        paddingTop: '48px',
+        paddingBottom: '100px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px',
+        padding: '48px 24px 100px 24px',
         textAlign: 'center',
       }}>
         {renderProgressBar()}

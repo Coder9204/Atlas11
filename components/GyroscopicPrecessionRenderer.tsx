@@ -511,7 +511,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
       <span style={{ fontSize: '22px', flexShrink: 0 }}>{icon}</span>
       <div>
         <p style={{ fontSize: '14px', fontWeight: 700, color: colors.textPrimary, marginBottom: '4px' }}>{title}</p>
-        <p style={{ fontSize: '13px', fontWeight: 400, color: colors.muted, lineHeight: 1.5 }}>{desc}</p>
+        <p style={{ fontSize: '13px', fontWeight: 400, color: colors.textTertiary, lineHeight: 1.5 }}>{desc}</p>
       </div>
     </div>
   );
@@ -1121,7 +1121,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 textAlign: 'center',
               }}>
                 <span style={{ fontSize: '24px', display: 'block', marginBottom: space.sm }}>{item.icon}</span>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: colors.muted }}>{item.label}</span>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: colors.textTertiary }}>{item.label}</span>
               </div>
             ))}
           </div>
@@ -1152,7 +1152,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               <p style={{
                 fontSize: '13px',
                 fontWeight: 400,
-                color: colors.muted,
+                color: colors.textTertiary,
                 textAlign: 'center',
                 marginTop: space.sm,
                 lineHeight: 1.5,
@@ -1197,7 +1197,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                   }} />
                   <div>
                     <p style={{ fontSize: '14px', fontWeight: 700, color: prediction === opt.id ? '#fafafa' : '#e2e8f0' }}>{opt.label}</p>
-                    <p style={{ fontSize: '12px', fontWeight: 400, color: colors.muted }}>{opt.desc}</p>
+                    <p style={{ fontSize: '12px', fontWeight: 400, color: colors.textTertiary }}>{opt.desc}</p>
                   </div>
                 </button>
               ))}
@@ -1256,7 +1256,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               border: `1px solid ${colors.border}`,
             }}>
               <p style={{ fontSize: '12px', fontWeight: 700, color: colors.primary, marginBottom: '6px' }}>Why This Matters</p>
-              <p style={{ fontSize: '13px', fontWeight: 400, color: colors.muted, lineHeight: 1.6 }}>
+              <p style={{ fontSize: '13px', fontWeight: 400, color: colors.textTertiary, lineHeight: 1.6 }}>
                 Gyroscopic precession is fundamental to real-world engineering. Helicopters rely on this principle for stable flight,
                 spacecraft use reaction wheels for fuel-free orientation, and motorcycles depend on gyroscopic effects for stability at speed.
               </p>
@@ -1304,7 +1304,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
             }}>
               <p style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', color: colors.textTertiary, marginBottom: space.sm }}>THE PRECESSION EQUATION</p>
               <p style={{ fontSize: '26px', fontWeight: 800, color: colors.primary }}>\u03A9 = \u03C4 / (I \u00D7 \u03C9)</p>
-              <p style={{ fontSize: '13px', fontWeight: 400, color: colors.muted, marginTop: space.sm, lineHeight: 1.5 }}>Higher spin (\u03C9) \u2192 Lower precession rate (\u03A9)</p>
+              <p style={{ fontSize: '13px', fontWeight: 400, color: colors.textTertiary, marginTop: space.sm, lineHeight: 1.5 }}>Higher spin (\u03C9) \u2192 Lower precession rate (\u03A9)</p>
             </div>
           </div>
         </div>
@@ -1377,7 +1377,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                   }} />
                   <div>
                     <p style={{ fontSize: '14px', fontWeight: 700, color: twistPrediction === opt.id ? colors.textPrimary : colors.textSecondary }}>{opt.label}</p>
-                    <p style={{ fontSize: '12px', fontWeight: 400, color: colors.muted }}>{opt.desc}</p>
+                    <p style={{ fontSize: '12px', fontWeight: 400, color: colors.textTertiary }}>{opt.desc}</p>
                   </div>
                 </button>
               ))}
@@ -1408,7 +1408,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 background: `${colors.success}15`,
                 textAlign: 'center',
               }}>
-                <p style={{ fontSize: '11px', color: colors.muted, marginBottom: '4px' }}>HIGH SPIN</p>
+                <p style={{ fontSize: '11px', color: colors.textTertiary, marginBottom: '4px' }}>HIGH SPIN</p>
                 <p style={{ fontSize: '16px', fontWeight: 700, color: colors.success }}>Slow Precession</p>
               </div>
               <div style={{
@@ -1417,7 +1417,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 background: `${colors.danger}15`,
                 textAlign: 'center',
               }}>
-                <p style={{ fontSize: '11px', color: colors.muted, marginBottom: '4px' }}>LOW SPIN</p>
+                <p style={{ fontSize: '11px', color: colors.textTertiary, marginBottom: '4px' }}>LOW SPIN</p>
                 <p style={{ fontSize: '16px', fontWeight: 700, color: colors.danger }}>Fast Precession</p>
               </div>
             </div>
@@ -1476,7 +1476,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
           background: colors.bgSecondary,
           borderBottom: `1px solid ${colors.border}`,
         }}>
-          <span style={{ fontSize: '13px', fontWeight: 400, color: colors.muted }}>
+          <span style={{ fontSize: '13px', fontWeight: 400, color: colors.textTertiary }}>
             Application {selectedApp + 1} of {realWorldApps.length}
           </span>
           <div style={{ display: 'flex', gap: '6px' }}>
@@ -1559,7 +1559,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               marginBottom: space.md,
             }}>
               <p style={{ fontSize: '12px', fontWeight: 700, color: app.color, marginBottom: '6px' }}>Physics Connection</p>
-              <p style={{ fontSize: '13px', fontWeight: 400, color: colors.muted, lineHeight: 1.5 }}>{app.connection}</p>
+              <p style={{ fontSize: '13px', fontWeight: 400, color: colors.textTertiary, lineHeight: 1.5 }}>{app.connection}</p>
             </div>
 
             <div style={{
@@ -1570,7 +1570,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               marginBottom: space.md,
             }}>
               <p style={{ fontSize: '12px', fontWeight: 700, color: colors.textPrimary, marginBottom: '6px' }}>How It Works</p>
-              <p style={{ fontSize: '13px', fontWeight: 400, color: colors.muted, lineHeight: 1.5 }}>{app.howItWorks}</p>
+              <p style={{ fontSize: '13px', fontWeight: 400, color: colors.textTertiary, lineHeight: 1.5 }}>{app.howItWorks}</p>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: space.sm, marginBottom: space.md }}>
@@ -1584,7 +1584,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 }}>
                   <span style={{ fontSize: '16px' }}>{s.icon}</span>
                   <p style={{ fontSize: '15px', fontWeight: 700, color: app.color }}>{s.value}</p>
-                  <p style={{ fontSize: '11px', fontWeight: 400, color: colors.muted }}>{s.label}</p>
+                  <p style={{ fontSize: '11px', fontWeight: 400, color: colors.textTertiary }}>{s.label}</p>
                 </div>
               ))}
             </div>
@@ -1598,7 +1598,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               <p style={{ fontSize: '12px', fontWeight: 700, color: colors.textPrimary, marginBottom: space.sm }}>Real Examples:</p>
               <ul style={{ margin: 0, paddingLeft: '18px' }}>
                 {app.examples.map((ex, i) => (
-                  <li key={i} style={{ fontSize: '12px', fontWeight: 400, color: colors.muted, marginBottom: '4px', lineHeight: 1.5 }}>{ex}</li>
+                  <li key={i} style={{ fontSize: '12px', fontWeight: 400, color: colors.textTertiary, marginBottom: '4px', lineHeight: 1.5 }}>{ex}</li>
                 ))}
               </ul>
             </div>
@@ -1682,7 +1682,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               <p style={{ fontSize: '42px', fontWeight: 800, color: passed ? colors.success : colors.warning, marginBottom: space.md }}>
                 {totalCorrect}/10
               </p>
-              <p style={{ fontSize: '14px', fontWeight: 400, color: colors.muted, marginBottom: space.xl, lineHeight: 1.5 }}>
+              <p style={{ fontSize: '14px', fontWeight: 400, color: colors.textTertiary, marginBottom: space.xl, lineHeight: 1.5 }}>
                 {passed ? 'You\'ve mastered gyroscopic precession!' : 'Review the concepts and try again.'}
               </p>
               <button
@@ -1799,7 +1799,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 marginBottom: space.lg,
               }}>
                 <p style={{ fontSize: '12px', fontWeight: 700, color: colors.accent, marginBottom: '6px' }}>Explanation</p>
-                <p style={{ fontSize: '13px', fontWeight: 400, color: colors.muted, lineHeight: 1.6 }}>{q.explanation}</p>
+                <p style={{ fontSize: '13px', fontWeight: 400, color: colors.textTertiary, lineHeight: 1.6 }}>{q.explanation}</p>
               </div>
             )}
 
@@ -1870,7 +1870,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
           <div style={{ textAlign: 'center', maxWidth: '460px' }}>
             <div style={{ fontSize: '72px', marginBottom: space.lg }}>{'\uD83C\uDFC6'}</div>
             <h1 style={{ fontSize: '30px', fontWeight: 800, color: colors.textPrimary, marginBottom: space.md }}>Mastery Achieved!</h1>
-            <p style={{ fontSize: '15px', fontWeight: 400, color: colors.muted, marginBottom: space.xl, lineHeight: 1.7 }}>
+            <p style={{ fontSize: '15px', fontWeight: 400, color: colors.textTertiary, marginBottom: space.xl, lineHeight: 1.7 }}>
               You now understand gyroscopic precession\u2014the physics behind helicopters, spacecraft, motorcycles, and Earth's wobble!
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: space.sm, justifyContent: 'center', marginBottom: space.xl }}>

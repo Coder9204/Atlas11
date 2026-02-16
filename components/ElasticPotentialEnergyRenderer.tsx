@@ -1859,11 +1859,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
             </button>
           </div>
         ) : (
-          <div className="max-w-2xl w-full" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-          paddingBottom: '100px',
-          paddingTop: '48px',
-          flex: 1,
-          paddingTop: '48px',
+          <div className="max-w-2xl w-full" style={{ maxHeight: '70vh', overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
             <div className="bg-slate-800/50 rounded-2xl p-6 text-center mb-6">
               <div className="text-6xl mb-4">{calculateScore() >= 7 ? 'Excellent!' : 'Keep Learning'}</div>
               <h3 className="text-2xl font-bold mb-2" style={{ color: '#f1f5f9' }}>

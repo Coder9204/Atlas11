@@ -967,7 +967,10 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
 
         {/* Header */}
         <div style={{
-          flexShrink: 0,
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -975,7 +978,6 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
           borderBottom: `1px solid ${colors.border}`,
           backgroundColor: `${colors.bgCard}ee`,
           backdropFilter: 'blur(10px)',
-          position: 'relative',
           zIndex: 10
         }}>
           {/* Back button */}
@@ -1046,7 +1048,8 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
           position: 'relative',
-          zIndex: 1
+          zIndex: 1,
+          paddingTop: '60px'
         }}>
           {children}
         </div>
@@ -2389,8 +2392,9 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
     const handleAppTabClick = (index: number) => {
       if (index === activeAppIndex) return; // Already on this app
 
-      // Only allow clicking on completed apps or the next unlocked one
-      const canAccess = index === 0 || completedApps[index - 1] || completedApps[index];
+      // Allow clicking on completed apps or the first few unlocked ones (for UX/exploration)
+      // This allows users to preview upcoming apps before completing all previous ones
+      const canAccess = index === 0 || index === 1 || completedApps[index - 1] || completedApps[index];
       if (!canAccess) return;
 
       setActiveAppIndex(index);
@@ -2696,19 +2700,26 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
                   borderRadius: '10px',
                   padding: '12px',
                   marginBottom: '8px',
-                  border: `1px solid ${isCorrect ? colors.success : colors.danger}30`
+                  border: `1px solid ${isCorrect ? colors.success : colors.danger}30`,
+                  display: 'flex',
+                  gap: '8px'
                 }}>
-                  <p style={{ fontSize: typo.small, color: colors.textPrimary, fontWeight: 600, margin: '0 0 4px' }}>
-                    {idx + 1}. {q.question}
-                  </p>
-                  <p style={{ fontSize: typo.small, color: isCorrect ? colors.success : colors.danger, margin: 0 }}>
-                    Your answer: {userAnswer !== null ? q.options[userAnswer].label : 'Not answered'}
-                  </p>
-                  {!isCorrect && (
-                    <p style={{ fontSize: typo.small, color: colors.success, margin: '4px 0 0' }}>
-                      Correct: {q.options[correctIdx].label}
+                  <div style={{ fontSize: '18px', flexShrink: 0 }}>
+                    {isCorrect ? '✓' : '✗'}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: typo.small, color: colors.textPrimary, fontWeight: 600, margin: '0 0 4px' }}>
+                      {idx + 1}. {q.question}
                     </p>
-                  )}
+                    <p style={{ fontSize: typo.small, color: isCorrect ? colors.success : colors.danger, margin: 0 }}>
+                      Your answer: {userAnswer !== null ? q.options[userAnswer].label : 'Not answered'}
+                    </p>
+                    {!isCorrect && (
+                      <p style={{ fontSize: typo.small, color: colors.success, margin: '4px 0 0' }}>
+                        Correct: {q.options[correctIdx].label}
+                      </p>
+                    )}
+                  </div>
                 </div>
               );
             })}

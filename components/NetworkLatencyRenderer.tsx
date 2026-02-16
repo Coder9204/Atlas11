@@ -130,7 +130,7 @@ const fiberDistances: Record<string, number> = {
 };
 
 const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
-  phase,
+  phase = 'hook',
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
@@ -794,49 +794,49 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
 
           {/* Info panel at bottom */}
           <g>
-            <rect x={50} y={height - 70} width={width - 100} height={55} rx="12" fill="url(#netlInfoPanelGradient)" stroke="#334155" strokeWidth="1" />
+            <rect x={50} y={height - 78} width={width - 100} height={62} rx="12" fill="url(#netlInfoPanelGradient)" stroke="#334155" strokeWidth="1" />
 
             {/* Distance info */}
-            <text x={150} y={height - 45} textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="system-ui, -apple-system, sans-serif">
-              FIBER DISTANCE
+            <text x={150} y={height - 56} textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="system-ui, -apple-system, sans-serif">
+              DISTANCE
             </text>
-            <text x={150} y={height - 28} textAnchor="middle" fill="#22d3ee" fontSize="16" fontWeight="bold" fontFamily="system-ui, -apple-system, sans-serif">
+            <text x={150} y={height - 33} textAnchor="middle" fill="#22d3ee" fontSize="17" fontWeight="bold" fontFamily="system-ui, -apple-system, sans-serif">
               {distance.toLocaleString()} km
             </text>
 
             {/* Theoretical minimum */}
-            <text x={350} y={height - 45} textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="system-ui, -apple-system, sans-serif">
-              SPEED OF LIGHT LIMIT
+            <text x={350} y={height - 56} textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="system-ui, -apple-system, sans-serif">
+              LIGHT LIMIT
             </text>
-            <text x={350} y={height - 28} textAnchor="middle" fill="#8b5cf6" fontSize="16" fontWeight="bold" fontFamily="system-ui, -apple-system, sans-serif">
-              {theoreticalMin.toFixed(1)} ms RTT (theoretical)
+            <text x={350} y={height - 33} textAnchor="middle" fill="#8b5cf6" fontSize="14" fontWeight="bold" fontFamily="system-ui, -apple-system, sans-serif">
+              {theoreticalMin.toFixed(1)} ms
             </text>
 
             {/* Actual RTT */}
-            <text x={550} y={height - 45} textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="system-ui, -apple-system, sans-serif">
-              ESTIMATED RTT
+            <text x={550} y={height - 56} textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="system-ui, -apple-system, sans-serif">
+              TOTAL RTT
             </text>
-            <text x={550} y={height - 28} textAnchor="middle" fill="#10b981" fontSize="16" fontWeight="bold" fontFamily="system-ui, -apple-system, sans-serif">
+            <text x={550} y={height - 33} textAnchor="middle" fill="#10b981" fontSize="17" fontWeight="bold" fontFamily="system-ui, -apple-system, sans-serif">
               {roundTrip.toFixed(1)} ms
             </text>
           </g>
 
           {/* Latency component legend */}
           <g transform="translate(580, 80)">
-            <rect x="-10" y="-10" width="110" height="100" rx="8" fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth="1" />
-            <text x="45" y="8" textAnchor="middle" fill="#f8fafc" fontSize="9" fontWeight="bold">LATENCY BREAKDOWN</text>
+            <rect x="-10" y="-10" width="110" height="108" rx="8" fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth="1" />
+            <text x="45" y="8" textAnchor="middle" fill="#f8fafc" fontSize="11" fontWeight="bold">BREAKDOWN</text>
 
-            <circle cx="8" cy="28" r="4" fill="#22d3ee" />
-            <text x="18" y="32" fill="#94a3b8" fontSize="8">Propagation</text>
-            <text x="95" y="32" textAnchor="end" fill="#22d3ee" fontSize="8" fontWeight="bold">{propagationDelay.toFixed(1)}ms</text>
+            <circle cx="8" cy="30" r="4" fill="#22d3ee" />
+            <text x="18" y="34" fill="#94a3b8" fontSize="11">Propag</text>
+            <text x="95" y="34" textAnchor="end" fill="#22d3ee" fontSize="11" fontWeight="bold">{propagationDelay.toFixed(1)}</text>
 
-            <circle cx="8" cy="48" r="4" fill="#f59e0b" />
-            <text x="18" y="52" fill="#94a3b8" fontSize="8">Serialization</text>
-            <text x="95" y="52" textAnchor="end" fill="#f59e0b" fontSize="8" fontWeight="bold">{serialization.toFixed(2)}ms</text>
+            <circle cx="8" cy="53" r="4" fill="#f59e0b" />
+            <text x="18" y="57" fill="#94a3b8" fontSize="11">Serial</text>
+            <text x="95" y="57" textAnchor="end" fill="#f59e0b" fontSize="11" fontWeight="bold">{serialization.toFixed(2)}</text>
 
-            <circle cx="8" cy="68" r="4" fill="#8b5cf6" />
-            <text x="18" y="72" fill="#94a3b8" fontSize="8">Processing</text>
-            <text x="95" y="72" textAnchor="end" fill="#8b5cf6" fontSize="8" fontWeight="bold">{routerProcessing.toFixed(1)}ms</text>
+            <circle cx="8" cy="76" r="4" fill="#8b5cf6" />
+            <text x="18" y="80" fill="#94a3b8" fontSize="11">Process</text>
+            <text x="95" y="80" textAnchor="end" fill="#8b5cf6" fontSize="11" fontWeight="bold">{routerProcessing.toFixed(1)}</text>
           </g>
         </svg>
 
@@ -951,7 +951,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
           step="10"
           value={bandwidth}
           onChange={(e) => setBandwidth(parseInt(e.target.value))}
-          style={{ width: '100%', WebkitTapHighlightColor: 'transparent' }}
+          style={{ width: '100%', WebkitTapHighlightColor: 'transparent', touchAction: 'pan-y', accentColor: colors.accent }}
         />
       </div>
 
@@ -966,7 +966,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
           step="1"
           value={numHops}
           onChange={(e) => setNumHops(parseInt(e.target.value))}
-          style={{ width: '100%', WebkitTapHighlightColor: 'transparent' }}
+          style={{ width: '100%', WebkitTapHighlightColor: 'transparent', touchAction: 'pan-y', accentColor: colors.accent }}
         />
       </div>
 
@@ -977,14 +977,17 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
         borderLeft: `3px solid ${colors.accent}`,
       }}>
         <div style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 'bold', marginBottom: '8px' }}>
-          Latency Breakdown:
+          Formula & Latency Breakdown:
         </div>
-        <div style={{ color: colors.textSecondary, fontSize: '11px', fontFamily: 'monospace' }}>
-          <div>Propagation = Distance / Speed = {distance}km / {SPEED_OF_LIGHT_FIBER}km/s = {propagationDelay.toFixed(1)}ms</div>
-          <div style={{ marginTop: '4px' }}>Serialization = Bits / Rate = {packetSize * 8}b / {bandwidth}Mb/s = {serialization.toFixed(3)}ms</div>
-          <div style={{ marginTop: '4px' }}>Processing = {numHops} hops x {processingDelay}ms = {routerProcessing.toFixed(1)}ms</div>
+        <div style={{ color: colors.textSecondary, fontSize: '11px', fontFamily: 'monospace', lineHeight: 1.6 }}>
+          <div style={{ marginBottom: '6px', fontWeight: 'bold', color: colors.textPrimary }}>
+            Total = Propagation + Serialization + Processing
+          </div>
+          <div>Propagation = d/c = {distance}km / {SPEED_OF_LIGHT_FIBER}km/s = {propagationDelay.toFixed(1)}ms</div>
+          <div style={{ marginTop: '4px' }}>Serialization = bits/rate = {packetSize * 8}b / {bandwidth}Mb/s = {serialization.toFixed(3)}ms</div>
+          <div style={{ marginTop: '4px' }}>Processing = hops × delay = {numHops} × {processingDelay}ms = {routerProcessing.toFixed(1)}ms</div>
           <div style={{ marginTop: '8px', color: colors.success, fontWeight: 'bold' }}>
-            Round Trip = 2 x ({propagationDelay.toFixed(1)} + {serialization.toFixed(2)} + {routerProcessing.toFixed(1)}) = {roundTrip.toFixed(1)}ms
+            RTT = 2 × ({propagationDelay.toFixed(1)} + {serialization.toFixed(2)} + {routerProcessing.toFixed(1)}) = {roundTrip.toFixed(1)}ms
           </div>
         </div>
       </div>
@@ -1011,12 +1014,16 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
           padding: '12px 32px',
           borderRadius: '8px',
           border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
+          background: canProceed ? `linear-gradient(135deg, ${colors.accent}, #a78bfa)` : 'rgba(255,255,255,0.1)',
           color: canProceed ? 'white' : colors.textMuted,
           fontWeight: 'bold',
           cursor: canProceed ? 'pointer' : 'not-allowed',
           fontSize: '16px',
           WebkitTapHighlightColor: 'transparent',
+          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+          boxShadow: canProceed ? `0 4px 12px ${colors.accentGlow}` : 'none',
+          minHeight: '44px',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
         }}
       >
         {buttonText}
@@ -1149,12 +1156,23 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
             padding: '16px',
             borderRadius: '12px',
           }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
+            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Cause & Effect - What Happens When You Change Parameters:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '12px' }}>
+              When you <strong>increase distance</strong>, propagation delay grows because light must travel farther.
+              When you <strong>decrease bandwidth</strong>, serialization increases since bits take longer to transmit.
+              As you <strong>add router hops</strong>, processing delay compounds - each hop adds examination time.
+            </p>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', marginTop: '12px' }}>Why This Concept Matters in the Real World:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '12px' }}>
+              Latency physics determines why gamers obsess over ping, why high-frequency traders pay millions for proximity to exchanges,
+              and why cloud providers build global data centers. The speed of light creates an absolute floor that shapes all networked systems.
+            </p>
+            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try - Watch & Observe:</h4>
             <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Compare NY-London (~56ms) vs NY-Tokyo (~150ms)</li>
-              <li>Set bandwidth to 10 Mbps - watch serialization increase</li>
-              <li>Add 30 router hops - see processing delay compound</li>
-              <li>Notice: propagation dominates on long routes!</li>
+              <li>Compare NY-London (~56ms) vs NY-Tokyo (~150ms) - notice how distance affects total RTT</li>
+              <li>Set bandwidth to 10 Mbps - watch serialization increase dramatically in the breakdown</li>
+              <li>Add 30 router hops - observe processing delay compound linearly</li>
+              <li>Pay attention: propagation dominates on long routes while serialization matters on slow links!</li>
             </ul>
           </div>
         </div>
@@ -1193,6 +1211,17 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
           }}>
             <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Network Latency</h3>
             <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+              <p style={{ marginBottom: '12px' }}>
+                <strong style={{ color: colors.textPrimary }}>As you saw in the visualization</strong>, latency has three key components combined by this formula:
+              </p>
+              <div style={{ background: 'rgba(139, 92, 246, 0.2)', padding: '14px', borderRadius: '8px', marginBottom: '14px', fontFamily: 'monospace', fontSize: '13px', lineHeight: 1.8 }}>
+                <strong style={{ color: colors.textPrimary }}>Total Latency = Propagation + Serialization + Processing</strong><br/>
+                where:<br/>
+                • <span style={{ color: colors.fiber }}>Propagation</span> = Distance / Speed = d / c<br/>
+                • <span style={{ color: colors.warning }}>Serialization</span> = Packet Size / Bandwidth<br/>
+                • <span style={{ color: colors.accent }}>Processing</span> = Hops × Delay per Hop<br/>
+                <strong style={{ color: colors.success }}>RTT (Round Trip Time) = 2 × Total Latency</strong>
+              </div>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Three Delay Components:</strong>
               </p>
@@ -1417,8 +1446,43 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
                   Reveal Answer
                 </button>
               ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                <div>
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '8px' }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px', marginBottom: '8px' }}>{app.answer}</p>
+                    {realWorldApps[index] && (
+                      <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                        <p style={{ color: colors.textMuted, fontSize: '11px', marginBottom: '6px', fontWeight: 'bold' }}>Key Statistics:</p>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                          {realWorldApps[index].stats.map((stat, i) => (
+                            <div key={i} style={{ background: 'rgba(255,255,255,0.05)', padding: '6px 10px', borderRadius: '6px', fontSize: '11px' }}>
+                              {stat.icon} <strong style={{ color: colors.textPrimary }}>{stat.value}</strong> <span style={{ color: colors.textMuted }}>{stat.label}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => {
+                      const newSet = new Set(transferCompleted);
+                      newSet.delete(index);
+                      setTransferCompleted(newSet);
+                    }}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      background: `linear-gradient(135deg, ${colors.success}, #34d399)`,
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      fontWeight: 'bold',
+                      WebkitTapHighlightColor: 'transparent',
+                      boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
+                    }}
+                  >
+                    Got It
+                  </button>
                 </div>
               )}
             </div>
@@ -1496,7 +1560,16 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
               ))}
             </div>
             <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
+              <div style={{ color: colors.textMuted, fontSize: '12px', marginBottom: '10px', fontWeight: 'bold' }}>
+                Question {currentTestQuestion + 1} of {testQuestions.length}
+              </div>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6, marginBottom: '12px' }}>{currentQ.question}</p>
+              <div style={{ marginTop: '12px', padding: '10px', background: 'rgba(139, 92, 246, 0.15)', borderRadius: '6px', borderLeft: `3px solid ${colors.accent}` }}>
+                <p style={{ color: colors.textSecondary, fontSize: '12px', lineHeight: 1.5 }}>
+                  Think about what you learned: propagation delay depends on distance and speed of light in fiber,
+                  serialization depends on bandwidth, and processing depends on router hops.
+                </p>
+              </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {currentQ.options.map((opt, oIndex) => (
@@ -1616,7 +1689,38 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
     );
   }
 
-  return null;
+  // Default fallback - render hook phase for unrecognized phases
+  return (
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>📡</div>
+          <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+            Network Latency Physics
+          </h1>
+          <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            Why is there always some delay, even with fiber?
+          </p>
+        </div>
+        {renderVisualization(true)}
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          <div style={{
+            background: colors.bgCard,
+            padding: '20px',
+            borderRadius: '12px',
+            marginBottom: '16px',
+          }}>
+            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+              Even with perfectly optimized networks, there's an absolute minimum delay
+              that no technology can overcome. It's set by a fundamental law of physics:
+              nothing travels faster than light.
+            </p>
+          </div>
+        </div>
+      </div>
+      {renderBottomBar(false, true, 'Make a Prediction')}
+    </div>
+  );
 };
 
 export default NetworkLatencyRenderer;

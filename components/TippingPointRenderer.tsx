@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 interface TippingPointRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  gamePhase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
@@ -103,13 +104,18 @@ const realWorldApps = [
 ];
 
 const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
-  phase,
+  phase: propPhase,
+  gamePhase,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
-  const currentPhaseIndex = PHASE_ORDER.indexOf(phase as typeof PHASE_ORDER[number]);
+  // Handle invalid phase gracefully - support both phase and gamePhase props
+  const phase = (gamePhase || propPhase || 'hook') as typeof PHASE_ORDER[number];
+  const validPhase = PHASE_ORDER.includes(phase) ? phase : 'hook';
+  const currentPhaseIndex = PHASE_ORDER.indexOf(validPhase);
   const progressPercent = ((currentPhaseIndex + 1) / PHASE_ORDER.length) * 100;
+
   // Simulation state
   const [objectHeight, setObjectHeight] = useState(150);
   const [baseWidth, setBaseWidth] = useState(60);
@@ -117,6 +123,12 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   const [tiltAngle, setTiltAngle] = useState(0);
   const [isPushing, setIsPushing] = useState(false);
   const [hasAddedWeight, setHasAddedWeight] = useState(false);
+
+  // Reference/baseline values for comparison
+  const [referenceHeight] = useState(150);
+  const [referenceBaseWidth] = useState(60);
+  const referenceComHeight = referenceHeight * 0.5;
+  const referenceCriticalAngle = Math.atan(referenceBaseWidth / (2 * referenceComHeight)) * (180 / Math.PI);
 
   // Phase-specific state
   const [prediction, setPrediction] = useState<string | null>(null);
@@ -230,7 +242,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
 
   const testQuestions = [
     {
-      question: 'What determines the critical tipping angle of an object?',
+      question: 'A furniture designer is creating a tall bookshelf. What determines the critical tipping angle that will make it safe or dangerous?',
       options: [
         { text: 'Only the weight of the object', correct: false },
         { text: 'The ratio of base width to center of mass height', correct: true },
@@ -239,12 +251,12 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
       ],
     },
     {
-      question: 'When does an object tip over?',
+      question: 'An SUV is driving through a sharp turn. Under what condition will the vehicle tip over and roll?',
       options: [
         { text: 'When any force is applied', correct: false },
         { text: 'When its weight exceeds a limit', correct: false },
-        { text: 'When its center of mass moves outside the support polygon', correct: true },
-        { text: 'When it starts to slide', correct: false },
+        { text: 'When its center of mass projection moves outside the support polygon (track width)', correct: true },
+        { text: 'When it starts to slide sideways', correct: false },
       ],
     },
     {
@@ -570,7 +582,8 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
 
             {/* Grid pattern */}
             <pattern id="tippGridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
-              <rect width="20" height="20" fill="none" stroke="#334155" strokeWidth="0.5" strokeOpacity="0.3" />
+              <line x1="0" y1="0" x2="0" y2="20" stroke="#334155" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
+              <line x1="0" y1="0" x2="20" y2="0" stroke="#334155" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
             </pattern>
           </defs>
 
@@ -624,8 +637,8 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
             </text>
 
             {/* Labels */}
-            <text x={meterX - 10} y={meterY + 14} textAnchor="end" fill="#10b981" fontSize={10} fontWeight="600">STABLE</text>
-            <text x={meterX + meterWidth + 10} y={meterY + 14} textAnchor="start" fill="#ef4444" fontSize={10} fontWeight="600">TIP!</text>
+            <text x={meterX - 10} y={meterY + 14} textAnchor="end" fill="#10b981" fontSize={11} fontWeight="600">STABLE</text>
+            <text x={meterX + meterWidth + 10} y={meterY + 14} textAnchor="start" fill="#ef4444" fontSize={11} fontWeight="600">TIP!</text>
           </g>
 
           {/* === GROUND SURFACE === */}
@@ -645,14 +658,14 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
           </g>
           <text
             x={centerX}
-            y={groundY + 25}
+            y={groundY + 28}
             textAnchor="middle"
             fill="#10b981"
             fontSize={11}
             fontWeight="600"
             filter="url(#tippTextGlow)"
           >
-            Support Base ({baseWidth}px)
+            {baseWidth}px
           </text>
 
           {/* === STABILITY ZONE VISUALIZATION === */}
@@ -709,15 +722,15 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
               rx={2}
             />
 
-            {/* Object label */}
+            {/* Object label - positioned to avoid overlap with COM */}
             <text
-              x={pivotX}
+              x={pivotX - 30}
               y={pivotY - objectHeight / 2}
               textAnchor="middle"
               fill="#f8fafc"
-              fontSize={12}
+              fontSize={11}
               fontWeight="bold"
-              transform={`rotate(${-tiltAngle}, ${pivotX}, ${pivotY - objectHeight / 2})`}
+              transform={`rotate(${-tiltAngle}, ${pivotX - 30}, ${pivotY - objectHeight / 2})`}
             >
               {objectHeight}px
             </text>
@@ -798,7 +811,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
                   x={pivotX + baseWidth / 2 + 55}
                   y={pivotY - pushHeight + 4}
                   fill="#f87171"
-                  fontSize={10}
+                  fontSize={11}
                   fontWeight="bold"
                 >
                   PUSH
@@ -831,7 +844,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
               y={worldComY + 4}
               textAnchor="middle"
               fill="#78350f"
-              fontSize={10}
+              fontSize={11}
               fontWeight="bold"
             >
               CM
@@ -932,23 +945,23 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
               x={12}
               y={55}
               width={120}
-              height={90}
+              height={95}
               rx={8}
               fill="rgba(15, 23, 42, 0.9)"
               stroke="#475569"
               strokeWidth={1}
             />
-            <text x={20} y={75} fill="#94a3b8" fontSize={10}>Height:</text>
-            <text x={100} y={75} fill="#f8fafc" fontSize={10} fontWeight="bold" textAnchor="end">{objectHeight}px</text>
+            <text x={20} y={75} fill="#94a3b8" fontSize={11}>Height:</text>
+            <text x={105} y={75} fill="#f8fafc" fontSize={11} fontWeight="bold" textAnchor="end">{objectHeight}px</text>
 
-            <text x={20} y={92} fill="#94a3b8" fontSize={10}>Base:</text>
-            <text x={100} y={92} fill="#f8fafc" fontSize={10} fontWeight="bold" textAnchor="end">{baseWidth}px</text>
+            <text x={20} y={93} fill="#94a3b8" fontSize={11}>Base:</text>
+            <text x={105} y={93} fill="#f8fafc" fontSize={11} fontWeight="bold" textAnchor="end">{baseWidth}px</text>
 
-            <text x={20} y={109} fill="#94a3b8" fontSize={10}>COM Height:</text>
-            <text x={100} y={109} fill="#fbbf24" fontSize={10} fontWeight="bold" textAnchor="end">{comHeight.toFixed(0)}px</text>
+            <text x={20} y={111} fill="#94a3b8" fontSize={11}>COM Ht:</text>
+            <text x={105} y={111} fill="#fbbf24" fontSize={11} fontWeight="bold" textAnchor="end">{comHeight.toFixed(0)}px</text>
 
-            <text x={20} y={126} fill="#94a3b8" fontSize={10}>Crit. Angle:</text>
-            <text x={100} y={126} fill="#a855f7" fontSize={10} fontWeight="bold" textAnchor="end">{criticalAngle.toFixed(1)}deg</text>
+            <text x={20} y={129} fill="#94a3b8" fontSize={11}>Crit.Ang:</text>
+            <text x={105} y={129} fill="#a855f7" fontSize={11} fontWeight="bold" textAnchor="end">{criticalAngle.toFixed(1)}°</text>
           </g>
 
           {/* === STABILITY STATUS BADGE === */}
@@ -974,6 +987,32 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
               {isTipping ? 'TIPPING!' : comOverSupport ? 'STABLE' : 'WARNING'}
             </text>
           </g>
+
+          {/* === REFERENCE/BASELINE MARKER === */}
+          {interactive && (objectHeight !== referenceHeight || baseWidth !== referenceBaseWidth || hasAddedWeight) && (
+            <g opacity={0.5}>
+              <circle
+                cx={width - 62}
+                cy={100}
+                r={8}
+                fill="none"
+                stroke="#64748b"
+                strokeWidth={2}
+                strokeDasharray="3,3"
+                filter="url(#tippTextGlow)"
+              />
+              <text
+                x={width - 62}
+                y={120}
+                textAnchor="middle"
+                fill="#94a3b8"
+                fontSize={11}
+                fontWeight="600"
+              >
+                Baseline: {referenceCriticalAngle.toFixed(1)}°
+              </text>
+            </g>
+          )}
         </svg>
 
         {interactive && (
@@ -1046,7 +1085,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
           step="10"
           value={objectHeight}
           onChange={(e) => setObjectHeight(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' } as React.CSSProperties}
         />
       </div>
 
@@ -1061,7 +1100,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
           step="5"
           value={baseWidth}
           onChange={(e) => setBaseWidth(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' } as React.CSSProperties}
         />
       </div>
 
@@ -1076,7 +1115,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
           step="10"
           value={Math.min(pushHeight, objectHeight - 10)}
           onChange={(e) => setPushHeight(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' } as React.CSSProperties}
         />
       </div>
 
@@ -1211,11 +1250,11 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   );
 
   // HOOK PHASE
-  if (phase === 'hook') {
+  if (validPhase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               The Tipping Point
@@ -1262,11 +1301,11 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   }
 
   // PREDICT PHASE
-  if (phase === 'predict') {
+  if (validPhase === 'predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           {renderVisualization(false)}
 
           <div style={{
@@ -1285,7 +1324,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
 
           <div style={{ padding: '0 16px 16px 16px' }}>
             <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              Given two bottles with the same base width, which is easier to tip?
+              Predict: Given two bottles with the same base width, which is easier to tip?
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {predictions.map((p) => (
@@ -1316,11 +1355,11 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   }
 
   // PLAY PHASE
-  if (phase === 'play') {
+  if (validPhase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Tipping Physics</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1349,13 +1388,29 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
             padding: '16px',
             borderRadius: '12px',
           }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 'bold' }}>Try These Experiments:</h4>
+            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0, fontWeight: 'normal' }}>
               <li>Make the object very tall - see how small the critical angle becomes</li>
               <li>Widen the base - notice the increased stability</li>
               <li>Push high vs. low - higher push = more torque!</li>
               <li>Find the exact angle where tipping becomes inevitable</li>
             </ul>
+          </div>
+
+          <div style={{
+            background: 'rgba(245, 158, 11, 0.1)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `3px solid ${colors.warning}`,
+          }}>
+            <h4 style={{ color: colors.warning, marginBottom: '8px', fontWeight: 'bold' }}>Why This Matters:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, margin: 0, fontWeight: 'normal' }}>
+              Understanding tipping points is critical for preventing furniture tip-overs that kill children, designing SUVs resistant to rollovers,
+              engineering stable construction cranes, and optimizing athletic stances in martial arts. The same physics governs earthquake-resistant
+              buildings and ship stability. Every year, thousands of accidents occur because engineers and designers fail to account for center-of-mass
+              dynamics and critical tipping angles.
+            </p>
           </div>
         </div>
         {renderBottomBar(false, true, 'Next')}
@@ -1364,13 +1419,19 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   }
 
   // REVIEW PHASE
-  if (phase === 'review') {
+  if (validPhase === 'review') {
     const wasCorrect = prediction === 'tall';
+    const predictionLabels = {
+      'short': 'the short bottle is easier to tip',
+      'tall': 'the tall bottle is easier to tip',
+      'same': 'both are equally easy to tip',
+      'weight': 'it only depends on how heavy they are'
+    };
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1378,10 +1439,15 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
             borderRadius: '12px',
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px', fontWeight: 'bold' }}>
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
-            <p style={{ color: colors.textPrimary }}>
+            {prediction && (
+              <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'normal' }}>
+                You predicted: {predictionLabels[prediction as keyof typeof predictionLabels]}
+              </p>
+            )}
+            <p style={{ color: colors.textPrimary, fontWeight: 'normal' }}>
               The tall bottle is easier to tip because its center of mass is higher, giving it a smaller critical tipping angle.
             </p>
           </div>
@@ -1417,11 +1483,11 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   }
 
   // TWIST PREDICT PHASE
-  if (phase === 'twist_predict') {
+  if (validPhase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1478,11 +1544,11 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   }
 
   // TWIST PLAY PHASE
-  if (phase === 'twist_play') {
+  if (validPhase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Bottom Weight</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1526,13 +1592,13 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   }
 
   // TWIST REVIEW PHASE
-  if (phase === 'twist_review') {
+  if (validPhase === 'twist_review') {
     const wasCorrect = twistPrediction === 'better';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1580,16 +1646,16 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   }
 
   // TRANSFER PHASE
-  if (phase === 'transfer') {
+  if (validPhase === 'transfer') {
     const [currentAppIndex, setCurrentAppIndex] = useState(0);
     const currentApp = transferApplications[currentAppIndex];
     const isCurrentCompleted = transferCompleted.has(currentAppIndex);
     const allCompleted = transferCompleted.size >= transferApplications.length;
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1599,15 +1665,18 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
             </p>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '16px' }}>
               {transferApplications.map((_, i) => (
-                <div
+                <button
                   key={i}
                   onClick={() => setCurrentAppIndex(i)}
+                  aria-label={`Application ${i + 1}`}
                   style={{
                     width: '12px',
                     height: '12px',
                     borderRadius: '50%',
-                    background: transferCompleted.has(i) ? colors.success : i === currentAppIndex ? colors.accent : 'rgba(255,255,255,0.2)',
+                    background: transferCompleted.has(i) ? colors.success : i === currentAppIndex ? colors.accent : 'rgba(148,163,184,0.7)',
                     cursor: 'pointer',
+                    border: 'none',
+                    padding: 0,
                   }}
                 />
               ))}
@@ -1624,10 +1693,34 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <h3 style={{ color: colors.textPrimary, fontSize: '18px' }}>{currentApp.title}</h3>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: 'bold' }}>{currentApp.title}</h3>
               {isCurrentCompleted && <span style={{ color: colors.success, fontWeight: 'bold' }}>Completed</span>}
             </div>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '16px', lineHeight: 1.6 }}>{currentApp.description}</p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '16px', lineHeight: 1.6, fontWeight: 'normal' }}>{currentApp.description}</p>
+
+            {/* Display real-world app if available */}
+            {realWorldApps[currentAppIndex] && (
+              <div style={{ background: 'rgba(15, 23, 42, 0.5)', padding: '16px', borderRadius: '8px', marginBottom: '16px' }}>
+                <div style={{ fontSize: '32px', marginBottom: '8px' }}>{realWorldApps[currentAppIndex].icon}</div>
+                <p style={{ color: colors.textPrimary, fontSize: '15px', marginBottom: '8px', fontWeight: '600' }}>{realWorldApps[currentAppIndex].short}</p>
+                <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '12px', fontWeight: 'normal' }}>{realWorldApps[currentAppIndex].description}</p>
+                <p style={{ color: colors.textMuted, fontSize: '13px', marginBottom: '8px', fontWeight: 'normal' }}><strong>How it works:</strong> {realWorldApps[currentAppIndex].howItWorks}</p>
+                {realWorldApps[currentAppIndex].stats && (
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '12px' }}>
+                    {realWorldApps[currentAppIndex].stats.map((stat, idx) => (
+                      <div key={idx} style={{ background: 'rgba(139, 92, 246, 0.2)', padding: '8px 12px', borderRadius: '6px' }}>
+                        <div style={{ color: colors.accent, fontSize: '16px', fontWeight: 'bold' }}>{stat.value}</div>
+                        <div style={{ color: colors.textSecondary, fontSize: '11px', fontWeight: 'normal' }}>{stat.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '12px', fontWeight: 'normal' }}>
+                  <strong>Companies:</strong> {realWorldApps[currentAppIndex].companies.join(', ')}
+                </p>
+              </div>
+            )}
+
             <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
               <p style={{ color: colors.accent, fontSize: '14px', fontWeight: 'bold', margin: 0 }}>{currentApp.question}</p>
             </div>
@@ -1706,12 +1799,12 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   }
 
   // TEST PHASE
-  if (phase === 'test') {
+  if (validPhase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderNavBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1749,9 +1842,9 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -1789,11 +1882,11 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   }
 
   // MASTERY PHASE
-  if (phase === 'mastery') {
+  if (validPhase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
@@ -1824,7 +1917,24 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
     );
   }
 
-  return null;
+  // Default fallback - should never reach here due to validPhase
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      {renderNavBar()}
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+            The Tipping Point
+          </h1>
+          <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            Which is easier to tip: a tall bottle or a short one - why?
+          </p>
+        </div>
+        {renderVisualization(true)}
+      </div>
+      {renderBottomBar(false, true, 'Next', false)}
+    </div>
+  );
 };
 
 export default TippingPointRenderer;

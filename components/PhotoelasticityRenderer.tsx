@@ -307,7 +307,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
     const height = 420;
     const beamWidth = 260;
     const beamHeight = isThick ? 60 : 32;
-    const beamY = height / 2 - 30;
+    const beamY = height / 2 - 10; // Moved down slightly to use more vertical space
 
     // Generate stress fringe colors based on bend amount
     const generateFringes = () => {
@@ -367,7 +367,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
     const generateBeamPath = () => {
       const leftX = width / 2 - beamWidth / 2;
       const rightX = width / 2 + beamWidth / 2;
-      const bendY = bendAmount * 0.9;
+      const bendY = bendAmount * 1.6; // Increased to use more vertical space (>25% of height)
 
       return `M ${leftX} ${beamY}
               Q ${width / 2} ${beamY + bendY} ${rightX} ${beamY}
@@ -565,8 +565,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
             <circle cx="0" cy="20" r="15" fill="url(#phoelLightSource)" filter="url(#phoelLightGlow)" />
             <circle cx="0" cy="20" r="8" fill="#fef9c3" />
             {/* Label */}
-            <text x="0" y="-40" fill="#94a3b8" fontSize="10" textAnchor="middle" fontWeight="600">LIGHT</text>
-            <text x="0" y="-30" fill="#64748b" fontSize="8" textAnchor="middle">SOURCE</text>
+            <text x="0" y="-43" fill="#94a3b8" fontSize="9" textAnchor="middle" fontWeight="600">LIGHT</text>
           </g>
 
           {/* === LIGHT BEAM (before polarizer) === */}
@@ -592,8 +591,8 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
               />
             ))}
             {/* Label */}
-            <text x="0" y="-20" fill="#3b82f6" fontSize="11" textAnchor="middle" fontWeight="700">POLARIZER</text>
-            <text x="0" y={beamHeight + 140} fill="#64748b" fontSize="8" textAnchor="middle">(Horizontal)</text>
+            <text x="0" y="-23" fill="#3b82f6" fontSize="9" textAnchor="middle" fontWeight="700">POL 1</text>
+            <text x="0" y={beamHeight + 143} fill="#64748b" fontSize="7" textAnchor="middle">(H)</text>
           </g>
 
           {/* === POLARIZED LIGHT BEAM === */}
@@ -603,7 +602,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
           <g transform={`translate(${width / 2 - beamWidth / 2 - 25}, ${beamY + beamHeight / 2})`}>
             <rect x="-12" y="-25" width="24" height="50" rx="2" fill="url(#phoelPolarizerFrame)" />
             <rect x="-8" y="-20" width="16" height="40" fill="#0f172a" />
-            <text x="0" y="40" fill="#64748b" fontSize="8" textAnchor="middle">CLAMP</text>
+            <text x="-30" y="5" fill="#64748b" fontSize="7" textAnchor="middle">CLAMP</text>
           </g>
 
           {/* === HORIZONTAL FORCE ARROWS (Compression) === */}
@@ -675,7 +674,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
             {polarizerEnabled && bendAmount > 20 && (
               <ellipse
                 cx={width / 2}
-                cy={beamY + beamHeight / 2 + bendAmount * 0.5}
+                cy={beamY + beamHeight / 2 + bendAmount * 0.8}
                 rx={30 + bendAmount * 0.3}
                 ry={15 + bendAmount * 0.2}
                 fill="url(#phoelStressCenter)"
@@ -689,10 +688,30 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
               {generateFringes()}
             </g>
 
+            {/* Interactive marker showing maximum deflection point - moves with bend */}
+            <circle
+              cx={width / 2}
+              cy={beamY + beamHeight / 2 + bendAmount * 1.6}
+              r="6"
+              fill="#fbbf24"
+              stroke="#fff"
+              strokeWidth="2"
+              opacity="0.9"
+            />
+            <text
+              x={width / 2 + 15}
+              y={beamY + beamHeight / 2 + bendAmount * 1.6 + 4}
+              fill="#fbbf24"
+              fontSize="10"
+              fontWeight="bold"
+            >
+              Max Stress
+            </text>
+
             {/* Specimen label */}
             <text
               x={width / 2}
-              y={beamY + beamHeight + bendAmount * 0.9 + 25}
+              y={beamY + beamHeight + bendAmount * 1.6 + 30}
               fill="#94a3b8"
               fontSize="10"
               textAnchor="middle"
@@ -706,7 +725,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
           <g transform={`translate(${width / 2 + beamWidth / 2 + 25}, ${beamY + beamHeight / 2})`}>
             <rect x="-12" y="-25" width="24" height="50" rx="2" fill="url(#phoelPolarizerFrame)" />
             <rect x="-8" y="-20" width="16" height="40" fill="#0f172a" />
-            <text x="0" y="40" fill="#64748b" fontSize="8" textAnchor="middle">CLAMP</text>
+            <text x="30" y="5" fill="#64748b" fontSize="7" textAnchor="middle">CLAMP</text>
           </g>
 
           {/* === TRANSMITTED LIGHT BEAM === */}
@@ -739,12 +758,12 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
               />
             ))}
             {/* Label */}
-            <text x="0" y="-20" fill={polarizerEnabled ? '#818cf8' : '#64748b'} fontSize="11" textAnchor="middle" fontWeight="700">ANALYZER</text>
-            <text x="0" y={beamHeight + 140} fill="#64748b" fontSize="8" textAnchor="middle">(Vertical, 90deg)</text>
+            <text x="0" y="-23" fill={polarizerEnabled ? '#818cf8' : '#64748b'} fontSize="9" textAnchor="middle" fontWeight="700">POL 2</text>
+            <text x="0" y={beamHeight + 143} fill="#64748b" fontSize="7" textAnchor="middle">(V 90°)</text>
             {/* Status indicator */}
-            <circle cx="0" cy={beamHeight + 155} r="5" fill={polarizerEnabled ? '#10b981' : '#ef4444'} />
-            <text x="0" y={beamHeight + 168} fill={polarizerEnabled ? '#10b981' : '#ef4444'} fontSize="7" textAnchor="middle">
-              {polarizerEnabled ? 'ACTIVE' : 'OFF'}
+            <circle cx="0" cy={beamHeight + 158} r="4" fill={polarizerEnabled ? '#10b981' : '#ef4444'} />
+            <text x="0" y={beamHeight + 172} fill={polarizerEnabled ? '#10b981' : '#ef4444'} fontSize="6" textAnchor="middle">
+              {polarizerEnabled ? 'ON' : 'OFF'}
             </text>
           </g>
 
@@ -773,35 +792,35 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
           </g>
 
           {/* === INFO PANEL === */}
-          <g transform={`translate(${width - 180}, 15)`}>
-            <rect x="0" y="0" width="165" height="70" rx="6" fill="rgba(15, 23, 42, 0.9)" stroke="#334155" strokeWidth="1" />
-            <text x="82" y="18" fill="#e2e8f0" fontSize="10" textAnchor="middle" fontWeight="700">PHOTOELASTICITY</text>
-            <line x1="10" y1="25" x2="155" y2="25" stroke="#334155" strokeWidth="1" />
-            <text x="15" y="40" fill="#94a3b8" fontSize="9">Bend Amount:</text>
-            <text x="150" y="40" fill="#f59e0b" fontSize="9" textAnchor="end" fontWeight="600">{bendAmount}%</text>
-            <text x="15" y="54" fill="#94a3b8" fontSize="9">Specimen:</text>
-            <text x="150" y="54" fill="#a855f7" fontSize="9" textAnchor="end" fontWeight="600">{isThick ? 'Thick' : 'Thin'}</text>
-            <text x="15" y="68" fill="#94a3b8" fontSize="9">Polarizers:</text>
-            <text x="150" y="68" fill={polarizerEnabled ? '#10b981' : '#ef4444'} fontSize="9" textAnchor="end" fontWeight="600">
-              {polarizerEnabled ? 'CROSSED' : 'OFF'}
+          <g transform={`translate(${width - 175}, 110)`}>
+            <rect x="0" y="0" width="160" height="65" rx="6" fill="rgba(15, 23, 42, 0.9)" stroke="#334155" strokeWidth="1" />
+            <text x="80" y="16" fill="#e2e8f0" fontSize="9" textAnchor="middle" fontWeight="700">STATUS</text>
+            <line x1="10" y1="22" x2="150" y2="22" stroke="#334155" strokeWidth="1" />
+            <text x="15" y="36" fill="#94a3b8" fontSize="8">Bend:</text>
+            <text x="145" y="36" fill="#f59e0b" fontSize="8" textAnchor="end" fontWeight="600">{bendAmount}%</text>
+            <text x="15" y="48" fill="#94a3b8" fontSize="8">Specimen:</text>
+            <text x="145" y="48" fill="#a855f7" fontSize="8" textAnchor="end" fontWeight="600">{isThick ? 'Thick' : 'Thin'}</text>
+            <text x="15" y="60" fill="#94a3b8" fontSize="8">Polarizers:</text>
+            <text x="145" y="60" fill={polarizerEnabled ? '#10b981' : '#ef4444'} fontSize="8" textAnchor="end" fontWeight="600">
+              {polarizerEnabled ? 'ON' : 'OFF'}
             </text>
           </g>
 
           {/* === LEGEND === */}
-          <g transform="translate(15, 15)">
-            <rect x="0" y="0" width="140" height="85" rx="6" fill="rgba(15, 23, 42, 0.9)" stroke="#334155" strokeWidth="1" />
-            <text x="70" y="16" fill="#e2e8f0" fontSize="9" textAnchor="middle" fontWeight="700">FRINGE COLOR KEY</text>
-            <line x1="10" y1="22" x2="130" y2="22" stroke="#334155" strokeWidth="1" />
+          <g transform="translate(15, 110)">
+            <rect x="0" y="0" width="130" height="78" rx="6" fill="rgba(15, 23, 42, 0.9)" stroke="#334155" strokeWidth="1" />
+            <text x="65" y="14" fill="#e2e8f0" fontSize="8" textAnchor="middle" fontWeight="700">STRESS LEVEL</text>
+            <line x1="8" y1="20" x2="122" y2="20" stroke="#334155" strokeWidth="1" />
             {[
-              { color: '#3b82f6', label: 'Low Stress' },
+              { color: '#3b82f6', label: 'Low' },
               { color: '#10b981', label: 'Moderate' },
-              { color: '#fbbf24', label: 'High Stress' },
+              { color: '#fbbf24', label: 'High' },
               { color: '#ef4444', label: 'Very High' },
-              { color: '#a855f7', label: 'Peak Stress' },
+              { color: '#a855f7', label: 'Peak' },
             ].map((item, i) => (
-              <g key={`legend-${i}`} transform={`translate(12, ${30 + i * 11})`}>
-                <rect x="0" y="0" width="12" height="8" rx="1" fill={item.color} />
-                <text x="20" y="7" fill="#94a3b8" fontSize="8">{item.label}</text>
+              <g key={`legend-${i}`} transform={`translate(10, ${27 + i * 10.5})`}>
+                <rect x="0" y="0" width="10" height="7" rx="1" fill={item.color} />
+                <text x="16" y="6" fill="#94a3b8" fontSize="7">{item.label}</text>
               </g>
             ))}
           </g>
@@ -859,10 +878,29 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
   const renderControls = () => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Bend Amount: {bendAmount}%
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+          Applied Stress (Mechanical Deformation): {bendAmount}%
         </label>
-        <input type="range" min="5" max="80" step="5" value={bendAmount} onChange={(e) => setBendAmount(parseInt(e.target.value))} style={{ width: '100%' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ color: colors.textMuted, fontSize: '12px', minWidth: '60px' }}>Low (5%)</span>
+          <input
+            type="range"
+            min="5"
+            max="80"
+            step="5"
+            value={bendAmount}
+            onChange={(e) => setBendAmount(parseInt(e.target.value))}
+            style={{
+              width: '100%',
+              touchAction: 'pan-y',
+              transition: 'all 0.3s ease'
+            }}
+          />
+          <span style={{ color: colors.textMuted, fontSize: '12px', minWidth: '70px', textAlign: 'right' }}>High (80%)</span>
+        </div>
+        <div style={{ color: colors.textMuted, fontSize: '12px', marginTop: '4px' }}>
+          Adjusts mechanical stress causing birefringence and fringe patterns
+        </div>
       </div>
       <label style={{ color: colors.textSecondary, display: 'flex', alignItems: 'center', gap: '8px' }}>
         <input type="checkbox" checked={polarizerEnabled} onChange={(e) => setPolarizerEnabled(e.target.checked)} />
@@ -948,6 +986,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
               <li>Increase bend - more fringes appear</li>
               <li>Turn off polarizers - fringes disappear!</li>
               <li>Notice how fringe density shows stress concentration</li>
+              <li>Watch the yellow "Max Stress" marker move as you adjust bend</li>
             </ul>
           </div>
         </div>
@@ -958,6 +997,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
 
   if (phase === 'review') {
     const wasCorrect = prediction === 'fringes';
+
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
@@ -965,6 +1005,39 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>{wasCorrect ? 'Correct!' : 'Not Quite!'}</h3>
             <p style={{ color: colors.textPrimary }}>Rainbow-colored bands appear showing where stress is concentrated!</p>
           </div>
+
+          {/* Side-by-side Comparison View */}
+          <div style={{ margin: '16px' }}>
+            <h3 style={{ color: colors.textPrimary, textAlign: 'center', marginBottom: '12px' }}>Comparison: With vs Without Crossed Polarizers</h3>
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap', flexDirection: 'row' }}>
+              <div style={{ flex: '1 1 250px', maxWidth: '350px', background: colors.bgCard, padding: '12px', borderRadius: '8px', border: '2px solid rgba(255,255,255,0.1)' }}>
+                <div style={{ marginBottom: '8px', fontWeight: 'bold', color: colors.warning, textAlign: 'center' }}>Polarizers OFF</div>
+                <div style={{ transform: 'scale(0.9)', transformOrigin: 'top center', marginBottom: '8px' }}>
+                  <svg viewBox="0 0 700 420" style={{ width: '100%', maxWidth: '350px', borderRadius: '8px' }}>
+                    <defs>
+                      <linearGradient id="simpleBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#030712" />
+                        <stop offset="50%" stopColor="#0f172a" />
+                        <stop offset="100%" stopColor="#030712" />
+                      </linearGradient>
+                    </defs>
+                    <rect width="700" height="420" fill="url(#simpleBg)" />
+                    <rect x="220" y="190" width="260" height="40" fill="#cbd5e1" opacity="0.3" rx="4" />
+                    <text x="350" y="240" fill="#94a3b8" fontSize="16" textAnchor="middle">Clear Plastic - No Fringes</text>
+                  </svg>
+                </div>
+                <div style={{ marginTop: '8px', fontSize: '12px', color: colors.textMuted, textAlign: 'center' }}>Without polarizers, stress is invisible</div>
+              </div>
+              <div style={{ flex: '1 1 250px', maxWidth: '350px', background: colors.bgCard, padding: '12px', borderRadius: '8px', border: '2px solid ' + colors.success }}>
+                <div style={{ marginBottom: '8px', fontWeight: 'bold', color: colors.success, textAlign: 'center' }}>Polarizers ON</div>
+                <div style={{ transform: 'scale(0.9)', transformOrigin: 'top center' }}>
+                  {renderVisualization(false)}
+                </div>
+                <div style={{ marginTop: '8px', fontSize: '12px', color: colors.textMuted, textAlign: 'center' }}>Stress patterns become visible as colored fringes!</div>
+              </div>
+            </div>
+          </div>
+
           <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
             <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Photoelasticity</h3>
             <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
@@ -1033,6 +1106,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
 
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'more';
+
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
@@ -1040,6 +1114,44 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>{wasCorrect ? 'Correct!' : 'Not Quite!'}</h3>
             <p style={{ color: colors.textPrimary }}>Thicker plastic shows more closely-spaced fringes!</p>
           </div>
+
+          {/* Visual diagram showing thin vs thick comparison */}
+          <div style={{ margin: '16px' }}>
+            <h3 style={{ color: colors.textPrimary, textAlign: 'center', marginBottom: '12px' }}>Comparison: Thin vs Thick Specimen</h3>
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap', flexDirection: 'row' }}>
+              <div style={{ flex: '1 1 250px', maxWidth: '350px', background: colors.bgCard, padding: '12px', borderRadius: '8px', border: '2px solid rgba(255,255,255,0.1)' }}>
+                <div style={{ marginBottom: '8px', fontWeight: 'bold', color: colors.accent, textAlign: 'center' }}>THIN Specimen</div>
+                <div style={{ transform: 'scale(0.9)', transformOrigin: 'top center', marginBottom: '8px' }}>
+                  <svg viewBox="0 0 300 200" style={{ width: '100%', borderRadius: '8px' }}>
+                    <rect width="300" height="200" fill="#0f172a" />
+                    <rect x="100" y="80" width="100" height="20" fill="#3b82f6" opacity="0.6" />
+                    <text x="150" y="130" fill="#94a3b8" fontSize="12" textAnchor="middle">Thin = Fewer Fringes</text>
+                    <circle cx="80" cy="90" r="4" fill="#fbbf24" />
+                    <circle cx="150" cy="90" r="4" fill="#10b981" />
+                    <circle cx="220" cy="90" r="4" fill="#ef4444" />
+                  </svg>
+                </div>
+                <div style={{ marginTop: '8px', fontSize: '12px', color: colors.textMuted, textAlign: 'center' }}>Less path length = fewer fringes</div>
+              </div>
+              <div style={{ flex: '1 1 250px', maxWidth: '350px', background: colors.bgCard, padding: '12px', borderRadius: '8px', border: '2px solid ' + colors.warning }}>
+                <div style={{ marginBottom: '8px', fontWeight: 'bold', color: colors.warning, textAlign: 'center' }}>THICK Specimen</div>
+                <div style={{ transform: 'scale(0.9)', transformOrigin: 'top center', marginBottom: '8px' }}>
+                  <svg viewBox="0 0 300 200" style={{ width: '100%', borderRadius: '8px' }}>
+                    <rect width="300" height="200" fill="#0f172a" />
+                    <rect x="100" y="70" width="100" height="40" fill="#3b82f6" opacity="0.6" />
+                    <text x="150" y="140" fill="#94a3b8" fontSize="12" textAnchor="middle">Thick = More Fringes</text>
+                    <circle cx="60" cy="90" r="4" fill="#fbbf24" />
+                    <circle cx="100" cy="90" r="4" fill="#10b981" />
+                    <circle cx="140" cy="90" r="4" fill="#ef4444" />
+                    <circle cx="180" cy="90" r="4" fill="#a855f7" />
+                    <circle cx="220" cy="90" r="4" fill="#3b82f6" />
+                  </svg>
+                </div>
+                <div style={{ marginTop: '8px', fontSize: '12px', color: colors.textMuted, textAlign: 'center' }}>Greater path length = more fringes</div>
+              </div>
+            </div>
+          </div>
+
           <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
             <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Path Length Matters</h3>
             <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>

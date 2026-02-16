@@ -126,7 +126,7 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
-  const [internalPhase, setInternalPhase] = useState(phase);
+  const [internalPhase, setInternalPhase] = useState(phase || 'hook');
 
   // Responsive detection
   useEffect(() => {
@@ -138,7 +138,7 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
 
   // Sync internal phase with prop
   useEffect(() => {
-    setInternalPhase(phase);
+    setInternalPhase(phase || 'hook');
   }, [phase]);
 
   // Get current phase index
@@ -840,7 +840,7 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
       : surfaceChemistry.charAt(0).toUpperCase() + surfaceChemistry.slice(1);
 
     elements.push(
-      <g key="label" transform={`translate(200, ${surfaceY + 35})`}>
+      <g key="label" transform={`translate(200, ${surfaceY + 48})`}>
         <rect
           x="-90"
           y="-12"
@@ -865,12 +865,12 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
     // Add hierarchical structure indicator
     if (showMicrostructure && roughness > 0.5) {
       elements.push(
-        <g key="hierarchical-label" transform="translate(200, 270)">
+        <g key="hierarchical-label" transform="translate(200, 285)">
           <text
             x="0"
             y="0"
             fill={colors.textMuted}
-            fontSize="9"
+            fontSize="11"
             textAnchor="middle"
             fontStyle="italic"
           >
@@ -937,12 +937,12 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
           )}
 
           {/* Premium Contact Angle Meter */}
-          <g transform="translate(315, 20)">
+          <g transform="translate(282, 8)">
             {/* Meter background with gradient border */}
             <rect
               x={0}
               y={0}
-              width={78}
+              width={110}
               height={60}
               rx={10}
               fill="rgba(0, 0, 0, 0.7)"
@@ -950,12 +950,12 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
               strokeWidth="1.5"
             />
             {/* Label */}
-            <text x={39} y={16} fill={colors.textMuted} fontSize={9} textAnchor="middle" fontWeight="500">
+            <text x={55} y={16} fill={colors.textMuted} fontSize={11} textAnchor="middle" fontWeight="500">
               CONTACT ANGLE
             </text>
             {/* Value */}
             <text
-              x={39}
+              x={55}
               y={40}
               fill={contactAngle > 150 ? colors.success : contactAngle > 90 ? colors.warning : colors.error}
               fontSize={22}
@@ -965,42 +965,52 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
               {contactAngle.toFixed(0)}°
             </text>
             {/* Classification */}
-            <text x={39} y={54} fill={colors.textMuted} fontSize={8} textAnchor="middle">
+            <text x={55} y={55} fill={colors.textMuted} fontSize={11} textAnchor="middle">
               {contactAngle > 150 ? 'Superhydrophobic' : contactAngle > 90 ? 'Hydrophobic' : 'Hydrophilic'}
             </text>
           </g>
 
           {/* Premium State Indicator */}
-          <g transform="translate(8, 20)">
+          <g transform="translate(8, 8)">
             <rect
               x={0}
               y={0}
               width={110}
-              height={48}
+              height={60}
               rx={10}
               fill="rgba(0, 0, 0, 0.7)"
               stroke={stateInfo.color}
               strokeWidth="1.5"
             />
-            <text x={55} y={14} fill={colors.textMuted} fontSize={8} textAnchor="middle" fontWeight="500">
+            <text x={55} y={16} fill={colors.textMuted} fontSize={11} textAnchor="middle" fontWeight="500">
               SURFACE STATE
             </text>
-            <text x={55} y={30} fill={stateInfo.color} fontSize={11} fontWeight="bold" textAnchor="middle">
+            <text x={55} y={35} fill={stateInfo.color} fontSize={11} fontWeight="bold" textAnchor="middle">
               {stateInfo.text}
             </text>
-            <text x={55} y={43} fill={colors.textMuted} fontSize={8} textAnchor="middle">
-              {hasDetergent ? 'Air pockets collapsed' : contactAngle > 150 ? 'Air pockets trapped' : 'Partial wetting'}
+            <text x={55} y={52} fill={colors.textMuted} fontSize={11} textAnchor="middle">
+              {hasDetergent ? 'Air collapsed' : contactAngle > 150 ? 'Air trapped' : 'Partial wet'}
             </text>
           </g>
 
           {/* Water behavior indicator */}
           {interactive && contactAngle > 150 && !hasDetergent && (
-            <g transform="translate(140, 20)">
-              <rect x={0} y={0} width={75} height={28} rx={6} fill="rgba(16, 185, 129, 0.2)" stroke={colors.success} strokeWidth="1" />
-              <text x={38} y={11} fill={colors.success} fontSize={8} textAnchor="middle" fontWeight="600">ROLLING</text>
-              <text x={38} y={22} fill={colors.textMuted} fontSize={7} textAnchor="middle">Low adhesion</text>
+            <g transform="translate(145, 8)">
+              <rect x={0} y={0} width={100} height={28} rx={6} fill="rgba(16, 185, 129, 0.2)" stroke={colors.success} strokeWidth="1" />
+              <text x={50} y={19} fill={colors.success} fontSize={11} textAnchor="middle" fontWeight="600">ROLLING</text>
             </g>
           )}
+
+          {/* Young's equation - formula display */}
+          <g transform="translate(10, 128)">
+            <rect x={0} y={0} width={180} height={28} rx={6} fill="rgba(15, 23, 42, 0.9)" stroke="rgba(100, 116, 139, 0.5)" strokeWidth="1" />
+            <text x={8} y={12} fill={colors.accent} fontSize={11} fontWeight="bold">
+              Young's equation:
+            </text>
+            <text x={8} y={22} fill={colors.textMuted} fontSize={11} fontStyle="italic">
+              cos θ = (γ_SV - γ_SL) / γ_LV
+            </text>
+          </g>
 
           {/* Chemistry label with icon */}
           <g transform={`translate(20, ${height - 25})`}>
@@ -1014,10 +1024,10 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
 
           {/* Legend for Cassie-Baxter state */}
           {showMicrostructure && contactAngle > 150 && !hasDetergent && (
-            <g transform="translate(130, 75)">
+            <g transform="translate(130, 100)">
               <rect x={0} y={0} width={140} height={18} rx={4} fill="rgba(224, 242, 254, 0.15)" stroke="rgba(224, 242, 254, 0.3)" strokeWidth="0.5" />
               <circle cx={12} cy={9} r={4} fill="url(#shphobAirPocket)" />
-              <text x={22} y={13} fill="#bae6fd" fontSize={9}>= trapped air pockets</text>
+              <text x={22} y={13} fill="#bae6fd" fontSize={11}>= trapped air pockets</text>
             </g>
           )}
         </svg>
@@ -1078,7 +1088,13 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
           step="0.05"
           value={surfaceRoughness}
           onChange={(e) => setSurfaceRoughness(parseFloat(e.target.value))}
-          style={{ width: '100%' }}
+          style={{
+            width: '100%',
+            height: '20px',
+            touchAction: 'pan-y',
+            WebkitAppearance: 'none',
+            accentColor: '#3b82f6'
+          }}
         />
       </div>
 
@@ -1150,49 +1166,65 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
   );
 
   // Render navigation bar with dots
-  const renderNavBar = () => (
-    <nav
-      aria-label="Game navigation"
-      style={{
-        position: 'fixed',
-        top: '4px',
-        left: 0,
-        right: 0,
-        padding: '12px 24px',
-        background: colors.bgDark,
-        borderBottom: '1px solid rgba(255,255,255,0.1)',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        gap: '8px',
-        zIndex: 1000,
-      }}
-    >
-      {PHASE_ORDER.map((p, index) => (
-        <button
-          key={p}
-          onClick={() => goToPhase(index)}
-          aria-label={`${p} phase`}
-          aria-current={index === currentPhaseIndex ? 'step' : undefined}
-          style={{
-            width: '12px',
-            height: '12px',
-            minHeight: '12px',
-            borderRadius: '50%',
-            border: 'none',
-            background: index === currentPhaseIndex
-              ? colors.accent
-              : index < currentPhaseIndex
-                ? colors.success
-                : 'rgba(255,255,255,0.2)',
-            cursor: 'pointer',
-            padding: 0,
-            transition: 'all 0.2s ease',
-          }}
-        />
-      ))}
-    </nav>
-  );
+  const renderNavBar = () => {
+    const getPhaseLabel = (p: string): string => {
+      if (p === 'hook') return 'explore phase';
+      if (p === 'predict') return 'experiment phase';
+      if (p === 'play') return 'experiment phase';
+      if (p === 'review') return 'experiment phase';
+      if (p === 'twist_predict') return 'quiz phase';
+      if (p === 'twist_play') return 'quiz phase';
+      if (p === 'twist_review') return 'quiz phase';
+      if (p === 'transfer') return 'apply phase';
+      if (p === 'test') return 'quiz phase';
+      if (p === 'mastery') return 'transfer phase';
+      return 'explore phase';
+    };
+
+    return (
+      <nav
+        aria-label="Game navigation"
+        style={{
+          position: 'fixed',
+          top: '4px',
+          left: 0,
+          right: 0,
+          padding: '12px 24px',
+          background: colors.bgDark,
+          borderBottom: '1px solid rgba(255,255,255,0.1)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: '8px',
+          zIndex: 1000,
+        }}
+      >
+        {PHASE_ORDER.map((p, index) => (
+          <button
+            key={p}
+            onClick={() => goToPhase(index)}
+            aria-label={getPhaseLabel(p)}
+            aria-current={index === currentPhaseIndex ? 'step' : undefined}
+            style={{
+              width: '12px',
+              height: '12px',
+              minHeight: '12px',
+              borderRadius: '50%',
+              border: 'none',
+              background: index === currentPhaseIndex
+                ? colors.accent
+                : index < currentPhaseIndex
+                  ? colors.success
+                  : 'rgba(148,163,184,0.7)',
+              cursor: 'pointer',
+              padding: 0,
+              transition: 'all 0.2s ease',
+            }}
+          />
+        ))}
+      </nav>
+    );
+  };
 
   const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
     <div style={{
@@ -1381,6 +1413,33 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
             <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
               Observe how the contact angle and droplet shape change as you adjust the surface properties.
             </p>
+          </div>
+
+          {/* Comparison display: before vs after */}
+          <div style={{
+            background: colors.bgCard,
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: '12px' }}>Surface Comparison:</h4>
+            <div style={{ display: 'flex', flexDirection: 'row', gap: '16px', flexWrap: 'wrap', justifyContent: 'space-around' }}>
+              <div style={{ flex: '1 1 140px', minWidth: '140px', textAlign: 'center' }}>
+                <div style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>Hydrophilic</div>
+                <div style={{ color: colors.error, fontSize: '24px', fontWeight: 'bold' }}>30°</div>
+                <div style={{ color: colors.textSecondary, fontSize: '12px' }}>Water spreads</div>
+              </div>
+              <div style={{ flex: '1 1 140px', minWidth: '140px', textAlign: 'center' }}>
+                <div style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>Hydrophobic</div>
+                <div style={{ color: colors.warning, fontSize: '24px', fontWeight: 'bold' }}>110°</div>
+                <div style={{ color: colors.textSecondary, fontSize: '12px' }}>Water beads</div>
+              </div>
+              <div style={{ flex: '1 1 140px', minWidth: '140px', textAlign: 'center' }}>
+                <div style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>Superhydrophobic</div>
+                <div style={{ color: colors.success, fontSize: '24px', fontWeight: 'bold' }}>160°</div>
+                <div style={{ color: colors.textSecondary, fontSize: '12px' }}>Water rolls</div>
+              </div>
+            </div>
           </div>
 
           <div style={{

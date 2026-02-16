@@ -10,6 +10,17 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 // Steel paperclip floats despite being 8x denser than water
 // Force balance: Weight = Surface tension x perimeter x sin(theta)
 
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
+}
+
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
@@ -28,7 +39,9 @@ const phaseLabels: Record<Phase, string> = {
 };
 
 interface FloatingPaperclipRendererProps {
-  phase: Phase;
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+  phase?: Phase;
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
@@ -457,11 +470,16 @@ const PremiumSVGDefs: React.FC = () => (
 // ============================================================================
 
 export default function FloatingPaperclipRenderer({
-  phase,
+  onGameEvent,
+  gamePhase,
+  phase: phaseProp,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer
 }: FloatingPaperclipRendererProps) {
+  // State for self-managed phase
+  const [internalPhase, setInternalPhase] = useState<Phase>('hook');
+  const phase = (phaseProp || gamePhase || internalPhase) as Phase;
   // Responsive detection
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -554,9 +572,21 @@ export default function FloatingPaperclipRenderer({
     if (navigationLockRef.current) return;
     navigationLockRef.current = true;
     setTimeout(() => { navigationLockRef.current = false; }, 400);
+
+    setInternalPhase(newPhase);
     onPhaseComplete?.();
     playSound('transition');
-  }, [onPhaseComplete, playSound]);
+
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'floating-paperclip',
+        gameTitle: 'Floating Paperclip',
+        details: { phase: newPhase },
+        timestamp: Date.now()
+      });
+    }
+  }, [onPhaseComplete, playSound, onGameEvent]);
 
   // Animation for force vectors
   useEffect(() => {
@@ -615,6 +645,94 @@ export default function FloatingPaperclipRenderer({
     setTwistClipState('floating');
     setSoapAmount(0);
   };
+
+  // Progress bar
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: 'rgba(15, 23, 42, 0.8)',
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: 'linear-gradient(90deg, #3b82f6, #22c55e)',
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
+
+  // Bottom navigation bar
+  const currentIndex = phaseOrder.indexOf(phase);
+  const isFirst = currentIndex === 0;
+  const isLast = currentIndex === phaseOrder.length - 1;
+  const canGoNext = !isLast && phase !== 'test';
+
+  const renderBottomBar = () => (
+    <div style={{
+      flexShrink: 0,
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: '12px 20px',
+      borderTop: '1px solid rgba(255,255,255,0.1)',
+      background: 'rgba(0,0,0,0.3)',
+    }}>
+      <button
+        onClick={() => !isFirst && goToPhase(phaseOrder[currentIndex - 1])}
+        style={{
+          padding: '8px 20px',
+          borderRadius: '8px',
+          border: '1px solid rgba(255,255,255,0.2)',
+          background: 'transparent',
+          color: isFirst ? 'rgba(255,255,255,0.3)' : 'white',
+          cursor: isFirst ? 'not-allowed' : 'pointer',
+          opacity: isFirst ? 0.4 : 1,
+          transition: 'all 0.3s ease',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+        }}
+      >
+        ← Back
+      </button>
+      <div style={{ display: 'flex', gap: '6px' }}>
+        {phaseOrder.map((p, i) => (
+          <div
+            key={p}
+            onClick={() => i <= currentIndex && goToPhase(p)}
+            title={phaseLabels[p]}
+            style={{
+              width: p === phase ? '20px' : '10px',
+              height: '10px',
+              borderRadius: '5px',
+              background: p === phase ? '#3b82f6' : i < currentIndex ? '#10b981' : 'rgba(255,255,255,0.2)',
+              cursor: i <= currentIndex ? 'pointer' : 'default',
+              transition: 'all 0.3s ease',
+            }}
+          />
+        ))}
+      </div>
+      <button
+        onClick={() => canGoNext && goToPhase(phaseOrder[currentIndex + 1])}
+        style={{
+          padding: '8px 20px',
+          borderRadius: '8px',
+          border: 'none',
+          background: canGoNext ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : 'rgba(255,255,255,0.1)',
+          color: 'white',
+          cursor: canGoNext ? 'pointer' : 'not-allowed',
+          opacity: canGoNext ? 1 : 0.4,
+          transition: 'all 0.3s ease',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+        }}
+      >
+        Next →
+      </button>
+    </div>
+  );
 
   // Calculate effective surface tension
   const getEffectiveSurfaceTension = useCallback(() => {
@@ -711,7 +829,9 @@ export default function FloatingPaperclipRenderer({
     currentClipState: 'hovering' | 'floating' | 'sinking',
     showForces: boolean,
     surfaceForceN: number,
-    weightForceN: number
+    weightForceN: number,
+    gamma: number,
+    weight: number
   ) => (
     <svg viewBox="0 0 400 280" className="w-full h-64">
       <PremiumSVGDefs />
@@ -766,6 +886,18 @@ export default function FloatingPaperclipRenderer({
 
       {/* Paperclip */}
       {renderPremiumPaperclip(170, clipYPos, 1)}
+
+      {/* Labels */}
+      <text x="200" y="95" textAnchor="middle" fill="#60a5fa" fontSize="12" fontWeight="bold">Water Surface</text>
+      <text x="70" y="130" fill="#3b82f6" fontSize="11">Water</text>
+      <text x="70" y="145" fill="#3b82f6" fontSize="10">(γ = {gamma.toFixed(3)} N/m)</text>
+      <text x="200" y="25" textAnchor="middle" fill="#94a3b8" fontSize="11">Paperclip ({weight.toFixed(1)}g)</text>
+      {currentClipState === 'floating' && (
+        <>
+          <text x="310" y="115" fill="#22c55e" fontSize="10">Surface Tension</text>
+          <text x="310" y="127" fill="#22c55e" fontSize="10">Supporting</text>
+        </>
+      )}
 
       {/* Force Vectors */}
       {showForces && currentClipState === 'floating' && (
@@ -897,9 +1029,30 @@ export default function FloatingPaperclipRenderer({
   const renderPredict = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
       <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-6">Make Your Prediction</h2>
-      <p style={{ fontSize: typo.body }} className="text-slate-400 mb-6 text-center max-w-md">
+      <p style={{ fontSize: typo.body }} className="text-slate-400 mb-4 text-center max-w-md">
         {predictions.initial.question}
       </p>
+
+      {/* Static visualization */}
+      <div className="mb-6">
+        <svg width="300" height="200" viewBox="0 0 300 200">
+          <PremiumSVGDefs />
+          {/* Water container */}
+          <rect x="50" y="100" width="200" height="80" fill="url(#clipWaterDepth)" stroke="url(#clipContainerRim)" strokeWidth="3" rx="4" />
+          <rect x="50" y="100" width="200" height="5" fill="url(#clipWaterSurface)" opacity="0.8" />
+          {/* Paperclip hovering */}
+          <g transform="translate(150, 60)">
+            <ellipse cx="0" cy="15" rx="12" ry="3" fill="#1e293b" opacity="0.3" />
+            <path d="M -15,-5 Q -10,-15 0,-15 Q 10,-15 15,-5 L 15,5 Q 10,15 0,15 Q -10,15 -15,5 Z"
+              fill="url(#clipMetallic)" stroke="url(#clipShadow)" strokeWidth="1" />
+            <ellipse cx="-3" cy="-8" rx="4" ry="6" fill="url(#clipHighlight)" opacity="0.6" />
+          </g>
+          <text x="150" y="35" textAnchor="middle" fill="#94a3b8" fontSize="12" fontWeight="bold">Steel Paperclip</text>
+          <text x="150" y="115" textAnchor="middle" fill="#60a5fa" fontSize="12" fontWeight="bold">Water Surface</text>
+          <text x="60" y="195" fill="#64748b" fontSize="10">Density: 7,850 kg/m³</text>
+          <text x="200" y="195" fill="#3b82f6" fontSize="10">1,000 kg/m³</text>
+        </svg>
+      </div>
 
       <div className="grid grid-cols-1 gap-3 w-full max-w-md mb-6">
         {predictions.initial.options.map(opt => (
@@ -983,6 +1136,7 @@ export default function FloatingPaperclipRenderer({
               value={surfaceTension}
               onChange={(e) => setSurfaceTension(parseFloat(e.target.value))}
               className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+              style={{ touchAction: 'pan-y' }}
             />
             <div className="flex justify-between mt-1">
               <span style={{ fontSize: typo.label }} className="text-slate-500">Alcohol (0.02)</span>
@@ -1004,6 +1158,7 @@ export default function FloatingPaperclipRenderer({
               value={clipWeight}
               onChange={(e) => setClipWeight(parseFloat(e.target.value))}
               className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+              style={{ touchAction: 'pan-y' }}
             />
           </div>
 
@@ -1021,6 +1176,7 @@ export default function FloatingPaperclipRenderer({
               value={waterTemperature}
               onChange={(e) => setWaterTemperature(parseInt(e.target.value))}
               className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+              style={{ touchAction: 'pan-y' }}
             />
           </div>
 
@@ -1037,7 +1193,7 @@ export default function FloatingPaperclipRenderer({
 
         {/* Visualization */}
         <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-xl">
-          {renderPremiumWaterContainer(clipY, dimpleDepth, clipState, showForceVectors, surfaceForceN, weightForceN)}
+          {renderPremiumWaterContainer(clipY, dimpleDepth, clipState, showForceVectors, surfaceForceN, weightForceN, surfaceTension, clipWeight)}
 
           <div className="mt-2 space-y-2">
             {showForceVectors && clipState === 'floating' && (
@@ -1190,9 +1346,34 @@ export default function FloatingPaperclipRenderer({
   const renderTwistPredict = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
       <h2 style={{ fontSize: typo.heading }} className="font-bold text-amber-400 mb-6">The Soap Test</h2>
-      <p style={{ fontSize: typo.body }} className="text-slate-400 mb-6 text-center max-w-md">
+      <p style={{ fontSize: typo.body }} className="text-slate-400 mb-4 text-center max-w-md">
         {predictions.twist.question}
       </p>
+
+      {/* Static visualization showing floating paperclip with soap droplet */}
+      <div className="mb-6">
+        <svg width="320" height="200" viewBox="0 0 320 200">
+          <PremiumSVGDefs />
+          {/* Water container */}
+          <rect x="60" y="80" width="200" height="100" fill="url(#clipWaterDepth)" stroke="url(#clipContainerRim)" strokeWidth="3" rx="4" />
+          <rect x="60" y="80" width="200" height="4" fill="url(#clipWaterSurface)" opacity="0.8" />
+          {/* Floating paperclip */}
+          <g transform="translate(130, 72)">
+            <path d="M -15,-5 Q -10,-15 0,-15 Q 10,-15 15,-5 L 15,5 Q 10,15 0,15 Q -10,15 -15,5 Z"
+              fill="url(#clipMetallic)" stroke="url(#clipShadow)" strokeWidth="1" />
+            <ellipse cx="-3" cy="-8" rx="4" ry="6" fill="url(#clipHighlight)" opacity="0.6" />
+          </g>
+          {/* Soap droplet */}
+          <g transform="translate(220, 50)">
+            <circle cx="0" cy="0" r="12" fill="#a855f7" opacity="0.6" />
+            <circle cx="-3" cy="-3" r="4" fill="#e0e7ff" opacity="0.8" />
+            <text x="0" y="30" textAnchor="middle" fill="#a855f7" fontSize="11" fontWeight="bold">Soap</text>
+          </g>
+          <text x="130" y="60" textAnchor="middle" fill="#94a3b8" fontSize="11">Paperclip Floating</text>
+          <text x="160" y="95" textAnchor="middle" fill="#60a5fa" fontSize="11" fontWeight="bold">Water</text>
+          <path d="M 220,60 Q 200,70 180,75" stroke="#a855f7" strokeWidth="2" strokeDasharray="3,3" fill="none" markerEnd="url(#clipArrowRed)" />
+        </svg>
+      </div>
 
       <div className="grid grid-cols-1 gap-3 w-full max-w-md mb-6">
         {predictions.twist.options.map(opt => (
@@ -1289,6 +1470,7 @@ export default function FloatingPaperclipRenderer({
                 }
               }}
               className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+              style={{ touchAction: 'pan-y' }}
             />
             <p style={{ fontSize: typo.label }} className="text-purple-400 mt-1">
               Effective gamma: {twistEffectiveGamma.toFixed(3)} N/m ({((1 - twistEffectiveGamma / liquidProperties[selectedLiquid].gamma) * 100).toFixed(0)}% reduction)
@@ -1334,6 +1516,7 @@ export default function FloatingPaperclipRenderer({
               value={contactAngle}
               onChange={(e) => setContactAngle(parseInt(e.target.value))}
               className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+              style={{ touchAction: 'pan-y' }}
             />
           </div>
 
@@ -1535,7 +1718,7 @@ export default function FloatingPaperclipRenderer({
           <div className="grid grid-cols-3 gap-3 mb-4">
             {currentApp.stats.map((stat, i) => (
               <div key={i} className="bg-slate-900/50 rounded-lg p-3 text-center">
-                <p style={{ fontSize: typo.bodyLarge }} className="font-bold" style={{ color: currentApp.color }}>{stat.value}</p>
+                <p style={{ fontSize: typo.bodyLarge, color: currentApp.color }} className="font-bold">{stat.value}</p>
                 <p style={{ fontSize: typo.label }} className="text-slate-400">{stat.label}</p>
               </div>
             ))}
@@ -1802,14 +1985,22 @@ export default function FloatingPaperclipRenderer({
     }
   };
 
-  const currentIndex = phaseOrder.indexOf(phase);
-
   // ============================================================================
   // MAIN RENDER
   // ============================================================================
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(180deg, #0a0f1a 0%, #0a1628 100%)',
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+      position: 'relative'
+    }}>
+      {/* Progress bar */}
+      {renderProgressBar()}
+
       {/* Premium background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
@@ -1834,6 +2025,7 @@ export default function FloatingPaperclipRenderer({
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
                 title={phaseLabels[p]}
+                aria-label={phaseLabels[p]}
               />
             ))}
           </div>
@@ -1842,7 +2034,18 @@ export default function FloatingPaperclipRenderer({
       </div>
 
       {/* Main content */}
-      <div className="relative pt-16 pb-12">{renderPhase()}</div>
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        paddingTop: '64px',
+        paddingBottom: '0px',
+        position: 'relative'
+      }}>
+        {renderPhase()}
+      </div>
+
+      {/* Bottom navigation */}
+      {renderBottomBar()}
     </div>
   );
 }

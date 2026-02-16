@@ -2228,7 +2228,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
           </div>
 
           {/* Show explanations */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '600px', overflow: 'auto' }}>
             {testQuestions.map((q, i) => {
               const correctIdx = q.options.findIndex(opt => opt.correct);
               const wasCorrect = testAnswers[i] === correctIdx;

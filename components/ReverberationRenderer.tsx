@@ -75,11 +75,36 @@ const realWorldApps = [
   }
 ];
 
+// --- GAME EVENT INTERFACE FOR AI COACH INTEGRATION ---
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+             'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+             'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+             'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected' |
+             'coach_prompt' | 'guide_paused' | 'guide_resumed';
+  gameType: string;
+  gameTitle: string;
+  details: {
+     currentScreen?: number;
+     totalScreens?: number;
+     phase?: string;
+     phaseLabel?: string;
+     prediction?: string;
+     answer?: string;
+     isCorrect?: boolean;
+     score?: number;
+     maxScore?: number;
+     message?: string;
+     coachMessage?: string;
+     needsHelp?: boolean;
+     [key: string]: any;
+  };
+  timestamp: number;
+}
+
 interface ReverberationRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
 }
 
 const colors = {
@@ -181,11 +206,27 @@ const roomTypes: Record<string, RoomConfig> = {
 };
 
 const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
-  phase,
-  onPhaseComplete,
-  onCorrectAnswer,
-  onIncorrectAnswer,
+  onGameEvent,
+  gamePhase,
 }) => {
+  type ReverbPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: ReverbPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  const getInitialPhase = (): ReverbPhase => {
+    if (gamePhase && validPhases.includes(gamePhase as ReverbPhase)) {
+      return gamePhase as ReverbPhase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<ReverbPhase>(getInitialPhase);
+
+  useEffect(() => {
+    if (gamePhase && validPhases.includes(gamePhase as ReverbPhase) && gamePhase !== phase) {
+      setPhase(gamePhase as ReverbPhase);
+    }
+  }, [gamePhase, phase]);
+
   // Simulation state
   const [selectedRoom, setSelectedRoom] = useState<string>('bathroom');
   const [rays, setRays] = useState<SoundRay[]>([]);
@@ -193,6 +234,7 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
   const [time, setTime] = useState(0);
   const [energyHistory, setEnergyHistory] = useState<number[]>([100]);
   const [hasFurnishings, setHasFurnishings] = useState(false);
+  const [simulationSpeed, setSimulationSpeed] = useState(1);
   const animationRef = useRef<number | null>(null);
 
   // Phase-specific state
@@ -212,6 +254,79 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+  // Navigation
+  const phaseOrder: ReverbPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const phaseLabels: Record<ReverbPhase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Add Materials',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
+
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);
+
+  const emitGameEvent = useCallback((
+    eventType: GameEvent['eventType'],
+    details: GameEvent['details']
+  ) => {
+    if (onGameEvent) {
+      onGameEvent({
+        eventType,
+        gameType: 'reverberation',
+        gameTitle: 'Reverberation',
+        details,
+        timestamp: Date.now()
+      });
+    }
+  }, [onGameEvent]);
+
+  const goToPhase = useCallback((p: ReverbPhase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    if (isNavigating.current) return;
+
+    isNavigating.current = true;
+    lastClickRef.current = now;
+
+    setPhase(p);
+
+    const currentIndex = phaseOrder.indexOf(phase);
+    const targetIndex = phaseOrder.indexOf(p);
+
+    emitGameEvent('phase_changed', {
+      currentScreen: targetIndex + 1,
+      totalScreens: phaseOrder.length,
+      phase: p,
+      phaseLabel: phaseLabels[p],
+      direction: targetIndex > currentIndex ? 'forward' : 'backward'
+    });
+
+    setTimeout(() => {
+      isNavigating.current = false;
+    }, 300);
+  }, [phase, emitGameEvent]);
+
+  const goNext = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase]);
+
 
   // Responsive typography
   const typo = {
@@ -1138,37 +1253,107 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: '1px solid rgba(255,255,255,0.1)',
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-    }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-        }}
-      >
-        {buttonText}
-      </button>
-    </div>
-  );
+  const renderNavigationDots = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    return (
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'center', padding: '12px 0' }}>
+        {phaseOrder.map((p, index) => (
+          <button
+            key={p}
+            onClick={() => goToPhase(p)}
+            aria-label={phaseLabels[p]}
+            title={phaseLabels[p]}
+            style={{
+              width: index === currentIndex ? '20px' : '10px',
+              height: '10px',
+              borderRadius: '5px',
+              border: 'none',
+              background: index === currentIndex ? colors.accent : index < currentIndex ? 'rgba(139, 92, 246, 0.5)' : 'rgba(255,255,255,0.2)',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+            }}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  const renderProgressBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const progress = ((currentIndex + 1) / phaseOrder.length) * 100;
+    return (
+      <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
+        <div style={{ width: `${progress}%`, height: '100%', background: colors.accent, transition: 'width 0.3s ease' }} />
+      </div>
+    );
+  };
+
+  const canProceed = () => {
+    if (phase === 'predict') return prediction !== null;
+    if (phase === 'twist_predict') return twistPrediction !== null;
+    if (phase === 'transfer') return transferCompleted.size >= 4;
+    if (phase === 'test') return testSubmitted && testScore >= 8;
+    return true;
+  };
+
+  const renderBottomBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoNext = canProceed();
+    const canGoBack = currentIndex > 0;
+    const isLastPhase = currentIndex === phaseOrder.length - 1;
+
+    return (
+      <nav style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgDark,
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        zIndex: 1000,
+      }}>
+        {renderProgressBar()}
+        <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <button
+            onClick={goBack}
+            disabled={!canGoBack}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: `2px solid ${canGoBack ? colors.accent : 'rgba(255,255,255,0.1)'}`,
+              background: 'transparent',
+              color: canGoBack ? colors.accent : colors.textMuted,
+              fontWeight: 'bold',
+              cursor: canGoBack ? 'pointer' : 'not-allowed',
+              fontSize: '16px',
+              opacity: canGoBack ? 1 : 0.5,
+            }}
+          >
+            Back
+          </button>
+
+          {renderNavigationDots()}
+
+          <button
+            onClick={goNext}
+            disabled={!canGoNext || isLastPhase}
+            style={{
+              padding: '12px 32px',
+              borderRadius: '8px',
+              border: 'none',
+              background: canGoNext && !isLastPhase ? colors.accent : 'rgba(255,255,255,0.1)',
+              color: canGoNext && !isLastPhase ? 'white' : colors.textMuted,
+              fontWeight: 'bold',
+              cursor: canGoNext && !isLastPhase ? 'pointer' : 'not-allowed',
+              fontSize: '16px',
+            }}
+          >
+            {isLastPhase ? 'Complete' : 'Next'}
+          </button>
+        </div>
+      </nav>
+    );
+  };
 
   // HOOK PHASE
   if (phase === 'hook') {
@@ -1215,7 +1400,7 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1268,7 +1453,7 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1286,6 +1471,29 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
           </div>
 
           {renderRoomVisualization(true)}
+          <div style={{
+            background: colors.bgCard,
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+          }}>
+            <label style={{ color: colors.textSecondary, fontSize: '14px', display: 'block', marginBottom: '8px' }}>
+              Simulation Speed: {simulationSpeed.toFixed(1)}x
+            </label>
+            <input
+              type="range"
+              min="0.5"
+              max="3"
+              step="0.1"
+              value={simulationSpeed}
+              onChange={(e) => setSimulationSpeed(parseFloat(e.target.value))}
+              style={{
+                width: '100%',
+                accentColor: colors.accent,
+              }}
+            />
+          </div>
+
           {renderRoomSelector()}
 
           <div style={{
@@ -1303,7 +1511,7 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
             </ul>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1372,7 +1580,7 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
             </ul>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1431,7 +1639,7 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1488,7 +1696,7 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1565,7 +1773,7 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1621,7 +1829,7 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
             </div>
           ))}
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1662,7 +1870,7 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
+          {renderBottomBar()}
         </div>
       );
     }
@@ -1681,6 +1889,13 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
                 <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
               ))}
             </div>
+            <div style={{ background: 'rgba(139, 92, 246, 0.15)', margin: '0 16px 16px 16px', padding: '16px', borderRadius: '12px', borderLeft: `3px solid ${colors.accent}` }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+                Test your understanding of reverberation physics. Answer all 10 questions to demonstrate mastery.
+                You need 8 correct answers to pass. Take your time and think carefully about each question.
+              </p>
+            </div>
+
             <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
               <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
             </div>
@@ -1736,7 +1951,7 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
           </div>
           {renderRoomVisualization(true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
+        {renderBottomBar()}
       </div>
     );
   }

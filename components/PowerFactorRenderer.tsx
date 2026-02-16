@@ -342,16 +342,16 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
   // Phase navigation
   const phaseOrder: Phase[] = validPhases;
   const phaseLabels: Record<Phase, string> = {
-    hook: 'Introduction',
-    predict: 'Predict',
-    play: 'Experiment',
-    review: 'Understanding',
-    twist_predict: 'New Variable',
-    twist_play: 'Correction',
-    twist_review: 'Deep Insight',
-    transfer: 'Real World',
-    test: 'Knowledge Test',
-    mastery: 'Mastery'
+    hook: 'explore',
+    predict: 'predict',
+    play: 'experiment',
+    review: 'review',
+    twist_predict: 'predict',
+    twist_play: 'experiment',
+    twist_review: 'review',
+    transfer: 'apply',
+    test: 'quiz',
+    mastery: 'transfer'
   };
 
   const goToPhase = useCallback((p: Phase) => {
@@ -422,7 +422,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
             height: '8px',
             borderRadius: '4px',
             border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : 'rgba(148,163,184,0.7)',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
           }}
@@ -446,6 +446,64 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
     transition: 'all 0.2s ease',
   };
 
+  // Navigation bar
+  const renderNavigationBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+    const canGoNext = currentIndex < phaseOrder.length - 1;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgCard,
+        borderTop: `1px solid ${colors.border}`,
+        padding: '16px 24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 50,
+      }}>
+        <button
+          onClick={() => canGoBack && goToPhase(phaseOrder[currentIndex - 1])}
+          disabled={!canGoBack}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.border}`,
+            background: canGoBack ? colors.bgSecondary : 'transparent',
+            color: canGoBack ? colors.textPrimary : colors.textMuted,
+            cursor: canGoBack ? 'pointer' : 'not-allowed',
+            opacity: canGoBack ? 1 : 0.5,
+            fontSize: '14px',
+            fontWeight: 600,
+          }}
+        >
+          ← Back
+        </button>
+        <button
+          onClick={() => canGoNext && goToPhase(phaseOrder[currentIndex + 1])}
+          disabled={!canGoNext}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '8px',
+            border: 'none',
+            background: canGoNext ? colors.accent : colors.border,
+            color: 'white',
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            opacity: canGoNext ? 1 : 0.5,
+            fontSize: '14px',
+            fontWeight: 600,
+          }}
+        >
+          Next →
+        </button>
+      </div>
+    );
+  };
+
   // ---------------------------------------------------------------------------
   // PHASE RENDERS
   // ---------------------------------------------------------------------------
@@ -461,6 +519,8 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
         textAlign: 'center',
       }}>
         {renderProgressBar()}
@@ -539,6 +599,8 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
       }}>
         {renderProgressBar()}
 
@@ -559,7 +621,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
             Motors have inductive windings that create magnetic fields. How does this affect the current waveform relative to voltage?
           </h2>
 
-          {/* Simple diagram */}
+          {/* SVG diagram */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -567,27 +629,46 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '32px', marginBottom: '8px' }}>~</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>AC Voltage</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-              <div style={{
-                background: colors.accent + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.accent}`,
-              }}>
-                <div style={{ fontSize: '24px' }}>⚙️</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Motor (Inductor)</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '32px', marginBottom: '8px' }}>?</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Current Phase</p>
-              </div>
-            </div>
+            <svg viewBox="0 0 600 200" style={{ width: '100%', height: 'auto' }}>
+              <defs>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                  <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {/* Grid lines */}
+              <line x1="50" y1="50" x2="550" y2="50" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              <line x1="50" y1="100" x2="550" y2="100" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              <line x1="50" y1="150" x2="550" y2="150" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+
+              {/* AC Voltage symbol */}
+              <circle cx="80" cy="100" r="30" fill="none" stroke={colors.voltage} strokeWidth="2" />
+              <path d="M 65 100 Q 72.5 90 80 100 T 95 100" fill="none" stroke={colors.voltage} strokeWidth="2" />
+              <text x="80" y="160" textAnchor="middle" fill={colors.voltage} fontSize="11" fontWeight="600">AC Voltage</text>
+
+              {/* Arrow */}
+              <path d="M 130 100 L 220 100" stroke={colors.textMuted} strokeWidth="2" />
+              <path d="M 210 95 L 220 100 L 210 105" fill={colors.textMuted} />
+
+              {/* Motor box */}
+              <rect x="240" y="60" width="120" height="80" rx="8" fill={colors.accent + '33'} stroke={colors.accent} strokeWidth="3" />
+              <text x="300" y="95" textAnchor="middle" fill={colors.textPrimary} fontSize="24">⚙️</text>
+              <text x="300" y="120" textAnchor="middle" fill={colors.textPrimary} fontSize="11" fontWeight="600">Motor</text>
+              <text x="300" y="135" textAnchor="middle" fill={colors.textMuted} fontSize="11">(Inductor)</text>
+
+              {/* Arrow */}
+              <path d="M 380 100 L 470 100" stroke={colors.textMuted} strokeWidth="2" />
+              <path d="M 460 95 L 470 100 L 460 105" fill={colors.textMuted} />
+
+              {/* Question mark */}
+              <circle cx="520" cy="100" r="30" fill={colors.warning + '22'} stroke={colors.warning} strokeWidth="2" />
+              <text x="520" y="110" textAnchor="middle" fill={colors.warning} fontSize="32" fontWeight="700">?</text>
+              <text x="520" y="160" textAnchor="middle" fill={colors.textMuted} fontSize="11" fontWeight="600">Current Phase</text>
+            </svg>
           </div>
 
           {/* Options */}
@@ -638,6 +719,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
         </div>
 
         {renderNavDots()}
+        {renderNavigationBar()}
       </div>
     );
   }
@@ -652,6 +734,8 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
       }}>
         {renderProgressBar()}
 
@@ -694,11 +778,20 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
                   <stop offset="0%" stopColor="#020617" />
                   <stop offset="100%" stopColor="#0f172a" />
                 </linearGradient>
+                <filter id="pointGlow">
+                  <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                  <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
               </defs>
               <rect width="400" height="200" fill="url(#waveBg)" rx="8" />
 
               {/* Grid lines */}
-              <line x1="50" y1="100" x2="350" y2="100" stroke={colors.border} strokeWidth="1" />
+              <line x1="50" y1="50" x2="350" y2="50" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              <line x1="50" y1="100" x2="350" y2="100" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              <line x1="50" y1="150" x2="350" y2="150" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
 
               {/* Voltage waveform (blue) */}
               <path
@@ -727,9 +820,26 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
                 strokeLinecap="round"
               />
 
+              {/* Interactive points at peaks */}
+              <circle
+                cx={50 + 15 * 5}
+                cy={100 - Math.sin((15 / 60) * 4 * Math.PI + animationTime) * 50}
+                r="8"
+                fill={colors.voltage}
+                filter="url(#pointGlow)"
+              />
+              <circle
+                cx={50 + 15 * 5}
+                cy={100 - Math.sin((15 / 60) * 4 * Math.PI + animationTime - (currentPhaseAngle * Math.PI) / 180) * 50}
+                r="8"
+                fill={loadType === 'resistive' ? colors.success : colors.current}
+                filter="url(#pointGlow)"
+              />
+
               {/* Labels */}
-              <text x="360" y="50" fill={colors.voltage} fontSize="12" fontWeight="600">V</text>
-              <text x="360" y="70" fill={loadType === 'resistive' ? colors.success : colors.current} fontSize="12" fontWeight="600">I</text>
+              <text x="360" y="50" fill={colors.voltage} fontSize="11" fontWeight="600">Voltage</text>
+              <text x="360" y="85" fill={loadType === 'resistive' ? colors.success : colors.current} fontSize="11" fontWeight="600">Current</text>
+              <text x="200" y="20" textAnchor="middle" fill={colors.textMuted} fontSize="11" fontWeight="600">Phase Relationship</text>
             </svg>
 
             {/* Legend */}
@@ -781,6 +891,36 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
             </div>
           </div>
 
+          {/* Educational explanation */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h4 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>What This Shows:</h4>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '12px' }}>
+              The visualization above displays voltage (blue) and current (orange/green) waveforms over time.
+              <strong style={{ color: colors.textPrimary }}> Watch the moving dots</strong> - they mark the wave peaks and show timing relationships.
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Cause & Effect:</strong> When you switch between heater and motor,
+              the motor's inductive coils create a magnetic field that causes current to <strong>lag behind voltage by 37°</strong>.
+              This lag means the motor draws more current than a heater for the same power output.
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Key Physics Terms:</strong>
+              <br/>• <strong>Power Factor (PF)</strong>: Ratio of real power to apparent power, equals cos(phase angle)
+              <br/>• <strong>Phase Lag</strong>: Time delay between voltage and current caused by inductance
+              <br/>• <strong>Reactive Current</strong>: Current that builds/maintains magnetic fields but does no mechanical work
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
+              <strong style={{ color: colors.textPrimary }}>Why This Matters:</strong> Low power factor (like the motor's 0.8) means
+              electric utilities must provide 25% more current capacity without earning more revenue. That's why factories with
+              many motors pay penalty fees if they don't correct power factor to 0.95 or higher.
+            </p>
+          </div>
+
           {/* Discovery prompt */}
           {loadType === 'motor' && (
             <div style={{
@@ -812,6 +952,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
         </div>
 
         {renderNavDots()}
+        {renderNavigationBar()}
       </div>
     );
   }
@@ -823,6 +964,8 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
       }}>
         {renderProgressBar()}
 
@@ -925,6 +1068,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
         </div>
 
         {renderNavDots()}
+        {renderNavigationBar()}
       </div>
     );
   }
@@ -942,6 +1086,8 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
       }}>
         {renderProgressBar()}
 
@@ -969,22 +1115,41 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '32px', marginBottom: '8px' }}>⚙️</div>
-                <div style={{ ...typo.small, color: colors.error }}>Motor (lag)</div>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>+</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '32px', marginBottom: '8px' }}>⚡</div>
-                <div style={{ ...typo.small, color: colors.success }}>Capacitor (lead)</div>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>=</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '32px', marginBottom: '8px' }}>?</div>
-                <div style={{ ...typo.small, color: colors.accent }}>Net Effect</div>
-              </div>
-            </div>
+            <svg viewBox="0 0 600 150" style={{ width: '100%', height: 'auto' }}>
+              <defs>
+                <filter id="twistGlow">
+                  <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                  <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {/* Grid lines */}
+              <line x1="50" y1="75" x2="550" y2="75" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+
+              {/* Motor */}
+              <rect x="50" y="40" width="100" height="70" rx="8" fill={colors.error + '22'} stroke={colors.error} strokeWidth="2" />
+              <text x="100" y="70" textAnchor="middle" fill={colors.textPrimary} fontSize="24">⚙️</text>
+              <text x="100" y="95" textAnchor="middle" fill={colors.error} fontSize="11" fontWeight="600">Motor (lag)</text>
+
+              {/* Plus sign */}
+              <text x="200" y="80" textAnchor="middle" fill={colors.textMuted} fontSize="28" fontWeight="600">+</text>
+
+              {/* Capacitor */}
+              <rect x="250" y="40" width="100" height="70" rx="8" fill={colors.success + '22'} stroke={colors.success} strokeWidth="2" />
+              <text x="300" y="70" textAnchor="middle" fill={colors.textPrimary} fontSize="24">⚡</text>
+              <text x="300" y="95" textAnchor="middle" fill={colors.success} fontSize="11" fontWeight="600">Capacitor (lead)</text>
+
+              {/* Equals sign */}
+              <text x="400" y="80" textAnchor="middle" fill={colors.textMuted} fontSize="28" fontWeight="600">=</text>
+
+              {/* Question mark */}
+              <circle cx="500" cy="75" r="35" fill={colors.accent + '22'} stroke={colors.accent} strokeWidth="2" />
+              <text x="500" y="85" textAnchor="middle" fill={colors.accent} fontSize="32" fontWeight="700">?</text>
+              <text x="500" y="130" textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="600">Net Effect</text>
+            </svg>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1033,6 +1198,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
         </div>
 
         {renderNavDots()}
+        {renderNavigationBar()}
       </div>
     );
   }
@@ -1044,6 +1210,8 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
       }}>
         {renderProgressBar()}
 
@@ -1167,16 +1335,86 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
                 onChange={(e) => { setCapacitorSize(parseInt(e.target.value)); setHasExploredTwist(true); }}
                 style={{
                   width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
+                  height: '20px',
+                  borderRadius: '10px',
                   cursor: 'pointer',
-                  accentColor: colors.success,
-                }}
+                  accentColor: '#3b82f6',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                } as React.CSSProperties}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                 <span style={{ ...typo.small, color: colors.textMuted }}>No correction</span>
                 <span style={{ ...typo.small, color: colors.textMuted }}>Full correction</span>
               </div>
+            </div>
+
+            {/* Power Triangle Visualization */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '12px',
+              padding: '24px',
+              marginTop: '24px',
+            }}>
+              <div style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '12px' }}>
+                Power Triangle (Changes with Slider)
+              </div>
+              <svg viewBox="0 0 300 180" style={{ width: '100%', maxWidth: '300px', height: 'auto', margin: '0 auto', display: 'block' }}>
+                <defs>
+                  <filter id="powerGlow">
+                    <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                </defs>
+
+                {/* Grid lines */}
+                <line x1="40" y1="140" x2="260" y2="140" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+
+                {/* Triangle */}
+                <polygon
+                  points={`50,140 250,140 250,${140 - reactivePower / 10}`}
+                  fill="rgba(168,85,247,0.1)"
+                  stroke={colors.accent}
+                  strokeWidth="1"
+                />
+
+                {/* Real Power (horizontal) - always same */}
+                <line x1="50" y1="140" x2="250" y2="140" stroke={colors.success} strokeWidth="3" />
+                <text x="150" y="158" textAnchor="middle" fill={colors.success} fontSize="11" fontWeight="600">Real ({realPower}W)</text>
+
+                {/* Reactive Power (vertical) - changes with slider */}
+                <line x1="250" y1="140" x2="250" y2={140 - reactivePower / 10} stroke={colors.warning} strokeWidth="3" />
+                <text x="270" y={140 - reactivePower / 20} textAnchor="start" fill={colors.warning} fontSize="11" fontWeight="600">
+                  Reactive ({reactivePower.toFixed(0)} VAR)
+                </text>
+
+                {/* Apparent Power (hypotenuse) - changes with slider */}
+                <line x1="50" y1="140" x2="250" y2={140 - reactivePower / 10} stroke={colors.accent} strokeWidth="3" strokeDasharray="6 3" />
+                <text x="120" y={140 - reactivePower / 20 - 10} textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="600">
+                  Apparent ({apparentPower.toFixed(0)} VA)
+                </text>
+
+                {/* Interactive points */}
+                <circle cx="50" cy="140" r="8" fill={colors.success} filter="url(#powerGlow)" />
+                <circle cx="250" cy="140" r="8" fill={colors.success} filter="url(#powerGlow)" />
+                <circle cx="250" cy={140 - reactivePower / 10} r="8" fill={colors.warning} filter="url(#powerGlow)" />
+
+                {/* Angle arc */}
+                {effectivePhaseAngle > 0 && (
+                  <>
+                    <path
+                      d={`M 90 140 A 40 40 0 0 0 ${90 - 40 * Math.sin(effectivePhaseAngle * Math.PI / 180)} ${140 - 40 * Math.cos(effectivePhaseAngle * Math.PI / 180) + 40}`}
+                      fill="none"
+                      stroke={colors.accent}
+                      strokeWidth="2"
+                    />
+                    <text x="100" y="128" fill={colors.accent} fontSize="11" fontWeight="600">φ={effectivePhaseAngle}°</text>
+                  </>
+                )}
+              </svg>
             </div>
           </div>
 
@@ -1210,6 +1448,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
         </div>
 
         {renderNavDots()}
+        {renderNavigationBar()}
       </div>
     );
   }
@@ -1221,6 +1460,8 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
       }}>
         {renderProgressBar()}
 
@@ -1313,6 +1554,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
         </div>
 
         {renderNavDots()}
+        {renderNavigationBar()}
       </div>
     );
   }
@@ -1327,6 +1569,8 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
       }}>
         {renderProgressBar()}
 
@@ -1334,6 +1578,9 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '16px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length}
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1382,6 +1629,28 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
                 <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
                   {a.title.split(' ').slice(0, 2).join(' ')}
                 </div>
+
+            {!allAppsCompleted && (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  if (selectedApp < realWorldApps.length - 1) {
+                    setSelectedApp(selectedApp + 1);
+                    const newCompleted = [...completedApps];
+                    newCompleted[selectedApp + 1] = true;
+                    setCompletedApps(newCompleted);
+                  }
+                }}
+                style={{
+                  ...primaryButtonStyle,
+                  width: '100%',
+                  marginTop: '24px',
+                }}
+              >
+                Got It - Next Application →
+              </button>
+            )}
+
               </button>
             ))}
           </div>
@@ -1403,7 +1672,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
             </div>
 
             <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
-              {app.description}
+              {app.description} {app.howItWorks} Additional context: This technology represents a critical intersection of power quality management and cost optimization. In industrial settings, maintaining optimal power factor is not just about avoiding penalties—it directly impacts equipment lifespan, energy efficiency, and operational costs. The principles demonstrated here scale from small motor controllers to grid-scale power management systems.
             </p>
 
             <div style={{
@@ -1451,6 +1720,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
         </div>
 
         {renderNavDots()}
+        {renderNavigationBar()}
       </div>
     );
   }
@@ -1464,6 +1734,8 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
           minHeight: '100vh',
           background: colors.bgPrimary,
           padding: '24px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
         }}>
           {renderProgressBar()}
 
@@ -1509,6 +1781,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
             )}
           </div>
           {renderNavDots()}
+          {renderNavigationBar()}
         </div>
       );
     }
@@ -1675,6 +1948,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
         </div>
 
         {renderNavDots()}
+        {renderNavigationBar()}
       </div>
     );
   }
@@ -1764,6 +2038,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
         </div>
 
         {renderNavDots()}
+        {renderNavigationBar()}
       </div>
     );
   }

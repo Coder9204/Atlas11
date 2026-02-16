@@ -1706,8 +1706,8 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
         <NavigationDots />
       </div>
       {/* Scrollable content area */}
-      <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', paddingTop: '48px' }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%', paddingBottom: '100px', minHeight: '100vh' }}>
+      <div style={{ flex: '1 1 0%', minHeight: '100vh', overflowY: 'auto', paddingTop: '48px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%', paddingBottom: '100px' }}>
           {renderPhase()}
         </div>
       </div>

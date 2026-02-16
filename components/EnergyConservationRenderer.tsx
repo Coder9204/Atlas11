@@ -263,16 +263,16 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
   const [isMobile, setIsMobile] = useState(false);
 
   // Simulation state
-  const [releaseHeight, setReleaseHeight] = useState(80); // % of max height
+  const [releaseHeight, setReleaseHeight] = useState(50); // % of max height
   const [frictionLevel, setFrictionLevel] = useState(0); // 0-100
   const [isSimulating, setIsSimulating] = useState(false);
-  const [marblePosition, setMarblePosition] = useState({ x: 10, y: 20 });
+  const [marblePosition, setMarblePosition] = useState({ x: 10, y: 5 + (100 - 50) * 0.75 }); // 42.5
   const [marbleVelocity, setMarbleVelocity] = useState({ x: 0, y: 0 });
   const [trackType, setTrackType] = useState<'valley' | 'bowl' | 'hill'>('valley');
   const animationRef = useRef<number | null>(null);
 
   // Energy calculations
-  const [potentialEnergy, setPotentialEnergy] = useState(100);
+  const [potentialEnergy, setPotentialEnergy] = useState(50);
   const [kineticEnergy, setKineticEnergy] = useState(0);
   const [thermalEnergy, setThermalEnergy] = useState(0);
 
@@ -469,9 +469,10 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
   const resetSimulation = () => {
     setIsSimulating(false);
     if (animationRef.current) cancelAnimationFrame(animationRef.current);
-    setMarblePosition({ x: 10, y: 20 });
+    setReleaseHeight(50);
+    setMarblePosition({ x: 10, y: 5 + (100 - 50) * 0.75 });
     setMarbleVelocity({ x: 0, y: 0 });
-    setPotentialEnergy(100);
+    setPotentialEnergy(50);
     setKineticEnergy(0);
     setThermalEnergy(0);
   };
@@ -601,7 +602,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
 
         {/* Labels layer */}
         <g className="labels-layer">
-          <text x="15" y="40" fill={colors.potential} fontSize="12" fontWeight="600">Height</text>
+          <text x="15" y="60" fill={colors.potential} fontSize="12" fontWeight="600">Height</text>
           <text x="15" y={height - 80} fill={colors.kinetic} fontSize="12" fontWeight="600">Energy</text>
         </g>
 
@@ -1082,6 +1083,10 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
                     accentColor: '#3b82f6',
                   }}
                 />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Low</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>High</span>
+                </div>
               </div>
 
               {/* Control buttons */}

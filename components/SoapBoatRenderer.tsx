@@ -82,11 +82,26 @@ const realWorldApps = [
 // Marangoni effect: Flow from low to high surface tension regions
 // Water surface tension ≈ 0.072 N/m; soap reduces it significantly
 
+// Game event types for analytics and progress tracking
+type GameEventType =
+  | 'phase_change'
+  | 'prediction_made'
+  | 'simulation_started'
+  | 'parameter_changed'
+  | 'twist_prediction_made'
+  | 'app_explored'
+  | 'test_answered'
+  | 'test_completed'
+  | 'mastery_achieved';
+
+interface GameEvent {
+  type: GameEventType;
+  data?: Record<string, unknown>;
+}
+
 interface SoapBoatRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
 }
 
 type Phase =
@@ -146,11 +161,24 @@ const playSound = (soundType: 'click' | 'success' | 'failure' | 'transition' | '
 // Main Component
 // ─────────────────────────────────────────────────────────────
 export default function SoapBoatRenderer({
-  phase,
-  onPhaseComplete,
-  onCorrectAnswer,
-  onIncorrectAnswer
+  onGameEvent,
+  gamePhase
 }: SoapBoatRendererProps) {
+  // Phase state - use gamePhase from props if valid, otherwise default to 'hook'
+  const [phase, setPhase] = useState<Phase>(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  });
+
+  // Sync phase with gamePhase prop changes (for resume functionality)
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
+    }
+  }, [gamePhase, phase]);
+
   const [prediction, setPrediction] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -231,7 +259,11 @@ export default function SoapBoatRenderer({
     navigationLockRef.current = true;
     setTimeout(() => { navigationLockRef.current = false; }, 400);
 
-    onPhaseComplete?.();
+    setPhase(newPhase);
+    onGameEvent?.({
+      type: 'phase_change',
+      data: { from: phase, to: newPhase }
+    });
     playSound('transition');
   };
 
@@ -380,11 +412,13 @@ export default function SoapBoatRenderer({
       }
       return acc;
     }, 0);
+    onGameEvent?.({
+      type: 'test_completed',
+      data: { score, total: testQuestions.length }
+    });
     if (score >= 7) {
-      onCorrectAnswer?.();
       playSound('success');
     } else {
-      onIncorrectAnswer?.();
       playSound('failure');
     }
   };
@@ -516,7 +550,7 @@ export default function SoapBoatRenderer({
       // ───────────────────────────────────────────────────
       case 'hook':
         return (
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center" style={{ gap: '20px' }}>
             {/* Premium Badge */}
             <div style={{
               display: 'inline-flex',
@@ -738,7 +772,7 @@ export default function SoapBoatRenderer({
       // ───────────────────────────────────────────────────
       case 'predict':
         return (
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center" style={{ gap: '16px' }}>
             <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#1e293b' }}>
               Make Your Prediction
             </h2>
@@ -897,7 +931,7 @@ export default function SoapBoatRenderer({
         const reducedTension = currentTension * (1 - getSoapReduction());
 
         return (
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center" style={{ gap: '20px' }}>
             <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#1e293b' }}>
               Soap Boat Experiment
             </h2>
@@ -940,7 +974,7 @@ export default function SoapBoatRenderer({
                       value={soapConcentration}
                       onChange={(e) => setSoapConcentration(parseInt(e.target.value))}
                       disabled={soapAdded}
-                      style={{ width: '100%', accentColor: '#a855f7' }}
+                      style={{ width: '100%', accentColor: '#a855f7', touchAction: 'pan-y' }}
                     />
                   </div>
 
@@ -957,7 +991,7 @@ export default function SoapBoatRenderer({
                       value={waterTemperature}
                       onChange={(e) => setWaterTemperature(parseInt(e.target.value))}
                       disabled={soapAdded}
-                      style={{ width: '100%', accentColor: '#3b82f6' }}
+                      style={{ width: '100%', accentColor: '#3b82f6', touchAction: 'pan-y' }}
                     />
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#64748b' }}>
                       <span>Cold (5°C)</span>
@@ -978,7 +1012,7 @@ export default function SoapBoatRenderer({
                       value={boatMass}
                       onChange={(e) => setBoatMass(parseInt(e.target.value))}
                       disabled={soapAdded}
-                      style={{ width: '100%', accentColor: '#22c55e' }}
+                      style={{ width: '100%', accentColor: '#22c55e', touchAction: 'pan-y' }}
                     />
                   </div>
 
@@ -1399,7 +1433,7 @@ export default function SoapBoatRenderer({
       // ───────────────────────────────────────────────────
       case 'review':
         return (
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center" style={{ gap: '16px' }}>
             <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#1e293b' }}>
               The Physics of Surface Tension
             </h2>
@@ -1576,7 +1610,7 @@ export default function SoapBoatRenderer({
       // ───────────────────────────────────────────────────
       case 'twist_predict':
         return (
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center" style={{ gap: '16px' }}>
             <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#1e293b' }}>
               The Liquid Challenge
             </h2>
@@ -1719,7 +1753,7 @@ export default function SoapBoatRenderer({
         };
 
         return (
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center" style={{ gap: '20px' }}>
             <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#1e293b' }}>
               Compare Different Liquids
             </h2>
@@ -1985,7 +2019,7 @@ export default function SoapBoatRenderer({
       // ───────────────────────────────────────────────────
       case 'twist_review':
         return (
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center" style={{ gap: '16px' }}>
             <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#1e293b' }}>
               It's About the Gradient!
             </h2>
@@ -2049,6 +2083,43 @@ export default function SoapBoatRenderer({
               </div>
             </div>
 
+            {/* Visual diagram showing surface tension gradient */}
+            <svg viewBox="0 0 500 200" style={{ width: '100%', maxWidth: 500, marginBottom: '1.5rem' }}>
+              <defs>
+                <linearGradient id="tensionGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#a855f7" stopOpacity="0.8" />
+                </linearGradient>
+                <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                  <polygon points="0 0, 10 3, 0 6" fill="#22c55e" />
+                </marker>
+              </defs>
+
+              {/* Water surface before soap */}
+              <rect x="20" y="50" width="200" height="80" fill="#3b82f6" opacity="0.3" rx="4" />
+              <text x="120" y="40" textAnchor="middle" fill="#e2e8f0" fontSize="14" fontWeight="600">High Tension (γ = 0.072)</text>
+              <line x1="40" y1="90" x2="200" y2="90" stroke="#3b82f6" strokeWidth="3" strokeDasharray="5,5" />
+
+              {/* Boat */}
+              <path d="M 100 70 L 120 70 L 125 85 L 95 85 Z" fill="#a16207" stroke="#854d0e" strokeWidth="2" />
+
+              {/* Water surface after soap */}
+              <rect x="280" y="50" width="200" height="80" fill="#a855f7" opacity="0.3" rx="4" />
+              <text x="380" y="40" textAnchor="middle" fill="#e2e8f0" fontSize="14" fontWeight="600">Low Tension (γ = 0.025)</text>
+              <line x1="300" y1="90" x2="460" y2="90" stroke="#a855f7" strokeWidth="3" strokeDasharray="5,5" />
+
+              {/* Force arrow showing movement */}
+              <line x1="110" y1="100" x2="170" y2="100" stroke="#22c55e" strokeWidth="4" markerEnd="url(#arrowhead)" />
+              <text x="140" y="120" textAnchor="middle" fill="#22c55e" fontSize="16" fontWeight="700">Force →</text>
+
+              {/* Labels */}
+              <text x="120" y="160" textAnchor="middle" fill="#94a3b8" fontSize="12">Front (pulling)</text>
+              <text x="380" y="160" textAnchor="middle" fill="#94a3b8" fontSize="12">Back (soap added)</text>
+
+              {/* Central explanation */}
+              <text x="250" y="185" textAnchor="middle" fill="#fbbf24" fontSize="14" fontWeight="600">Δγ = Propulsive Force</text>
+            </svg>
+
             <div style={{
               background: '#f0fdf4',
               borderRadius: 12,
@@ -2087,7 +2158,7 @@ export default function SoapBoatRenderer({
       // ───────────────────────────────────────────────────
       case 'transfer':
         return (
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center" style={{ gap: '20px' }}>
             <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#1e293b' }}>
               Surface Tension in the Real World
             </h2>
@@ -2174,33 +2245,35 @@ export default function SoapBoatRenderer({
         }, 0);
 
         return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#1e293b' }}>
+          <div className="flex flex-col items-center" style={{ gap: '24px' }}>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#f8fafc', fontWeight: 700 }}>
               Surface Tension Mastery Test
             </h2>
 
-            <div style={{ width: '100%', maxWidth: 600 }}>
+            <div style={{ width: '100%', maxWidth: 600, display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {testQuestions.map((tq, qi) => (
                 <div
                   key={qi}
                   style={{
-                    background: 'white',
+                    background: 'rgba(30, 41, 59, 0.5)',
                     borderRadius: 12,
                     padding: '1rem',
-                    marginBottom: '1rem',
                     border: `2px solid ${
                       testSubmitted
-                        ? testAnswers[qi] === tq.correct
+                        ? tq.options[testAnswers[qi]]?.correct
                           ? '#22c55e'
                           : testAnswers[qi] !== undefined
                           ? '#ef4444'
-                          : '#e2e8f0'
-                        : '#e2e8f0'
+                          : 'rgba(71, 85, 105, 0.5)'
+                        : 'rgba(71, 85, 105, 0.5)'
                     }`
                   }}
                 >
-                  <p style={{ fontWeight: 600, color: '#1e293b', marginBottom: '0.75rem' }}>
-                    {qi + 1}. {tq.question}
+                  <p style={{ fontWeight: 600, color: '#e2e8f0', marginBottom: '0.75rem', fontSize: '0.95rem' }}>
+                    Question {qi + 1} of {testQuestions.length}
+                  </p>
+                  <p style={{ color: '#cbd5e1', marginBottom: '0.75rem' }}>
+                    {tq.question}
                   </p>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -2214,30 +2287,32 @@ export default function SoapBoatRenderer({
                           textAlign: 'left',
                           background: testSubmitted
                             ? opt.correct
-                              ? '#dcfce7'
+                              ? 'rgba(34, 197, 94, 0.2)'
                               : testAnswers[qi] === oi
-                              ? '#fee2e2'
-                              : '#f8fafc'
+                              ? 'rgba(239, 68, 68, 0.2)'
+                              : 'rgba(15, 23, 42, 0.5)'
                             : testAnswers[qi] === oi
-                            ? '#dbeafe'
-                            : '#f8fafc',
-                          color: '#1e293b',
+                            ? 'rgba(59, 130, 246, 0.2)'
+                            : 'rgba(15, 23, 42, 0.5)',
+                          color: testSubmitted && opt.correct ? '#86efac' : '#e2e8f0',
                           border: `1px solid ${
                             testSubmitted
                               ? opt.correct
                                 ? '#22c55e'
                                 : testAnswers[qi] === oi
                                 ? '#ef4444'
-                                : '#e2e8f0'
+                                : 'rgba(71, 85, 105, 0.5)'
                               : testAnswers[qi] === oi
                               ? '#3b82f6'
-                              : '#e2e8f0'
+                              : 'rgba(71, 85, 105, 0.5)'
                           }`,
                           borderRadius: 8,
                           cursor: testSubmitted ? 'default' : 'pointer',
                           fontSize: '0.9rem'
                         }}
                       >
+                        {testSubmitted && opt.correct && '✓ '}
+                        {testSubmitted && !opt.correct && testAnswers[qi] === oi && '✗ '}
                         {opt.text}
                       </button>
                     ))}
@@ -2254,27 +2329,61 @@ export default function SoapBoatRenderer({
                   padding: '1rem 2.5rem',
                   fontSize: '1.1rem',
                   background: Object.keys(testAnswers).length < testQuestions.length
-                    ? '#94a3b8'
+                    ? '#475569'
                     : 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
                   color: 'white',
                   border: 'none',
                   borderRadius: 12,
                   cursor: Object.keys(testAnswers).length < testQuestions.length ? 'not-allowed' : 'pointer',
-                  fontWeight: 600
+                  fontWeight: 600,
+                  marginTop: '8px'
                 }}
               >
                 Submit Test ({Object.keys(testAnswers).length}/{testQuestions.length})
               </button>
             ) : (
-              <div style={{ textAlign: 'center' }}>
+              <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '8px' }}>
                 <p style={{
                   fontSize: '1.5rem',
                   fontWeight: 'bold',
                   color: score >= 7 ? '#22c55e' : '#f59e0b',
-                  marginBottom: '1rem'
                 }}>
                   Score: {score}/{testQuestions.length} ({Math.round(score / testQuestions.length * 100)}%)
                 </p>
+
+                <div style={{
+                  background: 'rgba(30, 41, 59, 0.5)',
+                  borderRadius: 12,
+                  padding: '16px',
+                  border: '1px solid rgba(71, 85, 105, 0.5)',
+                  maxHeight: '300px',
+                  overflowY: 'auto'
+                }}>
+                  <h3 style={{ color: '#e2e8f0', marginBottom: '12px', fontSize: '1rem', fontWeight: 600 }}>Answer Review</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+                    {testQuestions.map((tq, qi) => {
+                      const isCorrect = tq.options[testAnswers[qi]]?.correct;
+                      return (
+                        <div key={qi} style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '8px',
+                          background: isCorrect ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                          borderRadius: 8,
+                          border: `1px solid ${isCorrect ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
+                        }}>
+                          <span style={{ fontSize: '1.2rem' }}>{isCorrect ? '✓' : '✗'}</span>
+                          <span style={{ color: '#cbd5e1', fontSize: '0.9rem' }}>
+                            Question {qi + 1}: <span style={{ color: isCorrect ? '#86efac' : '#fca5a5' }}>
+                              {isCorrect ? 'Correct' : 'Incorrect'}
+                            </span>
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
 
                 <button
                   onPointerDown={() => goToPhase('mastery')}
@@ -2308,7 +2417,7 @@ export default function SoapBoatRenderer({
         }, 0);
 
         return (
-          <div className="flex flex-col items-center" style={{ textAlign: 'center' }}>
+          <div className="flex flex-col items-center" style={{ textAlign: 'center', gap: '20px' }}>
             <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🚤💧🎉</div>
             <h2 style={{ fontSize: '2rem', marginBottom: '0.5rem', color: '#1e293b' }}>
               Surface Tension Master!
@@ -2386,7 +2495,7 @@ export default function SoapBoatRenderer({
 
             <button
               onPointerDown={() => {
-                onPhaseComplete?.();
+                goToPhase('hook');
                 setTestAnswers({});
                 setTestSubmitted(false);
                 setCompletedApps(new Set());
@@ -2442,15 +2551,27 @@ export default function SoapBoatRenderer({
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
                 title={p}
+                aria-label={`Go to ${p} phase`}
               />
             ))}
           </div>
           <span className="text-sm font-medium text-blue-400">{phase.replace('_', ' ')}</span>
         </div>
+        {/* Progress bar */}
+        <div className="w-full bg-slate-800/30 h-1">
+          <div
+            className="bg-blue-400 h-full transition-all duration-300"
+            style={{ width: `${((currentIndex + 1) / phaseOrder.length) * 100}%` }}
+            role="progressbar"
+            aria-valuenow={currentIndex + 1}
+            aria-valuemin={1}
+            aria-valuemax={phaseOrder.length}
+          />
+        </div>
       </div>
 
       {/* Main content */}
-      <div className="relative pt-16 pb-12" style={{ padding: isMobile ? '1rem' : '2rem', paddingTop: '5rem' }}>
+      <div className="relative pt-16 pb-24" style={{ padding: isMobile ? '1rem' : '2rem', paddingTop: '5rem', paddingBottom: '6rem' }}>
         <div style={{
           position: 'relative',
           zIndex: 10,
@@ -2464,6 +2585,63 @@ export default function SoapBoatRenderer({
           boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)'
         }}>
           {renderPhase()}
+        </div>
+      </div>
+
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-t border-slate-800/50" style={{ padding: '16px' }}>
+        <div className="flex items-center justify-between max-w-4xl mx-auto" style={{ gap: '16px' }}>
+          <button
+            onPointerDown={() => {
+              const prevIndex = currentIndex - 1;
+              if (prevIndex >= 0) {
+                goToPhase(phaseOrder[prevIndex]);
+              }
+            }}
+            disabled={currentIndex === 0}
+            style={{
+              padding: '12px 24px',
+              fontSize: '16px',
+              fontWeight: 600,
+              background: currentIndex === 0 ? 'rgba(71, 85, 105, 0.5)' : 'rgba(59, 130, 246, 0.2)',
+              color: currentIndex === 0 ? '#64748b' : '#3b82f6',
+              border: `1px solid ${currentIndex === 0 ? 'rgba(71, 85, 105, 0.5)' : 'rgba(59, 130, 246, 0.5)'}`,
+              borderRadius: 12,
+              cursor: currentIndex === 0 ? 'not-allowed' : 'pointer',
+              opacity: currentIndex === 0 ? 0.5 : 1,
+              transition: 'all 0.2s'
+            }}
+          >
+            ← Back
+          </button>
+
+          <div style={{ flex: 1, textAlign: 'center', color: '#94a3b8', fontSize: '14px', fontWeight: 500 }}>
+            {currentIndex + 1} / {phaseOrder.length}
+          </div>
+
+          <button
+            onPointerDown={() => {
+              const nextIndex = currentIndex + 1;
+              if (nextIndex < phaseOrder.length) {
+                goToPhase(phaseOrder[nextIndex]);
+              }
+            }}
+            disabled={currentIndex === phaseOrder.length - 1}
+            style={{
+              padding: '12px 24px',
+              fontSize: '16px',
+              fontWeight: 600,
+              background: currentIndex === phaseOrder.length - 1 ? 'rgba(71, 85, 105, 0.5)' : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+              color: 'white',
+              border: 'none',
+              borderRadius: 12,
+              cursor: currentIndex === phaseOrder.length - 1 ? 'not-allowed' : 'pointer',
+              opacity: currentIndex === phaseOrder.length - 1 ? 0.5 : 1,
+              transition: 'all 0.2s'
+            }}
+          >
+            Next →
+          </button>
         </div>
       </div>
     </div>

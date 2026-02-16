@@ -436,7 +436,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
 
   const renderVisualization = (interactive: boolean, showComparison: boolean = false) => {
     const width = 500;
-    const height = 420;
+    const height = 480;
     const output = calculateOutput();
 
     // Generate defect positions at both top and bottom surfaces
@@ -620,11 +620,11 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
           <rect width={width} height={height} fill="url(#pasrLabGrid)" />
 
           {/* Title and technology label */}
-          <text x={width / 2} y="28" fill={colors.accent} fontSize="16" textAnchor="middle" fontWeight="bold" letterSpacing="0.5">
+          <text x={width / 2} y="22" fill={colors.accent} fontSize="16" textAnchor="middle" fontWeight="bold" letterSpacing="0.5">
             {passivationPresets[passivationType].name}
           </text>
-          <text x={width / 2} y="46" fill={colors.textMuted} fontSize="10" textAnchor="middle">
-            Surface Recombination Velocity: {output.effectiveSRV} cm/s
+          <text x={width / 2} y="40" fill={colors.textMuted} fontSize="11" textAnchor="middle">
+            SRV: {output.effectiveSRV} cm/s
           </text>
 
           {/* === SOLAR CELL CROSS-SECTION STRUCTURE === */}
@@ -705,7 +705,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
           {topDefects.map((d, i) => (
             <g key={`top-${i}`} filter="url(#pasrDefectGlow)">
               <circle cx={d.x} cy={d.y} r="8" fill="url(#pasrDefectTrap)" />
-              <text x={d.x} y={d.y + 4} textAnchor="middle" fontSize="10" fill="#fff" fontWeight="bold">X</text>
+              <text x={d.x} y={d.y + 4} textAnchor="middle" fontSize="8" fill="#fff" fontWeight="bold">X</text>
               {/* Dangling bond indicator lines */}
               <line x1={d.x} y1={d.y - 10} x2={d.x} y2={d.y - 18} stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" opacity="0.7" />
             </g>
@@ -713,14 +713,14 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
           {bottomDefects.map((d, i) => (
             <g key={`bottom-${i}`} filter="url(#pasrDefectGlow)">
               <circle cx={d.x} cy={d.y} r="8" fill="url(#pasrDefectTrap)" />
-              <text x={d.x} y={d.y + 4} textAnchor="middle" fontSize="10" fill="#fff" fontWeight="bold">X</text>
+              <text x={d.x} y={d.y + 4} textAnchor="middle" fontSize="8" fill="#fff" fontWeight="bold">X</text>
               <line x1={d.x} y1={d.y + 10} x2={d.x} y2={d.y + 18} stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" opacity="0.7" />
             </g>
           ))}
 
           {/* Defect label */}
           {passivationType === 'none' && topDefects.length > 0 && (
-            <text x={topDefects[0].x - 5} y={topDefects[0].y - 25} fill="#f87171" fontSize="8" fontWeight="bold">
+            <text x="30" y="85" fill="#f87171" fontSize="8" fontWeight="bold">
               Dangling Bonds
             </text>
           )}
@@ -775,54 +775,54 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
           )}
 
           {/* === PREMIUM LEGEND === */}
-          <g transform="translate(60, 295)">
-            <rect x="-5" y="-12" width="200" height="50" rx="6" fill="rgba(15, 23, 42, 0.8)" stroke={colors.border} strokeWidth="0.5" />
+          <g transform="translate(30, 340)">
+            <rect x="0" y="0" width="220" height="80" rx="6" fill="rgba(15, 23, 42, 0.9)" stroke={colors.border} strokeWidth="0.5" />
 
             {/* Electron */}
-            <circle cx="15" cy="8" r="6" fill="url(#pasrElectronGlow)" />
-            <circle cx="15" cy="8" r="3" fill="#22d3ee" />
-            <text x="28" y="12" fill={colors.textSecondary} fontSize="9" fontWeight="600">Electron (e-)</text>
+            <circle cx="20" cy="18" r="6" fill="url(#pasrElectronGlow)" />
+            <circle cx="20" cy="18" r="3" fill="#22d3ee" />
+            <text x="34" y="22" fill={colors.textSecondary} fontSize="11" fontWeight="600">Electron (e-)</text>
 
             {/* Hole */}
-            <circle cx="110" cy="8" r="6" fill="url(#pasrHoleGlow)" />
-            <circle cx="110" cy="8" r="3" fill="#f472b6" />
-            <text x="123" y="12" fill={colors.textSecondary} fontSize="9" fontWeight="600">Hole (h+)</text>
+            <circle cx="120" cy="18" r="6" fill="url(#pasrHoleGlow)" />
+            <circle cx="120" cy="18" r="3" fill="#f472b6" />
+            <text x="134" y="22" fill={colors.textSecondary} fontSize="11" fontWeight="600">Hole (h+)</text>
 
             {/* Defect */}
-            <circle cx="15" cy="28" r="6" fill="url(#pasrDefectTrap)" />
-            <text x="15" y="31" textAnchor="middle" fontSize="7" fill="#fff" fontWeight="bold">X</text>
-            <text x="28" y="32" fill={colors.textSecondary} fontSize="9" fontWeight="600">Surface Defect</text>
+            <circle cx="20" cy="50" r="6" fill="url(#pasrDefectTrap)" />
+            <text x="20" y="53" textAnchor="middle" fontSize="8" fill="#fff" fontWeight="bold">X</text>
+            <text x="34" y="54" fill={colors.textSecondary} fontSize="11" fontWeight="600">Surface Defect</text>
 
             {/* Recombination */}
-            <circle cx="110" cy="28" r="6" fill="url(#pasrRecombFlash)" />
-            <text x="123" y="32" fill={colors.textSecondary} fontSize="9" fontWeight="600">Recombination</text>
+            <circle cx="120" cy="50" r="6" fill="url(#pasrRecombFlash)" />
+            <text x="134" y="54" fill={colors.textSecondary} fontSize="11" fontWeight="600">Recombination</text>
           </g>
 
           {/* === PREMIUM OUTPUT PANEL === */}
-          <g transform="translate(280, 295)">
-            <rect x="0" y="-12" width="160" height="85" rx="8" fill="url(#pasrOutputPanel)" stroke={colors.accent} strokeWidth="1.5" />
+          <g transform="translate(260, 340)">
+            <rect x="0" y="0" width="210" height="105" rx="8" fill="url(#pasrOutputPanel)" stroke={colors.accent} strokeWidth="1.5" />
 
             {/* Panel header */}
-            <rect x="0" y="-12" width="160" height="20" rx="8" fill="rgba(245, 158, 11, 0.15)" />
-            <text x="80" y="3" fill={colors.accent} fontSize="10" textAnchor="middle" fontWeight="bold" letterSpacing="1">
+            <rect x="0" y="0" width="210" height="28" rx="8" fill="rgba(245, 158, 11, 0.15)" />
+            <text x="105" y="19" fill={colors.accent} fontSize="12" textAnchor="middle" fontWeight="bold" letterSpacing="1">
               CELL OUTPUT
             </text>
 
             {/* Voc */}
-            <text x="12" y="25" fill={colors.textMuted} fontSize="9">Open-Circuit Voltage</text>
-            <text x="148" y="25" fill={colors.textPrimary} fontSize="12" textAnchor="end" fontWeight="bold">
+            <text x="16" y="50" fill={colors.textMuted} fontSize="11">Voc</text>
+            <text x="194" y="50" fill={colors.textPrimary} fontSize="12" textAnchor="end" fontWeight="bold">
               {output.voc.toFixed(3)} V
             </text>
 
             {/* Efficiency */}
-            <text x="12" y="42" fill={colors.textMuted} fontSize="9">Cell Efficiency</text>
-            <text x="148" y="42" fill={colors.success} fontSize="12" textAnchor="end" fontWeight="bold">
+            <text x="16" y="72" fill={colors.textMuted} fontSize="11">Efficiency</text>
+            <text x="194" y="72" fill={colors.success} fontSize="12" textAnchor="end" fontWeight="bold">
               {output.efficiency.toFixed(1)}%
             </text>
 
             {/* Lifetime */}
-            <text x="12" y="59" fill={colors.textMuted} fontSize="9">Carrier Lifetime</text>
-            <text x="148" y="59" fill={colors.textSecondary} fontSize="11" textAnchor="end" fontWeight="600">
+            <text x="16" y="94" fill={colors.textMuted} fontSize="11">Lifetime</text>
+            <text x="194" y="94" fill={colors.textSecondary} fontSize="12" textAnchor="end" fontWeight="600">
               {output.effectiveLifetime} us
             </text>
           </g>
@@ -1145,14 +1145,14 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Passivation & Recombination
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', fontWeight: 'normal' }}>
               Where do electrons "disappear" inside a solar cell?
             </p>
           </div>
@@ -1195,7 +1195,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           {renderVisualization(false)}
@@ -1248,7 +1248,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
@@ -1301,7 +1301,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
     const wasCorrect = prediction === 'surface';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{
@@ -1312,9 +1312,10 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
+              {wasCorrect ? 'Correct Prediction!' : 'Not Quite!'}
             </h3>
             <p style={{ color: colors.textPrimary }}>
+              {wasCorrect ? 'You predicted correctly! ' : 'Your prediction was that carriers disappear '}{prediction === 'area' ? 'through edges' : prediction === 'bulk' ? 'in the bulk' : prediction === 'contacts' ? 'at contacts' : 'at surfaces'}{wasCorrect ? '' : ', but actually '}
               Carriers "disappear" through recombination at surface defects! These defects act like
               traps where electrons and holes meet and cancel out, releasing energy as heat instead
               of current.
@@ -1360,7 +1361,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
@@ -1421,7 +1422,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
@@ -1459,7 +1460,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
     const wasCorrect = twistPrediction === 'hjt_best';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{
@@ -1513,7 +1514,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
   // TRANSFER PHASE
   if (phase === 'transfer') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
@@ -1521,10 +1522,10 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
               Real-World Applications
             </h2>
             <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-              Passivation is crucial beyond solar cells
+              Passivation is crucial beyond solar cells - $900B+ industry impact
             </p>
             <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
+              Complete all 4 applications (26%+ efficiency gains, 10,000x SRV reduction) to unlock the test
             </p>
           </div>
 
@@ -1561,7 +1562,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >
-                  Reveal Answer
+                  Got It
                 </button>
               ) : (
                 <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
@@ -1580,7 +1581,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderProgressBar()}
           <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
             <div style={{
@@ -1620,13 +1621,13 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <span style={{ color: colors.accent, fontSize: '16px', fontWeight: 'bold' }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
             </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
@@ -1634,6 +1635,9 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
               ))}
             </div>
             <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
+              <div style={{ marginBottom: '12px', fontWeight: 'normal', color: colors.textMuted, fontSize: '14px' }}>
+                Test your understanding of surface recombination and passivation concepts. Choose the best answer based on what you learned in the simulation.
+              </div>
               <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1715,11 +1719,11 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered passivation and recombination!</p>
           </div>

@@ -104,7 +104,7 @@ const colors = {
 };
 
 const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
-  phase,
+  phase = 'hook',
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
@@ -235,7 +235,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
 
   const testQuestions = [
     {
-      question: 'What keeps a ping-pong ball centered in an airstream?',
+      question: 'In the levitation demonstration, when the ball is displaced sideways from the center of the airstream, what physical mechanism brings it back to the center?',
       options: [
         { text: 'The ball is lighter than air', correct: false },
         { text: 'Pressure differences from varying airflow speeds create a restoring force', correct: true },
@@ -244,7 +244,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
       ],
     },
     {
-      question: 'When airflow speeds up around the edges of the ball, what happens to pressure there?',
+      question: 'According to Bernoulli\'s principle, when the airflow velocity increases as it squeezes past the edges of the levitating ball, what happens to the air pressure in that region?',
       options: [
         { text: 'Pressure increases', correct: false },
         { text: 'Pressure decreases (Bernoulli principle)', correct: true },
@@ -253,7 +253,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
       ],
     },
     {
-      question: 'If you tilt the hair dryer, the ball initially moves sideways but then:',
+      question: 'In the experiment, when you gradually tilt the hair dryer to one side while the ball is levitating, the ball initially moves sideways in the direction of the tilt. What happens next?',
       options: [
         { text: 'Falls out of the stream', correct: false },
         { text: 'Stays displaced to one side permanently', correct: false },
@@ -414,7 +414,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
     // Stability indicator dimensions
     const stabilityWidth = 140;
     const stabilityHeight = 65;
-    const wellDepth = isStable ? 35 * (1 / ballMass) : 8;
+    const wellDepth = isStable ? 45 * (1 / ballMass) : 12;
     const ballIndicatorX = (ballOffset.x / 50) * (stabilityWidth / 2);
 
     return (
@@ -671,7 +671,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
               y={centerY + 95}
               textAnchor="middle"
               fill="#64748b"
-              fontSize={9}
+              fontSize={11}
               fontWeight="bold"
             >
               AIR
@@ -767,7 +767,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
                 y={ballY - 8}
                 textAnchor="middle"
                 fill={colors.success}
-                fontSize={10}
+                fontSize={11}
                 fontWeight="bold"
               >
                 F restore
@@ -789,7 +789,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
               strokeWidth={1}
             />
             {/* Title */}
-            <text x={stabilityWidth / 2} y={-5} textAnchor="middle" fill={colors.textSecondary} fontSize={10} fontWeight="bold">
+            <text x={stabilityWidth / 2} y={-5} textAnchor="middle" fill={colors.textSecondary} fontSize={11} fontWeight="bold">
               STABILITY POTENTIAL WELL
             </text>
             {/* Well fill gradient */}
@@ -825,7 +825,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
               y={stabilityHeight + 8}
               textAnchor="middle"
               fill={isStable ? colors.success : colors.error}
-              fontSize={9}
+              fontSize={11}
               fontWeight="bold"
             >
               {isStable ? 'STABLE EQUILIBRIUM' : 'UNSTABLE - ESCAPING WELL'}
@@ -839,7 +839,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
             <text x={20} y={28} fill={colors.textPrimary} fontSize={12} fontWeight="bold">
               Tilt: {tiltAngle.toFixed(0)}deg
             </text>
-            <text x={20} y={45} fill={colors.textSecondary} fontSize={10}>
+            <text x={20} y={45} fill={colors.textSecondary} fontSize={11}>
               Mass: {ballMass === 0.5 ? 'Light (foam)' : ballMass === 1 ? 'Normal (PP)' : 'Heavy (golf)'}
             </text>
           </g>
@@ -878,11 +878,11 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
           {showPressure && (
             <g transform={`translate(${width - 130}, ${height - 90})`}>
               <rect x={-5} y={-5} width={125} height={50} rx={6} fill="rgba(15, 23, 42, 0.85)" stroke="rgba(71, 85, 105, 0.5)" strokeWidth={1} />
-              <text x={55} y={10} textAnchor="middle" fill={colors.textMuted} fontSize={9} fontWeight="bold">PRESSURE ZONES</text>
+              <text x={55} y={10} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontWeight="bold">PRESSURE ZONES</text>
               <circle cx={10} cy={25} r={6} fill="url(#slevPressureLow)" />
-              <text x={22} y={28} fill={colors.pressure.low} fontSize={9}>Low (fast flow)</text>
+              <text x={22} y={28} fill={colors.pressure.low} fontSize={11}>Low (fast flow)</text>
               <circle cx={10} cy={40} r={6} fill="url(#slevPressureHigh)" />
-              <text x={22} y={43} fill={colors.pressure.high} fontSize={9}>High (slow flow)</text>
+              <text x={22} y={43} fill={colors.pressure.high} fontSize={11}>High (slow flow)</text>
             </g>
           )}
         </svg>
@@ -900,6 +900,8 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                minHeight: '44px',
+                transition: 'all 0.2s ease',
               }}
             >
               {isAnimating ? 'Stop' : 'Animate'}
@@ -915,6 +917,8 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                minHeight: '44px',
+                transition: 'all 0.2s ease',
               }}
             >
               Reset
@@ -938,7 +942,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
           step="1"
           value={tiltAngle}
           onChange={(e) => setTiltAngle(parseFloat(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', touchAction: 'pan-y', accentColor: colors.accent }}
         />
       </div>
 
@@ -953,7 +957,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
           step="0.1"
           value={airflowStrength}
           onChange={(e) => setAirflowStrength(parseFloat(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', touchAction: 'pan-y', accentColor: colors.accent }}
         />
       </div>
 
@@ -969,7 +973,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
             step="0.5"
             value={ballMass}
             onChange={(e) => setBallMass(parseFloat(e.target.value))}
-            style={{ width: '100%' }}
+            style={{ width: '100%', touchAction: 'pan-y', accentColor: colors.accent }}
           />
         </div>
       )}
@@ -1110,7 +1114,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
         {renderNavHeader()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
@@ -1131,7 +1135,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
               borderRadius: '12px',
               marginBottom: '16px',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6, fontWeight: 400 }}>
                 Point a hair dryer upward and place a ping-pong ball in the airstream.
                 It floats! But here's the puzzle: even when you tilt the dryer,
                 the ball stays suspended...
@@ -1161,7 +1165,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
         {renderNavHeader()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           {renderVisualization(false, false)}
@@ -1197,6 +1201,9 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
+                    minHeight: '44px',
+                    transition: 'all 0.2s ease',
+                    fontWeight: prediction === p.id ? 600 : 400,
                   }}
                 >
                   {p.label}
@@ -1213,13 +1220,32 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
         {renderNavHeader()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Stable Levitation</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Tilt the dryer and watch the ball's response
+            </p>
+          </div>
+          {/* What the visualization shows */}
+          <div style={{
+            background: 'rgba(56, 189, 248, 0.1)',
+            margin: '0 16px 16px 16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.airflow}`,
+          }}>
+            <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0, marginBottom: '8px', fontWeight: 600 }}>
+              What the visualization shows:
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+              The simulation displays a hair dryer blowing air upward (blue particles), a levitating ball, and a
+              <strong> stability well graph</strong> at the bottom. The well graph shows the "energy landscape" - deeper
+              wells mean stronger stability. Watch how <strong>tilting</strong> the dryer affects the ball position
+              and how the ball naturally returns to the center due to <strong>pressure differences</strong> (shown
+              as colored zones around the ball).
             </p>
           </div>
           {/* Observation guidance */}
@@ -1231,7 +1257,10 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
             borderLeft: `3px solid ${colors.airflow}`,
           }}>
             <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
-              Observe how the ball responds to different tilt angles. Notice the restoring force that brings it back to center.
+              <strong style={{ color: colors.textPrimary }}>Observe carefully:</strong> As you tilt the dryer,
+              watch how the ball first moves sideways, then returns toward center. Notice the restoring force arrow
+              that appears when tilted, pointing back toward equilibrium. Pay attention to how the stability well
+              becomes shallower (less stable) at larger tilt angles.
             </p>
           </div>
 
@@ -1244,13 +1273,79 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
             padding: '16px',
             borderRadius: '12px',
           }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
+            <h4 style={{ color: colors.accent, marginBottom: '12px', fontWeight: 600 }}>What You're Observing</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '12px' }}>
+              When you <strong style={{ color: colors.textPrimary }}>tilt the dryer</strong>, the ball moves sideways initially, but then{' '}
+              <strong style={{ color: colors.textPrimary }}>returns toward center</strong>. This happens because air flows faster on one side,
+              creating lower pressure (Bernoulli's principle), which pushes the ball back.
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Increasing airflow</strong> creates stronger pressure differences,
+              making the ball more stable. The ball sits in a "potential well" - an energy minimum that naturally
+              resists displacement.
+            </p>
+          </div>
+
+          <div style={{
+            background: colors.bgCard,
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>Try These Experiments:</h4>
             <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
               <li>Tilt slowly - watch the ball shift then return</li>
               <li>Find the maximum tilt before the ball falls</li>
               <li>Increase airflow - does stability improve?</li>
               <li>Enable animation to see oscillations</li>
             </ul>
+          </div>
+
+          <div style={{
+            background: 'rgba(59, 130, 246, 0.15)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `4px solid ${colors.airflow}`,
+          }}>
+            <h4 style={{ color: colors.airflow, marginBottom: '12px', fontWeight: 600 }}>Key Physics Concepts</h4>
+            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+              <p style={{ marginBottom: '8px' }}>
+                <strong style={{ color: colors.textPrimary }}>Bernoulli's Principle:</strong> In a flowing fluid, regions
+                with higher velocity have lower pressure. This explains why the ball is pushed toward the center where
+                airflow is fastest and pressure is lowest.
+              </p>
+              <p style={{ marginBottom: '8px' }}>
+                <strong style={{ color: colors.textPrimary }}>Stable Equilibrium:</strong> A state where disturbances
+                create restoring forces that push the system back to its original position, like a ball at the bottom
+                of a bowl.
+              </p>
+              <p style={{ marginBottom: '8px' }}>
+                <strong style={{ color: colors.textPrimary }}>Potential Well:</strong> An energy landscape where the
+                equilibrium point is at a minimum. The ball naturally "falls" toward this low-energy state and resists
+                being pushed out.
+              </p>
+              <p>
+                <strong style={{ color: colors.textPrimary }}>Coanda Effect:</strong> The tendency of a fluid jet to
+                follow a curved surface, which helps keep the airflow attached to the ball's surface.
+              </p>
+            </div>
+          </div>
+
+          <div style={{
+            background: 'rgba(139, 92, 246, 0.15)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `4px solid ${colors.accent}`,
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>Why This Matters</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+              This same stable equilibrium principle enables <strong style={{ color: colors.textPrimary }}>maglev trains</strong> to float at 600 km/h,
+              <strong style={{ color: colors.textPrimary }}> magnetic bearings</strong> to spin frictionlessly in turbines, and
+              <strong style={{ color: colors.textPrimary }}> acoustic levitation</strong> to suspend materials for contamination-free processing.
+              Understanding stability helps engineers design systems that naturally resist disturbances.
+            </p>
           </div>
         </div>
         {renderBottomBar(false, true, 'Continue to Review')}
@@ -1263,7 +1358,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
     const wasCorrect = prediction === 'stable';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
         {renderNavHeader()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           <div style={{
@@ -1287,12 +1382,28 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
             padding: '20px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Stable Levitation</h3>
+            <h3 style={{ color: colors.accent, marginBottom: '12px', fontWeight: 600 }}>The Physics of Stable Levitation</h3>
             <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Bernoulli's Principle:</strong> When air flows
                 faster, its pressure drops. Around the ball, air speeds up as it squeezes past the edges.
               </p>
+              <div style={{
+                background: 'rgba(139, 92, 246, 0.1)',
+                padding: '12px',
+                borderRadius: '8px',
+                marginBottom: '12px',
+                fontFamily: 'monospace',
+                fontSize: '15px',
+                textAlign: 'center',
+              }}>
+                <div style={{ color: colors.textPrimary, marginBottom: '4px' }}>
+                  P + ½ρv² = constant
+                </div>
+                <div style={{ fontSize: '12px', color: colors.textMuted }}>
+                  Pressure + Dynamic Pressure = Total
+                </div>
+              </div>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Restoring Force:</strong> If the ball moves
                 sideways, air flows faster on one side (lower pressure) than the other (higher pressure).
@@ -1314,7 +1425,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
         {renderNavHeader()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
@@ -1357,6 +1468,9 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
+                    minHeight: '44px',
+                    transition: 'all 0.2s ease',
+                    fontWeight: twistPrediction === p.id ? 600 : 400,
                   }}
                 >
                   {p.label}
@@ -1373,7 +1487,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
         {renderNavHeader()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
@@ -1391,7 +1505,11 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
             borderLeft: `3px solid ${colors.warning}`,
           }}>
             <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
-              Observe how ball mass affects stability. Compare light foam balls with heavier balls at various tilt angles.
+              <strong style={{ color: colors.textPrimary }}>Observe carefully:</strong> Change the ball mass using
+              the slider and compare how each ball responds to tilting. Watch the stability well - it becomes deeper
+              for lighter balls. Notice the maximum stable tilt angle indicator shows that lighter balls can handle
+              more tilt before falling out of the airstream. This demonstrates how mass affects the balance between
+              gravitational and aerodynamic forces.
             </p>
           </div>
 
@@ -1422,7 +1540,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
     const wasCorrect = twistPrediction === 'light_better';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
         {renderNavHeader()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           <div style={{
@@ -1474,8 +1592,9 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
   // TRANSFER PHASE
   if (phase === 'transfer') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
+        {renderNavHeader()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1500,23 +1619,98 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Done</span>}
+                <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 600 }}>{app.title}</h3>
+                {transferCompleted.has(index) && <span style={{ color: colors.success }}>✓ Done</span>}
               </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px', lineHeight: 1.6 }}>
+                {app.description}
+                {index === 0 && ' Companies like Central Japan Railway and Transrapid are deploying these systems globally.'}
+                {index === 1 && ' Research labs like Argonne National Lab and companies like Ultrahaptics are pioneering this technology.'}
+                {index === 2 && ' Major manufacturers including SKF and Waukesha use these in critical applications.'}
+                {index === 3 && ' NASA Glenn Research Center and DLR lead research in this field for aerospace applications.'}
+              </p>
+
+              {/* Add numeric stats */}
+              <div style={{
+                display: 'flex',
+                gap: '12px',
+                marginBottom: '12px',
+                flexWrap: 'wrap'
+              }}>
+                {index === 0 && (
+                  <>
+                    <div style={{ background: 'rgba(139, 92, 246, 0.15)', padding: '8px 12px', borderRadius: '6px', flex: '1 1 auto', minWidth: '100px' }}>
+                      <div style={{ color: colors.accent, fontSize: '18px', fontWeight: 'bold' }}>603 km/h</div>
+                      <div style={{ color: colors.textMuted, fontSize: '11px' }}>Speed record</div>
+                    </div>
+                    <div style={{ background: 'rgba(139, 92, 246, 0.15)', padding: '8px 12px', borderRadius: '6px', flex: '1 1 auto', minWidth: '100px' }}>
+                      <div style={{ color: colors.accent, fontSize: '18px', fontWeight: 'bold' }}>10 mm</div>
+                      <div style={{ color: colors.textMuted, fontSize: '11px' }}>Levitation gap</div>
+                    </div>
+                  </>
+                )}
+                {index === 1 && (
+                  <>
+                    <div style={{ background: 'rgba(139, 92, 246, 0.15)', padding: '8px 12px', borderRadius: '6px', flex: '1 1 auto', minWidth: '100px' }}>
+                      <div style={{ color: colors.accent, fontSize: '18px', fontWeight: 'bold' }}>40 kHz</div>
+                      <div style={{ color: colors.textMuted, fontSize: '11px' }}>Frequency</div>
+                    </div>
+                    <div style={{ background: 'rgba(139, 92, 246, 0.15)', padding: '8px 12px', borderRadius: '6px', flex: '1 1 auto', minWidth: '100px' }}>
+                      <div style={{ color: colors.accent, fontSize: '18px', fontWeight: 'bold' }}>160 dB</div>
+                      <div style={{ color: colors.textMuted, fontSize: '11px' }}>Sound level</div>
+                    </div>
+                  </>
+                )}
+                {index === 2 && (
+                  <>
+                    <div style={{ background: 'rgba(139, 92, 246, 0.15)', padding: '8px 12px', borderRadius: '6px', flex: '1 1 auto', minWidth: '100px' }}>
+                      <div style={{ color: colors.accent, fontSize: '18px', fontWeight: 'bold' }}>100k RPM</div>
+                      <div style={{ color: colors.textMuted, fontSize: '11px' }}>Max speed</div>
+                    </div>
+                    <div style={{ background: 'rgba(139, 92, 246, 0.15)', padding: '8px 12px', borderRadius: '6px', flex: '1 1 auto', minWidth: '100px' }}>
+                      <div style={{ color: colors.accent, fontSize: '18px', fontWeight: 'bold' }}>0 friction</div>
+                      <div style={{ color: colors.textMuted, fontSize: '11px' }}>Energy loss</div>
+                    </div>
+                  </>
+                )}
+                {index === 3 && (
+                  <>
+                    <div style={{ background: 'rgba(139, 92, 246, 0.15)', padding: '8px 12px', borderRadius: '6px', flex: '1 1 auto', minWidth: '100px' }}>
+                      <div style={{ color: colors.accent, fontSize: '18px', fontWeight: 'bold' }}>3000°C</div>
+                      <div style={{ color: colors.textMuted, fontSize: '11px' }}>Max temp</div>
+                    </div>
+                    <div style={{ background: 'rgba(139, 92, 246, 0.15)', padding: '8px 12px', borderRadius: '6px', flex: '1 1 auto', minWidth: '100px' }}>
+                      <div style={{ color: colors.accent, fontSize: '18px', fontWeight: 'bold' }}>99.9999%</div>
+                      <div style={{ color: colors.textMuted, fontSize: '11px' }}>Purity</div>
+                    </div>
+                  </>
+                )}
+              </div>
+
               <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
                 <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
               </div>
               {!transferCompleted.has(index) ? (
                 <button
                   onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    border: `1px solid ${colors.accent}`,
+                    background: 'transparent',
+                    color: colors.accent,
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    minHeight: '36px',
+                    transition: 'all 0.2s ease',
+                    fontWeight: 600,
+                  }}
                 >
                   Reveal Answer
                 </button>
               ) : (
                 <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                  <p style={{ color: colors.textPrimary, fontSize: '13px', lineHeight: 1.6 }}>{app.answer}</p>
                 </div>
               )}
             </div>
@@ -1531,8 +1725,9 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
+          {renderNavHeader()}
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1570,8 +1765,9 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
+        {renderNavHeader()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -1587,18 +1783,60 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {currentQ.options.map((opt, oIndex) => (
-                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(139, 92, 246, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>
+                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{
+                  padding: '16px',
+                  borderRadius: '8px',
+                  border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
+                  background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
+                  color: colors.textPrimary,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: '14px',
+                  minHeight: '44px',
+                  transition: 'all 0.2s ease',
+                  fontWeight: testAnswers[currentTestQuestion] === oIndex ? 600 : 400,
+                }}>
                   {opt.text}
                 </button>
               ))}
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
+            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.textMuted}`,
+              background: 'transparent',
+              color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
+              cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
+              minHeight: '44px',
+              transition: 'all 0.2s ease',
+              fontWeight: 600,
+            }}>Previous</button>
             {currentTestQuestion < testQuestions.length - 1 ? (
-              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button>
+              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{
+                padding: '12px 24px',
+                borderRadius: '8px',
+                border: 'none',
+                background: colors.accent,
+                color: 'white',
+                cursor: 'pointer',
+                minHeight: '44px',
+                transition: 'all 0.2s ease',
+                fontWeight: 600,
+              }}>Next</button>
             ) : (
-              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
+              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{
+                padding: '12px 24px',
+                borderRadius: '8px',
+                border: 'none',
+                background: testAnswers.includes(null) ? colors.textMuted : colors.success,
+                color: 'white',
+                cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                minHeight: '44px',
+                transition: 'all 0.2s ease',
+                fontWeight: 600,
+              }}>Submit Test</button>
             )}
           </div>
         </div>
@@ -1609,8 +1847,9 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
+        {renderNavHeader()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '70px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>

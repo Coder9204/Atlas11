@@ -75,8 +75,13 @@ const realWorldApps = [
   }
 ];
 
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
 interface RollingShutterRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  phase?: Phase;
+  gamePhase?: string;
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
@@ -106,11 +111,21 @@ const colors = {
 };
 
 const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
-  phase,
+  phase: externalPhase,
+  gamePhase,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Internal phase management for self-managing mode
+  const [internalPhase, setInternalPhase] = useState<Phase>('hook');
+  let phase = (externalPhase || (gamePhase as Phase) || internalPhase) as Phase;
+
+  // Default to hook if phase is invalid
+  if (!phaseOrder.includes(phase)) {
+    phase = 'hook';
+  }
+
   const [rotationSpeed, setRotationSpeed] = useState(10);
   const [scanSpeed, setScanSpeed] = useState(50);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -125,6 +140,26 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Navigation functions for self-managing mode
+  const handleNext = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      const nextPhase = phaseOrder[currentIndex + 1];
+      setInternalPhase(nextPhase);
+    }
+    if (onPhaseComplete) {
+      onPhaseComplete();
+    }
+  }, [phase, onPhaseComplete]);
+
+  const handleBack = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      const prevPhase = phaseOrder[currentIndex - 1];
+      setInternalPhase(prevPhase);
+    }
+  }, [phase]);
 
   // Responsive detection
   useEffect(() => {
@@ -582,7 +617,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
             <text
               x={180} y={52}
               fill={colors.textMuted}
-              fontSize={10}
+              fontSize={11}
               textAnchor="middle"
             >
               3-blade at {rotationSpeed} rotations/sec
@@ -633,7 +668,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
               markerEnd="url(#rshutArrowHead)"
               opacity={0.6}
             />
-            <text x={370} y={170} fill={colors.sensor} fontSize={10} textAnchor="middle">Light rays</text>
+            <text x={370} y={170} fill={colors.sensor} fontSize={11} textAnchor="middle">Light rays</text>
           </g>
 
           {/* === CENTER: CAMERA SENSOR VISUALIZATION === */}
@@ -652,7 +687,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
             <text
               x={sensorX + sensorWidth/2} y={52}
               fill={colors.textMuted}
-              fontSize={10}
+              fontSize={11}
               textAnchor="middle"
             >
               Row-by-row readout ({scanSpeed}% speed)
@@ -718,9 +753,9 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
             <g transform={`translate(${sensorX + sensorWidth + 25}, ${sensorY + sensorHeight/2})`}>
               <line x1={0} y1={-60} x2={0} y2={60} stroke={colors.scanline} strokeWidth={2} />
               <polygon points="0,60 -6,48 6,48" fill={colors.scanline} />
-              <text x={12} y={-45} fill={colors.scanline} fontSize={9} fontWeight="600">SCAN</text>
-              <text x={12} y={-32} fill={colors.textMuted} fontSize={8}>direction</text>
-              <text x={12} y={50} fill={colors.textMuted} fontSize={8}>Top→Bottom</text>
+              <text x={12} y={-45} fill={colors.scanline} fontSize={11} fontWeight="600">SCAN</text>
+              <text x={12} y={-32} fill={colors.textMuted} fontSize={11}>direction</text>
+              <text x={12} y={50} fill={colors.textMuted} fontSize={11}>Top→Bottom</text>
             </g>
 
             {/* Status indicators */}
@@ -730,7 +765,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
                   <animate attributeName="opacity" values="1;0.4;1" dur="0.8s" repeatCount="indefinite" />
                 )}
               </circle>
-              <text x={10} y={4} fill={isPlaying ? colors.success : colors.textMuted} fontSize={9}>
+              <text x={10} y={4} fill={isPlaying ? colors.success : colors.textMuted} fontSize={11}>
                 {isPlaying ? 'SCANNING' : 'PAUSED'}
               </text>
             </g>
@@ -747,17 +782,17 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
               strokeWidth={1}
             />
 
-            {/* Info items */}
-            <text x={20} y={22} fill={colors.accent} fontSize={11} fontWeight="700">
+            {/* Info items - repositioned to avoid overlap */}
+            <text x={20} y={32} fill={colors.accent} fontSize={12} fontWeight="700">
               Rolling Shutter Effect
             </text>
-            <text x={200} y={22} fill={colors.textSecondary} fontSize={10}>
+            <text x={220} y={32} fill={colors.textSecondary} fontSize={12}>
               Rotation: {rotationSpeed} rot/s
             </text>
-            <text x={340} y={22} fill={colors.textSecondary} fontSize={10}>
+            <text x={20} y={52} fill={colors.textSecondary} fontSize={12}>
               Scan Speed: {scanSpeed}%
             </text>
-            <text x={480} y={22} fill={colors.textMuted} fontSize={10}>
+            <text x={220} y={52} fill={colors.textMuted} fontSize={11}>
               Slower scan + faster rotation = more distortion
             </text>
           </g>
@@ -902,7 +937,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
             <text x={width/4} y={270} fill={colors.textSecondary} fontSize={11} textAnchor="middle">
               All pixels captured at same instant
             </text>
-            <text x={width/4} y={288} fill={colors.success} fontSize={10} textAnchor="middle" fontWeight="600">
+            <text x={width/4} y={288} fill={colors.success} fontSize={11} textAnchor="middle" fontWeight="600">
               Straight blades (reality)
             </text>
           </g>
@@ -943,7 +978,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
             <text x={3*width/4} y={270} fill={colors.textSecondary} fontSize={11} textAnchor="middle">
               Rows captured at different times
             </text>
-            <text x={3*width/4} y={288} fill={colors.danger} fontSize={10} textAnchor="middle" fontWeight="600">
+            <text x={3*width/4} y={288} fill={colors.danger} fontSize={11} textAnchor="middle" fontWeight="600">
               Bent/curved blades (artifact)
             </text>
           </g>
@@ -1020,12 +1055,14 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
           step="1"
           value={rotationSpeed}
           onChange={(e) => setRotationSpeed(parseInt(e.target.value))}
+          onInput={(e) => setRotationSpeed(parseInt((e.target as HTMLInputElement).value))}
           style={{
             width: '100%',
-            height: '8px',
+            height: '16px',
             borderRadius: '4px',
             cursor: 'pointer',
-            accentColor: colors.propeller
+            accentColor: colors.propeller,
+            touchAction: 'pan-y'
           }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1058,12 +1095,14 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
           step="10"
           value={scanSpeed}
           onChange={(e) => setScanSpeed(parseInt(e.target.value))}
+          onInput={(e) => setScanSpeed(parseInt((e.target as HTMLInputElement).value))}
           style={{
             width: '100%',
-            height: '8px',
+            height: '16px',
             borderRadius: '4px',
             cursor: 'pointer',
-            accentColor: colors.scanline
+            accentColor: colors.scanline,
+            touchAction: 'pan-y'
           }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1110,42 +1149,85 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: `1px solid ${colors.border}`,
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-      backdropFilter: 'blur(8px)'
-    }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '14px 36px',
-          borderRadius: '12px',
-          border: 'none',
-          background: canProceed
-            ? `linear-gradient(135deg, ${colors.accent} 0%, ${colors.accentDark} 100%)`
-            : colors.bgCardLight,
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: '700',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '15px',
-          boxShadow: canProceed ? `0 4px 20px ${colors.accent}40` : 'none',
-          transition: 'all 0.2s ease'
-        }}
-      >
-        {buttonText}
-      </button>
-    </div>
-  );
+  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const showBack = currentIndex > 0 && phase !== 'hook';
+    const progress = ((currentIndex + 1) / phaseOrder.length) * 100;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgDark,
+        borderTop: `1px solid ${colors.border}`,
+        zIndex: 1000,
+        backdropFilter: 'blur(8px)'
+      }}>
+        {/* Progress bar */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: `${progress}%`,
+          height: '3px',
+          background: `linear-gradient(90deg, ${colors.primary}, ${colors.accent})`,
+          transition: 'width 0.3s ease'
+        }} />
+
+        <div style={{
+          padding: '16px 24px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          {showBack ? (
+            <button
+              onClick={handleBack}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '12px',
+                border: `1px solid ${colors.border}`,
+                background: colors.bgCard,
+                color: colors.textSecondary,
+                fontWeight: '600',
+                cursor: 'pointer',
+                fontSize: '14px',
+                transition: 'all 0.2s ease',
+                minHeight: '44px'
+              }}
+            >
+              ← Back
+            </button>
+          ) : <div />}
+
+          <button
+            onClick={onPhaseComplete || handleNext}
+            disabled={disabled && !canProceed}
+            style={{
+              padding: '14px 36px',
+              borderRadius: '12px',
+              border: 'none',
+              background: canProceed
+                ? `linear-gradient(135deg, ${colors.accent} 0%, ${colors.accentDark} 100%)`
+                : colors.bgCardLight,
+              color: canProceed ? 'white' : colors.textMuted,
+              fontWeight: '700',
+              cursor: canProceed ? 'pointer' : 'not-allowed',
+              fontSize: '15px',
+              boxShadow: canProceed ? `0 4px 20px ${colors.accent}40` : 'none',
+              transition: 'all 0.2s ease',
+              minHeight: '44px'
+            }}
+          >
+            {buttonText}
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   if (phase === 'hook') {
     return (
@@ -1363,10 +1445,64 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
 
           {renderControls()}
 
-          {/* Experiments card */}
+          {/* How It Works - Cause and Effect */}
           <div style={{
             background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.bgCardLight}40 100%)`,
             margin: '16px',
+            padding: '18px',
+            borderRadius: '14px',
+            border: `1px solid ${colors.border}`
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: '12px', fontSize: '14px', fontWeight: '700' }}>
+              How It Works - Cause and Effect
+            </h4>
+            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '14px' }}>
+              <p style={{ marginBottom: '10px' }}>
+                <strong style={{ color: colors.textPrimary }}>When you increase rotation speed:</strong> The blade moves more between scan lines, causing greater distortion. Each row captures the blade at a different position, making straight blades appear curved.
+              </p>
+              <p style={{ marginBottom: '10px' }}>
+                <strong style={{ color: colors.textPrimary }}>When you decrease scan speed:</strong> The sensor takes longer to scan top-to-bottom, giving the blade more time to move. This increases the difference between positions captured in each row, creating more pronounced bending.
+              </p>
+              <p>
+                <strong style={{ color: colors.textPrimary }}>As scan speed increases:</strong> The sensor captures the frame faster, reducing the time the blade has to move during capture. This minimizes positional differences between rows, reducing distortion.
+              </p>
+            </div>
+          </div>
+
+          {/* Why This Matters - Real World Relevance */}
+          <div style={{
+            background: `linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(59,130,246,0.05) 100%)`,
+            margin: '0 16px 16px',
+            padding: '18px',
+            borderRadius: '14px',
+            border: `1px solid rgba(59,130,246,0.3)`
+          }}>
+            <h4 style={{ color: colors.propeller, marginBottom: '12px', fontSize: '14px', fontWeight: '700' }}>
+              Why This Matters
+            </h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '10px' }}>
+              Every smartphone camera and most video cameras use rolling shutter CMOS sensors. This affects your everyday photos and videos:
+            </p>
+            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, paddingLeft: '24px', marginBottom: '12px' }}>
+              <li style={{ marginBottom: '8px' }}>
+                <strong style={{ color: colors.textPrimary }}>Helicopter blades and propellers</strong> appear impossibly bent in phone photos, not because they're flexible, but because the sensor captures different positions at different times.
+              </li>
+              <li style={{ marginBottom: '8px' }}>
+                <strong style={{ color: colors.textPrimary }}>Quick camera pans</strong> make buildings lean (the "jello effect"), as vertical structures are captured progressively while the camera moves.
+              </li>
+              <li>
+                <strong style={{ color: colors.textPrimary }}>Sports photography with phones</strong> shows bent golf clubs and baseball bats mid-swing - the faster the motion, the more extreme the distortion.
+              </li>
+            </ul>
+            <p style={{ color: colors.textMuted, fontSize: '13px', fontStyle: 'italic' }}>
+              Professional cameras minimize this with faster readout speeds or global shutters that capture all pixels simultaneously, eliminating the time difference that causes distortion.
+            </p>
+          </div>
+
+          {/* Experiments card */}
+          <div style={{
+            background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.bgCardLight}40 100%)`,
+            margin: '0 16px 16px',
             padding: '18px',
             borderRadius: '14px',
             border: `1px solid ${colors.border}`
@@ -1491,6 +1627,41 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Mathematical Relationship */}
+          <div style={{
+            background: `linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(59,130,246,0.05) 100%)`,
+            margin: '0 16px 16px',
+            padding: '20px',
+            borderRadius: '14px',
+            border: `1px solid rgba(59,130,246,0.3)`
+          }}>
+            <h3 style={{ color: colors.propeller, marginBottom: '14px', fontSize: '16px', fontWeight: '700' }}>
+              The Math Behind It
+            </h3>
+            <div style={{
+              background: 'rgba(0,0,0,0.3)',
+              padding: '16px',
+              borderRadius: '10px',
+              marginBottom: '14px',
+              textAlign: 'center',
+              fontFamily: 'monospace'
+            }}>
+              <div style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '8px' }}>
+                <strong>Angular Displacement</strong> = <strong style={{ color: colors.propeller }}>ω</strong> × <strong style={{ color: colors.scanline }}>Δt</strong>
+              </div>
+              <div style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6 }}>
+                ω = rotation speed (radians/s) <br />
+                Δt = time between scan lines (seconds)
+              </div>
+            </div>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6, marginBottom: '10px' }}>
+              <strong style={{ color: colors.textPrimary }}>Distortion is proportional to:</strong> The faster the object rotates and the slower the scan, the greater the angular change between captured rows, creating more pronounced curvature.
+            </p>
+            <p style={{ color: colors.textMuted, fontSize: '12px', lineHeight: 1.5, fontStyle: 'italic' }}>
+              Example: At 30 rotations/sec (188 rad/s) with 20ms scan time, a blade moves ~73° between top and bottom rows, creating extreme visible bending.
+            </p>
           </div>
         </div>
         {renderBottomBar(false, true, 'Next: A Twist!')}
@@ -1802,6 +1973,31 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
               </div>
               <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '14px', lineHeight: 1.5 }}>{app.description}</p>
 
+              {/* Stats display from realWorldApps */}
+              {realWorldApps[index] && realWorldApps[index].stats && (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '8px',
+                  marginBottom: '14px'
+                }}>
+                  {realWorldApps[index].stats.map((stat, i) => (
+                    <div key={i} style={{
+                      background: colors.bgCardLight,
+                      padding: '10px',
+                      borderRadius: '8px',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '14px', marginBottom: '2px' }}>{stat.icon}</div>
+                      <div style={{ color: colors.accent, fontSize: '14px', fontWeight: '700', marginBottom: '2px' }}>
+                        {stat.value}
+                      </div>
+                      <div style={{ color: colors.textMuted, fontSize: '10px' }}>{stat.label}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {/* Question box */}
               <div style={{
                 background: 'rgba(236,72,153,0.08)',
@@ -1977,6 +2173,23 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
               marginBottom: '18px',
               border: `1px solid ${colors.border}`
             }}>
+              {/* Scenario context */}
+              <div style={{
+                background: 'rgba(59,130,246,0.1)',
+                padding: '12px',
+                borderRadius: '8px',
+                marginBottom: '14px',
+                borderLeft: `3px solid ${colors.propeller}`
+              }}>
+                <p style={{ color: colors.textSecondary, fontSize: '12px', lineHeight: 1.6, marginBottom: '6px' }}>
+                  <strong style={{ color: colors.propeller }}>SCENARIO:</strong> Consider the rolling shutter effect we explored with spinning propellers and camera scans.
+                </p>
+                <p style={{ color: colors.textMuted, fontSize: '12px', lineHeight: 1.5 }}>
+                  {currentTestQuestion < 3 ? 'Remember how the sensor scans row-by-row, capturing different moments in time.' :
+                   currentTestQuestion < 6 ? 'Think about how motion during the scan creates the distortion effect.' :
+                   'Apply your understanding of rolling shutter to real-world camera situations.'}
+                </p>
+              </div>
               <p style={{ color: colors.textPrimary, fontSize: '15px', lineHeight: 1.5, fontWeight: '500' }}>
                 {currentQ.question}
               </p>
@@ -2172,6 +2385,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
     );
   }
 
+  // This should never be reached because we default to 'hook' above
   return null;
 };
 

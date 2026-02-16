@@ -208,6 +208,7 @@ interface MakeMicrophoneRendererProps {
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  gamePhase?: string;
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -218,12 +219,20 @@ export default function MakeMicrophoneRenderer({
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
+  gamePhase,
 }: MakeMicrophoneRendererProps) {
   // ──────────────────────────────────────────────────────────────────────────
   // STATE
   // ──────────────────────────────────────────────────────────────────────────
 
-  const [currentPhase, setCurrentPhase] = useState<Phase>('hook');
+  // Phase state - use gamePhase from props if valid, otherwise default to 'hook'
+  const [currentPhase, setCurrentPhase] = useState<Phase>(() => {
+    if (gamePhase && PHASES.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  });
+
   const [isMobile, setIsMobile] = useState(false);
 
   // Prediction states
@@ -259,6 +268,13 @@ export default function MakeMicrophoneRenderer({
   // ──────────────────────────────────────────────────────────────────────────
   // EFFECTS
   // ──────────────────────────────────────────────────────────────────────────
+
+  // Sync phase with gamePhase prop changes (for test framework)
+  useEffect(() => {
+    if (gamePhase && PHASES.includes(gamePhase as Phase) && gamePhase !== currentPhase) {
+      setCurrentPhase(gamePhase as Phase);
+    }
+  }, [gamePhase, currentPhase]);
 
   // Responsive detection
   useEffect(() => {
@@ -352,31 +368,46 @@ export default function MakeMicrophoneRenderer({
     </div>
   );
 
-  const renderNavDots = () => (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '8px',
-      padding: '16px 0',
-    }}>
-      {PHASES.map((p, i) => (
-        <button
-          key={p}
-          onClick={() => goToPhase(p)}
-          style={{
-            width: currentPhase === p ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
-            border: 'none',
-            background: PHASES.indexOf(currentPhase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-          }}
-          aria-label={`Go to ${p} phase`}
-        />
-      ))}
-    </div>
-  );
+  const renderNavDots = () => {
+    const phaseLabels: Record<Phase, string> = {
+      hook: 'explore',
+      predict: 'predict',
+      play: 'experiment',
+      review: 'review',
+      twist_predict: 'twist predict',
+      twist_play: 'twist experiment',
+      twist_review: 'twist review',
+      transfer: 'apply',
+      test: 'quiz',
+      mastery: 'transfer',
+    };
+
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        gap: '8px',
+        padding: '16px 0',
+      }}>
+        {PHASES.map((p, i) => (
+          <button
+            key={p}
+            onClick={() => goToPhase(p)}
+            style={{
+              width: currentPhase === p ? '24px' : '8px',
+              height: '8px',
+              borderRadius: '4px',
+              border: 'none',
+              background: PHASES.indexOf(currentPhase) >= i ? colors.accent : 'rgba(148,163,184,0.7)',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+            }}
+            aria-label={`Go to ${phaseLabels[p]} phase`}
+          />
+        ))}
+      </div>
+    );
+  };
 
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, #0891b2)`,
@@ -441,7 +472,7 @@ export default function MakeMicrophoneRenderer({
             opacity={0.4 + (i * 0.15)}
           />
         ))}
-        <text x="60" y={height/2 + 50} textAnchor="middle" fill={colors.accent} fontSize="10">
+        <text x="60" y={height/2 + 50} textAnchor="middle" fill={colors.accent} fontSize="11">
           Sound Waves
         </text>
 
@@ -459,7 +490,7 @@ export default function MakeMicrophoneRenderer({
           strokeWidth="2"
           transform={`translate(${diaphragmOffset}, 0)`}
         />
-        <text x="155" y={height/2 + 55} textAnchor="middle" fill="#9CA3AF" fontSize="9">
+        <text x="155" y={height/2 + 55} textAnchor="middle" fill="#9CA3AF" fontSize="11">
           Diaphragm
         </text>
 
@@ -474,16 +505,16 @@ export default function MakeMicrophoneRenderer({
               fill="#F59E0B"
               rx="3"
             />
-            <text x="177" y={height/2 + 25} textAnchor="middle" fill="#F59E0B" fontSize="8">
+            <text x="177" y={height/2 + 25} textAnchor="middle" fill="#F59E0B" fontSize="11">
               Coil
             </text>
 
             {/* Magnet */}
             <rect x="195" y={height/2 - 30} width="30" height="60" fill="#DC2626" rx="4" />
-            <text x="210" y={height/2 + 5} textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">
+            <text x="210" y={height/2 + 5} textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">
               N S
             </text>
-            <text x="210" y={height/2 + 45} textAnchor="middle" fill="#DC2626" fontSize="8">
+            <text x="210" y={height/2 + 45} textAnchor="middle" fill="#DC2626" fontSize="11">
               Magnet
             </text>
 
@@ -501,7 +532,7 @@ export default function MakeMicrophoneRenderer({
           <>
             {/* Backplate (condenser) */}
             <rect x="175" y={height/2 - 25} width="8" height="50" fill="#3B82F6" />
-            <text x="179" y={height/2 + 45} textAnchor="middle" fill="#3B82F6" fontSize="8">
+            <text x="179" y={height/2 + 45} textAnchor="middle" fill="#3B82F6" fontSize="11">
               Backplate
             </text>
 
@@ -510,7 +541,7 @@ export default function MakeMicrophoneRenderer({
             <line x1="175" y1={height/2 - 10} x2="175" y2={height/2 + 10} stroke="#6B7280" strokeWidth="2" />
 
             {/* Bias voltage */}
-            <text x="210" y={height/2} fill="#3B82F6" fontSize="9">
+            <text x="210" y={height/2} fill="#3B82F6" fontSize="11">
               48V bias
             </text>
           </>
@@ -557,7 +588,7 @@ export default function MakeMicrophoneRenderer({
             {/* Audio input */}
             <g transform="translate(30, 60)">
               <rect width="80" height="60" fill="#374151" rx="8" />
-              <text x="40" y="25" textAnchor="middle" fill="white" fontSize="10">
+              <text x="40" y="25" textAnchor="middle" fill="white" fontSize="11">
                 AUDIO IN
               </text>
               <path
@@ -574,7 +605,7 @@ export default function MakeMicrophoneRenderer({
             <path d="M 115 90 L 145 90 L 140 85 M 145 90 L 140 95" fill="none" stroke="#22C55E" strokeWidth="2">
               <animate attributeName="opacity" values="0.5;1;0.5" dur="0.5s" repeatCount="indefinite" />
             </path>
-            <text x="130" y="105" textAnchor="middle" fill="#22C55E" fontSize="9">Electric</text>
+            <text x="130" y="105" textAnchor="middle" fill="#22C55E" fontSize="11">Electric</text>
 
             {/* Speaker cone */}
             <g transform="translate(160, 50)">
@@ -586,7 +617,7 @@ export default function MakeMicrophoneRenderer({
               />
               <rect x="100" y="40" width="30" height="20" fill="#F59E0B" rx="3" />
               <rect x="130" y="35" width="20" height="30" fill="#DC2626" rx="3" />
-              <text x="90" y="90" textAnchor="middle" fill="#94a3b8" fontSize="10">Speaker</text>
+              <text x="90" y="90" textAnchor="middle" fill="#94a3b8" fontSize="11">Speaker</text>
             </g>
 
             {/* Sound waves out */}
@@ -605,7 +636,7 @@ export default function MakeMicrophoneRenderer({
                 <animate attributeName="rx" values={`${10 + i * 8};${15 + i * 8};${10 + i * 8}`} dur="0.5s" repeatCount="indefinite" />
               </ellipse>
             ))}
-            <text x="360" y="120" textAnchor="middle" fill={colors.accent} fontSize="10">Sound Out</text>
+            <text x="360" y="120" textAnchor="middle" fill={colors.accent} fontSize="11">Sound Out</text>
           </>
         ) : (
           <>
@@ -623,7 +654,7 @@ export default function MakeMicrophoneRenderer({
                 opacity={0.3 + i * 0.2}
               />
             ))}
-            <text x="60" y="120" textAnchor="middle" fill={colors.accent} fontSize="10">Sound In</text>
+            <text x="60" y="120" textAnchor="middle" fill={colors.accent} fontSize="11">Sound In</text>
 
             {/* Speaker cone (as mic) */}
             <g transform="translate(140, 50)">
@@ -635,19 +666,19 @@ export default function MakeMicrophoneRenderer({
               />
               <rect x="0" y="40" width="30" height="20" fill="#F59E0B" rx="3" />
               <rect x="-20" y="35" width="20" height="30" fill="#DC2626" rx="3" />
-              <text x="20" y="90" textAnchor="middle" fill="#94a3b8" fontSize="10">Same Speaker!</text>
+              <text x="20" y="90" textAnchor="middle" fill="#94a3b8" fontSize="11">Same Speaker!</text>
             </g>
 
             {/* Arrow */}
             <path d="M 220 80 L 250 80 L 245 75 M 250 80 L 245 85" fill="none" stroke="#22C55E" strokeWidth="2">
               <animate attributeName="opacity" values="0.5;1;0.5" dur="0.5s" repeatCount="indefinite" />
             </path>
-            <text x="235" y="95" textAnchor="middle" fill="#22C55E" fontSize="9">Electric</text>
+            <text x="235" y="95" textAnchor="middle" fill="#22C55E" fontSize="11">Electric</text>
 
             {/* Audio output */}
             <g transform="translate(270, 60)">
               <rect width="100" height="60" fill="#374151" rx="8" />
-              <text x="50" y="20" textAnchor="middle" fill="white" fontSize="10">AUDIO OUT</text>
+              <text x="50" y="20" textAnchor="middle" fill="white" fontSize="11">AUDIO OUT</text>
               <path
                 d={`M 15 40 ${Array.from({ length: 14 }, (_, i) =>
                   `L ${15 + i * 5} ${40 - Math.sin(soundWavePhase + i * 0.5) * 8}`
@@ -656,7 +687,7 @@ export default function MakeMicrophoneRenderer({
                 stroke="#22C55E"
                 strokeWidth="2"
               />
-              <text x="50" y="55" textAnchor="middle" fill="#9CA3AF" fontSize="8">(weaker signal)</text>
+              <text x="50" y="55" textAnchor="middle" fill="#9CA3AF" fontSize="11">(weaker signal)</text>
             </g>
           </>
         )}
@@ -743,11 +774,13 @@ export default function MakeMicrophoneRenderer({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
+        padding: '48px 24px 100px 24px',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -863,11 +896,13 @@ export default function MakeMicrophoneRenderer({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
+        padding: '48px 24px 100px 24px',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Microphone Simulator
           </h2>
@@ -899,7 +934,14 @@ export default function MakeMicrophoneRenderer({
                 step="0.5"
                 value={soundFrequency}
                 onChange={(e) => { setSoundFrequency(parseFloat(e.target.value)); handleExperiment(); }}
-                style={{ width: '100%', cursor: 'pointer' }}
+                style={{
+                  width: '100%',
+                  cursor: 'pointer',
+                  height: '20px',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6'
+                } as React.CSSProperties}
               />
             </div>
 
@@ -916,7 +958,14 @@ export default function MakeMicrophoneRenderer({
                 step="0.1"
                 value={soundAmplitude}
                 onChange={(e) => { setSoundAmplitude(parseFloat(e.target.value)); handleExperiment(); }}
-                style={{ width: '100%', cursor: 'pointer' }}
+                style={{
+                  width: '100%',
+                  cursor: 'pointer',
+                  height: '20px',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6'
+                } as React.CSSProperties}
               />
             </div>
 
@@ -965,20 +1014,49 @@ export default function MakeMicrophoneRenderer({
             borderRadius: '12px',
             padding: '16px',
             marginBottom: '24px',
-            textAlign: 'center',
           }}>
-            <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
-              Notice: Louder sounds = bigger diaphragm movement = stronger signal. Condenser mics are more sensitive but need phantom power (48V).
+            <h4 style={{ ...typo.h3, color: colors.warning, marginTop: 0, marginBottom: '12px' }}>What This Visualization Shows:</h4>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: '0 0 12px 0' }}>
+              Watch how sound pressure waves (left) cause the diaphragm to vibrate. This mechanical motion is converted to electrical voltage (right) through <strong>electromagnetic induction</strong> (dynamic mic) or <strong>capacitance changes</strong> (condenser mic).
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: '0 0 12px 0' }}>
+              <strong>When you increase frequency:</strong> The waves oscillate faster, creating more cycles per second. <strong>When you increase amplitude:</strong> The diaphragm moves further, generating stronger voltage.
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <strong>Why this matters:</strong> Every voice assistant, phone call, and recording studio relies on this acoustic-to-electric transduction. Understanding it explains why different microphone types suit different applications - condenser mics capture subtle details for studios, while rugged dynamic mics excel in live sound where durability matters.
             </p>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={hasExperimented ? primaryButtonStyle : disabledButtonStyle}
-            disabled={!hasExperimented}
-          >
-            {hasExperimented ? 'Understand the Physics' : `Experiment ${3 - experimentCount} more times...`}
-          </button>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button
+              onClick={() => {
+                playSound('click');
+                const currentIndex = PHASES.indexOf(currentPhase);
+                if (currentIndex > 0) {
+                  goToPhase(PHASES[currentIndex - 1]);
+                }
+              }}
+              style={{
+                flex: 1,
+                padding: '14px',
+                borderRadius: '10px',
+                border: `1px solid ${colors.border}`,
+                background: 'transparent',
+                color: colors.textSecondary,
+                cursor: 'pointer',
+                fontWeight: 600,
+              }}
+            >
+              Back
+            </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={hasExperimented ? { ...primaryButtonStyle, flex: 2 } : { ...disabledButtonStyle, flex: 2 }}
+              disabled={!hasExperimented}
+            >
+              {hasExperimented ? 'Next' : `Experiment ${3 - experimentCount} more times...`}
+            </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -992,11 +1070,13 @@ export default function MakeMicrophoneRenderer({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
+        padding: '48px 24px 100px 24px',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             How Microphones Work
           </h2>
@@ -1078,11 +1158,13 @@ export default function MakeMicrophoneRenderer({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
+        padding: '48px 24px 100px 24px',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1155,11 +1237,13 @@ export default function MakeMicrophoneRenderer({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
+        padding: '48px 24px 100px 24px',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Speaker / Microphone: Same Device, Both Directions!
           </h2>
@@ -1246,11 +1330,13 @@ export default function MakeMicrophoneRenderer({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
+        padding: '48px 24px 100px 24px',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Transducer Reciprocity
           </h2>
@@ -1339,11 +1425,13 @@ export default function MakeMicrophoneRenderer({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
+        padding: '48px 24px 100px 24px',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
@@ -1475,11 +1563,13 @@ export default function MakeMicrophoneRenderer({
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          padding: '48px 24px 100px 24px',
         }}>
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ maxWidth: '600px', margin: '20px auto 0', textAlign: 'center' }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>
               {passed ? 'Trophy' : 'Book'}
             </div>
@@ -1528,11 +1618,13 @@ export default function MakeMicrophoneRenderer({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
+        padding: '48px 24px 100px 24px',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',

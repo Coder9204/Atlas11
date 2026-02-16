@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 interface TunedMassDamperRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  gamePhase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
+
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 const colors = {
   textPrimary: '#f8fafc',
@@ -107,11 +110,25 @@ interface BuildingState {
 }
 
 const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
-  phase,
+  phase: inputPhase,
+  gamePhase,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Normalize phase - default to hook for invalid phases
+  // Accept both 'phase' and 'gamePhase' props for compatibility
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const externalPhase = gamePhase || inputPhase;
+  const normalizedInputPhase: Phase | null = externalPhase && validPhases.includes(externalPhase as Phase) ? externalPhase as Phase : null;
+
+  // Internal phase management for self-managing navigation
+  const [internalPhase, setInternalPhase] = useState<Phase>('hook');
+  // Use external prop if explicitly provided (for testing), otherwise use internal state
+  const phase = normalizedInputPhase || internalPhase;
+
+  console.log('[TunedMassDamper] Rendering phase:', phase);
+
   // Simulation state
   const [building, setBuilding] = useState<BuildingState>({
     x: 0,
@@ -1287,8 +1304,13 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
           step="0.1"
           value={earthquakeFreq}
           onChange={(e) => setEarthquakeFreq(parseFloat(e.target.value))}
-          style={{ width: '100%' }}
+          onInput={(e) => setEarthquakeFreq(parseFloat((e.target as HTMLInputElement).value))}
+          style={{ width: '100%', accentColor: colors.accent, appearance: 'auto', WebkitAppearance: 'slider-horizontal', touchAction: 'pan-y', height: '20px' }}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: colors.textMuted, marginTop: '4px' }}>
+          <span>0.3 Hz</span>
+          <span>2.0 Hz</span>
+        </div>
       </div>
 
       <div>
@@ -1305,7 +1327,11 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
             setDamperTuning(parseFloat(e.target.value));
             resetSimulation();
           }}
-          style={{ width: '100%' }}
+          onInput={(e) => {
+            setDamperTuning(parseFloat((e.target as HTMLInputElement).value));
+            resetSimulation();
+          }}
+          style={{ width: '100%', accentColor: colors.accent, appearance: 'auto', WebkitAppearance: 'slider-horizontal', touchAction: 'pan-y', height: '20px' }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: colors.textMuted }}>
           <span>Mis-tuned</span>
@@ -1512,7 +1538,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
             borderLeft: `3px solid ${colors.building}`,
           }}>
             <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
-              <strong style={{ color: colors.textPrimary }}>Observe:</strong> Watch how the TMD (red mass) moves in the opposite direction to the building. This counter-motion absorbs vibration energy.
+              <strong style={{ color: colors.textPrimary }}>Observe:</strong> Watch how the TMD (red mass) moves in the opposite direction to the building. This counter-motion absorbs vibration energy. When you increase the earthquake frequency near 1.0 Hz (the building's natural frequency), the amplitude increases dramatically - this is resonance.
             </p>
           </div>
 
@@ -1525,7 +1551,17 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
             padding: '16px',
             borderRadius: '12px',
           }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
+            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Physics Concepts:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Resonance:</strong> Every structure has a natural frequency at which it vibrates most easily. When forced vibrations match this frequency, the amplitude grows dramatically.
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Tuned Mass Damper (TMD):</strong> A secondary mass-spring system tuned to the structure's natural frequency. It oscillates out of phase, absorbing energy and reducing the structure's motion.
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Why This Matters:</strong> TMDs protect skyscrapers from earthquakes and wind, bridges from pedestrian-induced vibrations, and power lines from dangerous oscillations. Taipei 101's 730-ton damper reduces building sway by 40%, making it habitable during typhoons.
+            </p>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', marginTop: '16px' }}>Try These Experiments:</h4>
             <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
               <li>Toggle damper on/off - compare max amplitude</li>
               <li>Set frequency to 1.0 Hz (resonance) for dramatic effect</li>
@@ -1557,7 +1593,9 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
               {wasCorrect ? '✓ Correct!' : '✗ Not Quite!'}
             </h3>
             <p style={{ color: colors.textPrimary }}>
-              The tuned mass damper reduces the building's shaking dramatically!
+              {wasCorrect
+                ? 'You predicted correctly! The tuned mass damper reduces the building\'s shaking dramatically by absorbing vibration energy.'
+                : 'The tuned mass damper reduces the building\'s shaking dramatically! Your prediction suggested otherwise, but the TMD actually absorbs energy from the building.'}
             </p>
           </div>
 

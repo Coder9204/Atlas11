@@ -851,6 +851,10 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
               </p>
             </div>
 
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '20px', border: `1px solid rgba(255,255,255,0.1)` }}>
+              {renderEntropySVG(460, 300, false)}
+            </div>
+
             {[
               { icon: '\u{1F4CA}', title: 'What is Entropy?', color: colors.accent, points: ['A measure of disorder or randomness in a system', 'Counts the number of microscopic arrangements (microstates)', 'S = k_B \u00D7 ln(\u03A9) - Boltzmann famous formula', 'Higher entropy = more possible configurations', 'Nature spontaneously moves toward maximum entropy'] },
               { icon: '\u2696\uFE0F', title: 'The Second Law', color: colors.hot, points: ['Total entropy of an isolated system never decreases', '\u0394S_universe >= 0 (always!)', 'Processes tend toward thermodynamic equilibrium', 'Heat spontaneously flows from hot to cold', 'Gives time its arrow - distinguishes past from future'] },
@@ -1074,6 +1078,10 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
                   The entropy bill always gets paid!
                 </p>
               </div>
+            </div>
+
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '20px', border: `1px solid rgba(255,255,255,0.1)` }}>
+              {renderHeatFlowSVG(460, 300)}
             </div>
 
             <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', textAlign: 'center', marginBottom: '16px', border: `1px solid ${colors.accent}` }}>
