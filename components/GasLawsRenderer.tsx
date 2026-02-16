@@ -586,213 +586,229 @@ const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhas
     );
   };
 
-  // Piston SVG for Boyle's Law
+  // Piston SVG for Boyle's Law - PV chart with curve
   const renderPistonSVG = () => {
-    const containerHeight = (volume / 100) * 150;
-    const pressureIntensity = Math.min(1, (pressure - 0.5) / 3.5);
+    // Chart dimensions inside the SVG
+    const chartLeft = 80;
+    const chartRight = 420;
+    const chartTop = 35;
+    const chartBottom = 250;
+    const chartW = chartRight - chartLeft;
+    const chartH = chartBottom - chartTop;
+
+    // Generate Boyle's Law curve: P = 100/V, V from 25 to 200
+    // Map P range 0.5 to 4.0 across full chartH
+    const pMin = 0.5;
+    const pMax = 4.0;
+    const curvePoints: string[] = [];
+    for (let v = 25; v <= 200; v += 5) {
+      const p = 100 / v; // PV = 100
+      const x = chartLeft + ((v - 25) / 175) * chartW;
+      const y = chartBottom - ((p - pMin) / (pMax - pMin)) * chartH;
+      curvePoints.push(`${x.toFixed(1)} ${y.toFixed(1)}`);
+    }
+    const curvePath = `M ${curvePoints[0]} ${curvePoints.slice(1).map(pt => `L ${pt}`).join(' ')}`;
+
+    // Current operating point
+    const pointX = chartLeft + ((volume - 25) / 175) * chartW;
+    const pointY = chartBottom - ((pressure - pMin) / (pMax - pMin)) * chartH;
+
+    // Color based on pressure level
+    const pointColor = pressure > 2.5 ? colors.error : pressure > 1.5 ? colors.warning : colors.success;
+
+    // Color zone indicator (low = green, high = red)
+    const lowZoneY = chartBottom;
+    const highZoneY = chartTop;
 
     return (
-      <svg viewBox="0 0 250 220" style={{ width: '100%', height: '100%' }}>
+      <svg viewBox="0 0 450 300" style={{ width: '100%', height: '100%' }}>
         <defs>
-          <linearGradient id="gasContainerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#0f172a" />
-            <stop offset="15%" stopColor="#1e293b" />
-            <stop offset="85%" stopColor="#1e293b" />
-            <stop offset="100%" stopColor="#0f172a" />
-          </linearGradient>
-          <linearGradient id="gasPistonGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#94a3b8" />
-            <stop offset="50%" stopColor="#64748b" />
-            <stop offset="100%" stopColor="#334155" />
-          </linearGradient>
-          <radialGradient id="gasParticleGrad" cx="30%" cy="30%" r="70%">
-            <stop offset="0%" stopColor="#c4b5fd" />
-            <stop offset="100%" stopColor="#7c3aed" />
-          </radialGradient>
-          <radialGradient id="gasParticleHot" cx="30%" cy="30%" r="70%">
-            <stop offset="0%" stopColor="#fcd34d" />
-            <stop offset="100%" stopColor="#d97706" />
-          </radialGradient>
-          <filter id="particleGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="2" result="blur" />
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-          <filter id="containerShadow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="2" dy="2" stdDeviation="3" floodOpacity="0.3" />
-          </filter>
+          <linearGradient id="pvCurveGrad" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stopColor="#10B981" />
+            <stop offset="50%" stopColor="#F59E0B" />
+            <stop offset="100%" stopColor="#EF4444" />
+          </linearGradient>
+          <linearGradient id="pressureZoneGrad" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stopColor="#10B981" stopOpacity="0.08" />
+            <stop offset="100%" stopColor="#EF4444" stopOpacity="0.08" />
+          </linearGradient>
         </defs>
 
-        {/* Background group */}
-        <g id="background-layer">
-          <rect width="250" height="220" fill={colors.bgPrimary} rx="8" />
-          <pattern id="gridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
-            <rect width="20" height="20" fill="none" stroke={colors.border} strokeWidth="0.5" opacity="0.3" />
-          </pattern>
-          <rect width="250" height="220" fill="url(#gridPattern)" rx="8" />
+        {/* Background */}
+        <g id="bg-layer">
+          <rect width="450" height="300" fill={colors.bgPrimary} rx="8" />
+          <rect x={chartLeft} y={chartTop} width={chartW} height={chartH} fill="url(#pressureZoneGrad)" />
         </g>
 
-        {/* Cylinder group */}
-        <g id="cylinder-layer" filter="url(#containerShadow)">
-          <rect x="25" y="10" width="200" height="180" rx="6" fill="url(#gasContainerGrad)" stroke={colors.borderLight} strokeWidth="2" />
+        {/* Grid lines */}
+        <g id="grid-layer">
+          {[0.25, 0.5, 0.75].map((frac, i) => (
+            <line key={`hg${i}`} x1={chartLeft} y1={chartTop + frac * chartH} x2={chartRight} y2={chartTop + frac * chartH}
+              stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+          ))}
+          {[0.25, 0.5, 0.75].map((frac, i) => (
+            <line key={`vg${i}`} x1={chartLeft + frac * chartW} y1={chartTop} x2={chartLeft + frac * chartW} y2={chartBottom}
+              stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+          ))}
         </g>
 
-        {/* Molecules group */}
-        <g id="molecules-layer">
-          {molecules.map((mol, i) => {
-            const adjustedY = mol.y - (150 - containerHeight) + 25;
-            if (adjustedY > 35 + (150 - containerHeight) && adjustedY < 180) {
-              return (
-                <circle
-                  key={i}
-                  cx={mol.x + 25}
-                  cy={adjustedY}
-                  r="6"
-                  fill={pressure > 2 ? "url(#gasParticleHot)" : "url(#gasParticleGrad)"}
-                  filter="url(#particleGlow)"
-                  opacity={0.9}
-                />
-              );
-            }
-            return null;
-          })}
+        {/* Axes */}
+        <g id="axes-layer">
+          <line x1={chartLeft} y1={chartTop} x2={chartLeft} y2={chartBottom} stroke={colors.textSecondary} strokeWidth="2" />
+          <line x1={chartLeft} y1={chartBottom} x2={chartRight} y2={chartBottom} stroke={colors.textSecondary} strokeWidth="2" />
         </g>
 
-        {/* Piston group */}
-        <g id="piston-layer">
-          <rect
-            x="30"
-            y={15 + (150 - containerHeight)}
-            width="190"
-            height="20"
-            rx="3"
-            fill="url(#gasPistonGrad)"
-            stroke={colors.borderLight}
-            strokeWidth="1"
-          />
-          <rect x="110" y="0" width="30" height={20 + (150 - containerHeight)} fill={colors.borderLight} rx="2" />
-        </g>
+        {/* Y axis label - Pressure */}
+        <text x="20" y={chartTop + chartH / 2} textAnchor="middle" fill={colors.textSecondary} fontSize="13" fontWeight="bold"
+          transform={`rotate(-90, 20, ${chartTop + chartH / 2})`}>P (atm)</text>
 
-        {/* Labels group */}
-        <g id="labels-layer">
-          <text x="15" y="100" fill="#ffffff" fontSize="10" fontWeight="bold">Cylinder</text>
-          <text x="15" y="112" fill={colors.textMuted} fontSize="8">Container</text>
-          <text x="185" y="30" fill="#ffffff" fontSize="10" fontWeight="bold">Piston</text>
-          <text x="185" y="42" fill={colors.textMuted} fontSize="8">Movable</text>
-          <text x="125" y="205" textAnchor="middle" fill="#ffffff" fontSize="14" fontWeight="bold">
-            P = {pressure.toFixed(2)} atm
-          </text>
-          <text x="125" y="218" textAnchor="middle" fill={colors.textSecondary} fontSize="12">
-            V = {volume}%
+        {/* X axis label - Volume */}
+        <text x={chartLeft + chartW / 2} y="286" textAnchor="middle" fill={colors.textSecondary} fontSize="13" fontWeight="bold">Volume (%)</text>
+
+        {/* Y tick labels */}
+        <text x={chartLeft - 8} y={chartBottom + 4} textAnchor="end" fill={colors.textMuted} fontSize="11">0.5</text>
+        <text x={chartLeft - 8} y={chartTop + chartH * 0.5 + 4} textAnchor="end" fill={colors.textMuted} fontSize="11">2.3</text>
+        <text x={chartLeft - 8} y={chartTop + 4} textAnchor="end" fill={colors.textMuted} fontSize="11">4.0</text>
+
+        {/* X tick labels */}
+        <text x={chartLeft} y={chartBottom + 16} textAnchor="middle" fill={colors.textMuted} fontSize="11">25</text>
+        <text x={chartLeft + chartW * 0.5} y={chartBottom + 16} textAnchor="middle" fill={colors.textMuted} fontSize="11">113</text>
+        <text x={chartRight} y={chartBottom + 16} textAnchor="middle" fill={colors.textMuted} fontSize="11">200</text>
+
+        {/* Data layer */}
+        <g id="data-layer">
+          {/* PV curve */}
+          <path d={curvePath} fill="none" stroke={colors.accent} strokeWidth="3" opacity="0.8" />
+
+          {/* Reference line at P=1 (baseline) */}
+          <line x1={chartLeft} y1={chartBottom - ((1 - pMin) / (pMax - pMin)) * chartH}
+            x2={chartRight} y2={chartBottom - ((1 - pMin) / (pMax - pMin)) * chartH}
+            stroke={colors.success} strokeWidth="1" strokeDasharray="6 3" opacity="0.5" />
+          <text x={chartRight + 4} y={chartBottom - ((1 - pMin) / (pMax - pMin)) * chartH + 4}
+            fill={colors.success} fontSize="11">baseline</text>
+
+          {/* Interactive point */}
+          <circle cx={pointX} cy={pointY} r={8} fill={pointColor} filter="url(#glow)" stroke="#fff" strokeWidth={2} />
+
+          {/* Value label near point */}
+          <text x={Math.min(pointX + 14, chartRight - 60)} y={Math.max(pointY - 14, chartTop + 16)} fill={pointColor} fontSize="12" fontWeight="bold">
+            P={pressure.toFixed(2)}
           </text>
         </g>
+
+        {/* Color zone legend */}
+        <g id="legend-layer">
+          <circle cx={chartRight - 80} cy={chartTop + 12} r={4} fill="#10B981" />
+          <text x={chartRight - 72} y={chartTop + 16} fill={colors.textMuted} fontSize="11">Low</text>
+          <circle cx={chartRight - 40} cy={chartTop + 12} r={4} fill="#EF4444" />
+          <text x={chartRight - 32} y={chartTop + 16} fill={colors.textMuted} fontSize="11">High</text>
+        </g>
+
+        {/* Title */}
+        <text x={chartLeft + chartW / 2} y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">
+          Boyle's Law: P × V = constant
+        </text>
       </svg>
     );
   };
 
-  // Balloon SVG for Charles's Law
+  // Balloon SVG for Charles's Law - VT chart with curve
   const renderBalloonSVG = () => {
-    const containerHeight = (twistVolume / 100) * 150;
     const isHot = twistTemp > 350;
     const isCold = twistTemp < 250;
 
+    // Chart dimensions
+    const chartLeft = 70;
+    const chartRight = 420;
+    const chartTop = 30;
+    const chartBottom = 240;
+    const chartW = chartRight - chartLeft;
+    const chartH = chartBottom - chartTop;
+
+    // Charles's Law curve: V = (T/300)*100, T from 200 to 500
+    const curvePoints: string[] = [];
+    for (let t = 200; t <= 500; t += 10) {
+      const v = (t / 300) * 100;
+      const x = chartLeft + ((t - 200) / 300) * chartW;
+      const y = chartBottom - ((v - 50) / 130) * chartH;
+      curvePoints.push(`${x.toFixed(1)} ${y.toFixed(1)}`);
+    }
+    const curvePath = `M ${curvePoints[0]} ${curvePoints.slice(1).map(pt => `L ${pt}`).join(' ')}`;
+
+    // Current operating point
+    const currentV = (twistTemp / 300) * 100;
+    const pointX = chartLeft + ((twistTemp - 200) / 300) * chartW;
+    const pointY = chartBottom - ((currentV - 50) / 130) * chartH;
+
+    const pointColor = isHot ? colors.error : isCold ? '#3b82f6' : colors.warning;
+
     return (
-      <svg viewBox="0 0 250 220" style={{ width: '100%', height: '100%' }}>
+      <svg viewBox="0 0 450 300" style={{ width: '100%', height: '100%' }}>
         <defs>
-          <radialGradient id="balloonGrad" cx="40%" cy="35%" r="65%">
-            <stop offset="0%" stopColor={isHot ? '#fef3c7' : isCold ? '#cffafe' : '#ddd6fe'} stopOpacity="0.4" />
-            <stop offset="50%" stopColor={isHot ? '#f59e0b' : isCold ? '#06b6d4' : '#8b5cf6'} stopOpacity="0.25" />
-            <stop offset="100%" stopColor={isHot ? '#d97706' : isCold ? '#0891b2' : '#7c3aed'} stopOpacity="0.15" />
-          </radialGradient>
-          <linearGradient id="balloonBorder" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor={isHot ? '#fbbf24' : isCold ? '#22d3ee' : '#a78bfa'} />
-            <stop offset="100%" stopColor={isHot ? '#d97706' : isCold ? '#0891b2' : '#7c3aed'} />
-          </linearGradient>
-          <linearGradient id="heatSource" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#ef4444" stopOpacity={(twistTemp - 200) / 300 * 0.8} />
-            <stop offset="100%" stopColor="#fef3c7" stopOpacity={(twistTemp - 200) / 300 * 0.2} />
-          </linearGradient>
-          <radialGradient id="tempParticle" cx="30%" cy="30%" r="70%">
-            <stop offset="0%" stopColor={isHot ? '#fef08a' : isCold ? '#a5f3fc' : '#ddd6fe'} />
-            <stop offset="100%" stopColor={isHot ? '#d97706' : isCold ? '#0891b2' : '#7c3aed'} />
-          </radialGradient>
-          <filter id="balloonGlow" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="5" result="glow" />
+          <filter id="glow2" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
             <feMerge>
-              <feMergeNode in="glow" />
+              <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
         </defs>
 
         {/* Background */}
-        <rect width="250" height="220" fill={colors.bgPrimary} rx="8" />
+        <rect width="450" height="300" fill={colors.bgPrimary} rx="8" />
 
-        {/* Grid */}
-        <rect width="250" height="220" fill="url(#gridPattern)" rx="8" />
-
-        {/* Heat source */}
-        <rect x="50" y="185" width="150" height="15" rx="3" fill="url(#heatSource)" />
-        {[0, 1, 2, 3, 4].map(i => (
-          <rect key={i} x={60 + i * 30} y="188" width="20" height="8" rx="2"
-            fill={isHot ? '#dc2626' : '#374151'} opacity={isHot ? 0.8 : 0.3} />
+        {/* Grid lines */}
+        {[0.25, 0.5, 0.75].map((frac, i) => (
+          <line key={`hg2${i}`} x1={chartLeft} y1={chartTop + frac * chartH} x2={chartRight} y2={chartTop + frac * chartH}
+            stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+        ))}
+        {[0.25, 0.5, 0.75].map((frac, i) => (
+          <line key={`vg2${i}`} x1={chartLeft + frac * chartW} y1={chartTop} x2={chartLeft + frac * chartW} y2={chartBottom}
+            stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
         ))}
 
-        {/* Balloon */}
-        <ellipse
-          cx="125"
-          cy={95 - (containerHeight - 100) / 4}
-          rx={70 + (twistVolume - 100) * 0.35}
-          ry={containerHeight / 2 + 20}
-          fill="url(#balloonGrad)"
-          stroke="url(#balloonBorder)"
-          strokeWidth="3"
-          filter="url(#balloonGlow)"
-        />
+        {/* Axes */}
+        <line x1={chartLeft} y1={chartTop} x2={chartLeft} y2={chartBottom} stroke={colors.textSecondary} strokeWidth="2" />
+        <line x1={chartLeft} y1={chartBottom} x2={chartRight} y2={chartBottom} stroke={colors.textSecondary} strokeWidth="2" />
 
-        {/* Balloon tie */}
-        <path
-          d={`M120,${95 - (containerHeight - 100) / 4 + containerHeight / 2 + 20} L125,${105 - (containerHeight - 100) / 4 + containerHeight / 2 + 20} L130,${95 - (containerHeight - 100) / 4 + containerHeight / 2 + 20}`}
-          fill="none"
-          stroke={isHot ? '#f59e0b' : isCold ? '#06b6d4' : '#8b5cf6'}
-          strokeWidth="4"
-          strokeLinecap="round"
-        />
-        <line x1="125" y1={105 - (containerHeight - 100) / 4 + containerHeight / 2 + 20} x2="125" y2="185"
-          stroke={colors.textMuted} strokeWidth="2" strokeDasharray="4 2" />
+        {/* Y axis label */}
+        <text x="18" y={chartTop + chartH / 2} textAnchor="middle" fill={colors.textSecondary} fontSize="13" fontWeight="bold"
+          transform={`rotate(-90, 18, ${chartTop + chartH / 2})`}>Volume (%)</text>
 
-        {/* Molecules inside balloon */}
-        {molecules.slice(0, 20).map((mol, i) => {
-          const balloonRx = 70 + (twistVolume - 100) * 0.35;
-          const balloonRy = containerHeight / 2 + 20;
-          const balloonCy = 95 - (containerHeight - 100) / 4;
-          const normalizedX = (mol.x - 100) / 100;
-          const normalizedY = (mol.y - 80) / 80;
-          const cx = 125 + normalizedX * (balloonRx * 0.6);
-          const cy = balloonCy + normalizedY * (balloonRy * 0.6);
-          const dx = (cx - 125) / balloonRx;
-          const dy = (cy - balloonCy) / balloonRy;
-          if (dx * dx + dy * dy > 0.7) return null;
+        {/* X axis label */}
+        <text x={chartLeft + chartW / 2} y="280" textAnchor="middle" fill={colors.textSecondary} fontSize="13" fontWeight="bold">Temperature (K)</text>
 
-          return (
-            <circle key={i} cx={cx} cy={cy} r={4 + (twistTemp - 200) / 200}
-              fill="url(#tempParticle)" opacity={0.85} />
-          );
-        })}
+        {/* Y tick labels */}
+        <text x={chartLeft - 8} y={chartBottom + 4} textAnchor="end" fill={colors.textMuted} fontSize="11">50</text>
+        <text x={chartLeft - 8} y={chartTop + chartH * 0.5 + 4} textAnchor="end" fill={colors.textMuted} fontSize="11">115</text>
+        <text x={chartLeft - 8} y={chartTop + 4} textAnchor="end" fill={colors.textMuted} fontSize="11">180</text>
 
-        {/* Pressure indicator */}
-        <rect x="10" y="10" width="50" height="24" rx="4" fill={colors.bgCard} stroke={colors.border} />
-        <text x="35" y="19" textAnchor="middle" fill={colors.textMuted} fontSize="8">PRESSURE</text>
-        <text x="35" y="29" textAnchor="middle" fill={colors.success} fontSize="10" fontWeight="bold">1 atm</text>
+        {/* X tick labels */}
+        <text x={chartLeft} y={chartBottom + 18} textAnchor="middle" fill={colors.textMuted} fontSize="11">200</text>
+        <text x={chartLeft + chartW * 0.5} y={chartBottom + 18} textAnchor="middle" fill={colors.textMuted} fontSize="11">350</text>
+        <text x={chartRight} y={chartBottom + 18} textAnchor="middle" fill={colors.textMuted} fontSize="11">500</text>
 
-        {/* Labels */}
-        <text x="125" y="205" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">
-          T = {twistTemp} K ({Math.round(twistTemp - 273)}°C)
+        {/* VT curve */}
+        <path d={curvePath} fill="none" stroke={colors.warning} strokeWidth="3" opacity="0.8" />
+
+        {/* Interactive point */}
+        <circle cx={pointX} cy={pointY} r={8} fill={pointColor} filter="url(#glow2)" stroke="#fff" strokeWidth={2} />
+
+        {/* Value label near point */}
+        <text x={pointX + 14} y={pointY - 12} fill={pointColor} fontSize="12" fontWeight="bold">
+          V={currentV.toFixed(0)}%
         </text>
-        <text x="125" y="218" textAnchor="middle" fill={colors.textSecondary} fontSize="12">
-          V = {twistVolume.toFixed(0)}%
+
+        {/* Title */}
+        <text x={chartLeft + chartW / 2} y="18" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">
+          Charles's Law: V / T = constant
         </text>
       </svg>
     );
@@ -1029,13 +1045,10 @@ const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhas
               onChange={(e) => setVolume(parseInt(e.target.value))}
               style={{
                 width: '100%',
-                height: '8px',
-                borderRadius: '4px',
-                background: `linear-gradient(to right, ${colors.accent} 0%, ${colors.accent} ${(volume - 25) / 1.75}%, ${colors.border} ${(volume - 25) / 1.75}%, ${colors.border} 100%)`,
-                appearance: 'none',
-                cursor: 'pointer',
-                accentColor: colors.accent,
-                touchAction: 'none',
+                height: '20px',
+                touchAction: 'pan-y',
+                WebkitAppearance: 'none',
+                accentColor: '#3b82f6',
               }}
             />
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
@@ -1189,7 +1202,8 @@ const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhas
               <text x="80" y="88" textAnchor="middle" fill={colors.textMuted} fontSize="11">Cool</text>
               {/* Arrow + fire */}
               <text x="150" y="45" fontSize="20">🔥</text>
-              <path d="M175 45 L215 45 M205 35 L215 45 L205 55" stroke={colors.warning} strokeWidth="3" fill="none" />
+              <path d="M175 45 L215 45" stroke={colors.warning} strokeWidth="3" fill="none" />
+              <path d="M205 35 L215 45 L205 55" stroke={colors.warning} strokeWidth="3" fill="none" />
               {/* After */}
               <ellipse cx="280" cy="45" rx="45" ry="35" fill={`${colors.warning}20`} stroke={colors.warning} strokeWidth="2" strokeDasharray="5 3" />
               <text x="280" y="50" textAnchor="middle" fill={colors.warning} fontSize="14" fontWeight="bold">?</text>
@@ -1296,13 +1310,10 @@ const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhas
               onChange={(e) => setTwistTemp(parseInt(e.target.value))}
               style={{
                 width: '100%',
-                height: '8px',
-                borderRadius: '4px',
-                background: `linear-gradient(to right, ${colors.accentAlt} 0%, ${colors.warning} 50%, ${colors.error} 100%)`,
-                appearance: 'none',
-                cursor: 'pointer',
-                accentColor: colors.warning,
-                touchAction: 'none',
+                height: '20px',
+                touchAction: 'pan-y',
+                WebkitAppearance: 'none',
+                accentColor: '#3b82f6',
               }}
             />
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>

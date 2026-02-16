@@ -499,12 +499,12 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
           style={{
             width: phase === p ? '24px' : '8px',
             height: '8px',
-            minHeight: '44px',
             borderRadius: '4px',
             border: 'none',
             background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
             cursor: 'pointer',
             transition: 'all 0.3s ease',
+            padding: 0,
           }}
           aria-label={phaseLabels[p]}
         />
@@ -527,13 +527,31 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
     minHeight: '44px',
   };
 
-  // Circuit Visualization Component
-  const CircuitVisualization = ({ showLeakage = true }: { showLeakage?: boolean }) => {
-    const width = isMobile ? 340 : 480;
-    const height = isMobile ? 280 : 340;
+  // Circuit Visualization render function
+  const renderCircuitVisualization = (showLeakage = true) => {
+    const width = 480;
+    const height = 340;
+    // Chart area for current imbalance graph
+    const chartLeft = 60;
+    const chartRight = width - 20;
+    const chartTop = 240;
+    const chartBottom = height - 20;
+    const chartH = chartBottom - chartTop;
+    // Build current imbalance curve data points
+    const curvePoints: string[] = [];
+    for (let i = 0; i <= 20; i++) {
+      const x = chartLeft + (i / 20) * (chartRight - chartLeft);
+      const leakVal = (i / 20) * 10;
+      const y = chartBottom - (leakVal / 10) * chartH;
+      curvePoints.push(`${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`);
+    }
+    const curvePath = curvePoints.join(' ');
+    // Interactive point position based on leakageCurrent
+    const pointX = chartLeft + (leakageCurrent / 10) * (chartRight - chartLeft);
+    const pointY = chartBottom - (leakageCurrent / 10) * chartH;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
         <defs>
           <linearGradient id="hotWireGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.hot} stopOpacity="0.8" />
@@ -559,138 +577,101 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
           </filter>
         </defs>
 
-        {/* Power source */}
-        <rect x="20" y={height/2 - 50} width="50" height="100" rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="2" />
-        <text x="45" y={height/2 - 15} textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">120V</text>
-        <text x="45" y={height/2 + 5} textAnchor="middle" fill={colors.textMuted} fontSize="10">AC</text>
-        <text x="45" y={height/2 + 25} textAnchor="middle" fill={colors.textMuted} fontSize="10">Source</text>
+        {/* Circuit schematic group */}
+        <g>
+          {/* Power source */}
+          <rect x="20" y="55" width="50" height="100" rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="2" />
+          <text x="45" y="95" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">120V</text>
+          <text x="45" y="115" textAnchor="middle" fill={colors.textMuted} fontSize="11">AC Source</text>
 
-        {/* Hot wire (top) */}
-        <line
-          x1="70" y1={height/2 - 30} x2={width - 100} y2={height/2 - 30}
-          stroke={gfciTripped ? colors.textMuted : "url(#hotWireGrad)"}
-          strokeWidth="4"
-          filter={gfciTripped ? undefined : "url(#glow)"}
-        />
+          {/* Hot wire (top) */}
+          <line x1="70" y1="75" x2="380" y2="75" stroke={gfciTripped ? colors.textMuted : "url(#hotWireGrad)"} strokeWidth="4" filter={gfciTripped ? undefined : "url(#glow)"} />
 
-        {/* Animated current flow on hot wire */}
-        {!gfciTripped && Array.from({ length: 6 }).map((_, i) => (
-          <circle
-            key={`hot-${i}`}
-            cx={70 + ((animationFrame * 3 + i * 60) % (width - 170))}
-            cy={height/2 - 30}
-            r="5"
-            fill={colors.hot}
-            opacity="0.8"
-          />
-        ))}
+          {/* Animated current flow on hot wire */}
+          {!gfciTripped && Array.from({ length: 6 }).map((_, i) => (
+            <circle key={`hot-${i}`} cx={70 + ((animationFrame * 3 + i * 52) % 310)} cy={75} r="5" fill={colors.hot} opacity="0.8" />
+          ))}
+        </g>
 
-        {/* GFCI box */}
-        <rect
-          x={width/2 - 40} y={height/2 - 60} width="80" height="120"
-          rx="8"
-          fill={colors.bgSecondary}
-          stroke={gfciTripped ? colors.error : colors.accent}
-          strokeWidth="3"
-        />
-        <text x={width/2} y={height/2 - 40} textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="bold">GFCI</text>
+        {/* GFCI box group */}
+        <g>
+          <rect x="200" y="50" width="80" height="120" rx="8" fill={colors.bgSecondary} stroke={gfciTripped ? colors.error : colors.accent} strokeWidth="3" />
+          <text x="240" y="72" textAnchor="middle" fill={colors.accent} fontSize="13" fontWeight="bold">GFCI</text>
+          <ellipse cx="240" cy="95" rx="25" ry="8" fill="none" stroke={colors.textMuted} strokeWidth="2" />
+          <ellipse cx="240" cy="95" rx="18" ry="5" fill="none" stroke={colors.textSecondary} strokeWidth="1" />
+          <circle cx="240" cy="140" r="11" fill={gfciTripped ? colors.error : colors.success} filter="url(#glow)" />
+          <text x="240" y="162" textAnchor="middle" fill={gfciStatus.color} fontSize="11" fontWeight="bold">{gfciStatus.status}</text>
+        </g>
 
-        {/* GFCI current transformer ring */}
-        <ellipse cx={width/2} cy={height/2 - 15} rx="25" ry="8" fill="none" stroke={colors.textMuted} strokeWidth="2" />
-        <ellipse cx={width/2} cy={height/2 - 15} rx="18" ry="5" fill="none" stroke={colors.textSecondary} strokeWidth="1" />
+        {/* Neutral wire group */}
+        <g>
+          <line x1="70" y1="135" x2="380" y2="135" stroke={gfciTripped ? colors.textMuted : "url(#neutralWireGrad)"} strokeWidth="4" filter={gfciTripped ? undefined : "url(#glow)"} />
+          {!gfciTripped && Array.from({ length: Math.max(1, 6 - Math.floor(leakageCurrent / 2)) }).map((_, i) => (
+            <circle key={`neutral-${i}`} cx={380 - ((animationFrame * 3 + i * 52) % 310)} cy={135} r="5" fill={colors.neutral} opacity="0.8" />
+          ))}
+        </g>
 
-        {/* GFCI indicator */}
-        <circle cx={width/2} cy={height/2 + 30} r="10" fill={gfciTripped ? colors.error : colors.success} filter="url(#glow)" />
-        <text x={width/2} y={height/2 + 50} textAnchor="middle" fill={gfciStatus.color} fontSize="10" fontWeight="bold">
-          {gfciStatus.status}
-        </text>
+        {/* Load group */}
+        <g>
+          <rect x="390" y="55" width="60" height="100" rx="8" fill={colors.bgSecondary} stroke={colors.warning} strokeWidth="2" />
+          <text x="420" y="95" textAnchor="middle" fill={colors.warning} fontSize="12" fontWeight="bold">LOAD</text>
+          <path d={`M 395 115 l 5 0 l 2 -8 l 4 16 l 4 -16 l 4 16 l 4 -16 l 4 16 l 2 -8 l 5 0`} fill="none" stroke={colors.warning} strokeWidth="2" />
+        </g>
 
-        {/* Neutral wire (bottom) */}
-        <line
-          x1="70" y1={height/2 + 30} x2={width - 100} y2={height/2 + 30}
-          stroke={gfciTripped ? colors.textMuted : "url(#neutralWireGrad)"}
-          strokeWidth="4"
-          filter={gfciTripped ? undefined : "url(#glow)"}
-        />
-
-        {/* Animated current flow on neutral (opposite direction, less if leaking) */}
-        {!gfciTripped && Array.from({ length: Math.max(1, 6 - Math.floor(leakageCurrent / 2)) }).map((_, i) => (
-          <circle
-            key={`neutral-${i}`}
-            cx={width - 100 - ((animationFrame * 3 + i * 60) % (width - 170))}
-            cy={height/2 + 30}
-            r="5"
-            fill={colors.neutral}
-            opacity="0.8"
-          />
-        ))}
-
-        {/* Load (right side) */}
-        <rect x={width - 90} y={height/2 - 50} width="60" height="100" rx="8" fill={colors.bgSecondary} stroke={colors.warning} strokeWidth="2" />
-        <text x={width - 60} y={height/2 - 10} textAnchor="middle" fill={colors.warning} fontSize="12" fontWeight="bold">LOAD</text>
-        {/* Resistor symbol */}
-        <path
-          d={`M ${width - 75} ${height/2 + 10} l 5 0 l 2 -8 l 4 16 l 4 -16 l 4 16 l 4 -16 l 4 16 l 2 -8 l 5 0`}
-          fill="none"
-          stroke={colors.warning}
-          strokeWidth="2"
-        />
-
-        {/* Leakage path (person touching live part) */}
+        {/* Leakage path group */}
         {showLeakage && leakageCurrent > 0 && !gfciTripped && (
-          <>
-            {/* Person figure */}
-            <circle cx={width - 140} cy={height/2 + 90} r="15" fill="none" stroke={colors.warning} strokeWidth="2" />
-            <circle cx={width - 140} cy={height/2 + 78} r="6" fill="none" stroke={colors.warning} strokeWidth="2" />
-
-            {/* Leakage path line */}
-            <line
-              x1={width - 140} y1={height/2 - 30}
-              x2={width - 140} y2={height/2 + 72}
-              stroke={colors.warning}
-              strokeWidth="2"
-              strokeDasharray="5,3"
-            />
-
-            {/* Sparks at contact */}
+          <g>
+            <circle cx="340" cy="195" r="12" fill="none" stroke={colors.warning} strokeWidth="2" />
+            <circle cx="340" cy="185" r="5" fill="none" stroke={colors.warning} strokeWidth="2" />
+            <line x1="340" y1="75" x2="340" y2="180" stroke={colors.warning} strokeWidth="2" strokeDasharray="5,3" />
             {Array.from({ length: 3 }).map((_, i) => (
-              <circle
-                key={`spark-${i}`}
-                cx={width - 140 + Math.sin(animationFrame * 0.5 + i * 2) * 10}
-                cy={height/2 - 25 + Math.cos(animationFrame * 0.5 + i * 2) * 5}
-                r={3 + Math.sin(animationFrame * 0.3 + i) * 2}
-                fill="url(#sparkGlow)"
-              />
+              <circle key={`spark-${i}`} cx={340 + Math.sin(animationFrame * 0.5 + i * 2) * 10} cy={80 + Math.cos(animationFrame * 0.5 + i * 2) * 5} r={3 + Math.sin(animationFrame * 0.3 + i) * 2} fill="url(#sparkGlow)" />
             ))}
-
-            {/* Ground symbol */}
-            <g transform={`translate(${width - 140}, ${height/2 + 110})`}>
-              <line x1="0" y1="0" x2="0" y2="10" stroke={colors.ground} strokeWidth="2" />
-              <line x1="-12" y1="10" x2="12" y2="10" stroke={colors.ground} strokeWidth="3" />
-              <line x1="-8" y1="16" x2="8" y2="16" stroke={colors.ground} strokeWidth="2" />
-              <line x1="-4" y1="22" x2="4" y2="22" stroke={colors.ground} strokeWidth="1" />
+            <g transform="translate(340, 210)">
+              <line x1="0" y1="0" x2="0" y2="8" stroke={colors.ground} strokeWidth="2" />
+              <line x1="-10" y1="8" x2="10" y2="8" stroke={colors.ground} strokeWidth="3" />
+              <line x1="-6" y1="13" x2="6" y2="13" stroke={colors.ground} strokeWidth="2" />
+              <line x1="-3" y1="18" x2="3" y2="18" stroke={colors.ground} strokeWidth="1" />
             </g>
-
-            {/* Leakage current label */}
-            <text x={width - 100} y={height/2 + 100} fill={colors.warning} fontSize="11" fontWeight="bold">
-              {leakageCurrent} mA
-            </text>
-          </>
+            <text x="370" y="200" fill={colors.warning} fontSize="11" fontWeight="bold">{leakageCurrent} mA</text>
+          </g>
         )}
 
         {/* Current readings */}
-        <text x="90" y={height/2 - 45} fill={colors.hot} fontSize="11" fontWeight="600">
-          HOT: {gfciTripped ? '0' : hotCurrent.toFixed(3)} A
-        </text>
-        <text x="90" y={height/2 + 50} fill={colors.neutral} fontSize="11" fontWeight="600">
-          NEUTRAL: {gfciTripped ? '0' : neutralCurrent.toFixed(3)} A
-        </text>
+        <g>
+          <text x="90" y="65" fill={colors.hot} fontSize="11" fontWeight="600">HOT: {gfciTripped ? '0' : hotCurrent.toFixed(3)} A</text>
+          <text x="90" y="150" fill={colors.neutral} fontSize="11" fontWeight="600">NEUTRAL: {gfciTripped ? '0' : neutralCurrent.toFixed(3)} A</text>
+        </g>
+
+        {/* Current imbalance chart group */}
+        <g>
+          {/* Grid lines */}
+          <line x1={chartLeft} y1={chartTop} x2={chartRight} y2={chartTop} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+          <line x1={chartLeft} y1={chartTop + chartH * 0.25} x2={chartRight} y2={chartTop + chartH * 0.25} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+          <line x1={chartLeft} y1={chartTop + chartH * 0.5} x2={chartRight} y2={chartTop + chartH * 0.5} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+          <line x1={chartLeft} y1={chartTop + chartH * 0.75} x2={chartRight} y2={chartTop + chartH * 0.75} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+          {/* Axes */}
+          <line x1={chartLeft} y1={chartTop} x2={chartLeft} y2={chartBottom} stroke={colors.textMuted} strokeWidth="1" />
+          <line x1={chartLeft} y1={chartBottom} x2={chartRight} y2={chartBottom} stroke={colors.textMuted} strokeWidth="1" />
+          {/* Axis labels */}
+          <text x={chartLeft - 5} y={chartTop + 5} textAnchor="end" fill={colors.textMuted} fontSize="11">10</text>
+          <text x={chartLeft - 5} y={chartBottom} textAnchor="end" fill={colors.textMuted} fontSize="11">0</text>
+          <text x={(chartLeft + chartRight) / 2} y={chartBottom + 16} textAnchor="middle" fill={colors.textMuted} fontSize="11">Current Leakage (mA)</text>
+          <text x={chartLeft - 8} y={(chartTop + chartBottom) / 2} textAnchor="middle" fill={colors.textMuted} fontSize="11" transform={`rotate(-90, ${chartLeft - 8}, ${(chartTop + chartBottom) / 2})`}>Current (mA)</text>
+          {/* Trip threshold line */}
+          <line x1={chartLeft} y1={chartBottom - (5 / 10) * chartH} x2={chartRight} y2={chartBottom - (5 / 10) * chartH} stroke={colors.error} strokeWidth="1" strokeDasharray="6,3" />
+          <text x={chartRight - 2} y={chartBottom - (5 / 10) * chartH - 3} textAnchor="end" fill={colors.error} fontSize="11">5 mA Trip</text>
+          {/* Curve path */}
+          <path d={curvePath} fill="none" stroke={colors.accent} strokeWidth="2" />
+          {/* Interactive point */}
+          <circle cx={pointX} cy={pointY} r={8} fill={colors.accent} filter="url(#glow)" stroke="#fff" strokeWidth={2} />
+        </g>
 
         {/* Imbalance indicator */}
-        <rect x={width/2 - 50} y={height - 45} width="100" height="30" rx="6" fill={colors.bgSecondary} stroke={gfciStatus.color} strokeWidth="2" />
-        <text x={width/2} y={height - 25} textAnchor="middle" fill={gfciStatus.color} fontSize="12" fontWeight="bold">
-          Imbalance: {currentImbalance} mA
-        </text>
+        <g>
+          <rect x="200" y="170" width="100" height="28" rx="6" fill={colors.bgSecondary} stroke={gfciStatus.color} strokeWidth="2" />
+          <text x="250" y="189" textAnchor="middle" fill={gfciStatus.color} fontSize="12" fontWeight="bold">Imbalance: {currentImbalance} mA</text>
+        </g>
       </svg>
     );
   };
@@ -906,28 +887,41 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
     );
   }
 
+  // Slider style helper
+  const sliderStyle: React.CSSProperties = {
+    width: '100%',
+    height: '20px',
+    touchAction: 'pan-y',
+    WebkitAppearance: 'none',
+    accentColor: '#3b82f6',
+    cursor: 'pointer',
+  };
+
   // PLAY PHASE - Interactive GFCI Simulator
   if (phase === 'play') {
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '84px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             GFCI Circuit Simulator
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-            Introduce a ground fault and watch the GFCI detect the current imbalance
+            Introduce a ground fault and watch the GFCI detect the current imbalance. When you increase leakage, neutral current decreases because current escapes to ground instead of returning through the neutral wire.
           </p>
-          <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '8px' }}>
             Real-world relevance: GFCIs in bathrooms and kitchens use this exact principle to save over 300 lives annually
+          </p>
+          <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', textAlign: 'center', marginBottom: '24px' }}>
+            The current imbalance is calculated as I_hot - I_neutral = I_leakage. The formula is: Imbalance = V / R × 1000 (mA)
           </p>
 
           {/* Main visualization */}
@@ -938,13 +932,13 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <CircuitVisualization />
+              {renderCircuitVisualization()}
             </div>
 
             {/* Load current slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>💡 Load Current</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Load Current</span>
                 <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{hotCurrent} A</span>
               </div>
               <input
@@ -953,19 +947,14 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
                 max="15"
                 value={hotCurrent}
                 onChange={(e) => setHotCurrent(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
+                style={sliderStyle}
               />
             </div>
 
             {/* Leakage current slider */}
             <div style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>⚡ Ground Fault Leakage</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Ground Fault Leakage</span>
                 <span style={{
                   ...typo.small,
                   color: leakageCurrent >= 5 ? colors.error : leakageCurrent > 0 ? colors.warning : colors.success,
@@ -982,17 +971,15 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
                 onChange={(e) => !gfciTripped && setLeakageCurrent(parseInt(e.target.value))}
                 disabled={gfciTripped}
                 style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
+                  ...sliderStyle,
                   cursor: gfciTripped ? 'not-allowed' : 'pointer',
                   opacity: gfciTripped ? 0.5 : 1,
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>0 mA (Safe)</span>
+                <span style={{ ...typo.small, color: 'rgba(148,163,184,0.7)' }}>0 mA (Safe)</span>
                 <span style={{ ...typo.small, color: colors.error }}>5 mA (Trip Threshold)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>10 mA</span>
+                <span style={{ ...typo.small, color: 'rgba(148,163,184,0.7)' }}>10 mA</span>
               </div>
             </div>
 
@@ -1079,6 +1066,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
           >
             Understand How GFCIs Work →
           </button>
+        </div>
         </div>
 
         {renderNavDots()}
@@ -1225,14 +1213,39 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ ...typo.h3, color: colors.warning, marginBottom: '8px' }}>
-              I = V/R = 120V / 1000Ω = 0.12A (120 mA)
-            </div>
-            <p style={{ ...typo.small, color: colors.textSecondary }}>
-              Well below the 15A circuit breaker threshold...
-            </p>
-            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-              But P = I²R = (0.12)² × 1000 = 14.4 watts concentrated at the fault point
+            <svg width="400" height="220" viewBox="0 0 400 220" style={{ maxWidth: '100%' }}>
+              <defs>
+                <linearGradient id="twistGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor={colors.warning} stopOpacity="0.3" />
+                  <stop offset="100%" stopColor={colors.error} stopOpacity="0.3" />
+                </linearGradient>
+                <filter id="twistGlow"><feGaussianBlur stdDeviation="2" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+              </defs>
+              <g>
+                <rect x="20" y="40" width="360" height="140" rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
+                <text x="200" y="30" textAnchor="middle" fill={colors.warning} fontSize="14" fontWeight="bold">High-Impedance Fault Scenario</text>
+              </g>
+              <g>
+                <line x1="50" y1="80" x2="160" y2="80" stroke={colors.hot} strokeWidth="3" />
+                <text x="105" y="70" textAnchor="middle" fill={colors.hot} fontSize="11">Hot Wire 120V</text>
+                <rect x="160" y="60" width="80" height="40" rx="4" fill="url(#twistGrad)" stroke={colors.warning} strokeWidth="2" />
+                <text x="200" y="85" textAnchor="middle" fill={colors.warning} fontSize="12" fontWeight="bold">1000 Ohms</text>
+                <line x1="240" y1="80" x2="350" y2="80" stroke={colors.hot} strokeWidth="3" />
+              </g>
+              <g>
+                <line x1="200" y1="100" x2="200" y2="160" stroke={colors.warning} strokeWidth="2" strokeDasharray="5,3" />
+                <circle cx="200" cy="130" r="12" fill="none" stroke={colors.error} strokeWidth="2" />
+                <text x="230" y="135" fill={colors.error} fontSize="11" fontWeight="bold">Arcing</text>
+                <rect x="185" y="155" width="30" height="12" rx="2" fill="#8B4513" stroke={colors.warning} strokeWidth="1" />
+                <text x="200" y="178" textAnchor="middle" fill={colors.textMuted} fontSize="11">Wood beam</text>
+              </g>
+              <g>
+                <text x="200" y="200" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="bold">I = V/R = 120V / 1000 Ohms = 120 mA</text>
+                <text x="200" y="216" textAnchor="middle" fill={colors.textMuted} fontSize="11">P = I² × R = 14.4 W concentrated at fault</text>
+              </g>
+            </svg>
+            <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '8px' }}>
+              Well below the 15A circuit breaker threshold, but 14.4 watts concentrated at the fault point
             </p>
           </div>
 

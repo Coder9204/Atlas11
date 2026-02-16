@@ -2412,51 +2412,143 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
 
   // Main render
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      minHeight: '100vh',
+      background: '#0a0f1a',
+      color: 'white',
+      position: 'relative',
+      overflow: 'hidden',
+      fontFamily: premiumDesign.typography.fontFamily,
+    }}>
       {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-500/3 rounded-full blur-3xl" />
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #0f172a 0%, #0a1628 50%, #0f172a 100%)' }} />
 
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">RC Time Constant</span>
-          <div className="flex items-center gap-1.5">
+      {/* Header - fixed nav */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 200,
+        background: 'rgba(15, 23, 42, 0.9)',
+        backdropFilter: 'blur(16px)',
+        borderBottom: '1px solid rgba(148, 163, 184, 0.15)',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '10px 24px',
+          maxWidth: 900,
+          margin: '0 auto',
+        }}>
+          <span style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>RC Time Constant</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             {phaseOrder.map((p) => (
               <button
                 key={p}
                 onClick={() => goToPhase(p)}
-                style={{ zIndex: 10 }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
+                aria-label={`${phaseLabels[p]} - explore ${p.replace('_', ' ')} experiment`}
+                style={{
+                  width: phase === p ? 24 : 8,
+                  height: 8,
+                  borderRadius: 9999,
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  background: phase === p
+                    ? '#22d3ee'
                     : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
+                      ? '#10B981'
+                      : 'rgba(148,163,184,0.3)',
+                  boxShadow: phase === p ? '0 0 8px rgba(34,211,238,0.4)' : 'none',
+                  zIndex: 10,
+                }}
               />
             ))}
           </div>
-          <span className="text-sm font-medium text-cyan-400">{phaseLabels[phase]}</span>
+          <span style={{ fontSize: '14px', fontWeight: 500, color: '#22d3ee' }}>{phaseLabels[phase]}</span>
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="relative pt-16 pb-12" style={{ maxWidth: 900, margin: '0 auto', padding: isMobile ? '64px 16px 48px' : '64px 32px 48px' }}>
-        {phase === 'hook' && renderHookPhase()}
-        {phase === 'predict' && renderPredictPhase()}
-        {phase === 'play' && renderPlayPhase()}
-        {phase === 'review' && renderReviewPhase()}
-        {phase === 'twist_predict' && renderTwistPredictPhase()}
-        {phase === 'twist_play' && renderTwistPlayPhase()}
-        {phase === 'twist_review' && renderTwistReviewPhase()}
-        {phase === 'transfer' && renderTransferPhase()}
-        {phase === 'test' && renderTestPhase()}
-        {phase === 'mastery' && renderMasteryPhase()}
+      {/* Main scrollable content */}
+      <div style={{
+        position: 'relative',
+        flex: 1,
+        overflowY: 'auto',
+        paddingTop: '48px',
+        paddingBottom: '100px',
+      }}>
+        <div style={{
+          maxWidth: 900,
+          margin: '0 auto',
+          padding: isMobile ? '16px' : '24px 32px',
+        }}>
+          {phase === 'hook' && renderHookPhase()}
+          {phase === 'predict' && renderPredictPhase()}
+          {phase === 'play' && renderPlayPhase()}
+          {phase === 'review' && renderReviewPhase()}
+          {phase === 'twist_predict' && renderTwistPredictPhase()}
+          {phase === 'twist_play' && renderTwistPlayPhase()}
+          {phase === 'twist_review' && renderTwistReviewPhase()}
+          {phase === 'transfer' && renderTransferPhase()}
+          {phase === 'test' && renderTestPhase()}
+          {phase === 'mastery' && renderMasteryPhase()}
+        </div>
       </div>
+
+      {/* Fixed bottom bar */}
+      <nav style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 200,
+        background: 'rgba(15, 23, 42, 0.95)',
+        backdropFilter: 'blur(16px)',
+        borderTop: '1px solid rgba(148, 163, 184, 0.15)',
+        boxShadow: '0 -4px 12px rgba(0,0,0,0.4)',
+        padding: '12px 24px',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 900, margin: '0 auto' }}>
+          <button
+            onClick={goBack}
+            style={{
+              padding: '12px 24px',
+              borderRadius: 12,
+              border: '1px solid rgba(255,255,255,0.1)',
+              background: 'transparent',
+              color: 'rgba(255,255,255,0.7)',
+              cursor: 'pointer',
+              fontSize: '15px',
+              fontWeight: 500,
+              transition: 'all 0.3s ease',
+            }}
+          >
+            ← Back
+          </button>
+          <button
+            onClick={goNext}
+            style={{
+              padding: '12px 24px',
+              borderRadius: 12,
+              border: 'none',
+              background: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
+              color: 'white',
+              cursor: 'pointer',
+              fontSize: '15px',
+              fontWeight: 600,
+              boxShadow: '0 0 20px rgba(99,102,241,0.25)',
+              transition: 'all 0.3s ease',
+            }}
+          >
+            Next →
+          </button>
+        </div>
+      </nav>
     </div>
   );
 }

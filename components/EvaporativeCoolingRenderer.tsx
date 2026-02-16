@@ -318,7 +318,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
     cold: '#3B82F6',
     textPrimary: '#FFFFFF',
     textSecondary: '#e2e8f0', // High contrast - brightness ~230
-    textMuted: '#cbd5e1', // High contrast - brightness ~200
+    textMuted: 'rgba(203,213,225,0.8)', // High contrast muted
     border: '#2a2a3a',
   };
 
@@ -338,7 +338,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Wind Lab',
+    twist_play: 'Twist Explore',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -419,8 +419,8 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
     return "#b08878";
   };
 
-  // Skin Visualization Component
-  const SkinVisualization = ({ showWind = false }: { showWind?: boolean }) => {
+  // Skin Visualization render function
+  const renderSkinVisualization = (showWind = false) => {
     const width = isMobile ? 340 : 450;
     const height = isMobile ? 280 : 320;
     const currentEvapRate = calculateEvaporationRate(humidity, showWind ? windSpeed : 0);
@@ -596,7 +596,39 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
           <text x="20" y="65" fill={colors.textSecondary} fontSize="12">Wind: <tspan fill={colors.cold}>{windSpeed} m/s</tspan></text>
         )}
         <text x="380" y="270" fill={colors.textPrimary} fontSize="14" fontWeight="600">{currentSkinTemp.toFixed(1)}°C</text>
-        <text x="380" y="288" fill={colors.textMuted} fontSize="10">Skin Temp</text>
+        <text x="380" y="288" fill={colors.textMuted} fontSize="11">Skin Temp</text>
+
+        {/* Grid lines for visual reference */}
+        <g opacity="0.3">
+          <line x1="0" y1="100" x2="450" y2="100" stroke="#fff" strokeDasharray="4 4" />
+          <line x1="0" y1="160" x2="450" y2="160" stroke="#fff" strokeDasharray="4 4" />
+          <line x1="0" y1="220" x2="450" y2="220" stroke="#fff" strokeDasharray="4 4" />
+          <line x1="100" y1="0" x2="100" y2="320" stroke="#fff" strokeDasharray="4 4" />
+          <line x1="225" y1="0" x2="225" y2="320" stroke="#fff" strokeDasharray="4 4" />
+          <line x1="350" y1="0" x2="350" y2="320" stroke="#fff" strokeDasharray="4 4" />
+        </g>
+
+        {/* Axes labels */}
+        <g>
+          <text x="225" y="312" fill={colors.textMuted} fontSize="11" textAnchor="middle">Skin Surface</text>
+          <text x="8" y="90" fill={colors.textMuted} fontSize="11" textAnchor="start">Air</text>
+        </g>
+
+        {/* Interactive point showing current evaporation rate based on humidity */}
+        <circle
+          cx={40 + (humidity / 100) * 300}
+          cy={260 - currentEvapRate * 200}
+          r={8}
+          fill={colors.accent}
+          filter="url(#glow)"
+          stroke="#fff"
+          strokeWidth={2}
+        />
+
+        {/* Formula */}
+        <text x="225" y="80" fill={colors.accent} fontSize="12" textAnchor="middle">
+          Q = m × Lv (2,260 J/g)
+        </text>
       </svg>
     );
   };
@@ -634,13 +666,11 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
           key={p}
           onClick={() => goToPhase(p)}
           style={{
-            width: phase === p ? '24px' : '8px',
             minWidth: '44px',
-            height: '8px',
             minHeight: '44px',
             borderRadius: '4px',
             border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            background: 'transparent',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
             display: 'flex',
@@ -719,16 +749,16 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
       <button
         onClick={() => {
           const currentIndex = phaseOrder.indexOf(phase);
-          if (currentIndex < phaseOrder.length - 1) goToPhase(phaseOrder[currentIndex + 1]);
+          if (currentIndex < phaseOrder.length - 1 && phase !== 'test') goToPhase(phaseOrder[currentIndex + 1]);
         }}
-        disabled={phase === 'mastery'}
+        disabled={phase === 'mastery' || phase === 'test'}
         style={{
-          background: phase === 'mastery' ? 'transparent' : `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
+          background: (phase === 'mastery' || phase === 'test') ? 'transparent' : `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
           border: 'none',
           color: 'white',
           padding: '8px 16px',
           borderRadius: '8px',
-          cursor: phase === 'mastery' ? 'not-allowed' : 'pointer',
+          cursor: (phase === 'mastery' || phase === 'test') ? 'not-allowed' : 'pointer',
           fontSize: '14px',
           fontWeight: 600,
           minHeight: '44px',
@@ -887,7 +917,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
               <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '16px' }}>
                 What to Watch: Observe the diagram showing evaporation from wet skin
               </p>
-              <SkinVisualization />
+              {renderSkinVisualization()}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap', marginTop: '16px' }}>
                 <div style={{ padding: '12px 20px', background: '#3B82F633', borderRadius: '8px', border: '2px solid #3B82F6' }}>
                   <span style={{ color: '#3B82F6', fontWeight: 600 }}>Liquid Water</span>
@@ -980,8 +1010,11 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
             <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
               What to Watch: Observe how humidity affects evaporation rate and skin temperature
             </p>
-            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '12px' }}>
               Try adjusting the humidity slider below to see how different environments affect cooling
+            </p>
+            <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Evaporative cooling is defined as the process where heat energy is absorbed during a liquid-to-gas phase change. The formula Q = m × Lv describes how the heat removed (Q) is calculated from mass (m) and latent heat of vaporization (Lv = 2,260 J/g for water).
             </p>
 
             <div style={{
@@ -991,7 +1024,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
               marginBottom: '24px',
             }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <SkinVisualization />
+                {renderSkinVisualization()}
               </div>
 
               {/* Wet skin button */}
@@ -1027,7 +1060,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
                   max="95"
                   value={humidity}
                   onChange={(e) => setHumidity(parseInt(e.target.value))}
-                  style={{ width: '100%', cursor: 'pointer', touchAction: 'pan-y' }}
+                  style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as const, accentColor: '#3b82f6', cursor: 'pointer' }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                   <span style={{ ...typo.small, color: colors.textMuted }}>Desert (10%)</span>
@@ -1158,22 +1191,22 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
             </h2>
 
             {/* Reference user's prediction */}
-            {prediction && (
-              <div style={{
-                background: prediction === 'b' ? `${colors.success}22` : `${colors.warning}22`,
-                border: `1px solid ${prediction === 'b' ? colors.success : colors.warning}`,
-                borderRadius: '12px',
-                padding: '16px',
-                marginBottom: '24px',
-              }}>
-                <p style={{ ...typo.body, color: prediction === 'b' ? colors.success : colors.warning, margin: 0 }}>
-                  {prediction === 'b'
-                    ? `You predicted correctly that ${predictionLabels[prediction]}! The experiment confirmed your intuition.`
-                    : `You predicted that ${predictionLabels[prediction] || 'something else'}. The experiment showed that your skin actually provides the energy - water absorbs heat as it evaporates!`
-                  }
-                </p>
-              </div>
-            )}
+            <div style={{
+              background: prediction === 'b' ? `${colors.success}22` : `${colors.warning}22`,
+              border: `1px solid ${prediction === 'b' ? colors.success : colors.warning}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.body, color: prediction === 'b' ? colors.success : colors.warning, margin: 0 }}>
+                {prediction === 'b'
+                  ? `You predicted correctly that ${predictionLabels[prediction]}! The experiment confirmed your intuition.`
+                  : prediction
+                    ? `You predicted that ${predictionLabels[prediction] || 'something else'}. The experiment showed that your skin actually provides the energy - water absorbs heat as it evaporates!`
+                    : `As you observed in the experiment, your skin provides the energy. The observation confirmed that water absorbs heat as it evaporates, cooling whatever it touches.`
+                }
+              </p>
+            </div>
 
             <div style={{
               background: colors.bgCard,
@@ -1300,7 +1333,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
               <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '16px' }}>
                 What to Watch: Observe how wind affects evaporation
               </p>
-              <SkinVisualization showWind={true} />
+              {renderSkinVisualization(true)}
               <div style={{ fontSize: '48px', margin: '16px 0 8px' }}>💨 ➡️ 💧</div>
               <p style={{ ...typo.small, color: colors.textMuted }}>Wind blowing across wet skin</p>
             </div>
@@ -1399,7 +1432,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
               marginBottom: '24px',
             }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <SkinVisualization showWind={true} />
+                {renderSkinVisualization(true)}
               </div>
 
               {/* Make skin wet for this phase */}
@@ -1435,7 +1468,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
                   max="10"
                   value={windSpeed}
                   onChange={(e) => setWindSpeed(parseInt(e.target.value))}
-                  style={{ width: '100%', cursor: 'pointer', touchAction: 'pan-y' }}
+                  style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as const, accentColor: '#3b82f6', cursor: 'pointer' }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                   <span style={{ ...typo.small, color: colors.textMuted }}>Still Air</span>

@@ -958,7 +958,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
               step="100"
               value={surfaceRecombVelocity}
               onChange={(e) => { setSurfaceRecombVelocity(parseInt(e.target.value)); setPassivationType('none'); }}
-              style={{ width: '100%' }}
+              style={{ width: '100%', accentColor: colors.accent, WebkitAppearance: 'auto', touchAction: 'pan-y' } as React.CSSProperties}
             />
           </div>
 
@@ -973,7 +973,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
               step="10"
               value={carrierLifetime}
               onChange={(e) => { setCarrierLifetime(parseInt(e.target.value)); setPassivationType('none'); }}
-              style={{ width: '100%' }}
+              style={{ width: '100%', accentColor: colors.accent, WebkitAppearance: 'auto', touchAction: 'pan-y' } as React.CSSProperties}
             />
           </div>
         </>
@@ -1055,6 +1055,8 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
         {phaseOrder.map((p, i) => (
           <div
             key={p}
+            title={phaseLabels[p]}
+            aria-label={phaseLabels[p]}
             onClick={() => i <= currentIdx && goToPhase(p)}
             style={{
               width: i === currentIdx ? '24px' : '8px',
@@ -1185,7 +1187,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomBar(false, true, 'Start Prediction')}
       </div>
     );
   }
@@ -1267,11 +1269,26 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
           }}>
             <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
             <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Increase SRV (more defects) - watch Voc and efficiency drop</li>
-              <li>Increase carrier lifetime - see Voc improve</li>
+              <li>When you increase SRV (more defects), watch Voc and efficiency drop because more carriers are lost at the surface</li>
+              <li>When you increase carrier lifetime, the result is higher Voc and more current collection</li>
               <li>Notice: you can lose carriers without changing cell area!</li>
               <li>Observe how surface defects (red X) trap carriers</li>
             </ul>
+          </div>
+
+          <div style={{
+            background: 'rgba(59, 130, 246, 0.15)',
+            margin: '0 16px 16px 16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `3px solid ${colors.solar}`,
+          }}>
+            <h4 style={{ color: colors.solar, marginBottom: '8px' }}>Why This Matters in the Real World</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+              Passivation is one of the most important technology improvements in the solar industry.
+              By reducing surface recombination, engineers have pushed commercial cell efficiency from 15% to over 25%.
+              This directly lowers the cost of solar electricity, making clean energy useful and practical for everyone.
+            </p>
           </div>
         </div>
         {renderBottomBar(false, true, 'Continue to Review')}

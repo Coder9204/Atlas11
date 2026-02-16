@@ -365,7 +365,7 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Temperature Effect',
+    twist_play: 'Twist Explore',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -412,7 +412,7 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
   const mttfStatus = getMTTFStatus();
 
   // Electromigration Visualization SVG
-  const ElectromigrationVisualization = ({ showTemperature = false }: { showTemperature?: boolean }) => {
+  const renderElectromigrationVisualization = (showTemperature = false) => {
     const width = isMobile ? 340 : 480;
     const height = isMobile ? 280 : 340;
     const wireY = 100;
@@ -665,6 +665,63 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
     </div>
   );
 
+  // Bottom navigation bar with Back/Next
+  const renderBottomNav = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isTestPhase = phase === 'test';
+    const nextDisabled = currentIndex >= phaseOrder.length - 1 || isTestPhase;
+    return (
+      <nav style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '56px',
+        background: colors.bgSecondary,
+        borderTop: `1px solid ${colors.border}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 16px',
+        zIndex: 1001,
+      }}>
+        <button
+          onClick={() => { if (currentIndex > 0) goToPhase(phaseOrder[currentIndex - 1]); }}
+          style={{
+            background: 'transparent',
+            border: `1px solid ${colors.border}`,
+            color: currentIndex > 0 ? colors.textSecondary : colors.border,
+            padding: '8px 20px',
+            borderRadius: '8px',
+            cursor: currentIndex > 0 ? 'pointer' : 'default',
+            fontWeight: 600,
+            minHeight: '44px',
+          }}
+        >
+          ← Back
+        </button>
+        {renderNavDots()}
+        <button
+          disabled={nextDisabled}
+          onClick={() => { if (!nextDisabled) nextPhase(); }}
+          style={{
+            background: !nextDisabled ? colors.accent : colors.border,
+            border: 'none',
+            color: 'white',
+            padding: '8px 20px',
+            borderRadius: '8px',
+            cursor: !nextDisabled ? 'pointer' : 'not-allowed',
+            opacity: nextDisabled ? 0.4 : 1,
+            fontWeight: 600,
+            minHeight: '44px',
+          }}
+        >
+          Next →
+        </button>
+      </nav>
+    );
+  };
+
   // Primary button style with minHeight 44px for touch targets
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, #D97706)`,
@@ -720,15 +777,22 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        paddingTop: '80px',
-        textAlign: 'center',
-        overflowY: 'auto',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
+        <div style={{
+          flex: '1',
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center' as const,
+        }}>
 
         <div style={{
           fontSize: '64px',
@@ -776,7 +840,8 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
           Discover the Silent Killer
         </button>
 
-        {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -794,13 +859,12 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
-
+        <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', padding: '24px', paddingTop: '80px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           {/* Progress indicator */}
           <div style={{
@@ -938,8 +1002,8 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
             </button>
           )}
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -950,13 +1014,12 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
-
+        <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
         <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Electromigration Simulator
@@ -986,8 +1049,100 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
             padding: '24px',
             marginBottom: '24px',
           }}>
+            {/* MTTF vs Current Density Chart */}
+            {(() => {
+              const chartW = isMobile ? 340 : 480;
+              const chartH = 220;
+              const padL = 60, padR = 20, padT = 20, padB = 40;
+              const plotW = chartW - padL - padR;
+              const plotH = chartH - padT - padB;
+              const jMin = 1, jMax = 20;
+              const calcMTTFForJ = (j: number) => {
+                const T = temperature + 273;
+                return Math.min(1e12 * Math.pow(j, -2) * Math.exp(0.7 / (8.617e-5 * T)) / 1e6, 1000);
+              };
+              // Use log scale for Y axis to show the wide MTTF range
+              const logMin = Math.log10(0.01); // -2
+              const logMax = Math.log10(1000); // 3
+              const logRange = logMax - logMin; // 5 decades
+              const yForMTTF = (m: number) => {
+                const logVal = Math.log10(Math.max(m, 0.01));
+                return padT + (1 - (logVal - logMin) / logRange) * plotH;
+              };
+              const points: {x: number; y: number}[] = [];
+              for (let i = 0; i <= 40; i++) {
+                const j = jMin + (jMax - jMin) * (i / 40);
+                const m = calcMTTFForJ(j);
+                const px = padL + (j - jMin) / (jMax - jMin) * plotW;
+                const py = yForMTTF(m);
+                points.push({ x: px, y: py });
+              }
+              const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+              const curX = padL + (currentDensity - jMin) / (jMax - jMin) * plotW;
+              const curY = yForMTTF(mttf);
+              // Color zones
+              const safeY = yForMTTF(10);
+              const warnY = yForMTTF(5);
+              return (
+                <svg width={chartW} height={chartH} viewBox={`0 0 ${chartW} ${chartH}`} style={{ background: colors.bgSecondary, borderRadius: '8px', marginBottom: '16px' }}>
+                  <defs>
+                    <filter id="chartGlow">
+                      <feGaussianBlur stdDeviation="2" result="blur" />
+                      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                    </filter>
+                    <linearGradient id="chartFillGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={colors.accent} stopOpacity="0.3" />
+                      <stop offset="100%" stopColor={colors.accent} stopOpacity="0.02" />
+                    </linearGradient>
+                    <radialGradient id="pointGlow" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stopColor={colors.accent} stopOpacity="1" />
+                      <stop offset="100%" stopColor={colors.accent} stopOpacity="0" />
+                    </radialGradient>
+                  </defs>
+                  {/* Color zone backgrounds */}
+                  <g opacity="0.15">
+                    <rect x={padL} y={padT} width={plotW} height={Math.max(0, safeY - padT)} fill={colors.success} />
+                    <rect x={padL} y={safeY} width={plotW} height={Math.max(0, warnY - safeY)} fill={colors.warning} />
+                    <rect x={padL} y={warnY} width={plotW} height={Math.max(0, padT + plotH - warnY)} fill={colors.error} />
+                  </g>
+                  {/* Grid lines */}
+                  <g>
+                  {[0.25, 0.5, 0.75].map((f, i) => (
+                    <line key={`hg${i}`} x1={padL} y1={padT + plotH * f} x2={padL + plotW} y2={padT + plotH * f} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+                  ))}
+                  {[0.25, 0.5, 0.75].map((f, i) => (
+                    <line key={`vg${i}`} x1={padL + plotW * f} y1={padT} x2={padL + plotW * f} y2={padT + plotH} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+                  ))}
+                  </g>
+                  {/* Axes */}
+                  <g>
+                  <line x1={padL} y1={padT} x2={padL} y2={padT + plotH} stroke={colors.textMuted} strokeWidth="1" />
+                  <line x1={padL} y1={padT + plotH} x2={padL + plotW} y2={padT + plotH} stroke={colors.textMuted} strokeWidth="1" />
+                  </g>
+                  {/* Fill area under curve */}
+                  <path d={`${pathD} L ${points[points.length-1].x.toFixed(1)} ${(padT + plotH).toFixed(1)} L ${points[0].x.toFixed(1)} ${(padT + plotH).toFixed(1)} Z`} fill="url(#chartFillGrad)" />
+                  {/* Curve */}
+                  <path d={pathD} fill="none" stroke={colors.accent} strokeWidth="2.5" />
+                  {/* Reference lines for safe/critical thresholds */}
+                  <g>
+                  <line x1={padL} y1={safeY} x2={padL + plotW} y2={safeY} stroke={colors.success} strokeWidth="1" strokeDasharray="6 3" opacity="0.6" />
+                  <text x={padL + plotW + 2} y={safeY + 4} fill={colors.success} fontSize="11">10yr</text>
+                  <line x1={padL} y1={warnY} x2={padL + plotW} y2={warnY} stroke={colors.error} strokeWidth="1" strokeDasharray="6 3" opacity="0.6" />
+                  <text x={padL + plotW + 2} y={warnY + 4} fill={colors.error} fontSize="11">5yr</text>
+                  </g>
+                  {/* Interactive point */}
+                  <circle cx={curX} cy={curY} r={8} fill={colors.accent} filter="url(#chartGlow)" stroke="#fff" strokeWidth={2} />
+                  {/* Axis labels */}
+                  <text x={padL + plotW / 2} y={chartH - 4} textAnchor="middle" fill={colors.textMuted} fontSize="12">Current Density (MA/cm²)</text>
+                  <text x={14} y={padT + plotH / 2} textAnchor="middle" fill={colors.textMuted} fontSize="12" transform={`rotate(-90, 14, ${padT + plotH / 2})`}>MTTF (years)</text>
+                  {/* Value label */}
+                  <text x={curX} y={Math.max(curY - 14, padT + 10)} textAnchor="middle" fill={colors.textPrimary} fontSize="11" fontWeight="600">{mttf.toFixed(1)} yrs</text>
+                </svg>
+              );
+            })()}
+
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <ElectromigrationVisualization />
+              {renderElectromigrationVisualization()}
             </div>
 
             {/* Current density slider */}
@@ -1006,9 +1161,10 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
                 onChange={(e) => setCurrentDensity(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.success} 0%, ${colors.warning} 50%, ${colors.error} 100%)`,
+                  height: '20px',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none' as const,
+                  accentColor: '#3b82f6',
                   cursor: 'pointer',
                 }}
               />
@@ -1032,8 +1188,10 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
                 onChange={(e) => setWireWidth(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
+                  height: '20px',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none' as const,
+                  accentColor: '#3b82f6',
                   cursor: 'pointer',
                 }}
               />
@@ -1150,8 +1308,8 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
             Understand the Physics
           </button>
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1162,35 +1320,34 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
-
+        <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
         <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Black's Equation: Predicting Chip Lifetime
           </h2>
 
           {/* Reference to user's prediction */}
-          {prediction && (
-            <div style={{
-              background: prediction === 'b' ? `${colors.success}22` : `${colors.warning}22`,
-              border: `1px solid ${prediction === 'b' ? colors.success : colors.warning}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-            }}>
-              <p style={{ ...typo.body, color: prediction === 'b' ? colors.success : colors.warning, margin: 0 }}>
-                {prediction === 'b'
-                  ? "Your prediction was correct! Electron momentum transfer is indeed the cause of electromigration failure."
-                  : "Your prediction about chip failure was close, but electron momentum transfer (not heat, corrosion, or vibration) is the true mechanism behind electromigration."
-                }
-              </p>
-            </div>
-          )}
+          <div style={{
+            background: prediction === 'b' ? `${colors.success}22` : `${colors.warning}22`,
+            border: `1px solid ${prediction === 'b' ? colors.success : colors.warning}`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.body, color: prediction === 'b' ? colors.success : colors.warning, margin: 0 }}>
+              {prediction === 'b'
+                ? "Your prediction was correct! Electron momentum transfer is indeed the cause of electromigration failure."
+                : prediction
+                  ? "Your prediction about chip failure was close, but electron momentum transfer (not heat, corrosion, or vibration) is the true mechanism behind electromigration."
+                  : "As you observed in the experiment, electron momentum transfer is the true mechanism behind electromigration - the result of current pushing metal atoms along the wire."
+              }
+            </p>
+          </div>
 
           {/* Black's equation display */}
           <div style={{
@@ -1208,7 +1365,7 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
               color: colors.textPrimary,
               fontWeight: 700,
             }}>
-              MTTF = A * J^(-n) * e^(Ea/kT)
+              MTTF = A × J^(-n) × e^(Ea/kT)
             </div>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginTop: '16px', flexWrap: 'wrap' }}>
               <span style={{ ...typo.small, color: colors.textMuted }}>J = Current Density</span>
@@ -1288,8 +1445,8 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
             Explore the Temperature Effect
           </button>
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1307,13 +1464,12 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
-
+        <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
         <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           <div style={{
             background: `${colors.error}22`,
@@ -1411,8 +1567,8 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
             </button>
           )}
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1427,13 +1583,12 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
-
+        <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
         <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Temperature vs. Chip Lifetime
@@ -1449,7 +1604,7 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <ElectromigrationVisualization showTemperature={true} />
+              {renderElectromigrationVisualization(true)}
             </div>
 
             {/* Temperature slider */}
@@ -1468,9 +1623,10 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
                 onChange={(e) => setTemperature(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.success} 0%, ${colors.warning} 50%, ${colors.error} 100%)`,
+                  height: '20px',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none' as const,
+                  accentColor: '#3b82f6',
                   cursor: 'pointer',
                 }}
               />
@@ -1531,8 +1687,8 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
             Understand the Deep Physics
           </button>
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1543,13 +1699,12 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
-
+        <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
         <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Thermal Management = Reliability
@@ -1624,8 +1779,8 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
             See Real-World Applications
           </button>
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1639,13 +1794,12 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
-
+        <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
         <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
@@ -1691,7 +1845,7 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
                     fontSize: '12px',
                     lineHeight: '18px',
                   }}>
-                    check icon
+                    ✓
                   </div>
                 )}
                 <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
@@ -1859,8 +2013,8 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
             </button>
           )}
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1873,13 +2027,12 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
-          paddingTop: '80px',
-          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
         }}>
           {renderNavigationBar()}
           {renderProgressBar()}
-
+          <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
           <div style={{ maxWidth: '600px', margin: '20px auto 0', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
@@ -1921,7 +2074,8 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
               </button>
             )}
           </div>
-          {renderNavDots()}
+          </div>
+          {renderBottomNav()}
         </div>
       );
     }
@@ -1932,13 +2086,12 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
-
+        <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
         <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           {/* Progress */}
           <div style={{
@@ -2089,8 +2242,8 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
             )}
           </div>
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -2103,15 +2256,22 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        paddingTop: '80px',
-        textAlign: 'center',
-        overflowY: 'auto',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
+        <div style={{
+          flex: '1',
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center' as const,
+        }}>
 
         <div style={{
           fontSize: '100px',
@@ -2151,7 +2311,7 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
               'Advanced nodes face greater challenges as wires shrink',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                <span style={{ color: colors.success, fontSize: '16px' }}>check</span>
+                <span style={{ color: colors.success, fontSize: '16px' }}>✅</span>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
               </div>
             ))}
@@ -2203,8 +2363,8 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
             Return to Dashboard
           </a>
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }

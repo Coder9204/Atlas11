@@ -27,7 +27,7 @@ const phaseLabels: Record<Phase, string> = {
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#e2e8f0',
+  textMuted: 'rgba(148,163,184,0.7)',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -157,16 +157,20 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
     const I0 = 1e-9 * Math.exp(0.05 * (temperature - 25));
 
     // Generate I-V curve
-    for (let v = 0; v <= Voc * 1.1; v += 0.01) {
+    for (let v = 0; v <= Voc * 1.1; v += 0.005) {
       // Diode equation with series and shunt resistance
       // I = Iph - I0*(exp((V+I*Rs)/(n*Vt))-1) - (V+I*Rs)/Rsh
-      // Simplified iterative solution
+      // Newton-Raphson iterative solution with damping for stability
       let i = Iph;
-      for (let iter = 0; iter < 10; iter++) {
+      for (let iter = 0; iter < 50; iter++) {
         const vd = v + i * seriesResistance;
-        const idiode = I0 * (Math.exp(vd / Vt) - 1);
+        const expTerm = Math.exp(Math.min(vd / Vt, 40)); // clamp to avoid overflow
+        const idiode = I0 * (expTerm - 1);
         const ishunt = vd / shuntResistance;
-        i = Iph - idiode - ishunt;
+        const iNew = Iph - idiode - ishunt;
+        const clamped = Math.max(0, iNew);
+        // Damped update for convergence with high Rs
+        i = i * 0.5 + clamped * 0.5;
         if (i < 0) i = 0;
       }
       points.push({ v, i });
@@ -450,14 +454,14 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
 
   const renderVisualization = () => {
     const width = 550;
-    const height = 450;
+    const height = 380;
     const curve = calculateIVCurve();
 
-    // Graph dimensions
+    // Graph dimensions - use large portion of SVG for vertical utilization
     const graphX = 60;
-    const graphY = 50;
-    const graphWidth = 280;
-    const graphHeight = 200;
+    const graphY = 30;
+    const graphWidth = 300;
+    const graphHeight = 300;
 
     // Scale factors
     const vScale = graphWidth / (Voc * 1.1);
@@ -465,7 +469,7 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
 
     // Create path for I-V curve
     const pathData = curve.points
-      .map((p, i) => `${i === 0 ? 'M' : 'L'} ${graphX + p.v * vScale} ${graphY + graphHeight - p.i * iScale}`)
+      .map((p, i) => `${i === 0 ? 'M' : 'L'} ${(graphX + p.v * vScale).toFixed(1)} ${(graphY + graphHeight - p.i * iScale).toFixed(1)}`)
       .join(' ');
 
     // MPP rectangle
@@ -530,14 +534,6 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
               <stop offset="100%" stopColor="#374151" stopOpacity="0.2" />
             </linearGradient>
 
-            {/* MPP point radial glow */}
-            <radialGradient id="ffMppGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#34d399" stopOpacity="1" />
-              <stop offset="40%" stopColor="#10b981" stopOpacity="0.8" />
-              <stop offset="70%" stopColor="#059669" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#047857" stopOpacity="0" />
-            </radialGradient>
-
             {/* Fill factor gauge gradient - good (green) */}
             <linearGradient id="ffGaugeGradientGood" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#10b981" />
@@ -563,33 +559,6 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
               <stop offset="100%" stopColor="#ef4444" />
             </linearGradient>
 
-            {/* Solar cell panel gradient with reflection effect */}
-            <linearGradient id="ffSolarCellGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#1e3a5f" />
-              <stop offset="20%" stopColor="#0c4a6e" />
-              <stop offset="40%" stopColor="#0369a1" />
-              <stop offset="60%" stopColor="#0284c7" />
-              <stop offset="80%" stopColor="#0c4a6e" />
-              <stop offset="100%" stopColor="#1e3a5f" />
-            </linearGradient>
-
-            {/* Solar cell reflection overlay */}
-            <linearGradient id="ffCellReflection" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.15" />
-              <stop offset="50%" stopColor="#ffffff" stopOpacity="0.05" />
-              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-            </linearGradient>
-
-            {/* Parameter card gradients */}
-            <linearGradient id="ffParamCardGood" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#10b981" stopOpacity="0.25" />
-              <stop offset="100%" stopColor="#059669" stopOpacity="0.15" />
-            </linearGradient>
-            <linearGradient id="ffParamCardBad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.25" />
-              <stop offset="100%" stopColor="#dc2626" stopOpacity="0.15" />
-            </linearGradient>
-
             {/* Info panel gradient */}
             <linearGradient id="ffInfoPanelGradient" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#1e293b" />
@@ -597,25 +566,8 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
               <stop offset="100%" stopColor="#1e293b" />
             </linearGradient>
 
-            {/* Quality assessment gradients */}
-            <linearGradient id="ffQualityExcellent" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#10b981" stopOpacity="0.2" />
-              <stop offset="50%" stopColor="#34d399" stopOpacity="0.25" />
-              <stop offset="100%" stopColor="#10b981" stopOpacity="0.2" />
-            </linearGradient>
-            <linearGradient id="ffQualityWarning" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.2" />
-              <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.25" />
-              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.2" />
-            </linearGradient>
-            <linearGradient id="ffQualityError" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.2" />
-              <stop offset="50%" stopColor="#f87171" stopOpacity="0.25" />
-              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.2" />
-            </linearGradient>
-
-            {/* Glow filters using feGaussianBlur + feMerge pattern */}
-            <filter id="ffCurveGlow" x="-50%" y="-50%" width="200%" height="200%">
+            {/* Glow filter for interactive point */}
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="3" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
@@ -623,8 +575,8 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
               </feMerge>
             </filter>
 
-            <filter id="ffMppGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
+            <filter id="ffCurveGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
@@ -651,16 +603,10 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-
-            {/* Subtle grid pattern */}
-            <pattern id="ffGridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
-              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.4" />
-            </pattern>
           </defs>
 
           {/* Premium dark background */}
           <rect width={width} height={height} fill="url(#ffLabBg)" rx={12} />
-          <rect width={width} height={height} fill="url(#ffGridPattern)" rx={12} />
 
           {/* Graph background with depth */}
           <rect x={graphX - 2} y={graphY - 2} width={graphWidth + 4} height={graphHeight + 4} rx={6} fill="#0a0f1a" />
@@ -676,8 +622,8 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
                 y2={graphY + graphHeight * (1 - frac)}
                 stroke="#374151"
                 strokeWidth={1}
-                strokeDasharray="3,3"
-                strokeOpacity={0.6}
+                strokeDasharray="4 4"
+                opacity={0.3}
               />
               <line
                 x1={graphX + graphWidth * frac}
@@ -686,8 +632,8 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
                 y2={graphY + graphHeight}
                 stroke="#374151"
                 strokeWidth={1}
-                strokeDasharray="3,3"
-                strokeOpacity={0.6}
+                strokeDasharray="4 4"
+                opacity={0.3}
               />
             </g>
           ))}
@@ -727,19 +673,15 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
             filter="url(#ffCurveGlow)"
           />
 
-          {/* MPP operating point with enhanced radial glow */}
+          {/* MPP operating point - interactive marker */}
           <circle
             cx={mppX}
             cy={mppY}
-            r={12}
-            fill="url(#ffMppGlow)"
-            filter="url(#ffMppGlowFilter)"
-          />
-          <circle
-            cx={mppX}
-            cy={mppY}
-            r={5}
+            r={8}
             fill={colors.success}
+            filter="url(#glow)"
+            stroke="#fff"
+            strokeWidth={2}
           />
 
           {/* Axes with premium styling */}
@@ -755,107 +697,64 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
           <text x={graphX - 40} y={graphY + graphHeight / 2} fill={colors.textSecondary} fontSize={12} textAnchor="middle" transform={`rotate(-90, ${graphX - 40}, ${graphY + graphHeight / 2})`}>Current (A)</text>
 
           {/* Key points labels */}
-          <text x={graphX + Voc * vScale} y={graphY + graphHeight + 15} fill={colors.textMuted} fontSize={10} textAnchor="middle">Voc</text>
-          <text x={graphX - 5} y={graphY + graphHeight - Isc * iScale + 4} fill={colors.textMuted} fontSize={10} textAnchor="end">Isc</text>
+          <text x={graphX + Voc * vScale} y={graphY + graphHeight + 15} fill={colors.textMuted} fontSize={11} textAnchor="middle">Voc</text>
+          <text x={graphX - 8} y={graphY + graphHeight - Isc * iScale + 4} fill={colors.textMuted} fontSize={11} textAnchor="end">Isc</text>
 
-          {/* Fill Factor info panel with premium styling */}
-          <g transform={`translate(${graphX + graphWidth + 30}, ${graphY})`}>
-            <rect x="-2" y="-2" width="164" height="204" rx={10} fill="#0a0f1a" />
-            <rect x="0" y="0" width="160" height="200" rx={8} fill="url(#ffInfoPanelGradient)" stroke={colors.accent} strokeWidth={1} filter="url(#ffPanelGlow)" />
-            <text x="80" y="20" fill={colors.accent} fontSize={12} fontWeight="bold" textAnchor="middle" filter="url(#ffTextGlow)">FILL FACTOR</text>
+          {/* Fill Factor info panel - positioned far right to avoid overlap */}
+          <rect x={graphX + graphWidth + 28} y={graphY - 2} width={164} height={340} rx={10} fill="#0a0f1a" />
+          <rect x={graphX + graphWidth + 30} y={graphY} width={160} height={336} rx={8} fill="url(#ffInfoPanelGradient)" stroke={colors.accent} strokeWidth={1} filter="url(#ffPanelGlow)" />
+          <text x={graphX + graphWidth + 110} y={graphY + 22} fill={colors.accent} fontSize={12} fontWeight="bold" textAnchor="middle" filter="url(#ffTextGlow)">FILL FACTOR</text>
 
-            {/* FF gauge background */}
-            <rect x="20" y="35" width="120" height="20" rx={10} fill="#1e293b" />
-            {/* FF gauge fill with dynamic gradient */}
-            <rect
-              x="20"
-              y="35"
-              width={120 * curve.fillFactor}
-              height="20"
-              rx={10}
-              fill={curve.fillFactor > 0.7 ? 'url(#ffGaugeGradientGood)' : curve.fillFactor > 0.5 ? 'url(#ffGaugeGradientWarning)' : 'url(#ffGaugeGradientError)'}
-              filter="url(#ffInnerGlow)"
-            />
-            <text x="80" y="50" fill="white" fontSize={14} fontWeight="bold" textAnchor="middle">
-              {(curve.fillFactor * 100).toFixed(1)}%
-            </text>
-
-            {/* Key values */}
-            <text x="10" y="75" fill={colors.textSecondary} fontSize={10}>Voc: {curve.Voc.toFixed(3)} V</text>
-            <text x="10" y="92" fill={colors.textSecondary} fontSize={10}>Isc: {curve.Isc.toFixed(2)} A</text>
-            <text x="10" y="109" fill={colors.textSecondary} fontSize={10}>Vmp: {curve.Vmp.toFixed(3)} V</text>
-            <text x="10" y="126" fill={colors.textSecondary} fontSize={10}>Imp: {curve.Imp.toFixed(2)} A</text>
-
-            <line x1="10" y1="138" x2="150" y2="138" stroke={colors.textMuted} strokeWidth={1} strokeOpacity={0.5} />
-
-            <text x="10" y="158" fill={colors.success} fontSize={12} fontWeight="bold">Pmax: {curve.maxPower.toFixed(2)} W</text>
-            <text x="10" y="178" fill={colors.textMuted} fontSize={10}>Ideal: {(Voc * Isc).toFixed(2)} W</text>
-            <text x="10" y="195" fill={colors.textMuted} fontSize={9}>FF = Pmax / (Voc x Isc)</text>
-          </g>
-
-          {/* Resistance indicators panel */}
-          <g transform="translate(60, 280)">
-            <rect x="-2" y="-2" width="434" height="84" rx={10} fill="#0a0f1a" />
-            <rect x="0" y="0" width="430" height="80" rx={8} fill="url(#ffInfoPanelGradient)" />
-            <text x="215" y="20" fill={colors.textPrimary} fontSize={11} fontWeight="bold" textAnchor="middle">EQUIVALENT CIRCUIT PARAMETERS</text>
-
-            {/* Series resistance with gradient */}
-            <g transform="translate(20, 35)">
-              <rect x="0" y="0" width="80" height="35" rx={6} fill={seriesResistance > 2 ? 'url(#ffParamCardBad)' : 'url(#ffParamCardGood)'} stroke={seriesResistance > 2 ? colors.error : colors.success} strokeWidth={0.5} strokeOpacity={0.5} />
-              <text x="40" y="15" fill={colors.textSecondary} fontSize={9} textAnchor="middle">Series Rs</text>
-              <text x="40" y="30" fill={seriesResistance > 2 ? colors.error : colors.success} fontSize={12} fontWeight="bold" textAnchor="middle">{seriesResistance.toFixed(1)} Ohm</text>
-            </g>
-
-            {/* Shunt resistance with gradient */}
-            <g transform="translate(120, 35)">
-              <rect x="0" y="0" width="80" height="35" rx={6} fill={shuntResistance < 100 ? 'url(#ffParamCardBad)' : 'url(#ffParamCardGood)'} stroke={shuntResistance < 100 ? colors.error : colors.success} strokeWidth={0.5} strokeOpacity={0.5} />
-              <text x="40" y="15" fill={colors.textSecondary} fontSize={9} textAnchor="middle">Shunt Rsh</text>
-              <text x="40" y="30" fill={shuntResistance < 100 ? colors.error : colors.success} fontSize={12} fontWeight="bold" textAnchor="middle">{shuntResistance >= 1000 ? '1k+' : shuntResistance.toFixed(0)} Ohm</text>
-            </g>
-
-            {/* Ideality factor with gradient */}
-            <g transform="translate(220, 35)">
-              <rect x="0" y="0" width="80" height="35" rx={6} fill={recombinationFactor > 1.5 ? 'url(#ffParamCardBad)' : 'url(#ffParamCardGood)'} stroke={recombinationFactor > 1.5 ? colors.error : colors.success} strokeWidth={0.5} strokeOpacity={0.5} />
-              <text x="40" y="15" fill={colors.textSecondary} fontSize={9} textAnchor="middle">Ideality n</text>
-              <text x="40" y="30" fill={recombinationFactor > 1.5 ? colors.error : colors.success} fontSize={12} fontWeight="bold" textAnchor="middle">{(recombinationFactor + 0.3).toFixed(2)}</text>
-            </g>
-
-            {/* Temperature with gradient */}
-            <g transform="translate(320, 35)">
-              <rect x="0" y="0" width="80" height="35" rx={6} fill={temperature > 45 ? 'url(#ffParamCardBad)' : 'url(#ffParamCardGood)'} stroke={temperature > 45 ? colors.error : colors.success} strokeWidth={0.5} strokeOpacity={0.5} />
-              <text x="40" y="15" fill={colors.textSecondary} fontSize={9} textAnchor="middle">Temperature</text>
-              <text x="40" y="30" fill={temperature > 45 ? colors.error : colors.success} fontSize={12} fontWeight="bold" textAnchor="middle">{temperature}C</text>
-            </g>
-          </g>
-
-          {/* Quality assessment bar with premium gradient */}
-          <rect x={58} y={373} width={434} height={54} rx={10} fill="#0a0f1a" />
+          {/* FF gauge background */}
+          <rect x={graphX + graphWidth + 50} y={graphY + 35} width={120} height={20} rx={10} fill="#1e293b" />
+          {/* FF gauge fill with dynamic gradient */}
           <rect
-            x={60}
-            y={375}
-            width={430}
-            height={50}
-            rx={8}
-            fill={curve.fillFactor > 0.7 ? 'url(#ffQualityExcellent)' : curve.fillFactor > 0.5 ? 'url(#ffQualityWarning)' : 'url(#ffQualityError)'}
-            stroke={qualityColor}
-            strokeWidth={1}
+            x={graphX + graphWidth + 50}
+            y={graphY + 35}
+            width={120 * curve.fillFactor}
+            height={20}
+            rx={10}
+            fill={curve.fillFactor > 0.7 ? 'url(#ffGaugeGradientGood)' : curve.fillFactor > 0.5 ? 'url(#ffGaugeGradientWarning)' : 'url(#ffGaugeGradientError)'}
+            filter="url(#ffInnerGlow)"
           />
-          <text x={275} y={400} fill={qualityColor} fontSize={14} fontWeight="bold" textAnchor="middle" filter="url(#ffTextGlow)">
-            {curve.fillFactor > 0.75 ? 'EXCELLENT CELL' : curve.fillFactor > 0.65 ? 'GOOD CELL' : curve.fillFactor > 0.5 ? 'MARGINAL CELL' : 'DEFECTIVE CELL'}
+          <text x={graphX + graphWidth + 110} y={graphY + 50} fill="white" fontSize={14} fontWeight="bold" textAnchor="middle">
+            {(curve.fillFactor * 100).toFixed(1)}%
           </text>
-          <text x={275} y={418} fill={colors.textSecondary} fontSize={10} textAnchor="middle">
-            {curve.fillFactor > 0.75 ? 'Low resistance, minimal recombination' : curve.fillFactor > 0.65 ? 'Acceptable for most applications' : 'Check for defects or high resistance contacts'}
+
+          {/* Key values - all with absolute positioning and fontSize >= 11 */}
+          <text x={graphX + graphWidth + 40} y={graphY + 78} fill={colors.textSecondary} fontSize={11}>Voc: {curve.Voc.toFixed(3)} V</text>
+          <text x={graphX + graphWidth + 40} y={graphY + 96} fill={colors.textSecondary} fontSize={11}>Isc: {curve.Isc.toFixed(2)} A</text>
+          <text x={graphX + graphWidth + 40} y={graphY + 114} fill={colors.textSecondary} fontSize={11}>Vmp: {curve.Vmp.toFixed(3)} V</text>
+          <text x={graphX + graphWidth + 40} y={graphY + 132} fill={colors.textSecondary} fontSize={11}>Imp: {curve.Imp.toFixed(2)} A</text>
+
+          <line x1={graphX + graphWidth + 40} y1={graphY + 144} x2={graphX + graphWidth + 180} y2={graphY + 144} stroke={colors.textMuted} strokeWidth={1} strokeOpacity={0.5} />
+
+          <text x={graphX + graphWidth + 40} y={graphY + 164} fill={colors.success} fontSize={12} fontWeight="bold">Pmax: {curve.maxPower.toFixed(2)} W</text>
+          <text x={graphX + graphWidth + 40} y={graphY + 184} fill={colors.textMuted} fontSize={11}>Ideal: {(Voc * Isc).toFixed(2)} W</text>
+          <text x={graphX + graphWidth + 40} y={graphY + 204} fill={colors.textMuted} fontSize={11}>FF = Pmax / (Voc x Isc)</text>
+
+          {/* Quality indicator */}
+          <text x={graphX + graphWidth + 110} y={graphY + 234} fill={qualityColor} fontSize={12} fontWeight="bold" textAnchor="middle">
+            {curve.fillFactor > 0.75 ? 'EXCELLENT' : curve.fillFactor > 0.65 ? 'GOOD' : curve.fillFactor > 0.5 ? 'MARGINAL' : 'DEFECTIVE'}
           </text>
+
+          {/* Circuit params - absolute positions, no nested transforms */}
+          <text x={graphX + graphWidth + 40} y={graphY + 260} fill={colors.textSecondary} fontSize={11}>Rs: {seriesResistance.toFixed(1)} Ohm</text>
+          <text x={graphX + graphWidth + 40} y={graphY + 278} fill={colors.textSecondary} fontSize={11}>Rsh: {shuntResistance >= 1000 ? '1k+' : shuntResistance.toFixed(0)} Ohm</text>
+          <text x={graphX + graphWidth + 40} y={graphY + 296} fill={colors.textSecondary} fontSize={11}>n: {(recombinationFactor + 0.3).toFixed(2)}</text>
+          <text x={graphX + graphWidth + 40} y={graphY + 314} fill={colors.textSecondary} fontSize={11}>T: {temperature}C</text>
         </svg>
       </div>
     );
   };
 
+  const sliderStyle: React.CSSProperties = { width: '100%', height: '20px', touchAction: 'pan-y' as const, WebkitAppearance: 'none' as const, accentColor: '#3b82f6' };
+
   const renderControls = () => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
         <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Series Resistance (Rs): {seriesResistance.toFixed(1)} Ω
+          Series Resistance (Rs): {seriesResistance.toFixed(1)} Ohm
         </label>
         <input
           type="range"
@@ -864,16 +763,17 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
           step="0.1"
           value={seriesResistance}
           onChange={(e) => setSeriesResistance(parseFloat(e.target.value))}
-          style={{ width: '100%', accentColor: colors.error }}
+          onInput={(e) => setSeriesResistance(parseFloat((e.target as HTMLInputElement).value))}
+          style={{ ...sliderStyle, accentColor: colors.error }}
         />
-        <div style={{ fontSize: '10px', color: colors.textMuted }}>
+        <div style={{ fontSize: '11px', color: colors.textMuted }}>
           Higher Rs = Poor contacts, high-resistance grid lines
         </div>
       </div>
 
       <div>
         <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Shunt Resistance (Rsh): {shuntResistance >= 1000 ? '1000+ Ω' : shuntResistance + ' Ω'}
+          Shunt Resistance (Rsh): {shuntResistance >= 1000 ? '1000+ Ohm' : shuntResistance + ' Ohm'}
         </label>
         <input
           type="range"
@@ -882,9 +782,10 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
           step="10"
           value={shuntResistance}
           onChange={(e) => setShuntResistance(parseFloat(e.target.value))}
-          style={{ width: '100%', accentColor: colors.blue }}
+          onInput={(e) => setShuntResistance(parseFloat((e.target as HTMLInputElement).value))}
+          style={{ ...sliderStyle, accentColor: colors.blue }}
         />
-        <div style={{ fontSize: '10px', color: colors.textMuted }}>
+        <div style={{ fontSize: '11px', color: colors.textMuted }}>
           Lower Rsh = Crystal defects, edge leakage paths
         </div>
       </div>
@@ -900,9 +801,10 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
           step="0.1"
           value={recombinationFactor}
           onChange={(e) => setRecombinationFactor(parseFloat(e.target.value))}
-          style={{ width: '100%', accentColor: colors.purple }}
+          onInput={(e) => setRecombinationFactor(parseFloat((e.target as HTMLInputElement).value))}
+          style={{ ...sliderStyle, accentColor: colors.purple }}
         />
-        <div style={{ fontSize: '10px', color: colors.textMuted }}>
+        <div style={{ fontSize: '11px', color: colors.textMuted }}>
           Higher recombination = More electron-hole pairs lost before collection
         </div>
       </div>
@@ -918,9 +820,10 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
           step="5"
           value={temperature}
           onChange={(e) => setTemperature(parseFloat(e.target.value))}
-          style={{ width: '100%', accentColor: colors.warning }}
+          onInput={(e) => setTemperature(parseFloat((e.target as HTMLInputElement).value))}
+          style={{ ...sliderStyle, accentColor: colors.warning }}
         />
-        <div style={{ fontSize: '10px', color: colors.textMuted }}>
+        <div style={{ fontSize: '11px', color: colors.textMuted }}>
           Standard test condition is 25°C
         </div>
       </div>

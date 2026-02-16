@@ -849,7 +849,7 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
           step="1"
           value={angle}
           onChange={(e) => setAngle(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={{ width: '100%', accentColor: colors.accent, touchAction: 'pan-y' as const }}
         />
       </div>
 
@@ -884,7 +884,7 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
                 step="1"
                 value={thirdPolarizerAngle}
                 onChange={(e) => setThirdPolarizerAngle(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: colors.accent }}
+                style={{ width: '100%', accentColor: colors.accent, touchAction: 'pan-y' as const }}
               />
             </div>
           )}

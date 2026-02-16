@@ -56,6 +56,12 @@ const gameCategories = {
     color: '#6366F1',
     description: 'Hardware and AI concepts',
   },
+  elon: {
+    name: 'ELON Games',
+    icon: '🚀',
+    color: '#F97316',
+    description: 'Systems thinking across energy, space, chips, and more',
+  },
 };
 
 // Game list with categories
@@ -176,6 +182,68 @@ const games = [
   { name: 'Network Latency', slug: 'network-latency', category: 'computing', difficulty: 'intermediate' },
   { name: 'AI Inference Latency', slug: 'a-i-inference-latency', category: 'computing', difficulty: 'advanced' },
   { name: 'Energy Per Token', slug: 'energy-per-token', category: 'computing', difficulty: 'advanced' },
+
+  // ELON Games — Module 0: Meta-Skills
+  { name: 'ELON Constraint Cascade', slug: 'e-l-o-n_-constraint-cascade', category: 'elon', difficulty: 'intermediate' },
+  { name: 'ELON Precision Budget', slug: 'e-l-o-n_-precision-budget', category: 'elon', difficulty: 'intermediate' },
+
+  // ELON Games — Module 1: Energy & Grid
+  { name: 'ELON Grid Balance', slug: 'e-l-o-n_-grid-balance', category: 'elon', difficulty: 'intermediate' },
+  { name: 'ELON Transformer Timeline', slug: 'e-l-o-n_-transformer-timeline', category: 'elon', difficulty: 'intermediate' },
+  { name: 'ELON Interconnect Queue', slug: 'e-l-o-n_-interconnect-queue', category: 'elon', difficulty: 'advanced' },
+
+  // ELON Games — Module 2: Power Generation
+  { name: 'ELON Power Plant Picker', slug: 'e-l-o-n_-power-plant-picker', category: 'elon', difficulty: 'beginner' },
+  { name: 'ELON Fuel Delivery', slug: 'e-l-o-n_-fuel-delivery', category: 'elon', difficulty: 'intermediate' },
+  { name: 'ELON Blade Factory', slug: 'e-l-o-n_-blade-factory', category: 'elon', difficulty: 'intermediate' },
+
+  // ELON Games — Module 3: Data Centers
+  { name: 'ELON Facility Power', slug: 'e-l-o-n_-facility-power', category: 'elon', difficulty: 'intermediate' },
+  { name: 'ELON Cooling Strategy', slug: 'e-l-o-n_-cooling-strategy', category: 'elon', difficulty: 'intermediate' },
+  { name: 'ELON Uptime Architect', slug: 'e-l-o-n_-uptime-architect', category: 'elon', difficulty: 'advanced' },
+
+  // ELON Games — Module 4: Solar + Storage
+  { name: 'ELON Solar Manufacturing', slug: 'e-l-o-n_-solar-manufacturing', category: 'elon', difficulty: 'intermediate' },
+  { name: 'ELON Solar Deployment', slug: 'e-l-o-n_-solar-deployment', category: 'elon', difficulty: 'beginner' },
+  { name: 'ELON Battery System', slug: 'e-l-o-n_-battery-system', category: 'elon', difficulty: 'intermediate' },
+
+  // ELON Games — Module 5: Materials & Mining
+  { name: 'ELON Ore To Metal', slug: 'e-l-o-n_-ore-to-metal', category: 'elon', difficulty: 'intermediate' },
+  { name: 'ELON Mining Bottleneck', slug: 'e-l-o-n_-mining-bottleneck', category: 'elon', difficulty: 'advanced' },
+  { name: 'ELON Critical Minerals', slug: 'e-l-o-n_-critical-minerals', category: 'elon', difficulty: 'intermediate' },
+
+  // ELON Games — Module 6: Semiconductors
+  { name: 'ELON Fab Yield Curve', slug: 'e-l-o-n_-fab-yield-curve', category: 'elon', difficulty: 'advanced' },
+  { name: 'ELON Chip Supply Web', slug: 'e-l-o-n_-chip-supply-web', category: 'elon', difficulty: 'intermediate' },
+  { name: 'ELON Packaging Limit', slug: 'e-l-o-n_-packaging-limit', category: 'elon', difficulty: 'advanced' },
+
+  // ELON Games — Module 7: Networking & Comms
+  { name: 'ELON Cluster Comms', slug: 'e-l-o-n_-cluster-comms', category: 'elon', difficulty: 'advanced' },
+  { name: 'ELON Optical Link', slug: 'e-l-o-n_-optical-link', category: 'elon', difficulty: 'intermediate' },
+  { name: 'ELON Space Comms', slug: 'e-l-o-n_-space-comms', category: 'elon', difficulty: 'intermediate' },
+
+  // ELON Games — Module 8: Space Systems
+  { name: 'ELON Orbit Designer', slug: 'e-l-o-n_-orbit-designer', category: 'elon', difficulty: 'intermediate' },
+  { name: 'ELON Radiation Armor', slug: 'e-l-o-n_-radiation-armor', category: 'elon', difficulty: 'advanced' },
+  { name: 'ELON Space Radiator', slug: 'e-l-o-n_-space-radiator', category: 'elon', difficulty: 'intermediate' },
+  { name: 'ELON Orbital Factory', slug: 'e-l-o-n_-orbital-factory', category: 'elon', difficulty: 'advanced' },
+
+  // ELON Games — Module 9: Rockets & Reusability
+  { name: 'ELON Rocket Materials', slug: 'e-l-o-n_-rocket-materials', category: 'elon', difficulty: 'intermediate' },
+  { name: 'ELON TPS Turnaround', slug: 'e-l-o-n_-t-p-s-turnaround', category: 'elon', difficulty: 'intermediate' },
+
+  // ELON Games — Module 10: Robotics & Autonomy
+  { name: 'ELON Actuator Limits', slug: 'e-l-o-n_-actuator-limits', category: 'elon', difficulty: 'intermediate' },
+  { name: 'ELON Robot Learning', slug: 'e-l-o-n_-robot-learning', category: 'elon', difficulty: 'advanced' },
+  { name: 'ELON Recursive Bot', slug: 'e-l-o-n_-recursive-bot', category: 'elon', difficulty: 'advanced' },
+
+  // ELON Games — Module 11: Execution, Finance & Policy
+  { name: 'ELON Throughput Cadence', slug: 'e-l-o-n_-throughput-cadence', category: 'elon', difficulty: 'intermediate' },
+  { name: 'ELON Capital Stack', slug: 'e-l-o-n_-capital-stack', category: 'elon', difficulty: 'advanced' },
+  { name: 'ELON Policy Risk', slug: 'e-l-o-n_-policy-risk', category: 'elon', difficulty: 'intermediate' },
+
+  // ELON Games — Capstone
+  { name: 'ELON Gigawatt Blueprint', slug: 'e-l-o-n_-gigawatt-blueprint', category: 'elon', difficulty: 'advanced' },
 ];
 
 const GamesPage: React.FC = () => {
@@ -275,7 +343,7 @@ const GamesPage: React.FC = () => {
         margin: '0 auto',
       }}>
         <h1 style={{ fontSize: '36px', fontWeight: 800, marginBottom: '12px' }}>
-          260+ Interactive Physics Games
+          300+ Interactive Games
         </h1>
         <p style={{ color: colors.textSecondary, fontSize: '18px' }}>
           Master complex concepts through hands-on simulations
@@ -461,7 +529,7 @@ const GamesPage: React.FC = () => {
         background: colors.bgSecondary,
       }}>
         <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '12px' }}>
-          Unlock all 260+ games
+          Unlock all 300+ games
         </h2>
         <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>
           Start with 15 free games, or upgrade for unlimited access

@@ -216,7 +216,7 @@ const realWorldApps = [
     stats: [
       { value: '100 lm/W', label: 'Fluorescent efficacy', icon: '💡' },
       { value: '15 lm/W', label: 'Incandescent efficacy', icon: '🔥' },
-      { value: '10,000 hrs', label: 'Typical tube lifespan', icon: '⏰' }
+      { value: '10000 hrs', label: 'Typical tube lifespan', icon: '⏰' }
     ],
     examples: ['Office lighting', 'Compact fluorescent bulbs', 'Blacklight fixtures', 'Aquarium lighting'],
     companies: ['Philips Lighting', 'Osram', 'GE Lighting', 'Sylvania'],
@@ -233,7 +233,7 @@ const realWorldApps = [
     howItWorks: 'Fluorescent antibodies are added to patient samples (blood, tissue). They bind to specific antigens (viral proteins, cancer markers). UV excitation reveals bound antibodies as bright spots, indicating positive detection.',
     stats: [
       { value: '$25B', label: 'Immunodiagnostics market', icon: '💰' },
-      { value: 'Minutes', label: 'Rapid test results', icon: '⏱️' },
+      { value: '5 minutes', label: 'Rapid test results', icon: '⏱️' },
       { value: '99%', label: 'Sensitivity achievable', icon: '🎯' }
     ],
     examples: ['COVID-19 antigen tests', 'HIV screening', 'Autoimmune disease diagnosis', 'Cancer biomarker detection'],
@@ -242,17 +242,6 @@ const realWorldApps = [
     color: '#8B5CF6'
   }
 ];
-
-// Material properties for the simulation
-const getMaterialProps = (mat: string) => {
-  const props: Record<string, { fluorescent: boolean; emitColor: string; emitGlow: string; name: string; emissionWavelength: number }> = {
-    highlighter: { fluorescent: true, emitColor: '#22ff22', emitGlow: '#00ff00', name: 'Yellow Highlighter', emissionWavelength: 520 },
-    paper: { fluorescent: false, emitColor: '#f5f5dc', emitGlow: '#f5f5dc', name: 'Plain Paper', emissionWavelength: 0 },
-    tonic: { fluorescent: true, emitColor: '#00ccff', emitGlow: '#00ffff', name: 'Tonic Water (Quinine)', emissionWavelength: 450 },
-    mineral: { fluorescent: true, emitColor: '#ff4444', emitGlow: '#ff0000', name: 'Fluorite Mineral', emissionWavelength: 620 },
-  };
-  return props[mat] || props.highlighter;
-};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
@@ -274,15 +263,9 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
   const [isMobile, setIsMobile] = useState(false);
 
   // Simulation state
-  const [uvOn, setUvOn] = useState(false);
-  const [roomLightOn, setRoomLightOn] = useState(true);
-  const [selectedMaterial, setSelectedMaterial] = useState<'highlighter' | 'paper' | 'tonic' | 'mineral'>('highlighter');
   const [uvIntensity, setUvIntensity] = useState(70);
-  const [animationFrame, setAnimationFrame] = useState(0);
 
   // Twist phase - phosphorescence and quantum yield
-  const [showPhosphorescence, setShowPhosphorescence] = useState(false);
-  const [phosphorDecay, setPhosphorDecay] = useState(100);
   const [excitationWavelength, setExcitationWavelength] = useState(365);
 
   // Test state
@@ -306,40 +289,19 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Animation loop
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setAnimationFrame(f => f + 1);
-    }, 50);
-    return () => clearInterval(timer);
-  }, []);
-
-  // Phosphorescence decay
-  useEffect(() => {
-    if (showPhosphorescence && !uvOn && phosphorDecay > 0) {
-      const timer = setInterval(() => {
-        setPhosphorDecay(d => Math.max(0, d - 2));
-      }, 100);
-      return () => clearInterval(timer);
-    }
-    if (uvOn) {
-      setPhosphorDecay(100);
-    }
-  }, [showPhosphorescence, uvOn, phosphorDecay]);
-
   // Premium design colors
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
     bgCard: '#1a1a24',
-    accent: '#8B5CF6', // Purple for UV theme
+    accent: '#8B5CF6',
     accentGlow: 'rgba(139, 92, 246, 0.3)',
     success: '#10B981',
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#e2e8f0', // High contrast for readability
-    textMuted: '#e2e8f0', // Better contrast
+    textSecondary: '#e2e8f0',
+    textMuted: 'rgba(148,163,184,0.7)',
     border: '#2a2a3a',
   };
 
@@ -390,19 +352,36 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
     }
   }, [phase, goToPhase, phaseOrder]);
 
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
   // Helper to convert wavelength to color
   const wavelengthToColor = (wavelength: number): string => {
-    if (wavelength < 380) return '#8b5cf6'; // UV - violet
-    if (wavelength < 450) return '#3b82f6'; // Blue
-    if (wavelength < 495) return '#06b6d4'; // Cyan
-    if (wavelength < 570) return '#22c55e'; // Green
-    if (wavelength < 590) return '#eab308'; // Yellow
-    if (wavelength < 620) return '#f97316'; // Orange
-    if (wavelength < 700) return '#ef4444'; // Red
-    return '#7f1d1d'; // IR - dark red
+    if (wavelength < 380) return '#8b5cf6';
+    if (wavelength < 450) return '#3b82f6';
+    if (wavelength < 495) return '#06b6d4';
+    if (wavelength < 570) return '#22c55e';
+    if (wavelength < 590) return '#eab308';
+    if (wavelength < 620) return '#f97316';
+    if (wavelength < 700) return '#ef4444';
+    return '#7f1d1d';
   };
 
-  // Progress bar component
+  // Slider style
+  const sliderStyle: React.CSSProperties = {
+    width: '100%',
+    height: '20px',
+    touchAction: 'pan-y',
+    WebkitAppearance: 'none',
+    accentColor: '#3b82f6',
+    cursor: 'pointer',
+  };
+
+  // Progress bar render function
   const renderProgressBar = () => (
     <div style={{
       position: 'fixed',
@@ -422,7 +401,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
     </div>
   );
 
-  // Navigation dots
+  // Navigation dots render function
   const renderNavDots = () => (
     <div style={{
       display: 'flex',
@@ -464,14 +443,14 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
     minHeight: '44px',
   };
 
-  // Navigation bar component - fixed at top with z-index
+  // Navigation bar render function - with back button
   const renderNavBar = () => (
     <nav style={{
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
-      height: '56px',
+      height: '48px',
       background: colors.bgSecondary,
       borderBottom: `1px solid ${colors.border}`,
       display: 'flex',
@@ -481,6 +460,20 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
       zIndex: 1001,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <button
+          onClick={prevPhase}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: colors.textSecondary,
+            cursor: 'pointer',
+            fontSize: '18px',
+            padding: '4px 8px',
+            minHeight: '44px',
+          }}
+        >
+          ← Back
+        </button>
         <span style={{ fontSize: '20px' }}>🔦</span>
         <span style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>Fluorescence</span>
       </div>
@@ -490,31 +483,185 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
     </nav>
   );
 
-  // Fluorescence Scene Visualization
-  const FluorescenceScene = ({ showControls = true }: { showControls?: boolean }) => {
-    const matProps = getMaterialProps(selectedMaterial);
-    const isGlowing = uvOn && matProps.fluorescent && showControls;
-    const ambientLight = roomLightOn ? 0.8 : (uvOn ? 0.2 : 0.05);
-    const glowIntensity = (uvIntensity / 100);
-    const width = isMobile ? 340 : 480;
-    const height = isMobile ? 260 : 320;
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Fluorescence Intensity Chart SVG - render function (not a component)
+  // Shows emission intensity vs wavelength, controlled by UV intensity slider
+  // ─────────────────────────────────────────────────────────────────────────────
+  const renderFluorescenceChart = (intensity: number, showControls: boolean = true) => {
+    const svgW = 460;
+    const svgH = 320;
+    const pad = { top: 30, right: 30, bottom: 50, left: 55 };
+    const plotW = svgW - pad.left - pad.right;
+    const plotH = svgH - pad.top - pad.bottom;
+
+    // Emission spectrum as Gaussian curve - intensity scales with UV power
+    const emissionPeak = 520; // nm - green emission
+    const excitationPeak = 365; // nm - UV excitation
+    const emissionWidth = 40;
+    const excitationWidth = 15;
+    const scale = intensity / 100;
+
+    // Generate wavelength points from 300 to 700 nm
+    const nPoints = 40;
+    const wlMin = 300;
+    const wlMax = 700;
+
+    const toX = (wl: number) => pad.left + ((wl - wlMin) / (wlMax - wlMin)) * plotW;
+    const toY = (val: number) => pad.top + plotH - val * plotH;
+
+    // Excitation spectrum (UV absorption)
+    const excitationPoints: string[] = [];
+    for (let i = 0; i <= nPoints; i++) {
+      const wl = wlMin + (i / nPoints) * (wlMax - wlMin);
+      const val = Math.exp(-0.5 * ((wl - excitationPeak) / excitationWidth) ** 2) * 0.85;
+      excitationPoints.push(`${i === 0 ? 'M' : 'L'} ${toX(wl).toFixed(1)} ${toY(val).toFixed(1)}`);
+    }
+
+    // Emission spectrum (visible light)
+    const emissionPoints: string[] = [];
+    for (let i = 0; i <= nPoints; i++) {
+      const wl = wlMin + (i / nPoints) * (wlMax - wlMin);
+      const val = Math.exp(-0.5 * ((wl - emissionPeak) / emissionWidth) ** 2) * scale;
+      emissionPoints.push(`${i === 0 ? 'M' : 'L'} ${toX(wl).toFixed(1)} ${toY(val).toFixed(1)}`);
+    }
+
+    // Interactive point on emission curve at peak
+    const peakY = toY(scale);
+    const peakX = toX(emissionPeak);
+
+    // Stokes shift indicator position
+    const stokesX1 = toX(excitationPeak);
+    const stokesX2 = toX(emissionPeak);
+
+    // Grid lines
+    const gridLines = [];
+    for (let i = 0; i <= 4; i++) {
+      const y = pad.top + (i / 4) * plotH;
+      gridLines.push(y);
+    }
+    const wlTicks = [350, 400, 450, 500, 550, 600, 650];
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} role="img" aria-label="Fluorescence experiment visualization">
+      <svg width={svgW} height={svgH} viewBox={`0 0 ${svgW} ${svgH}`} style={{ maxWidth: '100%' }} role="img" aria-label="Fluorescence emission intensity vs wavelength chart">
         <defs>
-          <linearGradient id="labBg" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor={roomLightOn ? '#1e293b' : '#050510'} />
-            <stop offset="100%" stopColor={roomLightOn ? '#0f172a' : '#030308'} />
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <linearGradient id="emissionFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#22c55e" stopOpacity="0.05" />
           </linearGradient>
-          <radialGradient id="uvBeam" cx="50%" cy="0%" r="80%">
-            <stop offset="0%" stopColor="#a78bfa" stopOpacity={uvOn ? 0.6 * glowIntensity : 0} />
-            <stop offset="100%" stopColor="#6d28d9" stopOpacity="0" />
-          </radialGradient>
-          <radialGradient id="emission" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor={matProps.emitGlow} stopOpacity={isGlowing ? 0.9 * glowIntensity : 0} />
-            <stop offset="50%" stopColor={matProps.emitColor} stopOpacity={isGlowing ? 0.5 * glowIntensity : 0} />
-            <stop offset="100%" stopColor={matProps.emitColor} stopOpacity="0" />
-          </radialGradient>
+          <linearGradient id="exciteFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.05" />
+          </linearGradient>
+        </defs>
+
+        {/* Background */}
+        <rect width={svgW} height={svgH} fill="#1a1a24" rx="8" />
+
+        {/* Grid lines */}
+        {gridLines.map((y, i) => (
+          <line key={`h${i}`} x1={pad.left} y1={y} x2={svgW - pad.right} y2={y} stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+        ))}
+        {wlTicks.map((wl, i) => (
+          <line key={`v${i}`} x1={toX(wl)} y1={pad.top} x2={toX(wl)} y2={pad.top + plotH} stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+        ))}
+
+        {/* Y axis */}
+        <line x1={pad.left} y1={pad.top} x2={pad.left} y2={pad.top + plotH} stroke="#64748b" strokeWidth="1.5" />
+        {/* X axis */}
+        <line x1={pad.left} y1={pad.top + plotH} x2={svgW - pad.right} y2={pad.top + plotH} stroke="#64748b" strokeWidth="1.5" />
+
+        {/* Axis labels */}
+        <text x={pad.left - 8} y={pad.top + plotH / 2} textAnchor="middle" fill={colors.textSecondary} fontSize="12" transform={`rotate(-90, ${pad.left - 8}, ${pad.top + plotH / 2})`}>Intensity (a.u.)</text>
+        <text x={pad.left + plotW / 2} y={svgH - 8} textAnchor="middle" fill={colors.textSecondary} fontSize="12">Wavelength (nm)</text>
+
+        {/* Tick labels on X axis */}
+        {wlTicks.map((wl, i) => (
+          <text key={`xt${i}`} x={toX(wl)} y={pad.top + plotH + 18} textAnchor="middle" fill={colors.textMuted} fontSize="11">{wl}</text>
+        ))}
+
+        {/* Y axis tick labels */}
+        {[0, 0.25, 0.5, 0.75, 1.0].map((v, i) => (
+          <text key={`yt${i}`} x={pad.left - 12} y={toY(v) + 4} textAnchor="end" fill={colors.textMuted} fontSize="11">{v.toFixed(1)}</text>
+        ))}
+
+        {/* Excitation curve (UV absorption) */}
+        <path d={excitationPoints.join(' ')} fill="none" stroke="#8b5cf6" strokeWidth="2.5" />
+
+        {/* Emission curve (visible fluorescence) - area fill */}
+        <path d={emissionPoints.join(' ') + ` L ${toX(wlMax).toFixed(1)} ${toY(0).toFixed(1)} L ${toX(wlMin).toFixed(1)} ${toY(0).toFixed(1)} Z`} fill="url(#emissionFill)" />
+        {/* Emission curve stroke */}
+        <path d={emissionPoints.join(' ')} fill="none" stroke="#22c55e" strokeWidth="2.5" />
+
+        {/* Stokes shift arrow */}
+        <line x1={stokesX1} y1={toY(0.4)} x2={stokesX2} y2={toY(0.4)} stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="6 3" />
+        <text x={(stokesX1 + stokesX2) / 2} y={toY(0.4) - 8} textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="600">Stokes Shift</text>
+        <text x={(stokesX1 + stokesX2) / 2} y={toY(0.4) + 16} textAnchor="middle" fill="#f59e0b" fontSize="11">{emissionPeak - excitationPeak} nm</text>
+
+        {/* Peak labels */}
+        <text x={stokesX1} y={pad.top + 16} textAnchor="middle" fill="#a78bfa" fontSize="12" fontWeight="600">UV Excitation</text>
+        <text x={stokesX2} y={pad.top + 16} textAnchor="middle" fill="#22c55e" fontSize="12" fontWeight="600">Emission</text>
+
+        {/* Interactive point on emission peak */}
+        <circle cx={peakX} cy={peakY} r={8} fill="#22c55e" filter="url(#glow)" stroke="#fff" strokeWidth={2} />
+
+        {/* Current intensity label near point */}
+        <text x={peakX + 14} y={peakY - 8} fill="#22c55e" fontSize="12" fontWeight="600">{(scale * 100).toFixed(0)}%</text>
+
+        {/* Chart title */}
+        <text x={svgW / 2} y={16} textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">Fluorescence Emission Spectrum</text>
+      </svg>
+    );
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Twist Play Chart - excitation wavelength vs emission intensity
+  // ─────────────────────────────────────────────────────────────────────────────
+  const renderTwistChart = (excWl: number) => {
+    const svgW = 460;
+    const svgH = 320;
+    const pad = { top: 30, right: 30, bottom: 50, left: 55 };
+    const plotW = svgW - pad.left - pad.right;
+    const plotH = svgH - pad.top - pad.bottom;
+
+    // Excitation efficiency drops as wavelength moves away from optimal 365nm
+    const optimalWl = 365;
+    const efficiency = Math.exp(-0.5 * ((excWl - optimalWl) / 40) ** 2);
+
+    // Generate excitation efficiency curve
+    const nPoints = 30;
+    const wlMin = 300;
+    const wlMax = 450;
+    const toX = (wl: number) => pad.left + ((wl - wlMin) / (wlMax - wlMin)) * plotW;
+    const toY = (val: number) => pad.top + plotH - val * plotH;
+
+    const curvePoints: string[] = [];
+    for (let i = 0; i <= nPoints; i++) {
+      const wl = wlMin + (i / nPoints) * (wlMax - wlMin);
+      const val = Math.exp(-0.5 * ((wl - optimalWl) / 40) ** 2);
+      curvePoints.push(`${i === 0 ? 'M' : 'L'} ${toX(wl).toFixed(1)} ${toY(val).toFixed(1)}`);
+    }
+
+    const pointX = toX(excWl);
+    const pointY = toY(efficiency);
+
+    // Determine color based on wavelength
+    const wlColor = wavelengthToColor(excWl);
+
+    // Grid lines
+    const gridLines = [];
+    for (let i = 0; i <= 4; i++) gridLines.push(pad.top + (i / 4) * plotH);
+    const wlTicks = [300, 325, 350, 375, 400, 425, 450];
+
+    return (
+      <svg width={svgW} height={svgH} viewBox={`0 0 ${svgW} ${svgH}`} style={{ maxWidth: '100%' }} role="img" aria-label="Excitation efficiency vs wavelength chart">
+        <defs>
           <filter id="glow">
             <feGaussianBlur stdDeviation="4" result="blur" />
             <feMerge>
@@ -523,111 +670,42 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
             </feMerge>
           </filter>
         </defs>
+        <rect width={svgW} height={svgH} fill="#1a1a24" rx="8" />
 
-        {/* Background */}
-        <rect width={width} height={height} fill="url(#labBg)" />
+        {/* Grid */}
+        {gridLines.map((y, i) => (
+          <line key={`h${i}`} x1={pad.left} y1={y} x2={svgW - pad.right} y2={y} stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+        ))}
+        {wlTicks.map((wl, i) => (
+          <line key={`v${i}`} x1={toX(wl)} y1={pad.top} x2={toX(wl)} y2={pad.top + plotH} stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+        ))}
 
-        {/* UV Beam */}
-        {uvOn && (
-          <ellipse cx={width * 0.7} cy={height * 0.4} rx={width * 0.3} ry={height * 0.5} fill="url(#uvBeam)" />
-        )}
+        {/* Axes */}
+        <line x1={pad.left} y1={pad.top} x2={pad.left} y2={pad.top + plotH} stroke="#64748b" strokeWidth="1.5" />
+        <line x1={pad.left} y1={pad.top + plotH} x2={svgW - pad.right} y2={pad.top + plotH} stroke="#64748b" strokeWidth="1.5" />
 
-        {/* UV Light Source */}
-        <g transform={`translate(${width * 0.75}, 20)`}>
-          <rect x="-25" y="0" width="50" height="60" rx="6" fill="#374151" />
-          <rect x="-20" y="50" width="40" height="25" rx="4" fill={uvOn ? '#a78bfa' : '#4b5563'} filter={uvOn ? 'url(#glow)' : ''} />
-          {uvOn && (
-            <>
-              {[...Array(5)].map((_, i) => (
-                <line
-                  key={i}
-                  x1={-15 + i * 8}
-                  y1="75"
-                  x2={-40 + i * 15}
-                  y2={height - 40}
-                  stroke="#a78bfa"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  opacity={0.3 + Math.sin(animationFrame * 0.1 + i) * 0.2}
-                />
-              ))}
-            </>
-          )}
-        </g>
+        {/* Axis labels */}
+        <text x={pad.left - 8} y={pad.top + plotH / 2} textAnchor="middle" fill={colors.textSecondary} fontSize="12" transform={`rotate(-90, ${pad.left - 8}, ${pad.top + plotH / 2})`}>Intensity (a.u.)</text>
+        <text x={pad.left + plotW / 2} y={svgH - 8} textAnchor="middle" fill={colors.textSecondary} fontSize="12">Excitation Wavelength (nm)</text>
 
-        {/* Sample Object */}
-        <g transform={`translate(${width * 0.3}, ${height * 0.4})`}>
-          {/* Glow effect */}
-          {isGlowing && (
-            <ellipse
-              cx="50"
-              cy="50"
-              rx={80 + Math.sin(animationFrame * 0.1) * 8 * glowIntensity}
-              ry={60 + Math.sin(animationFrame * 0.1) * 8 * glowIntensity}
-              fill="url(#emission)"
-              filter="url(#glow)"
-            />
-          )}
+        {/* X tick labels */}
+        {wlTicks.map((wl, i) => (
+          <text key={`xt${i}`} x={toX(wl)} y={pad.top + plotH + 18} textAnchor="middle" fill={colors.textMuted} fontSize="11">{wl}</text>
+        ))}
 
-          {/* Object based on material */}
-          {selectedMaterial === 'highlighter' && (
-            <g>
-              <rect x="20" y="25" width="60" height="50" rx="4" fill={isGlowing ? matProps.emitColor : '#fef08a'} opacity={ambientLight} filter={isGlowing ? 'url(#glow)' : ''} />
-              <line x1="28" y1="38" x2="72" y2="38" stroke="#374151" strokeWidth="1" opacity={0.3} />
-              <line x1="28" y1="50" x2="72" y2="50" stroke="#374151" strokeWidth="1" opacity={0.3} />
-              <line x1="28" y1="62" x2="72" y2="62" stroke="#374151" strokeWidth="1" opacity={0.3} />
-            </g>
-          )}
-          {selectedMaterial === 'paper' && (
-            <g>
-              <rect x="15" y="20" width="70" height="60" rx="2" fill="#f5f5dc" opacity={ambientLight} />
-              {[...Array(5)].map((_, i) => (
-                <line key={i} x1="22" y1={30 + i * 10} x2="78" y2={30 + i * 10} stroke="#d4d4d4" strokeWidth="0.5" opacity={0.4} />
-              ))}
-            </g>
-          )}
-          {selectedMaterial === 'tonic' && (
-            <g>
-              <rect x="30" y="15" width="40" height="70" rx="4" fill="#4b5563" />
-              <rect x="36" y="8" width="28" height="10" rx="2" fill="#4b5563" />
-              <rect x="35" y="22" width="30" height="58" rx="3" fill={isGlowing ? matProps.emitColor : '#bae6fd'} opacity={ambientLight} filter={isGlowing ? 'url(#glow)' : ''} />
-              {[...Array(6)].map((_, i) => (
-                <circle
-                  key={i}
-                  cx={40 + (i % 3) * 8}
-                  cy={70 - ((animationFrame * 2 + i * 10) % 40)}
-                  r={1.5 + (i % 2)}
-                  fill={isGlowing ? matProps.emitGlow : '#ffffff'}
-                  opacity={0.5}
-                />
-              ))}
-            </g>
-          )}
-          {selectedMaterial === 'mineral' && (
-            <g>
-              <polygon
-                points="50,10 85,45 70,85 30,85 15,45"
-                fill={isGlowing ? matProps.emitColor : '#a78bfa'}
-                opacity={ambientLight}
-                filter={isGlowing ? 'url(#glow)' : ''}
-              />
-              <polygon points="50,10 65,35 50,50 35,35" fill={isGlowing ? '#ffffff' : '#c4b5fd'} opacity={0.6} />
-            </g>
-          )}
-        </g>
+        {/* Excitation efficiency curve */}
+        <path d={curvePoints.join(' ')} fill="none" stroke={wlColor} strokeWidth="2.5" />
 
-        {/* Material label */}
-        <text x={width / 2} y={height - 20} textAnchor="middle" fill={colors.textSecondary} fontSize="14">
-          {matProps.name}
-        </text>
+        {/* Optimal line */}
+        <line x1={toX(optimalWl)} y1={pad.top} x2={toX(optimalWl)} y2={pad.top + plotH} stroke="#a78bfa" strokeWidth="1" strokeDasharray="6 3" />
+        <text x={toX(optimalWl)} y={pad.top + plotH + 32} textAnchor="middle" fill="#a78bfa" fontSize="11">Optimal 365 nm</text>
 
-        {/* Light status indicators */}
-        <g transform="translate(15, 15)">
-          <circle cx="10" cy="10" r="8" fill={roomLightOn ? '#fef08a' : '#374151'} filter={roomLightOn ? 'url(#glow)' : ''} />
-          <text x="25" y="14" fill={colors.textMuted} fontSize="10">Room</text>
-          <circle cx="10" cy="35" r="8" fill={uvOn ? '#a78bfa' : '#374151'} filter={uvOn ? 'url(#glow)' : ''} />
-          <text x="25" y="39" fill={colors.textMuted} fontSize="10">UV</text>
-        </g>
+        {/* Interactive point */}
+        <circle cx={pointX} cy={pointY} r={8} fill={wlColor} filter="url(#glow)" stroke="#fff" strokeWidth={2} />
+        <text x={pointX + 14} y={pointY - 8} fill={wlColor} fontSize="12" fontWeight="600">{(efficiency * 100).toFixed(0)}%</text>
+
+        {/* Title */}
+        <text x={svgW / 2} y={16} textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">Excitation Efficiency Spectrum</text>
       </svg>
     );
   };
@@ -644,61 +722,58 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        paddingTop: '80px',
-        textAlign: 'center',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
-        }}>
-          🔦✨
-        </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', paddingTop: '80px', textAlign: 'center' }}>
+          <div style={{
+            fontSize: '64px',
+            marginBottom: '24px',
+            animation: 'pulse 2s infinite',
+          }}>
+            🔦✨
+          </div>
+          <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Fluorescence Physics
-        </h1>
+          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+            Fluorescence Physics
+          </h1>
 
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          "Under a UV lamp, a highlighter transforms into a brilliant beacon of <span style={{ color: colors.accent }}>glowing green light</span>. But why does invisible UV light become visible color, and why do some things glow while others stay dark?"
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
-        }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "Fluorescence is natures light show - molecules absorbing invisible radiation and re-emitting it as visible beauty. Its the principle behind everything from crime scene investigation to saving lives with medical diagnostics."
+          <p style={{
+            ...typo.body,
+            color: colors.textSecondary,
+            maxWidth: '600px',
+            marginBottom: '32px',
+          }}>
+            "Under a UV lamp, a highlighter transforms into a brilliant beacon of <span style={{ color: colors.accent }}>glowing green light</span>. But why does invisible UV light become visible color, and why do some things glow while others stay dark?"
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            — Photophysics Fundamentals
-          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '500px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+              "Fluorescence is natures light show - molecules absorbing invisible radiation and re-emitting it as visible beauty. Its the principle behind everything from crime scene investigation to saving lives with medical diagnostics."
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+              — Photophysics Fundamentals
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('click'); nextPhase(); }}
+            style={primaryButtonStyle}
+          >
+            Next
+          </button>
+
+          {renderNavDots()}
         </div>
-
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Next
-        </button>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -715,371 +790,359 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-          <div style={{
-            background: `${colors.accent}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.accent}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              🤔 Make Your Prediction - Step 1 of 3
-            </p>
-          </div>
-
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            A yellow highlighter appears pale in normal light, but glows bright green under UV. Why does this happen?
-          </h2>
-
-          {/* Static SVG diagram for predict phase */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <svg width="100%" height="160" viewBox="0 0 400 160" role="img" aria-label="UV light hitting highlighter to produce green glow diagram">
-              <defs>
-                <linearGradient id="uvGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#8b5cf6" />
-                  <stop offset="100%" stopColor="#a78bfa" />
-                </linearGradient>
-                <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#22c55e" />
-                  <stop offset="100%" stopColor="#86efac" />
-                </linearGradient>
-              </defs>
-              {/* UV Source */}
-              <rect x="20" y="50" width="60" height="60" rx="8" fill="#374151" />
-              <rect x="30" y="60" width="40" height="40" rx="4" fill="url(#uvGrad)" />
-              <text x="50" y="130" textAnchor="middle" fill={colors.textSecondary} fontSize="12">UV Light</text>
-              <text x="50" y="145" textAnchor="middle" fill={colors.accent} fontSize="10">365 nm</text>
-
-              {/* Arrow 1 */}
-              <path d="M 90 80 L 140 80" stroke={colors.accent} strokeWidth="3" markerEnd="url(#arrowhead)" />
-              <defs>
-                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                  <polygon points="0 0, 10 3.5, 0 7" fill={colors.accent} />
-                </marker>
-              </defs>
-
-              {/* Highlighter */}
-              <rect x="150" y="45" width="100" height="70" rx="8" fill="#fef08a" stroke={colors.accent} strokeWidth="2" />
-              <text x="200" y="85" textAnchor="middle" fill="#374151" fontSize="14" fontWeight="600">Highlighter</text>
-              <text x="200" y="135" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Sample</text>
-
-              {/* Arrow 2 */}
-              <path d="M 260 80 L 310 80" stroke="#22c55e" strokeWidth="3" markerEnd="url(#arrowhead2)" />
-              <defs>
-                <marker id="arrowhead2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                  <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e" />
-                </marker>
-              </defs>
-
-              {/* Emission */}
-              <circle cx="350" cy="80" r="30" fill="url(#greenGrad)" opacity="0.8" />
-              <text x="350" y="130" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Green Glow</text>
-              <text x="350" y="145" textAnchor="middle" fill="#22c55e" fontSize="10">520 nm</text>
-            </svg>
-
-            {/* Legend */}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', padding: '24px', paddingTop: '80px' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: '24px',
-              marginTop: '16px',
-              flexWrap: 'wrap',
+              background: `${colors.accent}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.accent}44`,
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '16px', height: '16px', background: colors.accent, borderRadius: '4px' }} />
-                <span style={{ ...typo.small, color: colors.textSecondary }}>UV Light (invisible)</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '16px', height: '16px', background: '#fef08a', borderRadius: '4px', border: '1px solid #d4d4d4' }} />
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Highlighter material</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '16px', height: '16px', background: '#22c55e', borderRadius: '4px' }} />
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Visible emission</span>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                Make Your Prediction - Step 1 of 3
+              </p>
+            </div>
+
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              A yellow highlighter appears pale in normal light, but glows bright green under UV. Why does this happen?
+            </h2>
+
+            {/* Static SVG diagram for predict phase */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <svg width="400" height="200" viewBox="0 0 400 200" role="img" aria-label="UV light hitting highlighter to produce green glow diagram">
+                <defs>
+                  <linearGradient id="uvGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#8b5cf6" />
+                    <stop offset="100%" stopColor="#a78bfa" />
+                  </linearGradient>
+                  <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#22c55e" />
+                    <stop offset="100%" stopColor="#86efac" />
+                  </linearGradient>
+                  <filter id="glow">
+                    <feGaussianBlur stdDeviation="4" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                  <marker id="arrowhead" markerWidth="12" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                    <polygon points="0 0, 12 3.5, 0 7" fill={colors.accent} />
+                  </marker>
+                  <marker id="arrowhead2" markerWidth="12" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                    <polygon points="0 0, 12 3.5, 0 7" fill="#22c55e" />
+                  </marker>
+                </defs>
+                <rect width="400" height="200" fill="#1a1a24" rx="8" />
+
+                {/* UV Source */}
+                <rect x="20" y="55" width="60" height="60" rx="8" fill="#374151" />
+                <rect x="30" y="65" width="40" height="40" rx="4" fill="url(#uvGrad)" />
+                <text x="50" y="135" textAnchor="middle" fill={colors.textSecondary} fontSize="12">UV Light</text>
+                <text x="50" y="155" textAnchor="middle" fill={colors.accent} fontSize="11">365 nm</text>
+
+                {/* Arrow 1 */}
+                <path d="M 90 85 L 140 85" stroke={colors.accent} strokeWidth="3" markerEnd="url(#arrowhead)" />
+
+                {/* Highlighter */}
+                <rect x="150" y="50" width="100" height="70" rx="8" fill="#fef08a" stroke={colors.accent} strokeWidth="2" />
+                <text x="200" y="90" textAnchor="middle" fill="#374151" fontSize="14" fontWeight="600">Highlighter</text>
+                <text x="200" y="145" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Sample Material</text>
+
+                {/* Arrow 2 */}
+                <path d="M 260 85 L 310 85" stroke="#22c55e" strokeWidth="3" markerEnd="url(#arrowhead2)" />
+
+                {/* Emission */}
+                <circle cx="350" cy="85" r="30" fill="url(#greenGrad)" opacity="0.8" filter="url(#glow)" />
+                <text x="350" y="135" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Green Glow</text>
+                <text x="350" y="155" textAnchor="middle" fill="#22c55e" fontSize="11">520 nm</text>
+
+                {/* Energy label */}
+                <text x="200" y="185" textAnchor="middle" fill={colors.textMuted} fontSize="11">E = hc/λ (higher energy UV → lower energy visible)</text>
+              </svg>
+
+              {/* Legend */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '24px',
+                marginTop: '16px',
+                flexWrap: 'wrap',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: '16px', height: '16px', background: colors.accent, borderRadius: '4px' }} />
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>UV Light (invisible)</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: '16px', height: '16px', background: '#fef08a', borderRadius: '4px', border: '1px solid #d4d4d4' }} />
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Highlighter material</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: '16px', height: '16px', background: '#22c55e', borderRadius: '4px' }} />
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Visible emission</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                  style={{
+                    background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                    color: prediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {prediction && (
               <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setPrediction(opt.id); }}
-                style={{
-                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  minHeight: '44px',
-                }}
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
               >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
+                Next
               </button>
-            ))}
+            )}
           </div>
 
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Next
-            </button>
-          )}
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
 
   // PLAY PHASE - Interactive Fluorescence Lab
   if (phase === 'play') {
-    const matProps = getMaterialProps(selectedMaterial);
+    // Calculate emission intensity based on UV intensity
+    const emissionIntensity = uvIntensity / 100;
+    const stokesShift = 155; // nm difference between excitation and emission
+    const quantumYield = 0.85;
+    const emittedEnergy = emissionIntensity * quantumYield;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Fluorescence Laboratory
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '12px' }}>
-            Control the light sources and materials to discover what fluoresces
-          </p>
-          <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '12px' }}>
-            Try toggling the UV light and observe what happens. Experiment with different materials!
-          </p>
-          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Real-world relevance: This same principle is used in forensic analysis to detect hidden evidence, in medical diagnostics to identify diseases, and in fluorescent lighting that powers buildings worldwide.
-          </p>
-
-          {/* Main visualization */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <FluorescenceScene />
-            </div>
-
-            {/* Material selector */}
-            <div style={{ marginBottom: '20px' }}>
-              <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>Select Material:</p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-                {(['highlighter', 'paper', 'tonic', 'mineral'] as const).map(mat => (
-                  <button
-                    key={mat}
-                    onClick={() => { playSound('click'); setSelectedMaterial(mat); }}
-                    style={{
-                      padding: '12px 8px',
-                      borderRadius: '8px',
-                      border: `2px solid ${selectedMaterial === mat ? colors.accent : colors.border}`,
-                      background: selectedMaterial === mat ? `${colors.accent}22` : colors.bgSecondary,
-                      cursor: 'pointer',
-                      textAlign: 'center',
-                    }}
-                  >
-                    <div style={{ fontSize: '20px', marginBottom: '4px' }}>
-                      {mat === 'highlighter' ? '📝' : mat === 'paper' ? '📄' : mat === 'tonic' ? '🥤' : '💎'}
-                    </div>
-                    <div style={{ ...typo.small, color: colors.textPrimary }}>
-                      {getMaterialProps(mat).name.split(' ')[0]}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Light controls */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-              <button
-                onClick={() => { playSound('click'); setRoomLightOn(!roomLightOn); }}
-                style={{
-                  padding: '16px',
-                  borderRadius: '12px',
-                  border: `2px solid ${roomLightOn ? colors.warning : colors.border}`,
-                  background: roomLightOn ? `${colors.warning}22` : colors.bgSecondary,
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                }}
-              >
-                <div style={{ fontSize: '24px', marginBottom: '4px' }}>💡</div>
-                <div style={{ ...typo.body, color: roomLightOn ? colors.warning : colors.textMuted, fontWeight: 600 }}>
-                  Room Light {roomLightOn ? 'ON' : 'OFF'}
-                </div>
-              </button>
-              <button
-                onClick={() => { playSound('click'); setUvOn(!uvOn); }}
-                style={{
-                  padding: '16px',
-                  borderRadius: '12px',
-                  border: `2px solid ${uvOn ? colors.accent : colors.border}`,
-                  background: uvOn ? `${colors.accent}22` : colors.bgSecondary,
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                }}
-              >
-                <div style={{ fontSize: '24px', marginBottom: '4px' }}>🔦</div>
-                <div style={{ ...typo.body, color: uvOn ? colors.accent : colors.textMuted, fontWeight: 600 }}>
-                  UV Light {uvOn ? 'ON' : 'OFF'}
-                </div>
-              </button>
-            </div>
-
-            {/* UV intensity slider - always visible */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>UV Intensity</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{uvIntensity}%</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="100"
-                value={uvIntensity}
-                onChange={(e) => setUvIntensity(parseInt(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
-                aria-label="UV Intensity slider"
-              />
-            </div>
-
-            {/* Status display */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: matProps.fluorescent ? colors.success : colors.error }}>
-                  {matProps.fluorescent ? 'Yes' : 'No'}
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Fluorescent</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>365 nm</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Excitation</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: matProps.fluorescent ? matProps.emitColor : colors.textMuted }}>
-                  {matProps.fluorescent ? `${matProps.emissionWavelength} nm` : '-'}
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Emission</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Observation guidance */}
-          <div style={{
-            background: `${colors.accent}11`,
-            border: `1px solid ${colors.accent}33`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '16px',
-          }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              <strong style={{ color: colors.accent }}>Observe:</strong> Toggle the UV light ON and room light OFF to see fluorescence. Try different materials and adjust UV intensity using the slider to see how brightness changes.
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Fluorescence Laboratory
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '12px' }}>
+              Fluorescence is defined as the emission of light by a substance that has absorbed electromagnetic radiation. Adjust the UV intensity to observe how emission intensity varies proportionally.
             </p>
+            <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              The Stokes shift describes how emitted photons always have longer wavelength (lower energy) than absorbed photons. This relationship between absorption and emission is calculated as: E = hc/λ. Real-world relevance: This same principle is used in forensic analysis, medical diagnostics, and fluorescent lighting.
+            </p>
+
+            {/* Main SVG visualization */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                {renderFluorescenceChart(uvIntensity)}
+              </div>
+
+              {/* Legend */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '24px',
+                marginBottom: '16px',
+                flexWrap: 'wrap',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: '16px', height: '16px', background: '#8b5cf6', borderRadius: '4px' }} />
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>UV Excitation (365 nm)</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: '16px', height: '16px', background: '#22c55e', borderRadius: '4px' }} />
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Visible Emission (520 nm)</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: '16px', height: '16px', background: '#f59e0b', borderRadius: '4px' }} />
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Stokes Shift region</span>
+                </div>
+              </div>
+
+              {/* Formula display */}
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+                marginBottom: '16px',
+              }}>
+                <span style={{ ...typo.body, color: colors.textPrimary, fontFamily: 'monospace' }}>
+                  E = hc/λ | Emission Intensity = UV Power × Quantum Yield (QY = {quantumYield})
+                </span>
+              </div>
+
+              {/* UV Intensity slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>UV Intensity (excitation power)</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{uvIntensity}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="10"
+                  max="100"
+                  value={uvIntensity}
+                  onChange={(e) => setUvIntensity(parseInt(e.target.value))}
+                  onInput={(e) => setUvIntensity(parseInt((e.target as HTMLInputElement).value))}
+                  style={sliderStyle}
+                  aria-label="UV Intensity slider"
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>10%</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>100%</span>
+                </div>
+              </div>
+
+              {/* Status display */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+              }}>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: emissionIntensity > 0.5 ? colors.success : colors.warning }}>
+                    {(emittedEnergy * 100).toFixed(0)}%
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Emission</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.accent }}>365 nm</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Excitation</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: '#22c55e' }}>
+                    {stokesShift} nm
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Stokes Shift</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Observation guidance */}
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.accent }}>Observe:</strong> As you observed in the prediction phase, UV light excites fluorescent molecules. Drag the UV intensity slider to see how excitation power affects emission brightness. Notice the emission peak always stays at 520 nm regardless of intensity - only the amplitude changes.
+              </p>
+            </div>
+
+            {/* Color-coded feedback */}
+            {uvIntensity >= 80 && (
+              <div style={{
+                background: `${colors.success}22`,
+                border: `1px solid ${colors.success}`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                  Maximum fluorescence! The emission peak reaches {(emittedEnergy * 100).toFixed(0)}% of maximum possible intensity.
+                </p>
+              </div>
+            )}
+
+            {uvIntensity < 30 && (
+              <div style={{
+                background: `${colors.error}22`,
+                border: `1px solid ${colors.error}`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.body, color: colors.error, margin: 0 }}>
+                  Low UV intensity - fluorescence emission is very weak at {(emittedEnergy * 100).toFixed(0)}%.
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Next
+            </button>
           </div>
 
-          {/* Discovery prompt */}
-          {uvOn && !roomLightOn && matProps.fluorescent && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                Beautiful! The {matProps.name.toLowerCase()} absorbs invisible UV and emits visible {matProps.emissionWavelength < 500 ? 'blue' : matProps.emissionWavelength < 570 ? 'green' : 'red'} light!
-              </p>
-            </div>
-          )}
-
-          {uvOn && !matProps.fluorescent && (
-            <div style={{
-              background: `${colors.warning}22`,
-              border: `1px solid ${colors.warning}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
-                Plain paper has no fluorescent molecules - it just reflects UV without converting it!
-              </p>
-            </div>
-          )}
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Next
-          </button>
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1090,110 +1153,106 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            The Fluorescence Process
-          </h2>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              The Fluorescence Process
+            </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ ...typo.body, color: colors.textSecondary }}>
-              <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Step 1: Absorption</strong> - A UV photon excites an electron to a higher energy state
-              </p>
-              <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Step 2: Relaxation</strong> - The electron loses some energy as heat (vibrational relaxation)
-              </p>
-              <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Step 3: Emission</strong> - The electron falls back down, releasing a <span style={{ color: colors.success }}>lower-energy visible photon</span>
-              </p>
-              <p>
-                This energy difference between absorbed and emitted light is called the <span style={{ color: colors.accent, fontWeight: 600 }}>Stokes Shift</span> - its why emission is always at a longer wavelength than excitation!
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ ...typo.body, color: colors.textSecondary }}>
+                <p style={{ marginBottom: '16px' }}>
+                  As you observed in the experiment, your prediction about fluorescence can now be confirmed:
+                </p>
+                <p style={{ marginBottom: '16px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Step 1: Absorption</strong> - A UV photon excites an electron to a higher energy state
+                </p>
+                <p style={{ marginBottom: '16px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Step 2: Relaxation</strong> - The electron loses some energy as heat (vibrational relaxation)
+                </p>
+                <p style={{ marginBottom: '16px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Step 3: Emission</strong> - The electron falls back down, releasing a <span style={{ color: colors.success }}>lower-energy visible photon</span>
+                </p>
+                <p>
+                  This energy difference between absorbed and emitted light is called the <span style={{ color: colors.accent, fontWeight: 600 }}>Stokes Shift</span> - its why emission is always at a longer wavelength than excitation!
+                </p>
+              </div>
+            </div>
+
+            {/* Energy diagram */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <svg viewBox="0 0 300 200" style={{ width: '100%', maxWidth: '400px', margin: '0 auto', display: 'block' }}>
+                <rect width="300" height="200" fill="#1a1a24" rx="8" />
+                {/* Ground state */}
+                <rect x="40" y="155" width="100" height="8" rx="2" fill="#4b5563" />
+                <text x="90" y="180" textAnchor="middle" fill={colors.textMuted} fontSize="11">Ground State (S0)</text>
+
+                {/* Excited state */}
+                <rect x="40" y="35" width="100" height="8" rx="2" fill="#8b5cf6" />
+                <text x="90" y="28" textAnchor="middle" fill="#a78bfa" fontSize="11">Excited State (S1)</text>
+
+                {/* Absorption arrow */}
+                <line x1="60" y1="150" x2="60" y2="47" stroke="#8b5cf6" strokeWidth="4" />
+                <polygon points="60,43 55,53 65,53" fill="#c4b5fd" />
+                <text x="40" y="100" fill="#a78bfa" fontSize="11" transform="rotate(-90, 40, 100)">Absorb UV</text>
+
+                {/* Heat loss */}
+                <path d="M 90 45 Q 100 55 90 65 Q 80 75 90 85" stroke="#f59e0b" strokeWidth="2" strokeDasharray="4,2" fill="none" />
+                <text x="108" y="65" fill="#f59e0b" fontSize="11">Heat loss</text>
+
+                {/* Emission arrow */}
+                <line x1="120" y1="47" x2="120" y2="150" stroke="#22c55e" strokeWidth="4" />
+                <polygon points="120,153 115,143 125,143" fill="#22c55e" />
+                <text x="140" y="100" fill="#22c55e" fontSize="11" transform="rotate(90, 140, 100)">Emit Visible</text>
+
+                {/* Stokes shift label */}
+                <rect x="175" y="65" width="100" height="40" rx="4" fill="#0f172a" />
+                <text x="225" y="82" textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="bold">Stokes Shift</text>
+                <text x="225" y="98" textAnchor="middle" fill={colors.textMuted} fontSize="11">155 nm</text>
+              </svg>
+            </div>
+
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '24px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+                Key Insight: Why Longer Wavelength?
+              </h3>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Energy is conserved! The emitted photon has <strong>less energy</strong> than the absorbed one because some energy is lost as heat. Since E = hc/λ, less energy means <strong>longer wavelength</strong> - UV (365 nm) becomes green (520 nm)!
               </p>
             </div>
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Next
+            </button>
           </div>
 
-          {/* Energy diagram */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <svg viewBox="0 0 300 150" style={{ width: '100%', maxWidth: '400px', margin: '0 auto', display: 'block' }}>
-              <defs>
-                <linearGradient id="absorbArrow" x1="0%" y1="100%" x2="0%" y2="0%">
-                  <stop offset="0%" stopColor="#8b5cf6" />
-                  <stop offset="100%" stopColor="#c4b5fd" />
-                </linearGradient>
-                <linearGradient id="emitArrow" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#ffffff" />
-                  <stop offset="100%" stopColor="#22c55e" />
-                </linearGradient>
-              </defs>
-              {/* Ground state */}
-              <rect x="40" y="120" width="100" height="8" rx="2" fill="#4b5563" />
-              <text x="90" y="140" textAnchor="middle" fill={colors.textMuted} fontSize="10">Ground State (S0)</text>
-
-              {/* Excited state */}
-              <rect x="40" y="30" width="100" height="8" rx="2" fill="#8b5cf6" />
-              <text x="90" y="22" textAnchor="middle" fill="#a78bfa" fontSize="10">Excited State (S1)</text>
-
-              {/* Absorption arrow */}
-              <line x1="60" y1="115" x2="60" y2="42" stroke="url(#absorbArrow)" strokeWidth="4" />
-              <polygon points="60,38 55,48 65,48" fill="#c4b5fd" />
-              <text x="45" y="80" fill="#a78bfa" fontSize="9" transform="rotate(-90, 45, 80)">Absorb UV</text>
-
-              {/* Heat loss */}
-              <path d="M 90 40 Q 100 50 90 60 Q 80 70 90 80" stroke="#f59e0b" strokeWidth="2" strokeDasharray="4,2" fill="none" />
-              <text x="105" y="60" fill="#f59e0b" fontSize="8">Heat loss</text>
-
-              {/* Emission arrow */}
-              <line x1="120" y1="42" x2="120" y2="115" stroke="url(#emitArrow)" strokeWidth="4" />
-              <polygon points="120,118 115,108 125,108" fill="#22c55e" />
-              <text x="135" y="80" fill="#22c55e" fontSize="9" transform="rotate(90, 135, 80)">Emit Visible</text>
-
-              {/* Stokes shift label */}
-              <rect x="170" y="55" width="80" height="40" rx="4" fill="#0f172a" />
-              <text x="210" y="72" textAnchor="middle" fill={colors.accent} fontSize="10" fontWeight="bold">Stokes Shift</text>
-              <text x="210" y="88" textAnchor="middle" fill={colors.textMuted} fontSize="9">~150 nm</text>
-            </svg>
-          </div>
-
-          <div style={{
-            background: `${colors.accent}11`,
-            border: `1px solid ${colors.accent}33`,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              💡 Key Insight: Why Longer Wavelength?
-            </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              Energy is conserved! The emitted photon has <strong>less energy</strong> than the absorbed one because some energy is lost as heat. Since E = hc/λ, less energy means <strong>longer wavelength</strong> - UV (365 nm) becomes green (520 nm)!
-            </p>
-          </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Next
-          </button>
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1210,304 +1269,227 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-          <div style={{
-            background: `${colors.warning}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.warning}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              🌙 New Variable: Phosphorescence
-            </p>
-          </div>
-
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            When you turn off the UV light, what happens to a glow-in-the-dark star vs a fluorescent highlighter?
-          </h2>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '40px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px', marginBottom: '8px' }}>📝✨</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Fluorescent</p>
-                <p style={{ ...typo.small, color: colors.success }}>Highlighter</p>
-              </div>
-              <div style={{ fontSize: '32px', color: colors.textMuted }}>vs</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px', marginBottom: '8px' }}>⭐🌙</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Phosphorescent</p>
-                <p style={{ ...typo.small, color: colors.accent }}>Glow Star</p>
-              </div>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
+            <div style={{
+              background: `${colors.warning}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.warning}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+                New Variable: Phosphorescence
+              </p>
             </div>
-          </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              When you turn off the UV light, what happens to a glow-in-the-dark star vs a fluorescent highlighter?
+            </h2>
+
+            {/* SVG for twist_predict */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <svg width="400" height="220" viewBox="0 0 400 220" role="img" aria-label="Fluorescence vs phosphorescence comparison">
+                <defs>
+                  <filter id="glow">
+                    <feGaussianBlur stdDeviation="4" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <rect width="400" height="220" fill="#1a1a24" rx="8" />
+
+                {/* Title */}
+                <text x="200" y="22" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">Time After UV Light Removed</text>
+
+                {/* Time axis */}
+                <line x1="50" y1="180" x2="360" y2="180" stroke="#64748b" strokeWidth="1.5" />
+                <text x="205" y="210" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Time (seconds)</text>
+                {[0, 1, 2, 3, 5, 10].map((t, i) => (
+                  <text key={i} x={50 + i * 62} y="196" textAnchor="middle" fill={colors.textMuted} fontSize="11">{t}s</text>
+                ))}
+
+                {/* Fluorescence - drops instantly */}
+                <line x1="50" y1="60" x2="50" y2="180" stroke="#22c55e" strokeWidth="3" />
+                <line x1="50" y1="180" x2="360" y2="180" stroke="#22c55e" strokeWidth="2" opacity="0.5" />
+                <text x="80" y="50" fill="#22c55e" fontSize="12" fontWeight="600">Fluorescence</text>
+                <text x="80" y="68" fill="#22c55e" fontSize="11">(instant off)</text>
+
+                {/* Phosphorescence - decays slowly */}
+                <path d="M 50 60 L 50 70 L 112 100 L 174 130 L 236 155 L 298 170 L 360 175" stroke="#f59e0b" strokeWidth="3" fill="none" />
+                <text x="300" y="50" fill="#f59e0b" fontSize="12" fontWeight="600">Phosphorescence</text>
+                <text x="300" y="68" fill="#f59e0b" fontSize="11">(slow decay)</text>
+
+                {/* Y axis label */}
+                <text x="30" y="120" textAnchor="middle" fill={colors.textSecondary} fontSize="12" transform="rotate(-90, 30, 120)">Intensity</text>
+              </svg>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                  style={{
+                    background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                    border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                    color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {twistPrediction && (
               <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
-                style={{
-                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
-                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
               >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
-                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
+                See the Difference
               </button>
-            ))}
+            )}
           </div>
 
-          {twistPrediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              See the Difference →
-            </button>
-          )}
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
 
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
-    const decayOpacity = !uvOn && showPhosphorescence ? phosphorDecay / 100 : (uvOn ? 1 : 0);
+    const optimalWl = 365;
+    const efficiency = Math.exp(-0.5 * ((excitationWavelength - optimalWl) / 40) ** 2);
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Fluorescence vs Phosphorescence
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Toggle phosphorescence mode and observe the afterglow when UV is turned off
-          </p>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Excitation Wavelength and Efficiency
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Not all wavelengths excite fluorescence equally. Adjust the excitation wavelength to discover the optimal absorption range.
+            </p>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            {/* Comparison visualization */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '16px',
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
               marginBottom: '24px',
             }}>
-              {/* Fluorescence side */}
+              {/* Chart */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                {renderTwistChart(excitationWavelength)}
+              </div>
+
+              {/* Excitation wavelength slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Excitation Wavelength</span>
+                  <span style={{ ...typo.small, color: wavelengthToColor(excitationWavelength), fontWeight: 600 }}>{excitationWavelength} nm</span>
+                </div>
+                <input
+                  type="range"
+                  min="300"
+                  max="450"
+                  value={excitationWavelength}
+                  onChange={(e) => setExcitationWavelength(parseInt(e.target.value))}
+                  onInput={(e) => setExcitationWavelength(parseInt((e.target as HTMLInputElement).value))}
+                  style={sliderStyle}
+                  aria-label="Excitation Wavelength slider"
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>UV (300 nm)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Violet (450 nm)</span>
+                </div>
+              </div>
+
+              {/* Status */}
               <div style={{
-                background: '#050510',
-                borderRadius: '12px',
-                padding: '20px',
-                textAlign: 'center',
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '12px',
               }}>
-                <div style={{ fontSize: '48px', marginBottom: '8px' }}>📝</div>
                 <div style={{
-                  width: '80px',
-                  height: '80px',
-                  margin: '0 auto 12px',
+                  background: colors.bgSecondary,
                   borderRadius: '8px',
-                  background: uvOn ? '#22ff22' : '#4b5563',
-                  boxShadow: uvOn ? '0 0 30px #00ff00' : 'none',
-                  transition: 'all 0.3s ease',
-                }} />
-                <p style={{ ...typo.body, color: colors.textPrimary, marginBottom: '4px' }}>Fluorescence</p>
-                <p style={{ ...typo.small, color: uvOn ? colors.success : colors.error }}>
-                  {uvOn ? 'Glowing!' : 'Dark (instant off)'}
-                </p>
-              </div>
-
-              {/* Phosphorescence side */}
-              <div style={{
-                background: '#050510',
-                borderRadius: '12px',
-                padding: '20px',
-                textAlign: 'center',
-              }}>
-                <div style={{ fontSize: '48px', marginBottom: '8px' }}>⭐</div>
+                  padding: '12px',
+                }}>
+                  <div style={{ ...typo.small, color: efficiency > 0.7 ? colors.success : efficiency > 0.3 ? colors.warning : colors.error, fontWeight: 600, marginBottom: '4px' }}>
+                    Efficiency: {(efficiency * 100).toFixed(0)}%
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>
+                    {efficiency > 0.8 ? 'Optimal excitation range' : efficiency > 0.3 ? 'Partial absorption' : 'Poor absorption at this wavelength'}
+                  </div>
+                </div>
                 <div style={{
-                  width: '80px',
-                  height: '80px',
-                  margin: '0 auto 12px',
+                  background: colors.bgSecondary,
                   borderRadius: '8px',
-                  background: showPhosphorescence
-                    ? `rgba(34, 255, 34, ${uvOn ? 1 : decayOpacity})`
-                    : (uvOn ? '#22ff22' : '#4b5563'),
-                  boxShadow: (uvOn || (showPhosphorescence && decayOpacity > 0.1))
-                    ? `0 0 ${30 * (uvOn ? 1 : decayOpacity)}px rgba(0, 255, 0, ${uvOn ? 1 : decayOpacity})`
-                    : 'none',
-                  transition: uvOn ? 'all 0.3s ease' : 'all 0.1s linear',
-                }} />
-                <p style={{ ...typo.body, color: colors.textPrimary, marginBottom: '4px' }}>Phosphorescence</p>
-                <p style={{ ...typo.small, color: (uvOn || decayOpacity > 0.1) ? colors.success : colors.error }}>
-                  {uvOn ? 'Glowing!' : showPhosphorescence && decayOpacity > 0.1 ? `Fading (${phosphorDecay}%)` : 'Dark'}
-                </p>
+                  padding: '12px',
+                }}>
+                  <div style={{ ...typo.small, color: colors.warning, fontWeight: 600, marginBottom: '4px' }}>
+                    Stokes Shift: {520 - excitationWavelength} nm
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>
+                    Energy lost as heat before emission
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Controls */}
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
-              <button
-                onClick={() => { playSound('click'); setUvOn(!uvOn); }}
-                style={{
-                  flex: 1,
-                  padding: '16px',
-                  borderRadius: '12px',
-                  border: `2px solid ${uvOn ? colors.accent : colors.border}`,
-                  background: uvOn ? `${colors.accent}22` : colors.bgSecondary,
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                }}
-              >
-                <div style={{ fontSize: '24px', marginBottom: '4px' }}>🔦</div>
-                <div style={{ ...typo.body, color: uvOn ? colors.accent : colors.textMuted, fontWeight: 600 }}>
-                  UV Light {uvOn ? 'ON' : 'OFF'}
-                </div>
-              </button>
-              <button
-                onClick={() => { playSound('click'); setShowPhosphorescence(!showPhosphorescence); setPhosphorDecay(100); }}
-                style={{
-                  flex: 1,
-                  padding: '16px',
-                  borderRadius: '12px',
-                  border: `2px solid ${showPhosphorescence ? colors.warning : colors.border}`,
-                  background: showPhosphorescence ? `${colors.warning}22` : colors.bgSecondary,
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                }}
-              >
-                <div style={{ fontSize: '24px', marginBottom: '4px' }}>⭐</div>
-                <div style={{ ...typo.body, color: showPhosphorescence ? colors.warning : colors.textMuted, fontWeight: 600 }}>
-                  Phosphorescence {showPhosphorescence ? 'ON' : 'OFF'}
-                </div>
-              </button>
-            </div>
-
-            {/* Stokes shift demonstration */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Excitation Wavelength</span>
-                <span style={{ ...typo.small, color: wavelengthToColor(excitationWavelength), fontWeight: 600 }}>{excitationWavelength} nm</span>
-              </div>
-              <input
-                type="range"
-                min="300"
-                max="450"
-                value={excitationWavelength}
-                onChange={(e) => setExcitationWavelength(parseInt(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>UV (300 nm)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Violet (450 nm)</span>
-              </div>
-            </div>
-
-            {/* Info cards */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '12px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-              }}>
-                <div style={{ ...typo.small, color: colors.success, fontWeight: 600, marginBottom: '4px' }}>
-                  Fluorescence
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>
-                  Nanoseconds - instant off when light removed
-                </div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-              }}>
-                <div style={{ ...typo.small, color: colors.warning, fontWeight: 600, marginBottom: '4px' }}>
-                  Phosphorescence
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>
-                  Seconds to hours - gradual afterglow
-                </div>
-              </div>
-            </div>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand the Mechanism
+            </button>
           </div>
 
-          {showPhosphorescence && !uvOn && phosphorDecay > 50 && (
-            <div style={{
-              background: `${colors.warning}22`,
-              border: `1px solid ${colors.warning}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
-                ✨ Watch the phosphorescent sample slowly fade! This is the forbidden triplet state slowly releasing energy.
-              </p>
-            </div>
-          )}
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Mechanism →
-          </button>
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1518,74 +1500,75 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Singlet vs Triplet States
-          </h2>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              Singlet vs Triplet States
+            </h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>⚡</span>
-                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Fluorescence (Fast)</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px' }}>⚡</span>
+                  <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Fluorescence (Fast)</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  Electrons return from the singlet excited state via an <strong>"allowed"</strong> transition. This happens in <span style={{ color: colors.success }}>nanoseconds (10⁻⁹ s)</span> - the moment UV stops, emission stops.
+                </p>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Electrons return from the singlet excited state via an <strong>"allowed"</strong> transition. This happens in <span style={{ color: colors.success }}>nanoseconds (10⁻⁹ s)</span> - the moment UV stops, emission stops.
-              </p>
+
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px' }}>🌙</span>
+                  <h3 style={{ ...typo.h3, color: colors.warning, margin: 0 }}>Phosphorescence (Slow)</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  Electrons cross to a triplet state where the return is <strong>"forbidden"</strong> by quantum rules. It still happens, but slowly over <span style={{ color: colors.warning }}>milliseconds to hours</span> - creating the afterglow effect.
+                </p>
+              </div>
+
+              <div style={{
+                background: `${colors.accent}11`,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.accent}33`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px' }}>🔬</span>
+                  <h3 style={{ ...typo.h3, color: colors.accent, margin: 0 }}>Applications</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  <strong>Quantum Yield</strong> measures efficiency: what fraction of absorbed photons become emitted light. High QY = bright fluorophore. <strong>Photobleaching</strong> is permanent fluorophore destruction - a limit in long imaging experiments.
+                </p>
+              </div>
             </div>
 
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🌙</span>
-                <h3 style={{ ...typo.h3, color: colors.warning, margin: 0 }}>Phosphorescence (Slow)</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Electrons cross to a triplet state where the return is <strong>"forbidden"</strong> by quantum rules. It still happens, but slowly over <span style={{ color: colors.warning }}>milliseconds to hours</span> - creating the afterglow effect.
-              </p>
-            </div>
-
-            <div style={{
-              background: `${colors.accent}11`,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.accent}33`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🔬</span>
-                <h3 style={{ ...typo.h3, color: colors.accent, margin: 0 }}>Applications</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                <strong>Quantum Yield</strong> measures efficiency: what fraction of absorbed photons become emitted light. High QY = bright fluorophore. <strong>Photobleaching</strong> is permanent fluorophore destruction - a limit in long imaging experiments.
-              </p>
-            </div>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              See Real-World Applications
+            </button>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            See Real-World Applications →
-          </button>
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1599,158 +1582,204 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
-          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            App {selectedApp + 1} of {realWorldApps.length} - Explore how fluorescence impacts everyday life
-          </p>
-
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
-            {realWorldApps.map((a, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  playSound('click');
-                  setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
-                }}
-                style={{
-                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
-                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 8px',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  position: 'relative',
-                }}
-              >
-                {completedApps[i] && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-6px',
-                    right: '-6px',
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: colors.success,
-                    color: 'white',
-                    fontSize: '12px',
-                    lineHeight: '18px',
-                  }}>
-                    ✓
-                  </div>
-                )}
-                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
-                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
-                  {a.title.split(' ').slice(0, 2).join(' ')}
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {/* Selected app details */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            borderLeft: `4px solid ${app.color}`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-              <span style={{ fontSize: '48px' }}>{app.icon}</span>
-              <div>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
-                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
-              </div>
-            </div>
-
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
-              {app.description}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
+            <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              App {selectedApp + 1} of {realWorldApps.length} - Explore how fluorescence impacts everyday life
             </p>
 
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '16px',
-            }}>
-              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                How Fluorescence Connects:
-              </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                {app.connection}
-              </p>
-            </div>
-
+            {/* App selector */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(4, 1fr)',
               gap: '12px',
-              marginBottom: '16px',
+              marginBottom: '24px',
             }}>
-              {app.stats.map((stat, i) => (
-                <div key={i} style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
-                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
-                </div>
+              {realWorldApps.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    playSound('click');
+                    setSelectedApp(i);
+                    const newCompleted = [...completedApps];
+                    newCompleted[i] = true;
+                    setCompletedApps(newCompleted);
+                  }}
+                  style={{
+                    background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                    border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 8px',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    position: 'relative',
+                  }}
+                >
+                  {completedApps[i] && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-6px',
+                      right: '-6px',
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: colors.success,
+                      color: 'white',
+                      fontSize: '12px',
+                      lineHeight: '18px',
+                    }}>
+                      ✓
+                    </div>
+                  )}
+                  <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                  <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                    {a.title.split(' ').slice(0, 2).join(' ')}
+                  </div>
+                </button>
               ))}
             </div>
 
-            {/* Got It button for within-app progression */}
-            <button
-              onClick={() => {
-                playSound('click');
-                const newCompleted = [...completedApps];
-                newCompleted[selectedApp] = true;
-                setCompletedApps(newCompleted);
-                if (selectedApp < realWorldApps.length - 1) {
-                  setSelectedApp(selectedApp + 1);
-                }
-              }}
-              style={{
-                ...primaryButtonStyle,
-                width: '100%',
-                background: completedApps[selectedApp] ? colors.success : `linear-gradient(135deg, ${colors.accent}, #7C3AED)`,
-              }}
-            >
-              {completedApps[selectedApp] ? 'Got It!' : 'Got It'}
-            </button>
+            {/* Selected app details */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              borderLeft: `4px solid ${app.color}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '48px' }}>{app.icon}</span>
+                <div>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                  <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+                </div>
+              </div>
+
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+                {app.description}
+              </p>
+
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                  How Fluorescence Connects:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.connection}
+                </p>
+              </div>
+
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                  How It Works:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.howItWorks}
+                </p>
+              </div>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                marginBottom: '16px',
+              }}>
+                {app.stats.map((stat, i) => (
+                  <div key={i} style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                    <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>Examples:</h4>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {app.examples.map((ex, i) => (
+                    <span key={i} style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '6px',
+                      padding: '4px 10px',
+                      ...typo.small,
+                      color: colors.textSecondary,
+                    }}>{ex}</span>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>Companies:</h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{app.companies.join(', ')}</p>
+              </div>
+
+              <div style={{
+                background: `${app.color}11`,
+                borderRadius: '8px',
+                padding: '12px',
+                marginBottom: '16px',
+              }}>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>
+                  <strong>Future Impact:</strong> {app.futureImpact}
+                </p>
+              </div>
+
+              {/* Got It button */}
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                  if (selectedApp < realWorldApps.length - 1) {
+                    setSelectedApp(selectedApp + 1);
+                  }
+                }}
+                style={{
+                  ...primaryButtonStyle,
+                  width: '100%',
+                  background: completedApps[selectedApp] ? colors.success : `linear-gradient(135deg, ${colors.accent}, #7C3AED)`,
+                }}
+              >
+                Got It
+              </button>
+            </div>
+
+            {allAppsCompleted && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Take the Test
+              </button>
+            )}
           </div>
 
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1763,52 +1792,54 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
-          paddingTop: '80px',
+          display: 'flex',
+          flexDirection: 'column',
         }}>
           {renderNavBar()}
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-            <div style={{
-              fontSize: '80px',
-              marginBottom: '24px',
-            }}>
-              {passed ? '🎉' : '📚'}
-            </div>
-            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
-              {passed ? 'Excellent!' : 'Keep Learning!'}
-            </h2>
-            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
-              {testScore} / 10
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
-              {passed
-                ? 'You understand fluorescence physics!'
-                : 'Review the concepts and try again.'}
-            </p>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+            <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center', padding: '24px' }}>
+              <div style={{
+                fontSize: '80px',
+                marginBottom: '24px',
+              }}>
+                {passed ? '🎉' : '📚'}
+              </div>
+              <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+                {passed ? 'Excellent!' : 'Keep Learning!'}
+              </h2>
+              <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+                {testScore} / 10
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+                {passed
+                  ? 'You understand fluorescence physics!'
+                  : 'Review the concepts and try again.'}
+              </p>
 
-            {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
-                Complete Lesson →
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
-                }}
-                style={primaryButtonStyle}
-              >
-                Review & Try Again
-              </button>
-            )}
+              {passed ? (
+                <button
+                  onClick={() => { playSound('complete'); nextPhase(); }}
+                  style={primaryButtonStyle}
+                >
+                  Complete Lesson
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setTestSubmitted(false);
+                    setTestAnswers(Array(10).fill(null));
+                    setCurrentQuestion(0);
+                    setTestScore(0);
+                    goToPhase('hook');
+                  }}
+                  style={primaryButtonStyle}
+                >
+                  Review & Try Again
+                </button>
+              )}
+            </div>
           </div>
           {renderNavDots()}
         </div>
@@ -1821,165 +1852,166 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-          {/* Progress */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '24px',
-          }}>
-            <span style={{ ...typo.small, color: colors.textSecondary }}>
-              Question {currentQuestion + 1} of 10
-            </span>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {testQuestions.map((_, i) => (
-                <div key={i} style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: i === currentQuestion
-                    ? colors.accent
-                    : testAnswers[i]
-                      ? colors.success
-                      : colors.border,
-                }} />
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
+            {/* Progress */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '24px',
+            }}>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>
+                Question {currentQuestion + 1} of 10
+              </span>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {testQuestions.map((_, i) => (
+                  <div key={i} style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: i === currentQuestion
+                      ? colors.accent
+                      : testAnswers[i]
+                        ? colors.success
+                        : colors.border,
+                  }} />
+                ))}
+              </div>
+            </div>
+
+            {/* Scenario */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px',
+              borderLeft: `3px solid ${colors.accent}`,
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {question.scenario}
+              </p>
+            </div>
+
+            {/* Question */}
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+              {question.question}
+            </h3>
+
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+              {question.options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    playSound('click');
+                    const newAnswers = [...testAnswers];
+                    newAnswers[currentQuestion] = opt.id;
+                    setTestAnswers(newAnswers);
+                  }}
+                  style={{
+                    background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '10px',
+                    padding: '14px 16px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                    color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '24px',
+                    marginRight: '10px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.small }}>
+                    {opt.label}
+                  </span>
+                </button>
               ))}
+            </div>
+
+            {/* Navigation */}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {currentQuestion > 0 && (
+                <button
+                  onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: colors.textSecondary,
+                    cursor: 'pointer',
+                  }}
+                >
+                  ← Previous
+                </button>
+              )}
+              {currentQuestion < 9 ? (
+                <button
+                  onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                  disabled={!testAnswers[currentQuestion]}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                    color: 'white',
+                    cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                    fontWeight: 600,
+                  }}
+                >
+                  Next
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    const score = testAnswers.reduce((acc, ans, i) => {
+                      const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                      return acc + (ans === correct ? 1 : 0);
+                    }, 0);
+                    setTestScore(score);
+                    setTestSubmitted(true);
+                    playSound(score >= 7 ? 'complete' : 'failure');
+                  }}
+                  disabled={testAnswers.some(a => a === null)}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                    color: 'white',
+                    cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                    fontWeight: 600,
+                  }}
+                >
+                  Submit Test
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Scenario */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '16px',
-            borderLeft: `3px solid ${colors.accent}`,
-          }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              {question.scenario}
-            </p>
-          </div>
-
-          {/* Question */}
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
-            {question.question}
-          </h3>
-
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-            {question.options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => {
-                  playSound('click');
-                  const newAnswers = [...testAnswers];
-                  newAnswers[currentQuestion] = opt.id;
-                  setTestAnswers(newAnswers);
-                }}
-                style={{
-                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '10px',
-                  padding: '14px 16px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
-                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '24px',
-                  marginRight: '10px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.small }}>
-                  {opt.label}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {/* Navigation */}
-          <div style={{ display: 'flex', gap: '12px' }}>
-            {currentQuestion > 0 && (
-              <button
-                onClick={() => setCurrentQuestion(currentQuestion - 1)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                }}
-              >
-                ← Previous
-              </button>
-            )}
-            {currentQuestion < 9 ? (
-              <button
-                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
-                disabled={!testAnswers[currentQuestion]}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
-                  color: 'white',
-                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Next →
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  const score = testAnswers.reduce((acc, ans, i) => {
-                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
-                    return acc + (ans === correct ? 1 : 0);
-                  }, 0);
-                  setTestScore(score);
-                  setTestSubmitted(true);
-                  playSound(score >= 7 ? 'complete' : 'failure');
-                }}
-                disabled={testAnswers.some(a => a === null)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
-                  color: 'white',
-                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Submit Test
-              </button>
-            )}
-          </div>
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1992,85 +2024,82 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        paddingTop: '80px',
-        textAlign: 'center',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{
-          fontSize: '100px',
-          marginBottom: '24px',
-          animation: 'bounce 1s infinite',
-        }}>
-          🏆
-        </div>
-        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
-
-        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
-          Fluorescence Master!
-        </h1>
-
-        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You now understand how molecules absorb UV light and emit visible light, powering applications from microscopy to medical diagnostics.
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '400px',
-        }}>
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
-            You Learned:
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
-            {[
-              'UV absorption excites electrons to higher energy states',
-              'Stokes shift explains why emission is longer wavelength',
-              'Fluorescence is instant, phosphorescence is delayed',
-              'Quantum yield measures fluorescence efficiency',
-              'Real-world applications in biology and medicine',
-            ].map((item, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: colors.success }}>✓</span>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
-              </div>
-            ))}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', textAlign: 'center' }}>
+          <div style={{
+            fontSize: '100px',
+            marginBottom: '24px',
+            animation: 'bounce 1s infinite',
+          }}>
+            🏆
           </div>
-        </div>
+          <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button
-            onClick={() => goToPhase('hook')}
-            style={{
-              padding: '14px 28px',
-              borderRadius: '10px',
-              border: `1px solid ${colors.border}`,
-              background: 'transparent',
-              color: colors.textSecondary,
-              cursor: 'pointer',
-            }}
-          >
-            Play Again
-          </button>
-          <a
-            href="/"
-            style={{
-              ...primaryButtonStyle,
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}
-          >
-            Return to Dashboard
-          </a>
-        </div>
+          <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+            Fluorescence Master!
+          </h1>
 
-        {renderNavDots()}
+          <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+            You now understand how molecules absorb UV light and emit visible light, powering applications from microscopy to medical diagnostics.
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '400px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+              You Learned:
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+              {[
+                'UV absorption excites electrons to higher energy states',
+                'Stokes shift explains why emission is longer wavelength',
+                'Fluorescence is instant, phosphorescence is delayed',
+                'Quantum yield measures fluorescence efficiency',
+                'Real-world applications in biology and medicine',
+              ].map((item, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ color: colors.success }}>✓</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <button
+              onClick={() => goToPhase('hook')}
+              style={{
+                padding: '14px 28px',
+                borderRadius: '10px',
+                border: `1px solid ${colors.border}`,
+                background: 'transparent',
+                color: colors.textSecondary,
+                cursor: 'pointer',
+              }}
+            >
+              Play Again
+            </button>
+            <a
+              href="/"
+              style={{
+                ...primaryButtonStyle,
+                textDecoration: 'none',
+                display: 'inline-block',
+              }}
+            >
+              Return to Dashboard
+            </a>
+          </div>
+
+          {renderNavDots()}
+        </div>
       </div>
     );
   }

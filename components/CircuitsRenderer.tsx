@@ -1041,86 +1041,80 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
                 filter={isCircuitOn ? "url(#circWireGlow)" : undefined}
               />
 
-              {/* Battery - 3D effect */}
-              <g transform="translate(30, 130)" filter="url(#circComponentShadow)">
-                <rect x="0" y="0" width="20" height="50" fill="url(#circBatteryBody)" stroke="#555" strokeWidth="1" rx="3" />
+              {/* Battery - 3D effect (absolute coords) */}
+              <g filter="url(#circComponentShadow)">
+                <rect x="30" y="130" width="20" height="50" fill="url(#circBatteryBody)" stroke="#555" strokeWidth="1" rx="3" />
                 {/* Positive terminal */}
-                <rect x="6" y="-4" width="8" height="6" fill="url(#circBatteryTerminal)" rx="1" />
+                <rect x="36" y="126" width="8" height="6" fill="url(#circBatteryTerminal)" rx="1" />
                 {/* Terminal symbols */}
-                <line x1="5" y1="15" x2="15" y2="15" stroke="url(#circBatteryTerminal)" strokeWidth="3" strokeLinecap="round" />
-                <line x1="10" y1="10" x2="10" y2="20" stroke="url(#circBatteryTerminal)" strokeWidth="3" strokeLinecap="round" />
-                <line x1="5" y1="35" x2="15" y2="35" stroke="#888" strokeWidth="2" strokeLinecap="round" />
+                <line x1="35" y1="145" x2="45" y2="145" stroke="url(#circBatteryTerminal)" strokeWidth="3" strokeLinecap="round" />
+                <line x1="40" y1="140" x2="40" y2="150" stroke="url(#circBatteryTerminal)" strokeWidth="3" strokeLinecap="round" />
+                <line x1="35" y1="165" x2="45" y2="165" stroke="#888" strokeWidth="2" strokeLinecap="round" />
               </g>
 
-              {/* Resistor - 3D ceramic style */}
-              <g transform="translate(115, 50)" filter="url(#circComponentShadow)">
-                <rect x="0" y="0" width="70" height="25" fill="url(#circResistorBody)" stroke="#8B4513" strokeWidth="1" rx="4" />
+              {/* Resistor - 3D ceramic style (absolute coords) */}
+              <g filter="url(#circComponentShadow)">
+                <rect x="115" y="50" width="70" height="25" fill="url(#circResistorBody)" stroke="#8B4513" strokeWidth="1" rx="4" />
                 {/* Color bands */}
-                <rect x="12" y="2" width="6" height="21" fill="#8B4513" rx="1" />
-                <rect x="22" y="2" width="6" height="21" fill="#000" rx="1" />
-                <rect x="32" y="2" width="6" height="21" fill="#FF0000" rx="1" />
-                <rect x="42" y="2" width="6" height="21" fill="#FFD700" rx="1" />
+                <rect x="127" y="52" width="6" height="21" fill="#8B4513" rx="1" />
+                <rect x="137" y="52" width="6" height="21" fill="#000" rx="1" />
+                <rect x="147" y="52" width="6" height="21" fill="#FF0000" rx="1" />
+                <rect x="157" y="52" width="6" height="21" fill="#FFD700" rx="1" />
                 {/* Highlight */}
-                <rect x="5" y="3" width="60" height="3" fill="rgba(255,255,255,0.15)" rx="1" />
-                {/* Zigzag heat pattern */}
-                <polyline points="10,12.5 20,5 30,20 40,5 50,20 60,12.5" fill="none" stroke="rgba(255,100,50,0.4)" strokeWidth="1.5" />
+                <rect x="120" y="53" width="60" height="3" fill="rgba(255,255,255,0.15)" rx="1" />
               </g>
 
-              {/* Light bulb - premium glass effect */}
-              <g transform="translate(130, 220)">
-                {/* Outer glow when on */}
-                {isCircuitOn && (
-                  <circle
-                    cx="20" cy="0" r="28"
-                    fill={`rgba(255, 200, 50, ${Math.min(0.4, current / 10)})`}
-                    filter="url(#circBulbGlowFilter)"
-                  />
-                )}
-                {/* Bulb base */}
-                <rect x="12" y="12" width="16" height="10" fill="#666" rx="2" />
-                <rect x="14" y="14" width="12" height="2" fill="#888" />
-                <rect x="14" y="18" width="12" height="2" fill="#888" />
-                {/* Bulb glass */}
+              {/* Light bulb - premium glass effect (absolute coords) */}
+              {/* Outer glow when on */}
+              {isCircuitOn && (
                 <circle
-                  cx="20" cy="0" r="18"
-                  fill={isCircuitOn ? "url(#circBulbGlow)" : "url(#circBulbGlass)"}
-                  stroke="rgba(255,255,255,0.3)"
-                  strokeWidth="1"
-                  style={{ opacity: isCircuitOn ? Math.min(1, 0.3 + current / 4) : 1 }}
+                  cx="150" cy="220" r="28"
+                  fill={`rgba(255, 200, 50, ${Math.min(0.4, current / 10)})`}
+                  filter="url(#circBulbGlowFilter)"
                 />
-                {/* Filament */}
-                <path
-                  d="M 15 0 Q 17 -5 20 0 Q 23 5 25 0"
-                  fill="none"
-                  stroke={isCircuitOn ? "#FFD700" : "#555"}
-                  strokeWidth="1.5"
-                  style={{ opacity: isCircuitOn ? 1 : 0.5 }}
-                />
-                {/* Light rays when on */}
-                {isCircuitOn && current > 1 && (
-                  <g stroke="#FFD700" strokeWidth="1.5" strokeLinecap="round" opacity={Math.min(1, current / 5)}>
-                    <line x1="12" y1="-10" x2="6" y2="-18" />
-                    <line x1="20" y1="-14" x2="20" y2="-24" />
-                    <line x1="28" y1="-10" x2="34" y2="-18" />
-                    <line x1="32" y1="0" x2="40" y2="0" />
-                    <line x1="8" y1="0" x2="0" y2="0" />
-                  </g>
-                )}
-              </g>
+              )}
+              {/* Bulb base */}
+              <rect x="142" y="232" width="16" height="10" fill="#666" rx="2" />
+              <rect x="144" y="234" width="12" height="2" fill="#888" />
+              <rect x="144" y="238" width="12" height="2" fill="#888" />
+              {/* Bulb glass */}
+              <circle
+                cx="150" cy="220" r="18"
+                fill={isCircuitOn ? "url(#circBulbGlow)" : "url(#circBulbGlass)"}
+                stroke="rgba(255,255,255,0.3)"
+                strokeWidth="1"
+                style={{ opacity: isCircuitOn ? Math.min(1, 0.3 + current / 4) : 1 }}
+              />
+              {/* Filament */}
+              <path
+                d="M145 220Q150 215 155 220"
+                fill="none"
+                stroke={isCircuitOn ? "#FFD700" : "#555"}
+                strokeWidth="1.5"
+                style={{ opacity: isCircuitOn ? 1 : 0.5 }}
+              />
+              {/* Light rays when on */}
+              {isCircuitOn && current > 1 && (
+                <g stroke="#FFD700" strokeWidth="1.5" strokeLinecap="round" opacity={Math.min(1, current / 5)}>
+                  <line x1="142" y1="210" x2="136" y2="202" />
+                  <line x1="150" y1="206" x2="150" y2="196" />
+                  <line x1="158" y1="210" x2="164" y2="202" />
+                  <line x1="162" y1="220" x2="170" y2="220" />
+                  <line x1="138" y1="220" x2="130" y2="220" />
+                </g>
+              )}
 
-              {/* Switch - improved visual */}
-              <g transform="translate(220, 135)">
-                <circle cx="0" cy="0" r="6" fill={isCircuitOn ? "#22C55E" : "#666"} stroke={isCircuitOn ? "#16A34A" : "#444"} strokeWidth="2" />
-                <line
-                  x1="0" y1="0"
-                  x2={isCircuitOn ? "30" : "20"}
-                  y2={isCircuitOn ? "0" : "-15"}
-                  stroke={isCircuitOn ? "url(#circCopperWireActive)" : "url(#circCopperWire)"}
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                />
-                <circle cx="30" cy="0" r="6" fill={isCircuitOn ? "#22C55E" : "#666"} stroke={isCircuitOn ? "#16A34A" : "#444"} strokeWidth="2" />
-              </g>
+              {/* Switch - improved visual (absolute coords) */}
+              <circle cx="220" cy="135" r="6" fill={isCircuitOn ? "#22C55E" : "#666"} stroke={isCircuitOn ? "#16A34A" : "#444"} strokeWidth="2" />
+              <line
+                x1="220" y1="135"
+                x2={isCircuitOn ? 250 : 240}
+                y2={isCircuitOn ? 135 : 120}
+                stroke={isCircuitOn ? "url(#circCopperWireActive)" : "url(#circCopperWire)"}
+                strokeWidth="4"
+                strokeLinecap="round"
+              />
+              <circle cx="250" cy="135" r="6" fill={isCircuitOn ? "#22C55E" : "#666"} stroke={isCircuitOn ? "#16A34A" : "#444"} strokeWidth="2" />
 
               {/* Electrons - premium glow effect */}
               {isCircuitOn && electrons.map(e => {
@@ -1145,14 +1139,14 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
 
               {/* Component Labels */}
               <text x="40" y="168" fill={premiumDesign.colors.voltage} fontSize="11" fontWeight="bold">Battery</text>
-              <text x="40" y="180" fill={premiumDesign.colors.voltage} fontSize="9">{voltage}V</text>
-              <text x="130" y="52" fill={premiumDesign.colors.resistance} fontSize="11" fontWeight="bold">Resistor</text>
-              <text x="150" y="40" fill={premiumDesign.colors.resistance} fontSize="9">{resistance}Ohm</text>
-              <text x="135" y="265" fill={premiumDesign.colors.text.secondary} fontSize="10">Light Bulb</text>
-              <text x="235" y="120" fill={premiumDesign.colors.success} fontSize="10">Switch</text>
-              {isCircuitOn && <text x="100" y="135" fill={premiumDesign.colors.current} fontSize="10">Electrons</text>}
+              <text x="40" y="182" fill={premiumDesign.colors.voltage} fontSize="11">{voltage}V</text>
+              <text x="130" y="40" fill={premiumDesign.colors.resistance} fontSize="11" fontWeight="bold">Resistor</text>
+              <text x="200" y="40" fill={premiumDesign.colors.resistance} fontSize="11">{resistance}Ohm</text>
+              <text x="135" y="265" fill={premiumDesign.colors.text.secondary} fontSize="11">Light Bulb</text>
+              <text x="235" y="120" fill={premiumDesign.colors.success} fontSize="11">Switch</text>
+              {isCircuitOn && <text x="100" y="135" fill={premiumDesign.colors.current} fontSize="11">Electrons</text>}
               {/* Dynamic current display */}
-              <text x="150" y="285" fill={premiumDesign.colors.current} fontSize="10" textAnchor="middle">
+              <text x="150" y="285" fill={premiumDesign.colors.current} fontSize="11" textAnchor="middle">
                 Current: {current.toFixed(2)}A
               </text>
             </svg>
@@ -1237,7 +1231,7 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
                 max="24"
                 value={voltage}
                 onChange={(e) => setVoltage(Number(e.target.value))}
-                style={{ width: '100%', accentColor: premiumDesign.colors.voltage }}
+                style={{ width: '100%', accentColor: premiumDesign.colors.voltage, touchAction: 'pan-y' as const }}
               />
             </div>
 
@@ -1256,7 +1250,7 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
                 max="20"
                 value={resistance}
                 onChange={(e) => setResistance(Number(e.target.value))}
-                style={{ width: '100%', accentColor: premiumDesign.colors.resistance }}
+                style={{ width: '100%', accentColor: premiumDesign.colors.resistance, touchAction: 'pan-y' as const }}
               />
             </div>
 
@@ -1941,7 +1935,7 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
                 max="10"
                 value={r1}
                 onChange={(e) => setR1(Number(e.target.value))}
-                style={{ width: '100%', accentColor: premiumDesign.colors.resistance }}
+                style={{ width: '100%', accentColor: premiumDesign.colors.resistance, touchAction: 'pan-y' as const }}
               />
               <h4 style={{ color: premiumDesign.colors.resistance, marginBottom: premiumDesign.spacing.sm, marginTop: premiumDesign.spacing.md }}>
                 R₂: {r2}Ω
@@ -1952,7 +1946,7 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
                 max="10"
                 value={r2}
                 onChange={(e) => setR2(Number(e.target.value))}
-                style={{ width: '100%', accentColor: premiumDesign.colors.resistance }}
+                style={{ width: '100%', accentColor: premiumDesign.colors.resistance, touchAction: 'pan-y' as const }}
               />
             </div>
 
@@ -2642,6 +2636,7 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
       position: 'relative',
       overflowY: 'auto',
       overflowX: 'hidden',
+      flex: 1,
     }}>
       {/* Premium background gradient */}
       <div style={{

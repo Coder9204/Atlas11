@@ -518,7 +518,11 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
   // Venturi Tube Visualization
   const VenturiVisualization = () => {
     const width = isMobile ? 340 : 480;
-    const height = isMobile ? 280 : 340;
+    const height = isMobile ? 320 : 400;
+    const constrict = (50 - constrictionSize) * 1.2;
+    const tubeTop = 60;
+    const tubeBot = 220;
+    const mid = (tubeTop + tubeBot) / 2;
 
     return (
       <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
@@ -543,14 +547,21 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
         </defs>
 
         {/* Title */}
-        <text x={width/2} y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+        <text x={width/2} y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="700">
           Venturi Tube - Continuity + Bernoulli
         </text>
 
-        {/* Venturi tube shape */}
+        {/* Axis labels */}
+        <text x={width/2} y="38" textAnchor="middle" fill={colors.textSecondary} fontSize="10">
+          Position along tube
+        </text>
+        <text x="12" y={mid} textAnchor="middle" fill={colors.textSecondary} fontSize="10" transform={`rotate(-90, 12, ${mid})`}>
+          Pressure (kPa)
+        </text>
+
+        {/* Venturi tube shape - path with many L points for smooth curve */}
         <path
-          d={`M20 80 L80 80 Q120 80 140 ${80 + (50 - constrictionSize) * 0.5} L${width - 140} ${80 + (50 - constrictionSize) * 0.5} Q${width - 120} 80 ${width - 80} 80 L${width - 20} 80
-              L${width - 20} 160 L${width - 80} 160 Q${width - 120} 160 ${width - 140} ${160 - (50 - constrictionSize) * 0.5} L140 ${160 - (50 - constrictionSize) * 0.5} Q120 160 80 160 L20 160 Z`}
+          d={`M 20 ${tubeTop} L 50 ${tubeTop} L 80 ${tubeTop} L 100 ${tubeTop} L 120 ${tubeTop + constrict * 0.3} L 140 ${tubeTop + constrict * 0.7} L 160 ${tubeTop + constrict} L ${width/2} ${tubeTop + constrict} L ${width - 160} ${tubeTop + constrict} L ${width - 140} ${tubeTop + constrict * 0.7} L ${width - 120} ${tubeTop + constrict * 0.3} L ${width - 100} ${tubeTop} L ${width - 80} ${tubeTop} L ${width - 50} ${tubeTop} L ${width - 20} ${tubeTop} L ${width - 20} ${tubeBot} L ${width - 50} ${tubeBot} L ${width - 80} ${tubeBot} L ${width - 100} ${tubeBot} L ${width - 120} ${tubeBot - constrict * 0.3} L ${width - 140} ${tubeBot - constrict * 0.7} L ${width - 160} ${tubeBot - constrict} L ${width/2} ${tubeBot - constrict} L 160 ${tubeBot - constrict} L 140 ${tubeBot - constrict * 0.7} L 120 ${tubeBot - constrict * 0.3} L 100 ${tubeBot} L 80 ${tubeBot} L 50 ${tubeBot} L 20 ${tubeBot} Z`}
           fill="url(#tubeGrad)"
           stroke="#6a8aac"
           strokeWidth="2"
@@ -560,27 +571,27 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
         {isFlowing && (
           <g filter="url(#glow)">
             {/* Wide section left */}
-            {[100, 115, 130, 145].map((y, i) => (
+            {[mid - 40, mid - 20, mid, mid + 20, mid + 40].map((y, i) => (
               <line
                 key={`left-${i}`}
                 x1="30"
                 y1={y}
-                x2="80"
+                x2="95"
                 y2={y}
                 stroke={colors.flow}
-                strokeWidth={i === 1 || i === 2 ? 3 : 2}
+                strokeWidth={i === 2 ? 3 : 2}
                 strokeDasharray="10,5"
               >
                 <animate attributeName="stroke-dashoffset" from="0" to="-15" dur={`${1.2 / (flowRate / 50)}s`} repeatCount="indefinite" />
               </line>
             ))}
             {/* Narrow section */}
-            {[115 + (50 - constrictionSize) * 0.3, 120, 125 - (50 - constrictionSize) * 0.3].map((y, i) => (
+            {[mid - constrict * 0.3, mid, mid + constrict * 0.3].map((y, i) => (
               <line
                 key={`narrow-${i}`}
-                x1="145"
+                x1="165"
                 y1={y}
-                x2={width - 145}
+                x2={width - 165}
                 y2={y}
                 stroke="#00ffff"
                 strokeWidth={i === 1 ? 4 : 2}
@@ -590,15 +601,15 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
               </line>
             ))}
             {/* Wide section right */}
-            {[100, 115, 130, 145].map((y, i) => (
+            {[mid - 40, mid - 20, mid, mid + 20, mid + 40].map((y, i) => (
               <line
                 key={`right-${i}`}
-                x1={width - 80}
+                x1={width - 95}
                 y1={y}
                 x2={width - 30}
                 y2={y}
                 stroke={colors.flow}
-                strokeWidth={i === 1 || i === 2 ? 3 : 2}
+                strokeWidth={i === 2 ? 3 : 2}
                 strokeDasharray="10,5"
               >
                 <animate attributeName="stroke-dashoffset" from="0" to="-15" dur={`${1.2 / (flowRate / 50)}s`} repeatCount="indefinite" />
@@ -611,47 +622,56 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
         {showPressure && (
           <g>
             {/* Left pressure gauge */}
-            <rect x="45" y="35" width="16" height="45" rx="3" fill="#1a2a3a" stroke={colors.pressure} strokeWidth="1" />
-            <rect x="48" y={80 - widePressure * 0.35} width="10" height={widePressure * 0.35} fill="#ef4444" rx="2" />
-            <text x="53" y="30" fontSize="9" fill="#f87171" textAnchor="middle" fontWeight="bold">P1</text>
+            <rect x="50" y={tubeTop - 35} width="16" height="30" rx="3" fill="#1a2a3a" stroke={colors.pressure} strokeWidth="1" />
+            <rect x="53" y={tubeTop - 8 - widePressure * 0.2} width="10" height={widePressure * 0.2} fill="#ef4444" rx="2" />
+            <text x="58" y={tubeTop - 40} fontSize="9" fill="#f87171" textAnchor="middle" fontWeight="bold">P1</text>
 
             {/* Middle pressure gauge */}
-            <rect x={width/2 - 8} y="25" width="16" height="50" rx="3" fill="#1a2a3a" stroke={colors.pressure} strokeWidth="1" />
-            <rect x={width/2 - 5} y={75 - Math.max(narrowPressure, 10) * 0.4} width="10" height={Math.max(narrowPressure, 10) * 0.4} fill="#3b82f6" rx="2" />
-            <text x={width/2} y="38" fontSize="9" fill="#60a5fa" textAnchor="middle" fontWeight="bold">P2</text>
+            <rect x={width/2 - 8} y={tubeTop - 40} width="16" height="35" rx="3" fill="#1a2a3a" stroke={colors.pressure} strokeWidth="1" />
+            <rect x={width/2 - 5} y={tubeTop - 8 - Math.max(narrowPressure, 10) * 0.25} width="10" height={Math.max(narrowPressure, 10) * 0.25} fill="#3b82f6" rx="2" />
+            <text x={width/2} y={tubeTop - 45} fontSize="9" fill="#60a5fa" textAnchor="middle" fontWeight="bold">P2</text>
 
             {/* Right pressure gauge */}
-            <rect x={width - 61} y="35" width="16" height="45" rx="3" fill="#1a2a3a" stroke={colors.pressure} strokeWidth="1" />
-            <rect x={width - 58} y={80 - widePressure * 0.35} width="10" height={widePressure * 0.35} fill="#ef4444" rx="2" />
-            <text x={width - 53} y="30" fontSize="9" fill="#f87171" textAnchor="middle" fontWeight="bold">P3</text>
+            <rect x={width - 66} y={tubeTop - 35} width="16" height="30" rx="3" fill="#1a2a3a" stroke={colors.pressure} strokeWidth="1" />
+            <rect x={width - 63} y={tubeTop - 8 - widePressure * 0.2} width="10" height={widePressure * 0.2} fill="#ef4444" rx="2" />
+            <text x={width - 58} y={tubeTop - 40} fontSize="9" fill="#f87171" textAnchor="middle" fontWeight="bold">P3</text>
           </g>
         )}
 
         {/* Velocity arrows */}
         {showVelocity && (
           <g>
-            <line x1="35" y1={height - 60} x2={35 + wideVelocity * 12} y2={height - 60} stroke="#22c55e" strokeWidth="4" strokeLinecap="round" />
-            <polygon points={`${40 + wideVelocity * 12},${height - 60} ${30 + wideVelocity * 12},${height - 68} ${30 + wideVelocity * 12},${height - 52}`} fill="#22c55e" />
-            <text x="70" y={height - 40} fontSize="10" fill="#4ade80" textAnchor="middle" fontWeight="bold">v1={wideVelocity.toFixed(1)} m/s</text>
+            <line x1="35" y1={tubeBot + 40} x2={35 + wideVelocity * 12} y2={tubeBot + 40} stroke="#22c55e" strokeWidth="4" strokeLinecap="round" />
+            <polygon points={`${40 + wideVelocity * 12},${tubeBot + 40} ${30 + wideVelocity * 12},${tubeBot + 32} ${30 + wideVelocity * 12},${tubeBot + 48}`} fill="#22c55e" />
+            <text x="70" y={tubeBot + 62} fontSize="10" fill="#4ade80" textAnchor="middle" fontWeight="bold">v1={wideVelocity.toFixed(1)} m/s</text>
 
-            <line x1={width/2 - 30} y1={height - 60} x2={width/2 - 30 + Math.min(narrowVelocity, 15) * 6} y2={height - 60} stroke="#22d3ee" strokeWidth="5" strokeLinecap="round" />
-            <polygon points={`${width/2 - 25 + Math.min(narrowVelocity, 15) * 6},${height - 60} ${width/2 - 35 + Math.min(narrowVelocity, 15) * 6},${height - 68} ${width/2 - 35 + Math.min(narrowVelocity, 15) * 6},${height - 52}`} fill="#22d3ee" />
-            <text x={width/2} y={height - 40} fontSize="10" fill="#67e8f9" textAnchor="middle" fontWeight="bold">v2={narrowVelocity.toFixed(1)} m/s</text>
+            <line x1={width/2 - 30} y1={tubeBot + 40} x2={width/2 - 30 + Math.min(narrowVelocity, 15) * 6} y2={tubeBot + 40} stroke="#22d3ee" strokeWidth="5" strokeLinecap="round" />
+            <polygon points={`${width/2 - 25 + Math.min(narrowVelocity, 15) * 6},${tubeBot + 40} ${width/2 - 35 + Math.min(narrowVelocity, 15) * 6},${tubeBot + 32} ${width/2 - 35 + Math.min(narrowVelocity, 15) * 6},${tubeBot + 48}`} fill="#22d3ee" />
+            <text x={width/2} y={tubeBot + 62} fontSize="10" fill="#67e8f9" textAnchor="middle" fontWeight="bold">v2={narrowVelocity.toFixed(1)} m/s</text>
 
-            <line x1={width - 100} y1={height - 60} x2={width - 100 + wideVelocity * 12} y2={height - 60} stroke="#22c55e" strokeWidth="4" strokeLinecap="round" />
-            <polygon points={`${width - 95 + wideVelocity * 12},${height - 60} ${width - 105 + wideVelocity * 12},${height - 68} ${width - 105 + wideVelocity * 12},${height - 52}`} fill="#22c55e" />
-            <text x={width - 70} y={height - 40} fontSize="10" fill="#4ade80" textAnchor="middle" fontWeight="bold">v3={wideVelocity.toFixed(1)} m/s</text>
+            <line x1={width - 100} y1={tubeBot + 40} x2={width - 100 + wideVelocity * 12} y2={tubeBot + 40} stroke="#22c55e" strokeWidth="4" strokeLinecap="round" />
+            <polygon points={`${width - 95 + wideVelocity * 12},${tubeBot + 40} ${width - 105 + wideVelocity * 12},${tubeBot + 32} ${width - 105 + wideVelocity * 12},${tubeBot + 48}`} fill="#22c55e" />
+            <text x={width - 70} y={tubeBot + 62} fontSize="10" fill="#4ade80" textAnchor="middle" fontWeight="bold">v3={wideVelocity.toFixed(1)} m/s</text>
           </g>
         )}
 
+        {/* Velocity axis label */}
+        <text x={width/2} y={tubeBot + 80} textAnchor="middle" fill={colors.textSecondary} fontSize="10">
+          Velocity (m/s)
+        </text>
+
         {/* Section labels */}
-        <text x="50" y={height - 15} fontSize="10" fill={colors.textMuted} textAnchor="middle">Wide</text>
-        <text x={width/2} y={height - 15} fontSize="10" fill="#22d3ee" textAnchor="middle" fontWeight="600">Narrow</text>
-        <text x={width - 50} y={height - 15} fontSize="10" fill={colors.textMuted} textAnchor="middle">Wide</text>
+        <text x="50" y={tubeBot + 95} fontSize="10" fill={colors.textMuted} textAnchor="middle">Wide</text>
+        <text x={width/2} y={tubeBot + 95} fontSize="10" fill="#22d3ee" textAnchor="middle" fontWeight="600">Narrow</text>
+        <text x={width - 50} y={tubeBot + 95} fontSize="10" fill={colors.textMuted} textAnchor="middle">Wide</text>
+
+        {/* Bernoulli equation */}
+        <rect x={width/2 - 80} y={height - 45} width="160" height="18" rx="4" fill="#0a1a2a" stroke={colors.accent} strokeWidth="1" />
+        <text x={width/2} y={height - 33} fontSize="10" fill={colors.accent} textAnchor="middle" fontWeight="bold" fontFamily="monospace">P + ½ρv² = const</text>
 
         {/* Continuity equation */}
-        <rect x={width/2 - 55} y="165" width="110" height="18" rx="4" fill="#0a1a2a" stroke={colors.accent} strokeWidth="1" />
-        <text x={width/2} y="177" fontSize="10" fill={colors.accent} textAnchor="middle" fontWeight="bold" fontFamily="monospace">A1v1 = A2v2</text>
+        <rect x={width/2 - 55} y={height - 22} width="110" height="18" rx="4" fill="#0a1a2a" stroke={colors.accent} strokeWidth="1" />
+        <text x={width/2} y={height - 10} fontSize="10" fill={colors.accent} textAnchor="middle" fontWeight="bold" fontFamily="monospace">A1v1 = A2v2</text>
       </svg>
     );
   };

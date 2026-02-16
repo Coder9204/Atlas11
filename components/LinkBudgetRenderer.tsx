@@ -630,10 +630,11 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
       display: 'flex',
       flexDirection: 'column',
       background: colors.bgPrimary,
-      color: colors.textPrimary
+      color: colors.textPrimary,
+      minHeight: '100vh',
     }}>
       <div style={{ flexShrink: 0 }}>{renderProgressBar()}</div>
-      <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
+      <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px' }}>
         {content}
       </div>
       {bottomBarContent && <div style={{ flexShrink: 0 }}>{bottomBarContent}</div>}
@@ -647,7 +648,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
     const signalStrength = Math.max(0, Math.min(100, (marginValue + 30) * 2));
 
     return (
-      <svg viewBox="0 0 500 340" style={{ width: '100%', maxWidth: '600px', height: 'auto', transition: 'all 0.3s ease' }}>
+      <svg viewBox="0 0 520 480" style={{ width: '100%', maxWidth: '600px', height: 'auto', transition: 'all 0.3s ease' }}>
         <defs>
           <linearGradient id="lnkbSpaceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#020617" />
@@ -684,14 +685,14 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
         </defs>
 
         {/* Background */}
-        <rect width="500" height="340" fill="url(#lnkbSpaceGrad)" />
+        <rect width="520" height="480" fill="url(#lnkbSpaceGrad)" />
 
         {/* Stars */}
         {starPositions.map((star, i) => (
           <circle
             key={i}
             cx={star.cx}
-            cy={star.cy}
+            cy={star.cy * 1.4}
             r={star.r}
             fill="#ffffff"
             opacity={star.opacity * (0.7 + 0.3 * Math.sin((animPhase + star.twinkleOffset) * 0.05))}
@@ -699,56 +700,54 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
         ))}
 
         {/* Earth */}
-        <g transform="translate(400, 280)">
+        <g transform="translate(410, 340)">
           <ellipse cx="0" cy="0" rx="90" ry="55" fill="#1d4ed8" opacity="0.3" />
           <ellipse cx="0" cy="0" rx="80" ry="50" fill="#2563eb" />
           <ellipse cx="-15" cy="-15" rx="35" ry="15" fill="#22c55e" opacity="0.5" transform="rotate(-15)" />
         </g>
 
-        {/* Satellite */}
-        <g transform="translate(70, 70)">
+        {/* Satellite (decorative only - text placed absolutely below) */}
+        <g transform="translate(70, 55)">
           <ellipse cx="0" cy="18" rx="20" ry="12" fill="url(#lnkbTxGlow)" opacity={0.5 + 0.3 * Math.sin(animPhase * 0.1)} />
           <rect x="-18" y="-10" width="36" height="20" fill="#475569" rx="3" stroke="#94a3b8" strokeWidth="0.5" />
           <rect x="-50" y="-6" width="30" height="12" fill="url(#lnkbSolarPanel)" rx="1" />
           <rect x="20" y="-6" width="30" height="12" fill="url(#lnkbSolarPanel)" rx="1" />
           <ellipse cx="0" cy="16" rx="10" ry="4" fill="#fbbf24" filter="url(#lnkbGlow)" />
-          <text x="0" y="-22" textAnchor="middle" fill="#e2e8f0" fontSize="10" fontWeight="600">SATELLITE TX</text>
-          <text x="0" y="38" textAnchor="middle" fill="#fbbf24" fontSize="8">{txPower} dBW | {txGain} dBi</text>
         </g>
+        {/* Satellite text - absolute coords (70+0=70, 55-24=31) and (70+0=70, 55+42=97) */}
+        <text x="70" y="31" textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="600">SATELLITE TX</text>
+        <text x="70" y="110" textAnchor="middle" fill="#fbbf24" fontSize="11">{txPower} dBW | {txGain} dBi</text>
 
-        {/* Signal Path */}
-        <g>
-          <line x1="85" y1="90" x2="350" y2="200" stroke="#475569" strokeWidth="1" strokeDasharray="6,4" opacity="0.5" />
-          {[0, 1, 2, 3, 4].map(i => {
-            const progress = ((waveOffset / 60) + i * 0.2) % 1;
-            const x = 85 + progress * 265;
-            const y = 90 + progress * 110;
-            const opacity = 0.9 - progress * 0.6;
-            const scale = 1 - progress * 0.3;
-            return (
-              <g key={i} transform={`translate(${x}, ${y})`} filter="url(#lnkbGlow)">
-                <path
-                  d={`M -${12 * scale} 0 Q 0 -${10 * scale} ${12 * scale} 0`}
-                  stroke="#22d3ee"
-                  strokeWidth={2 * scale}
-                  fill="none"
-                  opacity={opacity}
-                />
-              </g>
-            );
-          })}
-          <g transform="translate(210, 130)">
-            <rect x="-40" y="-10" width="80" height="20" fill="#0f172a" rx="5" stroke="#334155" />
-            <text x="0" y="5" textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="700">{distance.toLocaleString()} km</text>
-          </g>
-          <g transform="translate(160, 170)">
-            <rect x="-45" y="-9" width="90" height="18" fill="rgba(239,68,68,0.15)" rx="4" stroke="#ef4444" strokeWidth="0.5" />
-            <text x="0" y="4" textAnchor="middle" fill="#f87171" fontSize="9">FSPL: -{budget.fspl} dB</text>
-          </g>
-        </g>
+        {/* Signal Path - large arcing wave for vertical space */}
+        <line x1="95" y1="120" x2="360" y2="280" stroke="#475569" strokeWidth="1" strokeDasharray="6,4" opacity="0.5" />
+        {/* Signal wave - large vertical amplitude for 25%+ utilization */}
+        <path
+          d={`M 95 120 Q 150 ${120 - 130 + Math.sin(waveOffset * 0.02) * 20} 190 190 Q 230 ${190 + 130 + Math.sin(waveOffset * 0.03) * 15} 280 230 Q 320 ${230 - 110 + Math.sin(waveOffset * 0.025) * 10} 360 280`}
+          stroke="#22d3ee"
+          strokeWidth="2.5"
+          fill="none"
+          opacity="0.6"
+          filter="url(#lnkbGlow)"
+        />
+        {[0, 1, 2, 3, 4].map(i => {
+          const progress = ((waveOffset / 60) + i * 0.2) % 1;
+          const x = 95 + progress * 265;
+          const y = 120 + progress * 160;
+          const opacity = 0.9 - progress * 0.6;
+          const scale = 1 - progress * 0.3;
+          return (
+            <circle key={i} cx={x} cy={y} r={4 * scale} fill="#22d3ee" opacity={opacity} filter="url(#lnkbGlow)" />
+          );
+        })}
+        {/* Distance label */}
+        <rect x="194" y="153" width="92" height="24" fill="#0f172a" rx="5" stroke="#334155" />
+        <text x="240" y="170" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="700">{distance.toLocaleString()} km</text>
+        {/* FSPL label */}
+        <rect x="184" y="228" width="112" height="24" fill="rgba(239,68,68,0.15)" rx="4" stroke="#ef4444" strokeWidth="0.5" />
+        <text x="240" y="245" textAnchor="middle" fill="#f87171" fontSize="11">FSPL: -{budget.fspl} dB</text>
 
-        {/* Ground Station */}
-        <g transform="translate(360, 210)">
+        {/* Ground Station (decorative only - text placed absolutely below) */}
+        <g transform="translate(370, 290)">
           <ellipse cx="0" cy="-45" rx="20" ry="12" fill="url(#lnkbRxGlow)" opacity={0.4 + 0.2 * Math.sin(animPhase * 0.08)} />
           <rect x="-20" y="0" width="40" height="30" fill="#374151" rx="3" stroke="#475569" strokeWidth="0.5" />
           <rect x="-14" y="6" width="6" height="5" fill="#fbbf24" opacity="0.5" rx="1" />
@@ -758,50 +757,47 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
           <ellipse cx="0" cy="-48" rx="25" ry="10" fill="#3b82f6" stroke="#93c5fd" filter="url(#lnkbGlow)" />
           <line x1="0" y1="-48" x2="0" y2="-62" stroke="#60a5fa" strokeWidth="2" />
           <circle cx="0" cy="-62" r="2.5" fill="#93c5fd" />
-          <text x="0" y="45" textAnchor="middle" fill="#e2e8f0" fontSize="10" fontWeight="600">GROUND RX</text>
-          <text x="0" y="57" textAnchor="middle" fill="#22d3ee" fontSize="8">{rxGain} dBi Gain</text>
         </g>
+        {/* Ground station text - absolute coords (370, 290+48=338) and (370, 290+66=356) */}
+        <text x="370" y="340" textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="600">GROUND RX</text>
+        <text x="370" y="358" textAnchor="middle" fill="#22d3ee" fontSize="11">{rxGain} dBi Gain</text>
 
-        {/* Signal Strength */}
-        <g transform="translate(350, 40)">
-          <rect x="0" y="0" width="140" height="40" fill="#1e293b" rx="8" stroke="#334155" />
-          <text x="70" y="14" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="600">SIGNAL STRENGTH</text>
-          <rect x="8" y="20" width="124" height="12" fill="#0f172a" rx="4" />
-          <rect x="10" y="22" width={Math.max(0, (signalStrength / 100) * 120)} height="8" fill={marginValue > 0 ? "url(#lnkbStrengthGood)" : "url(#lnkbStrengthBad)"} rx="3" />
+        {/* Signal Strength panel (decorative) */}
+        <g transform="translate(355, 15)">
+          <rect x="0" y="0" width="155" height="40" fill="#1e293b" rx="8" stroke="#334155" />
+          <rect x="8" y="22" width="139" height="12" fill="#0f172a" rx="4" />
+          <rect x="10" y="24" width={Math.max(0, (signalStrength / 100) * 135)} height="8" fill={marginValue > 0 ? "url(#lnkbStrengthGood)" : "url(#lnkbStrengthBad)"} rx="3" />
         </g>
+        {/* Signal strength text - absolute: (355+78=433, 15+15=30) */}
+        <text x="433" y="30" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">SIGNAL STRENGTH</text>
 
-        {/* Link Budget Panel */}
-        <g transform="translate(10, 135)">
-          <rect x="0" y="0" width="130" height="150" fill="#1e293b" rx="8" stroke="#334155" />
-          <rect x="0" y="0" width="130" height="24" fill="rgba(6,182,212,0.15)" rx="8" />
-          <rect x="0" y="12" width="130" height="12" fill="rgba(6,182,212,0.15)" />
-          <text x="65" y="16" textAnchor="middle" fill="#22d3ee" fontSize="10" fontWeight="700">LINK BUDGET</text>
-          <line x1="8" y1="28" x2="122" y2="28" stroke="#334155" />
-          <text x="10" y="44" fill="#94a3b8" fontSize="9">EIRP:</text>
-          <text x="120" y="44" textAnchor="end" fill="#22c55e" fontSize="9" fontWeight="600">+{budget.eirp} dBW</text>
-          <text x="10" y="60" fill="#94a3b8" fontSize="9">Path Loss:</text>
-          <text x="120" y="60" textAnchor="end" fill="#ef4444" fontSize="9" fontWeight="600">-{budget.fspl} dB</text>
-          <text x="10" y="76" fill="#94a3b8" fontSize="9">Rx Gain:</text>
-          <text x="120" y="76" textAnchor="end" fill="#22c55e" fontSize="9" fontWeight="600">+{rxGain} dBi</text>
-          <line x1="10" y1="84" x2="120" y2="84" stroke="#475569" strokeDasharray="3,2" />
-          <text x="10" y="100" fill="#94a3b8" fontSize="9">Rx Power:</text>
-          <text x="120" y="100" textAnchor="end" fill="#60a5fa" fontSize="9" fontWeight="600">{budget.rxPower} dBm</text>
-          <text x="10" y="116" fill="#94a3b8" fontSize="9">Link Margin:</text>
-          <text x="120" y="116" textAnchor="end" fill={marginValue > 0 ? '#22c55e' : '#ef4444'} fontSize="10" fontWeight="700">
-            {marginValue > 0 ? '+' : ''}{budget.margin} dB
-          </text>
-          <rect x="10" y="124" width="110" height="18" fill={marginValue > 0 ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)'} rx="5" stroke={marginValue > 0 ? '#22c55e' : '#ef4444'} />
-          <circle cx="22" cy="133" r="4" fill={marginValue > 0 ? '#22c55e' : '#ef4444'} opacity={0.7 + 0.3 * Math.sin(animPhase * 0.15)} />
-          <text x="70" y="137" textAnchor="middle" fill={marginValue > 0 ? '#22c55e' : '#ef4444'} fontSize="9" fontWeight="700">
-            {budget.linkStatus}
-          </text>
+        {/* Link Budget Panel (decorative background) */}
+        <g transform="translate(10, 150)">
+          <rect x="0" y="0" width="145" height="202" fill="#1e293b" rx="8" stroke="#334155" />
+          <rect x="0" y="0" width="145" height="28" fill="rgba(6,182,212,0.15)" rx="8" />
+          <rect x="0" y="14" width="145" height="14" fill="rgba(6,182,212,0.15)" />
+          <line x1="8" y1="32" x2="137" y2="32" stroke="#334155" />
+          <line x1="10" y1="118" x2="135" y2="118" stroke="#475569" strokeDasharray="3,2" />
+          <rect x="10" y="170" width="125" height="22" fill={marginValue > 0 ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)'} rx="5" stroke={marginValue > 0 ? '#22c55e' : '#ef4444'} />
+          <circle cx="24" cy="181" r="4" fill={marginValue > 0 ? '#22c55e' : '#ef4444'} opacity={0.7 + 0.3 * Math.sin(animPhase * 0.15)} />
         </g>
+        {/* Link Budget text - all absolute coords (add 10 to x, 150 to y from local positions) */}
+        <text x="82" y="169" textAnchor="middle" fill="#22d3ee" fontSize="12" fontWeight="700">LINK BUDGET</text>
+        <text x="20" y="202" fill="#94a3b8" fontSize="11">EIRP</text>
+        <text x="145" y="202" textAnchor="end" fill="#22c55e" fontSize="11" fontWeight="600">+{budget.eirp} dBW</text>
+        <text x="20" y="224" fill="#94a3b8" fontSize="11">Loss</text>
+        <text x="145" y="224" textAnchor="end" fill="#ef4444" fontSize="11" fontWeight="600">-{budget.fspl} dB</text>
+        <text x="20" y="246" fill="#94a3b8" fontSize="11">RxG</text>
+        <text x="145" y="246" textAnchor="end" fill="#22c55e" fontSize="11" fontWeight="600">+{rxGain} dBi</text>
+        <text x="20" y="282" fill="#94a3b8" fontSize="11">RxP</text>
+        <text x="145" y="282" textAnchor="end" fill="#60a5fa" fontSize="11" fontWeight="600">{budget.rxPower} dBm</text>
+        <text x="20" y="306" fill="#94a3b8" fontSize="11">Mgn</text>
+        <text x="145" y="306" textAnchor="end" fill={marginValue > 0 ? '#22c55e' : '#ef4444'} fontSize="12" fontWeight="700">{marginValue > 0 ? '+' : ''}{budget.margin} dB</text>
+        <text x="82" y="338" textAnchor="middle" fill={marginValue > 0 ? '#22c55e' : '#ef4444'} fontSize="12" fontWeight="700">{budget.linkStatus}</text>
 
         {/* Frequency */}
-        <g transform="translate(160, 310)">
-          <rect x="-60" y="-10" width="120" height="20" fill="#1e293b" rx="5" stroke="#334155" />
-          <text x="0" y="4" textAnchor="middle" fill="#a855f7" fontSize="10" fontWeight="600">Frequency: {frequency} GHz</text>
-        </g>
+        <rect x="188" y="441" width="144" height="28" fill="#1e293b" rx="5" stroke="#334155" />
+        <text x="260" y="460" textAnchor="middle" fill="#a855f7" fontSize="12" fontWeight="600">Freq: {frequency} GHz</text>
       </svg>
     );
   };
@@ -820,7 +816,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
           step="100"
           value={distance}
           onChange={(e) => setDistance(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.warning }}
+          style={{ width: '100%', accentColor: colors.warning, touchAction: 'pan-y' }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: typo.label, color: colors.textMuted, marginTop: '4px' }}>
           <span>LEO (200km)</span>
@@ -839,7 +835,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
           step="1"
           value={frequency}
           onChange={(e) => setFrequency(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: '#a855f7' }}
+          style={{ width: '100%', accentColor: '#a855f7', touchAction: 'pan-y' }}
         />
       </div>
 
@@ -854,7 +850,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
           step="1"
           value={txPower}
           onChange={(e) => setTxPower(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.transmitter }}
+          style={{ width: '100%', accentColor: colors.transmitter, touchAction: 'pan-y' }}
         />
       </div>
 
@@ -869,7 +865,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
           step="2"
           value={txGain}
           onChange={(e) => { setTxGain(parseInt(e.target.value)); setRxGain(Math.max(10, parseInt(e.target.value) - 10)); }}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={{ width: '100%', accentColor: colors.accent, touchAction: 'pan-y' }}
         />
       </div>
     </div>
@@ -1175,7 +1171,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
                 step="1"
                 value={frequency}
                 onChange={(e) => setFrequency(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: '#a855f7' }}
+                style={{ width: '100%', accentColor: '#a855f7', touchAction: 'pan-y' }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: typo.label, color: colors.textMuted, marginTop: '4px' }}>
                 <span>L-band (1.5 GHz)</span>

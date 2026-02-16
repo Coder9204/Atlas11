@@ -264,7 +264,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
   // Simulation state
   const [generationOutput, setGenerationOutput] = useState(50); // % of max
-  const [loadDemand, setLoadDemand] = useState(50); // % of max
+  const [loadDemand, setLoadDemand] = useState(40); // % of max
   const [systemInertia, setSystemInertia] = useState(50); // % - represents spinning mass
   const [frequency, setFrequency] = useState(60); // Hz
   const [animationFrame, setAnimationFrame] = useState(0);
@@ -352,7 +352,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Renewable Grid',
+    twist_play: 'Twist Explore',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -392,16 +392,20 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
   const freqStatus = getFrequencyStatus();
 
-  // Grid Visualization SVG Component
-  const GridVisualization = ({ isStatic = false }: { isStatic?: boolean }) => {
-    const width = isMobile ? 340 : 480;
-    const height = isMobile ? 260 : 320;
+  // Grid Visualization SVG - render function (not sub-component)
+  const renderGridVisualization = (isStatic = false, showRenewable = false) => {
+    const width = 480;
+    const height = 320;
 
     // Frequency wave parameters - use static 60Hz for predict phase
     const displayFreq = isStatic ? 60 : frequency;
     const wavelength = 60 / displayFreq * 40;
     const staticStatus = { status: 'Normal', color: colors.success };
     const displayStatus = isStatic ? staticStatus : freqStatus;
+
+    // Wave center and amplitude - use >= 25% of SVG height for vertical space
+    const waveCenter = 120;
+    const waveAmplitude = 80; // 160px range = 50% of 320px height
 
     return (
       <svg
@@ -414,11 +418,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
       >
         <defs>
           <linearGradient id="freqWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={freqStatus.color} stopOpacity="0.8" />
-            <stop offset="50%" stopColor={freqStatus.color} stopOpacity="1" />
-            <stop offset="100%" stopColor={freqStatus.color} stopOpacity="0.8" />
+            <stop offset="0%" stopColor={displayStatus.color} stopOpacity="0.8" />
+            <stop offset="50%" stopColor={displayStatus.color} stopOpacity="1" />
+            <stop offset="100%" stopColor={displayStatus.color} stopOpacity="0.8" />
           </linearGradient>
-          <filter id="glowFilter">
+          <filter id="glow">
             <feGaussianBlur stdDeviation="3" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
@@ -431,77 +435,88 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
         {[0, 0.25, 0.5, 0.75, 1].map(frac => (
           <line
             key={`h-${frac}`}
-            x1="40"
-            y1={30 + frac * 80}
+            x1="50"
+            y1={40 + frac * 200}
             x2={width - 20}
-            y2={30 + frac * 80}
+            y2={40 + frac * 200}
             stroke={colors.border}
-            strokeDasharray="3,3"
+            strokeDasharray="4 4"
+            opacity="0.3"
           />
         ))}
+
+        {/* Y-axis label */}
+        <text x="12" y={waveCenter} fill={colors.textMuted} fontSize="11" textAnchor="middle" transform={`rotate(-90, 12, ${waveCenter})`}>Frequency (Hz)</text>
+
+        {/* X-axis label */}
+        <text x={width / 2} y={height - 6} fill={colors.textMuted} fontSize="11" textAnchor="middle">Time (seconds)</text>
 
         {/* Frequency waveform */}
         <path
           d={(() => {
-            let path = 'M 40 70';
-            for (let x = 0; x <= width - 60; x += 2) {
+            let path = `M 50 ${waveCenter}`;
+            for (let x = 0; x <= width - 70; x += 2) {
               const phaseVal = (x / wavelength + (isStatic ? 0 : animationFrame * 0.1)) * Math.PI * 2;
-              const y = 70 + Math.sin(phaseVal) * 30;
-              path += ` L ${40 + x} ${y}`;
+              const y = waveCenter + Math.sin(phaseVal) * waveAmplitude;
+              path += ` L ${50 + x} ${y.toFixed(1)}`;
             }
             return path;
           })()}
           fill="none"
           stroke="url(#freqWaveGrad)"
           strokeWidth="3"
-          filter="url(#glowFilter)"
+          filter="url(#glow)"
         />
 
         {/* 60 Hz reference line */}
-        <line x1="40" y1="70" x2={width - 20} y2="70" stroke={colors.textMuted} strokeDasharray="5,5" strokeWidth="1" />
-        <text x="45" y="62" fill={colors.textMuted} fontSize="10">60 Hz Reference</text>
+        <line x1="50" y1={waveCenter} x2={width - 20} y2={waveCenter} stroke={colors.textMuted} strokeDasharray="4 4" strokeWidth="1" opacity="0.3" />
+        <text x="120" y={waveCenter - 12} fill={colors.textMuted} fontSize="11">60 Hz Ref</text>
+
+        {/* Interactive point showing frequency deviation */}
+        <circle cx={width / 2} cy={waveCenter - ((displayFreq - 60) / 3) * waveAmplitude} r={8} fill={displayStatus.color} filter="url(#glow)" stroke="#fff" strokeWidth={2} />
 
         {/* Frequency display */}
-        <rect x={width/2 - 60} y={height - 100} width="120" height="50" rx="8" fill={colors.bgSecondary} stroke={displayStatus.color} strokeWidth="2" />
-        <text x={width/2} y={height - 72} textAnchor="middle" fill={displayStatus.color} fontSize="24" fontWeight="bold">
+        <rect x={width/2 - 60} y={height - 80} width="120" height="44" rx="8" fill={colors.bgSecondary} stroke={displayStatus.color} strokeWidth="2" />
+        <text x={width/2} y={height - 52} textAnchor="middle" fill={displayStatus.color} fontSize="22" fontWeight="bold">
           {displayFreq.toFixed(2)} Hz
         </text>
-        <text x={width/2} y={height - 56} textAnchor="middle" fill={displayStatus.color} fontSize="12">
+        <text x={width/2} y={height - 38} textAnchor="middle" fill={displayStatus.color} fontSize="12">
           {displayStatus.status}
         </text>
 
         {/* Supply/Demand indicators */}
-        <g transform={`translate(60, ${height - 35})`}>
-          <rect x="0" y="0" width="80" height="20" rx="4" fill={colors.success + '33'} />
-          <rect x="0" y="0" width={generationOutput * 0.8} height="20" rx="4" fill={colors.success} />
-          <text x="40" y="14" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">Gen: {generationOutput}%</text>
-        </g>
-        <g transform={`translate(${width - 140}, ${height - 35})`}>
-          <rect x="0" y="0" width="80" height="20" rx="4" fill={colors.error + '33'} />
-          <rect x="0" y="0" width={loadDemand * 0.8} height="20" rx="4" fill={colors.error} />
-          <text x="40" y="14" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">Load: {loadDemand}%</text>
-        </g>
+        <rect x="60" y={height - 26} width="80" height="18" rx="4" fill={colors.success + '33'} />
+        <rect x="60" y={height - 26} width={generationOutput * 0.8} height="18" rx="4" fill={colors.success} />
+        <text x="100" y={height - 13} textAnchor="middle" fill="white" fontSize="11" fontWeight="600">Gen: {generationOutput}%</text>
+        <rect x={width - 140} y={height - 26} width="80" height="18" rx="4" fill={colors.error + '33'} />
+        <rect x={width - 140} y={height - 26} width={loadDemand * 0.8} height="18" rx="4" fill={colors.error} />
+        <text x={width - 100} y={height - 13} textAnchor="middle" fill="white" fontSize="11" fontWeight="600">Load: {loadDemand}%</text>
 
         {/* Inertia indicator (spinning generator icon) */}
-        <g transform={`translate(${width/2}, 140)`}>
-          <circle cx="0" cy="0" r="25" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
-          <circle cx="0" cy="0" r="20" fill="none" stroke={colors.accent} strokeWidth="1" strokeDasharray="4,2" opacity="0.5" />
+        <g transform={`translate(${width - 55}, 55)`}>
+          <circle cx="0" cy="0" r="22" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
+          <circle cx="0" cy="0" r="17" fill="none" stroke={colors.accent} strokeWidth="1" strokeDasharray="4,2" opacity="0.5" />
           <g style={{ transformOrigin: 'center', animation: `spin ${3 / (systemInertia / 50)}s linear infinite` }}>
-            <line x1="-15" y1="0" x2="15" y2="0" stroke={colors.accent} strokeWidth="3" />
-            <line x1="0" y1="-15" x2="0" y2="15" stroke={colors.accent} strokeWidth="3" />
+            <line x1="-12" y1="0" x2="12" y2="0" stroke={colors.accent} strokeWidth="3" />
+            <line x1="0" y1="-12" x2="0" y2="12" stroke={colors.accent} strokeWidth="3" />
           </g>
-          <text x="0" y="40" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Inertia: {systemInertia}%</text>
+          <text x="0" y="36" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Inertia: {systemInertia}%</text>
         </g>
 
         {/* Decorative power flow paths */}
-        <path d="M 30 70 Q 35 60 40 70" fill="none" stroke={colors.accent} strokeWidth="1" opacity="0.4" />
-        <path d={`M ${width - 30} 70 Q ${width - 25} 80 ${width - 20} 70`} fill="none" stroke={colors.accent} strokeWidth="1" opacity="0.4" />
+        <path d="M 40 120 Q 45 110 50 120" fill="none" stroke={colors.accent} strokeWidth="1" opacity="0.4" />
+        <path d={`M ${width - 30} 120 Q ${width - 25} 130 ${width - 20} 120`} fill="none" stroke={colors.accent} strokeWidth="1" opacity="0.4" />
 
-        {/* Animated pulse on frequency display */}
-        <circle cx={width/2} cy={height - 75} r="4" fill={displayStatus.color} opacity="0.6">
-          <animate attributeName="r" values="4;8;4" dur="1.5s" repeatCount="indefinite" />
-          <animate attributeName="opacity" values="0.6;0.2;0.6" dur="1.5s" repeatCount="indefinite" />
-        </circle>
+        {/* Formula annotation */}
+        <text x="55" y={height - 90} fill={colors.textMuted} fontSize="11">f = P_gen / P_load × 60 Hz</text>
+
+        {/* Renewable penetration indicator for twist phase */}
+        {showRenewable && (
+          <g>
+            <text x={width - 55} y={height - 90} fill={colors.warning} fontSize="11" textAnchor="middle">Renewable: {renewablePenetration}%</text>
+            <text x={width - 55} y={height - 106} fill={batteryResponse ? colors.success : colors.textMuted} fontSize="11" textAnchor="middle">{batteryResponse ? 'Battery: ON' : 'Battery: OFF'}</text>
+          </g>
+        )}
 
         <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
       </svg>
@@ -540,7 +555,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           opacity: phase === 'hook' ? 0.5 : 1,
           cursor: phase === 'hook' ? 'not-allowed' : 'pointer',
           padding: '8px 16px',
-          minHeight: '36px',
+          minHeight: '44px',
         }}
       >
         ← Back
@@ -760,7 +775,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <GridVisualization isStatic={true} />
+            {renderGridVisualization(true)}
           </div>
 
           {/* Options */}
@@ -822,17 +837,21 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px', paddingTop: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Grid Frequency Simulator
           </h2>
           <p style={{ ...typo.body, color: '#e2e8f0', textAlign: 'center', marginBottom: '16px' }}>
             Balance generation and load to maintain 60 Hz. Adjust inertia to see its stabilizing effect.
+            Grid frequency is defined as the rate of AC oscillation, calculated as f = P_generation / P_load × 60 Hz.
           </p>
 
           {/* Observation guidance */}
@@ -856,7 +875,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <GridVisualization />
+              {renderGridVisualization()}
             </div>
 
             {/* Generation slider */}
@@ -871,9 +890,13 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 max="80"
                 value={generationOutput}
                 onChange={(e) => setGenerationOutput(parseInt(e.target.value))}
+                onInput={(e) => setGenerationOutput(parseInt((e.target as HTMLInputElement).value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none' as const,
+                  accentColor: '#3b82f6',
                   borderRadius: '4px',
                   background: `linear-gradient(to right, ${colors.success} ${((generationOutput - 20) / 60) * 100}%, ${colors.border} ${((generationOutput - 20) / 60) * 100}%)`,
                   cursor: 'pointer',
@@ -893,9 +916,13 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 max="80"
                 value={loadDemand}
                 onChange={(e) => setLoadDemand(parseInt(e.target.value))}
+                onInput={(e) => setLoadDemand(parseInt((e.target as HTMLInputElement).value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none' as const,
+                  accentColor: '#3b82f6',
                   borderRadius: '4px',
                   background: `linear-gradient(to right, ${colors.error} ${((loadDemand - 20) / 60) * 100}%, ${colors.border} ${((loadDemand - 20) / 60) * 100}%)`,
                   cursor: 'pointer',
@@ -915,9 +942,13 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 max="100"
                 value={systemInertia}
                 onChange={(e) => setSystemInertia(parseInt(e.target.value))}
+                onInput={(e) => setSystemInertia(parseInt((e.target as HTMLInputElement).value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none' as const,
+                  accentColor: '#3b82f6',
                   borderRadius: '4px',
                   background: `linear-gradient(to right, ${colors.accent} ${((systemInertia - 10) / 90) * 100}%, ${colors.border} ${((systemInertia - 10) / 90) * 100}%)`,
                   cursor: 'pointer',
@@ -1011,8 +1042,8 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             Understand the Physics →
           </button>
         </div>
-
         {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -1155,7 +1186,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <GridVisualization isStatic={true} />
+            {renderGridVisualization(true)}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1214,12 +1245,15 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px', paddingTop: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             High-Renewable Grid Simulation
           </h2>
@@ -1247,7 +1281,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <GridVisualization />
+              {renderGridVisualization(false, true)}
             </div>
 
             {/* Renewable penetration slider */}
@@ -1267,9 +1301,17 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                   // Reduce inertia as renewables increase
                   setSystemInertia(Math.max(10, 100 - val));
                 }}
+                onInput={(e) => {
+                  const val = parseInt((e.target as HTMLInputElement).value);
+                  setRenewablePenetration(val);
+                  setSystemInertia(Math.max(10, 100 - val));
+                }}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none' as const,
+                  accentColor: '#3b82f6',
                   borderRadius: '4px',
                   cursor: 'pointer',
                 }}
@@ -1288,9 +1330,13 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 max="80"
                 value={loadDemand}
                 onChange={(e) => setLoadDemand(parseInt(e.target.value))}
+                onInput={(e) => setLoadDemand(parseInt((e.target as HTMLInputElement).value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none' as const,
+                  accentColor: '#3b82f6',
                   borderRadius: '4px',
                   cursor: 'pointer',
                 }}
@@ -1384,8 +1430,8 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             Understand the Solution →
           </button>
         </div>
-
         {renderNavDots()}
+        </div>
       </div>
     );
   }

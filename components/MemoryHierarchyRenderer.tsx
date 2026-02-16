@@ -268,6 +268,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
   const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
+  const [answerChecked, setAnswerChecked] = useState(false);
 
   // Transfer state
   const [selectedApp, setSelectedApp] = useState(0);
@@ -353,8 +354,8 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#D1D5DB',
+    textMuted: '#9CA3AF',
     border: '#2a2a3a',
     l1: '#ef4444',
     l2: '#f97316',
@@ -401,6 +402,13 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
     }
   }, [phase, goToPhase, phaseOrder]);
 
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
   // Navigation bar component
   const renderNavBar = () => (
     <div style={{
@@ -417,8 +425,27 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
       padding: '0 16px',
       borderBottom: `1px solid ${colors.border}`,
     }}>
-      <span style={{ color: colors.textPrimary, fontWeight: 600 }}>Memory Hierarchy Latency</span>
-      <span style={{ color: colors.textSecondary, fontSize: '14px' }}>{phaseLabels[phase]}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <button
+          onClick={prevPhase}
+          style={{
+            background: 'transparent',
+            border: `1px solid ${colors.border}`,
+            color: phaseOrder.indexOf(phase) > 0 ? colors.textSecondary : colors.textMuted,
+            cursor: phaseOrder.indexOf(phase) > 0 ? 'pointer' : 'not-allowed',
+            padding: '6px 12px',
+            borderRadius: '6px',
+            fontSize: '14px',
+            minHeight: '44px',
+            opacity: phaseOrder.indexOf(phase) > 0 ? 1 : 0.4,
+          }}
+          disabled={phaseOrder.indexOf(phase) === 0}
+        >
+          Back
+        </button>
+        <span style={{ color: colors.textPrimary, fontWeight: 600 }}>Memory Hierarchy Latency</span>
+      </div>
+      <span style={{ color: '#9CA3AF', fontSize: '14px' }}>{phaseLabels[phase]}</span>
     </div>
   );
 
@@ -528,8 +555,18 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
           Memory Hierarchy - Speed vs Capacity Trade-off
         </text>
 
+        {/* Grid lines for visual reference */}
+        <line x1="20" y1="75" x2={width - 20} y2="75" stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+        <line x1="20" y1="175" x2={width - 20} y2="175" stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+        <line x1="20" y1="275" x2={width - 20} y2="275" stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+
+        {/* Latency axis label */}
+        <text x="14" y={height / 2} textAnchor="middle" fill="#9CA3AF" fontSize="11" fontWeight="500" transform={`rotate(-90, 14, ${height / 2})`}>
+          Latency (cycles)
+        </text>
+
         {/* CPU chip */}
-        <g transform={`translate(${width/2 - 40}, 40)`}>
+        <g transform={`translate(${width/2 - 40}, 38)`}>
           <rect x="0" y="0" width="80" height="30" rx="4" fill="#334155" stroke="#475569" strokeWidth="2" />
           <text x="40" y="20" textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="bold">CPU</text>
         </g>
@@ -578,7 +615,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
               />
               <text
                 x={x + 12}
-                y={baseY + (levelHeight - 10) / 2 + 4}
+                y={baseY + (levelHeight - 10) / 2 + 5}
                 fill={isActive ? '#ffffff' : '#e2e8f0'}
                 fontSize="12"
                 fontWeight="bold"
@@ -587,21 +624,12 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
               </text>
               <text
                 x={x + rectWidth - 12}
-                y={baseY + 14}
+                y={baseY + 20}
                 textAnchor="end"
-                fill={isActive ? '#ffffff' : '#64748b'}
-                fontSize="10"
+                fill={isActive ? '#ffffff' : '#94a3b8'}
+                fontSize="11"
               >
-                {sizeText}
-              </text>
-              <text
-                x={x + rectWidth - 12}
-                y={baseY + 28}
-                textAnchor="end"
-                fill={isActive ? '#ffffff' : '#64748b'}
-                fontSize="10"
-              >
-                {latencyText}
+                {sizeText} | {latencyText}
               </text>
 
               {/* Data flow animation when active */}
@@ -618,12 +646,17 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
           );
         })}
 
+        {/* Formula: Effective Latency */}
+        <text x={30} y={height - 50} fill="#9CA3AF" fontSize="11">
+          T = L1 + (1 - h1) × L2 + (1 - h2) × L3 + ...
+        </text>
+
         {/* Stats panel */}
-        <g transform={`translate(${width - 120}, ${height - 70})`}>
-          <rect x="0" y="0" width="110" height="60" rx="8" fill="#111827" stroke="#1f2937" strokeWidth="1" />
-          <text x="55" y="18" textAnchor="middle" fill="#e2e8f0" fontSize="9">ACTIVE LEVEL</text>
-          <text x="55" y="36" textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="bold">{activeLevel}</text>
-          <text x="55" y="52" textAnchor="middle" fill={effectiveLatency > 50 ? colors.error : colors.success} fontSize="10">
+        <g transform={`translate(${width - 130}, ${height - 65})`}>
+          <rect x="0" y="0" width="120" height="55" rx="8" fill="#111827" stroke="#1f2937" strokeWidth="1" />
+          <text x="60" y="16" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="500">ACTIVE LEVEL</text>
+          <text x="60" y="33" textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="bold">{activeLevel}</text>
+          <text x="60" y="48" textAnchor="middle" fill={effectiveLatency > 50 ? colors.error : colors.success} fontSize="11">
             {effectiveLatency >= 1000 ? `${effectiveLatency / 1000}k` : effectiveLatency} cycles
           </text>
         </g>
@@ -648,7 +681,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
           step={0.1}
           value={Math.log10(workingSetSize)}
           onChange={(e) => setWorkingSetSize(Math.pow(10, parseFloat(e.target.value)))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={{ width: '100%', accentColor: colors.accent, touchAction: 'pan-y' }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px', marginTop: '4px' }}>
           <span>10 KB</span>
@@ -952,6 +985,20 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
               Adjust working set size and access pattern to see how latency changes
             </p>
 
+            {/* Formula: Effective access time */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '12px 16px',
+              marginBottom: '16px',
+              textAlign: 'center',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <span style={{ color: colors.textPrimary, fontSize: '15px', fontWeight: 600 }}>
+                T = h1 × L1 + (1-h1) × h2 × L2 + (1-h1)(1-h2) × h3 × L3 + ...
+              </span>
+            </div>
+
             {/* Real-world relevance */}
             <div style={{
               background: `${colors.success}11`,
@@ -1179,6 +1226,11 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
               A 7B parameter LLM is 28GB. L3 cache is only 32MB. What happens during inference?
             </h2>
 
+            {/* Visualization without sliders for predict phase */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <MemoryVisualization />
+            </div>
+
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
@@ -1189,12 +1241,12 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '36px', color: colors.l3 }}>32 MB</div>
-                  <p style={{ ...typo.small, color: colors.textMuted }}>L3 Cache</p>
+                  <p style={{ ...typo.small, color: colors.textSecondary }}>L3 Cache</p>
                 </div>
-                <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
+                <div style={{ fontSize: '24px', color: colors.textSecondary }}>vs</div>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '36px', color: colors.error }}>28 GB</div>
-                  <p style={{ ...typo.small, color: colors.textMuted }}>7B Model Weights</p>
+                  <p style={{ ...typo.small, color: colors.textSecondary }}>7B Model Weights</p>
                 </div>
               </div>
               <p style={{ ...typo.small, color: colors.warning, marginTop: '16px' }}>
@@ -1482,9 +1534,11 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
                   onClick={() => {
                     playSound('click');
                     setSelectedApp(i);
-                    const newCompleted = [...completedApps];
-                    newCompleted[i] = true;
-                    setCompletedApps(newCompleted);
+                    setCompletedApps(prev => {
+                      const newCompleted = [...prev];
+                      newCompleted[i] = true;
+                      return newCompleted;
+                    });
                   }}
                   style={{
                     background: selectedApp === i ? `${a.color}22` : colors.bgCard,
@@ -1579,9 +1633,11 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
               <button
                 onClick={() => {
                   playSound('click');
-                  const newCompleted = [...completedApps];
-                  newCompleted[selectedApp] = true;
-                  setCompletedApps(newCompleted);
+                  setCompletedApps(prev => {
+                    const newCompleted = [...prev];
+                    newCompleted[selectedApp] = true;
+                    return newCompleted;
+                  });
                   if (selectedApp < realWorldApps.length - 1) {
                     setSelectedApp(selectedApp + 1);
                   }
@@ -1655,33 +1711,110 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
               <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
                 {testScore} / 10
               </p>
-              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '24px' }}>
                 {passed
                   ? 'You understand memory hierarchy and its impact on performance!'
                   : 'Review the concepts and try again.'}
               </p>
 
-              {passed ? (
+              {/* Answer Review */}
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+                textAlign: 'left',
+              }}>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>Answer Review</h3>
+                {testQuestions.map((q, i) => {
+                  const correctId = q.options.find(o => o.correct)?.id;
+                  const userAnswer = testAnswers[i];
+                  const isCorrect = userAnswer === correctId;
+                  return (
+                    <div key={i} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '8px 0',
+                      borderBottom: i < 9 ? `1px solid ${colors.border}` : 'none',
+                    }}>
+                      <span style={{
+                        width: '24px',
+                        height: '24px',
+                        borderRadius: '50%',
+                        background: isCorrect ? colors.success : colors.error,
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        flexShrink: 0,
+                      }}>
+                        {isCorrect ? 'Y' : 'X'}
+                      </span>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>
+                        Q{i + 1}: {isCorrect ? 'Correct' : `Wrong (${userAnswer?.toUpperCase()}) - Answer: ${correctId?.toUpperCase()}`}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                {passed ? (
+                  <button
+                    onClick={() => { playSound('complete'); nextPhase(); }}
+                    style={primaryButtonStyle}
+                  >
+                    Complete Lesson
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setTestSubmitted(false);
+                      setTestAnswers(Array(10).fill(null));
+                      setCurrentQuestion(0);
+                      setTestScore(0);
+                      setAnswerChecked(false);
+                      goToPhase('hook');
+                    }}
+                    style={primaryButtonStyle}
+                  >
+                    Review and Try Again
+                  </button>
+                )}
                 <button
-                  onClick={() => { playSound('complete'); nextPhase(); }}
-                  style={primaryButtonStyle}
-                >
-                  Complete Lesson
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    setTestSubmitted(false);
-                    setTestAnswers(Array(10).fill(null));
-                    setCurrentQuestion(0);
-                    setTestScore(0);
-                    goToPhase('hook');
+                  onClick={() => goToPhase('hook')}
+                  style={{
+                    padding: '14px 28px',
+                    borderRadius: '10px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: colors.textSecondary,
+                    cursor: 'pointer',
+                    minHeight: '44px',
                   }}
-                  style={primaryButtonStyle}
                 >
-                  Review and Try Again
+                  Play Again
                 </button>
-              )}
+                <a
+                  href="/"
+                  style={{
+                    padding: '14px 28px',
+                    borderRadius: '10px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: colors.textSecondary,
+                    textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    minHeight: '44px',
+                  }}
+                >
+                  Return to Dashboard
+                </a>
+              </div>
             </div>
             {renderNavDots()}
           </div>
@@ -1690,6 +1823,8 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
     }
 
     const question = testQuestions[currentQuestion];
+    const correctId = question.options.find(o => o.correct)?.id;
+    const isCurrentCorrect = testAnswers[currentQuestion] === correctId;
 
     return (
       <div style={{
@@ -1754,52 +1889,85 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
 
             {/* Options */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-              {question.options.map(opt => (
-                <button
-                  key={opt.id}
-                  onClick={() => {
-                    playSound('click');
-                    const newAnswers = [...testAnswers];
-                    newAnswers[currentQuestion] = opt.id;
-                    setTestAnswers(newAnswers);
-                  }}
-                  style={{
-                    background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
-                    border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
-                    borderRadius: '10px',
-                    padding: '14px 16px',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    minHeight: '44px',
-                  }}
-                >
-                  <span style={{
-                    display: 'inline-block',
-                    width: '24px',
-                    height: '24px',
-                    borderRadius: '50%',
-                    background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
-                    color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
-                    textAlign: 'center',
-                    lineHeight: '24px',
-                    marginRight: '10px',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                  }}>
-                    {opt.id.toUpperCase()}
-                  </span>
-                  <span style={{ color: colors.textPrimary, ...typo.small }}>
-                    {opt.label}
-                  </span>
-                </button>
-              ))}
+              {question.options.map(opt => {
+                const isSelected = testAnswers[currentQuestion] === opt.id;
+                let borderColor = isSelected ? colors.accent : colors.border;
+                let bgColor = isSelected ? `${colors.accent}22` : colors.bgCard;
+                if (answerChecked) {
+                  if (opt.correct) {
+                    borderColor = colors.success;
+                    bgColor = `${colors.success}22`;
+                  } else if (isSelected && !opt.correct) {
+                    borderColor = colors.error;
+                    bgColor = `${colors.error}22`;
+                  }
+                }
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => {
+                      if (answerChecked) return;
+                      playSound('click');
+                      const newAnswers = [...testAnswers];
+                      newAnswers[currentQuestion] = opt.id;
+                      setTestAnswers(newAnswers);
+                    }}
+                    style={{
+                      background: bgColor,
+                      border: `2px solid ${borderColor}`,
+                      borderRadius: '10px',
+                      padding: '14px 16px',
+                      textAlign: 'left',
+                      cursor: answerChecked ? 'default' : 'pointer',
+                      minHeight: '44px',
+                    }}
+                  >
+                    <span style={{
+                      display: 'inline-block',
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      background: isSelected ? colors.accent : colors.bgSecondary,
+                      color: isSelected ? 'white' : colors.textSecondary,
+                      textAlign: 'center',
+                      lineHeight: '24px',
+                      marginRight: '10px',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                    }}>
+                      {opt.id.toUpperCase()}
+                    </span>
+                    <span style={{ color: colors.textPrimary, ...typo.small }}>
+                      {opt.label}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
+
+            {/* Check Answer feedback */}
+            {answerChecked && (
+              <div style={{
+                background: isCurrentCorrect ? `${colors.success}22` : `${colors.error}22`,
+                border: `1px solid ${isCurrentCorrect ? colors.success : colors.error}`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <p style={{ ...typo.body, color: isCurrentCorrect ? colors.success : colors.error, margin: 0, marginBottom: '8px', fontWeight: 600 }}>
+                  {isCurrentCorrect ? 'Correct!' : 'Incorrect'}
+                </p>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {question.explanation}
+                </p>
+              </div>
+            )}
 
             {/* Navigation */}
             <div style={{ display: 'flex', gap: '12px' }}>
               {currentQuestion > 0 && (
                 <button
-                  onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                  onClick={() => { setCurrentQuestion(currentQuestion - 1); setAnswerChecked(false); }}
                   style={{
                     flex: 1,
                     padding: '14px',
@@ -1814,25 +1982,48 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
                   Previous
                 </button>
               )}
-              {currentQuestion < 9 ? (
+              {/* Check Answer button */}
+              {testAnswers[currentQuestion] && !answerChecked && (
                 <button
-                  onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
-                  disabled={!testAnswers[currentQuestion]}
+                  onClick={() => {
+                    setAnswerChecked(true);
+                    playSound(isCurrentCorrect ? 'success' : 'failure');
+                  }}
                   style={{
                     flex: 1,
                     padding: '14px',
                     borderRadius: '10px',
                     border: 'none',
-                    background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                    background: colors.accent,
                     color: 'white',
-                    cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    minHeight: '44px',
+                  }}
+                >
+                  Check Answer
+                </button>
+              )}
+              {/* Next / Submit after checking */}
+              {answerChecked && currentQuestion < 9 && (
+                <button
+                  onClick={() => { setCurrentQuestion(currentQuestion + 1); setAnswerChecked(false); }}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: colors.accent,
+                    color: 'white',
+                    cursor: 'pointer',
                     fontWeight: 600,
                     minHeight: '44px',
                   }}
                 >
                   Next
                 </button>
-              ) : (
+              )}
+              {answerChecked && currentQuestion === 9 && (
                 <button
                   onClick={() => {
                     const score = testAnswers.reduce((acc, ans, i) => {
@@ -1843,15 +2034,14 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
                     setTestSubmitted(true);
                     playSound(score >= 7 ? 'complete' : 'failure');
                   }}
-                  disabled={testAnswers.some(a => a === null)}
                   style={{
                     flex: 1,
                     padding: '14px',
                     borderRadius: '10px',
                     border: 'none',
-                    background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                    background: colors.success,
                     color: 'white',
-                    cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                    cursor: 'pointer',
                     fontWeight: 600,
                     minHeight: '44px',
                   }}

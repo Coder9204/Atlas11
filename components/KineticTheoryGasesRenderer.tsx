@@ -656,17 +656,21 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
 
         {/* Legend */}
         <g>
-          <rect x="8" y={containerSize - 60} width="120" height="50" rx="6" fill="rgba(0,0,0,0.5)" />
+          <rect x="8" y={containerSize - 60} width="130" height="50" rx="6" fill="rgba(0,0,0,0.5)" />
           <circle cx="20" cy={containerSize - 44} r="4" fill="url(#molSlow)" />
-          <text x="28" y={containerSize - 41} fill="rgba(156,163,175,0.9)" fontSize="9">Slow</text>
-          <circle cx="60" cy={containerSize - 44} r="4" fill="url(#molFast)" />
-          <text x="68" y={containerSize - 41} fill="rgba(156,163,175,0.9)" fontSize="9">Med</text>
-          <circle cx="95" cy={containerSize - 44} r="4" fill="url(#molHot)" />
-          <text x="103" y={containerSize - 41} fill="rgba(156,163,175,0.9)" fontSize="9">Fast</text>
-          <text x="15" y={containerSize - 20} fill="rgba(156,163,175,0.9)" fontSize="10">
+          <text x="28" y={containerSize - 41} fill="rgba(156,163,175,0.9)" fontSize="11">Slow</text>
+          <circle cx="65" cy={containerSize - 44} r="4" fill="url(#molFast)" />
+          <text x="73" y={containerSize - 41} fill="rgba(156,163,175,0.9)" fontSize="11">Med</text>
+          <circle cx="105" cy={containerSize - 44} r="4" fill="url(#molHot)" />
+          <text x="113" y={containerSize - 41} fill="rgba(156,163,175,0.9)" fontSize="11">Fast</text>
+          <text x="15" y={containerSize - 20} fill="rgba(156,163,175,0.9)" fontSize="11">
             N={count} V={vol} P={pressure}
           </text>
         </g>
+
+        {/* Axis labels */}
+        <text x={containerSize / 2} y={containerSize - 2} textAnchor="middle" fill="rgba(156,163,175,0.7)" fontSize="11">Position (velocity vectors show speed)</text>
+        <text x="12" y={containerSize / 2} textAnchor="middle" fill="rgba(156,163,175,0.7)" fontSize="11" transform={`rotate(-90, 12, ${containerSize / 2})`}>Temperature {temp} K</text>
       </svg>
     );
   };
@@ -835,7 +839,7 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
                 <text x={isMobile ? 270 : 350} y="195" textAnchor="middle" fill="rgba(156,163,175,0.7)" fontSize="11">Speed = ???</text>
               </g>
               <g>
-                <text x={isMobile ? 175 : 220} y="230" textAnchor="middle" fill="rgba(156,163,175,0.9)" fontSize="10">How much faster do molecules move?</text>
+                <text x={isMobile ? 175 : 220} y="230" textAnchor="middle" fill="rgba(156,163,175,0.9)" fontSize="11">How much faster do molecules move?</text>
               </g>
             </svg>
           </div>
@@ -953,11 +957,12 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
                 }}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
                   accentColor: colors.accent,
                   background: `linear-gradient(to right, ${colors.accent}, ${colors.accent})`,
+                  touchAction: 'pan-y',
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -984,11 +989,12 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
                 }}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
                   accentColor: colors.success,
                   background: `linear-gradient(to right, ${colors.success}, ${colors.success})`,
+                  touchAction: 'pan-y',
                 }}
               />
             </div>
@@ -1329,9 +1335,10 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
                 onChange={(e) => setTwistTemperature(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  touchAction: 'pan-y',
                 }}
               />
             </div>
@@ -1361,7 +1368,7 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
                 return (
                   <g key={gas.name}>
                     <text x="5" y={y + 18} fill="rgba(255,255,255,0.9)" fontSize="12" fontWeight="600">{gas.name}</text>
-                    <text x="40" y={y + 18} fill="rgba(156,163,175,0.9)" fontSize="10">({gas.mass}u)</text>
+                    <text x="40" y={y + 18} fill="rgba(156,163,175,0.9)" fontSize="11">({gas.mass}u)</text>
                     <rect x="75" y={y + 2} width={isMobile ? 200 : 300} height="28" rx="4" fill="rgba(255,255,255,0.05)" />
                     <rect x="75" y={y + 2} width={barWidth} height="28" rx="4" fill={`url(#grad${gas.name})`} filter="url(#barGlow)" />
                     <text x={80 + barWidth} y={y + 20} fill={gas.color} fontSize="11" fontWeight="bold">{speed.toFixed(0)} m/s</text>
@@ -2048,7 +2055,7 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
 
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, overflowY: 'auto' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px' }}>
         {renderPhaseContent()}
       </div>
       {renderBottomBar()}

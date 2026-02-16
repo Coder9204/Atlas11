@@ -802,7 +802,7 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
             {/* Status panel */}
             <g transform="translate(20, 50)">
               <rect width="100" height="60" fill={colors.cardBg} rx="8" stroke={colors.border} strokeWidth="1" />
-              <text x="50" y="18" textAnchor="middle" fill={colors.textMuted} fontSize="10">STABILITY</text>
+              <text x="50" y="18" textAnchor="middle" fill={colors.textMuted} fontSize="11">STABILITY</text>
               <rect x="10" y="26" width="80" height="10" fill={colors.background} rx="4" />
               <rect
                 x="12" y="28"
@@ -880,8 +880,12 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
                 setSpinRate(Number(e.target.value));
                 onGameEvent?.({ type: 'parameter_changed', data: { spinRate: Number(e.target.value) } });
               }}
-              style={{ width: '100%', height: '8px', accentColor: colors.primary, cursor: 'pointer' }}
+              style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
             />
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(148,163,184,0.7)', fontSize: '11px' }}>
+              <span>10 (slow)</span>
+              <span>100 (fast)</span>
+            </div>
           </div>
         </div>
 
@@ -1701,7 +1705,7 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
             position: 'absolute',
             top: '0px',
             right: '0px',
-            width: '384px',
+            width: '50%',
             height: '384px',
             borderRadius: '9999px',
             filter: 'blur(64px)',
@@ -1713,7 +1717,7 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
             position: 'absolute',
             top: '50%',
             left: '0px',
-            width: '384px',
+            width: '50%',
             height: '384px',
             borderRadius: '9999px',
             filter: 'blur(64px)',
@@ -1725,7 +1729,7 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
             position: 'absolute',
             bottom: '0px',
             right: '33%',
-            width: '384px',
+            width: '50%',
             height: '384px',
             borderRadius: '9999px',
             filter: 'blur(64px)',

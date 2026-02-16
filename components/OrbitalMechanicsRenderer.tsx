@@ -561,6 +561,13 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
           />
         ))}
 
+        {/* Orbital altitude reference grid lines */}
+        <circle cx={EARTH_CENTER.x} cy={EARTH_CENTER.y} r={EARTH_RADIUS + 60} fill="none" stroke="#334155" strokeWidth="1" strokeDasharray="6,4" opacity="0.4" />
+        <circle cx={EARTH_CENTER.x} cy={EARTH_CENTER.y} r={EARTH_RADIUS + 120} fill="none" stroke="#334155" strokeWidth="1" strokeDasharray="6,4" opacity="0.3" />
+        {/* Tick marks for altitude reference */}
+        <line x1={EARTH_CENTER.x} y1={EARTH_CENTER.y - EARTH_RADIUS - 55} x2={EARTH_CENTER.x} y2={EARTH_CENTER.y - EARTH_RADIUS - 65} stroke="#64748b" strokeWidth="1" opacity="0.6" />
+        <line x1={EARTH_CENTER.x} y1={EARTH_CENTER.y - EARTH_RADIUS - 115} x2={EARTH_CENTER.x} y2={EARTH_CENTER.y - EARTH_RADIUS - 125} stroke="#64748b" strokeWidth="1" opacity="0.6" />
+
         {/* Earth atmosphere glow */}
         <circle cx={EARTH_CENTER.x} cy={EARTH_CENTER.y} r={EARTH_RADIUS + 8} fill="none" stroke="#60a5fa" strokeWidth="6" opacity="0.3" />
 
@@ -640,8 +647,8 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
 
         {/* Labels for key elements */}
         <text x={EARTH_CENTER.x} y={EARTH_CENTER.y + EARTH_RADIUS + 20} textAnchor="middle" fill="#60a5fa" fontSize="11">Earth</text>
-        <text x={EARTH_CENTER.x + 20} y={EARTH_CENTER.y - EARTH_RADIUS - 30} textAnchor="start" fill="#9ca3af" fontSize="10">Cannon</text>
-        <text x={EARTH_CENTER.x - 40} y={EARTH_CENTER.y - EARTH_RADIUS - 10} textAnchor="end" fill="#9ca3af" fontSize="10">Mountain</text>
+        <text x={EARTH_CENTER.x + 20} y={EARTH_CENTER.y - EARTH_RADIUS - 45} textAnchor="start" fill="#9ca3af" fontSize="10">Cannon</text>
+        <text x={EARTH_CENTER.x - 55} y={EARTH_CENTER.y - EARTH_RADIUS + 5} textAnchor="end" fill="#9ca3af" fontSize="10">Mountain</text>
 
         {/* Legend */}
         <g transform="translate(10, 10)">
@@ -1000,7 +1007,7 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '24px' }}>
         <div style={{ maxWidth: '800px', margin: '40px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Newton's Cannonball
@@ -1036,11 +1043,12 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
                 disabled={isLaunched}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: isLaunched ? 'not-allowed' : 'pointer',
                   accentColor: colors.accent,
                   background: colors.bgSecondary,
+                  touchAction: 'pan-y',
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1396,7 +1404,7 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
                 max="100"
                 value={gravityStrength}
                 onChange={(e) => setGravityStrength(parseInt(e.target.value))}
-                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer', accentColor: colors.accent, background: colors.bgSecondary }}
+                style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: colors.accent, background: colors.bgSecondary, touchAction: 'pan-y' }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                 <span style={{ ...typo.small, color: colors.textMuted }}>0% (no gravity)</span>

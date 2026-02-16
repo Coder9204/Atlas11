@@ -516,7 +516,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
 
     return (
       <div>
-        <svg viewBox="0 0 400 120" className="w-full h-32 md:h-40">
+        <svg viewBox="0 0 400 200" className="w-full h-48 md:h-56">
           <defs>
             {/* Premium background gradient */}
             <linearGradient id="tbcLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -619,13 +619,24 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
           </defs>
 
           {/* Premium dark lab background */}
-          <rect x="0" y="0" width="400" height="120" fill="url(#tbcLabBg)" rx="10" />
+          <rect x="0" y="0" width="400" height="200" fill="url(#tbcLabBg)" rx="10" />
 
           {/* Subtle grid pattern */}
           <pattern id="tbcGrid" width="20" height="20" patternUnits="userSpaceOnUse">
             <rect width="20" height="20" fill="none" stroke="#334155" strokeWidth="0.5" strokeOpacity="0.3" />
           </pattern>
-          <rect x="0" y="0" width="400" height="120" fill="url(#tbcGrid)" rx="10" />
+          <rect x="0" y="0" width="400" height="200" fill="url(#tbcGrid)" rx="10" />
+
+          {/* Axis labels for educational clarity */}
+          <text x="200" y="195" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">Position</text>
+          <text x="12" y="100" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600" transform="rotate(-90, 12, 100)">Velocity</text>
+
+          {/* Tick marks along the track for visual reference */}
+          <line x1="60" y1="78" x2="60" y2="90" stroke="#94a3b8" strokeWidth="0.8" opacity="0.5" />
+          <line x1="120" y1="78" x2="120" y2="90" stroke="#94a3b8" strokeWidth="0.8" opacity="0.5" />
+          <line x1="200" y1="78" x2="200" y2="90" stroke="#94a3b8" strokeWidth="0.8" opacity="0.5" />
+          <line x1="280" y1="78" x2="280" y2="90" stroke="#94a3b8" strokeWidth="0.8" opacity="0.5" />
+          <line x1="340" y1="78" x2="340" y2="90" stroke="#94a3b8" strokeWidth="0.8" opacity="0.5" />
 
           {/* Track with metallic gradient and depth */}
           <rect x="20" y="78" width="360" height="12" fill="url(#tbcTrackGrad)" rx="6" />
@@ -1135,9 +1146,13 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
                 value={mass1}
                 onChange={(e) => setMass1(parseFloat(e.target.value))}
                 className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                style={{ width: '100%', height: '8px', accentColor: '#3b82f6', touchAction: 'none' }}
+                style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'none' }}
                 disabled={isAnimating}
               />
+              <div className="flex justify-between text-xs text-slate-500 mt-1">
+                <span>0.5 kg (low)</span>
+                <span>5 kg (max)</span>
+              </div>
             </div>
 
             {/* Mass 2 Slider */}
@@ -1154,9 +1169,13 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
                 value={mass2}
                 onChange={(e) => setMass2(parseFloat(e.target.value))}
                 className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500"
-                style={{ width: '100%', height: '8px', accentColor: '#ef4444', touchAction: 'none' }}
+                style={{ width: '100%', height: '20px', accentColor: '#ef4444', touchAction: 'none' }}
                 disabled={isAnimating}
               />
+              <div className="flex justify-between text-xs text-slate-500 mt-1">
+                <span>0.5 kg (low)</span>
+                <span>5 kg (max)</span>
+              </div>
             </div>
 
             {/* Initial Velocity Slider */}
@@ -1173,7 +1192,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
                 value={initialVelocity}
                 onChange={(e) => setInitialVelocity(parseFloat(e.target.value))}
                 className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-green-500"
-                style={{ width: '100%', height: '8px', accentColor: '#22c55e', touchAction: 'none' }}
+                style={{ width: '100%', height: '20px', accentColor: '#22c55e', touchAction: 'none' }}
                 disabled={isAnimating}
               />
             </div>
@@ -1193,7 +1212,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
                   value={elasticityCoeff}
                   onChange={(e) => setElasticityCoeff(parseFloat(e.target.value))}
                   className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
-                  style={{ width: '100%', height: '8px', accentColor: '#a855f7', touchAction: 'none' }}
+                  style={{ width: '100%', height: '20px', accentColor: '#a855f7', touchAction: 'none' }}
                   disabled={isAnimating}
                 />
                 <div className="flex justify-between text-xs text-slate-500 mt-1">
@@ -1777,8 +1796,9 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
     <div style={{ padding: typo.pagePadding, maxWidth: '600px', margin: '0 auto' }}>
       {renderSectionHeader('Step 7 • Real-World', 'Collisions Everywhere', 'From games to galaxies')}
 
+      <div style={{ overflowY: 'auto', maxHeight: '70vh' }}>
       {completedApps < realWorldApps.length ? (
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div style={{ borderRadius: '16px' }} className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <div
             className="p-4 text-white"
             style={{ backgroundColor: realWorldApps[completedApps].color }}
@@ -1795,12 +1815,12 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
           <div className="p-5">
             <p className="text-gray-700 mb-4">{realWorldApps[completedApps].description}</p>
 
-            <div className="bg-indigo-50 rounded-lg p-3 mb-4">
+            <div className="bg-indigo-50 rounded-lg p-3 mb-4" style={{ borderRadius: '8px' }}>
               <h4 className="font-semibold text-indigo-800 mb-1">🔗 Connection to Collisions:</h4>
               <p className="text-indigo-700 text-sm">{realWorldApps[completedApps].connection}</p>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-3 mb-4">
+            <div className="bg-gray-50 rounded-lg p-3 mb-4" style={{ borderRadius: '8px' }}>
               <h4 className="font-semibold text-gray-800 mb-1">⚙️ How It Works:</h4>
               <p className="text-gray-700 text-sm">{realWorldApps[completedApps].howItWorks}</p>
             </div>
@@ -1869,6 +1889,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
           {renderBottomBar(() => goToPhase('test'), true, 'Take the Test')}
         </div>
       )}
+      </div>
     </div>
   );
 

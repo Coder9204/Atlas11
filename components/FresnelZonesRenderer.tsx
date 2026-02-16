@@ -87,7 +87,7 @@ const testQuestions = [
     explanation: "At 900 MHz, the first Fresnel zone can be several meters wide. Trees that are bare in winter may grow leaves that intrude into this zone during summer. Even partial obstruction causes diffraction losses. This seasonal variation is a common issue in rural wireless deployments."
   },
   {
-    scenario: "An engineer calculates the first Fresnel zone radius at midpoint for a 10 km link using the formula r = sqrt(n * lambda * d1 * d2 / (d1 + d2)). At 6 GHz, she gets 12.5 meters.",
+    scenario: "An engineer calculates the first Fresnel zone radius at midpoint for a 10 km link using the formula r = sqrt(n × lambda × d1 × d2 / (d1 + d2)). At 6 GHz, she gets 12.5 meters.",
     question: "What happens to the Fresnel zone radius at a point 2 km from the transmitter (8 km from receiver)?",
     options: [
       { id: 'a', label: "It remains 12.5 meters throughout the path" },
@@ -95,7 +95,7 @@ const testQuestions = [
       { id: 'c', label: "It becomes larger because more path length remains" },
       { id: 'd', label: "The formula doesn't apply at non-midpoint locations" }
     ],
-    explanation: "The Fresnel zone is an ellipsoid, widest at midpoint and tapering toward both ends. At any point, radius depends on d1*d2/(d1+d2). At midpoint (d1=d2=5km), this equals 2.5km. At 2km/8km, it equals 1.6km - giving a smaller radius. This is why Fresnel clearance is most critical at midpoint."
+    explanation: "The Fresnel zone is an ellipsoid, widest at midpoint and tapering toward both ends. At any point, radius depends on d1×d2/(d1+d2). At midpoint (d1=d2=5km), this equals 2.5km. At 2km/8km, it equals 1.6km - giving a smaller radius. This is why Fresnel clearance is most critical at midpoint."
   },
   {
     scenario: "A telecommunications company is upgrading from 6 GHz microwave links to 80 GHz millimeter-wave for higher bandwidth. They plan to use the same tower heights.",
@@ -176,7 +176,7 @@ const realWorldApps = [
     tagline: 'The invisible highways connecting cell towers',
     description: 'Microwave links form the backbone of cellular networks, connecting cell towers to the core network. Engineers must carefully plan these point-to-point links to ensure the first Fresnel zone remains at least 60% clear of obstructions. A single tree or building in the wrong place can degrade a multi-gigabit link.',
     connection: 'The ellipsoidal Fresnel zone you explored shows exactly why engineers calculate clearance at every point along a path, not just the endpoints. The zone is widest at midpoint - that\'s where obstructions cause the most damage.',
-    howItWorks: 'Engineers use path profile analysis software to map terrain and obstacles between two points. They calculate the first Fresnel zone radius at every point using r = sqrt(n*lambda*d1*d2/(d1+d2)). Antenna heights are chosen to maintain 60-100% first zone clearance, accounting for Earth curvature (K-factor) and worst-case atmospheric refraction.',
+    howItWorks: 'Engineers use path profile analysis software to map terrain and obstacles between two points. They calculate the first Fresnel zone radius at every point using r = sqrt(n×lambda×d1×d2/(d1+d2)). Antenna heights are chosen to maintain 60-100% first zone clearance, accounting for Earth curvature (K-factor) and worst-case atmospheric refraction.',
     stats: [
       { value: '60%', label: 'Minimum clearance', icon: '📊' },
       { value: '80 GHz', label: 'E-band frequency', icon: '📶' },
@@ -212,7 +212,7 @@ const realWorldApps = [
     tagline: 'Combining signals across kilometers for cosmic resolution',
     description: 'Radio telescope arrays like ALMA and the VLA combine signals from multiple antennas spread across kilometers to achieve angular resolution impossible with single dishes. The spacing between antennas must account for Fresnel zones to properly combine wavefronts.',
     connection: 'When radio waves from a cosmic source reach an array, each antenna samples a different part of the incoming wavefront. Signals must be combined with precise time delays accounting for path differences - the same physics that defines Fresnel zones.',
-    howItWorks: 'Each antenna pair forms a "baseline" that samples one spatial frequency of the sky brightness. Signals are timestamped with atomic clocks and combined in a correlator. The array\'s resolution equals that of a dish with diameter equal to the maximum baseline. Fresnel distance D^2/lambda determines near-field vs far-field imaging.',
+    howItWorks: 'Each antenna pair forms a "baseline" that samples one spatial frequency of the sky brightness. Signals are timestamped with atomic clocks and combined in a correlator. The array\'s resolution equals that of a dish with diameter equal to the maximum baseline. Fresnel distance D²/lambda determines near-field vs far-field imaging.',
     stats: [
       { value: '16 km', label: 'VLA max baseline', icon: '📡' },
       { value: '66', label: 'ALMA antennas', icon: '🔭' },
@@ -242,6 +242,16 @@ const realWorldApps = [
     color: '#10B981'
   }
 ];
+
+// Slider style constant
+const sliderStyle: React.CSSProperties = {
+  width: '100%',
+  height: '20px',
+  touchAction: 'pan-y',
+  WebkitAppearance: 'none',
+  accentColor: '#3b82f6',
+  cursor: 'pointer',
+};
 
 // =============================================================================
 // MAIN COMPONENT
@@ -303,7 +313,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
     bgCard: '#1a1a24',
-    accent: '#22D3EE', // Cyan for radio waves
+    accent: '#22D3EE',
     accentGlow: 'rgba(34, 211, 238, 0.3)',
     success: '#10B981',
     error: '#EF4444',
@@ -314,7 +324,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
     signal: '#FBBF24',
     textPrimary: '#FFFFFF',
     textSecondary: '#e2e8f0',
-    textMuted: '#cbd5e1',
+    textMuted: 'rgba(148,163,184,0.7)',
     border: '#2a2a3a',
   };
 
@@ -327,7 +337,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
   };
 
   // Calculate Fresnel zone radii
-  const wavelength = 0.3 / frequency; // c / f, in meters (c = 3e8 m/s, f in GHz)
+  const wavelength = 0.3 / frequency;
   const fresnelRadius1 = Math.sqrt(wavelength * distance / 4);
   const fresnelRadius2 = Math.sqrt(2 * wavelength * distance / 4);
   const fresnelRadius3 = Math.sqrt(3 * wavelength * distance / 4);
@@ -345,7 +355,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Frequency Lab',
+    twist_play: 'Explore Twist',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -376,6 +386,13 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
     }
   }, [phase, goToPhase]);
 
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase]);
+
   // Get signal status
   const getSignalStatus = () => {
     if (signalLoss < 1) return { status: 'Excellent', color: colors.success };
@@ -386,10 +403,10 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
 
   const signalStatus = getSignalStatus();
 
-  // Fresnel Zone Visualization Component
-  const FresnelVisualization = ({ interactive = false }: { interactive?: boolean }) => {
-    const width = isMobile ? 340 : 500;
-    const height = isMobile ? 280 : 350;
+  // Fresnel Zone Visualization as render function (not component)
+  const renderFresnelVisualization = (interactive: boolean = false, isStatic: boolean = false) => {
+    const width = isMobile ? 360 : 520;
+    const height = 350;
     const margin = 40;
     const pathY = height / 2;
 
@@ -410,6 +427,24 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
 
     // Wave animation
     const waveOffset = (animationFrame * 3) % 60;
+
+    // Interactive point position (moves with obstacle)
+    const pointY = pathY - obstacleHeight_px;
+    const pointX = obstacleX;
+
+    // Build a path for the signal strength curve (at least 25% of SVG height)
+    const curvePoints: string[] = [];
+    const numPts = 20;
+    for (let i = 0; i <= numPts; i++) {
+      const t = i / numPts;
+      const px = txX + t * pathLength;
+      // Parabolic curve representing signal strength
+      const baseY = height - 30;
+      const curveHeight = height * 0.3; // 30% of height minimum
+      const py = baseY - curveHeight * 4 * t * (1 - t) * (1 - obstacleHeight / 200);
+      curvePoints.push(`${i === 0 ? 'M' : 'L'} ${px.toFixed(1)} ${py.toFixed(1)}`);
+    }
+    const curvePath = curvePoints.join(' ');
 
     return (
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
@@ -433,6 +468,13 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
             <stop offset="0%" stopColor={colors.signal} stopOpacity="0.8" />
             <stop offset="100%" stopColor={colors.signal} stopOpacity="0" />
           </radialGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
           <filter id="waveGlow">
             <feGaussianBlur stdDeviation="2" result="blur" />
             <feMerge>
@@ -445,146 +487,134 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
         {/* Background */}
         <rect width={width} height={height} fill="#0f172a" />
 
+        {/* Grid lines for visual reference */}
+        <g>
+          <line x1={txX} y1={margin} x2={txX} y2={height - 25} stroke="#4b5563" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+          <line x1={midX} y1={margin} x2={midX} y2={height - 25} stroke="#4b5563" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+          <line x1={rxX} y1={margin} x2={rxX} y2={height - 25} stroke="#4b5563" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+          <line x1={txX} y1={pathY - 60} x2={rxX} y2={pathY - 60} stroke="#4b5563" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+          <line x1={txX} y1={pathY + 60} x2={rxX} y2={pathY + 60} stroke="#4b5563" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+        </g>
+
         {/* Ground */}
-        <rect x="0" y={height - 25} width={width} height="25" fill="#374151" />
-        <line x1="0" y1={height - 25} x2={width} y2={height - 25} stroke="#4b5563" strokeWidth="2" />
+        <g>
+          <rect x="0" y={height - 25} width={width} height="25" fill="#374151" />
+          <line x1="0" y1={height - 25} x2={width} y2={height - 25} stroke="#4b5563" strokeWidth="2" />
+        </g>
 
         {/* Fresnel zones */}
-        {showZones >= 3 && (
-          <ellipse
-            cx={midX}
-            cy={pathY}
-            rx={pathLength / 2}
-            ry={r3Visual}
-            fill="url(#zone3Grad)"
-            stroke={colors.zone3}
-            strokeWidth="1"
-            strokeDasharray="4,4"
-            opacity="0.6"
-          />
-        )}
-        {showZones >= 2 && (
-          <ellipse
-            cx={midX}
-            cy={pathY}
-            rx={pathLength / 2}
-            ry={r2Visual}
-            fill="url(#zone2Grad)"
-            stroke={colors.zone2}
-            strokeWidth="1"
-            strokeDasharray="4,4"
-            opacity="0.7"
-          />
-        )}
-        {showZones >= 1 && (
-          <ellipse
-            cx={midX}
-            cy={pathY}
-            rx={pathLength / 2}
-            ry={r1Visual}
-            fill="url(#zone1Grad)"
-            stroke={colors.zone1}
-            strokeWidth="2"
-            opacity="0.9"
-          />
-        )}
+        <g>
+          {showZones >= 3 && (
+            <ellipse cx={midX} cy={pathY} rx={pathLength / 2} ry={r3Visual}
+              fill="url(#zone3Grad)" stroke={colors.zone3} strokeWidth="1" strokeDasharray="4,4" opacity="0.6" />
+          )}
+          {showZones >= 2 && (
+            <ellipse cx={midX} cy={pathY} rx={pathLength / 2} ry={r2Visual}
+              fill="url(#zone2Grad)" stroke={colors.zone2} strokeWidth="1" strokeDasharray="4,4" opacity="0.7" />
+          )}
+          {showZones >= 1 && (
+            <ellipse cx={midX} cy={pathY} rx={pathLength / 2} ry={r1Visual}
+              fill="url(#zone1Grad)" stroke={colors.zone1} strokeWidth="2" opacity="0.9" />
+          )}
+        </g>
 
         {/* Animated wave propagation */}
-        {[0, 1, 2, 3].map(i => {
-          const offset = (waveOffset + i * 15) % 60;
-          const progress = offset / 60;
-          const x = txX + progress * pathLength;
-          return (
-            <circle
-              key={i}
-              cx={x}
-              cy={pathY}
-              r={4 + progress * 6}
-              fill="none"
-              stroke={colors.signal}
-              strokeWidth="2"
-              opacity={1 - progress}
-              filter="url(#waveGlow)"
-            />
-          );
-        })}
+        <g>
+          {[0, 1, 2, 3].map(i => {
+            const offset = (waveOffset + i * 15) % 60;
+            const progress = offset / 60;
+            const x = txX + progress * pathLength;
+            return (
+              <circle key={i} cx={x} cy={pathY} r={4 + progress * 6}
+                fill="none" stroke={colors.signal} strokeWidth="2" opacity={1 - progress} />
+            );
+          })}
+        </g>
 
         {/* Direct path line */}
-        <line
-          x1={txX}
-          y1={pathY}
-          x2={rxX}
-          y2={pathY}
-          stroke={colors.signal}
-          strokeWidth="2"
-          strokeDasharray="8,4"
-        />
+        <g>
+          <line x1={txX} y1={pathY} x2={rxX} y2={pathY}
+            stroke={colors.signal} strokeWidth="2" strokeDasharray="8,4" />
+        </g>
+
+        {/* Signal strength curve (path with L commands) */}
+        <g>
+          <path d={curvePath} fill="none" stroke={colors.success} strokeWidth="2" opacity="0.6" />
+        </g>
 
         {/* Obstacle */}
         {obstacleHeight > 0 && (
           <g>
-            <rect
-              x={obstacleX - 15}
-              y={pathY - obstacleHeight_px}
-              width="30"
-              height={obstacleHeight_px + (height - 25 - pathY)}
-              fill="#64748b"
-              stroke={obstacleHeight > 60 ? colors.error : colors.warning}
-              strokeWidth="2"
-              rx="3"
-            />
-            <text
-              x={obstacleX}
-              y={pathY - obstacleHeight_px - 8}
-              textAnchor="middle"
-              fill={obstacleHeight > 60 ? colors.error : colors.warning}
-              fontSize="10"
-              fontWeight="600"
-            >
+            <rect x={obstacleX - 15} y={pathY - obstacleHeight_px}
+              width="30" height={obstacleHeight_px + (height - 25 - pathY)}
+              fill="#64748b" stroke={obstacleHeight > 60 ? colors.error : colors.warning} strokeWidth="2" rx="3" />
+            <text x={obstacleX} y={pathY - obstacleHeight_px - 8} textAnchor="middle"
+              fill={obstacleHeight > 60 ? colors.error : colors.warning} fontSize="11" fontWeight="600">
               {obstacleHeight}% blocked
             </text>
           </g>
         )}
 
         {/* Transmitter */}
-        <circle cx={txX} cy={pathY} r="20" fill="url(#antennaGlow)" />
-        <rect x={txX - 5} y={pathY} width="10" height="50" fill="#475569" rx="2" />
-        <polygon points={`${txX - 12},${pathY} ${txX},${pathY - 20} ${txX + 12},${pathY}`} fill={colors.zone1} />
-        <text x={txX} y={pathY + 70} textAnchor="middle" fill={colors.textSecondary} fontSize="12" fontWeight="600">TX</text>
+        <g>
+          <circle cx={txX} cy={pathY} r="20" fill="url(#antennaGlow)" />
+          <rect x={txX - 5} y={pathY} width="10" height="50" fill="#475569" rx="2" />
+          <polygon points={`${txX - 12},${pathY} ${txX},${pathY - 20} ${txX + 12},${pathY}`} fill={colors.zone1} />
+          <text x={txX} y={pathY + 70} textAnchor="middle" fill={colors.textSecondary} fontSize="12" fontWeight="600">TX</text>
+        </g>
 
         {/* Receiver */}
-        <circle cx={rxX} cy={pathY} r="20" fill="url(#antennaGlow)" />
-        <rect x={rxX - 5} y={pathY} width="10" height="50" fill="#475569" rx="2" />
-        <polygon points={`${rxX - 12},${pathY} ${rxX},${pathY - 20} ${rxX + 12},${pathY}`} fill={colors.zone1} />
-        <text x={rxX} y={pathY + 70} textAnchor="middle" fill={colors.textSecondary} fontSize="12" fontWeight="600">RX</text>
+        <g>
+          <circle cx={rxX} cy={pathY} r="20" fill="url(#antennaGlow)" />
+          <rect x={rxX - 5} y={pathY} width="10" height="50" fill="#475569" rx="2" />
+          <polygon points={`${rxX - 12},${pathY} ${rxX},${pathY - 20} ${rxX + 12},${pathY}`} fill={colors.zone1} />
+          <text x={rxX} y={pathY + 70} textAnchor="middle" fill={colors.textSecondary} fontSize="12" fontWeight="600">RX</text>
+        </g>
 
         {/* Zone labels */}
-        <text x={midX + pathLength / 4} y={pathY - r1Visual - 8} textAnchor="middle" fill={colors.zone1} fontSize="11" fontWeight="bold">1st Fresnel</text>
-        {showZones >= 2 && (
-          <text x={midX + pathLength / 4} y={pathY - r2Visual - 5} textAnchor="middle" fill={colors.zone2} fontSize="10">2nd Zone</text>
-        )}
-        {showZones >= 3 && (
-          <text x={midX + pathLength / 4} y={pathY - r3Visual - 5} textAnchor="middle" fill={colors.zone3} fontSize="10">3rd Zone</text>
-        )}
+        <g>
+          <text x={midX + pathLength / 4} y={pathY - r1Visual - 8} textAnchor="middle" fill={colors.zone1} fontSize="11" fontWeight="bold">1st Fresnel</text>
+          {showZones >= 2 && (
+            <text x={midX + pathLength / 4} y={pathY - r2Visual - 5} textAnchor="middle" fill={colors.zone2} fontSize="11">2nd Zone</text>
+          )}
+          {showZones >= 3 && (
+            <text x={midX + pathLength / 4} y={pathY - r3Visual - 5} textAnchor="middle" fill={colors.zone3} fontSize="11">3rd Zone</text>
+          )}
+        </g>
+
+        {/* Axis labels */}
+        <g>
+          <text x={midX} y={height - 5} textAnchor="middle" fill={colors.textSecondary} fontSize="12" fontWeight="600">Distance (m)</text>
+          <text x={15} y={pathY} textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="600" transform={`rotate(-90, 15, ${pathY})`}>Frequency</text>
+        </g>
 
         {/* Info panel */}
-        <rect x="10" y="10" width="130" height="75" fill={colors.bgSecondary} rx="8" opacity="0.95" />
-        <text x="20" y="28" fill={colors.textPrimary} fontSize="11" fontWeight="bold">Fresnel Analysis</text>
-        <text x="20" y="44" fill={colors.textSecondary} fontSize="10">Freq: {frequency.toFixed(1)} GHz</text>
-        <text x="20" y="58" fill={colors.textSecondary} fontSize="10">Dist: {distance} m</text>
-        <text x="20" y="72" fill={colors.zone1} fontSize="10" fontWeight="600">R1: {fresnelRadius1.toFixed(1)} m</text>
+        <g>
+          <rect x="10" y="10" width="130" height="75" fill={colors.bgSecondary} rx="8" opacity="0.95" />
+          <text x="20" y="28" fill={colors.textPrimary} fontSize="11" fontWeight="bold">Fresnel Analysis</text>
+          <text x="20" y="44" fill={colors.textSecondary} fontSize="11">Freq: {frequency.toFixed(1)} GHz</text>
+          <text x="20" y="58" fill={colors.textSecondary} fontSize="11">Dist: {distance} m</text>
+          <text x="20" y="72" fill={colors.zone1} fontSize="11" fontWeight="600">R1: {fresnelRadius1.toFixed(1)} m</text>
+        </g>
 
         {/* Signal quality indicator */}
-        <rect x={width - 120} y="10" width="110" height="55" fill={colors.bgSecondary} rx="8" opacity="0.95" />
-        <text x={width - 115} y="28" fill={colors.textPrimary} fontSize="10" fontWeight="bold">Signal Quality</text>
-        <rect x={width - 115} y="36" width="95" height="10" fill="#1e293b" rx="4" />
-        <rect x={width - 115} y="36" width={95 * Math.max(0, 1 - signalLoss / 15)} height="10" fill={signalStatus.color} rx="4" />
-        <text x={width - 115} y="58" fill={signalStatus.color} fontSize="10" fontWeight="600">{signalStatus.status}</text>
+        <g>
+          <rect x={width - 120} y="10" width="110" height="55" fill={colors.bgSecondary} rx="8" opacity="0.95" />
+          <text x={width - 115} y="28" fill={colors.textPrimary} fontSize="11" fontWeight="bold">Signal Quality</text>
+          <rect x={width - 115} y="36" width="95" height="10" fill="#1e293b" rx="4" />
+          <rect x={width - 115} y="36" width={95 * Math.max(0, 1 - signalLoss / 15)} height="10" fill={signalStatus.color} rx="4" />
+          <text x={width - 115} y="58" fill={signalStatus.color} fontSize="11" fontWeight="600">{signalStatus.status}</text>
+        </g>
+
+        {/* Interactive point marker - moves with obstacle */}
+        {interactive && (
+          <circle cx={pointX} cy={pointY} r={8} fill={colors.accent} filter="url(#glow)" stroke="#fff" strokeWidth={2} />
+        )}
       </svg>
     );
   };
 
-  // Progress bar component
+  // Progress bar render function
   const renderProgressBar = () => (
     <div style={{
       position: 'fixed',
@@ -604,38 +634,97 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
     </div>
   );
 
-  // Navigation dots
-  const renderNavDots = () => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '8px',
-      padding: '16px 0',
-      background: colors.bgPrimary,
-      zIndex: 1000,
-    }}>
-      {phaseOrder.map((p, i) => (
-        <button
-          key={p}
-          onClick={() => goToPhase(p)}
-          style={{
-            width: phase === p ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
-            border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-          }}
-          aria-label={phaseLabels[p]}
-        />
-      ))}
-    </div>
-  );
+  // Bottom navigation bar with Back/Next and nav dots
+  const renderBottomNav = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isTestPhase = phase === 'test';
+    const isLast = currentIndex === phaseOrder.length - 1;
+    const nextDisabled = isLast || isTestPhase;
+    return (
+      <>
+        {/* Nav dots - separate fixed bar above the bottom nav */}
+        <div style={{
+          position: 'fixed',
+          bottom: 68,
+          left: 0,
+          right: 0,
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '8px',
+          padding: '6px 0',
+          zIndex: 1001,
+        }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => goToPhase(p)}
+              style={{
+                width: phase === p ? '24px' : '8px',
+                height: '8px',
+                borderRadius: '4px',
+                border: 'none',
+                background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                padding: 0,
+              }}
+              aria-label={phaseLabels[p]}
+            />
+          ))}
+        </div>
+        {/* Back / Next buttons - the fixed footer */}
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          display: 'flex',
+          gap: '12px',
+          background: colors.bgPrimary,
+          borderTop: `1px solid ${colors.border}`,
+          zIndex: 1000,
+          padding: '10px 16px 12px',
+        }}>
+          <button
+            onClick={prevPhase}
+            disabled={currentIndex === 0}
+            style={{
+              flex: 1,
+              padding: '12px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: currentIndex === 0 ? colors.border : colors.textSecondary,
+              cursor: currentIndex === 0 ? 'not-allowed' : 'pointer',
+              fontWeight: 600,
+              fontSize: '15px',
+              minHeight: '48px',
+            }}
+          >
+            ← Back
+          </button>
+          <button
+            onClick={nextDisabled ? undefined : nextPhase}
+            disabled={nextDisabled}
+            style={{
+              flex: 1,
+              padding: '12px',
+              borderRadius: '10px',
+              border: 'none',
+              background: nextDisabled ? colors.border : `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
+              color: 'white',
+              cursor: nextDisabled ? 'not-allowed' : 'pointer',
+              fontWeight: 600,
+              fontSize: '15px',
+              minHeight: '48px',
+            }}
+          >
+            Next →
+          </button>
+        </div>
+      </>
+    );
+  };
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
@@ -649,7 +738,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
-    minHeight: '44px',
+    minHeight: '48px',
   };
 
   // =============================================================================
@@ -675,8 +764,8 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           alignItems: 'center',
           justifyContent: 'center',
           padding: '24px',
-          paddingTop: '40px',
-          paddingBottom: '80px',
+          paddingTop: '48px',
+          paddingBottom: '100px',
           textAlign: 'center',
         }}>
 
@@ -699,7 +788,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           maxWidth: '600px',
           marginBottom: '32px',
         }}>
-          "Two antennas with perfect line-of-sight. Nothing between them but air. Yet engineers obsess over an <span style={{ color: colors.accent }}>invisible ellipse of empty space</span>. What could possibly matter in thin air?"
+          Two antennas with perfect line-of-sight. Nothing between them but air. Yet engineers obsess over an <span style={{ color: colors.accent }}>invisible ellipse of empty space</span>. What could possibly matter in thin air?
         </p>
 
         <div style={{
@@ -711,7 +800,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           border: `1px solid ${colors.border}`,
         }}>
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "Radio waves don't travel in pencil-thin lines. Understanding the space they actually occupy is the difference between a reliable link and mysterious failures."
+            Radio waves do not travel in pencil-thin lines. Understanding the space they actually occupy is the difference between a reliable link and mysterious failures.
           </p>
           <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
             — RF Engineering Principle
@@ -725,7 +814,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           Discover the Hidden Physics →
         </button>
         </div>
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -751,8 +840,8 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           flex: 1,
           overflowY: 'auto',
           padding: '24px',
-          paddingTop: '40px',
-          paddingBottom: '80px',
+          paddingTop: '48px',
+          paddingBottom: '100px',
         }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
@@ -763,7 +852,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
             border: `1px solid ${colors.accent}44`,
           }}>
             <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              🤔 Make Your Prediction
+              Make Your Prediction
             </p>
           </div>
 
@@ -771,7 +860,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
             A cell tower microwave link has a building nearby that doesn't touch the direct path. Will this affect signal quality?
           </h2>
 
-          {/* Simple diagram */}
+          {/* Static SVG diagram for predict phase */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -779,21 +868,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>📡</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Tower A</p>
-              </div>
-              <div style={{ position: 'relative', width: '120px' }}>
-                <div style={{ position: 'absolute', top: '-20px', left: '50%', transform: 'translateX(-50%)', fontSize: '24px' }}>🏢</div>
-                <div style={{ borderBottom: `3px dashed ${colors.signal}`, width: '100%', marginTop: '20px' }}></div>
-                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>Building nearby</p>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>📡</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Tower B</p>
-              </div>
-            </div>
+            {renderFresnelVisualization(false, true)}
           </div>
 
           {/* Options */}
@@ -843,7 +918,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           )}
         </div>
         </div>
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -863,18 +938,18 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           flex: 1,
           overflowY: 'auto',
           padding: '24px',
-          paddingTop: '40px',
-          paddingBottom: '80px',
+          paddingTop: '48px',
+          paddingBottom: '100px',
         }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Fresnel Zone Simulator
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-            Add an obstacle and watch how it affects signal quality - even without blocking line-of-sight
+            Add an obstacle and watch how it affects signal quality - even without blocking line-of-sight. This is important for real-world engineering design and helps us understand practical wireless technology.
           </p>
 
-          {/* Observation Guidance */}
+          {/* Physics definition and formula */}
           <div style={{
             background: `${colors.accent}15`,
             border: `1px solid ${colors.accent}40`,
@@ -884,7 +959,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
             textAlign: 'center',
           }}>
             <p style={{ ...typo.body, color: colors.accent, margin: 0, fontWeight: 500 }}>
-              Observe: Move the obstacle slider and watch how even partial obstruction affects signal quality
+              The Fresnel zone is defined as the ellipsoidal region where radio waves arrive within half a wavelength of the direct path. The radius is calculated by: r = √(n × λ × d₁ × d₂ / (d₁ + d₂))
             </p>
           </div>
 
@@ -895,13 +970,13 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <FresnelVisualization interactive={true} />
+              {renderFresnelVisualization(true)}
             </div>
 
             {/* Obstacle slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏢 Obstacle Height (% of 1st zone)</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Obstacle Height (% of 1st zone)</span>
                 <span style={{ ...typo.small, color: obstacleHeight > 60 ? colors.error : obstacleHeight > 0 ? colors.warning : colors.success, fontWeight: 600 }}>
                   {obstacleHeight}%
                 </span>
@@ -913,12 +988,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
                 step="5"
                 value={obstacleHeight}
                 onChange={(e) => setObstacleHeight(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
+                style={sliderStyle}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                 <span style={{ ...typo.small, color: colors.textMuted }}>Clear</span>
@@ -930,7 +1000,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
             {/* Distance slider */}
             <div style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>📏 Link Distance</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Link Distance</span>
                 <span style={{ ...typo.small, color: colors.zone1, fontWeight: 600 }}>{distance} m</span>
               </div>
               <input
@@ -940,7 +1010,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
                 step="100"
                 value={distance}
                 onChange={(e) => setDistance(parseInt(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
+                style={sliderStyle}
               />
             </div>
 
@@ -991,7 +1061,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
               textAlign: 'center',
             }}>
               <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
-                ⚠️ Notice: The obstacle doesn't touch the line-of-sight, but signal is already degrading!
+                Notice: The obstacle doesn't touch the line-of-sight, but signal is already degrading!
               </p>
             </div>
           )}
@@ -1006,7 +1076,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
               textAlign: 'center',
             }}>
               <p style={{ ...typo.body, color: colors.error, margin: 0 }}>
-                ❌ Critical: More than 60% of the first Fresnel zone is blocked - link unreliable!
+                Critical: More than 60% of the first Fresnel zone is blocked - link unreliable!
               </p>
             </div>
           )}
@@ -1019,7 +1089,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           </button>
         </div>
         </div>
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1039,8 +1109,8 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           flex: 1,
           overflowY: 'auto',
           padding: '24px',
-          paddingTop: '40px',
-          paddingBottom: '80px',
+          paddingTop: '48px',
+          paddingBottom: '100px',
         }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1057,10 +1127,10 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
               The Physics of Radio Wave Propagation
             </h3>
             <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
-              Radio waves don't travel in pencil-thin lines - they spread out like ripples. The <strong style={{ color: colors.textPrimary }}>first Fresnel zone</strong> is an ellipsoidal region where waves arrive within half a wavelength of the direct path.
+              As you observed in the experiment, radio waves don't travel in pencil-thin lines - they spread out like ripples. The <strong style={{ color: colors.textPrimary }}>first Fresnel zone</strong> is an ellipsoidal region where waves arrive within half a wavelength of the direct path.
             </p>
             <p style={{ ...typo.body, color: colors.textSecondary }}>
-              Waves within this zone <strong style={{ color: colors.success }}>add constructively</strong> to strengthen the signal. When obstacles intrude, they cause <strong style={{ color: colors.error }}>diffraction losses</strong> even without blocking line-of-sight.
+              Waves within this zone <strong style={{ color: colors.success }}>add constructively</strong> to strengthen the signal. When obstacles intrude, they cause <strong style={{ color: colors.error }}>diffraction losses</strong> even without blocking line-of-sight. Your prediction about obstruction was tested in the experiment.
             </p>
           </div>
 
@@ -1080,10 +1150,10 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
               textAlign: 'center',
               marginBottom: '16px',
             }}>
-              <code style={{ fontSize: '18px', color: colors.textPrimary }}>r = sqrt(n * lambda * d1 * d2 / (d1 + d2))</code>
+              <code style={{ fontSize: '18px', color: colors.textPrimary }}>r = √(n × λ × d₁ × d₂ / (d₁ + d₂))</code>
             </div>
             <p style={{ ...typo.small, color: colors.textSecondary }}>
-              Where <strong>n</strong> = zone number, <strong>lambda</strong> = wavelength, <strong>d1</strong> and <strong>d2</strong> = distances to endpoints. At midpoint, this simplifies to r = sqrt(n * lambda * D / 4).
+              Where <strong>n</strong> = zone number, <strong>λ</strong> = wavelength, <strong>d₁</strong> and <strong>d₂</strong> = distances to endpoints. At midpoint, this simplifies to r = √(n × λ × D / 4).
             </p>
           </div>
 
@@ -1095,7 +1165,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
             marginBottom: '24px',
           }}>
             <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              💡 Key Insight: The 60% Rule
+              Key Insight: The 60% Rule
             </h3>
             <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
               Engineers require at least <strong style={{ color: colors.success }}>60% of the first Fresnel zone</strong> to be clear of obstructions. This provides adequate margin for reliable links with minimal diffraction loss.
@@ -1110,7 +1180,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           </button>
         </div>
         </div>
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1127,11 +1197,19 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+        }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1140,13 +1218,24 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
             border: `1px solid ${colors.warning}44`,
           }}>
             <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              📶 New Variable: Frequency
+              New Variable: Frequency
             </p>
           </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
             5G networks use millimeter-wave frequencies (28-80 GHz) while 4G uses lower frequencies (700 MHz - 2.5 GHz). How does this affect Fresnel zone clearance requirements?
           </h2>
+
+          {/* Static SVG for twist_predict */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            {renderFresnelVisualization(false, true)}
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
@@ -1192,8 +1281,8 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
             </button>
           )}
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1204,11 +1293,19 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+        }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Frequency vs Fresnel Zones
           </h2>
@@ -1223,13 +1320,13 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <FresnelVisualization interactive={true} />
+              {renderFresnelVisualization(true)}
             </div>
 
             {/* Frequency slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>📶 Frequency</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Frequency</span>
                 <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{frequency.toFixed(1)} GHz</span>
               </div>
               <input
@@ -1239,7 +1336,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
                 step="0.1"
                 value={frequency}
                 onChange={(e) => setFrequency(parseFloat(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
+                style={sliderStyle}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                 <span style={{ ...typo.small, color: colors.textMuted }}>900 MHz (4G)</span>
@@ -1261,7 +1358,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
                 step="1"
                 value={showZones}
                 onChange={(e) => setShowZones(parseInt(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
+                style={sliderStyle}
               />
             </div>
 
@@ -1313,8 +1410,8 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
             Understand the Tradeoffs →
           </button>
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1325,11 +1422,19 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+        }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Frequency-Zone Tradeoff
           </h2>
@@ -1346,7 +1451,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
                 <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Zone Size vs Wavelength</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Fresnel zone radius is proportional to <strong style={{ color: colors.accent }}>sqrt(wavelength)</strong>. Since wavelength = c/frequency, higher frequencies have smaller wavelengths and thus <strong style={{ color: colors.success }}>smaller Fresnel zones</strong>.
+                Fresnel zone radius is proportional to <strong style={{ color: colors.accent }}>√(wavelength)</strong>. Since wavelength = c/frequency, higher frequencies have smaller wavelengths and thus <strong style={{ color: colors.success }}>smaller Fresnel zones</strong>.
               </p>
             </div>
 
@@ -1388,8 +1493,8 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
             See Real-World Applications →
           </button>
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1403,14 +1508,27 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+        }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+
+          {/* Progress indicator */}
+          <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '16px' }}>
+            App {selectedApp + 1} of {realWorldApps.length}
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1490,6 +1608,20 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
               marginBottom: '16px',
             }}>
               <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
                 Connection to Fresnel Zones:
               </h4>
               <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
@@ -1501,6 +1633,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1515,19 +1648,67 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
                 </div>
               ))}
             </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                Real Examples:
+              </h4>
+              <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                {app.examples.map((ex, i) => (
+                  <li key={i} style={{ ...typo.small, color: colors.textSecondary, marginBottom: '4px' }}>{ex}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                Industry Leaders:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.companies.join(', ')}
+              </p>
+            </div>
+
+            <div>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                Future Impact:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.futureImpact}
+              </p>
+            </div>
           </div>
+
+          {/* Got It button for current app */}
+          <button
+            onClick={() => {
+              playSound('click');
+              const newCompleted = [...completedApps];
+              newCompleted[selectedApp] = true;
+              setCompletedApps(newCompleted);
+              if (selectedApp < realWorldApps.length - 1) {
+                setSelectedApp(selectedApp + 1);
+                const nc = [...newCompleted];
+                nc[selectedApp + 1] = true;
+                setCompletedApps(nc);
+              }
+            }}
+            style={{ ...primaryButtonStyle, width: '100%', marginBottom: '12px' }}
+          >
+            Got It →
+          </button>
 
           {allAppsCompleted && (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
+              style={{ ...primaryButtonStyle, width: '100%', background: `linear-gradient(135deg, ${colors.success}, #059669)` }}
             >
-              Take the Knowledge Test →
+              Take the Test →
             </button>
           )}
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1540,11 +1721,20 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}>
           {renderProgressBar()}
-
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '24px',
+            paddingTop: '48px',
+            paddingBottom: '100px',
+            textAlign: 'center',
+          }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1585,7 +1775,8 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
               </button>
             )}
           </div>
-          {renderNavDots()}
+          </div>
+          {renderBottomNav()}
         </div>
       );
     }
@@ -1596,11 +1787,19 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+        }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1700,6 +1899,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
                   background: 'transparent',
                   color: colors.textSecondary,
                   cursor: 'pointer',
+                  minHeight: '48px',
                 }}
               >
                 ← Previous
@@ -1718,9 +1918,10 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
                   color: 'white',
                   cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '48px',
                 }}
               >
-                Next →
+                Next Question →
               </button>
             ) : (
               <button
@@ -1743,6 +1944,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
                   color: 'white',
                   cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
+                  minHeight: '48px',
                 }}
               >
                 Submit Test
@@ -1750,8 +1952,8 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
             )}
           </div>
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1764,12 +1966,21 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '24px',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          textAlign: 'center',
+        }}>
 
         <div style={{
           fontSize: '100px',
@@ -1824,6 +2035,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
               background: 'transparent',
               color: colors.textSecondary,
               cursor: 'pointer',
+              minHeight: '48px',
             }}
           >
             Play Again
@@ -1839,8 +2051,8 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
             Return to Dashboard
           </a>
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }

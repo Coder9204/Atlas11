@@ -796,18 +796,32 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
             {/* Magnetic field lines */}
             {showFieldLines && (
               <g opacity="0.5">
-                {[-40, -20, 0, 20, 40].map((offset, i) => (
-                  <path
-                    key={i}
-                    d={`M ${magnetX - 50} ${coilCenterY + offset} Q ${coilCenterX} ${coilCenterY + offset * 0.5} ${magnetX + 100} ${coilCenterY + offset}`}
-                    fill="none"
-                    stroke="#3b82f6"
-                    strokeWidth="2"
-                    strokeDasharray="6 4"
-                  />
-                ))}
+                {[-40, -20, 20, 40].map((offset, i) => {
+                  const curveAmplitude = Math.abs(offset) * 2.5 + 35;
+                  return (
+                    <path
+                      key={i}
+                      d={`M ${magnetX - 50} ${coilCenterY + offset} Q ${coilCenterX} ${coilCenterY + offset - curveAmplitude * Math.sign(offset)} ${magnetX + 100} ${coilCenterY + offset}`}
+                      fill="none"
+                      stroke="#3b82f6"
+                      strokeWidth="2"
+                      strokeDasharray="6 4"
+                    />
+                  );
+                })}
+                {/* Center field line */}
+                <line x1={magnetX - 50} y1={coilCenterY} x2={magnetX + 100} y2={coilCenterY} stroke="#3b82f6" strokeWidth="2" strokeDasharray="6 4" />
               </g>
             )}
+            {/* EMF response curve */}
+            <path
+              d={`M ${width * 0.05} ${height * 0.88} L ${width * 0.12} ${height * 0.84} L ${width * 0.19} ${height * 0.76} L ${width * 0.26} ${height * 0.62} L ${width * 0.33} ${height * 0.42} L ${width * 0.40} ${height * 0.22} L ${width * 0.47} ${height * 0.12} L ${width * 0.54} ${height * 0.22} L ${width * 0.61} ${height * 0.42} L ${width * 0.68} ${height * 0.62} L ${width * 0.75} ${height * 0.76} L ${width * 0.82} ${height * 0.84} L ${width * 0.95} ${height * 0.88}`}
+              fill="none"
+              stroke={emfColor}
+              strokeWidth="2"
+              opacity="0.35"
+              strokeDasharray="4 4"
+            />
 
             {/* Coil with glow based on EMF */}
             <g>
@@ -885,14 +899,17 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
 
             {/* Data panel */}
             <g>
-              <rect x="8" y="8" width="130" height="68" fill="#0f172a" rx="8" stroke="#334155" strokeWidth="1" />
-              <text x="18" y="28" fill="#94a3b8" fontSize="10">Flux (Phi)</text>
-              <text x="128" y="28" fill="#60a5fa" fontSize="11" textAnchor="end">{calculateFlux(magnetPosition).toFixed(4)} Wb</text>
-              <text x="18" y="46" fill="#94a3b8" fontSize="10">EMF</text>
-              <text x="128" y="46" fill={emfColor} fontSize="11" textAnchor="end">{inducedEMF.toFixed(1)} mV</text>
-              <text x="18" y="64" fill="#94a3b8" fontSize="10">Turns</text>
-              <text x="128" y="64" fill="#f59e0b" fontSize="11" textAnchor="end">{coilTurns}</text>
+              <rect x="8" y="8" width="140" height="68" fill="#0f172a" rx="8" stroke="#334155" strokeWidth="1" />
+              <text x="18" y="28" fill="#94a3b8" fontSize="11">Flux</text>
+              <text x="138" y="28" fill="#60a5fa" fontSize="11" textAnchor="end">{calculateFlux(magnetPosition).toFixed(4)} Wb</text>
+              <text x="18" y="46" fill="#94a3b8" fontSize="11">Voltage</text>
+              <text x="138" y="46" fill={emfColor} fontSize="11" textAnchor="end">{inducedEMF.toFixed(1)} mV</text>
+              <text x="18" y="64" fill="#94a3b8" fontSize="11">Turns</text>
+              <text x="138" y="64" fill="#f59e0b" fontSize="11" textAnchor="end">{coilTurns}</text>
             </g>
+            {/* Axis labels */}
+            <text x={width / 2} y={height - 8} textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11">Position</text>
+            <text x="12" y={height / 2} fill="rgba(148,163,184,0.7)" fontSize="11" transform={`rotate(-90, 12, ${height / 2})`}>Voltage</text>
           </svg>
         </div>
 
@@ -931,7 +948,11 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
           </button>
 
           <div style={{ padding: '12px', backgroundColor: 'rgba(71, 85, 105, 0.5)', borderRadius: '12px', textAlign: 'center' }}>
-            <div style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '8px' }}>Turns</div>
+            <div style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '8px' }}>Coil Turns (frequency)</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'rgba(148,163,184,0.7)', marginBottom: '4px' }}>
+              <span>10 (low)</span>
+              <span>100 (max)</span>
+            </div>
             <input
               type="range"
               min="10"
@@ -940,10 +961,9 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
               onChange={(e) => setCoilTurns(parseInt(e.target.value))}
               style={{
                 width: '100%',
-                height: '8px',
-                borderRadius: '4px',
-                background: 'linear-gradient(90deg, #3b82f6, #0891b2)',
-                cursor: 'pointer',
+                height: '20px',
+                touchAction: 'pan-y',
+                WebkitAppearance: 'none',
                 accentColor: '#3b82f6'
               }}
             />
@@ -951,7 +971,11 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
           </div>
 
           <div style={{ padding: '12px', backgroundColor: 'rgba(71, 85, 105, 0.5)', borderRadius: '12px', textAlign: 'center' }}>
-            <div style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '8px' }}>Field (B)</div>
+            <div style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '8px' }}>Field Intensity (energy)</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'rgba(148,163,184,0.7)', marginBottom: '4px' }}>
+              <span>0.1 (weak)</span>
+              <span>2 (strong)</span>
+            </div>
             <input
               type="range"
               min="0.1"
@@ -961,10 +985,9 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
               onChange={(e) => setFieldStrength(parseFloat(e.target.value))}
               style={{
                 width: '100%',
-                height: '8px',
-                borderRadius: '4px',
-                background: 'linear-gradient(90deg, #3b82f6, #0891b2)',
-                cursor: 'pointer',
+                height: '20px',
+                touchAction: 'pan-y',
+                WebkitAppearance: 'none',
                 accentColor: '#3b82f6'
               }}
             />
@@ -1262,7 +1285,7 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
         {/* Normal Conductor */}
         <div className="bg-slate-800/50 rounded-2xl p-4">
           <h3 className="text-lg font-semibold text-cyan-400 mb-2 text-center">Normal Conductor</h3>
-          <svg width="180" height="120" className="mx-auto">
+          <svg width="280" height="220" viewBox="0 0 280 220" className="mx-auto" style={{ maxWidth: '100%' }}>
             <defs>
               <linearGradient id="normalBg" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#0f172a" />
@@ -1273,13 +1296,18 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
                 <stop offset="100%" stopColor="#4b5563" />
               </linearGradient>
             </defs>
-            <rect x="0" y="0" width="180" height="120" fill="url(#normalBg)" rx="10" />
-            <ellipse cx="90" cy="55" rx="52" ry="28" fill="none" stroke="url(#normalRing)" strokeWidth="10" />
-            {[-18, 0, 18].map((offset, i) => (
-              <line key={i} x1="48" y1={55 + offset} x2="132" y2={55 + offset} stroke="#60a5fa" strokeWidth="2" strokeDasharray="5 3" opacity={0.3 + i * 0.1} />
+            <rect x="0" y="0" width="280" height="220" fill="url(#normalBg)" rx="10" />
+            <text x="140" y="22" textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="12">Current vs Time</text>
+            <ellipse cx="140" cy="90" rx="65" ry="42" fill="none" stroke="url(#normalRing)" strokeWidth="12" />
+            {[-22, 0, 22].map((offset, i) => (
+              <line key={i} x1="85" y1={90 + offset} x2="195" y2={90 + offset} stroke="#60a5fa" strokeWidth="2" strokeDasharray="5 3" opacity={0.3 + i * 0.1} />
             ))}
-            <path d="M90,90 L90,108" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" />
-            <polygon points="85,108 90,118 95,108" fill="#ef4444" />
+            {/* Decay curve - exponential decay using >25% vertical space */}
+            <path d="M 40 100 L 70 120 L 100 145 L 130 162 L 160 175 L 190 185 L 220 192 L 250 197 L 270 200" stroke="#ef4444" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+            <text x="140" y="212" textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11">Time</text>
+            <text x="30" y="175" fill="rgba(148,163,184,0.7)" fontSize="11" transform="rotate(-90, 30, 175)">Current</text>
+            <path d="M140,130 L140,148" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" />
+            <polygon points="135,148 140,158 145,148" fill="#ef4444" />
           </svg>
           <p className="text-center text-sm text-red-400 mt-2">Field decays over time</p>
           <p className="text-center text-xs text-slate-400 mt-1">Resistance causes induced currents to decay</p>
@@ -1288,7 +1316,7 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
         {/* Superconductor */}
         <div className="bg-slate-800/50 rounded-2xl p-4">
           <h3 className="text-lg font-semibold text-purple-400 mb-2 text-center">Superconductor</h3>
-          <svg width="180" height="120" className="mx-auto">
+          <svg width="280" height="220" viewBox="0 0 280 220" className="mx-auto" style={{ maxWidth: '100%' }}>
             <defs>
               <linearGradient id="superBg" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#0f172a" />
@@ -1308,19 +1336,24 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
                 </feMerge>
               </filter>
             </defs>
-            <rect x="0" y="0" width="180" height="120" fill="url(#superBg)" rx="10" />
-            <ellipse cx="90" cy="55" rx="52" ry="28" fill="none" stroke="#a855f7" strokeWidth="16" opacity="0.3" filter="url(#superGlow)" />
-            <ellipse cx="90" cy="55" rx="52" ry="28" fill="none" stroke="url(#superRing)" strokeWidth="10" />
-            {[-18, 0, 18].map((offset, i) => (
-              <line key={i} x1="48" y1={55 + offset} x2="132" y2={55 + offset} stroke="#60a5fa" strokeWidth="3" opacity="0.8" />
+            <rect x="0" y="0" width="280" height="220" fill="url(#superBg)" rx="10" />
+            <text x="140" y="22" textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="12">Current vs Time</text>
+            <ellipse cx="140" cy="90" rx="65" ry="42" fill="none" stroke="#a855f7" strokeWidth="18" opacity="0.3" filter="url(#superGlow)" />
+            <ellipse cx="140" cy="90" rx="65" ry="42" fill="none" stroke="url(#superRing)" strokeWidth="12" />
+            {[-22, 0, 22].map((offset, i) => (
+              <line key={i} x1="85" y1={90 + offset} x2="195" y2={90 + offset} stroke="#60a5fa" strokeWidth="3" opacity="0.8" />
             ))}
             {[0, 1, 2, 3].map((i) => {
               const angle = (i / 4) * Math.PI * 2;
               return (
-                <circle key={i} cx={90 + Math.cos(angle) * 52} cy={55 + Math.sin(angle) * 28 * 0.6} r="4" fill="#22c55e" />
+                <circle key={i} cx={140 + Math.cos(angle) * 65} cy={90 + Math.sin(angle) * 42 * 0.6} r="5" fill="#22c55e" />
               );
             })}
-            <text x="90" y="105" textAnchor="middle" fill="#22c55e" fontSize="20" fontWeight="bold">infinity</text>
+            {/* Persistent current - ramps up and holds steady */}
+            <path d="M 40 200 L 60 190 L 80 165 L 100 145 L 120 130 L 140 130 L 160 130 L 180 130 L 200 130 L 220 130 L 240 130 L 260 130" stroke="#22c55e" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+            <text x="140" y="212" textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11">Time</text>
+            <text x="30" y="175" fill="rgba(148,163,184,0.7)" fontSize="11" transform="rotate(-90, 30, 175)">Current</text>
+            <text x="140" y="195" textAnchor="middle" fill="#22c55e" fontSize="14" fontWeight="bold">Persistent forever</text>
           </svg>
           <p className="text-center text-sm text-emerald-400 mt-2">Field trapped forever</p>
           <p className="text-center text-xs text-slate-400 mt-1">Zero resistance = currents flow forever!</p>
@@ -1426,78 +1459,81 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
           ))}
         </div>
 
-        {/* Application detail card */}
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-4xl">{app.icon}</span>
-            <div>
-              <h3 className="text-xl font-bold text-white">{app.title}</h3>
-              <p className="text-cyan-400 text-sm">{app.tagline}</p>
-            </div>
-          </div>
-
-          <p className={`text-slate-300 mb-4 ${typo.small}`}>{app.description}</p>
-
-          <div className="bg-slate-700/50 rounded-xl p-4 mb-4">
-            <h4 className="text-sm font-semibold text-cyan-400 mb-2">Physics Connection:</h4>
-            <p className="text-sm text-slate-300">{app.connection}</p>
-          </div>
-
-          <div className="mb-4">
-            <h4 className="text-sm font-semibold text-white mb-2">How It Works:</h4>
-            <p className={`text-slate-300 ${typo.small}`}>{app.howItWorks}</p>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-2 mb-4">
-            {app.stats.map((stat, i) => (
-              <div key={i} className="bg-slate-700/50 rounded-lg p-3 text-center">
-                <div className="text-2xl mb-1">{stat.icon}</div>
-                <div className="text-cyan-400 font-bold text-sm">{stat.value}</div>
-                <div className="text-slate-400 text-xs">{stat.label}</div>
+        {/* Scrollable application content container */}
+        <div style={{ overflowY: 'auto', maxHeight: '70vh', width: '100%', maxWidth: '672px' }}>
+          {/* Application detail card */}
+          <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '24px', marginBottom: '16px' }}>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-4xl">{app.icon}</span>
+              <div>
+                <h3 className="text-xl font-bold text-white">{app.title}</h3>
+                <p className="text-cyan-400 text-sm">{app.tagline}</p>
               </div>
-            ))}
-          </div>
+            </div>
 
-          {/* Examples */}
-          <div className="mb-4">
-            <h4 className="text-sm font-semibold text-white mb-2">Real Examples:</h4>
-            <ul className={`text-slate-300 ${typo.small} space-y-1`}>
-              {app.examples.map((ex, i) => (
-                <li key={i}>- {ex}</li>
-              ))}
-            </ul>
-          </div>
+            <p className={`text-slate-300 mb-4 ${typo.small}`}>{app.description}</p>
 
-          {/* Companies */}
-          <div className="mb-4">
-            <h4 className="text-sm font-semibold text-white mb-2">Leading Companies:</h4>
-            <div className="flex flex-wrap gap-2">
-              {app.companies.map((company, i) => (
-                <span key={i} className="px-2 py-1 bg-slate-600/50 rounded text-xs text-slate-300">{company}</span>
+            <div style={{ backgroundColor: 'rgba(51, 65, 85, 0.5)', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+              <h4 className="text-sm font-semibold text-cyan-400 mb-2">Physics Connection:</h4>
+              <p className="text-sm text-slate-300">{app.connection}</p>
+            </div>
+
+            <div className="mb-4">
+              <h4 className="text-sm font-semibold text-white mb-2">How It Works:</h4>
+              <p className={`text-slate-300 ${typo.small}`}>{app.howItWorks}</p>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{ backgroundColor: 'rgba(51, 65, 85, 0.5)', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                  <div className="text-2xl mb-1">{stat.icon}</div>
+                  <div className="text-cyan-400 font-bold text-sm">{stat.value}</div>
+                  <div className="text-slate-400 text-xs">{stat.label}</div>
+                </div>
               ))}
             </div>
-          </div>
 
-          {/* Future Impact */}
-          <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-xl p-4 mb-4">
-            <h4 className="text-sm font-semibold text-purple-400 mb-2">Future Impact:</h4>
-            <p className="text-sm text-slate-300">{app.futureImpact}</p>
-          </div>
+            {/* Examples */}
+            <div className="mb-4">
+              <h4 className="text-sm font-semibold text-white mb-2">Real Examples:</h4>
+              <ul className={`text-slate-300 ${typo.small} space-y-1`}>
+                {app.examples.map((ex, i) => (
+                  <li key={i}>- {ex}</li>
+                ))}
+              </ul>
+            </div>
 
-          {!completedApps[selectedApp] && (
-            <button
-              onClick={() => {
-                const newCompleted = [...completedApps];
-                newCompleted[selectedApp] = true;
-                setCompletedApps(newCompleted);
-                playSound('success');
-              }}
-              className="w-full mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors"
-            >
-              Mark as Understood
-            </button>
-          )}
+            {/* Companies */}
+            <div className="mb-4">
+              <h4 className="text-sm font-semibold text-white mb-2">Leading Companies:</h4>
+              <div className="flex flex-wrap gap-2">
+                {app.companies.map((company, i) => (
+                  <span key={i} className="px-2 py-1 bg-slate-600/50 rounded text-xs text-slate-300">{company}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Future Impact */}
+            <div style={{ background: 'linear-gradient(to right, rgba(88, 28, 135, 0.3), rgba(136, 19, 55, 0.3))', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+              <h4 className="text-sm font-semibold text-purple-400 mb-2">Future Impact:</h4>
+              <p className="text-sm text-slate-300">{app.futureImpact}</p>
+            </div>
+
+            {!completedApps[selectedApp] && (
+              <button
+                onClick={() => {
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                  playSound('success');
+                }}
+                className="w-full mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors"
+              >
+                Mark as Understood
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Progress indicator */}

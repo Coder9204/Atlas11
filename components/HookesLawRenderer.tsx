@@ -702,15 +702,15 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, game
           <rect x="15" y="245" width="160" height="90" rx="10" fill="url(#hookeStatsPanelGrad)" stroke="#334155" strokeWidth="1" />
 
           {/* SVG Text Labels - Direct labels on objects */}
-          <text x="200" y="35" textAnchor="middle" fill="#64748b" fontSize="10">Support Wall</text>
+          <text x="200" y="35" textAnchor="middle" fill="#64748b" fontSize="11">Support Wall</text>
           <text x="200" y={baseY + currentLength + 35} textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">{(appliedForce / 10).toFixed(1)} kg Mass</text>
-          <text x="340" y={baseY + restLength + 4} textAnchor="start" fill="#64748b" fontSize="9">Rest Position</text>
-          <text x="25" y="260" fill="#64748b" fontSize="9">Spring Constant (k)</text>
+          <text x="340" y={baseY + restLength + 4} textAnchor="start" fill="#64748b" fontSize="11">Rest Position</text>
+          <text x="25" y="260" fill="#64748b" fontSize="11">Spring Constant (k)</text>
           <text x="25" y="275" fill="#22c55e" fontSize="12" fontWeight="bold">{springConstant} N/m</text>
-          <text x="25" y="295" fill="#64748b" fontSize="9">Potential Energy</text>
+          <text x="25" y="295" fill="#64748b" fontSize="11">Potential Energy</text>
           <text x="25" y="310" fill="#f59e0b" fontSize="12" fontWeight="bold">{elasticPE.toFixed(2)} J</text>
           {stretchAmount > 10 && (
-            <text x="315" y={(baseY + restLength + baseY + currentLength + 25) / 2} fill="#2dd4bf" fontSize="10" fontWeight="bold">x = {(displacement * 100).toFixed(1)} cm</text>
+            <text x="315" y={(baseY + restLength + baseY + currentLength + 25) / 2} fill="#2dd4bf" fontSize="11" fontWeight="bold">x = {(displacement * 100).toFixed(1)} cm</text>
           )}
         </svg>
 
@@ -1065,7 +1065,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, game
                   max="50"
                   value={appliedForce}
                   onChange={(e) => setAppliedForce(Number(e.target.value))}
-                  style={{ width: '100%', height: '8px', background: '#334155', borderRadius: '4px', accentColor: '#10b981' }}
+                  style={{ width: '100%', height: '20px', background: '#334155', borderRadius: '4px', accentColor: '#10b981', touchAction: 'pan-y' }}
                 />
               </div>
 
@@ -1080,7 +1080,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, game
                   max="200"
                   value={springConstant}
                   onChange={(e) => setSpringConstant(Number(e.target.value))}
-                  style={{ width: '100%', height: '8px', background: '#334155', borderRadius: '4px', accentColor: '#14b8a6' }}
+                  style={{ width: '100%', height: '20px', background: '#334155', borderRadius: '4px', accentColor: '#14b8a6', touchAction: 'pan-y' }}
                 />
               </div>
             </div>

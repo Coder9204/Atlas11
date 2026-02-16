@@ -548,10 +548,10 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
           strokeWidth={2}
           filter="url(#glow)"
         />
-        <text x={rampEndX - 55} y={rampEndY - 15} fill={colors.accent} fontSize="14" fontWeight="bold">
-          {angle}
+        <text x={rampEndX - 65} y={rampEndY - 18} fill={colors.accent} fontSize="14" fontWeight="bold">
+          {angle}°
         </text>
-        <text x={rampEndX - 48} y={rampEndY - 3} fill={colors.accent} fontSize="12" fontStyle="italic">θ</text>
+        <text x={rampEndX - 35} y={rampEndY - 2} fill={colors.accent} fontSize="12" fontStyle="italic">θ</text>
 
         {/* Ball */}
         <circle
@@ -708,7 +708,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
             </g>
           );
         })}
-        <text x={12} y={padT + plotH / 2} textAnchor="middle" fill={colors.textSecondary} fontSize="10" transform={`rotate(-90, 12, ${padT + plotH / 2})`}>
+        <text x={12} y={padT + plotH / 2} textAnchor="end" fill={colors.textSecondary} fontSize="10" transform={`rotate(-90, 12, ${padT + plotH / 2})`}>
           Acceleration (m/s²)
         </text>
 
@@ -988,7 +988,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0', flex: 1, overflowY: 'auto' }}>
+        <div style={{ maxWidth: '800px', margin: '60px auto 0', flex: 1, overflowY: 'auto', paddingTop: '48px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Inclined Plane Simulator
           </h2>
@@ -1006,13 +1006,13 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
             maxHeight: '600px',
             overflowY: 'auto',
           }}>
-            <div style={{ marginBottom: '24px' }}>
-              <InclinedPlaneVisualization />
-            </div>
-
             {/* Acceleration vs Angle Graph */}
             <div style={{ marginBottom: '24px' }}>
               <AccelerationGraph />
+            </div>
+
+            <div style={{ marginBottom: '24px' }}>
+              <InclinedPlaneVisualization />
             </div>
 
             {/* Angle slider */}
@@ -1031,10 +1031,11 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
                 disabled={isRolling}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: isRolling ? 'not-allowed' : 'pointer',
                   accentColor: colors.accent,
+                  touchAction: 'pan-y' as const,
                   background: `linear-gradient(to right, ${colors.accent}, ${colors.success})`,
                 }}
               />

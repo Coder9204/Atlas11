@@ -672,6 +672,22 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
           Law of Reflection: Angle In = Angle Out
         </text>
 
+        {/* Angle reference tick marks along mirror */}
+        <g className="tick-marks">
+          {[15, 30, 45, 60, 75].map(angle => {
+            const rad = angle * Math.PI / 180;
+            const tickLen = 8;
+            const tx = centerX - Math.sin(rad) * 50;
+            const ty = mirrorY - Math.cos(rad) * 50;
+            const dx = -Math.cos(rad) * tickLen / 2;
+            const dy = Math.sin(rad) * tickLen / 2;
+            return (
+              <line key={`tick-${angle}`} x1={tx - dx} y1={ty - dy} x2={tx + dx} y2={ty + dy}
+                stroke={colors.textMuted} strokeWidth={1} opacity="0.5" />
+            );
+          })}
+        </g>
+
         {/* Virtual space indicator */}
         {showVirtualImage && (
           <>
@@ -896,7 +912,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
       <div style={{ marginBottom: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
           <span style={{ color: colors.textSecondary, fontSize: typo.body }}>Incident Angle</span>
-          <span style={{ color: colors.incident, fontWeight: 600, fontSize: typo.body }}>{incidentAngle}deg</span>
+          <span style={{ color: colors.incident, fontWeight: 600, fontSize: typo.body }}>{incidentAngle}° ({(incidentAngle * Math.PI / 180).toFixed(2)} rad)</span>
         </div>
         <input
           type="range"
@@ -904,7 +920,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
           max="85"
           value={incidentAngle}
           onChange={(e) => setIncidentAngle(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.incident }}
+          style={{ width: '100%', accentColor: colors.incident, touchAction: 'pan-y' }}
         />
       </div>
 
@@ -1154,6 +1170,56 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
 
           {renderReflectionVisualization()}
           {renderControls()}
+
+          {/* Calculated values readout */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '12px',
+            marginTop: '16px',
+            marginBottom: '16px',
+          }}>
+            <div style={{
+              background: 'rgba(30, 41, 59, 0.8)',
+              padding: '12px',
+              borderRadius: '8px',
+              textAlign: 'center',
+            }}>
+              <div style={{ color: colors.textMuted, fontSize: typo.label, marginBottom: '4px' }}>Incident Angle</div>
+              <div style={{ color: colors.incident, fontWeight: 700, fontSize: typo.bodyLarge }}>{incidentAngle}°</div>
+              <div style={{ color: colors.textMuted, fontSize: typo.label }}>{(incidentAngle * Math.PI / 180).toFixed(2)} rad</div>
+            </div>
+            <div style={{
+              background: 'rgba(30, 41, 59, 0.8)',
+              padding: '12px',
+              borderRadius: '8px',
+              textAlign: 'center',
+            }}>
+              <div style={{ color: colors.textMuted, fontSize: typo.label, marginBottom: '4px' }}>Reflected Angle</div>
+              <div style={{ color: colors.reflected, fontWeight: 700, fontSize: typo.bodyLarge }}>{incidentAngle}°</div>
+              <div style={{ color: colors.textMuted, fontSize: typo.label }}>
+                {incidentAngle === incidentAngle
+                  ? <span style={{ color: colors.success }}>Match ✓</span>
+                  : <span style={{ color: colors.error }}>Mismatch</span>
+                }
+              </div>
+            </div>
+            <div style={{
+              background: 'rgba(30, 41, 59, 0.8)',
+              padding: '12px',
+              borderRadius: '8px',
+              textAlign: 'center',
+            }}>
+              <div style={{ color: colors.textMuted, fontSize: typo.label, marginBottom: '4px' }}>Deflection ratio</div>
+              <div style={{ color: colors.accent, fontWeight: 700, fontSize: typo.bodyLarge }}>{incidentAngle * 2}°</div>
+              <div
+                data-feedback={incidentAngle >= 45 ? 'warning' : 'success'}
+                style={{ color: incidentAngle >= 45 ? '#F59E0B' : colors.success, fontSize: typo.label }}
+              >
+                {incidentAngle >= 45 ? 'Wide output spread' : 'Narrow output'}
+              </div>
+            </div>
+          </div>
 
           <div style={{
             background: 'rgba(30, 41, 59, 0.8)',

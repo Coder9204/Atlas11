@@ -389,7 +389,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Load Dynamics',
+    twist_play: 'Twist Explore',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -421,7 +421,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
   }, [phase, goToPhase, phaseOrder]);
 
   // Generator Visualization SVG
-  const GeneratorVisualization = ({ showControls = true }: { showControls?: boolean }) => {
+  const renderGeneratorVisualization = (showControls = true) => {
     const width = isMobile ? 340 : 480;
     const height = isMobile ? 280 : 320;
     const rotationSpeed = showControls ? rpm / 30 : 0;
@@ -544,6 +544,27 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
           </g>
         )}
 
+        {/* Grid lines for visual reference */}
+        <line x1="15" y1={isMobile ? 55 : 60} x2={width - 15} y2={isMobile ? 55 : 60} stroke="#4b5563" strokeDasharray="4 4" opacity="0.3" />
+        <line x1="15" y1={isMobile ? 170 : 195} x2={width - 15} y2={isMobile ? 170 : 195} stroke="#4b5563" strokeDasharray="4 4" opacity="0.3" />
+
+        {/* Frequency axis label */}
+        <text x={width - 20} y="42" textAnchor="end" fill={colors.textSecondary} fontSize="11">Frequency</text>
+
+        {/* RPM curve path showing startup progression */}
+        <path d={`M 15 ${height - 80} L ${15 + (rpm / 1800) * (width - 60)} ${height - 80 - (rpm / 1800) * (height * 0.35)}`} fill="none" stroke="#3b82f6" strokeWidth="2" />
+
+        {/* Interactive point showing current RPM position */}
+        <circle
+          cx={15 + (rpm / 1800) * (width - 60)}
+          cy={height - 80 - (rpm / 1800) * (height * 0.35)}
+          r={8}
+          fill={colors.accent}
+          filter="url(#glowFilter)"
+          stroke="#fff"
+          strokeWidth={2}
+        />
+
         {/* Status Panel */}
         <rect x="15" y={height - 75} width={width - 30} height="60" fill={colors.bgCard} rx="8" stroke={colors.border} strokeWidth="1" />
 
@@ -556,7 +577,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
             { label: 'TIME', value: `${startupTime.toFixed(1)}s`, color: colors.textPrimary },
           ].map((item, i) => (
             <g key={i} transform={`translate(${30 + i * (isMobile ? 75 : 110)}, 0)`}>
-              <text y="12" fill={colors.textMuted} fontSize="10" fontWeight="500">{item.label}</text>
+              <text y="12" fill={colors.textMuted} fontSize="11" fontWeight="500">{item.label}</text>
               <text y="32" fill={item.color} fontSize={isMobile ? "14" : "16"} fontWeight="700">{item.value}</text>
             </g>
           ))}
@@ -566,7 +587,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
   };
 
   // Frequency Droop Visualization
-  const FrequencyDroopVisualization = () => {
+  const renderFrequencyDroopVisualization = () => {
     const width = isMobile ? 340 : 480;
     const height = isMobile ? 220 : 260;
     const droopPercent = ((60 - frequencyDroop) / 60) * 100;
@@ -610,7 +631,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
               strokeDasharray={freq === 60 ? "0" : "3,3"}
               opacity={0.5}
             />
-            <text x="35" y={59 + i * 18} textAnchor="end" fill={colors.textMuted} fontSize="10">{freq}</text>
+            <text x="35" y={59 + i * 18} textAnchor="end" fill={colors.textMuted} fontSize="11">{freq}</text>
           </g>
         ))}
 
@@ -634,7 +655,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
 
         {/* Governor response meter */}
         <rect x={isMobile ? 185 : 230} y="125" width={isMobile ? 125 : 150} height="40" fill={colors.bgCard} rx="8" stroke={colors.border} strokeWidth="1" />
-        <text x={isMobile ? 247 : 305} y="140" textAnchor="middle" fill={colors.textMuted} fontSize="10">GOVERNOR RESPONSE</text>
+        <text x={isMobile ? 247 : 305} y="140" textAnchor="middle" fill={colors.textMuted} fontSize="11">GOVERNOR RESPONSE</text>
         <rect x={isMobile ? 195 : 240} y="148" width={isMobile ? 105 : 130} height="10" fill={colors.bgSecondary} rx="4" />
         <rect x={isMobile ? 195 : 240} y="148" width={(isMobile ? 105 : 130) * governorResponse / 100} height="10" fill="#06b6d4" rx="4" />
 
@@ -715,6 +736,13 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
   };
 
   // Navigation bar component
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
   const renderNavBar = () => (
     <nav style={{
       position: 'fixed',
@@ -731,6 +759,20 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
       zIndex: 1000,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <button
+          onClick={prevPhase}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: colors.textSecondary,
+            cursor: phaseOrder.indexOf(phase) > 0 ? 'pointer' : 'default',
+            fontSize: '16px',
+            padding: '8px',
+            opacity: phaseOrder.indexOf(phase) > 0 ? 1 : 0.3,
+          }}
+        >
+          Back
+        </button>
         <span style={{ fontSize: '24px' }}>⚙️</span>
         <span style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>Generator Startup</span>
       </div>
@@ -856,7 +898,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
 
           {/* Static visualization for predict phase */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <GeneratorVisualization showControls={false} />
+            {renderGeneratorVisualization(false)}
           </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
@@ -950,14 +992,15 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '20px auto 0', overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '80px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Generator Startup Simulator
           </h2>
@@ -979,7 +1022,20 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
             </p>
           </div>
 
-          {/* Observation guidance */}
+          {/* Cause-effect and physics definitions */}
+          <div style={{
+            background: `${colors.bgCard}`,
+            border: `1px solid ${colors.border}`,
+            borderRadius: '8px',
+            padding: '12px 16px',
+            marginBottom: '16px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.accent }}>Observe:</strong> Watch the RPM increase and frequency stabilize. When you increase RPM, frequency increases proportionally because frequency is calculated as f = (Poles × RPM) / 120.
+            </p>
+          </div>
+
           <div style={{
             background: `${colors.bgCard}`,
             border: `1px solid ${colors.border}`,
@@ -988,8 +1044,8 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              <strong style={{ color: colors.accent }}>Observe:</strong> Watch the RPM increase and frequency stabilize. Notice how the generator must reach 1800 RPM for 60Hz output.
+            <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', margin: 0 }}>
+              Rotational inertia is defined as the resistance of a rotating body to changes in angular velocity. The formula f = (P × N) / 120 relates frequency to pole count and RPM.
             </p>
           </div>
 
@@ -1000,7 +1056,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <GeneratorVisualization />
+              {renderGeneratorVisualization()}
             </div>
 
             {/* Startup sequence description */}
@@ -1065,9 +1121,10 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
                 }}
                 style={{
                   width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
+                  height: '20px',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6',
                 }}
                 aria-label="RPM slider"
               />
@@ -1160,6 +1217,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
         </div>
 
         {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -1191,27 +1249,25 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
           </h2>
 
           {/* Reference user's prediction */}
-          {userPredictionText && (
-            <div style={{
-              background: wasCorrect ? `${colors.success}22` : `${colors.warning}22`,
-              border: `1px solid ${wasCorrect ? colors.success : colors.warning}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-            }}>
-              <p style={{ ...typo.small, color: wasCorrect ? colors.success : colors.warning, margin: 0, fontWeight: 600 }}>
-                {wasCorrect ? 'Your prediction was correct!' : 'Let\'s examine your prediction:'}
+          <div style={{
+            background: wasCorrect ? `${colors.success}22` : `${colors.warning}22`,
+            border: `1px solid ${wasCorrect ? colors.success : colors.warning}`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.small, color: wasCorrect ? colors.success : colors.warning, margin: 0, fontWeight: 600 }}>
+              {wasCorrect ? 'Your prediction was correct!' : 'As you observed in the experiment, let\'s examine your prediction:'}
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: '8px 0 0 0' }}>
+              {userPredictionText ? `You predicted: "${userPredictionText}"` : 'The correct answer is that heavy rotating parts must accelerate to full speed.'}
+            </p>
+            {!wasCorrect && (
+              <p style={{ ...typo.small, color: colors.textMuted, margin: '8px 0 0 0' }}>
+                The correct answer is that heavy rotating parts must accelerate to full speed. Let's explore why.
               </p>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: '8px 0 0 0' }}>
-                You predicted: "{userPredictionText}"
-              </p>
-              {!wasCorrect && (
-                <p style={{ ...typo.small, color: colors.textMuted, margin: '8px 0 0 0' }}>
-                  The correct answer is that heavy rotating parts must accelerate to full speed. Let's explore why.
-                </p>
-              )}
-            </div>
-          )}
+            )}
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1310,6 +1366,48 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
             The generator is running at perfect 60Hz. The UPS suddenly transfers 500kW of server load. What happens to frequency?
           </h2>
 
+          {/* Prediction SVG - no sliders */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <svg width={isMobile ? 340 : 480} height={isMobile ? 220 : 260} viewBox={`0 0 ${isMobile ? 340 : 480} ${isMobile ? 220 : 260}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <defs>
+                <filter id="twistGlow">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+                <linearGradient id="twistFreqGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                  <stop offset="0%" stopColor={colors.error} />
+                  <stop offset="100%" stopColor={colors.success} />
+                </linearGradient>
+              </defs>
+              <rect width={isMobile ? 340 : 480} height={isMobile ? 220 : 260} fill={colors.bgSecondary} rx="12" />
+              <text x={isMobile ? 170 : 240} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">Frequency vs Time During Load Step</text>
+              {/* Y-axis label */}
+              <text x="14" y={isMobile ? 120 : 140} textAnchor="middle" fill={colors.textSecondary} fontSize="12" transform={`rotate(-90, 14, ${isMobile ? 120 : 140})`}>Frequency (Hz)</text>
+              {/* X-axis label */}
+              <text x={isMobile ? 190 : 270} y={isMobile ? 210 : 250} textAnchor="middle" fill={colors.textSecondary} fontSize="12">Time (seconds)</text>
+              {/* Grid lines */}
+              <line x1="50" y1="40" x2={isMobile ? 320 : 460} y2="40" stroke="#4b5563" strokeDasharray="4 4" opacity="0.3" />
+              <line x1="50" y1="80" x2={isMobile ? 320 : 460} y2="80" stroke="#4b5563" strokeDasharray="4 4" opacity="0.3" />
+              <line x1="50" y1="120" x2={isMobile ? 320 : 460} y2="120" stroke="#4b5563" strokeDasharray="4 4" opacity="0.3" />
+              <line x1="50" y1="160" x2={isMobile ? 320 : 460} y2="160" stroke="#4b5563" strokeDasharray="4 4" opacity="0.3" />
+              {/* Axes */}
+              <line x1="50" y1="40" x2="50" y2={isMobile ? 190 : 230} stroke={colors.textSecondary} strokeWidth="2" />
+              <line x1="50" y1={isMobile ? 190 : 230} x2={isMobile ? 320 : 460} y2={isMobile ? 190 : 230} stroke={colors.textSecondary} strokeWidth="2" />
+              {/* Y-axis ticks */}
+              <text x="45" y="44" textAnchor="end" fill={colors.textSecondary} fontSize="11">60</text>
+              <text x="45" y="84" textAnchor="end" fill={colors.textSecondary} fontSize="11">59</text>
+              <text x="45" y="124" textAnchor="end" fill={colors.textSecondary} fontSize="11">58</text>
+              <text x="45" y="164" textAnchor="end" fill={colors.textSecondary} fontSize="11">57</text>
+              {/* Frequency curve showing droop pattern */}
+              <path d={`M 50 40 L 120 40 L 140 ${isMobile ? 150 : 160} L 200 ${isMobile ? 100 : 110} L 280 60 L ${isMobile ? 320 : 460} 50`} fill="none" stroke="#3b82f6" strokeWidth="3" />
+              {/* Question mark at droop point */}
+              <text x="150" y={isMobile ? 175 : 185} textAnchor="middle" fill={colors.warning} fontSize="24" fontWeight="700">?</text>
+              {/* Load event marker */}
+              <line x1="120" y1="35" x2="120" y2={isMobile ? 190 : 230} stroke={colors.warning} strokeWidth="2" strokeDasharray="6 3" />
+              <text x="125" y={isMobile ? 200 : 240} fill={colors.warning} fontSize="11">Load Applied</text>
+            </svg>
+          </div>
+
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -1403,7 +1501,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <FrequencyDroopVisualization />
+              {renderFrequencyDroopVisualization()}
             </div>
 
             {/* Load slider */}
@@ -1421,8 +1519,10 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
                 disabled={!isLoadApplied}
                 style={{
                   width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
+                  height: '20px',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6',
                   cursor: isLoadApplied ? 'pointer' : 'not-allowed',
                   opacity: isLoadApplied ? 1 : 0.5,
                 }}

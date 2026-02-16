@@ -170,7 +170,7 @@ const testQuestions = [
 // ─────────────────────────────────────────────────────────────────────────────
 const realWorldApps = [
   {
-    icon: '✈️',
+    icon: '(aircraft)',
     title: 'Aircraft Structural Integrity',
     short: 'Why airplane windows have rounded corners',
     tagline: 'The shape that saved aviation',
@@ -178,9 +178,9 @@ const realWorldApps = [
     connection: 'The stress concentration factor (Kt) you learned about explains why sharp corners are deadly: local stress = Kt x average stress, and sharp corners have Kt > 3.',
     howItWorks: 'Sharp corners create geometric discontinuities where stress flow lines crowd together. Rounded corners allow stress to flow smoothly. Aircraft undergo regular inspection for microscopic fatigue cracks before they can propagate.',
     stats: [
-      { value: '3-6x', label: 'Stress at corners', icon: '📐' },
-      { value: '30,000+', label: 'Flight cycles', icon: '✈️' },
-      { value: '$15B', label: 'MRO market', icon: '💰' }
+      { value: '3-6x', label: 'Stress at corners', icon: '(angle)' },
+      { value: '30,000+', label: 'Flight cycles', icon: '(plane)' },
+      { value: '$15B', label: 'MRO market', icon: '(cost)' }
     ],
     examples: ['Boeing 737 window design', 'Airbus fuselage stress analysis', 'De Havilland Comet investigations', 'Spacecraft hatch design'],
     companies: ['Boeing', 'Airbus', 'Lockheed Martin', 'SpaceX'],
@@ -188,7 +188,7 @@ const realWorldApps = [
     color: '#3B82F6'
   },
   {
-    icon: '🔧',
+    icon: '(wrench)',
     title: 'Stop-Drill Crack Arrest',
     short: 'Drilling holes to stop cracks',
     tagline: 'The counterintuitive repair that works',
@@ -196,9 +196,9 @@ const realWorldApps = [
     connection: 'You learned that crack tips have extreme stress concentration. A drilled hole has Kt of about 3, while a sharp crack tip approaches infinity. The hole converts a dangerous crack into a manageable stress raiser.',
     howItWorks: 'The sharp crack tip concentrates stress to fracture-inducing levels. Drilling a hole blunts the tip, distributing stress over a larger area. The crack effectively becomes a hole with finite, manageable stress concentration.',
     stats: [
-      { value: 'Infinity to 3', label: 'Kt reduction', icon: '📉' },
-      { value: '80%', label: 'Life extension', icon: '⏰' },
-      { value: '$500M', label: 'Annual savings', icon: '💰' }
+      { value: 'Infinity to 3', label: 'Kt reduction', icon: '(down)' },
+      { value: '80%', label: 'Life extension', icon: '(clock)' },
+      { value: '$500M', label: 'Annual savings', icon: '(cost)' }
     ],
     examples: ['Aircraft fuselage repairs', 'Ship hull maintenance', 'Bridge girder cracks', 'Pressure vessel repairs'],
     companies: ['Textron Aviation', 'General Dynamics', 'Newport News Shipbuilding', 'AECOM'],
@@ -206,7 +206,7 @@ const realWorldApps = [
     color: '#EF4444'
   },
   {
-    icon: '💎',
+    icon: '(diamond)',
     title: 'Diamond Cutting & Scoring',
     short: 'Using stress concentration to cut the hardest material',
     tagline: 'Controlled fracture is precise cutting',
@@ -214,9 +214,9 @@ const realWorldApps = [
     connection: 'The scorer creates a V-notch - the highest stress concentration shape you studied. When bent, all fracture energy focuses at this notch, making the material break exactly where intended.',
     howItWorks: 'A hard point (diamond tip) creates a shallow scratch with a sharp V-bottom. When force is applied, stress concentrates at the scratch tip (Kt approaches infinity). The material fractures along this pre-determined path.',
     stats: [
-      { value: '10 GPa', label: 'Diamond hardness', icon: '💎' },
-      { value: '< 1 mm', label: 'Score depth', icon: '📏' },
-      { value: '$85B', label: 'Diamond market', icon: '💰' }
+      { value: '10 GPa', label: 'Diamond hardness', icon: '(gem)' },
+      { value: '< 1 mm', label: 'Score depth', icon: '(ruler)' },
+      { value: '$85B', label: 'Diamond market', icon: '(cost)' }
     ],
     examples: ['Diamond cleaving', 'Glass cutting', 'Silicon wafer dicing', 'Ceramic tile cutting'],
     companies: ['De Beers', 'Rio Tinto', 'Corning', 'Schott'],
@@ -224,7 +224,7 @@ const realWorldApps = [
     color: '#8B5CF6'
   },
   {
-    icon: '🏗️',
+    icon: '(structure)',
     title: 'Fatigue-Resistant Design',
     short: 'Engineering structures to survive billions of cycles',
     tagline: 'Design for the millionth load, not the first',
@@ -232,9 +232,9 @@ const realWorldApps = [
     connection: 'Fatigue cracks initiate at stress concentrations you studied. Each load cycle grows the crack slightly until it reaches critical size and causes sudden catastrophic failure.',
     howItWorks: 'S-N curves show stress vs. cycles to failure. Below the fatigue limit, infinite life is possible. Above it, life is finite. Designs minimize stress concentrations, use shot peening to compress surfaces, and specify inspection intervals.',
     stats: [
-      { value: '10^7', label: 'Cycles for infinite life', icon: '🔄' },
-      { value: '50%', label: 'Of failures', icon: '⚠️' },
-      { value: '$100B', label: 'Annual costs', icon: '💰' }
+      { value: '10^7', label: 'Cycles for infinite life', icon: '(cycle)' },
+      { value: '50%', label: 'Of failures', icon: '(warn)' },
+      { value: '$100B', label: 'Annual costs', icon: '(cost)' }
     ],
     examples: ['Jet engine turbine blades', 'Suspension bridge cables', 'Automobile crankshafts', 'Railroad wheel axles'],
     companies: ['GE Aviation', 'Rolls-Royce', 'ANSYS', 'Siemens PLM'],
@@ -242,6 +242,15 @@ const realWorldApps = [
     color: '#22C55E'
   }
 ];
+
+// Slider style constant
+const sliderStyle: React.CSSProperties = {
+  width: '100%',
+  height: '20px',
+  touchAction: 'pan-y',
+  WebkitAppearance: 'none',
+  accentColor: '#3b82f6',
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
@@ -350,15 +359,15 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
     bgCard: '#1a1a24',
-    accent: '#EF4444', // Red for fracture theme
+    accent: '#EF4444',
     accentGlow: 'rgba(239, 68, 68, 0.3)',
-    secondary: '#F97316', // Orange
+    secondary: '#F97316',
     success: '#10B981',
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
     textSecondary: '#e2e8f0',
-    textMuted: '#e2e8f0',
+    textMuted: 'rgba(148,163,184,0.7)',
     border: '#2a2a3a',
   };
 
@@ -409,7 +418,14 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
     }
   }, [phase, goToPhase, phaseOrder]);
 
-  // Progress bar component
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  // Progress bar render function
   const renderProgressBar = () => (
     <div style={{
       position: 'fixed',
@@ -429,7 +445,7 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
     </div>
   );
 
-  // Navigation dots
+  // Navigation dots render function
   const renderNavDots = () => (
     <div style={{
       display: 'flex',
@@ -456,6 +472,29 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
     </div>
   );
 
+  // Back button render function
+  const renderBackButton = () => {
+    if (phase === 'hook') return null;
+    return (
+      <button
+        onClick={prevPhase}
+        style={{
+          background: 'transparent',
+          border: `1px solid ${colors.border}`,
+          color: colors.textSecondary,
+          padding: '8px 16px',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          fontSize: '14px',
+          marginBottom: '16px',
+          transition: 'all 0.2s ease',
+        }}
+      >
+        Back
+      </button>
+    );
+  };
+
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, ${colors.secondary})`,
@@ -471,16 +510,37 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
     minHeight: '44px',
   };
 
-  // Stress Concentration Visualization SVG
-  const StressVisualization = () => {
-    const width = isMobile ? 340 : 480;
-    const height = isMobile ? 260 : 320;
+  // Layout wrapper render function for consistent scroll structure
+  const renderLayout = (children: React.ReactNode) => (
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      background: colors.bgPrimary,
+      overflow: 'hidden',
+    }}>
+      {renderProgressBar()}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        paddingTop: '48px',
+        paddingBottom: '100px',
+      }}>
+        {children}
+      </div>
+    </div>
+  );
+
+  // Stress Concentration Visualization SVG - render function (not component)
+  const renderStressVisualization = () => {
+    const width = 480;
+    const height = 320;
     const kt = getStressConcentration(notchType);
     const localStress = Math.min(appliedStress * kt, 250);
     const stretch = appliedStress / 15;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
         <defs>
           <linearGradient id="steelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#6b7280" />
@@ -512,11 +572,21 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
           </filter>
         </defs>
 
-        {/* Grid pattern */}
-        <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-          <rect width="20" height="20" fill="none" stroke={colors.border} strokeWidth="0.5" strokeOpacity="0.3" />
-        </pattern>
-        <rect width={width} height={height} fill="url(#grid)" />
+        {/* Grid lines with dashed stroke for visual reference */}
+        {[80, 160, 240, 320, 400].map(x => (
+          <line key={`gv-${x}`} x1={x} y1="30" x2={x} y2={height - 30} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+        ))}
+        {[60, 120, 180, 240].map(y => (
+          <line key={`gh-${y}`} x1="30" y1={y} x2={width - 30} y2={y} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+        ))}
+
+        {/* Axes */}
+        <line x1="30" y1={height - 30} x2={width - 30} y2={height - 30} stroke="#9CA3AF" strokeWidth="1.5" />
+        <line x1="30" y1="30" x2="30" y2={height - 30} stroke="#9CA3AF" strokeWidth="1.5" />
+
+        {/* Axis labels */}
+        <text x={width / 2} y={height - 12} textAnchor="middle" fill={colors.textMuted} fontSize="12">Position (mm)</text>
+        <text x="14" y={height / 2} textAnchor="middle" fill={colors.textMuted} fontSize="12" transform={`rotate(-90, 14, ${height / 2})`}>Stress Intensity</text>
 
         {/* Stress arrows - top */}
         {appliedStress > 5 && (
@@ -588,6 +658,26 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
             </g>
           )}
 
+          {/* Stress distribution curve (path) */}
+          <path
+            d={`M 0 ${(height - 100) / 2 - 40} L 30 ${(height - 100) / 2 - 35} L 60 ${(height - 100) / 2 - 30} L 80 ${(height - 100) / 2 - localStress / 5} L 100 ${(height - 100) / 2 - localStress / 3} L 120 ${(height - 100) / 2 - localStress / 5} L 140 ${(height - 100) / 2 - 30} L 170 ${(height - 100) / 2 - 35} L 200 ${(height - 100) / 2 - 40}`}
+            fill="none"
+            stroke={colors.accent}
+            strokeWidth="2"
+            strokeDasharray="6 3"
+          />
+
+          {/* Interactive point on stress curve */}
+          <circle
+            cx={100}
+            cy={(height - 100) / 2 - localStress / 3}
+            r={8}
+            fill={colors.accent}
+            filter="url(#glow)"
+            stroke="#fff"
+            strokeWidth={2}
+          />
+
           {/* Fracture line */}
           {isFractured && (
             <g transform={`translate(0, ${(height - 100) / 2})`} filter="url(#glow)">
@@ -613,7 +703,7 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
           <text x="42" y="42" textAnchor="middle" fill={colors.textPrimary} fontSize="16" fontWeight="bold">{appliedStress} MPa</text>
           <text x="42" y="60" textAnchor="middle" fill={colors.textMuted} fontSize="11">Kt</text>
           <text x="42" y="77" textAnchor="middle" fill={colors.warning} fontSize="16" fontWeight="bold">x{kt}</text>
-          <text x="42" y="94" textAnchor="middle" fill={colors.accent} fontSize="10">Local: {localStress.toFixed(0)}</text>
+          <text x="42" y="94" textAnchor="middle" fill={colors.accent} fontSize="11">Local: {localStress.toFixed(0)}</text>
         </g>
 
         {/* Fractured label */}
@@ -624,7 +714,7 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
         )}
 
         {/* Notch type label */}
-        <text x={width / 2} y={height - 15} textAnchor="middle" fill={colors.textMuted} fontSize="12">
+        <text x={width / 2} y={height - 35} textAnchor="middle" fill={colors.textMuted} fontSize="12">
           {notchType === 'none' ? 'Solid material' :
             notchType === 'round' ? 'Circular hole (Kt = 2-3)' :
               notchType === 'vsharp' ? 'Sharp V-notch (Kt = 5+)' :
@@ -634,14 +724,14 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
     );
   };
 
-  // Crack Stop Visualization SVG
-  const CrackStopVisualization = () => {
-    const width = isMobile ? 340 : 480;
-    const height = isMobile ? 220 : 260;
+  // Crack Stop Visualization SVG - render function (not component)
+  const renderCrackStopVisualization = () => {
+    const width = 480;
+    const height = 260;
     const crackTipX = 80 + crackLength;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
         <defs>
           <linearGradient id="plateGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#64748b" />
@@ -659,11 +749,13 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
           </radialGradient>
         </defs>
 
-        {/* Grid */}
-        <pattern id="crackGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-          <rect width="20" height="20" fill="none" stroke={colors.border} strokeWidth="0.5" strokeOpacity="0.3" />
-        </pattern>
-        <rect width={width} height={height} fill="url(#crackGrid)" />
+        {/* Grid lines */}
+        {[80, 160, 240, 320, 400].map(x => (
+          <line key={`cv-${x}`} x1={x} y1="20" x2={x} y2={height - 20} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+        ))}
+        {[50, 100, 150, 200].map(y => (
+          <line key={`ch-${y}`} x1="30" y1={y} x2={width - 30} y2={y} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+        ))}
 
         {/* Stress arrows */}
         {twistStress > 5 && (
@@ -703,6 +795,17 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
           </g>
         )}
 
+        {/* Interactive point at crack tip */}
+        <circle
+          cx={crackTipX}
+          cy={height / 2}
+          r={8}
+          fill={colors.accent}
+          filter="url(#glow)"
+          stroke="#fff"
+          strokeWidth={2}
+        />
+
         {/* Stop hole */}
         {hasCrackStopHole && (
           <g transform={`translate(${crackTipX + 18}, ${height / 2})`}>
@@ -710,6 +813,15 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
             <circle r="14" fill={colors.bgPrimary} stroke={colors.success} strokeWidth="2" />
           </g>
         )}
+
+        {/* Stress distribution path */}
+        <path
+          d={`M 50 ${height / 2 - 40} L 100 ${height / 2 - 35} L ${crackTipX - 20} ${height / 2 - 50} L ${crackTipX} ${height / 2 - 80} L ${crackTipX + 20} ${height / 2 - 50} L ${width - 100} ${height / 2 - 35} L ${width - 50} ${height / 2 - 40}`}
+          fill="none"
+          stroke={colors.warning}
+          strokeWidth="2"
+          strokeDasharray="6 3"
+        />
 
         {/* Info panel */}
         <g transform={`translate(${width - 95}, 60)`}>
@@ -719,6 +831,9 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
             {hasCrackStopHole ? '~3' : '~10+'}
           </text>
         </g>
+
+        {/* Axis labels */}
+        <text x={width / 2} y={height - 5} textAnchor="middle" fill={colors.textMuted} fontSize="12">Distance along crack (mm)</text>
 
         {/* Status messages */}
         {crackLength >= 180 && (
@@ -738,9 +853,58 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
             Stop hole
           </text>
         )}
-        <text x={width / 2} y={height - 12} textAnchor="middle" fill={colors.textMuted} fontSize="11">
+        <text x={width / 2} y={height - 18} textAnchor="middle" fill={colors.textMuted} fontSize="11">
           {hasCrackStopHole ? 'Hole converts sharp crack to rounded edge - lower Kt' : 'Sharp crack tip has extreme stress concentration'}
         </text>
+      </svg>
+    );
+  };
+
+  // Twist predict SVG (no sliders) - render function
+  const renderTwistPredictSVG = () => {
+    const width = 400;
+    const height = 200;
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
+        <defs>
+          <filter id="glowTP">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <linearGradient id="tpPlate" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#64748b" />
+            <stop offset="100%" stopColor="#475569" />
+          </linearGradient>
+        </defs>
+        {/* Grid lines */}
+        {[80, 160, 240, 320].map(x => (
+          <line key={`tp-v-${x}`} x1={x} y1="20" x2={x} y2={height - 20} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+        ))}
+        {[50, 100, 150].map(y => (
+          <line key={`tp-h-${y}`} x1="20" y1={y} x2={width - 20} y2={y} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+        ))}
+        {/* Plate with crack */}
+        <rect x="40" y="50" width="140" height="100" rx="4" fill="url(#tpPlate)" stroke="#6b7280" strokeWidth="2" />
+        <line x1="38" y1="100" x2="110" y2="100" stroke={colors.bgPrimary} strokeWidth="4" strokeLinecap="round" />
+        <text x="90" y="165" textAnchor="middle" fill={colors.textMuted} fontSize="12">Sharp crack tip</text>
+        {/* Arrow */}
+        <text x={200} y="105" textAnchor="middle" fill={colors.success} fontSize="24">+</text>
+        {/* Plate with crack + stop hole */}
+        <rect x="220" y="50" width="140" height="100" rx="4" fill="url(#tpPlate)" stroke="#6b7280" strokeWidth="2" />
+        <line x1="218" y1="100" x2="290" y2="100" stroke={colors.bgPrimary} strokeWidth="4" strokeLinecap="round" />
+        <circle cx="298" cy="100" r="10" fill={colors.bgPrimary} stroke={colors.success} strokeWidth="2" />
+        <circle cx="298" cy="100" r={8} fill={colors.success} filter="url(#glowTP)" stroke="#fff" strokeWidth={2} opacity="0.5" />
+        <text x="290" y="165" textAnchor="middle" fill={colors.success} fontSize="12">With stop hole</text>
+        {/* Title */}
+        <text x={width / 2} y="30" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">Crack Arrest Technique</text>
+        {/* Stress intensity axis label */}
+        <text x={width / 2} y={height - 5} textAnchor="middle" fill={colors.textMuted} fontSize="11">Stress Concentration Comparison</text>
+        {/* Path for visual complexity */}
+        <path d={`M 40 50 L 180 50 L 180 150 L 40 150 Z`} fill="none" stroke="#6b7280" strokeWidth="0.5" opacity="0.3" />
+        <path d={`M 220 50 L 360 50 L 360 150 L 220 150 Z`} fill="none" stroke="#6b7280" strokeWidth="0.5" opacity="0.3" />
       </svg>
     );
   };
@@ -751,25 +915,22 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
 
   // HOOK PHASE
   if (phase === 'hook') {
-    return (
+    return renderLayout(
       <div style={{
-        minHeight: '100vh',
-        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
         textAlign: 'center',
+        minHeight: '80vh',
       }}>
-        {renderProgressBar()}
-
         <div style={{
           fontSize: '64px',
           marginBottom: '24px',
           animation: 'pulse 2s infinite',
         }}>
-          ✈️💥
+          (aircraft)(fracture)
         </div>
         <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
@@ -798,7 +959,7 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
             "Stress flows through material like water through a pipe. At sharp corners, it crowds together - amplifying local stress by 3x, 5x, even 10x the average. That's where fractures begin."
           </p>
           <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            — Fracture Mechanics Engineering
+            -- Fracture Mechanics Engineering
           </p>
         </div>
 
@@ -822,101 +983,95 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
       { id: 'c', text: 'Both fail at the same load - any defect equally weakens the material' },
     ];
 
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
+    return renderLayout(
+      <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
+        {renderBackButton()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.accent}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.accent}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              Make Your Prediction
-            </p>
-          </div>
-
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            You have two identical metal plates under the same tensile load. One has a circular hole, one has a sharp V-notch. Which breaks first?
-          </h2>
-
-          {/* Simple diagram */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <svg width="320" height="160" viewBox="0 0 320 160" style={{ maxWidth: '100%' }}>
-              {/* Circular hole plate */}
-              <rect x="20" y="20" width="80" height="120" rx="4" fill="#6b7280" stroke="#9ca3af" strokeWidth="2" />
-              <circle cx="60" cy="80" r="14" fill={colors.bgCard} stroke={colors.border} strokeWidth="2" />
-              <text x="60" y="155" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Circular Hole</text>
-
-              {/* VS text */}
-              <text x="160" y="85" textAnchor="middle" fill={colors.textMuted} fontSize="20">vs</text>
-
-              {/* V-notch plate */}
-              <rect x="220" y="20" width="80" height="120" rx="4" fill="#6b7280" stroke="#9ca3af" strokeWidth="2" />
-              <polygon points="260,60 245,80 260,100 275,80" fill={colors.bgCard} stroke={colors.border} strokeWidth="2" />
-              <text x="260" y="155" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Sharp V-Notch</text>
-            </svg>
-          </div>
-
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setPrediction(opt.id); }}
-                style={{
-                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test My Prediction
-            </button>
-          )}
+        <div style={{
+          background: `${colors.accent}22`,
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '24px',
+          border: `1px solid ${colors.accent}44`,
+        }}>
+          <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+            Make Your Prediction
+          </p>
         </div>
+
+        <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+          You have two identical metal plates under the same tensile load. One has a circular hole, one has a sharp V-notch. Which breaks first?
+        </h2>
+
+        {/* Simple diagram */}
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '24px',
+          textAlign: 'center',
+        }}>
+          <svg width="320" height="160" viewBox="0 0 320 160" style={{ maxWidth: '100%' }}>
+            {/* Circular hole plate */}
+            <rect x="20" y="20" width="80" height="120" rx="4" fill="#6b7280" stroke="#9ca3af" strokeWidth="2" />
+            <circle cx="60" cy="80" r="14" fill={colors.bgCard} stroke={colors.border} strokeWidth="2" />
+            <text x="60" y="155" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Circular Hole</text>
+
+            {/* VS text */}
+            <text x="160" y="85" textAnchor="middle" fill={colors.textMuted} fontSize="20">vs</text>
+
+            {/* V-notch plate */}
+            <rect x="220" y="20" width="80" height="120" rx="4" fill="#6b7280" stroke="#9ca3af" strokeWidth="2" />
+            <polygon points="260,60 245,80 260,100 275,80" fill={colors.bgCard} stroke={colors.border} strokeWidth="2" />
+            <text x="260" y="155" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Sharp V-Notch</text>
+          </svg>
+        </div>
+
+        {/* Options */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+          {options.map(opt => (
+            <button
+              key={opt.id}
+              onClick={() => { playSound('click'); setPrediction(opt.id); }}
+              style={{
+                background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                borderRadius: '12px',
+                padding: '16px 20px',
+                textAlign: 'left',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+            >
+              <span style={{
+                display: 'inline-block',
+                width: '28px',
+                height: '28px',
+                borderRadius: '50%',
+                background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                color: prediction === opt.id ? 'white' : colors.textSecondary,
+                textAlign: 'center',
+                lineHeight: '28px',
+                marginRight: '12px',
+                fontWeight: 700,
+              }}>
+                {opt.id.toUpperCase()}
+              </span>
+              <span style={{ color: colors.textPrimary, ...typo.body }}>
+                {opt.text}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {prediction && (
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={primaryButtonStyle}
+          >
+            Test My Prediction
+          </button>
+        )}
 
         {renderNavDots()}
       </div>
@@ -925,153 +1080,147 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
 
   // PLAY PHASE - Interactive Stress Concentration Simulator
   if (phase === 'play') {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
+    return renderLayout(
+      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 24px' }}>
+        {renderBackButton()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Stress Concentration Simulator
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Change the defect type and applied stress to see how geometry affects fracture behavior.
-          </p>
+        <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+          Stress Concentration Simulator
+        </h2>
+        <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          Observe how geometry affects fracture behavior. Watch what happens when you increase stress on different defect types.
+        </p>
 
-          {/* Main visualization */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <StressVisualization />
+        {/* Main visualization */}
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '24px',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            {renderStressVisualization()}
+          </div>
+
+          {/* Defect type selector */}
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
+              Defect Type:
             </div>
-
-            {/* Defect type selector */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
-                Defect Type:
-              </div>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                {[
-                  { id: 'none', label: 'None' },
-                  { id: 'round', label: 'Round Hole' },
-                  { id: 'vsharp', label: 'V-Notch' },
-                  { id: 'crack', label: 'Crack' }
-                ].map(opt => (
-                  <button
-                    key={opt.id}
-                    onClick={() => {
-                      playSound('click');
-                      setNotchType(opt.id as typeof notchType);
-                      setAppliedStress(30);
-                      setIsFractured(false);
-                    }}
-                    style={{
-                      padding: '8px 16px',
-                      borderRadius: '8px',
-                      border: `2px solid ${notchType === opt.id ? colors.accent : colors.border}`,
-                      background: notchType === opt.id ? `${colors.accent}22` : 'transparent',
-                      color: notchType === opt.id ? colors.accent : colors.textSecondary,
-                      cursor: 'pointer',
-                      fontWeight: 600,
-                      transition: 'all 0.2s',
-                    }}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Stress slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Applied Stress</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{appliedStress} MPa</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={appliedStress}
-                onChange={(e) => setAppliedStress(parseInt(e.target.value))}
-                disabled={isFractured}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.accent} ${appliedStress}%, ${colors.border} ${appliedStress}%)`,
-                  cursor: isFractured ? 'not-allowed' : 'pointer',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>0</span>
-                <span style={{ ...typo.small, color: colors.warning }}>Fracture threshold: {getFractureStress(notchType).toFixed(0)} MPa</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>100</span>
-              </div>
-            </div>
-
-            {/* Reset button */}
-            {isFractured && (
-              <button
-                onClick={() => {
-                  playSound('click');
-                  setIsFractured(false);
-                  setAppliedStress(30);
-                }}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                  marginBottom: '16px',
-                }}
-              >
-                Reset Experiment
-              </button>
-            )}
-
-            {/* Info box */}
-            <div style={{
-              background: `${colors.accent}11`,
-              border: `1px solid ${colors.accent}33`,
-              borderRadius: '12px',
-              padding: '16px',
-            }}>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                <strong style={{ color: colors.accent }}>Stress Concentration Factor (Kt):</strong> The ratio of maximum local stress to average stress. Sharper features have higher Kt values and fracture at lower applied loads!
-              </p>
-            </div>
-
-            {/* Real-world relevance */}
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '12px',
-              padding: '16px',
-              marginTop: '16px',
-            }}>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                <strong style={{ color: colors.success }}>Real-World Relevance:</strong> This principle is why airplane windows have rounded corners, why bridges use curved transitions at joints, and why pressure vessels avoid sharp internal edges. Engineers design to minimize stress concentration everywhere.
-              </p>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {[
+                { id: 'none', label: 'None' },
+                { id: 'round', label: 'Round Hole' },
+                { id: 'vsharp', label: 'V-Notch' },
+                { id: 'crack', label: 'Crack' }
+              ].map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    playSound('click');
+                    setNotchType(opt.id as typeof notchType);
+                    setAppliedStress(30);
+                    setIsFractured(false);
+                  }}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    border: `2px solid ${notchType === opt.id ? colors.accent : colors.border}`,
+                    background: notchType === opt.id ? `${colors.accent}22` : 'transparent',
+                    color: notchType === opt.id ? colors.accent : colors.textSecondary,
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Physics
-          </button>
+          {/* Stress slider */}
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>Applied Stress</span>
+              <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{appliedStress} MPa</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={appliedStress}
+              onChange={(e) => setAppliedStress(parseInt(e.target.value))}
+              disabled={isFractured}
+              style={{
+                ...sliderStyle,
+                cursor: isFractured ? 'not-allowed' : 'pointer',
+              }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+              <span style={{ ...typo.small, color: colors.textMuted }}>0</span>
+              <span style={{ ...typo.small, color: colors.warning }}>Fracture threshold: {getFractureStress(notchType).toFixed(0)} MPa</span>
+              <span style={{ ...typo.small, color: colors.textMuted }}>100</span>
+            </div>
+          </div>
+
+          {/* Reset button */}
+          {isFractured && (
+            <button
+              onClick={() => {
+                playSound('click');
+                setIsFractured(false);
+                setAppliedStress(30);
+              }}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '8px',
+                border: `1px solid ${colors.border}`,
+                background: 'transparent',
+                color: colors.textSecondary,
+                cursor: 'pointer',
+                marginBottom: '16px',
+              }}
+            >
+              Reset Experiment
+            </button>
+          )}
+
+          {/* Formula */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+          }}>
+            <p style={{ ...typo.body, color: colors.textPrimary, margin: 0, textAlign: 'center', fontWeight: 600 }}>
+              Local Stress = Kt × Applied Stress
+            </p>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: '8px 0 0', textAlign: 'center' }}>
+              <strong style={{ color: colors.accent }}>Stress Concentration Factor (Kt):</strong> The ratio of maximum local stress to average stress. Sharper features have higher Kt values and fracture at lower applied loads!
+            </p>
+          </div>
+
+          {/* Real-world relevance */}
+          <div style={{
+            background: colors.bgSecondary,
+            borderRadius: '12px',
+            padding: '16px',
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.success }}>Try adjusting the slider:</strong> Notice how when you increase stress with a V-notch or crack, fracture occurs at much lower loads because the local stress is multiplied by Kt. This principle is why airplane windows have rounded corners and why bridges use curved transitions at joints.
+            </p>
+          </div>
         </div>
+
+        <button
+          onClick={() => { playSound('success'); nextPhase(); }}
+          style={{ ...primaryButtonStyle, width: '100%' }}
+        >
+          Understand the Physics
+        </button>
 
         {renderNavDots()}
       </div>
@@ -1082,127 +1231,121 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
   if (phase === 'review') {
     const wasCorrect = prediction === 'a';
 
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
+    return renderLayout(
+      <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
+        {renderBackButton()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          {/* Prediction result */}
-          <div style={{
-            background: wasCorrect ? `${colors.success}22` : `${colors.warning}22`,
-            border: `1px solid ${wasCorrect ? colors.success : colors.warning}44`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <p style={{ ...typo.body, color: wasCorrect ? colors.success : colors.warning, margin: 0 }}>
-              {wasCorrect ? 'Correct! Sharp corners create the highest stress concentration.' : 'The V-notch actually fails first due to higher stress concentration.'}
-            </p>
-          </div>
+        {/* Prediction result */}
+        <div style={{
+          background: wasCorrect ? `${colors.success}22` : `${colors.warning}22`,
+          border: `1px solid ${wasCorrect ? colors.success : colors.warning}44`,
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '24px',
+          textAlign: 'center',
+        }}>
+          <p style={{ ...typo.body, color: wasCorrect ? colors.success : colors.warning, margin: 0 }}>
+            {wasCorrect ? 'Your prediction was correct! Sharp corners create the highest stress concentration.' : 'The V-notch actually fails first due to higher stress concentration. As you observed in the experiment, sharper features have higher Kt.'}
+          </p>
+        </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Why Sharp Corners Fail
-          </h2>
+        <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+          Why Sharp Corners Fail
+        </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
-                <div style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  background: colors.accent,
-                  color: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 700,
-                  flexShrink: 0,
-                }}>1</div>
-                <div>
-                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Stress Flow Lines</h3>
-                  <p style={{ ...typo.body, color: colors.textSecondary, margin: '4px 0 0' }}>
-                    Stress "flows" through material like water. It must go around obstacles and crowd together at sharp features.
-                  </p>
-                </div>
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '24px',
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                background: colors.accent,
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 700,
+                flexShrink: 0,
+              }}>1</div>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Stress Flow Lines</h3>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: '4px 0 0' }}>
+                  Stress "flows" through material like water. It must go around obstacles and crowd together at sharp features.
+                </p>
               </div>
+            </div>
 
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
-                <div style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  background: colors.secondary,
-                  color: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 700,
-                  flexShrink: 0,
-                }}>2</div>
-                <div>
-                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Concentration at Corners</h3>
-                  <p style={{ ...typo.body, color: colors.textSecondary, margin: '4px 0 0' }}>
-                    Sharp corners force stress into a tiny area. Local stress can be 3-10x the average applied stress.
-                  </p>
-                </div>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                background: colors.secondary,
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 700,
+                flexShrink: 0,
+              }}>2</div>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Concentration at Corners</h3>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: '4px 0 0' }}>
+                  Sharp corners force stress into a tiny area. Local stress can be 3-10x the average applied stress.
+                </p>
               </div>
+            </div>
 
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
-                <div style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  background: colors.warning,
-                  color: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 700,
-                  flexShrink: 0,
-                }}>3</div>
-                <div>
-                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Crack Initiation</h3>
-                  <p style={{ ...typo.body, color: colors.textSecondary, margin: '4px 0 0' }}>
-                    When local stress exceeds material strength, cracks begin. Once started, they propagate rapidly.
-                  </p>
-                </div>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                background: colors.warning,
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 700,
+                flexShrink: 0,
+              }}>3</div>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Crack Initiation</h3>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: '4px 0 0' }}>
+                  When local stress exceeds material strength, cracks begin. Once started, they propagate rapidly.
+                </p>
               </div>
             </div>
           </div>
-
-          <div style={{
-            background: `${colors.success}11`,
-            border: `1px solid ${colors.success}33`,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '8px' }}>
-              Engineering Rule
-            </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              Always use fillets (rounded transitions) at corners. A fillet radius of just 1-2mm can reduce stress concentration by 50%!
-            </p>
-          </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            But Wait... A Twist!
-          </button>
         </div>
+
+        <div style={{
+          background: `${colors.success}11`,
+          border: `1px solid ${colors.success}33`,
+          borderRadius: '12px',
+          padding: '20px',
+          marginBottom: '24px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '8px' }}>
+            Engineering Rule
+          </h3>
+          <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+            Always use fillets (rounded transitions) at corners. A fillet radius of just 1-2mm can reduce stress concentration by 50%!
+          </p>
+        </div>
+
+        <button
+          onClick={() => { playSound('success'); nextPhase(); }}
+          style={{ ...primaryButtonStyle, width: '100%' }}
+        >
+          But Wait... A Twist!
+        </button>
 
         {renderNavDots()}
       </div>
@@ -1217,133 +1360,79 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
       { id: 'c', text: 'It makes welding the crack easier for permanent repair' },
     ];
 
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
+    return renderLayout(
+      <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
+        {renderBackButton()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.secondary}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.secondary}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.secondary, margin: 0 }}>
-              The Twist: Counterintuitive Repair
-            </p>
-          </div>
-
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            A ship hull develops a crack. Surprisingly, the repair involves <span style={{ color: colors.success }}>drilling a HOLE</span> at the crack tip! Why would making the defect bigger help?
-          </h2>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
-              <div>
-                <div style={{
-                  width: '120px',
-                  height: '60px',
-                  background: '#475569',
-                  borderRadius: '4px',
-                  position: 'relative',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}>
-                  <div style={{
-                    width: '40px',
-                    height: '3px',
-                    background: colors.bgCard,
-                    marginLeft: '-5px',
-                  }} />
-                </div>
-                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>Crack with sharp tip</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.success }}>+</div>
-              <div>
-                <div style={{
-                  width: '120px',
-                  height: '60px',
-                  background: '#475569',
-                  borderRadius: '4px',
-                  position: 'relative',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}>
-                  <div style={{
-                    width: '40px',
-                    height: '3px',
-                    background: colors.bgCard,
-                    marginLeft: '-5px',
-                  }} />
-                  <div style={{
-                    width: '16px',
-                    height: '16px',
-                    borderRadius: '50%',
-                    background: colors.bgCard,
-                    border: `2px solid ${colors.success}`,
-                    marginLeft: '-8px',
-                  }} />
-                </div>
-                <p style={{ ...typo.small, color: colors.success, marginTop: '8px' }}>Crack with stop-drill hole</p>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
-                style={{
-                  background: twistPrediction === opt.id ? `${colors.secondary}22` : colors.bgCard,
-                  border: `2px solid ${twistPrediction === opt.id ? colors.secondary : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: twistPrediction === opt.id ? colors.secondary : colors.bgSecondary,
-                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {twistPrediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test the Crack-Stop Hole
-            </button>
-          )}
+        <div style={{
+          background: `${colors.secondary}22`,
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '24px',
+          border: `1px solid ${colors.secondary}44`,
+        }}>
+          <p style={{ ...typo.small, color: colors.secondary, margin: 0 }}>
+            The Twist: Counterintuitive Repair
+          </p>
         </div>
+
+        <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+          A ship hull develops a crack. Surprisingly, the repair involves <span style={{ color: colors.success }}>drilling a HOLE</span> at the crack tip! Why would making the defect bigger help?
+        </h2>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '24px',
+          textAlign: 'center',
+        }}>
+          {renderTwistPredictSVG()}
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+          {options.map(opt => (
+            <button
+              key={opt.id}
+              onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+              style={{
+                background: twistPrediction === opt.id ? `${colors.secondary}22` : colors.bgCard,
+                border: `2px solid ${twistPrediction === opt.id ? colors.secondary : colors.border}`,
+                borderRadius: '12px',
+                padding: '16px 20px',
+                textAlign: 'left',
+                cursor: 'pointer',
+              }}
+            >
+              <span style={{
+                display: 'inline-block',
+                width: '28px',
+                height: '28px',
+                borderRadius: '50%',
+                background: twistPrediction === opt.id ? colors.secondary : colors.bgSecondary,
+                color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                textAlign: 'center',
+                lineHeight: '28px',
+                marginRight: '12px',
+                fontWeight: 700,
+              }}>
+                {opt.id.toUpperCase()}
+              </span>
+              <span style={{ color: colors.textPrimary, ...typo.body }}>
+                {opt.text}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {twistPrediction && (
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={primaryButtonStyle}
+          >
+            Test the Crack-Stop Hole
+          </button>
+        )}
 
         {renderNavDots()}
       </div>
@@ -1352,112 +1441,106 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
 
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
+    return renderLayout(
+      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 24px' }}>
+        {renderBackButton()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Crack-Stop Hole Simulation
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            See how a drilled hole can arrest crack propagation
-          </p>
+        <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+          Crack-Stop Hole Simulation
+        </h2>
+        <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          Observe how a drilled hole can arrest crack propagation. Try increasing stress with and without the stop hole.
+        </p>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <CrackStopVisualization />
-            </div>
-
-            {/* Controls */}
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '20px', flexWrap: 'wrap' }}>
-              <button
-                onClick={() => {
-                  playSound('click');
-                  setHasCrackStopHole(!hasCrackStopHole);
-                  setCrackLength(20);
-                }}
-                style={{
-                  padding: '10px 20px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: hasCrackStopHole ? colors.success : colors.bgSecondary,
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                }}
-              >
-                {hasCrackStopHole ? 'Stop Hole Added' : 'Add Stop Hole'}
-              </button>
-              <button
-                onClick={() => {
-                  playSound('click');
-                  setCrackLength(20);
-                  setTwistStress(20);
-                }}
-                style={{
-                  padding: '10px 20px',
-                  borderRadius: '8px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                }}
-              >
-                Reset
-              </button>
-            </div>
-
-            {/* Stress slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Applied Stress</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{twistStress} MPa</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="50"
-                value={twistStress}
-                onChange={(e) => setTwistStress(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Info box */}
-            <div style={{
-              background: `${colors.success}11`,
-              border: `1px solid ${colors.success}33`,
-              borderRadius: '12px',
-              padding: '16px',
-            }}>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                <strong style={{ color: colors.success }}>The Crack-Stop Hole</strong> converts an infinitely sharp crack tip (Kt very high) into a rounded edge (Kt of about 3). This dramatically reduces stress concentration and arrests crack growth!
-              </p>
-            </div>
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '24px',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            {renderCrackStopVisualization()}
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand Why This Works
-          </button>
+          {/* Controls */}
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '20px', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => {
+                playSound('click');
+                setHasCrackStopHole(!hasCrackStopHole);
+                setCrackLength(20);
+              }}
+              style={{
+                padding: '10px 20px',
+                borderRadius: '8px',
+                border: 'none',
+                background: hasCrackStopHole ? colors.success : colors.bgSecondary,
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: 600,
+                transition: 'all 0.2s',
+              }}
+            >
+              {hasCrackStopHole ? 'Stop Hole Added' : 'Add Stop Hole'}
+            </button>
+            <button
+              onClick={() => {
+                playSound('click');
+                setCrackLength(20);
+                setTwistStress(20);
+              }}
+              style={{
+                padding: '10px 20px',
+                borderRadius: '8px',
+                border: `1px solid ${colors.border}`,
+                background: 'transparent',
+                color: colors.textSecondary,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+            >
+              Reset
+            </button>
+          </div>
+
+          {/* Stress slider */}
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>Applied Stress</span>
+              <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{twistStress} MPa</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="50"
+              value={twistStress}
+              onChange={(e) => setTwistStress(parseInt(e.target.value))}
+              style={{
+                ...sliderStyle,
+                cursor: 'pointer',
+              }}
+            />
+          </div>
+
+          {/* Info box */}
+          <div style={{
+            background: `${colors.success}11`,
+            border: `1px solid ${colors.success}33`,
+            borderRadius: '12px',
+            padding: '16px',
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.success }}>The Crack-Stop Hole</strong> converts an infinitely sharp crack tip (Kt very high) into a rounded edge (Kt of about 3). This dramatically reduces stress concentration and arrests crack growth!
+            </p>
+          </div>
         </div>
+
+        <button
+          onClick={() => { playSound('success'); nextPhase(); }}
+          style={{ ...primaryButtonStyle, width: '100%' }}
+        >
+          Understand Why This Works
+        </button>
 
         {renderNavDots()}
       </div>
@@ -1468,84 +1551,78 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'a';
 
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
+    return renderLayout(
+      <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
+        {renderBackButton()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          {/* Prediction result */}
+        {/* Prediction result */}
+        <div style={{
+          background: wasCorrect ? `${colors.success}22` : `${colors.warning}22`,
+          border: `1px solid ${wasCorrect ? colors.success : colors.warning}44`,
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '24px',
+          textAlign: 'center',
+        }}>
+          <p style={{ ...typo.body, color: wasCorrect ? colors.success : colors.warning, margin: 0 }}>
+            {wasCorrect ? 'Correct! The hole blunts the sharp crack tip.' : 'The key is that the hole blunts the sharp crack tip, reducing Kt.'}
+          </p>
+        </div>
+
+        <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+          Fighting Cracks with Holes
+        </h2>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
           <div style={{
-            background: wasCorrect ? `${colors.success}22` : `${colors.warning}22`,
-            border: `1px solid ${wasCorrect ? colors.success : colors.warning}44`,
+            background: `${colors.accent}11`,
             borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            textAlign: 'center',
+            padding: '20px',
+            border: `1px solid ${colors.accent}33`,
           }}>
-            <p style={{ ...typo.body, color: wasCorrect ? colors.success : colors.warning, margin: 0 }}>
-              {wasCorrect ? 'Correct! The hole blunts the sharp crack tip.' : 'The key is that the hole blunts the sharp crack tip, reducing Kt.'}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+              <span style={{ fontSize: '24px' }}>Sharp Crack Tip</span>
+            </div>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              Kt approaches infinity. The crack grows under any stress because energy release exceeds surface energy.
             </p>
           </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Fighting Cracks with Holes
-          </h2>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-            <div style={{
-              background: `${colors.accent}11`,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.accent}33`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                <span style={{ fontSize: '24px' }}>Sharp Crack Tip</span>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Kt approaches infinity. The crack grows under any stress because energy release exceeds surface energy.
-              </p>
+          <div style={{
+            background: `${colors.success}11`,
+            borderRadius: '12px',
+            padding: '20px',
+            border: `1px solid ${colors.success}33`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+              <span style={{ fontSize: '24px' }}>After Stop Hole</span>
             </div>
-
-            <div style={{
-              background: `${colors.success}11`,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.success}33`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                <span style={{ fontSize: '24px' }}>After Stop Hole</span>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Kt drops to about 2-3 (like a circular hole). The crack is arrested because stress no longer exceeds fracture threshold!
-              </p>
-            </div>
-
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                <span style={{ fontSize: '24px' }}>Real Applications</span>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Ship hulls, aircraft fuselages, bridges, and pressure vessels all use this technique. Drill and fill for permanent repair!
-              </p>
-            </div>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              Kt drops to about 2-3 (like a circular hole). The crack is arrested because stress no longer exceeds fracture threshold!
+            </p>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            See Real-World Applications
-          </button>
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '20px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+              <span style={{ fontSize: '24px' }}>Real Applications</span>
+            </div>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              Ship hulls, aircraft fuselages, bridges, and pressure vessels all use this technique. Drill and fill for permanent repair!
+            </p>
+          </div>
         </div>
+
+        <button
+          onClick={() => { playSound('success'); nextPhase(); }}
+          style={{ ...primaryButtonStyle, width: '100%' }}
+        >
+          See Real-World Applications
+        </button>
 
         {renderNavDots()}
       </div>
@@ -1557,158 +1634,195 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
 
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
+    return renderLayout(
+      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 24px' }}>
+        {renderBackButton()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            App {selectedApp + 1} of {realWorldApps.length}
+        <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+          Real-World Applications
+        </h2>
+        <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          App {selectedApp + 1} of {realWorldApps.length}
+        </p>
+
+        {/* App selector */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '12px',
+          marginBottom: '24px',
+        }}>
+          {realWorldApps.map((a, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                playSound('click');
+                setSelectedApp(i);
+                const newCompleted = [...completedApps];
+                newCompleted[i] = true;
+                setCompletedApps(newCompleted);
+              }}
+              style={{
+                background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                borderRadius: '12px',
+                padding: '16px 8px',
+                cursor: 'pointer',
+                textAlign: 'center',
+                position: 'relative',
+                transition: 'all 0.2s',
+              }}
+            >
+              {completedApps[i] && (
+                <div style={{
+                  position: 'absolute',
+                  top: '-6px',
+                  right: '-6px',
+                  width: '18px',
+                  height: '18px',
+                  borderRadius: '50%',
+                  background: colors.success,
+                  color: 'white',
+                  fontSize: '12px',
+                  lineHeight: '18px',
+                }}>
+                  OK
+                </div>
+              )}
+              <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+              <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                {a.title.split(' ').slice(0, 2).join(' ')}
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Selected app details */}
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '24px',
+          borderLeft: `4px solid ${app.color}`,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+            <span style={{ fontSize: '48px' }}>{app.icon}</span>
+            <div>
+              <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+              <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+            </div>
+          </div>
+
+          <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+            {app.description}
           </p>
 
-          {/* App selector */}
+          <div style={{
+            background: colors.bgSecondary,
+            borderRadius: '8px',
+            padding: '16px',
+            marginBottom: '16px',
+          }}>
+            <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+              Connection to Stress Concentration:
+            </h4>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {app.connection}
+            </p>
+          </div>
+
+          <div style={{
+            background: colors.bgSecondary,
+            borderRadius: '8px',
+            padding: '16px',
+            marginBottom: '16px',
+          }}>
+            <h4 style={{ ...typo.small, color: colors.success, marginBottom: '8px', fontWeight: 600 }}>
+              How It Works:
+            </h4>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {app.howItWorks}
+            </p>
+          </div>
+
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
+            gridTemplateColumns: 'repeat(3, 1fr)',
             gap: '12px',
-            marginBottom: '24px',
+            marginBottom: '16px',
           }}>
-            {realWorldApps.map((a, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  playSound('click');
-                  setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
-                }}
-                style={{
-                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
-                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 8px',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  position: 'relative',
-                }}
-              >
-                {completedApps[i] && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-6px',
-                    right: '-6px',
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: colors.success,
-                    color: 'white',
-                    fontSize: '12px',
-                    lineHeight: '18px',
-                  }}>
-                    OK
-                  </div>
-                )}
-                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
-                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
-                  {a.title.split(' ').slice(0, 2).join(' ')}
-                </div>
-              </button>
+            {app.stats.map((stat, i) => (
+              <div key={i} style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+              </div>
             ))}
           </div>
 
-          {/* Selected app details */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            borderLeft: `4px solid ${app.color}`,
+            background: colors.bgSecondary,
+            borderRadius: '8px',
+            padding: '16px',
+            marginBottom: '16px',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-              <span style={{ fontSize: '48px' }}>{app.icon}</span>
-              <div>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
-                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
-              </div>
-            </div>
-
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
-              {app.description}
+            <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 600 }}>
+              Companies:
+            </h4>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {app.companies.join(', ')}
             </p>
-
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '16px',
-            }}>
-              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                Connection to Stress Concentration:
-              </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                {app.connection}
-              </p>
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}>
-              {app.stats.map((stat, i) => (
-                <div key={i} style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
-                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
-                </div>
-              ))}
-            </div>
           </div>
 
-          {/* Got It button for current app */}
-          <button
-            onClick={() => {
-              playSound('click');
-              const newCompleted = [...completedApps];
-              newCompleted[selectedApp] = true;
-              setCompletedApps(newCompleted);
-              // Navigate to next incomplete app or stay
-              if (selectedApp < realWorldApps.length - 1) {
-                setSelectedApp(selectedApp + 1);
-              }
-            }}
-            style={{
-              ...primaryButtonStyle,
-              width: '100%',
-              marginBottom: '16px',
-              background: completedApps[selectedApp] ? colors.success : `linear-gradient(135deg, ${colors.accent}, ${colors.secondary})`,
-            }}
-          >
-            {completedApps[selectedApp] ? 'Got It!' : 'Got It'}
-          </button>
-
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
+          <div style={{
+            background: colors.bgSecondary,
+            borderRadius: '8px',
+            padding: '16px',
+          }}>
+            <h4 style={{ ...typo.small, color: colors.secondary, marginBottom: '8px', fontWeight: 600 }}>
+              Future Impact:
+            </h4>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {app.futureImpact}
+            </p>
+          </div>
         </div>
+
+        {/* Got It button for current app */}
+        <button
+          onClick={() => {
+            playSound('click');
+            const newCompleted = [...completedApps];
+            newCompleted[selectedApp] = true;
+            setCompletedApps(newCompleted);
+            // Navigate to next incomplete app or stay
+            if (selectedApp < realWorldApps.length - 1) {
+              setSelectedApp(selectedApp + 1);
+            }
+          }}
+          style={{
+            ...primaryButtonStyle,
+            width: '100%',
+            marginBottom: '16px',
+            background: completedApps[selectedApp] ? colors.success : `linear-gradient(135deg, ${colors.accent}, ${colors.secondary})`,
+          }}
+        >
+          {completedApps[selectedApp] ? 'Got It!' : 'Got It'}
+        </button>
+
+        {allAppsCompleted && (
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Take the Knowledge Test
+          </button>
+        )}
 
         {renderNavDots()}
       </div>
@@ -1719,55 +1833,50 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
   if (phase === 'test') {
     if (testSubmitted) {
       const passed = testScore >= 7;
-      return (
-        <div style={{
-          minHeight: '100vh',
-          background: colors.bgPrimary,
-          padding: '24px',
-        }}>
-          {renderProgressBar()}
+      return renderLayout(
+        <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center', padding: '0 24px' }}>
+          {renderBackButton()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
-            <div style={{
-              fontSize: '80px',
-              marginBottom: '24px',
-            }}>
-              {passed ? '🎉' : '📚'}
-            </div>
-            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
-              {passed ? 'Excellent!' : 'Keep Learning!'}
-            </h2>
-            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
-              {testScore} / 10
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
-              {passed
-                ? 'You understand fracture mechanics and stress concentration!'
-                : 'Review the concepts and try again.'}
-            </p>
-
-            {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
-                Complete Lesson
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
-                }}
-                style={primaryButtonStyle}
-              >
-                Review and Try Again
-              </button>
-            )}
+          <div style={{
+            fontSize: '80px',
+            marginBottom: '24px',
+          }}>
+            {passed ? '(trophy)' : '(book)'}
           </div>
+          <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+            {passed ? 'Excellent!' : 'Keep Learning!'}
+          </h2>
+          <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+            {testScore} / 10
+          </p>
+          <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+            {passed
+              ? 'You understand fracture mechanics and stress concentration!'
+              : 'Review the concepts and try again.'}
+          </p>
+
+          {passed ? (
+            <button
+              onClick={() => { playSound('complete'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Complete Lesson
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                setTestSubmitted(false);
+                setTestAnswers(Array(10).fill(null));
+                setCurrentQuestion(0);
+                setTestScore(0);
+                goToPhase('hook');
+              }}
+              style={primaryButtonStyle}
+            >
+              Review and Try Again
+            </button>
+          )}
+
           {renderNavDots()}
         </div>
       );
@@ -1775,163 +1884,161 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
 
     const question = testQuestions[currentQuestion];
 
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
+    return renderLayout(
+      <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
+        {renderBackButton()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          {/* Progress */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '24px',
-          }}>
-            <span style={{ ...typo.small, color: colors.textSecondary }}>
-              Question {currentQuestion + 1} of 10
-            </span>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {testQuestions.map((_, i) => (
-                <div key={i} style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: i === currentQuestion
-                    ? colors.accent
-                    : testAnswers[i]
-                      ? colors.success
-                      : colors.border,
-                }} />
-              ))}
-            </div>
-          </div>
-
-          {/* Scenario */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '16px',
-            borderLeft: `3px solid ${colors.accent}`,
-          }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              {question.scenario}
-            </p>
-          </div>
-
-          {/* Question */}
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
-            {question.question}
-          </h3>
-
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-            {question.options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => {
-                  playSound('click');
-                  const newAnswers = [...testAnswers];
-                  newAnswers[currentQuestion] = opt.id;
-                  setTestAnswers(newAnswers);
-                }}
-                style={{
-                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '10px',
-                  padding: '14px 16px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
-                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '24px',
-                  marginRight: '10px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.small }}>
-                  {opt.label}
-                </span>
-              </button>
+        {/* Progress */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '24px',
+        }}>
+          <span style={{ ...typo.small, color: colors.textSecondary }}>
+            Question {currentQuestion + 1} of 10
+          </span>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {testQuestions.map((_, i) => (
+              <div key={i} style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: i === currentQuestion
+                  ? colors.accent
+                  : testAnswers[i]
+                    ? colors.success
+                    : colors.border,
+              }} />
             ))}
           </div>
+        </div>
 
-          {/* Navigation */}
-          <div style={{ display: 'flex', gap: '12px' }}>
-            {currentQuestion > 0 && (
-              <button
-                onClick={() => setCurrentQuestion(currentQuestion - 1)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                }}
-              >
-                Previous
-              </button>
-            )}
-            {currentQuestion < 9 ? (
-              <button
-                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
-                disabled={!testAnswers[currentQuestion]}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
-                  color: 'white',
-                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  const score = testAnswers.reduce((acc, ans, i) => {
-                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
-                    return acc + (ans === correct ? 1 : 0);
-                  }, 0);
-                  setTestScore(score);
-                  setTestSubmitted(true);
-                  playSound(score >= 7 ? 'complete' : 'failure');
-                }}
-                disabled={testAnswers.some(a => a === null)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
-                  color: 'white',
-                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Submit Test
-              </button>
-            )}
-          </div>
+        {/* Scenario */}
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '16px',
+          borderLeft: `3px solid ${colors.accent}`,
+        }}>
+          <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+            {question.scenario}
+          </p>
+        </div>
+
+        {/* Question */}
+        <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+          {question.question}
+        </h3>
+
+        {/* Options */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+          {question.options.map(opt => (
+            <button
+              key={opt.id}
+              onClick={() => {
+                playSound('click');
+                const newAnswers = [...testAnswers];
+                newAnswers[currentQuestion] = opt.id;
+                setTestAnswers(newAnswers);
+              }}
+              style={{
+                background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                borderRadius: '10px',
+                padding: '14px 16px',
+                textAlign: 'left',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+            >
+              <span style={{
+                display: 'inline-block',
+                width: '24px',
+                height: '24px',
+                borderRadius: '50%',
+                background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                textAlign: 'center',
+                lineHeight: '24px',
+                marginRight: '10px',
+                fontSize: '12px',
+                fontWeight: 700,
+              }}>
+                {opt.id.toUpperCase()}
+              </span>
+              <span style={{ color: colors.textPrimary, ...typo.small }}>
+                {opt.label}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* Navigation */}
+        <div style={{ display: 'flex', gap: '12px' }}>
+          {currentQuestion > 0 && (
+            <button
+              onClick={() => setCurrentQuestion(currentQuestion - 1)}
+              style={{
+                flex: 1,
+                padding: '14px',
+                borderRadius: '10px',
+                border: `1px solid ${colors.border}`,
+                background: 'transparent',
+                color: colors.textSecondary,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+            >
+              Previous
+            </button>
+          )}
+          {currentQuestion < 9 ? (
+            <button
+              onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+              disabled={!testAnswers[currentQuestion]}
+              style={{
+                flex: 1,
+                padding: '14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                color: 'white',
+                cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                fontWeight: 600,
+                transition: 'all 0.2s',
+              }}
+            >
+              Next
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                const score = testAnswers.reduce((acc, ans, i) => {
+                  const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                  return acc + (ans === correct ? 1 : 0);
+                }, 0);
+                setTestScore(score);
+                setTestSubmitted(true);
+                playSound(score >= 7 ? 'complete' : 'failure');
+              }}
+              disabled={testAnswers.some(a => a === null)}
+              style={{
+                flex: 1,
+                padding: '14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                color: 'white',
+                cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                fontWeight: 600,
+                transition: 'all 0.2s',
+              }}
+            >
+              Submit Test
+            </button>
+          )}
         </div>
 
         {renderNavDots()}
@@ -1941,25 +2048,24 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
 
   // MASTERY PHASE
   if (phase === 'mastery') {
-    return (
+    return renderLayout(
       <div style={{
-        minHeight: '100vh',
-        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
         textAlign: 'center',
+        minHeight: '80vh',
       }}>
-        {renderProgressBar()}
+        {renderBackButton()}
 
         <div style={{
           fontSize: '100px',
           marginBottom: '24px',
           animation: 'bounce 1s infinite',
         }}>
-          🏆
+          (trophy)
         </div>
         <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
@@ -2007,6 +2113,7 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
               background: 'transparent',
               color: colors.textSecondary,
               cursor: 'pointer',
+              transition: 'all 0.2s',
             }}
           >
             Play Again

@@ -288,9 +288,12 @@ const realWorldApps = [
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
-const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = ({ onGameEvent }) => {
+const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = ({ onGameEvent, gamePhase }) => {
   // ========== STATE ==========
-  const [phase, setPhase] = useState<Phase>('hook');
+  const [phase, setPhase] = useState<Phase>(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) return gamePhase as Phase;
+    return 'hook';
+  });
   const [isMobile, setIsMobile] = useState(false);
 
   // Prediction states
@@ -324,6 +327,13 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
   const hydrostaticPressure = fluidDensity * GRAVITY * depth;
   const totalPressure = ATM_PRESSURE + hydrostaticPressure;
   const pressureInAtm = totalPressure / ATM_PRESSURE;
+
+  // ========== SYNC gamePhase PROP ==========
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
+      setPhase(gamePhase as Phase);
+    }
+  }, [gamePhase]);
 
   // ========== RESPONSIVE DETECTION ==========
   useEffect(() => {
@@ -540,6 +550,21 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
           {/* Background */}
           <rect x="0" y="0" width={width} height={height} fill={colors.bgSurface} rx="16" />
 
+          {/* Grid lines for visual reference */}
+          {[0, 10, 20, 30, 40, 50].map((d) => {
+            const gy = tankTop + (d / 50) * tankHeight;
+            return (
+              <line key={`grid-${d}`} x1={tankLeft} y1={gy} x2={tankLeft + tankWidth} y2={gy} stroke={colors.textMuted} strokeDasharray="4 4" opacity="0.3" />
+            );
+          })}
+
+          {/* Axis labels */}
+          <text x={tankLeft + tankWidth / 2} y={tankTop - 12} textAnchor="middle" fill={colors.textSecondary} fontSize="12" fontWeight="600">Depth (meters)</text>
+          <text x={width - 72} y="18" textAnchor="middle" fill={colors.textSecondary} fontSize="12" fontWeight="600">Pressure</text>
+
+          {/* Formula display in SVG */}
+          <text x={tankLeft + tankWidth / 2} y={height - 12} textAnchor="middle" fill={colors.warning} fontSize="12" fontWeight="bold">P = rgh = {(hydrostaticPressure / 1000).toFixed(1)} kPa</text>
+
           {/* Tank water fill */}
           <rect x={tankLeft} y={tankTop} width={tankWidth} height={tankHeight} fill="url(#hydroWaterGrad)" rx="4" />
 
@@ -556,16 +581,16 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
             return (
               <g key={d}>
                 <line x1={tankLeft - 10} y1={y} x2={tankLeft - 4} y2={y} stroke={isActive ? colors.primary : colors.textMuted} strokeWidth={isActive ? 2 : 1} />
-                <text x={tankLeft - 14} y={y + 4} textAnchor="end" fill={isActive ? colors.primary : colors.textMuted} fontSize="10" fontWeight={isActive ? 'bold' : 'normal'}>{d}m</text>
+                <text x={tankLeft - 14} y={y + 4} textAnchor="end" fill={isActive ? colors.primary : colors.textMuted} fontSize="11" fontWeight={isActive ? 'bold' : 'normal'}>{d}m</text>
               </g>
             );
           })}
 
-          {/* Object/Diver indicator */}
-          <g transform={`translate(${tankLeft + tankWidth/2}, ${Math.min(objectY, tankTop + tankHeight - 18)})`} filter="url(#hydroGlowFilter)">
-            <circle r="16" fill="url(#hydroObjectGlow)" />
-            <circle r="16" fill="none" stroke="#fbbf24" strokeWidth="2" strokeOpacity="0.7" />
-            <text y="4" textAnchor="middle" fill={colors.bgDeep} fontSize="10" fontWeight="bold">{depth}m</text>
+          {/* Object/Diver indicator - interactive point */}
+          <g transform={`translate(${tankLeft + tankWidth/2}, ${Math.min(objectY, tankTop + tankHeight - 18)})`}>
+            <circle r="18" fill="url(#hydroObjectGlow)" filter="url(#hydroGlowFilter)" />
+            <circle r="18" fill="none" stroke="#fbbf24" strokeWidth="2" strokeOpacity="0.7" />
+            <text y="5" textAnchor="middle" fill={colors.bgDeep} fontSize="11" fontWeight="bold">{depth}m</text>
           </g>
 
           {/* Pressure arrows pointing inward */}
@@ -598,15 +623,15 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
 
           {/* Pressure readout panel */}
           <rect x={width - 130} y="30" width="115" height="140" fill={colors.bgElevated} rx="12" stroke={colors.bgHover} strokeWidth="1" />
-          <text x={width - 72} y="50" textAnchor="middle" fill={colors.textMuted} fontSize="10" fontWeight="600" letterSpacing="0.5">PRESSURE</text>
+          <text x={width - 72} y="50" textAnchor="middle" fill={colors.textMuted} fontSize="11" fontWeight="600" letterSpacing="0.5">PRESSURE</text>
 
-          <text x={width - 72} y="78" textAnchor="middle" fill={colors.success} fontSize="20" fontWeight="bold">{(hydrostaticPressure / 1000).toFixed(1)}</text>
-          <text x={width - 72} y="94" textAnchor="middle" fill={colors.textMuted} fontSize="9">kPa (hydrostatic)</text>
+          <text x={width - 72} y="76" textAnchor="middle" fill={colors.success} fontSize="20" fontWeight="bold">{(hydrostaticPressure / 1000).toFixed(1)}</text>
+          <text x={width - 72} y="94" textAnchor="middle" fill={colors.textMuted} fontSize="11">kPa (hydrostatic)</text>
 
           <line x1={width - 120} y1="105" x2={width - 25} y2="105" stroke={colors.bgHover} strokeWidth="1" />
 
-          <text x={width - 72} y="128" textAnchor="middle" fill={colors.secondary} fontSize="20" fontWeight="bold">{pressureInAtm.toFixed(2)}</text>
-          <text x={width - 72} y="144" textAnchor="middle" fill={colors.textMuted} fontSize="9">atm (total)</text>
+          <text x={width - 72} y="126" textAnchor="middle" fill={colors.secondary} fontSize="20" fontWeight="bold">{pressureInAtm.toFixed(2)}</text>
+          <text x={width - 72} y="144" textAnchor="middle" fill={colors.textMuted} fontSize="11">atm (total)</text>
         </svg>
 
         {/* Formula display */}
@@ -1017,12 +1042,14 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
                 }}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   background: colors.bgElevated,
                   cursor: 'pointer',
                   WebkitAppearance: 'none',
-                  appearance: 'none'
+                  appearance: 'none',
+                  accentColor: '#3b82f6',
+                  touchAction: 'pan-y' as const
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
@@ -2223,13 +2250,13 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
   // ============================================================================
   return (
     <div style={{
-      position: 'absolute',
-      inset: 0,
+      minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
       background: colors.bgDeep,
       color: colors.textPrimary,
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      overflow: 'hidden'
     }}>
       {/* Background gradient effects */}
       <div style={{
@@ -2276,10 +2303,74 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
         overflowY: 'auto',
         overflowX: 'hidden',
         WebkitOverflowScrolling: 'touch',
-        marginTop: '52px'
+        paddingTop: '48px',
+        paddingBottom: '100px'
       }}>
         {renderPhase()}
       </div>
+
+      {/* Fixed bottom navigation bar */}
+      <nav style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '12px 18px',
+        background: `${colors.bgSurface}f0`,
+        backdropFilter: 'blur(12px)',
+        borderTop: `1px solid ${colors.bgHover}`,
+        zIndex: 1000
+      }}>
+        <button
+          onClick={() => {
+            const idx = phaseOrder.indexOf(phase);
+            if (idx > 0) goToPhase(phaseOrder[idx - 1]);
+          }}
+          style={{
+            padding: '14px 28px',
+            fontSize: typo.body,
+            fontWeight: 600,
+            background: colors.bgElevated,
+            color: phaseOrder.indexOf(phase) === 0 ? colors.textMuted : colors.textSecondary,
+            border: 'none',
+            borderRadius: '12px',
+            cursor: phaseOrder.indexOf(phase) === 0 ? 'not-allowed' : 'pointer',
+            opacity: phaseOrder.indexOf(phase) === 0 ? 0.4 : 1,
+            minHeight: '44px',
+            transition: 'all 0.2s ease'
+          }}
+          disabled={phaseOrder.indexOf(phase) === 0}
+        >
+          ← Back
+        </button>
+
+        <button
+          onClick={() => {
+            const idx = phaseOrder.indexOf(phase);
+            if (phase === 'test') return;
+            if (idx < phaseOrder.length - 1) goToPhase(phaseOrder[idx + 1]);
+          }}
+          style={{
+            padding: '14px 28px',
+            fontSize: typo.body,
+            fontWeight: 600,
+            background: phase === 'test' ? colors.bgElevated : `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
+            color: phase === 'test' ? colors.textMuted : '#fff',
+            border: 'none',
+            borderRadius: '12px',
+            cursor: phase === 'test' ? 'not-allowed' : 'pointer',
+            opacity: phase === 'test' ? 0.4 : 1,
+            minHeight: '44px',
+            transition: 'all 0.2s ease'
+          }}
+          disabled={phase === 'test'}
+        >
+          Next →
+        </button>
+      </nav>
     </div>
   );
 };

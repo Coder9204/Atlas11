@@ -5,7 +5,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 // Real-world applications for MOSFET switching
 const realWorldApps = [
   {
-    icon: '⚡',
+    icon: '\u26A1',
     title: 'Power Conversion Systems',
     short: 'Switching power supplies everywhere',
     tagline: 'Billions of transistors switching trillions of watts',
@@ -13,9 +13,9 @@ const realWorldApps = [
     connection: 'The game showed how gate drive affects switching speed and losses. In real power supplies, MOSFET switching at 100kHz-1MHz converts AC to DC efficiently. The same Cgs charging dynamics determine switching loss.',
     howItWorks: 'MOSFETs switch on/off at high frequency (100kHz+). PWM duty cycle controls output voltage. Faster switching allows smaller inductors/capacitors. Switching losses (Coss, gate charge) limit frequency. GaN/SiC enable MHz operation.',
     stats: [
-      { value: '95%', label: 'Modern PSU efficiency', icon: '⚡' },
-      { value: '1MHz', label: 'GaN switching frequency', icon: '📊' },
-      { value: '$50B', label: 'Power electronics market', icon: '📈' }
+      { value: '95%', label: 'Modern PSU efficiency', icon: '\u26A1' },
+      { value: '1MHz', label: 'GaN switching frequency', icon: '\uD83D\uDCCA' },
+      { value: '$50B', label: 'Power electronics market', icon: '\uD83D\uDCC8' }
     ],
     examples: ['USB-C chargers', 'Server PSUs', 'EV onboard chargers', 'Solar inverters'],
     companies: ['Texas Instruments', 'Infineon', 'ON Semiconductor', 'GaN Systems'],
@@ -23,7 +23,7 @@ const realWorldApps = [
     color: '#f59e0b'
   },
   {
-    icon: '🚗',
+    icon: '\uD83D\uDE97',
     title: 'Electric Vehicle Inverters',
     short: 'MOSFETs driving motors at 400V',
     tagline: 'From battery to torque in microseconds',
@@ -31,9 +31,9 @@ const realWorldApps = [
     connection: 'The simulation showed switching transitions and losses. EV inverters switch at 10-20kHz, with each transition following the same gate charge, dead time, and loss mechanisms. Faster switching means smoother motor control.',
     howItWorks: 'Six MOSFETs/IGBTs form 3-phase bridge. PWM creates sinusoidal current in motor windings. Dead time prevents shoot-through (both switches on). Switching losses generate heat requiring cooling. SiC enables higher frequency and efficiency.',
     stats: [
-      { value: '300kW', label: 'Peak inverter power', icon: '⚡' },
-      { value: '97%', label: 'Inverter efficiency', icon: '📊' },
-      { value: '$20B', label: 'EV power electronics', icon: '📈' }
+      { value: '300kW', label: 'Peak inverter power', icon: '\u26A1' },
+      { value: '97%', label: 'Inverter efficiency', icon: '\uD83D\uDCCA' },
+      { value: '$20B', label: 'EV power electronics', icon: '\uD83D\uDCC8' }
     ],
     examples: ['Tesla Model S/3/X/Y', 'Porsche Taycan', 'Rivian R1T', 'Lucid Air'],
     companies: ['Tesla', 'BYD', 'Bosch', 'Denso'],
@@ -41,7 +41,7 @@ const realWorldApps = [
     color: '#22c55e'
   },
   {
-    icon: '💻',
+    icon: '\uD83D\uDCBB',
     title: 'CPU Voltage Regulators',
     short: 'Millions of switching cycles per second',
     tagline: 'Powering processors one nanosecond at a time',
@@ -49,9 +49,9 @@ const realWorldApps = [
     connection: 'The game\'s focus on gate charge and switching speed applies directly to VRMs. Each phase switches at 500kHz-2MHz, and gate driver strength determines how fast the MOSFET can respond to CPU load changes.',
     howItWorks: 'Multi-phase VRM with 12-20 MOSFET pairs. High-side and low-side switch alternately. Rapid switching enables fast load response. Gate drivers must charge Cgs in nanoseconds. Thermal management critical for 200A+ delivery.',
     stats: [
-      { value: '200A', label: 'CPU current demand', icon: '⚡' },
-      { value: '2MHz', label: 'Per-phase switching', icon: '📊' },
-      { value: '<1%', label: 'Voltage tolerance', icon: '🎯' }
+      { value: '200A', label: 'CPU current demand', icon: '\u26A1' },
+      { value: '2MHz', label: 'Per-phase switching', icon: '\uD83D\uDCCA' },
+      { value: '<1%', label: 'Voltage tolerance', icon: '\uD83C\uDFAF' }
     ],
     examples: ['Intel desktop VRMs', 'AMD Ryzen motherboards', 'Laptop power delivery', 'GPU power stages'],
     companies: ['Renesas', 'Monolithic Power', 'Infineon', 'Texas Instruments'],
@@ -59,7 +59,7 @@ const realWorldApps = [
     color: '#3b82f6'
   },
   {
-    icon: '🔊',
+    icon: '\uD83D\uDD0A',
     title: 'Class D Audio Amplifiers',
     short: 'High-fidelity sound from switching transistors',
     tagline: 'Digital efficiency, analog quality',
@@ -67,9 +67,9 @@ const realWorldApps = [
     connection: 'The simulation showed how switching transitions create losses. In Class D, switching speed determines how accurately the PWM waveform represents the audio signal. Faster transitions mean lower distortion.',
     howItWorks: 'Audio signal modulates PWM duty cycle. MOSFETs switch at 400kHz-2MHz. LC filter recovers analog audio. Dead time causes crossover distortion. Feedback corrects errors. Switching noise must stay above audio band.',
     stats: [
-      { value: '95%', label: 'Amplifier efficiency', icon: '⚡' },
-      { value: '0.01%', label: 'THD achievable', icon: '📊' },
-      { value: '$5B', label: 'Audio amplifier market', icon: '📈' }
+      { value: '95%', label: 'Amplifier efficiency', icon: '\u26A1' },
+      { value: '0.01%', label: 'THD achievable', icon: '\uD83D\uDCCA' },
+      { value: '$5B', label: 'Audio amplifier market', icon: '\uD83D\uDCC8' }
     ],
     examples: ['Smartphone speakers', 'Bluetooth speakers', 'Car audio', 'PA systems'],
     companies: ['Texas Instruments', 'Cirrus Logic', 'Qualcomm', 'Analog Devices'],
@@ -112,7 +112,7 @@ const phaseLabels: Record<MOSFETPhase, string> = {
   review: 'Review',
   twist_predict: 'Twist',
   twist_play: 'Explore',
-  twist_review: 'Explain',
+  twist_review: 'Deep Insight',
   transfer: 'Transfer',
   test: 'Test',
   mastery: 'Mastery',
@@ -289,6 +289,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
   const testQuestions = [
     {
       question: 'What causes switching losses in a MOSFET?',
+      context: 'Consider a MOSFET in a power supply switching at 500kHz. During each transition between on and off states, the transistor passes through a linear region.',
       options: [
         { text: 'Resistance when fully turned on', correct: false },
         { text: 'Energy lost during the transition between on and off states', correct: true },
@@ -298,6 +299,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
     },
     {
       question: 'If you double the switching frequency, what happens to switching losses?',
+      context: 'A DC-DC converter operates at 200kHz with measured switching losses of 500mW. The engineer considers increasing to 400kHz for smaller passives.',
       options: [
         { text: 'They stay the same', correct: false },
         { text: 'They approximately double', correct: true },
@@ -307,6 +309,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
     },
     {
       question: 'Gate charge (Qg) losses are important because:',
+      context: 'A gate driver circuit charges and discharges the MOSFET gate capacitance every switching cycle. The gate charge Qg determines energy consumed per cycle.',
       options: [
         { text: 'The gate stores energy that is lost each switching cycle', correct: true },
         { text: 'Gate current causes significant voltage drop', correct: false },
@@ -316,6 +319,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
     },
     {
       question: 'Why do faster-switching MOSFETs often have lower gate charge?',
+      context: 'An engineer compares two MOSFETs: one with Qg=30nC switching at 100kHz, another with Qg=5nC capable of 2MHz. Both handle similar power levels.',
       options: [
         { text: 'They use different semiconductor materials', correct: false },
         { text: 'Smaller gate capacitance means less charge needed, enabling faster switching', correct: true },
@@ -325,6 +329,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
     },
     {
       question: 'During the switching transition, why is there significant power loss?',
+      context: 'When a MOSFET transitions from off to on, the drain voltage falls from Vds to near zero while drain current rises from zero to the load current. This overlap region is critical.',
       options: [
         { text: 'The MOSFET is partially conducting with high voltage across it', correct: true },
         { text: 'The gate driver consumes maximum power', correct: false },
@@ -334,6 +339,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
     },
     {
       question: 'What is the overlap loss region?',
+      context: 'In a power converter waveform diagram, the drain voltage Vds and drain current Id are plotted over time during a switching event.',
       options: [
         { text: 'When two MOSFETs conduct simultaneously', correct: false },
         { text: 'The time when both high voltage AND high current exist in the switch', correct: true },
@@ -343,6 +349,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
     },
     {
       question: 'Silicon carbide (SiC) MOSFETs reduce switching losses because:',
+      context: 'Tesla switched from silicon IGBTs to SiC MOSFETs in Model 3 inverters, achieving 5-10% range improvement from reduced power conversion losses.',
       options: [
         { text: 'They have lower on-resistance', correct: false },
         { text: 'They can switch faster with lower gate charge', correct: true },
@@ -352,6 +359,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
     },
     {
       question: 'Why might a designer choose a lower switching frequency?',
+      context: 'A solar inverter design team debates between 50kHz and 200kHz operation. The higher frequency allows 75% smaller magnetics but increases thermal challenges.',
       options: [
         { text: 'To reduce switching losses when they dominate', correct: true },
         { text: 'To increase output power', correct: false },
@@ -361,6 +369,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
     },
     {
       question: 'In a synchronous buck converter, dead time is important because:',
+      context: 'A buck converter uses two MOSFETs (high-side and low-side). If both turn on at the same time, a short circuit from Vin to ground occurs.',
       options: [
         { text: 'It allows the inductor to fully charge', correct: false },
         { text: 'It prevents both MOSFETs from conducting simultaneously (shoot-through)', correct: true },
@@ -370,6 +379,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
     },
     {
       question: 'As MOSFET technology improves, switching losses decrease primarily due to:',
+      context: 'From silicon to GaN to SiC, each generation of power transistors has achieved lower figures of merit (Qg x Rdson) and faster switching capability.',
       options: [
         { text: 'Better thermal management', correct: false },
         { text: 'Faster switching speeds and lower parasitic capacitances', correct: true },
@@ -400,12 +410,66 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
 
   const renderVisualization = () => {
     const losses = calculateLosses();
-    const width = 400;
-    const height = 350;
+    const width = 500;
+    const height = 400;
 
     // MOSFET switching waveform visualization
     const phaseAngle = (animationTime / 360) * 2 * Math.PI;
     const switchState = Math.sin(phaseAngle * switchingFrequency / 10) > 0;
+
+    // Generate more data points for the waveforms (>= 10 points per path)
+    const wavePoints = 12;
+    const waveWidth = 280;
+    const waveStartX = 10;
+    const stepX = waveWidth / (wavePoints - 1);
+
+    // Vds waveform path - uses full vertical range of its area (40-155)
+    let vdsPath = '';
+    let idPath = '';
+    const vdsHigh = 45;
+    const vdsLow = 145;
+    const idHigh = 45;
+    const idLow = 145;
+
+    for (let i = 0; i < wavePoints; i++) {
+      const x = waveStartX + i * stepX;
+      const cycle = Math.floor(i / 3) % 2;
+      const pos = i % 3;
+      let vdsY: number, idY: number;
+
+      if (pos === 0) {
+        vdsY = cycle === 0 ? vdsLow : vdsHigh;
+        idY = cycle === 0 ? idHigh : idLow;
+      } else if (pos === 1) {
+        vdsY = cycle === 0 ? vdsHigh : vdsLow;
+        idY = cycle === 0 ? idLow : idHigh;
+      } else {
+        vdsY = cycle === 0 ? vdsHigh : vdsLow;
+        idY = cycle === 0 ? idLow : idHigh;
+      }
+
+      vdsPath += `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${vdsY.toFixed(1)} `;
+      idPath += `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${idY.toFixed(1)} `;
+    }
+
+    // Power loss spikes at transitions
+    let powerPath = '';
+    const powerBase = 145;
+    const powerPeak = 45;
+    let pIdx = 0;
+    for (let i = 0; i < wavePoints; i++) {
+      const x = waveStartX + i * stepX;
+      const pos = i % 3;
+      if (pos === 1) {
+        // Transition point - spike
+        if (pIdx === 0) {
+          powerPath += `M ${(x - 5).toFixed(1)} ${powerBase} L ${x.toFixed(1)} ${powerPeak} L ${(x + 5).toFixed(1)} ${powerBase} `;
+        } else {
+          powerPath += `M ${(x - 5).toFixed(1)} ${powerBase} L ${x.toFixed(1)} ${powerPeak} L ${(x + 5).toFixed(1)} ${powerBase} `;
+        }
+        pIdx++;
+      }
+    }
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -426,6 +490,16 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
               <stop offset="50%" stopColor="#f59e0b" />
               <stop offset="100%" stopColor="#ef4444" />
             </linearGradient>
+            <filter id="glowFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <filter id="shadowFilter" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="rgba(0,0,0,0.5)" />
+            </filter>
           </defs>
 
           {/* Title */}
@@ -434,7 +508,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
           </text>
 
           {/* MOSFET Symbol */}
-          <g transform="translate(50, 60)">
+          <g transform="translate(20, 50)">
             {/* Gate */}
             <line x1={0} y1={40} x2={20} y2={40} stroke={colors.gate} strokeWidth={3} />
             <line x1={20} y1={20} x2={20} y2={60} stroke={colors.gate} strokeWidth={2} />
@@ -445,103 +519,90 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
             {/* Drain */}
             <line x1={30} y1={20} x2={60} y2={20} stroke={colors.textPrimary} strokeWidth={2} />
             <line x1={60} y1={0} x2={60} y2={20} stroke={colors.textPrimary} strokeWidth={2} />
-            <text x={70} y={10} fill={colors.textMuted} fontSize={10}>D</text>
+            <text x={70} y={8} fill={colors.textSecondary} fontSize={11}>Drain</text>
 
             {/* Source */}
             <line x1={30} y1={60} x2={60} y2={60} stroke={colors.textPrimary} strokeWidth={2} />
             <line x1={60} y1={60} x2={60} y2={80} stroke={colors.textPrimary} strokeWidth={2} />
-            <text x={70} y={70} fill={colors.textMuted} fontSize={10}>S</text>
+            <text x={70} y={68} fill={colors.textSecondary} fontSize={11}>Source</text>
 
             {/* Gate label */}
-            <text x={-5} y={44} fill={colors.textMuted} fontSize={10} textAnchor="end">G</text>
+            <text x={-5} y={44} fill={colors.textSecondary} fontSize={11} textAnchor="end">Gate</text>
 
             {/* On/Off indicator */}
-            <circle cx={45} cy={40} r={8} fill={switchState ? colors.success : colors.error} opacity={0.8}>
+            <circle cx={45} cy={40} r={8} fill={switchState ? colors.success : colors.error} opacity={0.8} filter="url(#glowFilter)">
               <animate attributeName="opacity" values="0.6;1;0.6" dur="0.5s" repeatCount="indefinite" />
             </circle>
+            <text x={45} y={100} fill={colors.textSecondary} fontSize={11} textAnchor="middle">
+              {switchState ? 'ON' : 'OFF'}
+            </text>
           </g>
 
-          {/* Waveforms */}
-          <g transform="translate(150, 50)">
+          {/* Waveforms area */}
+          <g transform="translate(140, 35)">
             {/* Vds waveform */}
-            <text x={0} y={0} fill={colors.accent} fontSize={10}>Vds (Drain-Source Voltage)</text>
-            <rect x={0} y={5} width={200} height={40} fill="rgba(0,0,0,0.3)" rx={4} />
+            <text x={0} y={0} fill={colors.accent} fontSize={12} fontWeight="bold">Vds (Drain-Source)</text>
+
+            {/* Grid lines for Vds area */}
+            <line x1={0} y1={45} x2={waveWidth + 20} y2={45} stroke="rgba(255,255,255,0.1)" strokeWidth={1} strokeDasharray="4,4" />
+            <line x1={0} y1={95} x2={waveWidth + 20} y2={95} stroke="rgba(255,255,255,0.1)" strokeWidth={1} strokeDasharray="4,4" />
+            <line x1={0} y1={145} x2={waveWidth + 20} y2={145} stroke="rgba(255,255,255,0.1)" strokeWidth={1} strokeDasharray="4,4" />
+
+            {/* Y-axis tick marks for Vds */}
+            <line x1={0} y1={45} x2={5} y2={45} stroke="rgba(255,255,255,0.3)" strokeWidth={1} />
+            <line x1={0} y1={95} x2={5} y2={95} stroke="rgba(255,255,255,0.3)" strokeWidth={1} />
+            <line x1={0} y1={145} x2={5} y2={145} stroke="rgba(255,255,255,0.3)" strokeWidth={1} />
+
+            <rect x={0} y={10} width={waveWidth + 20} height={150} fill="rgba(0,0,0,0.3)" rx={4} />
             <path
-              d={`M 5 ${switchState ? 40 : 15} L 50 ${switchState ? 40 : 15} L 55 ${switchState ? 15 : 40} L 100 ${switchState ? 15 : 40} L 105 ${switchState ? 40 : 15} L 150 ${switchState ? 40 : 15} L 155 ${switchState ? 15 : 40} L 195 ${switchState ? 15 : 40}`}
+              d={vdsPath}
               stroke={colors.accent}
               strokeWidth={2}
               fill="none"
             />
 
-            {/* Id waveform */}
-            <text x={0} y={60} fill={colors.success} fontSize={10}>Id (Drain Current)</text>
-            <rect x={0} y={65} width={200} height={40} fill="rgba(0,0,0,0.3)" rx={4} />
+            {/* Reference line for baseline at mid frequency */}
+            <circle cx={waveStartX + 3 * stepX} cy={vdsHigh} r={6} fill={colors.accent} stroke="#ffffff" strokeWidth={2} filter="url(#glowFilter)" />
+          </g>
+
+          {/* Id waveform */}
+          <g transform="translate(140, 195)">
+            <text x={0} y={0} fill={colors.success} fontSize={12} fontWeight="bold">Id (Drain Current)</text>
+            <rect x={0} y={10} width={waveWidth + 20} height={150} fill="rgba(0,0,0,0.3)" rx={4} />
             <path
-              d={`M 5 ${switchState ? 75 : 100} L 50 ${switchState ? 75 : 100} L 55 ${switchState ? 100 : 75} L 100 ${switchState ? 100 : 75} L 105 ${switchState ? 75 : 100} L 150 ${switchState ? 75 : 100} L 155 ${switchState ? 100 : 75} L 195 ${switchState ? 100 : 75}`}
+              d={idPath}
               stroke={colors.success}
               strokeWidth={2}
               fill="none"
             />
-
-            {/* Power loss indication */}
-            <text x={0} y={120} fill={colors.error} fontSize={10}>Power Loss (V x I overlap)</text>
-            <rect x={0} y={125} width={200} height={40} fill="rgba(0,0,0,0.3)" rx={4} />
-            {/* Spikes at transitions */}
-            <path
-              d="M 52 160 L 55 130 L 58 160 M 102 160 L 105 130 L 108 160 M 152 160 L 155 130 L 158 160"
-              stroke={colors.error}
-              strokeWidth={2}
-              fill="none"
-            />
           </g>
 
-          {/* Loss breakdown */}
-          <g transform="translate(20, 220)">
-            <text x={0} y={0} fill={colors.textSecondary} fontSize={11} fontWeight="bold">Power Losses:</text>
-
-            <rect x={0} y={10} width={360} height={20} fill="rgba(0,0,0,0.3)" rx={4} />
-
-            {/* Stacked bar for losses */}
-            {(() => {
-              const total = losses.totalLoss || 1;
-              const switchWidth = (losses.switchingLoss / total) * 340;
-              const gateWidth = (losses.gateDriverLoss / total) * 340;
-              const condWidth = (losses.conductionLoss / total) * 340;
-
-              return (
-                <>
-                  <rect x={10} y={12} width={switchWidth} height={16} fill={colors.error} rx={2} />
-                  <rect x={10 + switchWidth} y={12} width={gateWidth} height={16} fill={colors.accent} rx={2} />
-                  <rect x={10 + switchWidth + gateWidth} y={12} width={condWidth} height={16} fill={colors.chip} rx={2} />
-                </>
-              );
-            })()}
-
-            {/* Legend */}
-            <g transform="translate(0, 40)">
-              <rect x={0} y={0} width={12} height={12} fill={colors.error} rx={2} />
-              <text x={18} y={10} fill={colors.textSecondary} fontSize={10}>Switching: {losses.switchingLoss.toFixed(1)} mW</text>
-
-              <rect x={130} y={0} width={12} height={12} fill={colors.accent} rx={2} />
-              <text x={148} y={10} fill={colors.textSecondary} fontSize={10}>Gate: {losses.gateDriverLoss.toFixed(1)} mW</text>
-
-              <rect x={250} y={0} width={12} height={12} fill={colors.chip} rx={2} />
-              <text x={268} y={10} fill={colors.textSecondary} fontSize={10}>Cond: {losses.conductionLoss.toFixed(1)} mW</text>
-            </g>
-
-            {/* Total and efficiency */}
-            <text x={0} y={70} fill={colors.textPrimary} fontSize={12} fontWeight="bold">
-              Total Loss: {losses.totalLoss.toFixed(1)} mW | Efficiency: {losses.efficiency.toFixed(1)}%
+          {/* Loss breakdown bar */}
+          <g transform="translate(20, 360)">
+            <text x={0} y={0} fill={colors.textSecondary} fontSize={12} fontWeight="500">
+              Switching: {losses.switchingLoss.toFixed(1)} mW
+            </text>
+            <text x={170} y={0} fill={colors.textSecondary} fontSize={12} fontWeight="500">
+              Gate: {losses.gateDriverLoss.toFixed(1)} mW
+            </text>
+            <text x={320} y={0} fill={colors.textSecondary} fontSize={12} fontWeight="500">
+              Efficiency: {losses.efficiency.toFixed(1)}%
             </text>
           </g>
 
           {/* Frequency indicator */}
-          <text x={width/2} y={height - 10} fill={colors.textMuted} fontSize={11} textAnchor="middle">
-            Switching at {switchingFrequency} MHz
+          <text x={width/2} y={height - 5} fill={colors.textMuted} fontSize={12} textAnchor="middle">
+            Switching at {switchingFrequency} MHz | Total Loss: {losses.totalLoss.toFixed(1)} mW
           </text>
         </svg>
       </div>
     );
+  };
+
+  const sliderStyle = {
+    width: '100%',
+    accentColor: colors.accent,
+    touchAction: 'pan-y' as const,
   };
 
   const renderControls = () => (
@@ -557,7 +618,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
           step="10"
           value={switchingFrequency}
           onChange={(e) => setSwitchingFrequency(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={sliderStyle}
         />
       </div>
 
@@ -572,7 +633,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
           step="1"
           value={gateCharge}
           onChange={(e) => setGateCharge(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={sliderStyle}
         />
       </div>
 
@@ -587,7 +648,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
           step="0.5"
           value={supplyVoltage}
           onChange={(e) => setSupplyVoltage(parseFloat(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={sliderStyle}
         />
       </div>
 
@@ -602,7 +663,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
           step="0.1"
           value={loadCurrent}
           onChange={(e) => setLoadCurrent(parseFloat(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={sliderStyle}
         />
       </div>
 
@@ -622,8 +683,9 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
     </div>
   );
 
-  const buttonStyle = {
+  const buttonBaseStyle = {
     WebkitTapHighlightColor: 'transparent' as const,
+    transition: 'all 0.2s ease',
   };
 
   const renderProgressBar = () => (
@@ -646,7 +708,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
             onClick={() => index <= currentIndex && goToPhase(p)}
             disabled={index > currentIndex}
             style={{
-              ...buttonStyle,
+              ...buttonBaseStyle,
               width: isMobile ? '28px' : '32px',
               height: isMobile ? '28px' : '32px',
               borderRadius: '50%',
@@ -688,7 +750,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
         onClick={goBack}
         disabled={phase === 'hook'}
         style={{
-          ...buttonStyle,
+          ...buttonBaseStyle,
           padding: '12px 24px',
           borderRadius: '8px',
           border: `1px solid ${colors.textMuted}`,
@@ -706,15 +768,16 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
         onClick={goNext}
         disabled={!canProceed}
         style={{
-          ...buttonStyle,
+          ...buttonBaseStyle,
           padding: '12px 32px',
           borderRadius: '8px',
           border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
+          background: canProceed ? `linear-gradient(135deg, ${colors.accent}, #d97706)` : 'rgba(255,255,255,0.1)',
           color: canProceed ? 'white' : colors.textMuted,
           fontWeight: 'bold',
           cursor: canProceed ? 'pointer' : 'not-allowed',
           fontSize: '16px',
+          boxShadow: canProceed ? '0 4px 12px rgba(245, 158, 11, 0.4)' : 'none',
         }}
       >
         {buttonText}
@@ -725,7 +788,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100px', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
@@ -752,6 +815,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
               </p>
               <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
                 This is why your laptop gets warm even when idle, and why phone chargers heat up.
+                Let's explore how switching frequency and gate charge affect power loss!
               </p>
             </div>
 
@@ -761,13 +825,13 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
               borderRadius: '8px',
               borderLeft: `3px solid ${colors.accent}`,
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                Explore how switching frequency and gate charge affect power loss!
+              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'normal' }}>
+                Discover how switching frequency and gate charge affect power loss!
               </p>
             </div>
           </div>
         </div>
-        {renderBottomBar(true, 'Make a Prediction')}
+        {renderBottomBar(true, 'Start Exploring')}
       </div>
     );
   }
@@ -775,7 +839,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100px', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           {renderVisualization()}
@@ -803,7 +867,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
                   key={p.id}
                   onClick={() => setPrediction(p.id)}
                   style={{
-                    ...buttonStyle,
+                    ...buttonBaseStyle,
                     padding: '16px',
                     borderRadius: '8px',
                     border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
@@ -828,13 +892,13 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100px', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Switching Losses</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Adjust parameters to see how losses change
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 'normal' }}>
+              This visualization shows how MOSFET drain voltage and current overlap during switching transitions. Watch how the waveforms change as you adjust parameters below.
             </p>
           </div>
 
@@ -849,11 +913,24 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
           }}>
             <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
             <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Double the frequency - what happens to switching loss?</li>
-              <li>Increase gate charge - how does gate driver loss change?</li>
+              <li>Double the frequency - observe how switching loss increases</li>
+              <li>Increase gate charge - notice how gate driver loss changes</li>
               <li>Find the settings for highest efficiency</li>
               <li>Note how the loss breakdown shifts with frequency</li>
             </ul>
+          </div>
+
+          <div style={{
+            background: 'rgba(59, 130, 246, 0.15)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `3px solid #3b82f6`,
+          }}>
+            <h4 style={{ color: '#3b82f6', marginBottom: '8px' }}>Why This Matters in Industry</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 'normal' }}>
+              Understanding switching losses is important for practical engineering design. This is why engineers in the power electronics industry carefully choose switching frequencies - it directly enables smaller, more efficient chargers, inverters, and power supplies used in everyday technology.
+            </p>
           </div>
         </div>
         {renderBottomBar(true, 'Continue to Review')}
@@ -866,7 +943,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
     const wasCorrect = prediction === 'switching';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100px', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{
@@ -880,7 +957,8 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
             <p style={{ color: colors.textPrimary }}>
-              At high frequencies, switching losses dominate. Every time the MOSFET transitions,
+              Your prediction was that {prediction === 'switching' ? 'switching losses dominate' : prediction === 'conduction' ? 'conduction losses dominate' : prediction === 'leakage' ? 'leakage losses dominate' : 'capacitive losses dominate'}.
+              As you observed in the experiment, at high frequencies switching losses dominate. Every time the MOSFET transitions,
               there is a brief moment when both high voltage AND high current exist simultaneously.
             </p>
           </div>
@@ -920,7 +998,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100px', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
@@ -956,7 +1034,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
                   key={p.id}
                   onClick={() => setTwistPrediction(p.id)}
                   style={{
-                    ...buttonStyle,
+                    ...buttonBaseStyle,
                     padding: '16px',
                     borderRadius: '8px',
                     border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
@@ -981,7 +1059,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100px', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
@@ -1018,7 +1096,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
     const wasCorrect = twistPrediction === 'balance';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100px', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{
@@ -1060,7 +1138,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, 'Apply This Knowledge')}
+        {renderBottomBar(true, 'Continue to Transfer')}
       </div>
     );
   }
@@ -1068,7 +1146,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
   // TRANSFER PHASE
   if (phase === 'transfer') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100px', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
@@ -1105,9 +1183,9 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
               {!transferCompleted.has(index) ? (
                 <button
                   onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ ...buttonStyle, padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
+                  style={{ ...buttonBaseStyle, padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
                 >
-                  Reveal Answer
+                  Got It - Reveal Answer
                 </button>
               ) : (
                 <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
@@ -1117,7 +1195,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
             </div>
           ))}
         </div>
-        {renderBottomBar(transferCompleted.size >= 4, 'Take the Test')}
+        {renderBottomBar(transferCompleted.size >= 4, 'Continue to Test')}
       </div>
     );
   }
@@ -1126,7 +1204,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ minHeight: '100px', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderProgressBar()}
           <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
             <div style={{
@@ -1159,20 +1237,20 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
               );
             })}
           </div>
-          {renderBottomBar(testScore >= 7, testScore >= 7 ? 'Complete Mastery' : 'Review & Retry')}
+          {renderBottomBar(testScore >= 7, testScore >= 7 ? 'Continue to Mastery' : 'Review & Retry')}
         </div>
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100px', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <span style={{ color: colors.textSecondary }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
             </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
@@ -1180,22 +1258,23 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
               ))}
             </div>
             <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5, fontWeight: 'bold' }}>{currentQ.question}</p>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5, marginTop: '8px', fontWeight: 'normal' }}>{currentQ.context}</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {currentQ.options.map((opt, oIndex) => (
-                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ ...buttonStyle, padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left' as const, fontSize: '14px' }}>
+                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ ...buttonBaseStyle, padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left' as const, fontSize: '14px' }}>
                   {opt.text}
                 </button>
               ))}
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ ...buttonStyle, padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
+            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ ...buttonBaseStyle, padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
             {currentTestQuestion < testQuestions.length - 1 ? (
-              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ ...buttonStyle, padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button>
+              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ ...buttonBaseStyle, padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button>
             ) : (
-              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ ...buttonStyle, padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
+              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ ...buttonBaseStyle, padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
             )}
           </div>
         </div>
@@ -1206,11 +1285,11 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100px', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>{'\uD83C\uDFC6'}</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You understand MOSFET switching losses!</p>
           </div>
@@ -1234,7 +1313,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
           </div>
           {renderVisualization()}
         </div>
-        {renderBottomBar(true, 'Complete Game')}
+        {renderBottomBar(true, 'Continue')}
       </div>
     );
   }

@@ -428,9 +428,6 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
   }, [playSound]);
 
   const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
     setTestAnswers(prev => {
       const newAnswers = [...prev];
       newAnswers[questionIndex] = answerIndex;

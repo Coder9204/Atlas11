@@ -567,13 +567,17 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
         </g>
 
         {/* Labels */}
-        <text x={width - 40} y={glassTop - 10} fill={colors.textMuted} fontSize="10" textAnchor="middle">AIR</text>
-        <text x={width - 40} y={waterSurfaceY + 30} fill={colors.water} fontSize="10" textAnchor="middle">
+        <text x={width - 40} y={glassTop - 10} fill={colors.textMuted} fontSize="11" textAnchor="middle">AIR</text>
+        <text x={width - 40} y={waterSurfaceY + 30} fill={colors.water} fontSize="11" textAnchor="middle">
           {material.toUpperCase()}
         </text>
-        <text x={width - 40} y={waterSurfaceY + 42} fill={colors.textMuted} fontSize="9" textAnchor="middle">
+        <text x={width - 40} y={waterSurfaceY + 44} fill={colors.textMuted} fontSize="11" textAnchor="middle">
           n={refractiveIndex.toFixed(2)}
         </text>
+
+        {/* Axis labels */}
+        <text x={width/2} y={height - 18} textAnchor="middle" fill={colors.textMuted} fontSize="11">Distance</text>
+        <text x={12} y={height/2} textAnchor="middle" fill={colors.textMuted} fontSize="11" transform={`rotate(-90, 12, ${height/2})`}>Angle</text>
 
         {/* Shift indicator */}
         <text x={width/2} y={height - 5} textAnchor="middle" fill={colors.textSecondary} fontSize="11">
@@ -585,9 +589,9 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
           <g transform={`translate(15, ${height - 45})`}>
             <rect x="0" y="0" width="80" height="35" rx="4" fill="rgba(30, 41, 59, 0.9)" />
             <line x1="8" y1="12" x2="25" y2="12" stroke={colors.error} strokeWidth="2" strokeDasharray="4,2" />
-            <text x="30" y="15" fill={colors.textMuted} fontSize="9">Actual ray</text>
+            <text x="30" y="15" fill={colors.textMuted} fontSize="11">Actual ray</text>
             <line x1="8" y1="26" x2="25" y2="26" stroke={colors.success} strokeWidth="2" />
-            <text x="30" y="29" fill={colors.textMuted} fontSize="9">Perceived</text>
+            <text x="30" y="29" fill={colors.textMuted} fontSize="11">Perceived</text>
           </g>
         )}
       </svg>
@@ -947,10 +951,11 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
                   onChange={(e) => setViewingAngle(parseInt(e.target.value))}
                   style={{
                     width: '100%',
-                    height: '8px',
+                    height: '20px',
                     borderRadius: '4px',
                     cursor: 'pointer',
                     accentColor: colors.accent,
+                    touchAction: 'pan-y',
                   }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -977,10 +982,11 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
                   onChange={(e) => setRefractiveIndex(parseFloat(e.target.value))}
                   style={{
                     width: '100%',
-                    height: '8px',
+                    height: '20px',
                     borderRadius: '4px',
                     cursor: 'pointer',
                     accentColor: colors.accent,
+                    touchAction: 'pan-y',
                   }}
                 />
               </div>
@@ -999,10 +1005,11 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
                   onChange={(e) => setWaterLevel(parseInt(e.target.value))}
                   style={{
                     width: '100%',
-                    height: '8px',
+                    height: '20px',
                     borderRadius: '4px',
                     cursor: 'pointer',
                     accentColor: colors.water,
+                    touchAction: 'pan-y',
                   }}
                 />
               </div>
@@ -1245,11 +1252,13 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
                   <line x1="65" y1="50" x2="65" y2="110" stroke="#fbbf24" strokeWidth="6" strokeLinecap="round" opacity="0.4" strokeDasharray="4,4" />
                   <circle cx="65" cy="50" r="4" fill={colors.water} filter="url(#twistGlow)" />
                   <text x="65" y="145" textAnchor="middle" fill={colors.textMuted} fontSize="11">Plain Water</text>
-                  <text x="65" y="158" textAnchor="middle" fill={colors.water} fontSize="10" fontWeight="600">n = 1.33</text>
+                  <text x="65" y="158" textAnchor="middle" fill={colors.water} fontSize="11" fontWeight="600">n = 1.33</text>
                 </g>
                 {/* Arrow */}
                 <g transform="translate(185, 85)">
-                  <path d="M 0 0 L 25 0 L 20 -5 M 25 0 L 20 5" stroke={colors.textMuted} strokeWidth="2" fill="none" />
+                  <line x1="0" y1="0" x2="25" y2="0" stroke={colors.textMuted} strokeWidth="2" />
+                  <line x1="25" y1="0" x2="20" y2="-5" stroke={colors.textMuted} strokeWidth="2" />
+                  <line x1="25" y1="0" x2="20" y2="5" stroke={colors.textMuted} strokeWidth="2" />
                 </g>
                 {/* Sugar water side */}
                 <g transform="translate(230, 35)">
@@ -1260,7 +1269,7 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
                   <line x1="65" y1="50" x2="75" y2="110" stroke="#fbbf24" strokeWidth="6" strokeLinecap="round" filter="url(#twistGlow)" />
                   <circle cx="65" cy="50" r="4" fill={colors.warning} filter="url(#twistGlow)" />
                   <text x="65" y="145" textAnchor="middle" fill={colors.textMuted} fontSize="11">Sugar Water</text>
-                  <text x="65" y="158" textAnchor="middle" fill={colors.warning} fontSize="10" fontWeight="600">n = ???</text>
+                  <text x="65" y="158" textAnchor="middle" fill={colors.warning} fontSize="11" fontWeight="600">n = ???</text>
                 </g>
               </svg>
             </div>
@@ -1397,10 +1406,11 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
                   onChange={(e) => setViewingAngle(parseInt(e.target.value))}
                   style={{
                     width: '100%',
-                    height: '8px',
+                    height: '20px',
                     borderRadius: '4px',
                     cursor: 'pointer',
                     accentColor: colors.accent,
+                    touchAction: 'pan-y',
                   }}
                 />
               </div>

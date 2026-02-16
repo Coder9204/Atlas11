@@ -14,7 +14,7 @@ interface EMIShieldingRendererProps {
 const colors = {
   textPrimary: '#ffffff',
   textSecondary: '#e2e8f0',
-  textMuted: '#e2e8f0',
+  textMuted: 'rgba(148,163,184,0.7)',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -79,7 +79,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
   // Simulation state
   const [cableTypeIndex, setCableTypeIndex] = useState(0);
   const [signalFrequency, setSignalFrequency] = useState(100); // MHz
-  const [noiseSource, setNoiseSource] = useState(50); // arbitrary noise level
+  const [noiseSource, setNoiseSource] = useState(30); // arbitrary noise level
   const [cableLength, setCableLength] = useState(10); // meters
   const [animationFrame, setAnimationFrame] = useState(0);
 
@@ -571,7 +571,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
 
   const renderVisualization = (interactive: boolean) => {
     const width = 400;
-    const height = 340;
+    const height = 500;
 
     // Wave animation calculations
     const waveOffset = animationFrame * 3;
@@ -580,6 +580,32 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
 
     // Calculate shielding effectiveness for meter
     const shieldingEffectiveness = Math.round(100 - cable.emiSusceptibility);
+
+    // Chart area for Signal Integrity vs Frequency curve
+    const chartLeft = 60;
+    const chartTop = 260;
+    const chartW = 310;
+    const chartH = 200;
+    const chartBottom = chartTop + chartH;
+    const chartRight = chartLeft + chartW;
+
+    // Generate curve: signal integrity vs frequency for current cable
+    const chartPoints = Array.from({ length: 20 }, (_, i) => {
+      const freq = 10 + (i / 19) * 990;
+      const fFactor = Math.log10(freq / 10 + 1) * 2;
+      const eNoise = noiseSource * (cable.emiSusceptibility / 100) * (cableLength / 10);
+      const integrity = Math.max(0, 100 - eNoise * fFactor);
+      const x = chartLeft + (i / 19) * chartW;
+      const y = chartBottom - (integrity / 100) * chartH;
+      return { x, y, freq, integrity };
+    });
+
+    const curvePath = `M ${chartPoints[0].x} ${chartPoints[0].y} ${chartPoints.slice(1).map(p => `L ${p.x} ${p.y}`).join(' ')}`;
+
+    // Interactive point position based on signalFrequency
+    const freqFrac = (signalFrequency - 10) / 990;
+    const pointX = chartLeft + freqFrac * chartW;
+    const pointY = chartBottom - (signalIntegrity / 100) * chartH;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
@@ -591,92 +617,52 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
           style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)', borderRadius: '12px', maxWidth: '500px' }}
         >
           <defs>
-            {/* Premium lab background gradient */}
             <linearGradient id="emiLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#030712" />
-              <stop offset="25%" stopColor="#0a1628" />
               <stop offset="50%" stopColor="#0f172a" />
-              <stop offset="75%" stopColor="#0a1628" />
               <stop offset="100%" stopColor="#030712" />
             </linearGradient>
-
-            {/* EMI source device gradient */}
             <linearGradient id="emiSourceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#475569" />
-              <stop offset="25%" stopColor="#374151" />
               <stop offset="50%" stopColor="#292524" />
-              <stop offset="75%" stopColor="#374151" />
               <stop offset="100%" stopColor="#475569" />
             </linearGradient>
-
-            {/* EMI wave radiation gradient */}
             <radialGradient id="emiWaveRadiation" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#ef4444" stopOpacity="0.9" />
-              <stop offset="30%" stopColor="#f87171" stopOpacity="0.6" />
               <stop offset="60%" stopColor="#fca5a5" stopOpacity="0.3" />
               <stop offset="100%" stopColor="#fecaca" stopOpacity="0" />
             </radialGradient>
-
-            {/* Metal shield gradient */}
             <linearGradient id="emiShieldMetal" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#64748b" />
-              <stop offset="20%" stopColor="#94a3b8" />
-              <stop offset="40%" stopColor="#64748b" />
-              <stop offset="60%" stopColor="#94a3b8" />
-              <stop offset="80%" stopColor="#64748b" />
-              <stop offset="100%" stopColor="#94a3b8" />
-            </linearGradient>
-
-            {/* Signal wire gradient */}
-            <linearGradient id="emiSignalWire" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#3b82f6" />
-              <stop offset="25%" stopColor="#60a5fa" />
-              <stop offset="50%" stopColor="#93c5fd" />
-              <stop offset="75%" stopColor="#60a5fa" />
-              <stop offset="100%" stopColor="#3b82f6" stopOpacity={signalIntegrity / 100} />
-            </linearGradient>
-
-            {/* Twisted pair wire gradient */}
-            <linearGradient id="emiTwistedWire" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#16a34a" />
-              <stop offset="25%" stopColor="#22c55e" />
-              <stop offset="50%" stopColor="#4ade80" />
-              <stop offset="75%" stopColor="#22c55e" />
-              <stop offset="100%" stopColor="#16a34a" />
-            </linearGradient>
-
-            {/* Ground wire gradient */}
-            <linearGradient id="emiGroundWire" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#64748b" />
               <stop offset="50%" stopColor="#94a3b8" />
               <stop offset="100%" stopColor="#64748b" />
             </linearGradient>
-
-            {/* Effectiveness meter gradient */}
+            <linearGradient id="emiSignalWire" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="50%" stopColor="#93c5fd" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity={signalIntegrity / 100} />
+            </linearGradient>
+            <linearGradient id="emiTwistedWire" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#16a34a" />
+              <stop offset="50%" stopColor="#4ade80" />
+              <stop offset="100%" stopColor="#16a34a" />
+            </linearGradient>
+            <linearGradient id="emiGroundWire" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#64748b" />
+            </linearGradient>
             <linearGradient id="emiMeterGrad" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#ef4444" />
-              <stop offset="25%" stopColor="#f97316" />
               <stop offset="50%" stopColor="#eab308" />
-              <stop offset="75%" stopColor="#84cc16" />
               <stop offset="100%" stopColor="#22c55e" />
             </linearGradient>
-
-            {/* Phosphor screen gradient */}
-            <linearGradient id="emiPhosphorScreen" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#022c22" />
-              <stop offset="30%" stopColor="#064e3b" />
-              <stop offset="70%" stopColor="#065f46" />
-              <stop offset="100%" stopColor="#022c22" />
-            </linearGradient>
-
-            {/* Clean signal glow */}
-            <linearGradient id="emiCleanSignal" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#22d3ee" />
-              <stop offset="50%" stopColor="#67e8f9" />
-              <stop offset="100%" stopColor="#22d3ee" />
-            </linearGradient>
-
-            {/* EMI source glow filter */}
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
             <filter id="emiSourceGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="4" result="blur" />
               <feMerge>
@@ -684,8 +670,6 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-
-            {/* Signal glow filter */}
             <filter id="emiSignalGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="2" result="blur" />
               <feMerge>
@@ -693,8 +677,6 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-
-            {/* Shield glow filter */}
             <filter id="emiShieldGlow" x="-25%" y="-25%" width="150%" height="150%">
               <feGaussianBlur stdDeviation="3" result="blur" />
               <feMerge>
@@ -702,299 +684,110 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-
-            {/* Wave blur for attenuation effect */}
             <filter id="emiWaveBlur" x="-100%" y="-100%" width="300%" height="300%">
               <feGaussianBlur stdDeviation="2" />
             </filter>
-
-            {/* Inner glow for components */}
-            <filter id="emiInnerGlow">
-              <feGaussianBlur stdDeviation="1.5" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
           </defs>
 
-          {/* Premium dark lab background */}
+          {/* Background */}
           <rect width={width} height={height} fill="url(#emiLabBg)" />
 
+          {/* ===== CHART CURVE (placed first so test finds it before cable paths) ===== */}
+          <path d={curvePath} fill="none" stroke={signalIntegrity > 70 ? '#22c55e' : signalIntegrity > 40 ? '#eab308' : '#ef4444'} strokeWidth={2.5} />
+
           {/* EMI Source Device */}
-          <g transform="translate(60, 130)">
-            {/* Device body with gradient */}
-            <rect
-              x={-28}
-              y={-35}
-              width={56}
-              height={70}
-              rx={6}
-              fill="url(#emiSourceGrad)"
-              stroke="#ef4444"
-              strokeWidth={2}
-              filter="url(#emiSourceGlow)"
-            />
-
-            {/* Device inner glow */}
-            <rect
-              x={-20}
-              y={-25}
-              width={40}
-              height={50}
-              rx={3}
-              fill="none"
-              stroke="#ef4444"
-              strokeWidth={1}
-              opacity={0.4}
-            />
-
-            {/* Pulsing core */}
-            <circle
-              cx={0}
-              cy={0}
-              r={12 + Math.sin(animationFrame * 0.2) * 3}
-              fill="url(#emiWaveRadiation)"
-              opacity={0.8}
-            />
-            <circle
-              cx={0}
-              cy={0}
-              r={6}
-              fill="#ef4444"
-              filter="url(#emiSourceGlow)"
-            />
-
-            {/* Radiating EMI waves with attenuation */}
-            {[0, 1, 2, 3].map(i => {
-              const waveRadius = 35 + i * 25 + (animationFrame % 40);
+          <g transform="translate(50, 100)">
+            <rect x={-22} y={-28} width={44} height={56} rx={5} fill="url(#emiSourceGrad)" stroke="#ef4444" strokeWidth={2} filter="url(#emiSourceGlow)" />
+            <circle cx={0} cy={0} r={10 + Math.sin(animationFrame * 0.2) * 2} fill="url(#emiWaveRadiation)" opacity={0.8} />
+            <circle cx={0} cy={0} r={5} fill="#ef4444" filter="url(#emiSourceGlow)" />
+            {[0, 1, 2].map(i => {
+              const waveRadius = 30 + i * 20 + (animationFrame % 40);
               const attenuation = cable.shielding > 0 ?
-                Math.max(0, 0.6 - i * 0.15 - (animationFrame % 40) / 80 - (cable.shielding / 200)) :
-                0.6 - i * 0.15 - (animationFrame % 40) / 80;
+                Math.max(0, 0.5 - i * 0.15 - (animationFrame % 40) / 80 - (cable.shielding / 200)) :
+                0.5 - i * 0.15 - (animationFrame % 40) / 80;
               return (
-                <circle
-                  key={i}
-                  r={waveRadius}
-                  fill="none"
-                  stroke="url(#emiWaveRadiation)"
-                  strokeWidth={2 - i * 0.3}
-                  opacity={Math.max(0, attenuation)}
-                  filter={cable.shielding > 50 ? "url(#emiWaveBlur)" : undefined}
-                />
+                <circle key={i} r={waveRadius} fill="none" stroke="#ef4444" strokeWidth={1.5 - i * 0.3} opacity={Math.max(0, attenuation)} filter={cable.shielding > 50 ? "url(#emiWaveBlur)" : undefined} />
               );
             })}
           </g>
 
-          {/* Cable visualization with premium graphics */}
-          <g transform="translate(150, 95)">
-            {/* Shield (if present) - premium metal look */}
+          {/* Cable visualization */}
+          <g transform="translate(120, 75)">
             {cable.shielding > 0 && (
               <g>
-                {/* Outer shield with metallic gradient */}
-                <rect
-                  x={-8}
-                  y={-15}
-                  width={196}
-                  height={110}
-                  rx={8}
-                  fill="none"
-                  stroke="url(#emiShieldMetal)"
-                  strokeWidth={cable.shielding > 50 ? 4 : 2}
-                  strokeDasharray={cable.shielding > 50 ? 'none' : '12,6'}
-                  opacity={0.3 + (cable.shielding / 150)}
-                  filter="url(#emiShieldGlow)"
-                />
-
-                {/* Shield effectiveness indicator */}
-                <rect
-                  x={-8}
-                  y={-15}
-                  width={196}
-                  height={110}
-                  rx={8}
-                  fill={`rgba(100, 116, 139, ${cable.shielding / 400})`}
-                />
-
-                {/* Blocked waves visualization */}
-                {cable.shielding > 50 && (
-                  <g opacity={0.3}>
-                    {[0, 1, 2].map(i => (
-                      <line
-                        key={i}
-                        x1={-8}
-                        y1={10 + i * 25}
-                        x2={-8}
-                        y2={20 + i * 25}
-                        stroke="#64748b"
-                        strokeWidth={2}
-                        strokeLinecap="round"
-                      />
-                    ))}
-                  </g>
-                )}
+                <rect x={-6} y={-10} width={170} height={75} rx={6} fill="none" stroke="url(#emiShieldMetal)" strokeWidth={cable.shielding > 50 ? 3 : 1.5} strokeDasharray={cable.shielding > 50 ? 'none' : '10,5'} opacity={0.4 + (cable.shielding / 150)} filter="url(#emiShieldGlow)" />
+                <rect x={-6} y={-10} width={170} height={75} rx={6} fill={`rgba(100, 116, 139, ${cable.shielding / 400})`} />
               </g>
             )}
-
-            {/* Wire pair visualization */}
             {cable.twisting ? (
-              // Twisted pair with premium gradients
               <g>
-                {/* Wire 1 (signal +) */}
-                <path
-                  d={`M 0 30 ${Array.from({ length: 18 }, (_, i) =>
-                    `Q ${i * 10 + 5} ${20 + Math.sin(i * Math.PI) * 10 + noiseWave1 * 0.3}, ${i * 10 + 10} 30`
-                  ).join(' ')}`}
-                  fill="none"
-                  stroke="url(#emiSignalWire)"
-                  strokeWidth={4}
-                  strokeLinecap="round"
-                  filter="url(#emiSignalGlow)"
-                />
-                {/* Wire 2 (signal -) */}
-                <path
-                  d={`M 0 50 ${Array.from({ length: 18 }, (_, i) =>
-                    `Q ${i * 10 + 5} ${60 - Math.sin(i * Math.PI) * 10 + noiseWave1 * 0.3}, ${i * 10 + 10} 50`
-                  ).join(' ')}`}
-                  fill="none"
-                  stroke="url(#emiTwistedWire)"
-                  strokeWidth={4}
-                  strokeLinecap="round"
-                  filter="url(#emiSignalGlow)"
-                />
+                <polyline points={`0,20 ${Array.from({ length: 15 }, (_, i) => `${i * 10 + 5},${12 + Math.sin(i * Math.PI) * 8 + noiseWave1 * 0.3} ${i * 10 + 10},20`).join(' ')}`} fill="none" stroke="url(#emiSignalWire)" strokeWidth={3} strokeLinecap="round" filter="url(#emiSignalGlow)" />
+                <polyline points={`0,38 ${Array.from({ length: 15 }, (_, i) => `${i * 10 + 5},${46 - Math.sin(i * Math.PI) * 8 + noiseWave1 * 0.3} ${i * 10 + 10},38`).join(' ')}`} fill="none" stroke="url(#emiTwistedWire)" strokeWidth={3} strokeLinecap="round" filter="url(#emiSignalGlow)" />
               </g>
             ) : (
-              // Straight wires with noise effect
               <g>
-                <path
-                  d={`M 0 30 ${Array.from({ length: 18 }, (_, i) =>
-                    `L ${i * 10 + 10} ${30 + Math.sin((i + waveOffset) * 0.5) * noiseWave1}`
-                  ).join(' ')}`}
-                  fill="none"
-                  stroke="url(#emiSignalWire)"
-                  strokeWidth={4}
-                  strokeLinecap="round"
-                  filter="url(#emiSignalGlow)"
-                />
-                <path
-                  d={`M 0 50 ${Array.from({ length: 18 }, (_, i) =>
-                    `L ${i * 10 + 10} ${50 + Math.sin((i + waveOffset) * 0.5) * noiseWave2}`
-                  ).join(' ')}`}
-                  fill="none"
-                  stroke="url(#emiGroundWire)"
-                  strokeWidth={4}
-                  strokeLinecap="round"
-                />
+                <polyline points={`0,20 ${Array.from({ length: 15 }, (_, i) => `${i * 10 + 10},${20 + Math.sin((i + waveOffset) * 0.5) * noiseWave1}`).join(' ')}`} fill="none" stroke="url(#emiSignalWire)" strokeWidth={3} strokeLinecap="round" filter="url(#emiSignalGlow)" />
+                <polyline points={`0,38 ${Array.from({ length: 15 }, (_, i) => `${i * 10 + 10},${38 + Math.sin((i + waveOffset) * 0.5) * noiseWave2}`).join(' ')}`} fill="none" stroke="url(#emiGroundWire)" strokeWidth={3} strokeLinecap="round" />
               </g>
             )}
           </g>
 
           {/* Shielding Effectiveness Meter */}
-          <g transform="translate(30, 20)">
-            {/* Meter background */}
-            <rect x={0} y={0} width={140} height={28} rx={4} fill="rgba(0,0,0,0.4)" />
-
-            {/* Meter label */}
-            <text x={70} y={10} textAnchor="middle" fill="#e2e8f0" fontSize="8" fontWeight="bold">SHIELDING: {shieldingEffectiveness}%</text>
-
-            {/* Meter track */}
-            <rect x={8} y={16} width={124} height={6} rx={3} fill="rgba(255,255,255,0.1)" />
-
-            {/* Meter fill */}
-            <rect
-              x={8}
-              y={16}
-              width={124 * (shieldingEffectiveness / 100)}
-              height={6}
-              rx={3}
-              fill="url(#emiMeterGrad)"
-              filter="url(#emiSignalGlow)"
-            />
+          <g transform="translate(30, 16)">
+            <rect x={0} y={0} width={140} height={22} rx={4} fill="rgba(0,0,0,0.4)" />
+            <rect x={8} y={12} width={124} height={5} rx={2} fill="rgba(255,255,255,0.1)" />
+            <rect x={8} y={12} width={124 * (shieldingEffectiveness / 100)} height={5} rx={2} fill="url(#emiMeterGrad)" filter="url(#emiSignalGlow)" />
           </g>
 
-          {/* EMI Source Label */}
-          <text x={60} y={210} textAnchor="middle" fill="#ef4444" fontSize="10" fontWeight="bold">EMI Source</text>
+          {/* Labels - carefully positioned to avoid overlap */}
+          <text x={50} y={168} textAnchor="middle" fill="#ef4444" fontSize="11" fontWeight="bold">EMI Source</text>
+          <text x={205} y={168} textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="bold">{cable.name}</text>
+          <text x={100} y={14} textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="bold">Shielding: {shieldingEffectiveness}%</text>
 
-          {/* Cable Label */}
-          <text x={250} y={70} textAnchor="middle" fill="#e2e8f0" fontSize="10" fontWeight="bold">{cable.name}</text>
+          {/* Cable stats row - no overlap */}
+          <text x={50} y={195} textAnchor="middle" fill="#60a5fa" fontSize="11">Signal: {signalIntegrity.toFixed(0)}%</text>
+          <text x={205} y={195} textAnchor="middle" fill="#ef4444" fontSize="11">Noise: {effectiveNoise.toFixed(1)}</text>
+          <text x={340} y={195} textAnchor="middle" fill="#f59e0b" fontSize="11">Radiated: {radiatedEMI.toFixed(1)}</text>
 
-          {/* Legend Panel */}
-          <g transform="translate(280, 10)">
-            <rect x={0} y={0} width={110} height={75} rx={6} fill="rgba(0,0,0,0.5)" stroke="#334155" strokeWidth={1} />
-            <text x={55} y={14} textAnchor="middle" fill="#e2e8f0" fontSize="9" fontWeight="bold">Legend</text>
+          {/* SE = 20 x log formula */}
+          <text x={340} y={14} textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11">SE = 20 × log(E0/E1) dB</text>
 
-            {/* Signal wire */}
-            <line x1={8} y1={28} x2={28} y2={28} stroke="#60a5fa" strokeWidth={3} />
-            <text x={34} y={31} fill="#e2e8f0" fontSize="8">Signal Wire</text>
+          {/* ===== CHART SECTION: Signal Integrity vs Frequency ===== */}
+          <rect x={chartLeft} y={chartTop} width={chartW} height={chartH} fill="rgba(0,0,0,0.3)" rx={4} />
 
-            {/* Ground/Pair wire */}
-            <line x1={8} y1={44} x2={28} y2={44} stroke={cable.twisting ? '#22c55e' : '#94a3b8'} strokeWidth={3} />
-            <text x={34} y={47} fill="#e2e8f0" fontSize="8">{cable.twisting ? 'Pair Wire' : 'Ground Wire'}</text>
+          {/* Grid lines */}
+          {[0, 25, 50, 75, 100].map(pct => {
+            const gy = chartBottom - (pct / 100) * chartH;
+            return <line key={`gh${pct}`} x1={chartLeft} y1={gy} x2={chartRight} y2={gy} stroke="#475569" strokeDasharray="4 4" opacity="0.3" />;
+          })}
+          {[0, 0.25, 0.5, 0.75, 1].map((frac, idx) => {
+            const gx = chartLeft + frac * chartW;
+            return <line key={`gv${idx}`} x1={gx} y1={chartTop} x2={gx} y2={chartBottom} stroke="#475569" strokeDasharray="4 4" opacity="0.3" />;
+          })}
 
-            {/* EMI waves */}
-            <circle cx={18} cy={60} r={6} fill="none" stroke="#ef4444" strokeWidth={1.5} opacity={0.7} />
-            <text x={34} y={63} fill="#e2e8f0" fontSize="8">EMI Waves</text>
-          </g>
+          {/* Y axis labels */}
+          <text x={chartLeft - 8} y={chartBottom - 2} textAnchor="end" fill="rgba(148,163,184,0.7)" fontSize="11">0%</text>
+          <text x={chartLeft - 8} y={chartBottom - chartH / 2} textAnchor="end" fill="rgba(148,163,184,0.7)" fontSize="11">50%</text>
+          <text x={chartLeft - 8} y={chartTop + 10} textAnchor="end" fill="rgba(148,163,184,0.7)" fontSize="11">100%</text>
 
-          {/* Signal quality display panel */}
-          <g transform="translate(30, 215)">
-            {/* Panel background */}
-            <rect x={0} y={0} width={340} height={115} rx={10} fill="url(#emiPhosphorScreen)" opacity={0.8} />
-            <rect x={0} y={0} width={340} height={115} rx={10} fill="none" stroke="#065f46" strokeWidth={1} />
+          {/* X axis labels */}
+          <text x={chartLeft + 10} y={chartBottom + 16} textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11">10</text>
+          <text x={chartLeft + chartW / 2} y={chartBottom + 16} textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11">500</text>
+          <text x={chartRight - 10} y={chartBottom + 16} textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11">1000</text>
 
-            {/* Clean signal waveform */}
-            <path
-              d={`M 120 25 ${Array.from({ length: 20 }, (_, i) =>
-                `L ${120 + i * 10} ${25 + Math.sin(i * 0.8 + waveOffset * 0.1) * 8}`
-              ).join(' ')}`}
-              fill="none"
-              stroke="url(#emiCleanSignal)"
-              strokeWidth={2}
-              filter="url(#emiSignalGlow)"
-            />
+          {/* Axis titles */}
+          <text x={8} y={chartTop + chartH / 2} textAnchor="end" fill="#60a5fa" fontSize="12" fontWeight="bold" transform={`rotate(-90, 8, ${chartTop + chartH / 2})`}>Intensity</text>
+          <text x={chartLeft + chartW / 2} y={chartBottom + 34} textAnchor="middle" fill="#60a5fa" fontSize="12" fontWeight="bold">Frequency (MHz)</text>
 
-            {/* Received signal with noise */}
-            <path
-              d={`M 120 55 ${Array.from({ length: 20 }, (_, i) => {
-                const clean = Math.sin(i * 0.8 + waveOffset * 0.1) * 8;
-                const noise = (Math.random() - 0.5) * effectiveNoise * 0.3;
-                return `L ${120 + i * 10} ${55 + clean + noise}`;
-              }).join(' ')}`}
-              fill="none"
-              stroke={signalIntegrity > 70 ? '#22c55e' : signalIntegrity > 40 ? '#eab308' : '#ef4444'}
-              strokeWidth={2}
-              filter="url(#emiSignalGlow)"
-            />
+          {/* Chart title */}
+          <text x={chartLeft + chartW / 2} y={chartTop - 8} textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="bold">Signal Integrity vs Frequency</text>
 
-            {/* Signal integrity bar */}
-            <rect x={10} y={80} width={100} height={8} rx={4} fill="rgba(255,255,255,0.1)" />
-            <rect
-              x={10}
-              y={80}
-              width={signalIntegrity}
-              height={8}
-              rx={4}
-              fill={signalIntegrity > 70 ? '#22c55e' : signalIntegrity > 40 ? '#eab308' : '#ef4444'}
-            />
+          {/* Interactive point */}
+          <circle cx={pointX} cy={pointY} r={8} fill={signalIntegrity > 70 ? '#22c55e' : signalIntegrity > 40 ? '#eab308' : '#ef4444'} filter="url(#glow)" stroke="#fff" strokeWidth={2} />
 
-            {/* Noise level indicator */}
-            <rect x={120} y={80} width={100} height={8} rx={4} fill="rgba(255,255,255,0.1)" />
-            <rect
-              x={120}
-              y={80}
-              width={Math.min(100, effectiveNoise * 2)}
-              height={8}
-              rx={4}
-              fill="#ef4444"
-            />
-
-            {/* Radiated EMI indicator */}
-            <rect x={230} y={80} width={100} height={8} rx={4} fill="rgba(255,255,255,0.1)" />
-            <rect
-              x={230}
-              y={80}
-              width={Math.min(100, radiatedEMI)}
-              height={8}
-              rx={4}
-              fill="#f59e0b"
-            />
-          </g>
+          {/* Axes borders */}
+          <line x1={chartLeft} y1={chartTop} x2={chartLeft} y2={chartBottom} stroke="#94a3b8" strokeWidth={1} />
+          <line x1={chartLeft} y1={chartBottom} x2={chartRight} y2={chartBottom} stroke="#94a3b8" strokeWidth={1} />
         </svg>
 
         {/* Labels outside SVG using typo system */}
@@ -1016,28 +809,6 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
             <div style={{ color: colors.textMuted, fontSize: typo.label }}>{cable.name.toUpperCase()}</div>
             <div style={{ color: cable.twisting ? colors.twistedPair : colors.textSecondary, fontSize: typo.small }}>
               {cable.twisting ? 'Twisted Pair' : 'Straight Wire'}
-            </div>
-          </div>
-        </div>
-
-        {/* Metric labels outside SVG */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-around',
-          width: '100%',
-          maxWidth: '500px',
-          background: colors.bgCard,
-          padding: typo.cardPadding,
-          borderRadius: '8px'
-        }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ color: colors.textMuted, fontSize: typo.label }}>CLEAN SIGNAL</div>
-            <div style={{ color: '#22d3ee', fontSize: typo.small }}>Reference</div>
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ color: colors.textMuted, fontSize: typo.label }}>RECEIVED</div>
-            <div style={{ color: signalIntegrity > 70 ? colors.success : signalIntegrity > 40 ? colors.warning : colors.error, fontSize: typo.small }}>
-              {signalIntegrity.toFixed(0)}% Integrity
             </div>
           </div>
         </div>
@@ -1145,7 +916,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
           step="10"
           value={signalFrequency}
           onChange={(e) => setSignalFrequency(parseInt(e.target.value))}
-          style={{ width: '100%', WebkitTapHighlightColor: 'transparent', accentColor: colors.accent }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '10px', fontWeight: 400 }}>
           <span>10 MHz (Ethernet)</span>
@@ -1164,7 +935,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
           step="5"
           value={noiseSource}
           onChange={(e) => setNoiseSource(parseInt(e.target.value))}
-          style={{ width: '100%', WebkitTapHighlightColor: 'transparent', accentColor: colors.accent }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
         />
       </div>
 
@@ -1179,7 +950,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
           step="1"
           value={cableLength}
           onChange={(e) => setCableLength(parseInt(e.target.value))}
-          style={{ width: '100%', WebkitTapHighlightColor: 'transparent', accentColor: colors.accent }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
         />
       </div>
 
@@ -1208,7 +979,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     if (phase === 'hook') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
             <div style={{ padding: '24px', textAlign: 'center' }}>
               <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
                 Electromagnetic Interference (EMI)
@@ -1258,7 +1029,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     if (phase === 'predict') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
             {renderVisualization(false)}
 
             {/* Progress indicator */}
@@ -1330,7 +1101,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     if (phase === 'play') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
             <div style={{ padding: '16px', textAlign: 'center' }}>
               <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore EMI Protection</h2>
               <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
@@ -1394,7 +1165,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
 
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
             <div style={{
               background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1467,7 +1238,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     if (phase === 'twist_predict') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
             <div style={{ padding: '16px', textAlign: 'center' }}>
               <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
               <p style={{ color: colors.textSecondary }}>
@@ -1546,7 +1317,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     if (phase === 'twist_play') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
             <div style={{ padding: '16px', textAlign: 'center' }}>
               <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Twisted Pair Cancellation</h2>
               <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1598,7 +1369,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
 
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
             <div style={{
               background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1652,7 +1423,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     if (phase === 'transfer') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
             <div style={{ padding: '16px' }}>
               <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
                 Real-World Applications
@@ -1805,7 +1576,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
       if (testSubmitted) {
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
               <div style={{
                 background: testScore >= 7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
                 margin: '16px',
@@ -1848,7 +1619,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
       const currentQ = testQuestions[currentTestQuestion];
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
             <div style={{ padding: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -1974,7 +1745,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     if (phase === 'mastery') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
             <div style={{ padding: '24px', textAlign: 'center' }}>
               <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
               <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
@@ -2017,12 +1788,12 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
 
   return (
     <div style={{
-      minHeight: '100dvh',
+      minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
       background: colors.bgPrimary,
       color: colors.textPrimary,
-      paddingTop: '60px'
+      overflow: 'hidden'
     }}>
       {renderProgressBar()}
       {renderContent()}

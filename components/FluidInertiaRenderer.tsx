@@ -11,7 +11,7 @@
  * - Full compliance with GAME_EVALUATION_SYSTEM.md
  */
 
-import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 
 // ============================================================
 // THEME COLORS
@@ -38,7 +38,7 @@ const colors = {
 
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#e2e8f0',
+  textMuted: 'rgba(148,163,184,0.7)',
 
   border: '#334155',
   borderLight: '#475569',
@@ -70,7 +70,7 @@ type Phase =
 
 const testQuestions = [
   {
-    scenario: "You quickly close a water faucet and hear a loud banging noise in the pipes.",
+    scenario: "You quickly close a water faucet and hear a loud banging noise in the pipes. The sudden closure forces water to decelerate instantly, converting its kinetic energy into a pressure wave.",
     question: "What causes this 'water hammer' effect?",
     options: [
       { id: 'air', label: "Air bubbles collapsing in the pipes" },
@@ -81,7 +81,7 @@ const testQuestions = [
     explanation: "Water hammer occurs because moving water has momentum (mass x velocity). When flow suddenly stops, the water's inertia creates a massive pressure wave that travels back through the pipes, causing the banging sound."
   },
   {
-    scenario: "A car's shock absorber uses oil-filled cylinders to provide a smooth ride.",
+    scenario: "A car's shock absorber uses oil-filled cylinders to provide a smooth ride. When a wheel hits a pothole, the piston rapidly displaces oil through calibrated orifices.",
     question: "How does fluid inertia help absorb bumps?",
     options: [
       { id: 'compression', label: "The oil compresses and springs back" },
@@ -92,7 +92,7 @@ const testQuestions = [
     explanation: "When a wheel hits a bump, the piston tries to move quickly through the oil. The fluid's inertia and viscous resistance oppose rapid motion, absorbing and dissipating the energy gradually instead of all at once."
   },
   {
-    scenario: "Blood flows continuously through your arteries in a pulsatile manner.",
+    scenario: "Blood flows continuously through your arteries in a pulsatile manner. Between heartbeats, the heart is not actively pumping, yet blood continues to circulate.",
     question: "Why doesn't blood stop flowing between heartbeats?",
     options: [
       { id: 'gravity', label: "Gravity keeps it moving downward" },
@@ -103,7 +103,7 @@ const testQuestions = [
     explanation: "The blood's inertia keeps it moving forward between heartbeats. Elastic artery walls store energy during systole and release it during diastole, working with fluid inertia to maintain continuous flow."
   },
   {
-    scenario: "Engineers are designing a long-distance oil pipeline.",
+    scenario: "Engineers are designing a long-distance oil pipeline spanning 800 miles. The pipeline contains millions of gallons of oil moving at 3-8 mph.",
     question: "Why do pipelines need careful startup and shutdown procedures?",
     options: [
       { id: 'temperature', label: "Oil needs time to reach operating temperature" },
@@ -114,7 +114,7 @@ const testQuestions = [
     explanation: "Millions of gallons of oil moving at high speed have enormous inertia. Sudden stops or starts create pressure waves that can rupture pipes. Gradual ramp-up/down procedures manage fluid inertia safely."
   },
   {
-    scenario: "You're pouring water from a pitcher and suddenly stop.",
+    scenario: "You're pouring water from a pitcher and suddenly stop tilting. Despite the pitcher being level, water continues to flow out for a brief moment.",
     question: "Why does some water continue to flow out after you stop pouring?",
     options: [
       { id: 'gravity', label: "Gravity continues pulling the water" },
@@ -125,7 +125,7 @@ const testQuestions = [
     explanation: "Water already in motion has momentum due to its inertia. Even when you stop tilting, the water's inertia continues carrying it forward until friction and gravity overcome this momentum."
   },
   {
-    scenario: "A hydraulic brake system uses fluid to transmit force from the pedal to the brakes.",
+    scenario: "A hydraulic brake system uses fluid to transmit force from the pedal to the brakes. A mechanic discovers air bubbles in the brake lines.",
     question: "Why do hydraulic brakes feel 'spongy' with air in the lines?",
     options: [
       { id: 'compression', label: "Air compresses instead of transmitting force instantly" },
@@ -136,7 +136,7 @@ const testQuestions = [
     explanation: "Hydraulic systems rely on fluid inertia to transmit force rapidly. Air bubbles compress and absorb energy, disrupting the inertial coupling between pedal and brakes, making response sluggish and unpredictable."
   },
   {
-    scenario: "A tsunami approaches the coast after an undersea earthquake.",
+    scenario: "A tsunami approaches the coast after an undersea earthquake. Unlike surface wind waves, the entire water column from surface to seabed is in motion.",
     question: "What role does fluid inertia play in tsunami formation?",
     options: [
       { id: 'speed', label: "Inertia makes the wave move faster" },
@@ -147,7 +147,7 @@ const testQuestions = [
     explanation: "A tsunami involves the entire water column moving, not just surface waves. This enormous mass of water carries tremendous momentum due to inertia, which is why even slow-moving tsunamis cause catastrophic damage."
   },
   {
-    scenario: "Fuel injectors spray precisely timed bursts of fuel into an engine.",
+    scenario: "Fuel injectors spray precisely timed bursts of fuel into an engine cylinder. The electronic signal opens the injector valve, but fuel delivery is not instantaneous.",
     question: "How does fluid inertia affect fuel injection timing?",
     options: [
       { id: 'delay', label: "Fuel inertia causes response delay between signal and spray", correct: true },
@@ -158,7 +158,7 @@ const testQuestions = [
     explanation: "When the injector opens, fuel must accelerate from rest. Its inertia causes a slight delay before flow reaches full rate. Engineers account for this 'hydraulic delay' in injection timing calculations."
   },
   {
-    scenario: "An artificial heart pump must maintain steady blood flow.",
+    scenario: "An artificial heart pump must maintain steady blood flow to keep a patient alive. Engineers debate between pulsatile and continuous flow designs.",
     question: "Why do some heart pumps use continuous flow instead of pulsatile?",
     options: [
       { id: 'simpler', label: "Continuous pumps are simpler to build" },
@@ -169,7 +169,7 @@ const testQuestions = [
     explanation: "Continuous flow pumps work with blood's inertia rather than against it. Once moving, the blood's inertia helps maintain flow with less energy. Pulsatile pumps must repeatedly overcome inertia, requiring more power."
   },
   {
-    scenario: "A dam's spillway must handle emergency water releases safely.",
+    scenario: "A dam's spillway must handle emergency water releases safely. During heavy rain, millions of gallons per minute may exit through the spillway at high velocity.",
     question: "Why are spillway designs critical for dam safety?",
     options: [
       { id: 'erosion', label: "To prevent erosion of the dam base" },
@@ -300,6 +300,18 @@ const realWorldApps = [
 ];
 
 // ============================================================
+// SLIDER STYLE
+// ============================================================
+
+const sliderStyle: React.CSSProperties = {
+  width: '100%',
+  height: '20px',
+  touchAction: 'pan-y',
+  WebkitAppearance: 'none',
+  accentColor: '#3b82f6',
+};
+
+// ============================================================
 // MAIN COMPONENT
 // ============================================================
 
@@ -327,12 +339,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
   const [activeAppIndex, setActiveAppIndex] = useState(0);
   const [viewedApps, setViewedApps] = useState<Set<number>>(new Set([0]));
   const [flowVelocity, setFlowVelocity] = useState(50);
-  const [valveOpen, setValveOpen] = useState(true);
-  const [showPressureSpike, setShowPressureSpike] = useState(false);
   const [dampingLevel, setDampingLevel] = useState(50);
-  const [animTime, setAnimTime] = useState(0);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number | null>(null);
 
   // Emit game events
   const emitEvent = useCallback((type: string, details: Record<string, unknown> = {}) => {
@@ -360,89 +367,6 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
       setPhase(gamePhase as Phase);
     }
   }, [gamePhase, phase]);
-
-  // Water hammer animation
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || phase !== 'play') return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    let time = 0;
-    const animate = () => {
-      time += 0.05;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Draw pipe
-      ctx.fillStyle = colors.bgCardLight;
-      ctx.fillRect(50, 80, 300, 40);
-
-      // Draw valve
-      const valveX = 300;
-      ctx.fillStyle = valveOpen ? colors.success : colors.error;
-      ctx.fillRect(valveX - 5, 70, 10, 60);
-
-      // Draw water particles
-      const particleCount = 20;
-      for (let i = 0; i < particleCount; i++) {
-        const baseX = 60 + (i / particleCount) * 230;
-        let x = baseX;
-
-        if (valveOpen) {
-          x = baseX + (time * flowVelocity * 0.1) % 240;
-          if (x > 290) x = x - 240;
-        } else if (showPressureSpike) {
-          // Water hammer effect - particles bunch up at valve
-          const distToValve = 290 - baseX;
-          x = baseX + Math.max(0, distToValve * (1 - Math.exp(-time * 2)));
-        }
-
-        const y = 100 + Math.sin(time * 2 + i) * 5;
-
-        ctx.beginPath();
-        ctx.arc(x, y, 6, 0, Math.PI * 2);
-        ctx.fillStyle = colors.fluid;
-        ctx.fill();
-      }
-
-      // Draw pressure indicator
-      if (showPressureSpike) {
-        const pressure = Math.min(100, time * 50);
-        ctx.fillStyle = colors.error;
-        ctx.fillRect(320, 130 - pressure, 20, pressure);
-        ctx.fillStyle = colors.textPrimary;
-        ctx.font = '12px system-ui';
-        ctx.fillText('Pressure', 310, 145);
-      }
-
-      animationRef.current = requestAnimationFrame(animate);
-    };
-
-    animate();
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [phase, valveOpen, flowVelocity, showPressureSpike]);
-
-  // Handle valve close (water hammer demonstration)
-  const handleValveClose = () => {
-    if (valveOpen) {
-      setValveOpen(false);
-      setShowPressureSpike(true);
-      setHasPlayedSimulation(true);
-      emitEvent('simulation_played', { action: 'valve_closed', velocity: flowVelocity });
-
-      // Reset after 3 seconds
-      setTimeout(() => {
-        setValveOpen(true);
-        setShowPressureSpike(false);
-      }, 3000);
-    }
-  };
 
   // Handle answer selection
   const handleAnswerSelect = (answerId: string) => {
@@ -476,27 +400,78 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
     }
   };
 
-  // Animation effect for SVG
-  useEffect(() => {
-    if (phase === 'play') {
-      const interval = setInterval(() => {
-        setAnimTime(t => t + 0.05);
-      }, 50);
-      return () => clearInterval(interval);
+  // Compute pressure curve points based on flow velocity
+  const computePressureCurve = useCallback((velocity: number) => {
+    const points: string[] = [];
+    const svgW = 450;
+    const svgH = 300;
+    const padL = 60;
+    const padR = 30;
+    const padT = 50;
+    const padB = 50;
+    const plotW = svgW - padL - padR;
+    const plotH = svgH - padT - padB;
+    const n = 40;
+    // Pressure spike model: ΔP = ρ × c × v
+    // Normalized spike amplitude proportional to velocity
+    const amplitude = 0.3 + 0.6 * (velocity / 100);
+    for (let i = 0; i <= n; i++) {
+      const t = i / n;
+      const x = padL + t * plotW;
+      // Spike at ~20% of timeline, then exponential decay with oscillation
+      const dt = Math.max(0, t - 0.18);
+      const spike = amplitude * Math.exp(-3 * dt) * Math.abs(Math.sin(Math.PI * 5 * dt));
+      const baseline = 0.05;
+      const pNorm = baseline + spike;
+      const y = padT + plotH * (1 - pNorm);
+      points.push(`${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`);
     }
-  }, [phase]);
+    return points.join(' ');
+  }, []);
+
+  // Compute damping curve based on damping level
+  const computeDampingCurve = useCallback((damping: number) => {
+    const points: string[] = [];
+    const svgW = 400;
+    const svgH = 300;
+    const padL = 60;
+    const padR = 30;
+    const padT = 50;
+    const padB = 50;
+    const plotW = svgW - padL - padR;
+    const plotH = svgH - padT - padB;
+    const n = 40;
+    const dampRatio = damping / 100;
+    for (let i = 0; i <= n; i++) {
+      const t = i / n;
+      const x = padL + t * plotW;
+      // Damped oscillation: displacement = e^(-ζωt) × cos(ωd × t)
+      const omega = 6;
+      const displacement = Math.exp(-dampRatio * omega * t * 3) * Math.cos(omega * t * (1 - dampRatio * 0.5) * 3);
+      const yNorm = 0.5 + 0.45 * displacement;
+      const y = padT + plotH * (1 - yNorm);
+      points.push(`${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`);
+    }
+    return points.join(' ');
+  }, []);
 
   // Styles
   const containerStyle: React.CSSProperties = {
     minHeight: '100vh',
     background: `linear-gradient(135deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
     color: colors.textPrimary,
-    padding: '20px',
-    paddingBottom: '100px',
     fontFamily: 'system-ui, -apple-system, sans-serif',
     display: 'flex',
     flexDirection: 'column',
-    overflowY: 'auto'
+  };
+
+  const scrollStyle: React.CSSProperties = {
+    flex: 1,
+    overflowY: 'auto',
+    paddingLeft: '20px',
+    paddingRight: '20px',
+    paddingTop: '48px',
+    paddingBottom: '100px',
   };
 
   const cardStyle: React.CSSProperties = {
@@ -516,7 +491,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
     fontSize: '16px',
     fontWeight: 600,
     cursor: 'pointer',
-    transition: 'transform 0.2s, box-shadow 0.2s',
+    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
     minHeight: '44px'
   };
 
@@ -553,7 +528,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
               background: i <= currentIndex ? colors.primary : colors.border,
               border: 'none',
               cursor: i <= currentIndex ? 'pointer' : 'default',
-              transition: 'background 0.3s',
+              transition: 'background 0.3s ease',
               padding: 0
             }}
           />
@@ -569,114 +544,307 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
     }
   }, [currentIndex, goToPhase]);
 
-  const goToNextPhase = useCallback(() => {
-    if (currentIndex < phases.length - 1) {
-      goToPhase(phases[currentIndex + 1]);
-    }
-  }, [currentIndex, goToPhase]);
+  // SVG defs (gradients, filters, glow) shared across phases
+  const renderSvgDefs = () => (
+    <defs>
+      <linearGradient id="waterGrad" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stopColor={colors.fluid} />
+        <stop offset="100%" stopColor={colors.fluidLight} />
+      </linearGradient>
+      <linearGradient id="pressureGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor={colors.error} />
+        <stop offset="100%" stopColor={colors.errorLight} />
+      </linearGradient>
+      <radialGradient id="glowGrad">
+        <stop offset="0%" stopColor={colors.primaryLight} stopOpacity="0.8" />
+        <stop offset="100%" stopColor={colors.primary} stopOpacity="0" />
+      </radialGradient>
+      <filter id="glow">
+        <feGaussianBlur stdDeviation="3" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+      <filter id="shadow">
+        <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.4" />
+      </filter>
+      <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+        <polygon points="0 0, 10 3.5, 0 7" fill={colors.flow} />
+      </marker>
+    </defs>
+  );
 
-  // SVG Visualization for Water Hammer
-  const WaterHammerSVG = ({ interactive = false }: { interactive?: boolean }) => {
-    const pipeY = 100;
-    const pipeHeight = 50;
-    const valveX = 300;
+  // Render interactive pressure SVG for play phase
+  const renderPressureSVG = () => {
+    const svgW = 450;
+    const svgH = 300;
+    const padL = 60;
+    const padR = 30;
+    const padT = 50;
+    const padB = 50;
+    const plotW = svgW - padL - padR;
+    const plotH = svgH - padT - padB;
+
+    const curvePath = computePressureCurve(flowVelocity);
+
+    // Interactive point at the spike peak
+    const amplitude = 0.3 + 0.6 * (flowVelocity / 100);
+    const peakT = 0.22;
+    const peakX = padL + peakT * plotW;
+    const peakDt = Math.max(0, peakT - 0.18);
+    const peakSpike = amplitude * Math.exp(-3 * peakDt) * Math.abs(Math.sin(Math.PI * 5 * peakDt));
+    const peakY = padT + plotH * (1 - (0.05 + peakSpike));
+
+    // Reference line (baseline at low velocity)
+    const refPath = computePressureCurve(20);
 
     return (
-      <svg viewBox="0 0 450 250" style={{ width: '100%', maxWidth: '450px', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
-        {/* Pipe body */}
-        <rect x="40" y={pipeY} width="320" height={pipeHeight} fill={colors.bgCardLight} stroke={colors.border} strokeWidth="2" />
+      <svg viewBox={`0 0 ${svgW} ${svgH}`} style={{ width: '100%', maxWidth: '450px', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
+        {renderSvgDefs()}
 
-        {/* Water inside pipe */}
-        <rect x="42" y={pipeY + 2} width={valveOpen ? 254 : 254} height={pipeHeight - 4} fill={colors.fluid} opacity="0.7" />
+        {/* Title */}
+        <text x={svgW / 2} y="22" fill={colors.textPrimary} fontSize="15" textAnchor="middle" fontWeight="700">
+          Water Hammer Pressure vs Time
+        </text>
 
-        {/* Valve */}
-        <rect x={valveX - 8} y={pipeY - 15} width="16" height={pipeHeight + 30} fill={valveOpen ? colors.success : colors.error} stroke={colors.border} strokeWidth="2" />
-        <text x={valveX} y={pipeY - 25} fill={colors.textSecondary} fontSize="12" textAnchor="middle">Valve</text>
+        {/* Grid lines */}
+        <g>
+          {[0.25, 0.5, 0.75].map((frac, i) => (
+            <line key={`hgrid-${i}`} x1={padL} y1={padT + plotH * frac} x2={padL + plotW} y2={padT + plotH * frac}
+              stroke={colors.borderLight} strokeDasharray="4 4" opacity="0.3" />
+          ))}
+          {[0.25, 0.5, 0.75].map((frac, i) => (
+            <line key={`vgrid-${i}`} x1={padL + plotW * frac} y1={padT} x2={padL + plotW * frac} y2={padT + plotH}
+              stroke={colors.borderLight} strokeDasharray="4 4" opacity="0.3" />
+          ))}
+        </g>
 
-        {/* Water particles animation */}
-        {interactive && Array.from({ length: 12 }).map((_, i) => {
-          const baseX = 60 + (i / 12) * 220;
-          let x = baseX;
+        {/* Axes */}
+        <g>
+          <line x1={padL} y1={padT} x2={padL} y2={padT + plotH} stroke={colors.textSecondary} strokeWidth="2" />
+          <line x1={padL} y1={padT + plotH} x2={padL + plotW} y2={padT + plotH} stroke={colors.textSecondary} strokeWidth="2" />
+        </g>
 
-          if (valveOpen) {
-            x = 60 + ((baseX - 60 + animTime * flowVelocity * 0.5) % 230);
-          } else if (showPressureSpike) {
-            const distToValve = valveX - 10 - baseX;
-            x = baseX + Math.max(0, distToValve * (1 - Math.exp(-animTime * 2)));
-          }
+        {/* Axis labels */}
+        <text x={padL / 2} y={padT + plotH / 2} fill={colors.textSecondary} fontSize="12" textAnchor="middle"
+          transform={`rotate(-90, ${padL / 2}, ${padT + plotH / 2})`}>
+          Pressure (Pa)
+        </text>
+        <text x={padL + plotW / 2} y={svgH - 12} fill={colors.textSecondary} fontSize="12" textAnchor="middle">
+          Time (ms)
+        </text>
 
-          const y = pipeY + pipeHeight / 2 + Math.sin(animTime * 2 + i) * 8;
+        {/* Reference baseline curve */}
+        <path d={refPath} fill="none" stroke={colors.borderLight} strokeWidth="1.5" strokeDasharray="6 3" opacity="0.5" />
+        <text x={padL + plotW - 10} y={padT + plotH - 15} fill={colors.textMuted} fontSize="11" textAnchor="end">
+          Reference (low velocity)
+        </text>
 
-          return (
-            <circle key={i} cx={Math.min(x, valveX - 15)} cy={y} r="8" fill={colors.fluidLight} opacity="0.9" />
-          );
-        })}
+        {/* Main pressure curve */}
+        <g filter="url(#shadow)">
+          <path d={curvePath} fill="none" stroke="url(#pressureGrad)" strokeWidth="3" strokeLinecap="round" />
+        </g>
 
-        {/* Flow direction arrow */}
-        {valveOpen && (
-          <g>
-            <line x1="80" y1={pipeY + pipeHeight + 20} x2="200" y2={pipeY + pipeHeight + 20} stroke={colors.flow} strokeWidth="2" markerEnd="url(#arrowhead)" />
-            <text x="140" y={pipeY + pipeHeight + 40} fill={colors.textSecondary} fontSize="12" textAnchor="middle">Flow Direction</text>
-          </g>
-        )}
+        {/* Interactive point at peak */}
+        <circle cx={peakX} cy={peakY} r={8} fill={colors.error} filter="url(#glow)" stroke="#fff" strokeWidth={2} />
 
-        {/* Pressure indicator */}
-        {showPressureSpike && (
-          <g>
-            <rect x="340" y={pipeY} width="30" height={pipeHeight} fill="none" stroke={colors.border} strokeWidth="1" />
-            <rect x="342" y={pipeY + pipeHeight - Math.min(46, animTime * 25)} width="26" height={Math.min(46, animTime * 25)} fill={colors.error} />
-            <text x="355" y={pipeY + pipeHeight + 20} fill={colors.textSecondary} fontSize="11" textAnchor="middle">Pressure</text>
-          </g>
-        )}
+        {/* Peak pressure label */}
+        <text x={peakX + 15} y={peakY - 12} fill={colors.error} fontSize="12" fontWeight="600">
+          Peak: {(flowVelocity * 14).toFixed(0)} Pa
+        </text>
 
-        {/* Labels */}
-        <text x="150" y="40" fill={colors.textPrimary} fontSize="16" textAnchor="middle" fontWeight="600">Water Hammer Visualization</text>
-        <text x="150" y={pipeY + pipeHeight / 2 + 5} fill={colors.textPrimary} fontSize="14" textAnchor="middle">Water</text>
+        {/* Formula */}
+        <g>
+          <rect x={padL + plotW - 160} y={padT + 5} width="155" height="28" rx="6" fill={colors.bgCardLight} opacity="0.9" />
+          <text x={padL + plotW - 83} y={padT + 24} fill={colors.warning} fontSize="13" textAnchor="middle" fontWeight="700">
+            ΔP = ρ × c × v
+          </text>
+        </g>
 
-        {/* Arrow marker definition */}
-        <defs>
-          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-            <polygon points="0 0, 10 3.5, 0 7" fill={colors.flow} />
-          </marker>
-        </defs>
+        {/* Current velocity annotation */}
+        <text x={padL + 12} y={padT + 18} fill={colors.fluidLight} fontSize="12" fontWeight="500">
+          v = {flowVelocity}% max
+        </text>
 
-        {/* Legend */}
-        <g transform="translate(340, 20)">
-          <circle cx="10" cy="8" r="6" fill={colors.fluidLight} />
-          <text x="22" y="12" fill={colors.textSecondary} fontSize="10">Water</text>
-          <rect x="4" y="22" width="12" height="12" fill={valveOpen ? colors.success : colors.error} />
-          <text x="22" y="32" fill={colors.textSecondary} fontSize="10">{valveOpen ? 'Open' : 'Closed'}</text>
+        {/* Color legend */}
+        <g transform={`translate(${padL + plotW - 110}, ${padT + plotH - 40})`}>
+          <rect x="0" y="0" width="105" height="38" rx="6" fill={colors.bgCardLight} opacity="0.85" />
+          <line x1="8" y1="12" x2="28" y2="12" stroke={colors.error} strokeWidth="3" />
+          <text x="33" y="16" fill={colors.textSecondary} fontSize="11">Current</text>
+          <line x1="8" y1="28" x2="28" y2="28" stroke={colors.borderLight} strokeWidth="1.5" strokeDasharray="6 3" />
+          <text x="33" y="32" fill={colors.textMuted} fontSize="11">Baseline</text>
         </g>
       </svg>
     );
   };
 
+  // Render damping SVG for twist_play phase
+  const renderDampingSVG = () => {
+    const svgW = 400;
+    const svgH = 300;
+    const padL = 60;
+    const padR = 30;
+    const padT = 50;
+    const padB = 50;
+    const plotW = svgW - padL - padR;
+    const plotH = svgH - padT - padB;
+
+    const curvePath = computeDampingCurve(dampingLevel);
+
+    // Interactive point at first peak
+    const dampRatio = dampingLevel / 100;
+    const peakT = 0.08;
+    const peakX = padL + peakT * plotW;
+    const omega = 6;
+    const displacement = Math.exp(-dampRatio * omega * peakT * 3) * Math.cos(omega * peakT * (1 - dampRatio * 0.5) * 3);
+    const peakYNorm = 0.5 + 0.45 * displacement;
+    const peakY = padT + plotH * (1 - peakYNorm);
+
+    return (
+      <svg viewBox={`0 0 ${svgW} ${svgH}`} style={{ width: '100%', maxWidth: '400px', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
+        {renderSvgDefs()}
+
+        {/* Title */}
+        <text x={svgW / 2} y="22" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="700">
+          Damped Oscillation Response
+        </text>
+
+        {/* Grid lines */}
+        <g>
+          {[0.25, 0.5, 0.75].map((frac, i) => (
+            <line key={`hgrid-${i}`} x1={padL} y1={padT + plotH * frac} x2={padL + plotW} y2={padT + plotH * frac}
+              stroke={colors.borderLight} strokeDasharray="4 4" opacity="0.3" />
+          ))}
+          {[0.25, 0.5, 0.75].map((frac, i) => (
+            <line key={`vgrid-${i}`} x1={padL + plotW * frac} y1={padT} x2={padL + plotW * frac} y2={padT + plotH}
+              stroke={colors.borderLight} strokeDasharray="4 4" opacity="0.3" />
+          ))}
+        </g>
+
+        {/* Axes */}
+        <g>
+          <line x1={padL} y1={padT} x2={padL} y2={padT + plotH} stroke={colors.textSecondary} strokeWidth="2" />
+          <line x1={padL} y1={padT + plotH} x2={padL + plotW} y2={padT + plotH} stroke={colors.textSecondary} strokeWidth="2" />
+        </g>
+
+        {/* Axis labels */}
+        <text x={padL / 2} y={padT + plotH / 2} fill={colors.textSecondary} fontSize="12" textAnchor="middle"
+          transform={`rotate(-90, ${padL / 2}, ${padT + plotH / 2})`}>
+          Displacement
+        </text>
+        <text x={padL + plotW / 2} y={svgH - 12} fill={colors.textSecondary} fontSize="12" textAnchor="middle">
+          Time (ms)
+        </text>
+
+        {/* Equilibrium line */}
+        <line x1={padL} y1={padT + plotH * 0.5} x2={padL + plotW} y2={padT + plotH * 0.5}
+          stroke={colors.flow} strokeWidth="1" strokeDasharray="8 4" opacity="0.4" />
+
+        {/* Damped oscillation curve */}
+        <g filter="url(#shadow)">
+          <path d={curvePath} fill="none" stroke="url(#waterGrad)" strokeWidth="3" strokeLinecap="round" />
+        </g>
+
+        {/* Interactive point */}
+        <circle cx={peakX} cy={peakY} r={8} fill={colors.primary} filter="url(#glow)" stroke="#fff" strokeWidth={2} />
+
+        {/* Formula */}
+        <g>
+          <rect x={padL + plotW - 170} y={padT + 5} width="165" height="28" rx="6" fill={colors.bgCardLight} opacity="0.9" />
+          <text x={padL + plotW - 88} y={padT + 24} fill={colors.warning} fontSize="12" textAnchor="middle" fontWeight="700">
+            F = m × a (damped)
+          </text>
+        </g>
+
+        {/* Damping annotation */}
+        <text x={padL + 12} y={padT + 18} fill={colors.dampingLight} fontSize="12" fontWeight="500">
+          Damping: {dampingLevel}%
+        </text>
+      </svg>
+    );
+  };
+
+  // Render predict phase SVG (static preview)
+  const renderPredictSVG = () => (
+    <svg viewBox="0 0 450 250" style={{ width: '100%', maxWidth: '450px', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
+      {renderSvgDefs()}
+
+      {/* Title */}
+      <text x="225" y="22" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="700">
+        Water Flowing Through Pipe
+      </text>
+
+      {/* Pipe body */}
+      <g filter="url(#shadow)">
+        <rect x="40" y="80" width="320" height="50" fill={colors.bgCardLight} stroke={colors.border} strokeWidth="2" rx="4" />
+      </g>
+
+      {/* Water inside pipe - static */}
+      <rect x="42" y="82" width="254" height="46" fill="url(#waterGrad)" opacity="0.7" />
+
+      {/* Valve - open position */}
+      <rect x="292" y="65" width="16" height="80" fill={colors.success} stroke={colors.border} strokeWidth="2" rx="2" />
+      <text x="300" y="55" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Valve</text>
+
+      {/* Static water particles */}
+      {Array.from({ length: 8 }).map((_, i) => (
+        <circle key={i} cx={70 + i * 28} cy={105} r="8" fill={colors.fluidLight} opacity="0.9" />
+      ))}
+
+      {/* Flow arrow */}
+      <line x1="80" y1="155" x2="200" y2="155" stroke={colors.flow} strokeWidth="2" markerEnd="url(#arrowhead)" />
+      <text x="140" y="175" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Flow Direction</text>
+
+      {/* Velocity label */}
+      <text x="170" y="110" fill={colors.textPrimary} fontSize="13" textAnchor="middle">
+        Velocity = high
+      </text>
+
+      {/* Momentum label */}
+      <text x="225" y="210" fill={colors.warning} fontSize="13" textAnchor="middle" fontWeight="600">
+        Momentum = mass × velocity
+      </text>
+
+      {/* Legend */}
+      <g transform="translate(340, 40)">
+        <rect x="0" y="-5" width="95" height="50" rx="6" fill={colors.bgCardLight} opacity="0.8" />
+        <circle cx="14" cy="12" r="6" fill={colors.fluidLight} />
+        <text x="26" y="16" fill={colors.textSecondary} fontSize="11">Water</text>
+        <rect x="8" y="26" width="12" height="12" fill={colors.success} rx="2" />
+        <text x="26" y="36" fill={colors.textSecondary} fontSize="11">Valve Open</text>
+      </g>
+    </svg>
+  );
+
   // Phase rendering
   if (phase === 'hook') {
     return (
       <div style={containerStyle}>
-        <div style={{ maxWidth: '600px', margin: '0 auto', flex: 1 }}>
-          {progressDots}
-          <div style={cardStyle}>
-            <h1 style={{ fontSize: '28px', marginBottom: '16px', textAlign: 'center' }}>
-              Have you ever heard pipes bang when you quickly shut off a faucet?
-            </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', textAlign: 'center', lineHeight: 1.6 }}>
-              That loud, sometimes violent banging is called "water hammer" - and it is a dramatic
-              demonstration of a fundamental physics principle: <strong style={{ color: colors.primary }}>fluid inertia</strong>.
-            </p>
-            <div style={{
-              margin: '24px 0',
-              padding: '20px',
-              background: colors.bgCardLight,
-              borderRadius: '12px',
-              textAlign: 'center'
-            }}>
-              <span style={{ fontSize: '48px' }}>💥🔧</span>
-              <p style={{ color: colors.textSecondary, marginTop: '12px' }}>
-                Moving water does not want to stop moving. When you force it to stop suddenly,
-                all that momentum has to go somewhere...
+        <div style={scrollStyle}>
+          <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+            {progressDots}
+            <div style={cardStyle}>
+              <h1 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '16px', textAlign: 'center' }}>
+                Let's discover what happens when you quickly shut off a faucet!
+              </h1>
+              <p style={{ color: colors.textSecondary, fontSize: '18px', textAlign: 'center', lineHeight: 1.6, fontWeight: 400 }}>
+                That loud, sometimes violent banging is called "water hammer" - and it is a dramatic
+                demonstration of a fundamental physics principle: <strong style={{ color: colors.primary }}>fluid inertia</strong>.
               </p>
+              <div style={{
+                margin: '24px 0',
+                padding: '20px',
+                background: colors.bgCardLight,
+                borderRadius: '12px',
+                textAlign: 'center'
+              }}>
+                <span style={{ fontSize: '48px' }}>💥🔧</span>
+                <p style={{ color: colors.textMuted, marginTop: '12px' }}>
+                  Moving water does not want to stop moving. When you force it to stop suddenly,
+                  all that momentum has to go somewhere...
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -701,90 +869,55 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
   if (phase === 'predict') {
     return (
       <div style={containerStyle}>
-        <div style={{ maxWidth: '600px', margin: '0 auto', flex: 1 }}>
-          {progressDots}
-          <div style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '12px', fontSize: '14px' }}>
-            Step 1 of 3: Make a Prediction
-          </div>
-          <div style={cardStyle}>
-            <h2 style={{ fontSize: '24px', marginBottom: '16px' }}>Make a Prediction</h2>
-
-            {/* Static SVG for predict phase */}
-            <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
-              <svg viewBox="0 0 450 200" style={{ width: '100%', maxWidth: '450px', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
-                {/* Pipe body */}
-                <rect x="40" y="80" width="320" height="50" fill={colors.bgCardLight} stroke={colors.border} strokeWidth="2" />
-
-                {/* Water inside pipe - static */}
-                <rect x="42" y="82" width="254" height="46" fill={colors.fluid} opacity="0.7" />
-
-                {/* Valve - open position */}
-                <rect x="292" y="65" width="16" height="80" fill={colors.success} stroke={colors.border} strokeWidth="2" />
-                <text x="300" y="55" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Valve</text>
-
-                {/* Static water particles */}
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <circle key={i} cx={70 + i * 28} cy={105} r="8" fill={colors.fluidLight} opacity="0.9" />
-                ))}
-
-                {/* Flow arrow */}
-                <line x1="80" y1="150" x2="200" y2="150" stroke={colors.flow} strokeWidth="2" markerEnd="url(#arrowhead2)" />
-                <text x="140" y="170" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Flow Direction</text>
-
-                {/* Labels */}
-                <text x="170" y="30" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="600">Water Flowing Through Pipe</text>
-                <text x="150" y="110" fill={colors.textPrimary} fontSize="13" textAnchor="middle">Water</text>
-
-                {/* Arrow marker */}
-                <defs>
-                  <marker id="arrowhead2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                    <polygon points="0 0, 10 3.5, 0 7" fill={colors.flow} />
-                  </marker>
-                </defs>
-
-                {/* Legend */}
-                <g transform="translate(340, 30)">
-                  <circle cx="10" cy="8" r="6" fill={colors.fluidLight} />
-                  <text x="22" y="12" fill={colors.textSecondary} fontSize="10">Water</text>
-                  <rect x="4" y="22" width="12" height="12" fill={colors.success} />
-                  <text x="22" y="32" fill={colors.textSecondary} fontSize="10">Valve Open</text>
-                </g>
-              </svg>
+        <div style={scrollStyle}>
+          <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+            {progressDots}
+            <div style={{ color: colors.textMuted, textAlign: 'center', marginBottom: '12px', fontSize: '14px' }}>
+              Step 1 of 3: Make a Prediction
             </div>
+            <div style={cardStyle}>
+              <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '16px' }}>Make a Prediction</h2>
 
-            <p style={{ color: colors.textSecondary, marginBottom: '20px' }}>
-              Water is flowing through a pipe at high speed. You suddenly close a valve,
-              stopping the flow instantly. What do you think will happen?
-            </p>
+              {/* Static SVG for predict phase */}
+              <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
+                {renderPredictSVG()}
+              </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {[
-                { id: 'nothing', label: 'Nothing special - the water just stops' },
-                { id: 'pressure', label: 'A pressure spike occurs, potentially damaging the pipe', correct: true },
-                { id: 'reverse', label: 'The water reverses direction' },
-                { id: 'heat', label: 'The water heats up significantly' }
-              ].map(option => (
-                <button
-                  key={option.id}
-                  onClick={() => {
-                    setPrediction(option.id);
-                    emitEvent('prediction_made', { prediction: option.id });
-                  }}
-                  style={{
-                    padding: '16px',
-                    minHeight: '44px',
-                    background: prediction === option.id ? colors.primary : colors.bgCardLight,
-                    border: `2px solid ${prediction === option.id ? colors.primary : colors.border}`,
-                    borderRadius: '12px',
-                    color: colors.textPrimary,
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  {option.label}
-                </button>
-              ))}
+              <p style={{ color: colors.textSecondary, marginBottom: '20px', fontWeight: 400 }}>
+                Water is flowing through a pipe at high speed. You suddenly close a valve,
+                stopping the flow instantly. What do you think will happen?
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {[
+                  { id: 'nothing', label: 'Nothing special - the water just stops' },
+                  { id: 'pressure', label: 'A pressure spike occurs, potentially damaging the pipe', correct: true },
+                  { id: 'reverse', label: 'The water reverses direction' },
+                  { id: 'heat', label: 'The water heats up significantly' }
+                ].map(option => (
+                  <button
+                    key={option.id}
+                    onClick={() => {
+                      setPrediction(option.id);
+                      emitEvent('prediction_made', { prediction: option.id });
+                    }}
+                    style={{
+                      padding: '16px',
+                      minHeight: '44px',
+                      background: prediction === option.id ? colors.primary : colors.bgCardLight,
+                      border: `2px solid ${prediction === option.id ? colors.primary : colors.border}`,
+                      borderRadius: '12px',
+                      color: colors.textPrimary,
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      fontWeight: 400,
+                    }}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -811,102 +944,93 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
   if (phase === 'play') {
     return (
       <div style={containerStyle}>
-        <div style={{ maxWidth: '600px', margin: '0 auto', flex: 1 }}>
-          {progressDots}
-          <div style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '12px', fontSize: '14px' }}>
-            Step 2 of 3: Experiment
-          </div>
-          <div style={cardStyle}>
-            <h2 style={{ fontSize: '24px', marginBottom: '16px' }}>Water Hammer Simulation</h2>
-
-            {/* Observation Guidance */}
-            <div style={{
-              padding: '12px 16px',
-              background: colors.bgCardLight,
-              borderRadius: '8px',
-              marginBottom: '16px',
-              borderLeft: `4px solid ${colors.accent}`
-            }}>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
-                <strong style={{ color: colors.accent }}>What to Watch:</strong> Observe how the water particles behave when you close the valve.
-                Notice the pressure indicator on the right - watch for the spike!
-              </p>
+        <div style={scrollStyle}>
+          <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+            {progressDots}
+            <div style={{ color: colors.textMuted, textAlign: 'center', marginBottom: '12px', fontSize: '14px' }}>
+              Step 2 of 3: Experiment
             </div>
+            <div style={cardStyle}>
+              <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '16px' }}>Water Hammer Simulation</h2>
 
-            {/* SVG Visualization */}
-            <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
-              <WaterHammerSVG interactive={true} />
-            </div>
+              {/* Observation Guidance */}
+              <div style={{
+                padding: '12px 16px',
+                background: colors.bgCardLight,
+                borderRadius: '8px',
+                marginBottom: '16px',
+                borderLeft: `4px solid ${colors.accent}`
+              }}>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
+                  <strong style={{ color: colors.accent }}>What to Watch:</strong> Observe how the pressure curve changes
+                  when you increase the flow velocity. Notice the reference baseline for comparison.
+                  Higher velocity causes a stronger water hammer pressure spike!
+                </p>
+              </div>
 
-            {/* Slider Control */}
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', color: colors.textSecondary }}>
-                Flow Velocity: {flowVelocity}% - Adjust to control water speed
-              </label>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                value={flowVelocity}
-                onChange={(e) => setFlowVelocity(Number(e.target.value))}
-                disabled={!valveOpen}
-                style={{ width: '100%' }}
-                aria-label="Flow velocity control"
-              />
-              <p style={{ color: colors.textSecondary, fontSize: '12px', marginTop: '4px' }}>
-                {flowVelocity < 40 ? 'Low velocity: Mild water hammer effect expected' :
-                 flowVelocity < 70 ? 'Medium velocity: Moderate pressure spike expected' :
-                 'High velocity: Strong water hammer effect expected!'}
-              </p>
-            </div>
+              {/* SVG Visualization */}
+              <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
+                {renderPressureSVG()}
+              </div>
 
-            <button
-              onClick={handleValveClose}
-              disabled={!valveOpen}
-              style={{
-                ...buttonStyle,
-                width: '100%',
-                background: valveOpen
-                  ? `linear-gradient(135deg, ${colors.error} 0%, ${colors.errorLight} 100%)`
-                  : colors.bgCardLight,
-                cursor: valveOpen ? 'pointer' : 'not-allowed'
-              }}
-            >
-              {valveOpen ? 'Close Valve Suddenly' : 'Pressure Dissipating...'}
-            </button>
+              {/* Physics terms definition */}
+              <div style={{
+                padding: '12px 16px',
+                background: colors.bgCardLight,
+                borderRadius: '8px',
+                marginBottom: '16px',
+              }}>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
+                  <strong>Fluid inertia</strong> is defined as the tendency of a fluid to resist changes in its
+                  flow state. The pressure spike is calculated using the Joukowsky equation:
+                  ΔP = ρ × c × v, where ρ is density, c is the speed of sound in the fluid, and v is flow velocity.
+                  This relationship means that when you increase velocity, the resulting pressure spike increases proportionally.
+                </p>
+              </div>
 
-            {showPressureSpike && (
+              {/* Slider Control */}
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', color: colors.textSecondary, fontWeight: 500 }}>
+                  Flow Velocity: {flowVelocity}% - Adjust to control water speed
+                </label>
+                <input
+                  type="range"
+                  min="10"
+                  max="100"
+                  value={flowVelocity}
+                  onChange={(e) => {
+                    setFlowVelocity(Number(e.target.value));
+                    setHasPlayedSimulation(true);
+                  }}
+                  onInput={(e) => {
+                    setFlowVelocity(Number((e.target as HTMLInputElement).value));
+                    setHasPlayedSimulation(true);
+                  }}
+                  style={sliderStyle}
+                  aria-label="Flow velocity control"
+                />
+                <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '4px' }}>
+                  {flowVelocity < 40 ? 'Low velocity: Mild water hammer effect expected' :
+                   flowVelocity < 70 ? 'Medium velocity: Moderate pressure spike expected' :
+                   'High velocity: Strong water hammer effect expected!'}
+                </p>
+              </div>
+
+              {/* Real-world relevance */}
               <div style={{
                 marginTop: '20px',
                 padding: '16px',
-                background: 'rgba(239, 68, 68, 0.2)',
+                background: colors.bgCardLight,
                 borderRadius: '12px',
-                borderLeft: `4px solid ${colors.error}`
+                borderLeft: `4px solid ${colors.accent}`
               }}>
-                <p style={{ color: colors.errorLight, fontWeight: 600 }}>
-                  Water Hammer Detected!
-                </p>
-                <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '8px' }}>
-                  The water inertia created a massive pressure spike when flow suddenly stopped.
-                  Higher velocity = stronger hammer effect!
+                <h4 style={{ color: colors.accent, marginBottom: '8px', fontSize: '14px', fontWeight: 600 }}>Real-World Relevance</h4>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5, fontWeight: 400 }}>
+                  This same principle affects plumbing in homes and buildings, hydraulic systems in heavy machinery,
+                  oil pipelines spanning thousands of miles, and even blood flow in your arteries.
+                  Engineers must account for fluid inertia to prevent damage and ensure safety.
                 </p>
               </div>
-            )}
-
-            {/* Real-world relevance */}
-            <div style={{
-              marginTop: '20px',
-              padding: '16px',
-              background: colors.bgCardLight,
-              borderRadius: '12px',
-              borderLeft: `4px solid ${colors.accent}`
-            }}>
-              <h4 style={{ color: colors.accent, marginBottom: '8px', fontSize: '14px' }}>Real-World Relevance</h4>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-                This same principle affects plumbing in homes and buildings, hydraulic systems in heavy machinery,
-                oil pipelines spanning thousands of miles, and even blood flow in your arteries.
-                Engineers must account for fluid inertia to prevent damage and ensure safety.
-              </p>
             </div>
           </div>
         </div>
@@ -917,14 +1041,12 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
           >
             ← Back
           </button>
-          {hasPlayedSimulation && (
-            <button
-              style={buttonStyle}
-              onClick={() => goToPhase('review')}
-            >
-              Understand What Happened →
-            </button>
-          )}
+          <button
+            style={buttonStyle}
+            onClick={() => goToPhase('review')}
+          >
+            Understand What Happened →
+          </button>
         </div>
       </div>
     );
@@ -935,98 +1057,107 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
 
     return (
       <div style={containerStyle}>
-        <div style={{ maxWidth: '600px', margin: '0 auto', flex: 1 }}>
-          {progressDots}
-          <div style={cardStyle}>
-            <h2 style={{ fontSize: '24px', marginBottom: '16px' }}>
-              {wasCorrect ? '✅ Excellent Prediction!' : '🎓 Let\'s Learn Why'}
-            </h2>
+        <div style={scrollStyle}>
+          <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+            {progressDots}
+            <div style={cardStyle}>
+              <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '16px' }}>
+                {wasCorrect ? 'Excellent Prediction!' : 'Let\'s Learn Why'}
+              </h2>
 
-            {/* Reference user's prediction */}
-            <div style={{
-              padding: '16px',
-              background: wasCorrect ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-              borderRadius: '12px',
-              marginBottom: '20px',
-              borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`
-            }}>
-              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-                <strong>Your prediction:</strong> {prediction === 'pressure' ? 'A pressure spike occurs' :
-                  prediction === 'nothing' ? 'Nothing special happens' :
-                  prediction === 'reverse' ? 'Water reverses direction' : 'Water heats up'}
-              </p>
-              <p style={{ color: wasCorrect ? colors.success : colors.error, fontSize: '14px', marginTop: '8px' }}>
-                {wasCorrect ? 'Correct! The pressure spike is exactly what happens.' : 'The actual result: A massive pressure spike occurs, creating water hammer.'}
-              </p>
-            </div>
+              {/* Reference user's prediction */}
+              <div style={{
+                padding: '16px',
+                background: wasCorrect ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                borderRadius: '12px',
+                marginBottom: '20px',
+                borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`
+              }}>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
+                  <strong>Your prediction:</strong> {prediction === 'pressure' ? 'A pressure spike occurs' :
+                    prediction === 'nothing' ? 'Nothing special happens' :
+                    prediction === 'reverse' ? 'Water reverses direction' : 'Water heats up'}
+                </p>
+                <p style={{ color: wasCorrect ? colors.success : colors.error, fontSize: '14px', marginTop: '8px' }}>
+                  {wasCorrect ? 'Correct! The pressure spike is exactly what happens.' : 'The actual result: A massive pressure spike occurs, creating water hammer.'}
+                </p>
+              </div>
 
-            {/* SVG diagram for review */}
-            <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
-              <svg viewBox="0 0 400 180" style={{ width: '100%', maxWidth: '400px', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
-                {/* Title */}
-                <text x="200" y="20" fill={colors.textPrimary} fontSize="12" textAnchor="middle" fontWeight="600">Water Hammer Physics</text>
+              {/* SVG diagram for review */}
+              <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
+                <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '400px', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
+                  {renderSvgDefs()}
 
-                {/* Pipe */}
-                <rect x="30" y="50" width="200" height="40" fill={colors.bgCardLight} stroke={colors.border} strokeWidth="2" />
+                  {/* Title */}
+                  <text x="200" y="22" fill={colors.textPrimary} fontSize="13" textAnchor="middle" fontWeight="700">Water Hammer Physics</text>
 
-                {/* Valve (closed) */}
-                <rect x="222" y="40" width="12" height="60" fill={colors.error} stroke={colors.border} strokeWidth="1" />
-                <text x="228" y="115" fill={colors.textSecondary} fontSize="9" textAnchor="middle">Closed</text>
+                  {/* Pipe */}
+                  <g filter="url(#shadow)">
+                    <rect x="30" y="55" width="200" height="40" fill={colors.bgCardLight} stroke={colors.border} strokeWidth="2" rx="3" />
+                  </g>
 
-                {/* Pressure wave lines */}
-                <line x1="210" y1="55" x2="210" y2="85" stroke={colors.error} strokeWidth="2" />
-                <line x1="190" y1="55" x2="190" y2="85" stroke={colors.error} strokeWidth="2" opacity="0.7" />
-                <line x1="170" y1="55" x2="170" y2="85" stroke={colors.error} strokeWidth="2" opacity="0.4" />
+                  {/* Valve (closed) */}
+                  <rect x="222" y="45" width="12" height="60" fill={colors.error} stroke={colors.border} strokeWidth="1" rx="2" />
+                  <text x="228" y="120" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Closed</text>
 
-                {/* Water particles bunched up */}
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <circle key={i} cx={200 - i * 12} cy={70} r="6" fill={colors.fluidLight} />
-                ))}
+                  {/* Pressure wave lines */}
+                  <line x1="210" y1="60" x2="210" y2="90" stroke={colors.error} strokeWidth="2" />
+                  <line x1="190" y1="60" x2="190" y2="90" stroke={colors.error} strokeWidth="2" opacity="0.7" />
+                  <line x1="170" y1="60" x2="170" y2="90" stroke={colors.error} strokeWidth="2" opacity="0.4" />
 
-                {/* Pressure arrow */}
-                <path d="M260 70 L290 70 L290 65 L305 70 L290 75 L290 70" fill={colors.error} />
-                <text x="282" y="90" fill={colors.error} fontSize="10" textAnchor="middle">Pressure</text>
-                <text x="282" y="100" fill={colors.error} fontSize="10" textAnchor="middle">Spike!</text>
+                  {/* Water particles bunched up */}
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <circle key={i} cx={200 - i * 14} cy={75} r="6" fill={colors.fluidLight} />
+                  ))}
 
-                {/* Equation */}
-                <text x="200" y="145" fill={colors.warning} fontSize="11" textAnchor="middle" fontWeight="600">ΔP = ρcv</text>
-                <text x="200" y="165" fill={colors.textSecondary} fontSize="9" textAnchor="middle">Pressure = density × wave speed × velocity</text>
-              </svg>
-            </div>
+                  {/* Pressure arrow */}
+                  <path d="M260 75 L290 75 L290 70 L305 75 L290 80 L290 75" fill="url(#pressureGrad)" />
+                  <text x="282" y="95" fill={colors.error} fontSize="11" textAnchor="middle" fontWeight="600">Pressure</text>
+                  <text x="282" y="108" fill={colors.error} fontSize="11" textAnchor="middle">Spike!</text>
 
-            <div style={{
-              padding: '20px',
-              background: colors.bgCardLight,
-              borderRadius: '12px',
-              marginBottom: '20px'
-            }}>
-              <h3 style={{ color: colors.primary, marginBottom: '12px' }}>The Physics of Fluid Inertia</h3>
-              <p style={{ color: colors.textSecondary, lineHeight: 1.6 }}>
-                Moving water has <strong>momentum</strong> (mass x velocity). When you suddenly
-                stop the flow, this momentum must be absorbed somehow. The result is a
-                <strong> pressure wave</strong> that travels back through the pipe at the speed
-                of sound in water (~1,400 m/s).
-              </p>
-            </div>
+                  {/* Equation */}
+                  <text x="200" y="150" fill={colors.warning} fontSize="13" textAnchor="middle" fontWeight="700">ΔP = ρ × c × v</text>
+                  <text x="200" y="170" fill={colors.textMuted} fontSize="11" textAnchor="middle">Pressure = density × wave speed × velocity</text>
 
-            <div style={{
-              padding: '20px',
-              background: colors.bgCardLight,
-              borderRadius: '12px',
-              marginBottom: '20px'
-            }}>
-              <h3 style={{ color: colors.warning, marginBottom: '12px' }}>The Joukowsky Equation</h3>
-              <p style={{ color: colors.textSecondary, lineHeight: 1.6 }}>
-                The pressure spike is given by: <strong>ΔP = ρcv</strong>
-              </p>
-              <ul style={{ color: colors.textSecondary, marginTop: '12px', paddingLeft: '20px' }}>
-                <li>ρ = fluid density</li>
-                <li>c = speed of sound in fluid</li>
-                <li>v = flow velocity before stopping</li>
-              </ul>
-              <p style={{ color: colors.textSecondary, marginTop: '12px' }}>
-                This explains why faster flow = stronger water hammer!
-              </p>
+                  {/* Momentum indicator */}
+                  <text x="110" y="45" fill={colors.fluidLight} fontSize="11" textAnchor="middle">Momentum = m × v</text>
+                </svg>
+              </div>
+
+              <div style={{
+                padding: '20px',
+                background: colors.bgCardLight,
+                borderRadius: '12px',
+                marginBottom: '20px'
+              }}>
+                <h3 style={{ color: colors.primary, marginBottom: '12px', fontWeight: 600 }}>The Physics of Fluid Inertia</h3>
+                <p style={{ color: colors.textSecondary, lineHeight: 1.6, fontWeight: 400 }}>
+                  Moving water has <strong>momentum</strong> (mass × velocity). When you suddenly
+                  stop the flow, this momentum must be absorbed somehow. The result is a
+                  <strong> pressure wave</strong> that travels back through the pipe at the speed
+                  of sound in water (~1,400 m/s).
+                </p>
+              </div>
+
+              <div style={{
+                padding: '20px',
+                background: colors.bgCardLight,
+                borderRadius: '12px',
+                marginBottom: '20px'
+              }}>
+                <h3 style={{ color: colors.warning, marginBottom: '12px', fontWeight: 600 }}>The Joukowsky Equation</h3>
+                <p style={{ color: colors.textSecondary, lineHeight: 1.6, fontWeight: 400 }}>
+                  The pressure spike is given by: <strong>ΔP = ρ × c × v</strong>
+                </p>
+                <ul style={{ color: colors.textSecondary, marginTop: '12px', paddingLeft: '20px' }}>
+                  <li>ρ = fluid density</li>
+                  <li>c = speed of sound in fluid</li>
+                  <li>v = flow velocity before stopping</li>
+                </ul>
+                <p style={{ color: colors.textSecondary, marginTop: '12px', fontWeight: 400 }}>
+                  This explains why faster flow = stronger water hammer!
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -1051,79 +1182,86 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
   if (phase === 'twist_predict') {
     return (
       <div style={containerStyle}>
-        <div style={{ maxWidth: '600px', margin: '0 auto', flex: 1 }}>
-          {progressDots}
-          <div style={cardStyle}>
-            <h2 style={{ fontSize: '24px', marginBottom: '16px' }}>The Twist: Shock Absorbers</h2>
-            <p style={{ color: colors.textSecondary, marginBottom: '20px' }}>
-              Car shock absorbers are filled with oil. When the wheel hits a bump, a piston
-              pushes through this oil. How does fluid inertia help create a smooth ride?
-            </p>
+        <div style={scrollStyle}>
+          <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+            {progressDots}
+            <div style={cardStyle}>
+              <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '16px' }}>The Twist: Shock Absorbers</h2>
+              <p style={{ color: colors.textSecondary, marginBottom: '20px', fontWeight: 400 }}>
+                Car shock absorbers are filled with oil. When the wheel hits a bump, a piston
+                pushes through this oil. How does fluid inertia help create a smooth ride?
+              </p>
 
-            {/* SVG visualization of shock absorber */}
-            <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
-              <svg viewBox="0 0 300 200" style={{ width: '100%', maxWidth: '300px', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
-                {/* Shock absorber body */}
-                <rect x="120" y="30" width="60" height="140" rx="8" fill={colors.bgCardLight} stroke={colors.border} strokeWidth="2" />
+              {/* SVG visualization of shock absorber */}
+              <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
+                <svg viewBox="0 0 300 220" style={{ width: '100%', maxWidth: '300px', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
+                  {renderSvgDefs()}
 
-                {/* Oil inside */}
-                <rect x="125" y="80" width="50" height="85" fill={colors.fluid} opacity="0.7" />
+                  {/* Shock absorber body */}
+                  <g filter="url(#shadow)">
+                    <rect x="120" y="30" width="60" height="140" rx="8" fill={colors.bgCardLight} stroke={colors.border} strokeWidth="2" />
+                  </g>
 
-                {/* Piston rod */}
-                <rect x="145" y="20" width="10" height="70" fill={colors.textSecondary} />
+                  {/* Oil inside */}
+                  <rect x="125" y="80" width="50" height="85" fill="url(#waterGrad)" opacity="0.7" />
 
-                {/* Piston head */}
-                <rect x="130" y="75" width="40" height="12" rx="2" fill={colors.border} stroke={colors.borderLight} strokeWidth="1" />
+                  {/* Piston rod */}
+                  <rect x="145" y="20" width="10" height="70" fill={colors.textSecondary} />
 
-                {/* Orifice holes in piston */}
-                <circle cx="140" cy="81" r="3" fill={colors.bgDark} />
-                <circle cx="160" cy="81" r="3" fill={colors.bgDark} />
+                  {/* Piston head */}
+                  <rect x="130" y="75" width="40" height="12" rx="2" fill={colors.border} stroke={colors.borderLight} strokeWidth="1" />
 
-                {/* Mounting points */}
-                <circle cx="150" cy="20" r="8" fill={colors.bgCardLight} stroke={colors.border} strokeWidth="2" />
-                <circle cx="150" cy="180" r="8" fill={colors.bgCardLight} stroke={colors.border} strokeWidth="2" />
+                  {/* Orifice holes in piston */}
+                  <circle cx="140" cy="81" r="3" fill={colors.bgDark} />
+                  <circle cx="160" cy="81" r="3" fill={colors.bgDark} />
 
-                {/* Labels */}
-                <text x="150" y="10" fill={colors.textPrimary} fontSize="11" textAnchor="middle" fontWeight="600">Shock Absorber</text>
-                <text x="200" y="55" fill={colors.textSecondary} fontSize="9" textAnchor="start">Piston</text>
-                <line x1="155" y1="55" x2="195" y2="55" stroke={colors.textSecondary} strokeWidth="1" />
-                <text x="200" y="120" fill={colors.fluid} fontSize="9" textAnchor="start">Oil</text>
-                <line x1="175" y1="120" x2="195" y2="120" stroke={colors.fluid} strokeWidth="1" />
+                  {/* Mounting points */}
+                  <circle cx="150" cy="20" r="8" fill={colors.bgCardLight} stroke={colors.border} strokeWidth="2" />
+                  <circle cx="150" cy="180" r="8" fill={colors.bgCardLight} stroke={colors.border} strokeWidth="2" />
 
-                {/* Bump arrow */}
-                <path d="M150 195 L140 185 L145 185 L145 175 L155 175 L155 185 L160 185 Z" fill={colors.warning} />
-                <text x="150" y="210" fill={colors.warning} fontSize="9" textAnchor="middle">Bump Force</text>
-              </svg>
-            </div>
+                  {/* Labels */}
+                  <text x="150" y="12" fill={colors.textPrimary} fontSize="12" textAnchor="middle" fontWeight="700">Shock Absorber</text>
+                  <text x="205" y="55" fill={colors.textSecondary} fontSize="11" textAnchor="start">Piston</text>
+                  <line x1="155" y1="55" x2="200" y2="55" stroke={colors.textSecondary} strokeWidth="1" />
+                  <text x="205" y="120" fill={colors.fluid} fontSize="11" textAnchor="start">Oil</text>
+                  <line x1="175" y1="120" x2="200" y2="120" stroke={colors.fluid} strokeWidth="1" />
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {[
-                { id: 'compress', label: 'The oil compresses like a spring' },
-                { id: 'resist', label: 'Fluid inertia resists rapid piston movement, absorbing energy gradually', correct: true },
-                { id: 'heat', label: 'The oil heats up and expands to cushion the bump' },
-                { id: 'flow', label: 'Oil flows around the piston with no resistance' }
-              ].map(option => (
-                <button
-                  key={option.id}
-                  onClick={() => {
-                    setPrediction(option.id);
-                    emitEvent('twist_prediction_made', { prediction: option.id });
-                  }}
-                  style={{
-                    padding: '16px',
-                    minHeight: '44px',
-                    background: prediction === option.id ? colors.accent : colors.bgCardLight,
-                    border: `2px solid ${prediction === option.id ? colors.accent : colors.border}`,
-                    borderRadius: '12px',
-                    color: colors.textPrimary,
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  {option.label}
-                </button>
-              ))}
+                  {/* Bump arrow */}
+                  <polygon points="150,200 138,188 144,188 144,140 156,140 156,188 162,188" fill={colors.warning} />
+                  <text x="150" y="213" fill={colors.warning} fontSize="11" textAnchor="middle">Bump Force</text>
+                </svg>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {[
+                  { id: 'compress', label: 'The oil compresses like a spring' },
+                  { id: 'resist', label: 'Fluid inertia resists rapid piston movement, absorbing energy gradually', correct: true },
+                  { id: 'heat', label: 'The oil heats up and expands to cushion the bump' },
+                  { id: 'flow', label: 'Oil flows around the piston with no resistance' }
+                ].map(option => (
+                  <button
+                    key={option.id}
+                    onClick={() => {
+                      setPrediction(option.id);
+                      emitEvent('twist_prediction_made', { prediction: option.id });
+                    }}
+                    style={{
+                      padding: '16px',
+                      minHeight: '44px',
+                      background: prediction === option.id ? colors.accent : colors.bgCardLight,
+                      border: `2px solid ${prediction === option.id ? colors.accent : colors.border}`,
+                      borderRadius: '12px',
+                      color: colors.textPrimary,
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      fontWeight: 400,
+                    }}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -1150,86 +1288,49 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
   if (phase === 'twist_play') {
     return (
       <div style={containerStyle}>
-        <div style={{ maxWidth: '600px', margin: '0 auto', flex: 1 }}>
-          {progressDots}
-          <div style={cardStyle}>
-            <h2 style={{ fontSize: '24px', marginBottom: '16px' }}>Shock Absorber Simulation</h2>
-            <p style={{ color: colors.textSecondary, marginBottom: '20px' }}>
-              Adjust the damping level to see how fluid inertia affects bump absorption.
-            </p>
+        <div style={scrollStyle}>
+          <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+            {progressDots}
+            <div style={cardStyle}>
+              <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '16px' }}>Shock Absorber Simulation</h2>
+              <p style={{ color: colors.textSecondary, marginBottom: '20px', fontWeight: 400 }}>
+                Adjust the damping level to see how fluid inertia affects bump absorption.
+                Watch how the oscillation changes with different damping values.
+              </p>
 
-            <div style={{
-              background: colors.bgDark,
-              borderRadius: '12px',
-              padding: '20px',
-              marginBottom: '20px',
-              minHeight: '200px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{
-                  width: '60px',
-                  height: '120px',
-                  background: colors.bgCardLight,
-                  borderRadius: '8px',
-                  margin: '0 auto',
-                  position: 'relative',
-                  overflow: 'hidden'
-                }}>
-                  <div style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: `${dampingLevel}%`,
-                    background: colors.fluid,
-                    transition: 'height 0.3s'
-                  }} />
-                  <div style={{
-                    position: 'absolute',
-                    top: `${100 - dampingLevel}%`,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    width: '50px',
-                    height: '10px',
-                    background: colors.textSecondary,
-                    borderRadius: '4px'
-                  }} />
-                </div>
-                <p style={{ color: colors.textSecondary, marginTop: '12px', fontSize: '14px' }}>
-                  Damping: {dampingLevel}%
+              {/* SVG Visualization */}
+              <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
+                {renderDampingSVG()}
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', color: colors.textSecondary, fontWeight: 500 }}>
+                  Damping Level: {dampingLevel}%
+                </label>
+                <input
+                  type="range"
+                  min="10"
+                  max="100"
+                  value={dampingLevel}
+                  onChange={(e) => setDampingLevel(Number(e.target.value))}
+                  onInput={(e) => setDampingLevel(Number((e.target as HTMLInputElement).value))}
+                  style={sliderStyle}
+                  aria-label="Damping level control"
+                />
+              </div>
+
+              <div style={{
+                padding: '16px',
+                background: colors.bgCardLight,
+                borderRadius: '12px',
+                marginBottom: '20px'
+              }}>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
+                  {dampingLevel < 30 && 'Low damping: Minimal fluid resistance leads to excessive bouncing and a harsh ride.'}
+                  {dampingLevel >= 30 && dampingLevel < 70 && 'Optimal damping: Fluid inertia absorbs bumps smoothly, providing a comfortable ride.'}
+                  {dampingLevel >= 70 && 'High damping: Too much fluid resistance causes a stiff, harsh ride that transmits vibrations.'}
                 </p>
               </div>
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', color: colors.textSecondary }}>
-                Damping Level: {dampingLevel}%
-              </label>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                value={dampingLevel}
-                onChange={(e) => setDampingLevel(Number(e.target.value))}
-                style={{ width: '100%' }}
-                aria-label="Damping level control"
-              />
-            </div>
-
-            <div style={{
-              padding: '16px',
-              background: colors.bgCardLight,
-              borderRadius: '12px',
-              marginBottom: '20px'
-            }}>
-              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-                {dampingLevel < 30 && '⚠️ Low damping: Minimal fluid resistance, bouncy ride'}
-                {dampingLevel >= 30 && dampingLevel < 70 && '✅ Optimal damping: Fluid inertia absorbs bumps smoothly'}
-                {dampingLevel >= 70 && '⚠️ High damping: Too much resistance, harsh ride'}
-              </p>
             </div>
           </div>
         </div>
@@ -1256,101 +1357,107 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
 
     return (
       <div style={containerStyle}>
-        <div style={{ maxWidth: '600px', margin: '0 auto', flex: 1 }}>
-          {progressDots}
-          <div style={cardStyle}>
-            <h2 style={{ fontSize: '24px', marginBottom: '16px' }}>How Shock Absorbers Use Fluid Inertia</h2>
+        <div style={scrollStyle}>
+          <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+            {progressDots}
+            <div style={cardStyle}>
+              <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '16px' }}>How Shock Absorbers Use Fluid Inertia</h2>
 
-            {/* Reference user's prediction */}
-            <div style={{
-              padding: '16px',
-              background: twistWasCorrect ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-              borderRadius: '12px',
-              marginBottom: '20px',
-              borderLeft: `4px solid ${twistWasCorrect ? colors.success : colors.error}`
-            }}>
-              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-                <strong>Your prediction:</strong> {prediction === 'resist' ? 'Fluid inertia resists rapid movement' :
-                  prediction === 'compress' ? 'Oil compresses like a spring' :
-                  prediction === 'heat' ? 'Oil heats up and expands' : 'Oil flows with no resistance'}
-              </p>
-              <p style={{ color: twistWasCorrect ? colors.success : colors.error, fontSize: '14px', marginTop: '8px' }}>
-                {twistWasCorrect ? 'Exactly right! Fluid inertia is the key mechanism.' : 'The key is fluid inertia resisting rapid piston movement.'}
-              </p>
-            </div>
+              {/* Reference user's prediction */}
+              <div style={{
+                padding: '16px',
+                background: twistWasCorrect ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                borderRadius: '12px',
+                marginBottom: '20px',
+                borderLeft: `4px solid ${twistWasCorrect ? colors.success : colors.error}`
+              }}>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
+                  <strong>Your prediction:</strong> {prediction === 'resist' ? 'Fluid inertia resists rapid movement' :
+                    prediction === 'compress' ? 'Oil compresses like a spring' :
+                    prediction === 'heat' ? 'Oil heats up and expands' : 'Oil flows with no resistance'}
+                </p>
+                <p style={{ color: twistWasCorrect ? colors.success : colors.error, fontSize: '14px', marginTop: '8px' }}>
+                  {twistWasCorrect ? 'Exactly right! Fluid inertia is the key mechanism.' : 'The key is fluid inertia resisting rapid piston movement.'}
+                </p>
+              </div>
 
-            {/* SVG diagram for twist review */}
-            <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
-              <svg viewBox="0 0 350 200" style={{ width: '100%', maxWidth: '350px', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
-                {/* Title */}
-                <text x="175" y="18" fill={colors.textPrimary} fontSize="11" textAnchor="middle" fontWeight="600">Shock Absorber: Energy Conversion</text>
+              {/* SVG diagram for twist review */}
+              <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
+                <svg viewBox="0 0 350 210" style={{ width: '100%', maxWidth: '350px', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
+                  {renderSvgDefs()}
 
-                {/* Shock absorber diagram */}
-                <rect x="80" y="35" width="50" height="100" rx="6" fill={colors.bgCardLight} stroke={colors.border} strokeWidth="2" />
-                <rect x="85" y="60" width="40" height="70" fill={colors.fluid} opacity="0.7" />
-                <rect x="100" y="25" width="10" height="45" fill={colors.textSecondary} />
-                <rect x="88" y="55" width="34" height="10" rx="2" fill={colors.border} />
+                  {/* Title */}
+                  <text x="175" y="20" fill={colors.textPrimary} fontSize="12" textAnchor="middle" fontWeight="700">Shock Absorber: Energy Conversion</text>
 
-                {/* Energy flow arrows */}
-                <path d="M145 85 L175 85 L175 80 L190 85 L175 90 L175 85" fill={colors.warning} />
-                <text x="167" y="105" fill={colors.warning} fontSize="9" textAnchor="middle">Kinetic</text>
+                  {/* Shock absorber diagram */}
+                  <g filter="url(#shadow)">
+                    <rect x="80" y="35" width="50" height="100" rx="6" fill={colors.bgCardLight} stroke={colors.border} strokeWidth="2" />
+                  </g>
+                  <rect x="85" y="60" width="40" height="70" fill="url(#waterGrad)" opacity="0.7" />
+                  <rect x="100" y="25" width="10" height="45" fill={colors.textSecondary} />
+                  <rect x="88" y="55" width="34" height="12" rx="2" fill={colors.border} />
 
-                <path d="M205 85 L235 85 L235 80 L250 85 L235 90 L235 85" fill={colors.error} />
-                <text x="227" y="105" fill={colors.error} fontSize="9" textAnchor="middle">Heat</text>
+                  {/* Energy flow arrows */}
+                  <path d="M145 85 L175 85 L175 80 L190 85 L175 90 L175 85" fill={colors.warning} />
+                  <text x="167" y="105" fill={colors.warning} fontSize="11" textAnchor="middle">Kinetic</text>
 
-                {/* Heat waves */}
-                <path d="M260 70 Q265 75 260 80 Q255 85 260 90" stroke={colors.error} strokeWidth="2" fill="none" />
-                <path d="M270 65 Q275 72 270 80 Q265 88 270 95" stroke={colors.error} strokeWidth="2" fill="none" />
+                  <path d="M205 85 L235 85 L235 80 L250 85 L235 90 L235 85" fill={colors.error} />
+                  <text x="227" y="105" fill={colors.error} fontSize="11" textAnchor="middle">Heat</text>
 
-                {/* Labels */}
-                <text x="105" y="155" fill={colors.textSecondary} fontSize="9" textAnchor="middle">Damper</text>
+                  {/* Heat waves */}
+                  <path d="M260 70 Q265 75 260 80 Q255 85 260 90" stroke={colors.error} strokeWidth="2" fill="none" />
+                  <path d="M270 65 Q275 72 270 80 Q265 88 270 95" stroke={colors.error} strokeWidth="2" fill="none" />
 
-                {/* F=ma box */}
-                <rect x="60" y="165" width="230" height="28" rx="6" fill={colors.bgCardLight} stroke={colors.warning} strokeWidth="1" />
-                <text x="175" y="183" fill={colors.warning} fontSize="10" textAnchor="middle" fontWeight="600">F = ma: Faster motion = More resistance</text>
-              </svg>
-            </div>
+                  {/* Labels */}
+                  <text x="105" y="155" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Damper</text>
 
-            <div style={{
-              padding: '20px',
-              background: colors.bgCardLight,
-              borderRadius: '12px',
-              marginBottom: '20px'
-            }}>
-              <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Key Insight</h3>
-              <p style={{ color: colors.textSecondary, lineHeight: 1.6 }}>
-                When a wheel hits a bump, the piston tries to move quickly through oil.
-                The oil's <strong>inertia</strong> resists this rapid acceleration, creating
-                a damping force that's proportional to piston velocity.
-              </p>
-            </div>
+                  {/* F=ma box */}
+                  <rect x="60" y="170" width="230" height="28" rx="6" fill={colors.bgCardLight} stroke={colors.warning} strokeWidth="1" />
+                  <text x="175" y="188" fill={colors.warning} fontSize="12" textAnchor="middle" fontWeight="700">F = m × a: Faster motion = More resistance</text>
+                </svg>
+              </div>
 
-            <div style={{
-              padding: '20px',
-              background: colors.bgCardLight,
-              borderRadius: '12px',
-              marginBottom: '20px'
-            }}>
-              <h3 style={{ color: colors.success, marginBottom: '12px' }}>Energy Transformation</h3>
-              <p style={{ color: colors.textSecondary, lineHeight: 1.6 }}>
-                Instead of the bump's energy being transferred instantly to the car body
-                (causing jarring motion), fluid inertia allows the energy to be absorbed
-                gradually and converted to heat. This is why shock absorbers get warm during use!
-              </p>
-            </div>
+              <div style={{
+                padding: '20px',
+                background: colors.bgCardLight,
+                borderRadius: '12px',
+                marginBottom: '20px'
+              }}>
+                <h3 style={{ color: colors.accent, marginBottom: '12px', fontWeight: 600 }}>The Key Insight</h3>
+                <p style={{ color: colors.textSecondary, lineHeight: 1.6, fontWeight: 400 }}>
+                  When a wheel hits a bump, the piston tries to move quickly through oil.
+                  The oil's <strong>inertia</strong> resists this rapid acceleration, creating
+                  a damping force that's proportional to piston velocity.
+                </p>
+              </div>
 
-            <div style={{
-              padding: '20px',
-              background: colors.bgCardLight,
-              borderRadius: '12px',
-              marginBottom: '20px'
-            }}>
-              <h3 style={{ color: colors.warning, marginBottom: '12px' }}>F = ma at Work</h3>
-              <p style={{ color: colors.textSecondary, lineHeight: 1.6 }}>
-                The damping force comes from accelerating the oil mass through orifices.
-                Faster piston movement requires more force to accelerate the oil, providing
-                progressive damping exactly when it's needed most.
-              </p>
+              <div style={{
+                padding: '20px',
+                background: colors.bgCardLight,
+                borderRadius: '12px',
+                marginBottom: '20px'
+              }}>
+                <h3 style={{ color: colors.success, marginBottom: '12px', fontWeight: 600 }}>Energy Transformation</h3>
+                <p style={{ color: colors.textSecondary, lineHeight: 1.6, fontWeight: 400 }}>
+                  Instead of the bump's energy being transferred instantly to the car body
+                  (causing jarring motion), fluid inertia allows the energy to be absorbed
+                  gradually and converted to heat. This is why shock absorbers get warm during use!
+                </p>
+              </div>
+
+              <div style={{
+                padding: '20px',
+                background: colors.bgCardLight,
+                borderRadius: '12px',
+                marginBottom: '20px'
+              }}>
+                <h3 style={{ color: colors.warning, marginBottom: '12px', fontWeight: 600 }}>F = m × a at Work</h3>
+                <p style={{ color: colors.textSecondary, lineHeight: 1.6, fontWeight: 400 }}>
+                  The damping force comes from accelerating the oil mass through orifices.
+                  Faster piston movement requires more force to accelerate the oil, providing
+                  progressive damping exactly when it's needed most.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -1377,206 +1484,194 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
 
     return (
       <div style={containerStyle}>
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          {progressDots}
+        <div style={scrollStyle}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            {progressDots}
 
-          {/* App selector tabs */}
-          <div style={{
-            display: 'flex',
-            gap: '8px',
-            marginBottom: '20px',
-            flexWrap: 'wrap',
-            justifyContent: 'center'
-          }}>
-            {realWorldApps.map((app, index) => (
-              <button
-                key={index}
-                onClick={() => {
-                  setActiveAppIndex(index);
-                  setViewedApps(prev => new Set([...prev, index]));
-                  emitEvent('app_viewed', { appIndex: index, appTitle: app.title });
-                }}
-                style={{
-                  padding: '10px 16px',
-                  background: activeAppIndex === index ? currentApp.color : colors.bgCardLight,
-                  border: `2px solid ${activeAppIndex === index ? currentApp.color : colors.border}`,
-                  borderRadius: '20px',
-                  color: colors.textPrimary,
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  transition: 'all 0.2s'
-                }}
-              >
-                <span>{app.icon}</span>
-                <span>{app.short}</span>
-                {viewedApps.has(index) && <span style={{ color: colors.success }}>✓</span>}
-              </button>
-            ))}
-          </div>
-
-          <div style={{ ...cardStyle, borderTop: `4px solid ${currentApp.color}` }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
-              <span style={{ fontSize: '48px' }}>{currentApp.icon}</span>
-              <div>
-                <h2 style={{ fontSize: '24px', marginBottom: '4px' }}>{currentApp.title}</h2>
-                <p style={{ color: currentApp.color, fontSize: '14px' }}>{currentApp.tagline}</p>
-              </div>
-            </div>
-
-            <p style={{ color: colors.textSecondary, lineHeight: 1.7, marginBottom: '24px' }}>
-              {currentApp.description}
-            </p>
-
+            {/* App selector tabs */}
             <div style={{
-              padding: '20px',
-              background: colors.bgCardLight,
-              borderRadius: '12px',
-              marginBottom: '20px'
+              display: 'flex',
+              gap: '8px',
+              marginBottom: '20px',
+              flexWrap: 'wrap',
+              justifyContent: 'center'
             }}>
-              <h3 style={{ color: colors.primary, marginBottom: '12px', fontSize: '16px' }}>
-                🔗 Physics Connection
-              </h3>
-              <p style={{ color: colors.textSecondary, lineHeight: 1.6, fontSize: '14px' }}>
-                {currentApp.connection}
-              </p>
-            </div>
-
-            <div style={{
-              padding: '20px',
-              background: colors.bgCardLight,
-              borderRadius: '12px',
-              marginBottom: '20px'
-            }}>
-              <h3 style={{ color: colors.accent, marginBottom: '12px', fontSize: '16px' }}>
-                ⚙️ How It Works
-              </h3>
-              <p style={{ color: colors.textSecondary, lineHeight: 1.6, fontSize: '14px' }}>
-                {currentApp.howItWorks}
-              </p>
-            </div>
-
-            {/* Stats */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-              marginBottom: '20px'
-            }}>
-              {currentApp.stats.map((stat, i) => (
-                <div key={i} style={{
-                  background: colors.bgCardLight,
-                  borderRadius: '12px',
-                  padding: '16px',
-                  textAlign: 'center'
-                }}>
-                  <div style={{ fontSize: '24px', fontWeight: 700, color: currentApp.color }}>
-                    {stat.value}
-                  </div>
-                  <div style={{ fontSize: '12px', color: colors.textMuted, marginTop: '4px' }}>
-                    {stat.label}
-                  </div>
-                </div>
+              {realWorldApps.map((app, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    setActiveAppIndex(index);
+                    setViewedApps(prev => new Set([...prev, index]));
+                    emitEvent('app_viewed', { appIndex: index, appTitle: app.title });
+                  }}
+                  style={{
+                    padding: '10px 16px',
+                    background: activeAppIndex === index ? currentApp.color : colors.bgCardLight,
+                    border: `2px solid ${activeAppIndex === index ? currentApp.color : colors.border}`,
+                    borderRadius: '20px',
+                    color: colors.textPrimary,
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'all 0.2s ease',
+                    fontWeight: 400,
+                  }}
+                >
+                  <span>{app.icon}</span>
+                  <span>{app.short}</span>
+                  {viewedApps.has(index) && <span style={{ color: colors.success }}>✓</span>}
+                </button>
               ))}
             </div>
 
-            {/* Examples */}
-            <div style={{ marginBottom: '20px' }}>
-              <h3 style={{ color: colors.textSecondary, marginBottom: '12px', fontSize: '16px' }}>
-                📋 Real Examples
-              </h3>
-              <ul style={{ color: colors.textMuted, paddingLeft: '20px', lineHeight: 1.8 }}>
-                {currentApp.examples.map((example, i) => (
-                  <li key={i} style={{ marginBottom: '8px' }}>{example}</li>
-                ))}
-              </ul>
-            </div>
+            <div style={{ ...cardStyle, borderTop: `4px solid ${currentApp.color}` }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
+                <span style={{ fontSize: '48px' }}>{currentApp.icon}</span>
+                <div>
+                  <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '4px' }}>{currentApp.title}</h2>
+                  <p style={{ color: currentApp.color, fontSize: '14px', fontWeight: 500 }}>{currentApp.tagline}</p>
+                </div>
+              </div>
 
-            {/* Companies */}
-            <div style={{ marginBottom: '20px' }}>
-              <h3 style={{ color: colors.textSecondary, marginBottom: '12px', fontSize: '16px' }}>
-                🏢 Key Players
-              </h3>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {currentApp.companies.map((company, i) => (
-                  <span key={i} style={{
+              <p style={{ color: colors.textSecondary, lineHeight: 1.7, marginBottom: '24px', fontWeight: 400 }}>
+                {currentApp.description}
+              </p>
+
+              <div style={{
+                padding: '20px',
+                background: colors.bgCardLight,
+                borderRadius: '12px',
+                marginBottom: '20px'
+              }}>
+                <h3 style={{ color: colors.primary, marginBottom: '12px', fontSize: '16px', fontWeight: 600 }}>
+                  Physics Connection
+                </h3>
+                <p style={{ color: colors.textSecondary, lineHeight: 1.6, fontSize: '14px', fontWeight: 400 }}>
+                  {currentApp.connection}
+                </p>
+              </div>
+
+              <div style={{
+                padding: '20px',
+                background: colors.bgCardLight,
+                borderRadius: '12px',
+                marginBottom: '20px'
+              }}>
+                <h3 style={{ color: colors.accent, marginBottom: '12px', fontSize: '16px', fontWeight: 600 }}>
+                  How It Works
+                </h3>
+                <p style={{ color: colors.textSecondary, lineHeight: 1.6, fontSize: '14px', fontWeight: 400 }}>
+                  {currentApp.howItWorks}
+                </p>
+              </div>
+
+              {/* Stats */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                marginBottom: '20px'
+              }}>
+                {currentApp.stats.map((stat, i) => (
+                  <div key={i} style={{
                     background: colors.bgCardLight,
-                    padding: '6px 12px',
-                    borderRadius: '16px',
-                    fontSize: '13px',
-                    color: colors.textSecondary
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center'
                   }}>
-                    {company}
-                  </span>
+                    <div style={{ fontSize: '24px', fontWeight: 700, color: currentApp.color }}>
+                      {stat.value}
+                    </div>
+                    <div style={{ fontSize: '12px', color: colors.textMuted, marginTop: '4px', fontWeight: 400 }}>
+                      {stat.label}
+                    </div>
+                  </div>
                 ))}
               </div>
-            </div>
 
-            {/* Future Impact */}
-            <div style={{
-              padding: '20px',
-              background: `linear-gradient(135deg, ${currentApp.color}20 0%, ${colors.bgCardLight} 100%)`,
-              borderRadius: '12px',
-              borderLeft: `4px solid ${currentApp.color}`,
-              marginBottom: '20px'
-            }}>
-              <h3 style={{ color: currentApp.color, marginBottom: '12px', fontSize: '16px' }}>
-                🚀 Future Impact
-              </h3>
-              <p style={{ color: colors.textSecondary, lineHeight: 1.6, fontSize: '14px' }}>
-                {currentApp.futureImpact}
-              </p>
-            </div>
+              {/* Examples */}
+              <div style={{ marginBottom: '20px' }}>
+                <h3 style={{ color: colors.textSecondary, marginBottom: '12px', fontSize: '16px', fontWeight: 600 }}>
+                  Real Examples
+                </h3>
+                <ul style={{ color: colors.textMuted, paddingLeft: '20px', lineHeight: 1.8 }}>
+                  {currentApp.examples.map((example, i) => (
+                    <li key={i} style={{ marginBottom: '8px' }}>{example}</li>
+                  ))}
+                </ul>
+              </div>
 
-            {/* Next Application button */}
-            {activeAppIndex < realWorldApps.length - 1 ? (
+              {/* Companies */}
+              <div style={{ marginBottom: '20px' }}>
+                <h3 style={{ color: colors.textSecondary, marginBottom: '12px', fontSize: '16px', fontWeight: 600 }}>
+                  Key Players
+                </h3>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {currentApp.companies.map((company, i) => (
+                    <span key={i} style={{
+                      background: colors.bgCardLight,
+                      padding: '6px 12px',
+                      borderRadius: '16px',
+                      fontSize: '13px',
+                      color: colors.textSecondary,
+                      fontWeight: 400,
+                    }}>
+                      {company}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Future Impact */}
+              <div style={{
+                padding: '20px',
+                background: `linear-gradient(135deg, ${currentApp.color}20 0%, ${colors.bgCardLight} 100%)`,
+                borderRadius: '12px',
+                borderLeft: `4px solid ${currentApp.color}`,
+                marginBottom: '20px'
+              }}>
+                <h3 style={{ color: currentApp.color, marginBottom: '12px', fontSize: '16px', fontWeight: 600 }}>
+                  Future Impact
+                </h3>
+                <p style={{ color: colors.textSecondary, lineHeight: 1.6, fontSize: '14px', fontWeight: 400 }}>
+                  {currentApp.futureImpact}
+                </p>
+              </div>
+
+              {/* Got It button */}
               <button
-                style={{ ...buttonStyle, width: '100%' }}
+                style={{ ...buttonStyle, width: '100%', background: `linear-gradient(135deg, ${colors.success} 0%, ${colors.successLight} 100%)` }}
                 onClick={() => {
-                  const nextIndex = activeAppIndex + 1;
-                  setActiveAppIndex(nextIndex);
-                  setViewedApps(prev => new Set([...prev, nextIndex]));
-                  emitEvent('app_viewed', { appIndex: nextIndex, appTitle: realWorldApps[nextIndex].title });
-                }}
-              >
-                Next Application →
-              </button>
-            ) : (
-              <button
-                style={{ ...buttonStyle, width: '100%', background: colors.success }}
-                onClick={() => {
-                  setViewedApps(prev => new Set([...prev, activeAppIndex]));
+                  setViewedApps(new Set([0, 1, 2, 3]));
                 }}
               >
                 Got It
               </button>
+            </div>
+
+            {viewedApps.size >= realWorldApps.length && (
+              <div style={{ textAlign: 'center', marginTop: '20px', marginBottom: '20px' }}>
+                <p style={{ color: colors.textSecondary, marginBottom: '16px', fontWeight: 400 }}>
+                  All applications explored! Ready for the quiz.
+                </p>
+                <button
+                  style={buttonStyle}
+                  onClick={() => goToPhase('test')}
+                >
+                  Take the Test
+                </button>
+              </div>
             )}
 
-            {/* Always visible Got It button */}
-            <button
-              style={{ ...buttonStyle, width: '100%', marginTop: '12px', background: colors.success }}
-              onClick={() => {
-                setViewedApps(new Set([0, 1, 2, 3]));
-              }}
-            >
-              Got It
-            </button>
+            {viewedApps.size < realWorldApps.length && (
+              <p style={{ textAlign: 'center', color: colors.textMuted, marginTop: '20px', marginBottom: '20px', fontWeight: 400 }}>
+                Explore all {realWorldApps.length} applications to unlock the quiz
+                ({viewedApps.size}/{realWorldApps.length} viewed)
+              </p>
+            )}
           </div>
-
-          {viewedApps.size >= realWorldApps.length && (
-            <p style={{ textAlign: 'center', color: colors.textSecondary, marginTop: '20px', marginBottom: '20px' }}>
-              All applications explored! Ready for the quiz.
-            </p>
-          )}
-
-          {viewedApps.size < realWorldApps.length && (
-            <p style={{ textAlign: 'center', color: colors.textSecondary, marginTop: '20px', marginBottom: '20px' }}>
-              Explore all {realWorldApps.length} applications to unlock the quiz
-              ({viewedApps.size}/{realWorldApps.length} viewed)
-            </p>
-          )}
         </div>
         <div style={navBarStyle}>
           <button
@@ -1590,7 +1685,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
               style={buttonStyle}
               onClick={() => goToPhase('test')}
             >
-              Test Your Knowledge →
+              Next →
             </button>
           )}
         </div>
@@ -1603,91 +1698,95 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
 
     return (
       <div style={containerStyle}>
-        <div style={{ maxWidth: '600px', margin: '0 auto', flex: 1 }}>
-          {progressDots}
-          <div style={cardStyle}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              marginBottom: '20px',
-              color: colors.textSecondary
-            }}>
-              <span>Question {currentQuestion + 1} of {testQuestions.length}</span>
-              <span>Score: {score}/{currentQuestion + (showExplanation ? 1 : 0)}</span>
-            </div>
-
-            <div style={{
-              padding: '16px',
-              background: colors.bgCardLight,
-              borderRadius: '12px',
-              marginBottom: '20px'
-            }}>
-              <p style={{ color: colors.textMuted, fontSize: '14px', marginBottom: '8px' }}>
-                Scenario:
-              </p>
-              <p style={{ color: colors.textSecondary }}>
-                {currentQ.scenario}
-              </p>
-            </div>
-
-            <h3 style={{ fontSize: '18px', marginBottom: '16px' }}>
-              {currentQ.question}
-            </h3>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {currentQ.options.map(option => {
-                let bgColor = colors.bgCardLight;
-                let borderColor = colors.border;
-
-                if (showExplanation) {
-                  if (option.correct) {
-                    bgColor = 'rgba(34, 197, 94, 0.2)';
-                    borderColor = colors.success;
-                  } else if (selectedAnswer === option.id) {
-                    bgColor = 'rgba(239, 68, 68, 0.2)';
-                    borderColor = colors.error;
-                  }
-                } else if (selectedAnswer === option.id) {
-                  bgColor = colors.primary;
-                  borderColor = colors.primary;
-                }
-
-                return (
-                  <button
-                    key={option.id}
-                    onClick={() => handleAnswerSelect(option.id)}
-                    disabled={showExplanation}
-                    style={{
-                      padding: '16px',
-                      background: bgColor,
-                      border: `2px solid ${borderColor}`,
-                      borderRadius: '12px',
-                      color: colors.textPrimary,
-                      textAlign: 'left',
-                      cursor: showExplanation ? 'default' : 'pointer',
-                      transition: 'all 0.2s',
-                      opacity: showExplanation && !option.correct && selectedAnswer !== option.id ? 0.5 : 1
-                    }}
-                  >
-                    {option.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            {showExplanation && (
+        <div style={scrollStyle}>
+          <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+            {progressDots}
+            <div style={cardStyle}>
               <div style={{
-                marginTop: '20px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginBottom: '20px',
+                color: colors.textSecondary,
+                fontWeight: 400,
+              }}>
+                <span>Question {currentQuestion + 1} of {testQuestions.length}</span>
+                <span>Score: {score}/{currentQuestion + (showExplanation ? 1 : 0)}</span>
+              </div>
+
+              <div style={{
                 padding: '16px',
                 background: colors.bgCardLight,
                 borderRadius: '12px',
-                borderLeft: `4px solid ${colors.primary}`
+                marginBottom: '20px'
               }}>
-                <p style={{ color: colors.textSecondary, lineHeight: 1.6 }}>
-                  {currentQ.explanation}
+                <p style={{ color: colors.textMuted, fontSize: '14px', marginBottom: '8px', fontWeight: 400 }}>
+                  Scenario:
+                </p>
+                <p style={{ color: colors.textSecondary, fontWeight: 400 }}>
+                  {currentQ.scenario}
                 </p>
               </div>
-            )}
+
+              <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '16px' }}>
+                {currentQ.question}
+              </h3>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {currentQ.options.map(option => {
+                  let bgColor = colors.bgCardLight;
+                  let borderColor = colors.border;
+
+                  if (showExplanation) {
+                    if (option.correct) {
+                      bgColor = 'rgba(34, 197, 94, 0.2)';
+                      borderColor = colors.success;
+                    } else if (selectedAnswer === option.id) {
+                      bgColor = 'rgba(239, 68, 68, 0.2)';
+                      borderColor = colors.error;
+                    }
+                  } else if (selectedAnswer === option.id) {
+                    bgColor = colors.primary;
+                    borderColor = colors.primary;
+                  }
+
+                  return (
+                    <button
+                      key={option.id}
+                      onClick={() => handleAnswerSelect(option.id)}
+                      disabled={showExplanation}
+                      style={{
+                        padding: '16px',
+                        background: bgColor,
+                        border: `2px solid ${borderColor}`,
+                        borderRadius: '12px',
+                        color: colors.textPrimary,
+                        textAlign: 'left',
+                        cursor: showExplanation ? 'default' : 'pointer',
+                        transition: 'all 0.2s ease',
+                        opacity: showExplanation && !option.correct && selectedAnswer !== option.id ? 0.5 : 1,
+                        fontWeight: 400,
+                      }}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {showExplanation && (
+                <div style={{
+                  marginTop: '20px',
+                  padding: '16px',
+                  background: colors.bgCardLight,
+                  borderRadius: '12px',
+                  borderLeft: `4px solid ${colors.primary}`
+                }}>
+                  <p style={{ color: colors.textSecondary, lineHeight: 1.6, fontWeight: 400 }}>
+                    {currentQ.explanation}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
         <div style={navBarStyle}>
@@ -1716,52 +1815,54 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
 
     return (
       <div style={containerStyle}>
-        <div style={{ maxWidth: '600px', margin: '0 auto', flex: 1 }}>
-          {progressDots}
-          <div style={{ ...cardStyle, textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '20px' }}>
-              {passed ? '🏆' : '📚'}
-            </div>
-
-            <h2 style={{ fontSize: '28px', marginBottom: '8px' }}>
-              {passed ? 'Congratulations!' : 'Keep Learning!'}
-            </h2>
-
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>
-              {passed
-                ? 'You\'ve mastered the physics of fluid inertia!'
-                : 'Review the material and try again to master this topic.'}
-            </p>
-
-            <div style={{
-              fontSize: '48px',
-              fontWeight: 700,
-              color: passed ? colors.success : colors.warning,
-              marginBottom: '8px'
-            }}>
-              {score}/{testQuestions.length}
-            </div>
-            <p style={{ color: colors.textSecondary, marginBottom: '32px' }}>
-              {percentage}% Correct
-            </p>
-
-            {passed && (
-              <div style={{
-                padding: '20px',
-                background: colors.bgCardLight,
-                borderRadius: '12px',
-                marginBottom: '24px',
-                textAlign: 'left'
-              }}>
-                <h3 style={{ color: colors.success, marginBottom: '12px' }}>Key Takeaways:</h3>
-                <ul style={{ color: colors.textSecondary, paddingLeft: '20px', lineHeight: 1.8 }}>
-                  <li>Moving fluids have momentum (mass x velocity) that resists changes</li>
-                  <li>Sudden flow changes create pressure spikes (water hammer)</li>
-                  <li>Fluid inertia is essential for shock absorbers, pipelines, and blood flow</li>
-                  <li>The Joukowsky equation predicts pressure spikes: ΔP = ρcv</li>
-                </ul>
+        <div style={scrollStyle}>
+          <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+            {progressDots}
+            <div style={{ ...cardStyle, textAlign: 'center' }}>
+              <div style={{ fontSize: '64px', marginBottom: '20px' }}>
+                {passed ? '🏆' : '📚'}
               </div>
-            )}
+
+              <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '8px' }}>
+                {passed ? 'Congratulations!' : 'Keep Learning!'}
+              </h2>
+
+              <p style={{ color: colors.textSecondary, marginBottom: '24px', fontWeight: 400 }}>
+                {passed
+                  ? 'You\'ve mastered the physics of fluid inertia!'
+                  : 'Review the material and try again to master this topic.'}
+              </p>
+
+              <div style={{
+                fontSize: '48px',
+                fontWeight: 700,
+                color: passed ? colors.success : colors.warning,
+                marginBottom: '8px'
+              }}>
+                {score}/{testQuestions.length}
+              </div>
+              <p style={{ color: colors.textSecondary, marginBottom: '32px', fontWeight: 400 }}>
+                {percentage}% Correct
+              </p>
+
+              {passed && (
+                <div style={{
+                  padding: '20px',
+                  background: colors.bgCardLight,
+                  borderRadius: '12px',
+                  marginBottom: '24px',
+                  textAlign: 'left'
+                }}>
+                  <h3 style={{ color: colors.success, marginBottom: '12px', fontWeight: 600 }}>Key Takeaways:</h3>
+                  <ul style={{ color: colors.textSecondary, paddingLeft: '20px', lineHeight: 1.8 }}>
+                    <li>Moving fluids have momentum (mass × velocity) that resists changes</li>
+                    <li>Sudden flow changes create pressure spikes (water hammer)</li>
+                    <li>Fluid inertia is essential for shock absorbers, pipelines, and blood flow</li>
+                    <li>The Joukowsky equation predicts pressure spikes: ΔP = ρ × c × v</li>
+                  </ul>
+                </div>
+              )}
+            </div>
           </div>
         </div>
         <div style={navBarStyle}>

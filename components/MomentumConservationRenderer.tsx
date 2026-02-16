@@ -474,6 +474,11 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
         </pattern>
         <rect width={width} height={height} fill="url(#grid)" />
 
+        {/* Grid reference lines */}
+        <line x1={20} y1={trackY} x2={width - 20} y2={trackY} stroke="#374151" strokeWidth="0.5" strokeDasharray="4,4" opacity={0.5} />
+        <line x1={centerX} y1={20} x2={centerX} y2={trackY + cartHeight + 10} stroke="#374151" strokeWidth="0.5" strokeDasharray="4,4" opacity={0.5} />
+        <line x1={20} y1={trackY - 40} x2={width - 20} y2={trackY - 40} stroke="#374151" strokeWidth="0.5" strokeDasharray="4,4" opacity={0.3} />
+
         {/* Track */}
         <rect x={20} y={trackY + cartHeight} width={width - 40} height={12} rx={4} fill="url(#trackGrad)" />
         <rect x={20} y={trackY + cartHeight} width={width - 40} height={3} rx={1.5} fill="rgba(255,255,255,0.1)" />
@@ -488,7 +493,7 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
           {isCompressed ? (
             <g>
               <path
-                d={`M0 0 ${Array.from({length: 6}, (_, i) => `L${3 + i * 3} ${i % 2 === 0 ? -6 : 6}`).join(' ')} L${rightCartX - leftCartX - cartWidth - 4} 0`}
+                d={`M0 0 ${Array.from({length: 6}, (_, i) => `L${3 + i * 3} ${i % 2 === 0 ? -35 : 35}`).join(' ')} L${rightCartX - leftCartX - cartWidth - 4} 0`}
                 stroke="#22C55E"
                 strokeWidth={3}
                 fill="none"
@@ -562,19 +567,15 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
         )}
 
         {/* Momentum display */}
-        <g transform={`translate(${width - 110}, 15)`}>
-          <rect width={95} height={50} rx={8} fill={colors.bgSecondary} stroke={Math.abs(totalMomentum) < 0.5 ? colors.success : colors.border} strokeWidth={2} />
-          <text x={47} y={18} textAnchor="middle" fill={colors.textMuted} fontSize="10">Total Momentum</text>
-          <text x={47} y={38} textAnchor="middle" fill={Math.abs(totalMomentum) < 0.5 ? colors.success : colors.textPrimary} fontSize="16" fontWeight="700">
-            {totalMomentum.toFixed(1)} kg*m/s
-          </text>
-        </g>
+        <rect x={width - 110} y={15} width={95} height={50} rx={8} fill={colors.bgSecondary} stroke={Math.abs(totalMomentum) < 0.5 ? colors.success : colors.border} strokeWidth={2} />
+        <text x={width - 63} y={33} textAnchor="middle" fill={colors.textMuted} fontSize="10">Total Momentum</text>
+        <text x={width - 63} y={53} textAnchor="middle" fill={Math.abs(totalMomentum) < 0.5 ? colors.success : colors.textPrimary} fontSize="16" fontWeight="700">
+          {totalMomentum.toFixed(1)} kg*m/s
+        </text>
 
         {/* Individual momenta */}
-        <g transform="translate(15, 15)">
-          <text x={0} y={12} fill="#60A5FA" fontSize="11" fontWeight="600">p1 = {momentumLeft.toFixed(1)}</text>
-          <text x={0} y={28} fill="#FDBA74" fontSize="11" fontWeight="600">p2 = {momentumRight.toFixed(1)}</text>
-        </g>
+        <text x={15} y={27} fill="#60A5FA" fontSize="11" fontWeight="600">p1 = {momentumLeft.toFixed(1)}</text>
+        <text x={15} y={43} fill="#FDBA74" fontSize="11" fontWeight="600">p2 = {momentumRight.toFixed(1)}</text>
       </svg>
     );
   };
@@ -921,8 +922,8 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
-          <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '88px', paddingLeft: '24px', paddingRight: '24px' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Momentum Lab
           </h2>
@@ -958,7 +959,7 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
                   value={massLeft}
                   onChange={(e) => { setMassLeft(parseInt(e.target.value)); resetExperiment(); }}
                   disabled={isAnimating}
-                  style={{ width: '100%', cursor: isAnimating ? 'not-allowed' : 'pointer', accentColor: colors.accent, background: colors.bgSecondary }}
+                  style={{ width: '100%', cursor: isAnimating ? 'not-allowed' : 'pointer', accentColor: colors.accent, background: colors.bgSecondary, touchAction: 'pan-y' }}
                 />
               </div>
               <div>
@@ -973,7 +974,7 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
                   value={massRight}
                   onChange={(e) => { setMassRight(parseInt(e.target.value)); resetExperiment(); }}
                   disabled={isAnimating}
-                  style={{ width: '100%', cursor: isAnimating ? 'not-allowed' : 'pointer', accentColor: colors.accentSecondary, background: colors.bgSecondary }}
+                  style={{ width: '100%', cursor: isAnimating ? 'not-allowed' : 'pointer', accentColor: colors.accentSecondary, background: colors.bgSecondary, touchAction: 'pan-y' }}
                 />
               </div>
             </div>

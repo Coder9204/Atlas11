@@ -252,9 +252,9 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
 
   // Wrapper function for phase content
   const wrapPhaseContent = (content: React.ReactNode, bottomBarContent?: React.ReactNode) => (
-    <div className="absolute inset-0 flex flex-col" style={{ background: colors.bgPrimary, color: colors.textPrimary }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary, color: colors.textPrimary }}>
       <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000, flexShrink: 0 }}>{renderProgressBar()}</div>
-      <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden', marginTop: '60px', marginBottom: bottomBarContent ? '70px' : 0 }}>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px', paddingBottom: '100px' }}>
         {content}
       </div>
       {bottomBarContent && <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, flexShrink: 0 }}>{bottomBarContent}</div>}
@@ -608,168 +608,141 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
         {/* Background */}
         <rect width="500" height="450" fill="#0f172a" rx="12" />
 
+        {/* Grid lines for visual reference */}
+        <line x1="30" y1="220" x2="470" y2="220" stroke="rgba(148,163,184,0.3)" strokeDasharray="4 4" opacity="0.3" />
+        <line x1="30" y1="340" x2="470" y2="340" stroke="rgba(148,163,184,0.3)" strokeDasharray="4 4" opacity="0.3" />
+        <line x1="250" y1="40" x2="250" y2="210" stroke="rgba(148,163,184,0.3)" strokeDasharray="4 4" opacity="0.3" />
+
         {/* Title */}
         <text x="250" y="25" fill="#f8fafc" fontSize="14" fontWeight="bold" textAnchor="middle">
           Monolithic vs Chiplet Architecture
         </text>
 
-        {/* Monolithic Die Section */}
-        <g transform="translate(30, 45)">
-          <text x="90" y="0" fill="#6366f1" fontSize="12" fontWeight="bold" textAnchor="middle">Monolithic Die</text>
-          <rect x="20" y="10" width="140" height="140" fill="url(#monolithicGrad)" rx="4" stroke="#818cf8" strokeWidth="2" filter="url(#dropShadow)" />
+        {/* Monolithic Die Section - absolute coords */}
+        <text x="120" y="45" fill="#6366f1" fontSize="12" fontWeight="bold" textAnchor="middle">Monolithic Die</text>
+        <rect x="50" y="55" width="140" height="140" fill="url(#monolithicGrad)" rx="4" stroke="#818cf8" strokeWidth="2" filter="url(#dropShadow)" />
 
-          {/* Defects visualization */}
-          {[...Array(Math.floor((100 - metrics.monolithicYield) / 5))].map((_, i) => (
-            <circle
-              key={i}
-              cx={40 + Math.random() * 100}
-              cy={30 + Math.random() * 100}
-              r="3"
-              fill="#ef4444"
-              opacity="0.8"
-            />
-          ))}
+        {/* Defects visualization */}
+        {[...Array(Math.floor((100 - metrics.monolithicYield) / 5))].map((_, i) => (
+          <circle
+            key={`defect-${i}`}
+            cx={70 + (i * 17) % 100}
+            cy={75 + (i * 23) % 100}
+            r="3"
+            fill="#ef4444"
+            opacity="0.8"
+          />
+        ))}
 
-          <text x="90" y="170" fill="#e2e8f0" fontSize="10" textAnchor="middle">{dieSize}mm2 total</text>
-          <text x="90" y="185" fill={metrics.monolithicYield > 50 ? '#22c55e' : '#ef4444'} fontSize="11" textAnchor="middle">
-            Yield: {metrics.monolithicYield}%
-          </text>
-        </g>
+        <text x="120" y="212" fill="rgba(148, 163, 184, 0.7)" fontSize="11" textAnchor="middle">{dieSize}mm² total</text>
 
-        {/* Chiplet Section */}
-        <g transform="translate(250, 45)">
-          <text x="100" y="0" fill="#22c55e" fontSize="12" fontWeight="bold" textAnchor="middle">Chiplet Design</text>
+        {/* Chiplet Section - absolute coords */}
+        <text x="370" y="45" fill="#22c55e" fontSize="12" fontWeight="bold" textAnchor="middle">Chiplet Design</text>
 
-          {/* Chiplets grid */}
-          {[...Array(chipletCount)].map((_, i) => {
-            const col = i % cols;
-            const row = Math.floor(i / cols);
-            const chipletSize = 130 / Math.max(cols, rows);
-            const x = 35 + col * (chipletSize + 5);
-            const y = 15 + row * (chipletSize + 5);
+        {/* Chiplets grid */}
+        {[...Array(chipletCount)].map((_, i) => {
+          const col = i % cols;
+          const row = Math.floor(i / cols);
+          const chipletSize = 130 / Math.max(cols, rows);
+          const cx = 300 + col * (chipletSize + 5);
+          const cy = 60 + row * (chipletSize + 5);
 
-            return (
-              <g key={i}>
-                <rect
-                  x={x}
-                  y={y}
-                  width={chipletSize}
-                  height={chipletSize}
-                  fill={highlightedChiplet === i ? '#4ade80' : 'url(#chipletGrad)'}
-                  rx="2"
-                  stroke="#86efac"
-                  strokeWidth="1"
-                  filter={highlightedChiplet === i ? 'url(#glow)' : 'url(#dropShadow)'}
-                  style={{ cursor: 'pointer' }}
-                  onPointerEnter={() => setHighlightedChiplet(i)}
-                  onPointerLeave={() => setHighlightedChiplet(null)}
-                />
-                {/* Random defect (less likely on smaller die) */}
-                {Math.random() > metrics.singleChipletYield / 100 && (
-                  <circle cx={x + chipletSize / 2} cy={y + chipletSize / 2} r="2" fill="#ef4444" />
-                )}
-              </g>
-            );
-          })}
-
-          {/* Interconnect visualization */}
-          {showInterconnect && chipletCount > 1 && (
-            <g opacity="0.7">
-              {[...Array(chipletCount - 1)].map((_, i) => {
-                const col1 = i % cols;
-                const row1 = Math.floor(i / cols);
-                const col2 = (i + 1) % cols;
-                const row2 = Math.floor((i + 1) / cols);
-                const chipletSize = 130 / Math.max(cols, rows);
-                const x1 = 35 + col1 * (chipletSize + 5) + chipletSize;
-                const y1 = 15 + row1 * (chipletSize + 5) + chipletSize / 2;
-                const x2 = 35 + col2 * (chipletSize + 5);
-                const y2 = 15 + row2 * (chipletSize + 5) + chipletSize / 2;
-
-                return (
-                  <line
-                    key={i}
-                    x1={x1}
-                    y1={y1}
-                    x2={x2}
-                    y2={y2}
-                    stroke="#f59e0b"
-                    strokeWidth="2"
-                    strokeDasharray="4,2"
-                  />
-                );
-              })}
+          return (
+            <g key={i}>
+              <rect
+                x={cx}
+                y={cy}
+                width={chipletSize}
+                height={chipletSize}
+                fill={highlightedChiplet === i ? '#4ade80' : 'url(#chipletGrad)'}
+                rx="2"
+                stroke="#86efac"
+                strokeWidth="1"
+                filter={highlightedChiplet === i ? 'url(#glow)' : 'url(#dropShadow)'}
+                style={{ cursor: 'pointer' }}
+                onPointerEnter={() => setHighlightedChiplet(i)}
+                onPointerLeave={() => setHighlightedChiplet(null)}
+              />
             </g>
-          )}
+          );
+        })}
 
-          <text x="100" y="170" fill="#e2e8f0" fontSize="10" textAnchor="middle">{chipletCount}x {metrics.chipletArea}mm2</text>
-          <text x="100" y="185" fill={metrics.chipletYield > 50 ? '#22c55e' : '#ef4444'} fontSize="11" textAnchor="middle">
-            Combined Yield: {metrics.chipletYield}%
-          </text>
-        </g>
+        {/* Interconnect visualization */}
+        {showInterconnect && chipletCount > 1 && (
+          <g opacity="0.7">
+            {[...Array(chipletCount - 1)].map((_, i) => {
+              const col1 = i % cols;
+              const row1 = Math.floor(i / cols);
+              const col2 = (i + 1) % cols;
+              const row2 = Math.floor((i + 1) / cols);
+              const chipletSize = 130 / Math.max(cols, rows);
+              const x1 = 300 + col1 * (chipletSize + 5) + chipletSize;
+              const y1 = 60 + row1 * (chipletSize + 5) + chipletSize / 2;
+              const x2 = 300 + col2 * (chipletSize + 5);
+              const y2 = 60 + row2 * (chipletSize + 5) + chipletSize / 2;
 
-        {/* Yield Comparison Chart */}
-        <g transform="translate(30, 220)">
-          <text x="0" y="0" fill="#f8fafc" fontSize="12" fontWeight="bold">Yield Comparison</text>
+              return (
+                <line
+                  key={i}
+                  x1={x1}
+                  y1={y1}
+                  x2={x2}
+                  y2={y2}
+                  stroke="#f59e0b"
+                  strokeWidth="2"
+                  strokeDasharray="4,2"
+                />
+              );
+            })}
+          </g>
+        )}
 
-          <rect x="0" y="15" width={metrics.monolithicYield * 2} height="20" fill="url(#monolithicGrad)" rx="4" />
-          <text x={metrics.monolithicYield * 2 + 10} y="30" fill="#6366f1" fontSize="11">{metrics.monolithicYield}%</text>
+        <text x="370" y="212" fill="rgba(148, 163, 184, 0.7)" fontSize="11" textAnchor="middle">{chipletCount} × {metrics.chipletArea}mm²</text>
 
-          <rect x="0" y="45" width={metrics.chipletYield * 2} height="20" fill="url(#chipletGrad)" rx="4" />
-          <text x={metrics.chipletYield * 2 + 10} y="60" fill="#22c55e" fontSize="11">{metrics.chipletYield}%</text>
+        {/* Yield values below sections */}
+        <text x="120" y="233" fill={metrics.monolithicYield > 50 ? '#22c55e' : '#ef4444'} fontSize="12" textAnchor="middle">
+          Yield: {metrics.monolithicYield}%
+        </text>
+        <text x="370" y="233" fill={metrics.chipletYield > 50 ? '#22c55e' : '#ef4444'} fontSize="12" textAnchor="middle">
+          Combined Yield: {metrics.chipletYield}%
+        </text>
 
-          <text x="0" y="90" fill="#e2e8f0" fontSize="10">Single chiplet yield: {metrics.singleChipletYield}%</text>
-        </g>
+        {/* Yield Comparison Chart - absolute coords */}
+        <text x="30" y="265" fill="#f8fafc" fontSize="12" fontWeight="bold">Yield Comparison</text>
 
-        {/* Cost Comparison */}
-        <g transform="translate(270, 220)">
-          <text x="0" y="0" fill="#f8fafc" fontSize="12" fontWeight="bold">Relative Cost/Good Die</text>
+        <rect x="30" y="275" width={metrics.monolithicYield * 2} height="20" fill="url(#monolithicGrad)" rx="4" />
+        <text x={30 + metrics.monolithicYield * 2 + 10} y="290" fill="#6366f1" fontSize="11">{metrics.monolithicYield}%</text>
 
-          <rect x="0" y="15" width={Math.min(200, metrics.monolithicCost)} height="20" fill="#ef4444" rx="4" opacity="0.7" />
-          <text x={Math.min(200, metrics.monolithicCost) + 10} y="30" fill="#ef4444" fontSize="11">{metrics.monolithicCost}</text>
+        <rect x="30" y="305" width={metrics.chipletYield * 2} height="20" fill="url(#chipletGrad)" rx="4" />
+        <text x={30 + metrics.chipletYield * 2 + 10} y="320" fill="#22c55e" fontSize="11">{metrics.chipletYield}%</text>
 
-          <rect x="0" y="45" width={Math.min(200, metrics.chipletCost)} height="20" fill="#22c55e" rx="4" opacity="0.7" />
-          <text x={Math.min(200, metrics.chipletCost) + 10} y="60" fill="#22c55e" fontSize="11">{metrics.chipletCost}</text>
+        {/* Cost Comparison - absolute coords */}
+        <text x="280" y="265" fill="#f8fafc" fontSize="12" fontWeight="bold">Cost per Good Die</text>
 
-          <text x="0" y="90" fill={metrics.costSavings > 0 ? '#22c55e' : '#ef4444'} fontSize="11">
-            {metrics.costSavings > 0 ? `Saving ${metrics.costSavings}%` : `Extra cost ${-metrics.costSavings}%`}
-          </text>
-        </g>
+        <rect x="280" y="275" width={Math.min(180, metrics.monolithicCost)} height="20" fill="#ef4444" rx="4" opacity="0.7" />
+        <text x={280 + Math.min(180, metrics.monolithicCost) + 10} y="290" fill="#ef4444" fontSize="11">{metrics.monolithicCost}</text>
 
-        {/* Process Node Info */}
-        <g transform="translate(30, 340)">
-          <rect x="0" y="0" width="440" height="100" fill="rgba(30, 41, 59, 0.8)" rx="8" filter="url(#dropShadow)" />
-          <text x="20" y="25" fill="#f8fafc" fontSize="12" fontWeight="bold">Current Settings</text>
-          <text x="20" y="50" fill="#e2e8f0" fontSize="11" fontWeight="normal">Process Node: {processNode}nm</text>
-          <text x="20" y="70" fill="#e2e8f0" fontSize="11" fontWeight="normal">Total Die Area: {dieSize}mm2</text>
-          <text x="20" y="90" fill="#e2e8f0" fontSize="11" fontWeight="normal">Chiplet Count: {chipletCount}</text>
+        <rect x="280" y="305" width={Math.min(180, metrics.chipletCost)} height="20" fill="#22c55e" rx="4" opacity="0.7" />
+        <text x={280 + Math.min(180, metrics.chipletCost) + 10} y="320" fill="#22c55e" fontSize="11">{metrics.chipletCost}</text>
 
-          <text x="250" y="50" fill="#f59e0b" fontSize="11" fontWeight="normal">Interconnect: {metrics.interconnectBandwidth} GB/s</text>
-          <text x="250" y="70" fill="#e2e8f0" fontSize="11" fontWeight="normal">Packaging overhead: ~20%</text>
+        {/* Process Node Info - absolute coords */}
+        <rect x="30" y="345" width="440" height="95" fill="rgba(30, 41, 59, 0.8)" rx="8" />
+        <text x="50" y="370" fill="#f8fafc" fontSize="12" fontWeight="bold">Current Settings</text>
+        <text x="50" y="390" fill="#e2e8f0" fontSize="11">Process Node: {processNode}nm</text>
+        <text x="50" y="410" fill="#e2e8f0" fontSize="11">Total Die Area: {dieSize}mm²</text>
+        <text x="50" y="430" fill="#e2e8f0" fontSize="11">Chiplets: {chipletCount}</text>
 
-          {/* Additional visual indicators for complexity */}
-          <circle cx="420" cy="50" r="15" fill="url(#glowGrad)" />
-          <path d="M410,50 L430,50 M420,40 L420,60" stroke="#22c55e" strokeWidth="2" />
-        </g>
+        <text x="280" y="390" fill="#f59e0b" fontSize="11">Interconnect: {metrics.interconnectBandwidth} GB/s</text>
+        <text x="280" y="410" fill="#e2e8f0" fontSize="11">Packaging overhead: ~20%</text>
 
-        {/* Decorative elements for visual polish */}
-        <g transform="translate(450, 100)">
-          <circle cx="20" cy="20" r="8" fill="rgba(99, 102, 241, 0.3)" />
-          <circle cx="20" cy="50" r="6" fill="rgba(34, 197, 94, 0.3)" />
-          <circle cx="20" cy="75" r="4" fill="rgba(245, 158, 11, 0.3)" />
-        </g>
-
-        {/* Additional path elements for visual depth */}
-        <g transform="translate(0, 0)">
-          <path d="M5,225 Q25,210 45,225" stroke="#6366f1" strokeWidth="1" fill="none" opacity="0.4" />
-          <path d="M5,230 Q25,215 45,230" stroke="#6366f1" strokeWidth="1" fill="none" opacity="0.3" />
-          <path d="M455,225 Q475,210 495,225" stroke="#22c55e" strokeWidth="1" fill="none" opacity="0.4" />
-          <path d="M455,230 Q475,215 495,230" stroke="#22c55e" strokeWidth="1" fill="none" opacity="0.3" />
-          <path d="M230,430 L270,430" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" opacity="0.5" />
-        </g>
+        {/* Yield curve path using significant vertical space (>=10 L points) */}
+        <path d={`M 30 200 L 60 195 L 90 185 L 120 170 L 150 150 L 180 130 L 210 110 L 250 90 L 300 70 L 350 58 L 400 50 L 450 46 L 470 45`} stroke="#6366f1" strokeWidth="2" fill="none" opacity="0.5" />
+        <path d={`M 30 200 L 60 198 L 90 192 L 120 183 L 150 170 L 180 155 L 210 138 L 250 115 L 300 90 L 350 72 L 400 60 L 450 53 L 470 50`} stroke="#22c55e" strokeWidth="2" fill="none" opacity="0.5" />
       </svg>
     );
   };
+
+  const sliderStyle: React.CSSProperties = { width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' };
 
   const renderControls = () => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '500px', margin: '0 auto' }}>
@@ -784,9 +757,13 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
           step="50"
           value={dieSize}
           onChange={(e) => setDieSize(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: '#22c55e' }}
+          style={sliderStyle}
           aria-label="Die Area controls yield probability"
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(148, 163, 184, 0.7)', fontSize: '11px' }}>
+          <span>100 mm²</span>
+          <span>800 mm²</span>
+        </div>
       </div>
 
       <div>
@@ -800,9 +777,13 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
           step="1"
           value={chipletCount}
           onChange={(e) => setChipletCount(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: '#22c55e' }}
+          style={sliderStyle}
           aria-label="Chiplet Count affects combined yield"
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(148, 163, 184, 0.7)', fontSize: '11px' }}>
+          <span>1</span>
+          <span>9</span>
+        </div>
       </div>
 
       <div>
@@ -816,9 +797,13 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
           step="1"
           value={processNode}
           onChange={(e) => setProcessNode(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: '#22c55e' }}
+          style={sliderStyle}
           aria-label="Process Node defect density factor"
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(148, 163, 184, 0.7)', fontSize: '11px' }}>
+          <span>3 nm</span>
+          <span>14 nm</span>
+        </div>
       </div>
 
       <button

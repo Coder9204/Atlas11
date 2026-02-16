@@ -18,76 +18,39 @@ interface GyroscopicPrecessionRendererProps {
   gamePhase?: string;
 }
 
-// --- PREMIUM DESIGN SYSTEM (Apple/Airbnb quality) ---
-const design = {
-  // Colors - carefully balanced for contrast and readability
-  colors: {
-    // Primary brand colors
-    primary: '#f97316',       // Vibrant orange
-    primaryLight: '#fb923c',
-    primaryDark: '#ea580c',
-    accent: '#8b5cf6',        // Rich purple
-    accentLight: '#a78bfa',
-
-    // Semantic colors
-    success: '#10b981',
-    successLight: '#34d399',
-    warning: '#f59e0b',
-    danger: '#ef4444',
-
-    // Background hierarchy (dark theme)
-    bgPrimary: '#0a0a0f',     // Deepest background
-    bgSecondary: '#12121a',   // Cards and elevated surfaces
-    bgTertiary: '#1a1a24',    // Hover states, inputs
-    bgElevated: '#22222e',    // Highly elevated elements
-
-    // Border colors
-    border: '#2a2a36',
-    borderLight: '#3a3a48',
-    borderFocus: '#f97316',
-
-    // Text hierarchy - using bright colors for contrast (brightness >= 180)
-    textPrimary: '#fafafa',   // Headings
-    textSecondary: '#e2e8f0', // Body text - bright enough for readability
-    textTertiary: '#cbd5e1',  // Captions, hints - still readable
-    textInverse: '#0a0a0f',   // Text on light backgrounds
-  },
-
-  // Typography
-  fonts: {
-    display: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif',
-    body: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif',
-  },
-
-  // Spacing scale (4px base)
-  space: {
-    xs: '4px',
-    sm: '8px',
-    md: '16px',
-    lg: '24px',
-    xl: '32px',
-    xxl: '48px',
-  },
-
-  // Border radius
-  radius: {
-    sm: '8px',
-    md: '12px',
-    lg: '16px',
-    xl: '24px',
-    full: '9999px',
-  },
-
-  // Shadows
-  shadows: {
-    sm: '0 1px 2px rgba(0,0,0,0.3)',
-    md: '0 4px 12px rgba(0,0,0,0.4)',
-    lg: '0 8px 24px rgba(0,0,0,0.5)',
-    glow: (color: string) => `0 0 40px ${color}40`,
-  },
+// --- PREMIUM DESIGN SYSTEM ---
+const colors = {
+  primary: '#f97316',
+  primaryLight: '#fb923c',
+  primaryDark: '#ea580c',
+  accent: '#8b5cf6',
+  accentLight: '#a78bfa',
+  success: '#10b981',
+  successLight: '#34d399',
+  warning: '#f59e0b',
+  danger: '#ef4444',
+  bgPrimary: '#0a0a0f',
+  bgSecondary: '#12121a',
+  bgTertiary: '#1a1a24',
+  bgElevated: '#22222e',
+  border: '#2a2a36',
+  borderLight: '#3a3a48',
+  borderFocus: '#f97316',
+  textPrimary: '#fafafa',
+  textSecondary: '#e2e8f0',
+  textTertiary: '#cbd5e1',
+  textInverse: '#0a0a0f',
+  muted: 'rgba(148,163,184,0.7)',
 };
 
-const { colors, space, radius, shadows } = design;
+const space = { xs: '4px', sm: '8px', md: '16px', lg: '24px', xl: '32px', xxl: '48px' };
+const radius = { sm: '8px', md: '12px', lg: '16px', xl: '24px', full: '9999px' };
+const shadows = {
+  sm: '0 1px 2px rgba(0,0,0,0.3)',
+  md: '0 4px 12px rgba(0,0,0,0.4)',
+  lg: '0 8px 24px rgba(0,0,0,0.5)',
+  glow: (color: string) => `0 0 40px ${color}40`,
+};
 
 // --- PHASES ---
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
@@ -103,6 +66,15 @@ const phaseLabels: Record<Phase, string> = {
   'transfer': 'Transfer',
   'test': 'Test',
   'mastery': 'Mastery'
+};
+
+// Slider style constant for all sliders
+const sliderStyle: React.CSSProperties = {
+  width: '100%',
+  height: '20px',
+  touchAction: 'pan-y',
+  WebkitAppearance: 'none',
+  accentColor: '#3b82f6',
 };
 
 // --- MAIN COMPONENT ---
@@ -160,29 +132,6 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
 
-  // --- RESPONSIVE ---
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
-
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
-
   // --- AI COACH ---
   const emitGameEvent = useCallback((eventType: GameEvent['eventType'], details: Record<string, unknown> = {}) => {
     onGameEvent?.({
@@ -238,7 +187,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   // --- TEST DATA ---
   const testQuestions = [
     {
-      scenario: "You're holding a spinning bike wheel by its axle, and you try to tilt it downward.",
+      scenario: "You're holding a spinning bike wheel by its axle, and you try to tilt it downward. The wheel is spinning at high speed with significant angular momentum stored in its rotating mass.",
       question: "Instead of tilting down, the wheel moves sideways. Why?",
       options: [
         { text: "Air resistance pushes it sideways", correct: false },
@@ -249,7 +198,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
       explanation: "When you apply a torque, it changes the DIRECTION of the angular momentum vector, not its magnitude. The wheel moves perpendicular to both the torque and spin axis—this is precession!"
     },
     {
-      scenario: "A toy gyroscope is spinning fast. You push down on one end of its axle.",
+      scenario: "A toy gyroscope is spinning fast on a tabletop. You push down on one end of its axle with your finger, applying a steady downward force that creates a torque about the support point.",
       question: "What happens to the gyroscope?",
       options: [
         { text: "It tips over immediately", correct: false },
@@ -260,7 +209,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
       explanation: "The push (torque) causes the gyroscope to precess—its axis slowly rotates in a circle. The faster it spins, the slower the precession."
     },
     {
-      scenario: "Wheel A spins at 10 rad/s, Wheel B at 5 rad/s. You apply the same torque to both.",
+      scenario: "Wheel A spins at 10 rad/s, Wheel B at 5 rad/s. Both have identical mass and radius, giving them the same moment of inertia. You apply the same torque to both wheels simultaneously.",
       question: "Which wheel precesses faster?",
       options: [
         { text: "Wheel A (faster spin)", correct: false },
@@ -268,10 +217,10 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
         { text: "Both same rate", correct: false },
         { text: "Neither will precess", correct: false }
       ],
-      explanation: "Precession rate Ω = τ/L. With same torque, the slower wheel has less angular momentum, so it precesses FASTER."
+      explanation: "Precession rate \u03A9 = \u03C4/L. With same torque, the slower wheel has less angular momentum, so it precesses FASTER."
     },
     {
-      scenario: "A spinning top starts to wobble as it slows down.",
+      scenario: "A spinning top on a smooth surface starts to wobble as it gradually loses speed due to friction at the contact point. The wobble amplitude keeps growing as the rotational energy decreases.",
       question: "Why does the wobbling get worse as it slows?",
       options: [
         { text: "The top becomes heavier", correct: false },
@@ -279,10 +228,10 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
         { text: "Air becomes thicker", correct: false },
         { text: "It's running out of energy", correct: false }
       ],
-      explanation: "As spin decreases, angular momentum L decreases. Since Ω = τ/L, lower L means faster precession and larger wobble."
+      explanation: "As spin decreases, angular momentum L decreases. Since \u03A9 = \u03C4/L, lower L means faster precession and larger wobble."
     },
     {
-      scenario: "A helicopter's main rotor spins counterclockwise viewed from above.",
+      scenario: "A helicopter's main rotor spins counterclockwise viewed from above, generating enormous angular momentum. Without any compensation mechanism, Newton's third law would cause the fuselage to spin.",
       question: "Without a tail rotor, what would happen to the body?",
       options: [
         { text: "Nothing—too heavy", correct: false },
@@ -293,7 +242,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
       explanation: "Angular momentum conservation! The rotor spins one way, so without the tail rotor, the body would spin opposite."
     },
     {
-      scenario: "Spacecraft use spinning reaction wheels to orient themselves.",
+      scenario: "Spacecraft like the Hubble Space Telescope and the International Space Station use spinning reaction wheels mounted on perpendicular axes to orient themselves precisely in the vacuum of space.",
       question: "How do reaction wheels work?",
       options: [
         { text: "Push against solar wind", correct: false },
@@ -304,7 +253,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
       explanation: "Conservation of angular momentum! If a wheel speeds up one direction, the spacecraft rotates opposite. No fuel needed!"
     },
     {
-      scenario: "A figure skater tilts their head while spinning.",
+      scenario: "A figure skater spinning at high speed on the ice tilts their head to one side. Their body acts as a massive gyroscope with significant angular momentum along the vertical axis.",
       question: "What gyroscopic effect might they experience?",
       options: [
         { text: "No effect—humans too light", correct: false },
@@ -315,7 +264,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
       explanation: "Their body acts as a gyroscope! Tilting while spinning creates precession forces. Experienced skaters learn to anticipate these."
     },
     {
-      scenario: "A motorcycle is leaning into a turn at high speed.",
+      scenario: "A motorcycle rider is leaning into a sharp turn at 120 km/h. The front and rear wheels spin rapidly, creating gyroscopic angular momentum that significantly affects the bike's handling dynamics.",
       question: "How do the spinning wheels affect stability?",
       options: [
         { text: "Make it unstable", correct: false },
@@ -326,7 +275,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
       explanation: "The wheels' angular momentum resists tilting and turning. This gyroscopic stability helps keep the bike upright."
     },
     {
-      scenario: "Earth's axis slowly traces a circle in space over 26,000 years.",
+      scenario: "Earth's axis slowly traces a circle in space over 26,000 years. This astronomical precession was first noted by the ancient Greek astronomer Hipparchus around 130 BC when comparing star positions.",
       question: "What causes this slow precession?",
       options: [
         { text: "Sun's pull on Earth's equatorial bulge", correct: true },
@@ -337,7 +286,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
       explanation: "Earth bulges at the equator. The Sun and Moon exert torque on this bulge, causing Earth's axis to precess slowly."
     },
     {
-      scenario: "An engineer designs a ship stabilizer using a massive spinning flywheel.",
+      scenario: "An engineer designs a ship stabilizer using a massive spinning flywheel weighing over 10 tonnes, mounted on gimbals in the hull. When ocean waves roll the ship, the flywheel's angular momentum resists the motion.",
       question: "How would this reduce ship roll in waves?",
       options: [
         { text: "Absorbs wave energy", correct: false },
@@ -352,54 +301,54 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   // --- REAL WORLD APPS ---
   const realWorldApps = [
     {
-      icon: '🚁', title: 'Helicopter Dynamics', tagline: 'Tail Rotor & Gyroscopic Effects',
-      description: "Helicopter rotors are massive spinning disks with significant angular momentum. The tail rotor counteracts torque, and gyroscopic effects influence maneuverability.",
-      connection: "Just like a spinning wheel resists tilting, the helicopter's rotor resists orientation changes. Pilots must account for 90° phase lag in their inputs.",
-      howItWorks: "The main rotor creates angular momentum. When tilting, gyroscopic precession causes response 90° ahead of input—pilots learn to compensate.",
-      stats: [{ value: '400+', label: 'RPM typical', icon: '🔄' }, { value: '90°', label: 'Phase lag', icon: '📐' }, { value: '1944', label: 'First practical', icon: '📅' }],
+      icon: '\uD83D\uDE81', title: 'Helicopter Dynamics', tagline: 'Tail Rotor & Gyroscopic Effects',
+      description: "Helicopter rotors are massive spinning disks with significant angular momentum. The tail rotor counteracts torque, and gyroscopic effects influence maneuverability. Engineers at Boeing, Sikorsky, and Airbus Helicopters carefully model precession to ensure stable flight control systems.",
+      connection: "Just like a spinning wheel resists tilting, the helicopter's rotor resists orientation changes. Pilots must account for 90\u00B0 phase lag in their inputs.",
+      howItWorks: "The main rotor creates angular momentum. When tilting, gyroscopic precession causes response 90\u00B0 ahead of input\u2014pilots learn to compensate.",
+      stats: [{ value: '400+', label: 'RPM typical', icon: '\uD83D\uDD04' }, { value: '90\u00B0', label: 'Phase lag', icon: '\uD83D\uDCD0' }, { value: '1944', label: 'First practical', icon: '\uD83D\uDCC5' }],
       examples: ['Tail rotor prevents body rotation', 'Cyclic inputs account for precession', 'Autorotation uses stored momentum', 'Blade flapping compensates'],
       color: colors.primary
     },
     {
-      icon: '🛰️', title: 'Spacecraft Control', tagline: 'Reaction Wheels & CMGs',
-      description: "Satellites use spinning reaction wheels and control moment gyroscopes (CMGs) to orient precisely in space—without fuel.",
+      icon: '\uD83D\uDEF0\uFE0F', title: 'Spacecraft Control', tagline: 'Reaction Wheels & CMGs',
+      description: "NASA and ESA satellites use spinning reaction wheels and control moment gyroscopes (CMGs) to orient precisely in space\u2014without fuel. The Hubble Space Telescope, International Space Station, and Mars rovers all depend on this technology for precise pointing.",
       connection: "When a reaction wheel speeds up, the spacecraft rotates opposite (conservation). CMGs use precession for large torques.",
       howItWorks: "Three wheels on perpendicular axes control all rotations. CMGs tilt spinning wheels to create precession torques larger than motors could directly.",
-      stats: [{ value: '4+', label: 'Wheels on ISS', icon: '🔵' }, { value: '0', label: 'Fuel used', icon: '⛽' }, { value: '0.001°', label: 'Accuracy', icon: '🎯' }],
+      stats: [{ value: '4+', label: 'Wheels on ISS', icon: '\uD83D\uDD35' }, { value: '0', label: 'Fuel used', icon: '\u26FD' }, { value: '0.001\u00B0', label: 'Accuracy', icon: '\uD83C\uDFAF' }],
       examples: ['Hubble precision pointing', 'ISS uses CMGs', 'Mars rovers orient antennas', 'GPS satellites stay Earth-facing'],
       color: colors.accent
     },
     {
-      icon: '🏍️', title: 'Motorcycle Dynamics', tagline: 'Countersteering & Stability',
-      description: "Motorcycle wheels act as gyroscopes, providing inherent stability. Countersteering is necessary because of gyroscopic precession.",
-      connection: "The spinning front wheel resists tilting. To lean for turning, riders briefly steer AWAY—using precession to tip the bike.",
+      icon: '\uD83C\uDFCD\uFE0F', title: 'Motorcycle Dynamics', tagline: 'Countersteering & Stability',
+      description: "Motorcycle wheels act as gyroscopes, providing inherent stability at speed. Countersteering is necessary because of gyroscopic precession. Manufacturers like Ducati, BMW, and Honda engineer suspension geometry to work with gyroscopic forces.",
+      connection: "The spinning front wheel resists tilting. To lean for turning, riders briefly steer AWAY\u2014using precession to tip the bike.",
       howItWorks: "At speed, steering right causes the wheel to precess and lean LEFT. This is why motorcycles are steered by 'pushing' the handlebar.",
-      stats: [{ value: '20+', label: 'mph for effect', icon: '💨' }, { value: '2×', label: 'Stability boost', icon: '📊' }, { value: '~1s', label: 'Response time', icon: '⏱️' }],
-      examples: ['Countersteering all turns', 'Hands-free stability', 'Weave damping', 'Racing lean angles 60°'],
+      stats: [{ value: '20+', label: 'mph for effect', icon: '\uD83D\uDCA8' }, { value: '2\u00D7', label: 'Stability boost', icon: '\uD83D\uDCCA' }, { value: '~1s', label: 'Response time', icon: '\u23F1\uFE0F' }],
+      examples: ['Countersteering all turns', 'Hands-free stability', 'Weave damping', 'Racing lean angles 60\u00B0'],
       color: colors.success
     },
     {
-      icon: '🌍', title: "Earth's Precession", tagline: '26,000 Year Wobble',
-      description: "Earth's axis precesses like a slow-motion top, tracing a circle in space over 26,000 years, changing which star is the North Star.",
+      icon: '\uD83C\uDF0D', title: "Earth's Precession", tagline: '26,000 Year Wobble',
+      description: "Earth's axis precesses like a slow-motion top, tracing a circle in space over 26,000 years, changing which star is the North Star. This phenomenon was discovered by Hipparchus around 130 BC and is now understood through Newtonian mechanics and measured by observatories worldwide.",
       connection: "Earth's equatorial bulge experiences gravitational torque from Sun and Moon. Combined with spin, this causes slow precession.",
       howItWorks: "Earth bulges at the equator. Sun and Moon pull more on the closer bulge, creating torque that causes 26,000-year precession.",
-      stats: [{ value: '26,000', label: 'Years per cycle', icon: '🔄' }, { value: '23.4°', label: 'Axial tilt', icon: '📐' }, { value: '50"', label: 'Arc-sec/year', icon: '⭐' }],
+      stats: [{ value: '26,000', label: 'Years per cycle', icon: '\uD83D\uDD04' }, { value: '23.4\u00B0', label: 'Axial tilt', icon: '\uD83D\uDCD0' }, { value: '50"', label: 'Arc-sec/year', icon: '\u2B50' }],
       examples: ["Polaris wasn't always North Star", "Vega will be in ~12,000 years", "Milankovitch climate cycles", "Ancient alignments shift"],
       color: colors.warning
     }
   ];
 
-  // ===================== HELPER FUNCTIONS (return JSX) =====================
+  // ===================== RENDER FUNCTIONS =====================
 
   // Premium wrapper for all phases
   const renderPremiumWrapper = (content: React.ReactNode) => (
     <div style={{
       minHeight: '100vh',
-      height: '100vh',
       display: 'flex',
       flexDirection: 'column',
       background: colors.bgPrimary,
       color: colors.textPrimary,
+      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif',
       position: 'relative',
       overflow: 'hidden',
     }}>
@@ -436,6 +385,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               <button
                 key={p}
                 onClick={() => goToPhase(p)}
+                title={phaseLabels[p]}
                 style={{
                   height: '8px',
                   width: phase === p ? '24px' : '8px',
@@ -451,7 +401,6 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                   boxShadow: phase === p ? `0 0 8px ${colors.primary}60` : 'none',
                   zIndex: 10,
                 }}
-                title={phaseLabels[p]}
               />
             ))}
           </div>
@@ -464,21 +413,16 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
         flex: 1,
         overflowY: 'auto',
         overflowX: 'hidden',
-        paddingTop: '60px',
-        paddingBottom: '80px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
         position: 'relative',
       }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', padding: isMobile ? space.md : space.xl }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', padding: space.xl }}>
           {content}
         </div>
       </div>
     </div>
   );
-
-  // Progress indicator (kept for internal use, but header handles main navigation)
-  const renderProgressBar = () => {
-    return null; // Progress now shown in premium header
-  };
 
   // Bottom navigation
   const renderBottomBar = (canBack: boolean, canNext: boolean, label: string) => {
@@ -507,7 +451,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
             zIndex: 10,
           }}
         >
-          ← Back
+          \u2190 Back
         </button>
         <button
           onClick={() => canNext && goNext()}
@@ -528,7 +472,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
             zIndex: 10,
           }}
         >
-          {label} →
+          {label} \u2192
         </button>
       </div>
     );
@@ -544,12 +488,12 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
         marginBottom: space.sm,
       }}>{step}</span>
       <h2 style={{
-        fontSize: isMobile ? '22px' : '26px', fontWeight: 800,
+        fontSize: '26px', fontWeight: 800,
         color: colors.textPrimary,
         lineHeight: 1.2, marginBottom: subtitle ? space.sm : 0,
       }}>{title}</h2>
       {subtitle && (
-        <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.6 }}>{subtitle}</p>
+        <p style={{ fontSize: '14px', fontWeight: 400, color: colors.textSecondary, lineHeight: 1.6 }}>{subtitle}</p>
       )}
     </div>
   );
@@ -567,15 +511,143 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
       <span style={{ fontSize: '22px', flexShrink: 0 }}>{icon}</span>
       <div>
         <p style={{ fontSize: '14px', fontWeight: 700, color: colors.textPrimary, marginBottom: '4px' }}>{title}</p>
-        <p style={{ fontSize: '13px', color: colors.textSecondary, lineHeight: 1.5 }}>{desc}</p>
+        <p style={{ fontSize: '13px', fontWeight: 400, color: colors.muted, lineHeight: 1.5 }}>{desc}</p>
       </div>
     </div>
   );
+
+  // Chart SVG for precession rate vs spin speed - data-driven visualization
+  const renderPrecessionChart = () => {
+    const chartW = 340;
+    const chartH = 200;
+    const padL = 50;
+    const padR = 20;
+    const padT = 20;
+    const padB = 40;
+    const plotW = chartW - padL - padR;
+    const plotH = chartH - padT - padB;
+
+    // Generate curve: precession rate = tau / (I * omega) = 0.5 / (0.1 * omega) = 5/omega
+    const points: { x: number; y: number }[] = [];
+    const minOmega = 1;
+    const maxOmega = 10;
+    const maxPrecession = 5 / minOmega; // 5
+    for (let i = 0; i <= 40; i++) {
+      const omega = minOmega + (maxOmega - minOmega) * (i / 40);
+      const prec = 5 / omega;
+      const px = padL + (omega - minOmega) / (maxOmega - minOmega) * plotW;
+      const py = padT + (1 - prec / maxPrecession) * plotH;
+      points.push({ x: px, y: py });
+    }
+
+    const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+
+    // Current point position
+    const curOmega = spinSpeed;
+    const curPrec = 5 / curOmega;
+    const curX = padL + (curOmega - minOmega) / (maxOmega - minOmega) * plotW;
+    const curY = padT + (1 - curPrec / maxPrecession) * plotH;
+
+    // Reference point at omega = 5
+    const refOmega = 5;
+    const refPrec = 5 / refOmega;
+    const refX = padL + (refOmega - minOmega) / (maxOmega - minOmega) * plotW;
+    const refY = padT + (1 - refPrec / maxPrecession) * plotH;
+
+    return (
+      <svg viewBox={`0 0 ${chartW} ${chartH}`} style={{ width: '100%', height: 'auto', display: 'block' }}>
+        <defs>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <linearGradient id="chartCurveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#f97316" />
+            <stop offset="50%" stopColor="#8b5cf6" />
+            <stop offset="100%" stopColor="#10b981" />
+          </linearGradient>
+          <linearGradient id="chartFillGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#f97316" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#f97316" stopOpacity="0.02" />
+          </linearGradient>
+        </defs>
+
+        {/* Background */}
+        <rect width={chartW} height={chartH} rx="8" fill="#0f172a" />
+
+        {/* Grid lines */}
+        {[0, 0.25, 0.5, 0.75, 1].map((f, i) => (
+          <line key={`hg${i}`} x1={padL} y1={padT + f * plotH} x2={padL + plotW} y2={padT + f * plotH}
+            stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+        ))}
+        {[0, 0.25, 0.5, 0.75, 1].map((f, i) => (
+          <line key={`vg${i}`} x1={padL + f * plotW} y1={padT} x2={padL + f * plotW} y2={padT + plotH}
+            stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+        ))}
+
+        {/* Axes */}
+        <line x1={padL} y1={padT} x2={padL} y2={padT + plotH} stroke="#94a3b8" strokeWidth="1.5" />
+        <line x1={padL} y1={padT + plotH} x2={padL + plotW} y2={padT + plotH} stroke="#94a3b8" strokeWidth="1.5" />
+
+        {/* Fill area under curve */}
+        <path d={`${pathD} L ${points[points.length - 1].x.toFixed(1)} ${padT + plotH} L ${points[0].x.toFixed(1)} ${padT + plotH} Z`}
+          fill="url(#chartFillGrad)" />
+
+        {/* Main curve with L commands */}
+        <path d={pathD} fill="none" stroke="url(#chartCurveGrad)" strokeWidth="3" strokeLinecap="round" />
+
+        {/* Reference dashed line at omega=5 */}
+        <line x1={refX} y1={padT} x2={refX} y2={padT + plotH} stroke="#64748b" strokeDasharray="4 4" opacity="0.5" />
+        <circle cx={refX} cy={refY} r="4" fill="#64748b" stroke="#94a3b8" strokeWidth="1" />
+
+        {/* Current value indicator lines */}
+        <line x1={curX} y1={curY} x2={curX} y2={padT + plotH} stroke={colors.primary} strokeDasharray="3 3" opacity="0.6" />
+        <line x1={padL} y1={curY} x2={curX} y2={curY} stroke={colors.primary} strokeDasharray="3 3" opacity="0.6" />
+
+        {/* Interactive point - current value */}
+        <circle cx={curX} cy={curY} r={8} fill={colors.primary} filter="url(#glow)" stroke="#fff" strokeWidth={2} />
+
+        {/* Axis labels */}
+        <text x={padL + plotW / 2} y={chartH - 5} fill="#e2e8f0" fontSize="12" fontWeight="600" textAnchor="middle">
+          Spin Speed \u03C9 (rad/s)
+        </text>
+        <text x="14" y={padT + plotH / 2} fill="#e2e8f0" fontSize="12" fontWeight="600" textAnchor="middle"
+          transform={`rotate(-90, 14, ${padT + plotH / 2})`}>
+          Precession \u03A9
+        </text>
+
+        {/* Tick labels */}
+        <text x={padL} y={padT + plotH + 16} fill={colors.muted} fontSize="11" textAnchor="middle">1</text>
+        <text x={padL + plotW} y={padT + plotH + 16} fill={colors.muted} fontSize="11" textAnchor="middle">10</text>
+        <text x={padL - 8} y={padT + 5} fill={colors.muted} fontSize="11" textAnchor="end">5.0</text>
+        <text x={padL - 8} y={padT + plotH + 4} fill={colors.muted} fontSize="11" textAnchor="end">0</text>
+
+        {/* Current value readout */}
+        <text x={curX} y={curY - 14} fill="#fff" fontSize="12" fontWeight="700" textAnchor="middle">
+          \u03A9 = {curPrec.toFixed(2)}
+        </text>
+
+        {/* Reference label */}
+        <text x={refX + 4} y={padT + 14} fill="#94a3b8" fontSize="11" textAnchor="start">reference</text>
+
+        {/* Title */}
+        <text x={padL + plotW / 2} y={14} fill="#fafafa" fontSize="13" fontWeight="700" textAnchor="middle">
+          Precession Rate vs Spin Speed (\u03A9 = \u03C4 \u00F7 (I \u00D7 \u03C9))
+        </text>
+      </svg>
+    );
+  };
 
   // Gyroscope visualization with premium SVG graphics
   const renderGyroscope = (interactive: boolean = false) => {
     const precX = Math.sin(precessionAngle * Math.PI / 180) * 25;
     const precY = Math.cos(precessionAngle * Math.PI / 180) * 8;
+    // Derive visual parameters from spinSpeed for slider responsiveness
+    const wheelRadius = 30 + spinSpeed * 2.5; // 32.5-55
+    const spokeCount = Math.round(4 + spinSpeed); // 5-14
 
     return (
       <div style={{
@@ -584,9 +656,8 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
         padding: space.lg,
         border: `1px solid ${colors.border}`,
       }}>
-        <svg viewBox="0 0 400 280" style={{ width: '100%', maxHeight: '260px', display: 'block' }}>
+        <svg viewBox="0 0 400 300" style={{ width: '100%', display: 'block' }}>
           <defs>
-            {/* Premium 3D metallic disc gradient with 6 color stops */}
             <linearGradient id="gyroDiscGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#fbbf24" />
               <stop offset="20%" stopColor="#f59e0b" />
@@ -595,16 +666,12 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               <stop offset="80%" stopColor="#b45309" />
               <stop offset="100%" stopColor="#92400e" />
             </linearGradient>
-
-            {/* Spinning disc inner radial gradient for 3D depth */}
             <radialGradient id="gyroDiscRadial" cx="30%" cy="30%" r="70%">
               <stop offset="0%" stopColor="#fcd34d" stopOpacity="1" />
               <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.9" />
               <stop offset="70%" stopColor="#d97706" stopOpacity="0.8" />
               <stop offset="100%" stopColor="#92400e" stopOpacity="0.6" />
             </radialGradient>
-
-            {/* Axis metallic gradient - brushed steel effect */}
             <linearGradient id="gyroAxisGrad" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#64748b" />
               <stop offset="15%" stopColor="#94a3b8" />
@@ -614,60 +681,44 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               <stop offset="85%" stopColor="#94a3b8" />
               <stop offset="100%" stopColor="#64748b" />
             </linearGradient>
-
-            {/* Spin effect gradient for motion blur */}
             <linearGradient id="gyroSpinGrad" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
               <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.8" />
               <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.3" />
             </linearGradient>
-
-            {/* Angular momentum vector glow gradient */}
             <linearGradient id="gyroLVectorGrad" x1="0%" y1="100%" x2="0%" y2="0%">
               <stop offset="0%" stopColor="#8b5cf6" />
               <stop offset="30%" stopColor="#a78bfa" />
               <stop offset="60%" stopColor="#c4b5fd" />
               <stop offset="100%" stopColor="#8b5cf6" />
             </linearGradient>
-
-            {/* Torque arrow gradient */}
             <linearGradient id="gyroTorqueGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#f87171" />
               <stop offset="50%" stopColor="#ef4444" />
               <stop offset="100%" stopColor="#dc2626" />
             </linearGradient>
-
-            {/* Precession path gradient */}
             <linearGradient id="gyroPrecessionGrad" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
               <stop offset="50%" stopColor="#34d399" stopOpacity="1" />
               <stop offset="100%" stopColor="#10b981" stopOpacity="0.3" />
             </linearGradient>
-
-            {/* Hand skin tone gradient */}
             <radialGradient id="gyroHandGrad" cx="40%" cy="30%" r="70%">
               <stop offset="0%" stopColor="#a8a29e" />
               <stop offset="40%" stopColor="#78716c" />
               <stop offset="70%" stopColor="#57534e" />
               <stop offset="100%" stopColor="#44403c" />
             </radialGradient>
-
-            {/* Hub metallic gradient */}
             <radialGradient id="gyroHubGrad" cx="30%" cy="30%" r="70%">
               <stop offset="0%" stopColor="#94a3b8" />
               <stop offset="40%" stopColor="#64748b" />
               <stop offset="70%" stopColor="#475569" />
               <stop offset="100%" stopColor="#334155" />
             </radialGradient>
-
-            {/* Spoke metallic gradient */}
             <linearGradient id="gyroSpokeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#475569" />
               <stop offset="50%" stopColor="#94a3b8" />
               <stop offset="100%" stopColor="#475569" />
             </linearGradient>
-
-            {/* Premium glow filter for spinning disc */}
             <filter id="gyroDiscGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="4" result="blur" />
               <feMerge>
@@ -675,8 +726,6 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-
-            {/* Angular momentum vector glow filter */}
             <filter id="gyroVectorGlow" x="-100%" y="-100%" width="300%" height="300%">
               <feGaussianBlur stdDeviation="3" result="blur" />
               <feMerge>
@@ -684,8 +733,6 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-
-            {/* Torque arrow glow */}
             <filter id="gyroTorqueGlow" x="-100%" y="-100%" width="300%" height="300%">
               <feGaussianBlur stdDeviation="2" result="blur" />
               <feMerge>
@@ -693,8 +740,6 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-
-            {/* Precession path glow */}
             <filter id="gyroPrecessionGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="2" result="blur" />
               <feMerge>
@@ -702,32 +747,26 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-
-            {/* Motion blur for spinning effect */}
             <filter id="gyroMotionBlur" x="-20%" y="-20%" width="140%" height="140%">
               <feGaussianBlur stdDeviation="1.5" />
             </filter>
-
-            {/* Background lab gradient */}
             <linearGradient id="gyroLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#030712" />
               <stop offset="50%" stopColor="#0a1628" />
               <stop offset="100%" stopColor="#030712" />
             </linearGradient>
-
-            {/* Grid pattern */}
             <pattern id="gyroGridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
               <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" />
             </pattern>
           </defs>
 
           {/* Premium dark lab background */}
-          <rect width="400" height="280" fill="url(#gyroLabBg)" />
-          <rect width="400" height="280" fill="url(#gyroGridPattern)" opacity="0.3" />
+          <rect width="400" height="300" fill="url(#gyroLabBg)" />
+          <rect width="400" height="300" fill="url(#gyroGridPattern)" opacity="0.3" />
 
-          {/* Precession path visualization (elliptical orbit) */}
+          {/* Precession path visualization */}
           {isSpinning && (
-            <g transform="translate(200, 140)">
+            <g transform="translate(200, 150)">
               <ellipse
                 cx="70" cy="0" rx="30" ry="10"
                 fill="none"
@@ -743,81 +782,77 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
           )}
 
           {/* Hand with premium gradient */}
-          <g transform={`translate(${110 + precX}, ${140 + precY})`}>
+          <g transform={`translate(${110 + precX}, ${150 + precY})`}>
             <ellipse cx="0" cy="0" rx="22" ry="32" fill="url(#gyroHandGrad)" stroke="#a8a29e" strokeWidth="1.5" />
             <ellipse cx="-7" cy="-14" rx="7" ry="11" fill="url(#gyroHandGrad)" />
             <ellipse cx="7" cy="-16" rx="7" ry="11" fill="url(#gyroHandGrad)" />
-            {/* Finger highlights */}
             <ellipse cx="-7" cy="-16" rx="3" ry="5" fill="#a8a29e" opacity="0.3" />
             <ellipse cx="7" cy="-18" rx="3" ry="5" fill="#a8a29e" opacity="0.3" />
           </g>
 
           {/* Axle with metallic gradient */}
           <line
-            x1={130 + precX} y1={140 + precY}
-            x2={270 + precX} y2={140 + precY}
+            x1={130 + precX} y1={150 + precY}
+            x2={270 + precX} y2={150 + precY}
             stroke="url(#gyroAxisGrad)" strokeWidth="8" strokeLinecap="round"
           />
-          {/* Axle highlight line */}
           <line
-            x1={135 + precX} y1={138 + precY}
-            x2={265 + precX} y2={138 + precY}
+            x1={135 + precX} y1={148 + precY}
+            x2={265 + precX} y2={148 + precY}
             stroke="#e2e8f0" strokeWidth="1" strokeLinecap="round" opacity="0.4"
           />
 
-          {/* Wheel with premium 3D metallic gradient */}
-          <g transform={`translate(${270 + precX}, ${140 + precY}) rotate(${wheelAngle})`} filter={isSpinning ? "url(#gyroDiscGlow)" : ""}>
-            {/* Outer disc ring with gradient */}
-            <circle cx="0" cy="0" r="50" fill="none" stroke="url(#gyroDiscGrad)" strokeWidth="12" />
-            {/* Inner highlight ring */}
-            <circle cx="0" cy="0" r="50" fill="none" stroke="#fcd34d" strokeWidth="2" opacity="0.4" />
-            {/* Outer shadow ring */}
-            <circle cx="0" cy="0" r="56" fill="none" stroke="#92400e" strokeWidth="1" opacity="0.3" />
+          {/* Wheel - radius driven by spinSpeed */}
+          <g transform={`translate(${270 + precX}, ${150 + precY}) rotate(${wheelAngle})`} filter={isSpinning ? "url(#gyroDiscGlow)" : ""}>
+            <circle cx="0" cy="0" r={wheelRadius} fill="none" stroke="url(#gyroDiscGrad)" strokeWidth="12" />
+            <circle cx="0" cy="0" r={wheelRadius} fill="none" stroke="#fcd34d" strokeWidth="2" opacity="0.4" />
+            <circle cx="0" cy="0" r={wheelRadius + 6} fill="none" stroke="#92400e" strokeWidth="1" opacity="0.3" />
 
-            {/* Spokes with metallic gradient */}
-            {[0, 45, 90, 135, 180, 225, 270, 315].map((a, i) => (
-              <line
-                key={i}
-                x1="0" y1="0"
-                x2={Math.cos(a * Math.PI / 180) * 40}
-                y2={Math.sin(a * Math.PI / 180) * 40}
-                stroke="url(#gyroSpokeGrad)"
-                strokeWidth="3"
-                strokeLinecap="round"
-              />
-            ))}
+            {/* Spokes - count driven by spinSpeed */}
+            {Array.from({ length: spokeCount }, (_, i) => {
+              const a = (360 / spokeCount) * i;
+              return (
+                <line
+                  key={i}
+                  x1="0" y1="0"
+                  x2={Math.cos(a * Math.PI / 180) * (wheelRadius - 10)}
+                  y2={Math.sin(a * Math.PI / 180) * (wheelRadius - 10)}
+                  stroke="url(#gyroSpokeGrad)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                />
+              );
+            })}
 
-            {/* Center hub with metallic gradient */}
+            {/* Center hub */}
             <circle cx="0" cy="0" r="12" fill="url(#gyroHubGrad)" stroke="#94a3b8" strokeWidth="1" />
             <circle cx="-3" cy="-3" r="4" fill="#cbd5e1" opacity="0.4" />
 
             {/* Motion blur ring when spinning */}
             {isSpinning && (
-              <circle cx="0" cy="0" r="50" fill="none" stroke="url(#gyroSpinGrad)" strokeWidth="14" opacity="0.5" filter="url(#gyroMotionBlur)" />
+              <circle cx="0" cy="0" r={wheelRadius} fill="none" stroke="url(#gyroSpinGrad)" strokeWidth="14" opacity="0.5" filter="url(#gyroMotionBlur)" />
             )}
           </g>
 
-          {/* Angular momentum (L) vector with glow */}
-          <g transform={`translate(${270 + precX}, ${140 + precY})`} filter="url(#gyroVectorGlow)">
-            <line x1="0" y1="0" x2="0" y2="-80" stroke="url(#gyroLVectorGrad)" strokeWidth="4" strokeLinecap="round" />
-            <polygon points="-6,-78 6,-78 0,-92" fill="url(#gyroLVectorGrad)" />
-            {/* Glow effect at tip */}
-            <circle cx="0" cy="-85" r="6" fill="#a78bfa" opacity="0.3" />
+          {/* Angular momentum (L) vector - height driven by spinSpeed */}
+          <g transform={`translate(${270 + precX}, ${150 + precY})`} filter="url(#gyroVectorGlow)">
+            <line x1="0" y1="0" x2="0" y2={-spinSpeed * 10} stroke="url(#gyroLVectorGrad)" strokeWidth="4" strokeLinecap="round" />
+            <polygon points={`-6,${-spinSpeed * 10 + 2} 6,${-spinSpeed * 10 + 2} 0,${-spinSpeed * 10 - 12}`} fill="url(#gyroLVectorGrad)" />
+            <circle cx="0" cy={-spinSpeed * 10 - 5} r="6" fill="#a78bfa" opacity="0.3" />
           </g>
 
-          {/* Torque arrow with glow */}
+          {/* Torque arrow */}
           {isSpinning && (
             <g transform={`translate(${270 + precX}, ${200 + precY})`} filter="url(#gyroTorqueGlow)">
               <line x1="0" y1="0" x2="0" y2="35" stroke="url(#gyroTorqueGrad)" strokeWidth="4" strokeDasharray="6 3" strokeLinecap="round">
                 <animate attributeName="stroke-dashoffset" values="0;-18" dur="0.5s" repeatCount="indefinite" />
               </line>
               <polygon points="-6,33 6,33 0,46" fill="url(#gyroTorqueGrad)" />
-              {/* Glow at arrow tip */}
               <circle cx="0" cy="40" r="5" fill="#f87171" opacity="0.4" />
             </g>
           )}
 
-          {/* Precession indicator with glow */}
+          {/* Precession indicator */}
           {isSpinning && (
             <g transform="translate(200, 55)" filter="url(#gyroPrecessionGlow)">
               <path d="M-30,0 A30,10 0 0 1 30,0" fill="none" stroke="url(#gyroPrecessionGrad)" strokeWidth="3" strokeDasharray="6 3">
@@ -827,76 +862,89 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
             </g>
           )}
 
-          {/* Info box with premium styling */}
-          <g transform="translate(15, 215)">
-            <rect width="150" height="55" rx="10" fill="#0f172a" stroke="#334155" strokeWidth="1" />
-            <rect x="1" y="1" width="148" height="53" rx="9" fill="none" stroke="#1e293b" strokeWidth="1" opacity="0.5" />
+          {/* Info box */}
+          <g transform="translate(15, 230)">
+            <rect width="170" height="60" rx="10" fill="#0f172a" stroke="#334155" strokeWidth="1" />
+            <text x="12" y="20" fill="#e2e8f0" fontSize="12" fontWeight="600">
+              \u03C9 = {spinSpeed.toFixed(1)} rad/s
+            </text>
+            <text x="12" y="36" fill="#a78bfa" fontSize="12" fontWeight="600">
+              L = {angularMomentum.toFixed(2)} kg\u00B7m\u00B2/s
+            </text>
+            <text x="12" y="52" fill="#34d399" fontSize="12" fontWeight="600">
+              \u03A9 = {precessionRate.toFixed(2)} rad/s
+            </text>
           </g>
 
-          {/* SVG Labels for legend - educational clarity */}
+          {/* SVG Labels */}
           <text x="280" y="35" fill="#a78bfa" fontSize="12" fontWeight="600">L = Angular Momentum</text>
-          <text x="280" y="250" fill="#ef4444" fontSize="12" fontWeight="600">τ = Torque (Gravity)</text>
+          <text x="280" y="275" fill="#ef4444" fontSize="12" fontWeight="600">\u03C4 = Torque (Gravity)</text>
           <text x="140" y="45" fill="#34d399" fontSize="12" fontWeight="600">Precession Path</text>
-          <text x="260" y="165" fill="#fbbf24" fontSize="11" fontWeight="500">Spinning Wheel</text>
-          <text x="100" y="175" fill="#94a3b8" fontSize="10">Hand holding axle</text>
+          <text x="260" y="180" fill="#fbbf24" fontSize="11" fontWeight="600">Spinning Wheel</text>
         </svg>
 
-        {/* Labels outside SVG using typo system */}
+        {/* Labels outside SVG */}
         <div style={{
           display: 'flex',
+          flexDirection: 'row',
           justifyContent: 'space-between',
           alignItems: 'flex-start',
           marginTop: space.sm,
           padding: `0 ${space.sm}`,
         }}>
-          {/* Physics values panel */}
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '4px',
-          }}>
-            <span style={{ fontSize: typo.small, color: colors.textTertiary }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ fontSize: '14px', fontWeight: 400, color: colors.muted }}>
               Spin: <span style={{ color: colors.textPrimary, fontWeight: 600 }}>{spinSpeed.toFixed(1)} rad/s</span>
             </span>
-            <span style={{ fontSize: typo.small, color: colors.textTertiary }}>
-              L = <span style={{ color: colors.accent, fontWeight: 600 }}>{angularMomentum.toFixed(2)} kg·m²/s</span>
+            <span style={{ fontSize: '14px', fontWeight: 400, color: colors.muted }}>
+              L = <span style={{ color: colors.accent, fontWeight: 600 }}>{angularMomentum.toFixed(2)} kg\u00B7m\u00B2/s</span>
             </span>
-            <span style={{ fontSize: typo.small, color: colors.textTertiary }}>
-              Precession: <span style={{ color: colors.success, fontWeight: 600 }}>Ω = {precessionRate.toFixed(2)} rad/s</span>
+            <span style={{ fontSize: '14px', fontWeight: 400, color: colors.muted }}>
+              Precession: <span style={{ color: colors.success, fontWeight: 600 }}>\u03A9 = {precessionRate.toFixed(2)} rad/s</span>
             </span>
           </div>
-
-          {/* Legend */}
-          {isSpinning && (
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '4px',
-              textAlign: 'right',
-            }}>
-              <span style={{ fontSize: typo.label, color: colors.accent }}>L = Angular Momentum</span>
-              <span style={{ fontSize: typo.label, color: colors.danger }}>τ = Torque (Push)</span>
-              <span style={{ fontSize: typo.label, color: colors.success }}>Precession Direction</span>
-            </div>
-          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'right' }}>
+            <span style={{ fontSize: '12px', color: colors.accent }}>L = Angular Momentum</span>
+            <span style={{ fontSize: '12px', color: colors.danger }}>\u03C4 = Torque (Push)</span>
+            <span style={{ fontSize: '12px', color: colors.success }}>Precession Direction</span>
+          </div>
         </div>
 
         {interactive && (
           <div style={{ marginTop: space.md }}>
+            {/* Precession chart that responds to slider */}
+            <div style={{ marginBottom: space.md }}>
+              {renderPrecessionChart()}
+            </div>
+
             <div style={{
-              display: 'flex', alignItems: 'center', gap: space.md,
+              display: 'flex', flexDirection: 'column', gap: space.sm,
               padding: space.md,
               background: colors.bgTertiary,
               borderRadius: radius.md,
               marginBottom: space.md,
             }}>
-              <span style={{ fontSize: typo.body, color: colors.textSecondary, minWidth: '70px' }}>Spin Speed</span>
-              <input
-                type="range" min="1" max="10" step="0.5" value={spinSpeed}
-                onChange={(e) => setSpinSpeed(parseFloat(e.target.value))}
-                style={{ flex: 1, accentColor: colors.primary, height: '6px' }}
-              />
-              <span style={{ fontSize: typo.body, color: colors.textPrimary, minWidth: '50px', fontWeight: 600 }}>{spinSpeed.toFixed(1)}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '14px', fontWeight: 500, color: colors.textSecondary }}>Spin Speed</span>
+                <span style={{ fontSize: '14px', color: colors.textPrimary, fontWeight: 700 }}>{spinSpeed.toFixed(1)} rad/s</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: space.sm }}>
+                <span style={{ fontSize: '12px', color: colors.muted, minWidth: '28px' }}>1</span>
+                <input
+                  type="range" min="1" max="10" step="0.5" value={spinSpeed}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    setSpinSpeed(val);
+                    emitGameEvent('slider_changed', { spinSpeed: val });
+                  }}
+                  onInput={(e) => {
+                    const val = parseFloat((e.target as HTMLInputElement).value);
+                    setSpinSpeed(val);
+                  }}
+                  style={sliderStyle}
+                />
+                <span style={{ fontSize: '12px', color: colors.muted, minWidth: '28px', textAlign: 'right' }}>10</span>
+              </div>
             </div>
 
             <button
@@ -905,7 +953,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 width: '100%',
                 padding: space.md,
                 borderRadius: radius.md,
-                fontSize: typo.bodyLarge, fontWeight: 700,
+                fontSize: '16px', fontWeight: 700,
                 background: isSpinning ? colors.bgTertiary : `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
                 color: colors.textPrimary,
                 border: 'none',
@@ -923,65 +971,149 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
     );
   };
 
+  // Static prediction SVG (no sliders)
+  const renderPredictionSVG = () => (
+    <svg viewBox="0 0 400 250" style={{ width: '100%', display: 'block' }}>
+      <defs>
+        <linearGradient id="predWheelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#fbbf24" />
+          <stop offset="30%" stopColor="#f59e0b" />
+          <stop offset="70%" stopColor="#d97706" />
+          <stop offset="100%" stopColor="#92400e" />
+        </linearGradient>
+        <linearGradient id="predAxisGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#64748b" />
+          <stop offset="50%" stopColor="#cbd5e1" />
+          <stop offset="100%" stopColor="#64748b" />
+        </linearGradient>
+        <linearGradient id="predPushGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#f87171" />
+          <stop offset="100%" stopColor="#dc2626" />
+        </linearGradient>
+        <radialGradient id="predHubGrad" cx="30%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#94a3b8" />
+          <stop offset="100%" stopColor="#334155" />
+        </radialGradient>
+        <filter id="predGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+        <linearGradient id="predBg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#030712" />
+          <stop offset="50%" stopColor="#0a1628" />
+          <stop offset="100%" stopColor="#030712" />
+        </linearGradient>
+        <pattern id="predGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" />
+        </pattern>
+      </defs>
+
+      <rect width="400" height="250" fill="url(#predBg)" />
+      <rect width="400" height="250" fill="url(#predGrid)" opacity="0.3" />
+
+      {/* Axle */}
+      <line x1="100" y1="120" x2="300" y2="120" stroke="url(#predAxisGrad)" strokeWidth="6" strokeLinecap="round" />
+
+      {/* Spinning wheel */}
+      <g transform="translate(200, 120)">
+        <circle cx="0" cy="0" r="55" fill="none" stroke="url(#predWheelGrad)" strokeWidth="8" filter="url(#predGlow)" />
+        <circle cx="0" cy="0" r="12" fill="url(#predHubGrad)" stroke="#64748b" strokeWidth="1" />
+        {[0, 45, 90, 135, 180, 225, 270, 315].map((a, i) => (
+          <line key={i} x1="0" y1="0"
+            x2={Math.cos(a * Math.PI / 180) * 45}
+            y2={Math.sin(a * Math.PI / 180) * 45}
+            stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" />
+        ))}
+      </g>
+
+      {/* Push arrow */}
+      <line x1="300" y1="120" x2="300" y2="200" stroke="url(#predPushGrad)" strokeWidth="5" strokeLinecap="round" />
+      <polygon points="292,195 308,195 300,215" fill="url(#predPushGrad)" />
+
+      {/* Question marks for possible directions */}
+      <text x="340" y="170" fill="#f87171" fontSize="18" fontWeight="700">?</text>
+      <text x="200" y="35" fill="#34d399" fontSize="18" fontWeight="700">?</text>
+      <text x="60" y="170" fill="#a78bfa" fontSize="18" fontWeight="700">?</text>
+
+      {/* Labels */}
+      <text x="200" y="245" fill="#e2e8f0" fontSize="13" fontWeight="600" textAnchor="middle">
+        Which way does the wheel move when pushed down?
+      </text>
+      <text x="310" y="140" fill="#ef4444" fontSize="12" fontWeight="600">PUSH DOWN</text>
+      <text x="200" y="20" fill="#fbbf24" fontSize="12" fontWeight="600" textAnchor="middle">Spinning Wheel</text>
+    </svg>
+  );
+
   // ===================== PHASE RENDERS =====================
 
-  // HOOK - Premium welcome screen
+  // HOOK
   if (phase === 'hook') {
     return renderPremiumWrapper(
-      <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-        {/* Premium badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full mb-8">
-          <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
-          <span className="text-sm font-medium text-cyan-400 tracking-wide">PHYSICS EXPLORATION</span>
-        </div>
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '500px' }}>
+        <div style={{ flex: 1, padding: space.xl, textAlign: 'center' }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: space.sm,
+            padding: `${space.sm} ${space.md}`,
+            background: 'rgba(6, 182, 212, 0.1)',
+            border: '1px solid rgba(6, 182, 212, 0.2)',
+            borderRadius: radius.full,
+            marginBottom: space.xl,
+          }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22d3ee' }} />
+            <span style={{ fontSize: '12px', fontWeight: 600, color: '#22d3ee', letterSpacing: '0.1em' }}>PHYSICS EXPLORATION</span>
+          </div>
 
-        {/* Gradient title */}
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-cyan-400 via-blue-400 to-emerald-400 bg-clip-text text-transparent">
-          The Spinning Wheel Mystery
-        </h1>
+          <h1 style={{
+            fontSize: '36px', fontWeight: 800,
+            background: 'linear-gradient(to right, #22d3ee, #60a5fa, #34d399)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            marginBottom: space.lg,
+            lineHeight: 1.2,
+          }}>
+            The Spinning Wheel Mystery
+          </h1>
 
-        {/* Premium card */}
-        <div className="max-w-2xl mx-auto p-8 bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700/50 shadow-xl">
-          <p className="text-lg text-slate-300 leading-relaxed">
-            Push a spinning bike wheel down... but it moves <strong className="text-cyan-400">sideways</strong> instead! Discover the physics behind this counterintuitive behavior.
-          </p>
-        </div>
-
-        {/* Feature cards */}
-        <div className="grid grid-cols-3 gap-4 mt-8 w-full max-w-md">
-          {[
-            { icon: '🔄', label: 'Spin & Push' },
-            { icon: '📐', label: '90° Response' },
-            { icon: '🚁', label: 'Real Uses' },
-          ].map((item, i) => (
-            <div key={i} className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50 text-center">
-              <span className="text-2xl block mb-2">{item.icon}</span>
-              <span className="text-xs font-semibold text-slate-400">{item.label}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* CTA Button */}
-        <button
-          onClick={() => goNext()}
-          style={{
-            zIndex: 10,
-            marginTop: space.xl,
-            padding: `${space.md} ${space.xl}`,
-            minHeight: '44px',
-            background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
-            color: colors.textPrimary,
+          <div style={{
+            maxWidth: '560px', margin: '0 auto',
+            padding: space.xl,
+            background: 'rgba(30, 41, 59, 0.5)',
             borderRadius: radius.lg,
-            fontSize: '16px',
-            fontWeight: 700,
-            border: 'none',
-            cursor: 'pointer',
-            boxShadow: shadows.glow(colors.primary),
-            transition: 'all 0.3s ease',
-          }}
-        >
-          Make a Prediction
-        </button>
+            border: '1px solid rgba(51, 65, 85, 0.5)',
+          }}>
+            <p style={{ fontSize: '16px', fontWeight: 400, color: '#cbd5e1', lineHeight: 1.6 }}>
+              Push a spinning bike wheel down... but it moves <strong style={{ color: '#22d3ee' }}>sideways</strong> instead!
+              Discover the physics behind this counterintuitive behavior that keeps helicopters stable and spacecraft oriented.
+            </p>
+          </div>
+
+          <div style={{
+            display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: space.md,
+            marginTop: space.xl, maxWidth: '400px', margin: `${space.xl} auto 0`,
+          }}>
+            {[
+              { icon: '\uD83D\uDD04', label: 'Spin & Push' },
+              { icon: '\uD83D\uDCD0', label: '90\u00B0 Response' },
+              { icon: '\uD83D\uDE81', label: 'Real Uses' },
+            ].map((item, i) => (
+              <div key={i} style={{
+                padding: space.md,
+                background: 'rgba(30, 41, 59, 0.5)',
+                borderRadius: radius.md,
+                border: '1px solid rgba(51, 65, 85, 0.5)',
+                textAlign: 'center',
+              }}>
+                <span style={{ fontSize: '24px', display: 'block', marginBottom: space.sm }}>{item.icon}</span>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: colors.muted }}>{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {renderBottomBar(false, true, 'Start Discovery')}
       </div>
     );
   }
@@ -990,40 +1122,11 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   if (phase === 'predict') {
     return renderPremiumWrapper(
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '500px' }}>
-        {/* Progress indicator for predict phase */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: space.sm,
-          padding: `${space.sm} ${space.lg}`,
-          background: colors.bgSecondary,
-          borderBottom: `1px solid ${colors.border}`,
-        }}>
-          <span style={{ fontSize: '13px', color: '#e2e8f0' }}>
-            Step 1 of 3: Make Your Prediction
-          </span>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            {[1, 2, 3].map((step) => (
-              <div
-                key={step}
-                style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: step === 1 ? colors.primary : colors.bgTertiary,
-                  transition: 'background 0.3s ease'
-                }}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? space.lg : space.xl }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: space.xl }}>
           <div style={{ maxWidth: '560px', margin: '0 auto' }}>
-            {renderHeader('Step 1 • Predict', 'Which Way Does It Move?', 'You hold a fast-spinning bike wheel, then push one end DOWN.')}
+            {renderHeader('Step 1 \u2022 Predict', 'Which Way Does It Move?', 'You hold a fast-spinning bike wheel, then push one end DOWN.')}
 
-            {/* Simple diagram with premium styling */}
+            {/* Prediction SVG */}
             <div style={{
               padding: space.lg,
               background: colors.bgSecondary,
@@ -1031,58 +1134,16 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               border: `1px solid ${colors.border}`,
               marginBottom: space.lg,
             }}>
-              <svg viewBox="0 0 300 100" style={{ width: '100%', maxHeight: '100px' }}>
-                <defs>
-                  {/* Wheel gradient */}
-                  <linearGradient id="gyroPredictWheelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#fbbf24" />
-                    <stop offset="30%" stopColor="#f59e0b" />
-                    <stop offset="70%" stopColor="#d97706" />
-                    <stop offset="100%" stopColor="#92400e" />
-                  </linearGradient>
-                  {/* Axle gradient */}
-                  <linearGradient id="gyroPredictAxisGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#64748b" />
-                    <stop offset="50%" stopColor="#cbd5e1" />
-                    <stop offset="100%" stopColor="#64748b" />
-                  </linearGradient>
-                  {/* Push arrow gradient */}
-                  <linearGradient id="gyroPredictPushGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#f87171" />
-                    <stop offset="100%" stopColor="#dc2626" />
-                  </linearGradient>
-                  {/* Hub gradient */}
-                  <radialGradient id="gyroPredictHubGrad" cx="30%" cy="30%" r="70%">
-                    <stop offset="0%" stopColor="#94a3b8" />
-                    <stop offset="100%" stopColor="#334155" />
-                  </radialGradient>
-                  {/* Glow filter */}
-                  <filter id="gyroPredictGlow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="2" result="blur" />
-                    <feMerge>
-                      <feMergeNode in="blur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-                </defs>
-                {/* Axle */}
-                <line x1="90" y1="50" x2="210" y2="50" stroke="url(#gyroPredictAxisGrad)" strokeWidth="5" strokeLinecap="round" />
-                {/* Wheel ring */}
-                <circle cx="150" cy="50" r="38" fill="none" stroke="url(#gyroPredictWheelGrad)" strokeWidth="6" filter="url(#gyroPredictGlow)" />
-                {/* Hub */}
-                <circle cx="150" cy="50" r="8" fill="url(#gyroPredictHubGrad)" stroke="#64748b" strokeWidth="1" />
-                {/* Push arrow */}
-                <line x1="210" y1="50" x2="210" y2="85" stroke="url(#gyroPredictPushGrad)" strokeWidth="4" strokeLinecap="round" />
-                <polygon points="203,82 217,82 210,95" fill="url(#gyroPredictPushGrad)" />
-              </svg>
-              {/* Label outside SVG */}
+              {renderPredictionSVG()}
               <p style={{
-                fontSize: typo.small,
-                color: colors.textTertiary,
+                fontSize: '13px',
+                fontWeight: 400,
+                color: colors.muted,
                 textAlign: 'center',
                 marginTop: space.sm,
+                lineHeight: 1.5,
               }}>
-                Spinning wheel - you push one end <span style={{ color: colors.danger, fontWeight: 600 }}>DOWN</span>
+                Spinning wheel \u2014 you push one end <span style={{ color: colors.danger, fontWeight: 600 }}>DOWN</span>
               </p>
             </div>
 
@@ -1122,14 +1183,14 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                   }} />
                   <div>
                     <p style={{ fontSize: '14px', fontWeight: 700, color: prediction === opt.id ? '#fafafa' : '#e2e8f0' }}>{opt.label}</p>
-                    <p style={{ fontSize: '12px', color: '#cbd5e1' }}>{opt.desc}</p>
+                    <p style={{ fontSize: '12px', fontWeight: 400, color: colors.muted }}>{opt.desc}</p>
                   </div>
                 </button>
               ))}
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test It')}
+        {renderBottomBar(true, !!prediction, 'Next')}
       </div>
     );
   }
@@ -1138,11 +1199,10 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   if (phase === 'play') {
     return renderPremiumWrapper(
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '500px' }}>
-        <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? space.md : space.lg }}>
+        <div style={{ flex: 1, overflow: 'auto', padding: space.lg }}>
           <div style={{ maxWidth: '560px', margin: '0 auto' }}>
-            {renderHeader('Step 2 • Experiment', 'Spin the Wheel & Push', 'Watch what happens when you apply torque to a spinning wheel!')}
+            {renderHeader('Step 2 \u2022 Experiment', 'Spin the Wheel & Push', 'Watch what happens when you apply torque to a spinning wheel!')}
 
-            {/* Observation guidance */}
             <div style={{
               marginBottom: space.md,
               padding: space.md,
@@ -1151,8 +1211,8 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               border: `1px solid ${colors.accent}40`,
             }}>
               <p style={{ fontSize: '14px', fontWeight: 600, color: colors.accent, marginBottom: '4px' }}>What to observe:</p>
-              <p style={{ fontSize: '13px', color: '#e2e8f0' }}>
-                Click "Spin Wheel & Apply Torque" and watch the direction the wheel moves. Does it go down where you pushed, or somewhere else?
+              <p style={{ fontSize: '13px', fontWeight: 400, color: '#e2e8f0', lineHeight: 1.5 }}>
+                Adjust the spin speed slider and click "Spin Wheel & Apply Torque". Watch the direction the wheel moves and how the precession rate changes with speed.
               </p>
             </div>
 
@@ -1166,14 +1226,14 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 background: `${colors.success}15`,
                 border: `1px solid ${colors.success}40`,
               }}>
-                <p style={{ fontSize: '14px', fontWeight: 700, color: colors.success, marginBottom: '4px' }}>👀 Watch carefully!</p>
-                <p style={{ fontSize: '13px', color: colors.textSecondary }}>
+                <p style={{ fontSize: '14px', fontWeight: 700, color: colors.success, marginBottom: '4px' }}>Watch carefully!</p>
+                <p style={{ fontSize: '13px', fontWeight: 400, color: colors.textSecondary, lineHeight: 1.5 }}>
                   The wheel moves <strong style={{ color: colors.textPrimary }}>sideways</strong>, not down!
+                  Compare this with the reference line on the chart to see how spin speed affects precession rate.
                 </p>
               </div>
             )}
 
-            {/* Real-world relevance */}
             <div style={{
               marginTop: space.md,
               padding: space.md,
@@ -1181,17 +1241,15 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               background: colors.bgSecondary,
               border: `1px solid ${colors.border}`,
             }}>
-              <p style={{ fontSize: '12px', fontWeight: 700, color: colors.primary, marginBottom: '6px' }}>🌍 Why This Matters</p>
-              <p style={{ fontSize: '13px', color: colors.textSecondary, lineHeight: 1.6 }}>
-                This is important because gyroscopic precession is used in real-world engineering applications.
-                Helicopters rely on this principle for stable flight, spacecraft use reaction wheels for fuel-free orientation,
-                and motorcycles depend on gyroscopic effects for stability at speed. Understanding precession helps engineers
-                design safer, more efficient technology.
+              <p style={{ fontSize: '12px', fontWeight: 700, color: colors.primary, marginBottom: '6px' }}>Why This Matters</p>
+              <p style={{ fontSize: '13px', fontWeight: 400, color: colors.muted, lineHeight: 1.6 }}>
+                Gyroscopic precession is fundamental to real-world engineering. Helicopters rely on this principle for stable flight,
+                spacecraft use reaction wheels for fuel-free orientation, and motorcycles depend on gyroscopic effects for stability at speed.
               </p>
             </div>
           </div>
         </div>
-        {renderBottomBar(true, experimentCount >= 1, 'Understand Why')}
+        {renderBottomBar(true, experimentCount >= 1, 'Next')}
       </div>
     );
   }
@@ -1200,11 +1258,10 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   if (phase === 'review') {
     return renderPremiumWrapper(
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '500px' }}>
-        <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? space.lg : space.xl }}>
+        <div style={{ flex: 1, overflow: 'auto', padding: space.xl }}>
           <div style={{ maxWidth: '560px', margin: '0 auto' }}>
-            {renderHeader('Step 3 • Understanding', 'Why 90° Sideways?', 'The physics of gyroscopic precession explained.')}
+            {renderHeader('Step 3 \u2022 Understanding', 'Why 90\u00B0 Sideways?', 'The physics of gyroscopic precession explained.')}
 
-            {/* Reference user's prediction */}
             <div style={{
               padding: space.md,
               borderRadius: radius.md,
@@ -1212,18 +1269,17 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               border: `1px solid ${colors.accent}40`,
               marginBottom: space.lg,
             }}>
-              <p style={{ fontSize: '14px', color: colors.textSecondary }}>
+              <p style={{ fontSize: '14px', fontWeight: 400, color: colors.textSecondary, lineHeight: 1.5 }}>
                 {prediction === 'sideways'
                   ? <><strong style={{ color: colors.success }}>Your prediction was correct!</strong> You observed that the wheel moves sideways when you push down.</>
                   : <><strong style={{ color: colors.warning }}>As you saw</strong>, the wheel didn't move the way you expected. Your prediction was "{prediction || 'not recorded'}", but the result showed sideways motion!</>}
               </p>
             </div>
 
-            {renderInfoCard('🎯', 'Torque Changes L\'s Direction', 'Applied torque doesn\'t speed up the wheel—it changes the DIRECTION of angular momentum. The change is perpendicular to both torque and spin.')}
-            {renderInfoCard('📐', 'The Right-Hand Rule', 'Point fingers along ω (spin), curl toward τ (push). Your thumb points where L moves—90° sideways!')}
-            {renderInfoCard('⚡', 'Precession Rate: Ω = τ/L', 'More spin (bigger L) = SLOWER precession. More torque = faster precession.')}
+            {renderInfoCard('\uD83C\uDFAF', 'Torque Changes L\'s Direction', 'Applied torque doesn\'t speed up the wheel\u2014it changes the DIRECTION of angular momentum. The change is perpendicular to both torque and spin.')}
+            {renderInfoCard('\uD83D\uDCD0', 'The Right-Hand Rule', 'Point fingers along \u03C9 (spin), curl toward \u03C4 (push). Your thumb points where L moves\u201490\u00B0 sideways!')}
+            {renderInfoCard('\u26A1', 'Precession Rate: \u03A9 = \u03C4/L', 'More spin (bigger L) = SLOWER precession. More torque = faster precession.')}
 
-            {/* Key equation */}
             <div style={{
               padding: space.lg,
               borderRadius: radius.lg,
@@ -1233,12 +1289,12 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               marginTop: space.lg,
             }}>
               <p style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', color: colors.textTertiary, marginBottom: space.sm }}>THE PRECESSION EQUATION</p>
-              <p style={{ fontSize: '26px', fontWeight: 800, color: colors.primary }}>Ω = τ / (I × ω)</p>
-              <p style={{ fontSize: '13px', color: colors.textSecondary, marginTop: space.sm }}>Higher spin (ω) → Lower precession rate (Ω)</p>
+              <p style={{ fontSize: '26px', fontWeight: 800, color: colors.primary }}>\u03A9 = \u03C4 / (I \u00D7 \u03C9)</p>
+              <p style={{ fontSize: '13px', fontWeight: 400, color: colors.muted, marginTop: space.sm, lineHeight: 1.5 }}>Higher spin (\u03C9) \u2192 Lower precession rate (\u03A9)</p>
             </div>
           </div>
         </div>
-        {renderBottomBar(true, true, 'Try a Challenge')}
+        {renderBottomBar(true, true, 'Next')}
       </div>
     );
   }
@@ -1247,9 +1303,20 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   if (phase === 'twist_predict') {
     return renderPremiumWrapper(
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '500px' }}>
-        <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? space.lg : space.xl }}>
+        <div style={{ flex: 1, overflow: 'auto', padding: space.xl }}>
           <div style={{ maxWidth: '560px', margin: '0 auto' }}>
-            {renderHeader('Step 4 • New Variable', 'What If You Spin Slower?', 'You spin the wheel at HALF the speed, then apply the same push.')}
+            {renderHeader('Step 4 \u2022 New Variable', 'What If You Spin Slower?', 'You spin the wheel at HALF the speed, then apply the same push.')}
+
+            {/* Static SVG showing the comparison - NO sliders */}
+            <div style={{
+              padding: space.lg,
+              background: colors.bgSecondary,
+              borderRadius: radius.lg,
+              border: `1px solid ${colors.border}`,
+              marginBottom: space.lg,
+            }}>
+              {renderPredictionSVG()}
+            </div>
 
             <div style={{
               padding: space.md,
@@ -1258,7 +1325,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               border: `1px solid ${colors.warning}40`,
               marginBottom: space.lg,
             }}>
-              <p style={{ fontSize: '14px', color: colors.textSecondary }}>
+              <p style={{ fontSize: '14px', fontWeight: 400, color: colors.textSecondary, lineHeight: 1.5 }}>
                 Original: <strong style={{ color: colors.textPrimary }}>10 rad/s</strong><br />
                 New: <strong style={{ color: colors.warning }}>5 rad/s</strong> (half speed)<br />
                 Same push force applied.
@@ -1296,14 +1363,14 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                   }} />
                   <div>
                     <p style={{ fontSize: '14px', fontWeight: 700, color: twistPrediction === opt.id ? colors.textPrimary : colors.textSecondary }}>{opt.label}</p>
-                    <p style={{ fontSize: '12px', color: colors.textTertiary }}>{opt.desc}</p>
+                    <p style={{ fontSize: '12px', fontWeight: 400, color: colors.muted }}>{opt.desc}</p>
                   </div>
                 </button>
               ))}
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test It')}
+        {renderBottomBar(true, !!twistPrediction, 'Next')}
       </div>
     );
   }
@@ -1312,9 +1379,9 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   if (phase === 'twist_play') {
     return renderPremiumWrapper(
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '500px' }}>
-        <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? space.md : space.lg }}>
+        <div style={{ flex: 1, overflow: 'auto', padding: space.lg }}>
           <div style={{ maxWidth: '560px', margin: '0 auto' }}>
-            {renderHeader('Step 5 • Explore', 'Adjust Spin Speed', 'See how precession rate changes with different spin speeds.')}
+            {renderHeader('Step 5 \u2022 Explore', 'Adjust Spin Speed', 'See how precession rate changes with different spin speeds.')}
             {renderGyroscope(true)}
 
             <div style={{
@@ -1327,7 +1394,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 background: `${colors.success}15`,
                 textAlign: 'center',
               }}>
-                <p style={{ fontSize: '11px', color: colors.textTertiary, marginBottom: '4px' }}>HIGH SPIN</p>
+                <p style={{ fontSize: '11px', color: colors.muted, marginBottom: '4px' }}>HIGH SPIN</p>
                 <p style={{ fontSize: '16px', fontWeight: 700, color: colors.success }}>Slow Precession</p>
               </div>
               <div style={{
@@ -1336,13 +1403,13 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 background: `${colors.danger}15`,
                 textAlign: 'center',
               }}>
-                <p style={{ fontSize: '11px', color: colors.textTertiary, marginBottom: '4px' }}>LOW SPIN</p>
+                <p style={{ fontSize: '11px', color: colors.muted, marginBottom: '4px' }}>LOW SPIN</p>
                 <p style={{ fontSize: '16px', fontWeight: 700, color: colors.danger }}>Fast Precession</p>
               </div>
             </div>
           </div>
         </div>
-        {renderBottomBar(true, experimentCount >= 1, 'Deep Insight')}
+        {renderBottomBar(true, experimentCount >= 1, 'Next')}
       </div>
     );
   }
@@ -1351,9 +1418,9 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   if (phase === 'twist_review') {
     return renderPremiumWrapper(
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '500px' }}>
-        <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? space.lg : space.xl }}>
+        <div style={{ flex: 1, overflow: 'auto', padding: space.xl }}>
           <div style={{ maxWidth: '560px', margin: '0 auto' }}>
-            {renderHeader('Step 6 • Deep Insight', 'Angular Momentum as Stability', 'Why spinning objects resist change.')}
+            {renderHeader('Step 6 \u2022 Deep Insight', 'Angular Momentum as Stability', 'Why spinning objects resist change.')}
 
             <div style={{
               padding: space.lg,
@@ -1362,17 +1429,17 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               border: `1px solid ${colors.border}`,
               marginBottom: space.lg,
             }}>
-              <p style={{ fontSize: '15px', color: colors.textSecondary, lineHeight: 1.7 }}>
-                A spinning object has <strong style={{ color: colors.primary }}>angular momentum</strong> along its spin axis. This creates "directional memory"—the object resists having its axis tilted.
+              <p style={{ fontSize: '15px', fontWeight: 400, color: colors.textSecondary, lineHeight: 1.7 }}>
+                A spinning object has <strong style={{ color: colors.primary }}>angular momentum</strong> along its spin axis. This creates "directional memory"\u2014the object resists having its axis tilted.
               </p>
             </div>
 
-            {renderInfoCard('🎪', 'Spinning Tops', 'A fast top stays upright because its L resists gravity\'s torque. As it slows, precession speeds up until it falls.')}
-            {renderInfoCard('🌍', 'Earth\'s Axis', 'Earth\'s spin resists changes. Yet Sun and Moon\'s gravity slowly causes 26,000-year precession!')}
-            {renderInfoCard('🛸', 'Spacecraft', 'Reaction wheels and CMGs use precession physics for fuel-free orientation control.')}
+            {renderInfoCard('\uD83C\uDFAA', 'Spinning Tops', 'A fast top stays upright because its L resists gravity\'s torque. As it slows, precession speeds up until it falls.')}
+            {renderInfoCard('\uD83C\uDF0D', 'Earth\'s Axis', 'Earth\'s spin resists changes. Yet Sun and Moon\'s gravity slowly causes 26,000-year precession!')}
+            {renderInfoCard('\uD83D\uDEF8', 'Spacecraft', 'Reaction wheels and CMGs use precession physics for fuel-free orientation control.')}
           </div>
         </div>
-        {renderBottomBar(true, true, 'Real World Apps')}
+        {renderBottomBar(true, true, 'Next')}
       </div>
     );
   }
@@ -1395,7 +1462,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
           background: colors.bgSecondary,
           borderBottom: `1px solid ${colors.border}`,
         }}>
-          <span style={{ fontSize: '13px', color: colors.textSecondary }}>
+          <span style={{ fontSize: '13px', fontWeight: 400, color: colors.muted }}>
             Application {selectedApp + 1} of {realWorldApps.length}
           </span>
           <div style={{ display: 'flex', gap: '6px' }}>
@@ -1414,7 +1481,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
           </div>
         </div>
 
-        {/* Tabs - only allow clicking on viewed tabs */}
+        {/* Tabs */}
         <div style={{
           padding: `${space.sm} ${space.md}`,
           background: colors.bgSecondary,
@@ -1443,8 +1510,8 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                   }}
                 >
                   <span style={{ fontSize: '20px' }}>{a.icon}</span>
-                  <span style={{ fontSize: '9px', fontWeight: 600, color: isCurrent ? colors.textPrimary : isViewed ? colors.textSecondary : colors.textTertiary }}>{a.title.split(' ')[0]}</span>
-                  {isViewed && i < selectedApp && <span style={{ fontSize: '10px', color: colors.success }}>✓</span>}
+                  <span style={{ fontSize: '11px', fontWeight: 600, color: isCurrent ? colors.textPrimary : isViewed ? colors.textSecondary : colors.muted }}>{a.title.split(' ')[0]}</span>
+                  {isViewed && i < selectedApp && <span style={{ fontSize: '11px', color: colors.success }}>\u2713</span>}
                 </button>
               );
             })}
@@ -1464,11 +1531,11 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               }}>{app.icon}</div>
               <div>
                 <h2 style={{ fontSize: '20px', fontWeight: 800, color: colors.textPrimary }}>{app.title}</h2>
-                <p style={{ fontSize: '13px', color: app.color, fontWeight: 600 }}>{app.tagline}</p>
+                <p style={{ fontSize: '13px', fontWeight: 600, color: app.color }}>{app.tagline}</p>
               </div>
             </div>
 
-            <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, marginBottom: space.md }}>{app.description}</p>
+            <p style={{ fontSize: '14px', fontWeight: 400, color: colors.textSecondary, lineHeight: 1.7, marginBottom: space.md }}>{app.description}</p>
 
             <div style={{
               padding: space.md,
@@ -1477,8 +1544,19 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               border: `1px solid ${app.color}30`,
               marginBottom: space.md,
             }}>
-              <p style={{ fontSize: '12px', fontWeight: 700, color: app.color, marginBottom: '6px' }}>🔗 Physics Connection</p>
-              <p style={{ fontSize: '13px', color: colors.textSecondary }}>{app.connection}</p>
+              <p style={{ fontSize: '12px', fontWeight: 700, color: app.color, marginBottom: '6px' }}>Physics Connection</p>
+              <p style={{ fontSize: '13px', fontWeight: 400, color: colors.muted, lineHeight: 1.5 }}>{app.connection}</p>
+            </div>
+
+            <div style={{
+              padding: space.md,
+              borderRadius: radius.md,
+              background: colors.bgSecondary,
+              border: `1px solid ${colors.border}`,
+              marginBottom: space.md,
+            }}>
+              <p style={{ fontSize: '12px', fontWeight: 700, color: colors.textPrimary, marginBottom: '6px' }}>How It Works</p>
+              <p style={{ fontSize: '13px', fontWeight: 400, color: colors.muted, lineHeight: 1.5 }}>{app.howItWorks}</p>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: space.sm, marginBottom: space.md }}>
@@ -1492,7 +1570,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 }}>
                   <span style={{ fontSize: '16px' }}>{s.icon}</span>
                   <p style={{ fontSize: '15px', fontWeight: 700, color: app.color }}>{s.value}</p>
-                  <p style={{ fontSize: '10px', color: colors.textTertiary }}>{s.label}</p>
+                  <p style={{ fontSize: '11px', fontWeight: 400, color: colors.muted }}>{s.label}</p>
                 </div>
               ))}
             </div>
@@ -1506,13 +1584,14 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               <p style={{ fontSize: '12px', fontWeight: 700, color: colors.textPrimary, marginBottom: space.sm }}>Real Examples:</p>
               <ul style={{ margin: 0, paddingLeft: '18px' }}>
                 {app.examples.map((ex, i) => (
-                  <li key={i} style={{ fontSize: '12px', color: colors.textSecondary, marginBottom: '4px' }}>{ex}</li>
+                  <li key={i} style={{ fontSize: '12px', fontWeight: 400, color: colors.muted, marginBottom: '4px', lineHeight: 1.5 }}>{ex}</li>
                 ))}
               </ul>
             </div>
           </div>
         </div>
-        {/* Bottom bar: Next Application or Got It / Take Quiz */}
+
+        {/* Bottom bar */}
         <div style={{
           padding: `${space.md} ${space.lg}`,
           background: colors.bgSecondary,
@@ -1528,6 +1607,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 padding: `${space.md} ${space.lg}`,
                 minHeight: '44px',
                 fontSize: '14px',
+                fontWeight: 500,
                 color: colors.textSecondary,
                 background: colors.bgTertiary,
                 border: `1px solid ${colors.border}`,
@@ -1536,7 +1616,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 zIndex: 10,
               }}
             >
-              ← Previous
+              \u2190 Back
             </button>
           ) : (
             <div />
@@ -1555,7 +1635,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               fontSize: '15px',
               fontWeight: 700,
               color: colors.textPrimary,
-              background: isLastApp ? colors.success : `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+              background: isLastApp ? `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)` : `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
               border: 'none',
               borderRadius: radius.md,
               cursor: 'pointer',
@@ -1581,14 +1661,14 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '500px' }}>
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: space.xl }}>
             <div style={{ textAlign: 'center', maxWidth: '380px' }}>
-              <div style={{ fontSize: '64px', marginBottom: space.lg }}>{passed ? '🎉' : '📚'}</div>
+              <div style={{ fontSize: '64px', marginBottom: space.lg }}>{passed ? '\uD83C\uDF89' : '\uD83D\uDCDA'}</div>
               <h2 style={{ fontSize: '26px', fontWeight: 800, color: colors.textPrimary, marginBottom: space.sm }}>
                 {passed ? 'Excellent Work!' : 'Keep Learning!'}
               </h2>
               <p style={{ fontSize: '42px', fontWeight: 800, color: passed ? colors.success : colors.warning, marginBottom: space.md }}>
                 {totalCorrect}/10
               </p>
-              <p style={{ fontSize: '14px', color: colors.textSecondary, marginBottom: space.xl }}>
+              <p style={{ fontSize: '14px', fontWeight: 400, color: colors.muted, marginBottom: space.xl, lineHeight: 1.5 }}>
                 {passed ? 'You\'ve mastered gyroscopic precession!' : 'Review the concepts and try again.'}
               </p>
               <button
@@ -1606,7 +1686,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                   zIndex: 10,
                 }}
               >
-                {passed ? 'Complete! →' : 'Review Material'}
+                {passed ? 'Continue \u2192' : 'Review Material'}
               </button>
             </div>
           </div>
@@ -1616,12 +1696,11 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
 
     return renderPremiumWrapper(
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '500px' }}>
-        <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? space.md : space.lg }}>
+        <div style={{ flex: 1, overflow: 'auto', padding: space.lg }}>
           <div style={{ maxWidth: '560px', margin: '0 auto' }}>
             {/* Progress */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
               <span style={{ fontSize: '12px', fontWeight: 700, color: colors.primary }}>Question {testIndex + 1} of 10</span>
-              <span style={{ fontSize: '11px', color: colors.textSecondary }}>({testIndex + 1}/10)</span>
               <div style={{ display: 'flex', gap: '4px' }}>
                 {testQuestions.map((tq, i) => (
                   <div key={i} style={{
@@ -1642,7 +1721,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               border: `1px solid ${colors.border}`,
               marginBottom: space.md,
             }}>
-              <p style={{ fontSize: '13px', color: colors.textSecondary, fontStyle: 'italic' }}>{q.scenario}</p>
+              <p style={{ fontSize: '13px', fontWeight: 400, color: colors.textSecondary, fontStyle: 'italic', lineHeight: 1.6 }}>{q.scenario}</p>
             </div>
 
             {/* Question */}
@@ -1688,9 +1767,9 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                     }}>
                       {String.fromCharCode(65 + i)}
                     </span>
-                    <span style={{ fontSize: '14px', color: colors.textPrimary }}>{opt.text}</span>
-                    {answered && correct && <span style={{ marginLeft: space.sm, color: colors.success }}>✓</span>}
-                    {answered && selected && !correct && <span style={{ marginLeft: space.sm, color: colors.danger }}>✗</span>}
+                    <span style={{ fontSize: '14px', fontWeight: 400, color: colors.textPrimary }}>{opt.text}</span>
+                    {answered && correct && <span style={{ marginLeft: space.sm, color: colors.success }}>\u2713</span>}
+                    {answered && selected && !correct && <span style={{ marginLeft: space.sm, color: colors.danger }}>\u2717</span>}
                   </button>
                 );
               })}
@@ -1705,8 +1784,8 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 border: `1px solid ${colors.accent}40`,
                 marginBottom: space.lg,
               }}>
-                <p style={{ fontSize: '12px', fontWeight: 700, color: colors.accent, marginBottom: '6px' }}>💡 Explanation</p>
-                <p style={{ fontSize: '13px', color: colors.textSecondary, lineHeight: 1.6 }}>{q.explanation}</p>
+                <p style={{ fontSize: '12px', fontWeight: 700, color: colors.accent, marginBottom: '6px' }}>Explanation</p>
+                <p style={{ fontSize: '13px', fontWeight: 400, color: colors.muted, lineHeight: 1.6 }}>{q.explanation}</p>
               </div>
             )}
 
@@ -1726,7 +1805,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                   opacity: testIndex === 0 ? 0.4 : 1,
                   zIndex: 10,
                 }}
-              >← Prev</button>
+              >\u2190 Back</button>
               {testIndex < 9 ? (
                 <button
                   onClick={() => setTestIndex(testIndex + 1)}
@@ -1743,7 +1822,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                     opacity: testAnswers[testIndex] === null ? 0.4 : 1,
                     zIndex: 10,
                   }}
-                >Next →</button>
+                >Next \u2192</button>
               ) : (
                 <button
                   onClick={() => { setTestSubmitted(true); emitGameEvent('game_completed', { score: totalCorrect }); }}
@@ -1775,13 +1854,13 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '500px' }}>
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: space.xl }}>
           <div style={{ textAlign: 'center', maxWidth: '460px' }}>
-            <div style={{ fontSize: '72px', marginBottom: space.lg }}>🏆</div>
+            <div style={{ fontSize: '72px', marginBottom: space.lg }}>{'\uD83C\uDFC6'}</div>
             <h1 style={{ fontSize: '30px', fontWeight: 800, color: colors.textPrimary, marginBottom: space.md }}>Mastery Achieved!</h1>
-            <p style={{ fontSize: '15px', color: colors.textSecondary, marginBottom: space.xl, lineHeight: 1.7 }}>
-              You now understand gyroscopic precession—the physics behind helicopters, spacecraft, motorcycles, and Earth's wobble!
+            <p style={{ fontSize: '15px', fontWeight: 400, color: colors.muted, marginBottom: space.xl, lineHeight: 1.7 }}>
+              You now understand gyroscopic precession\u2014the physics behind helicopters, spacecraft, motorcycles, and Earth's wobble!
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: space.sm, justifyContent: 'center', marginBottom: space.xl }}>
-              {['Ω = τ/L', 'L = Iω', '90° Precession', 'Angular Momentum'].map((c, i) => (
+              {['\u03A9 = \u03C4/L', 'L = I\u03C9', '90\u00B0 Precession', 'Angular Momentum'].map((c, i) => (
                 <span key={i} style={{
                   padding: `${space.sm} ${space.md}`,
                   borderRadius: radius.full,
@@ -1792,7 +1871,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               ))}
             </div>
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => goToPhase('hook')}
               style={{
                 padding: `${space.md} ${space.xl}`,
                 borderRadius: radius.md,
@@ -1805,7 +1884,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 zIndex: 10,
               }}
             >
-              🔄 Play Again
+              Play Again
             </button>
           </div>
         </div>
