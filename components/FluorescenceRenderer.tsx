@@ -738,7 +738,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', paddingTop: '80px', textAlign: 'center' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', paddingTop: '80px', textAlign: 'center' }}>
           <div style={{
             fontSize: '64px',
             marginBottom: '24px',
@@ -808,7 +808,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', padding: '24px', paddingTop: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', padding: '24px', paddingTop: '80px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
               background: `${colors.accent}22`,

@@ -761,7 +761,7 @@ export default function ElectromagnetRenderer({
                     cx="200"
                     cy="140"
                     rx={40 * scale + fieldRadius}
-                    ry={20 * scale + fieldRadius / 2}
+                    ry={35 * scale + fieldRadius * 0.8}
                     fill="none"
                     stroke={curr > 0 ? 'url(#emagFieldGradBlue)' : 'url(#emagFieldGradRed)'}
                     strokeWidth="2"
@@ -783,7 +783,7 @@ export default function ElectromagnetRenderer({
                 cx="200"
                 cy="140"
                 rx={30 + fieldRadius * 0.5}
-                ry={15 + fieldRadius * 0.25}
+                ry={25 + fieldRadius * 0.4}
                 fill="url(#emagFieldGlow)"
               />
             </g>
@@ -951,7 +951,7 @@ export default function ElectromagnetRenderer({
           {clips.map((clip, i) => (
             <g key={i} transform={`translate(${clip.x}, ${clip.y})`}>
               <path
-                d="M -10 -6 L 10 -6 L 10 6 L -6 6 L -6 -2 L 6 -2"
+                d="M -12 -36 L 12 -36 L 12 36 L -8 36 L -8 -12 L 8 -12"
                 fill="none"
                 stroke={clip.attracted ? 'url(#emagClipAttracted)' : 'url(#emagClipMetal)'}
                 strokeWidth="2.5"
@@ -959,7 +959,7 @@ export default function ElectromagnetRenderer({
                 strokeLinejoin="round"
               />
               {clip.attracted && (
-                <circle cx="0" cy="0" r="12" fill="url(#emagFieldGlow)" opacity="0.5" />
+                <circle cx="0" cy="0" r="18" fill="url(#emagFieldGlow)" opacity="0.5" />
               )}
             </g>
           ))}

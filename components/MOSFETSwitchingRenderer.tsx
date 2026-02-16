@@ -570,6 +570,20 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
             fill="none"
           />
 
+          {/* Baseline reference marker at default frequency (100 MHz) */}
+          {(() => {
+            const baselineFreq = 100;
+            const baselineFraction = (baselineFreq - 10) / (500 - 10);
+            const baselineX = waveOffX + waveStartX + baselineFraction * waveWidth;
+            const baselineY = vdsOffY + vdsLow - baselineFraction * (vdsLow - vdsHigh);
+            return (
+              <>
+                <circle cx={baselineX} cy={baselineY} r={6} fill="rgba(148,163,184,0.4)" stroke="rgba(148,163,184,0.6)" strokeWidth={1.5} />
+                <text x={baselineX} y={baselineY - 12} fill="rgba(148,163,184,0.7)" fontSize={11} textAnchor="middle">baseline</text>
+              </>
+            );
+          })()}
+
           {/* Interactive point - moves with switchingFrequency slider */}
           <circle cx={interactiveX} cy={interactiveY} r={8} fill={colors.accent} stroke="#ffffff" strokeWidth={2} filter="url(#glowFilter)" />
 
@@ -968,6 +982,8 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
             </p>
           </div>
 
+          {renderVisualization()}
+
           <div style={{
             background: colors.bgCard,
             margin: '16px',
@@ -1119,6 +1135,8 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
               This is why different applications use different frequencies!
             </p>
           </div>
+
+          {renderVisualization()}
 
           <div style={{
             background: colors.bgCard,

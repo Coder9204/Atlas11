@@ -1550,7 +1550,15 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
               </h2>
               <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
               <p style={{ color: colors.textSecondary, marginTop: '8px', fontWeight: 'normal' }}>
-                {testScore >= 8 ? 'You\'ve mastered fill factor!' : 'Review the material and try again.'}
+                {testScore >= 8 ? 'You\'ve mastered fill factor!' : 'Review your answers below'}
+              </p>
+            </div>
+            <div style={{ margin: '16px', padding: '12px', background: 'rgba(59,130,246,0.1)', borderRadius: '8px', borderLeft: `3px solid ${colors.blue}` }}>
+              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>
+                Question Review ✓✗
+              </p>
+              <p style={{ color: colors.textSecondary, fontSize: '12px', fontWeight: 'normal' }}>
+                Your answers are marked below. ✓ = Correct answer, ✗ = Your answer (if incorrect)
               </p>
             </div>
             {testQuestions.map((q, qIndex) => {
@@ -1558,10 +1566,10 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
               const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
               return (
                 <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>Question {qIndex + 1} of {testQuestions.length}: {q.question}</p>
+                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{isCorrect ? '✓' : '✗'} Question {qIndex + 1} of {testQuestions.length}: {q.question}</p>
                   {q.options.map((opt, oIndex) => (
                     <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary, fontWeight: 'normal' }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
+                      {opt.correct ? '✓ Correct answer: ' : userAnswer === oIndex ? '✗ Your answer: ' : ''} {opt.text}
                     </div>
                   ))}
                 </div>

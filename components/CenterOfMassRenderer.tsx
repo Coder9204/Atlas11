@@ -432,7 +432,8 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
     const markerFrac = (markerParam + 1) / 2;
     const markerX = curveStartX + markerFrac * (curveEndX - curveStartX);
     const markerYCalc = calculateStability(markerParam, showWeight ? clayWeight : 50);
-    const markerY = 50 + markerYCalc.comPosition * (height - 100);
+    // Ensure marker stays within visible bounds (60 to height-60)
+    const markerY = Math.max(60, Math.min(height - 60, 50 + markerYCalc.comPosition * (height - 100)));
 
     return (
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
@@ -464,6 +465,10 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
 
         {/* Stability curve */}
         <path d={curvePath} fill="none" stroke="#3B82F6" strokeWidth="2" opacity="0.6" />
+
+        {/* Reference/baseline point (default stable position) */}
+        <circle cx={curveStartX + 0.25 * (curveEndX - curveStartX)} cy={height / 2} r={6} fill="rgba(16, 185, 129, 0.4)" stroke={colors.success} strokeWidth={2} />
+        <text x={curveStartX + 0.25 * (curveEndX - curveStartX)} y={height / 2 - 12} textAnchor="middle" fill={colors.success} fontSize="11" fontWeight="600">BASELINE</text>
 
         {/* Interactive point on curve - MUST be first circle with r>=6 and filter */}
         <circle cx={markerX} cy={markerY} r={8} filter="url(#glow)" stroke="#fff" strokeWidth={2} fill={colors.accent} />
@@ -999,6 +1004,20 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
           }}>
             <p style={{ ...typo.body, color: wasCorrect ? colors.success : colors.warning, margin: 0 }}>
               {wasCorrect ? 'Your prediction was correct!' : 'Now you understand why!'}
+            </p>
+          </div>
+
+          {/* Visual diagram showing the fork balance */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            {renderForkVisualization({ pivotPct: 50 })}
+            <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '16px', fontStyle: 'italic' }}>
+              The fork system remains balanced because the center of mass (red dot) is below the pivot point (green dot).
             </p>
           </div>
 
@@ -1611,6 +1630,58 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
                 ? 'You understand center of mass and stability!'
                 : 'Review the concepts and try again.'}
             </p>
+
+            {/* Answer Review - Question-by-question breakdown */}
+            <div style={{
+              maxHeight: '400px',
+              overflowY: 'auto',
+              marginBottom: '24px',
+              textAlign: 'left',
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+                Answer Review
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {testQuestions.map((q, i) => {
+                  const correctOption = q.options.find(o => (o as any).correct);
+                  const userAnswer = testAnswers[i];
+                  const isCorrect = userAnswer === correctOption?.id;
+                  return (
+                    <div
+                      key={i}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '8px',
+                        borderRadius: '8px',
+                        background: colors.bgSecondary,
+                      }}
+                    >
+                      <span style={{
+                        fontSize: '18px',
+                        color: isCorrect ? colors.success : colors.error,
+                      }}>
+                        {isCorrect ? '✓' : '✗'}
+                      </span>
+                      <span style={{ ...typo.small, color: colors.textSecondary, flex: 1 }}>
+                        Question {i + 1}
+                      </span>
+                      <span style={{
+                        ...typo.small,
+                        color: isCorrect ? colors.success : colors.error,
+                        fontWeight: 600,
+                      }}>
+                        {isCorrect ? 'Correct' : `Wrong (${correctOption?.id.toUpperCase()})`}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
 
             {passed ? (
               <button

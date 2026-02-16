@@ -533,7 +533,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
               cursor: isPast ? 'pointer' : 'default',
             }} />
             <span style={{
-              fontSize: '10px',
+              fontSize: '11px',
               color: isActive ? colors.accent : colors.textSecondary,
               marginTop: '4px',
             }}>

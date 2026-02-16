@@ -1049,7 +1049,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
                     // Update potential energy display and marble position immediately
                     setPotentialEnergy(newHeight);
                     if (!isSimulating) {
-                      const marbleY = getTrackY(10) * (1 - newHeight / 100) + 5;
+                      const marbleY = 5 + (100 - newHeight) * 0.75;
                       setMarblePosition({ x: 10, y: marbleY });
                     }
                   }}
@@ -1058,7 +1058,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
                     setReleaseHeight(newHeight);
                     setPotentialEnergy(newHeight);
                     if (!isSimulating) {
-                      const marbleY = getTrackY(10) * (1 - newHeight / 100) + 5;
+                      const marbleY = 5 + (100 - newHeight) * 0.75;
                       setMarblePosition({ x: 10, y: marbleY });
                     }
                   }}

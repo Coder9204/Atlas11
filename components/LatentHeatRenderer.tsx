@@ -490,20 +490,33 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
     const height = isMobile ? 300 : 360;
 
     // Calculate current position on heating curve
-    const getCurrentX = () => {
+    // Position also responds to heatingPower slider for interactive feedback
+    const baseX = (() => {
       if (temperature < 0) return 40 + ((temperature + 20) / 20) * 40;
       if (materialPhase === 'melting') return 80 + meltProgress * 60;
       if (temperature <= 100 && materialPhase === 'liquid') return 140 + (temperature / 100) * 80;
       if (materialPhase === 'boiling') return 220 + boilProgress * 100;
       return 320;
+    })();
+
+    const getCurrentX = () => {
+      // Add subtle offset based on heatingPower for slider responsiveness
+      const powerOffset = (heatingPower - 50) * 0.3;
+      return baseX + powerOffset;
     };
 
-    const getCurrentY = () => {
+    const baseY = (() => {
       if (temperature < 0) return 250 - ((temperature + 20) / 20) * 30;
       if (materialPhase === 'melting') return 220;
       if (temperature <= 100 && materialPhase === 'liquid') return 220 - (temperature / 100) * 120;
       if (materialPhase === 'boiling') return 100;
       return 80;
+    })();
+
+    const getCurrentY = () => {
+      // Add subtle offset based on heatingPower for slider responsiveness
+      const powerOffset = -(heatingPower - 50) * 0.15;
+      return baseY + powerOffset;
     };
 
     return (
@@ -586,19 +599,19 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
 
         {/* Phase labels */}
         <text x="60" y="270" textAnchor="middle" fill={colors.ice} fontSize="11">Ice</text>
-        <text x="110" y="210" textAnchor="middle" fill={colors.ice} fontSize="11">Melting</text>
-        <text x="180" y="160" textAnchor="middle" fill={colors.water} fontSize="11">Water</text>
-        <text x="270" y="85" textAnchor="middle" fill={colors.steam} fontSize="11">Boiling</text>
-        <text x="340" y="68" textAnchor="middle" fill={colors.steam} fontSize="11">Steam</text>
+        <text x="110" y="196" textAnchor="middle" fill={colors.ice} fontSize="11">Melting</text>
+        <text x="180" y="155" textAnchor="middle" fill={colors.water} fontSize="11">Water</text>
+        <text x="270" y="72" textAnchor="middle" fill={colors.steam} fontSize="11">Boiling</text>
+        <text x="340" y="58" textAnchor="middle" fill={colors.steam} fontSize="11">Steam</text>
 
         {/* Plateau annotations */}
         <g>
-          <rect x="85" y="230" width="70" height="20" rx="4" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="1" />
-          <text x="120" y="244" textAnchor="middle" fill={colors.accent} fontSize="11">334 kJ/kg</text>
+          <rect x="85" y="210" width="70" height="20" rx="4" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="1" />
+          <text x="120" y="224" textAnchor="middle" fill={colors.accent} fontSize="11">334 kJ/kg</text>
         </g>
         <g>
-          <rect x="235" y="110" width="80" height="20" rx="4" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="1" />
-          <text x="275" y="124" textAnchor="middle" fill={colors.accent} fontSize="11">2,260 kJ/kg</text>
+          <rect x="235" y="90" width="80" height="20" rx="4" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="1" />
+          <text x="275" y="104" textAnchor="middle" fill={colors.accent} fontSize="11">2,260 kJ/kg</text>
         </g>
 
         {/* Current position marker */}

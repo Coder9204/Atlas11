@@ -710,6 +710,11 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
         {/* Yield Comparison Chart - absolute coords */}
         <text x="30" y="265" fill="#f8fafc" fontSize="12" fontWeight="bold">Yield Comparison</text>
 
+        {/* Baseline reference marker at 50% */}
+        <line x1="130" y1="273" x2="130" y2="327" stroke="rgba(148,163,184,0.7)" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+        <circle cx="130" cy="300" r="3" fill="rgba(148,163,184,0.7)" opacity="0.6" />
+        <text x="135" y="303" fill="rgba(148,163,184,0.7)" fontSize="11">50% ref</text>
+
         <rect x="30" y="275" width={metrics.monolithicYield * 2} height="20" fill="url(#monolithicGrad)" rx="4" />
         <text x={30 + metrics.monolithicYield * 2 + 10} y="290" fill="#6366f1" fontSize="11">{metrics.monolithicYield}%</text>
 

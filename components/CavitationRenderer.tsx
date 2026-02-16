@@ -76,7 +76,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, g
     navigationLockRef.current = true;
     setPhase(newPhase);
     onPhaseComplete?.(newPhase);
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
+    setTimeout(() => { navigationLockRef.current = false; }, 50);
   }, [onPhaseComplete]);
 
   const goToNextPhase = useCallback(() => {

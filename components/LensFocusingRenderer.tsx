@@ -343,8 +343,8 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#cbd5e1',
+    textMuted: 'rgba(148,163,184,0.7)',
     border: '#2a2a3a',
     lens: '#22d3ee',
     ray: '#fbbf24',
@@ -774,7 +774,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
           </p>
         </div>
 
-        <p style={{ color: 'rgba(148,163,184,0.7)', fontSize: '12px', maxWidth: '400px', marginBottom: '16px' }}>
+        <p style={{ color: colors.textMuted, fontSize: '12px', maxWidth: '400px', marginBottom: '16px' }}>
           Discover the fundamental optics equation that governs every lens system
         </p>
 
@@ -845,7 +845,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
             <g className="objects">
               <rect x="30" y="50" width="6" height="80" fill="#f59e0b" rx="2" />
               <circle cx="33" cy="45" r="8" fill="#f59e0b" filter="url(#predictLensGlow)" />
-              <text x="20" y="150" fill="rgba(148,163,184,1)" fontSize="11">Candle</text>
+              <text x="20" y="150" fill={colors.textSecondary} fontSize="11">Candle</text>
             </g>
             <g className="lens">
               <ellipse cx="200" cy="90" rx="8" ry="55" fill="url(#lensGrad)" stroke={colors.accent} strokeWidth="2" />
@@ -853,7 +853,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
             </g>
             <g className="screen">
               <rect x="360" y="30" width="8" height="120" fill="#64748b" rx="2" />
-              <text x="345" y="165" fill="rgba(148,163,184,1)" fontSize="11">Screen</text>
+              <text x="345" y="165" fill={colors.textSecondary} fontSize="11">Screen</text>
             </g>
             <g className="rays">
               <line x1="38" y1="60" x2="192" y2="60" stroke="#fbbf24" strokeWidth="1.5" strokeDasharray="4,3" />
@@ -1274,13 +1274,13 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
             <g className="object">
               <rect x="200" y="55" width="4" height="70" fill="#f59e0b" rx="2" />
               <circle cx="202" cy="50" r="6" fill="#f59e0b" filter="url(#twistLensGlow)" />
-              <text x="185" y="145" fill="rgba(148,163,184,1)" fontSize="11">Object</text>
+              <text x="185" y="145" fill={colors.textSecondary} fontSize="11">Object</text>
               <text x="175" y="160" fill={colors.warning} fontSize="11">(inside f)</text>
             </g>
             <g className="eye">
               <ellipse cx="370" cy="90" rx="15" ry="10" fill="none" stroke="#94a3b8" strokeWidth="1.5" />
               <circle cx="370" cy="90" r="5" fill="#64748b" />
-              <text x="355" y="115" fill="rgba(148,163,184,1)" fontSize="11">Eye</text>
+              <text x="355" y="115" fill={colors.textSecondary} fontSize="11">Eye</text>
             </g>
             <g className="rays">
               <line x1="202" y1="60" x2="242" y2="70" stroke="#fbbf24" strokeWidth="1.5" strokeDasharray="4,3" />

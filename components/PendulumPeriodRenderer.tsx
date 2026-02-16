@@ -437,13 +437,13 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
           <g opacity={0.3 + pendulumLength / 400}>
             <circle cx={svgW - 30} cy={30} r={8 + pendulumLength / 30} fill="url(#pendLenGlow)" />
             <circle cx={svgW - 30} cy={30} r={3} fill={colors.primary} />
-            <path d={`M ${svgW - 60} ${svgH * 0.7} Q ${svgW - 45} ${svgH * 0.7 - pendulumLength * 0.6} ${svgW - 30} ${svgH * 0.7}`} fill="none" stroke={colors.primary} strokeWidth="1.5" />
+            <path d={`M ${svgW - 60} ${svgH * 0.85} Q ${svgW - 45} ${svgH * 0.15} ${svgW - 30} ${svgH * 0.85}`} fill="none" stroke={colors.primary} strokeWidth="1.5" />
           </g>
 
           {/* Pivot support */}
           <g>
             <rect x={pivotX - 30} y={pivotY - 8} width="60" height="10" rx="3" fill="#3a3a48" />
-            <path d={`M ${pivotX - 30} ${pivotY - 8} L ${pivotX - 40} ${pivotY - 18} L ${pivotX + 40} ${pivotY - 18} L ${pivotX + 30} ${pivotY - 8}`} fill="#2a2a36" />
+            <path d={`M ${pivotX - 30} ${pivotY - 8} L ${pivotX - 40} ${pivotY - 88} L ${pivotX + 40} ${pivotY - 88} L ${pivotX + 30} ${pivotY - 8}`} fill="#2a2a36" />
           </g>
 
           {/* Equilibrium line */}
@@ -545,7 +545,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
           <rect width="360" height="200" fill="url(#predPendBg)" rx="12" />
           <g opacity="0.06">{[0,1,2,3,4].map(i => <line key={`h${i}`} x1="0" y1={i*50} x2="360" y2={i*50} stroke="#fff" strokeWidth="0.5" />)}{[0,1,2,3,4,5,6].map(i => <line key={`v${i}`} x1={i*60} y1="0" x2={i*60} y2="200" stroke="#fff" strokeWidth="0.5" />)}</g>
           {/* Support beam */}
-          <g><rect x="60" y="20" width="240" height="8" rx="3" fill="#3a3a48" /><path d="M 80 20 L 70 10 L 290 10 L 280 20" fill="#2a2a36" /></g>
+          <g><rect x="60" y="20" width="240" height="8" rx="3" fill="#3a3a48" /><path d="M 80 20 L 90 -30 L 270 -30 L 280 20" fill="#2a2a36" /></g>
           {/* Heavy pendulum */}
           <g><line x1="120" y1="28" x2="120" y2="130" stroke="#71717a" strokeWidth="2" /><circle cx="120" cy="140" r="20" fill="url(#predHeavy)" filter="url(#predPendGlow)" /><text x="120" y="175" fill={colors.accent} fontSize="10" textAnchor="middle" fontWeight="600">Heavy (5 kg)</text></g>
           {/* Light pendulum */}

@@ -408,7 +408,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
             max="100"
             value={spinSpeed}
             onChange={(e) => setSpinSpeed(Number(e.target.value))}
-            style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
+            style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: '#3b82f6' }}
           />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
@@ -428,7 +428,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
           max="180"
           value={bottleAngle}
           onChange={(e) => setBottleAngle(Number(e.target.value))}
-          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: '#3b82f6' }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
           <span>Sideways (90°)</span>
@@ -447,7 +447,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
           max="100"
           value={neckWidth}
           onChange={(e) => setNeckWidth(Number(e.target.value))}
-          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: '#3b82f6' }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
           <span>Narrow</span>
@@ -1491,7 +1491,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
       return (
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {renderTopNavBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', maxHeight: 'calc(100vh - 180px)' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
             <div style={{ padding: '20px', textAlign: 'center' }}>
               <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px', fontWeight: 400 }}>
                 Test Complete! You Scored:

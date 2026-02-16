@@ -75,18 +75,18 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
   const phase = PHASES.includes(rawPhase as Phase) ? rawPhase : 'hook';
 
   // Navigation functions
-  const goToPhase = (p: Phase) => setInternalPhase(p);
-  const goBack = () => {
+  const goToPhase = useCallback((p: Phase) => setInternalPhase(p), []);
+  const goBack = useCallback(() => {
     const currentIdx = PHASES.indexOf(phase);
     if (currentIdx > 0) setInternalPhase(PHASES[currentIdx - 1]);
-  };
-  const goNext = () => {
+  }, [phase]);
+  const goNext = useCallback(() => {
     const currentIdx = PHASES.indexOf(phase);
     if (currentIdx < PHASES.length - 1) {
       setInternalPhase(PHASES[currentIdx + 1]);
       onPhaseComplete?.();
     }
-  };
+  }, [phase, onPhaseComplete]);
 
   // Responsive detection
   useEffect(() => {
