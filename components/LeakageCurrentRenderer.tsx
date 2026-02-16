@@ -46,7 +46,7 @@ const phaseLabels: Record<Phase, string> = {
   play: 'Experiment',
   review: 'Understanding',
   twist_predict: 'New Variable',
-  twist_play: 'Crossover Point',
+  twist_play: 'Explore Twist',
   twist_review: 'Deep Insight',
   transfer: 'Real World',
   test: 'Knowledge Test',
@@ -670,7 +670,7 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
 
             {/* Gate oxide label */}
             <line x1={195} y1={70 + oxideThickness/2} x2={235} y2={70 + oxideThickness/2} stroke="#fbbf24" strokeWidth={1} strokeDasharray="2,2" />
-            <text x={240} y={70 + oxideThickness/2 + 3} fill="#fbbf24" fontSize={8} fontWeight="bold">
+            <text x={240} y={70 + oxideThickness/2 + 3} fill="#fbbf24" fontSize={11} fontWeight="bold">
               SiO₂ ({output.tox.toFixed(1)}nm)
             </text>
 
@@ -829,7 +829,7 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
             <circle cx={15} cy={15} r={8} fill="url(#leakGateElectronGlow)" />
             <circle cx={15} cy={15} r={3} fill="#e879f9" />
             <text x={30} y={12} fill={colors.gate} fontSize={10} fontWeight="bold">Gate Leakage</text>
-            <text x={30} y={24} fill={colors.textMuted} fontSize={8}>Quantum tunneling through oxide</text>
+            <text x={30} y={24} fill={colors.textMuted} fontSize={11}>Quantum tunneling through oxide</text>
             <text x={200} y={18} fill={colors.gate} fontSize={12} fontWeight="bold" textAnchor="end">
               {output.gateLeakage.toFixed(2)}W
             </text>
@@ -838,7 +838,7 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
             <circle cx={15} cy={45} r={8} fill="url(#leakSubElectronGlow)" />
             <circle cx={15} cy={45} r={3} fill="#fb923c" />
             <text x={30} y={42} fill={colors.subthreshold} fontSize={10} fontWeight="bold">Subthreshold Leakage</text>
-            <text x={30} y={54} fill={colors.textMuted} fontSize={8}>Source-drain current when OFF</text>
+            <text x={30} y={54} fill={colors.textMuted} fontSize={11}>Source-drain current when OFF</text>
             <text x={200} y={48} fill={colors.subthreshold} fontSize={12} fontWeight="bold" textAnchor="end">
               {output.subthresholdLeakage.toFixed(2)}W
             </text>
@@ -883,10 +883,10 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
 
             {/* Stack labels */}
             {gateHeight > 15 && (
-              <text x={225} y={150 - gateHeight/2} fill="#f5f3ff" fontSize={8} textAnchor="middle">Gate</text>
+              <text x={225} y={150 - gateHeight/2} fill="#f5f3ff" fontSize={11} textAnchor="middle">Gate</text>
             )}
             {subHeight > 15 && (
-              <text x={225} y={150 - gateHeight - subHeight/2} fill="#fff7ed" fontSize={8} textAnchor="middle">Sub</text>
+              <text x={225} y={150 - gateHeight - subHeight/2} fill="#fff7ed" fontSize={11} textAnchor="middle">Sub</text>
             )}
           </g>
 
@@ -989,7 +989,7 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
             step="1"
             value={processNode}
             onChange={(e) => setProcessNode(parseInt(e.target.value))}
-            style={{ width: '100%' }}
+            style={{ width: '100%', height: '20px', touchAction: 'pan-y' as const, WebkitAppearance: 'none' as const, accentColor: '#3b82f6' }}
           />
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: colors.textMuted }}>
             <span>3nm (bleeding edge)</span>
@@ -1008,7 +1008,7 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
             step="5"
             value={temperature}
             onChange={(e) => setTemperature(parseInt(e.target.value))}
-            style={{ width: '100%' }}
+            style={{ width: '100%', height: '20px', touchAction: 'pan-y' as const, WebkitAppearance: 'none' as const, accentColor: '#3b82f6' }}
           />
         </div>
 
@@ -1023,7 +1023,7 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
             step="0.05"
             value={supplyVoltage}
             onChange={(e) => setSupplyVoltage(parseFloat(e.target.value))}
-            style={{ width: '100%' }}
+            style={{ width: '100%', height: '20px', touchAction: 'pan-y' as const, WebkitAppearance: 'none' as const, accentColor: '#3b82f6' }}
           />
         </div>
 
@@ -1038,7 +1038,7 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
             step="0.1"
             value={transistorCount}
             onChange={(e) => setTransistorCount(parseFloat(e.target.value))}
-            style={{ width: '100%' }}
+            style={{ width: '100%', height: '20px', touchAction: 'pan-y' as const, WebkitAppearance: 'none' as const, accentColor: '#3b82f6' }}
           />
         </div>
 
@@ -1084,21 +1084,24 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
           <div style={{ display: 'flex', gap: isMobile ? '4px' : '6px' }} role="tablist" aria-label="Progress dots">
             {phaseOrder.map((p, i) => (
-              <div
+              <button
                 key={p}
                 role="tab"
-                aria-label={`Phase ${i + 1}: ${phaseLabels[p]}`}
+                aria-label={phaseLabels[p]}
                 aria-selected={i === currentIdx}
                 onClick={() => i < currentIdx && goToPhase(p)}
                 style={{
                   height: isMobile ? '10px' : '8px',
                   width: i === currentIdx ? (isMobile ? '20px' : '24px') : (isMobile ? '10px' : '8px'),
                   borderRadius: '5px',
-                  backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : colors.border,
+                  backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : 'rgba(148,163,184,0.7)',
                   cursor: i < currentIdx ? 'pointer' : 'default',
                   transition: 'all 0.3s ease',
                   minWidth: isMobile ? '10px' : '8px',
-                  minHeight: isMobile ? '10px' : '8px'
+                  minHeight: isMobile ? '10px' : '8px',
+                  border: 'none',
+                  padding: 0,
+                  outline: 'none'
                 }}
                 title={phaseLabels[p]}
               />

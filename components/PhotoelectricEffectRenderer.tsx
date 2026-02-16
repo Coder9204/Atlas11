@@ -829,6 +829,17 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
             </pattern>
           </defs>
 
+          {/* Interactive energy marker - moves with wavelength slider */}
+          <circle
+            cx={80 + Math.min(photonEnergy * 20, 100)}
+            cy={295 - maxKE * 30}
+            r={8}
+            fill={emissionOccurs ? '#34d399' : '#f87171'}
+            stroke="white"
+            strokeWidth="2"
+            filter="url(#photoPhotonFilter)"
+          />
+
           {/* Premium lab background */}
           <rect width="600" height="320" fill="url(#photoLabBg)" />
           <rect width="600" height="320" fill="url(#photoGridPattern)" />

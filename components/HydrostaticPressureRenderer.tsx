@@ -587,11 +587,17 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
           })}
 
           {/* Object/Diver indicator - interactive point */}
-          <g transform={`translate(${tankLeft + tankWidth/2}, ${Math.min(objectY, tankTop + tankHeight - 18)})`}>
-            <circle r="18" fill="url(#hydroObjectGlow)" filter="url(#hydroGlowFilter)" />
-            <circle r="18" fill="none" stroke="#fbbf24" strokeWidth="2" strokeOpacity="0.7" />
-            <text y="5" textAnchor="middle" fill={colors.bgDeep} fontSize="11" fontWeight="bold">{depth}m</text>
-          </g>
+          {(() => {
+            const pointCx = tankLeft + tankWidth / 2;
+            const pointCy = Math.min(objectY, tankTop + tankHeight - 18);
+            return (
+              <g>
+                <circle cx={pointCx} cy={pointCy} r="18" fill="url(#hydroObjectGlow)" filter="url(#hydroGlowFilter)" />
+                <circle cx={pointCx} cy={pointCy} r="18" fill="none" stroke="#fbbf24" strokeWidth="2" strokeOpacity="0.7" />
+                <text x={pointCx} y={pointCy + 5} textAnchor="middle" fill={colors.bgDeep} fontSize="11" fontWeight="bold">{depth}m</text>
+              </g>
+            );
+          })()}
 
           {/* Pressure arrows pointing inward */}
           {showPressureArrows && (
@@ -655,9 +661,9 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
   // ============================================================================
   const renderContainerComparison = () => {
     const width = isMobile ? 300 : 380;
-    const height = 180;
-    const waterHeight = 70;
-    const baseY = 120;
+    const height = 220;
+    const waterHeight = 130;
+    const baseY = 180;
 
     const containers = [
       { x: width * 0.17, halfWidth: 40, label: 'Wide', volume: '1000 L' },
@@ -701,9 +707,15 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
             </g>
           ))}
 
+          {/* Title text at top */}
+          <text x={width / 2} y="18" textAnchor="middle" fill={colors.textSecondary} fontSize="13" fontWeight="600">Hydrostatic Paradox: Shape vs Pressure</text>
+
           {/* Height indicator */}
           <line x1={width - 25} y1={baseY - waterHeight + 5} x2={width - 25} y2={baseY - 5} stroke={colors.warning} strokeWidth="2" markerStart="url(#hydroArrowMarker)" />
-          <text x={width - 15} y={baseY - waterHeight/2 + 3} fill={colors.warning} fontSize="8" fontWeight="bold" writingMode="vertical-rl">SAME h</text>
+          <text x={width - 15} y={baseY - waterHeight/2 + 3} fill={colors.warning} fontSize="11" fontWeight="bold" writingMode="vertical-rl">SAME h</text>
+
+          {/* Bottom label */}
+          <text x={width / 2} y={baseY + 18} textAnchor="middle" fill={colors.textMuted} fontSize="11">All containers: same height, same pressure at the bottom</text>
         </svg>
 
         {/* Container labels */}
@@ -909,12 +921,57 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
           Think about what happens as you dive deeper into a swimming pool or the ocean. Consider the force that acts on everything - how much will the pressure change at different depths?
         </p>
 
+        {/* Static SVG preview for predict phase */}
+        <div style={{
+          background: colors.bgSurface,
+          borderRadius: '20px',
+          padding: typo.cardPadding,
+          border: `1px solid ${colors.bgHover}`,
+          marginBottom: '24px'
+        }}>
+          <svg width={isMobile ? 300 : 380} height={260} viewBox={`0 0 ${isMobile ? 300 : 380} 260`} style={{ display: 'block', margin: '0 auto' }}>
+            <defs>
+              <linearGradient id="predictWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#7dd3fc" stopOpacity="0.35" />
+                <stop offset="50%" stopColor="#0ea5e9" stopOpacity="0.65" />
+                <stop offset="100%" stopColor="#075985" stopOpacity="0.95" />
+              </linearGradient>
+              <linearGradient id="predictPressureBar" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#22c55e" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="#ef4444" stopOpacity="0.9" />
+              </linearGradient>
+            </defs>
+            <rect width={isMobile ? 300 : 380} height="260" fill={colors.bgDeep} rx="12" />
+            {/* Pool cross-section */}
+            <rect x="40" y="20" width="200" height="200" fill="url(#predictWaterGrad)" rx="6" />
+            <rect x="40" y="20" width="200" height="200" fill="none" stroke={colors.textMuted} strokeWidth="2" rx="6" strokeOpacity="0.4" />
+            {/* Depth labels */}
+            <text x="32" y="30" textAnchor="end" fill={colors.textMuted} fontSize="11">0m</text>
+            <text x="32" y="120" textAnchor="end" fill={colors.textMuted} fontSize="11">25m</text>
+            <text x="32" y="218" textAnchor="end" fill={colors.textMuted} fontSize="11">50m</text>
+            {/* Diver at surface */}
+            <circle cx="100" cy="40" r="12" fill="#fbbf24" />
+            <text x="100" y="44" textAnchor="middle" fill={colors.bgDeep} fontSize="11" fontWeight="bold">1 atm</text>
+            {/* Diver at mid depth */}
+            <circle cx="160" cy="120" r="12" fill="#f59e0b" />
+            <text x="160" y="124" textAnchor="middle" fill={colors.bgDeep} fontSize="11" fontWeight="bold">3 atm</text>
+            {/* Diver at deep */}
+            <circle cx="200" cy="200" r="12" fill="#ea580c" />
+            <text x="200" y="204" textAnchor="middle" fill={colors.bgDeep} fontSize="11" fontWeight="bold">6 atm</text>
+            {/* Pressure bar */}
+            <rect x={(isMobile ? 260 : 300)} y="20" width="12" height="200" fill="url(#predictPressureBar)" rx="6" />
+            <text x={(isMobile ? 266 : 306)} y="14" textAnchor="middle" fill={colors.textMuted} fontSize="11">Low</text>
+            <text x={(isMobile ? 266 : 306)} y="238" textAnchor="middle" fill={colors.textMuted} fontSize="11">High</text>
+            {/* Title */}
+            <text x="140" y="250" textAnchor="middle" fill={colors.primary} fontSize="13" fontWeight="bold">What happens to pressure as depth increases?</text>
+          </svg>
+        </div>
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '28px' }}>
           {options.map(opt => (
             <button
               key={opt.id}
-              role="option"
-              aria-selected={prediction === opt.id}
+              aria-pressed={prediction === opt.id}
               onClick={() => {
                 if (prediction !== opt.id) {
                   playSound('click');
@@ -989,7 +1046,7 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
           Pressure vs Depth Simulator
         </h1>
         <p style={{ fontSize: typo.body, color: colors.textSecondary, margin: 0 }}>
-          Adjust the depth slider and watch pressure change in real-time
+          Adjust the depth slider and watch pressure change in real-time. When you increase depth, pressure increases linearly because more water weight pushes down.
         </p>
         <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: '8px 0 0' }}>
           Real-world relevance: This is exactly how dive computers calculate decompression schedules for scuba divers, helping them avoid the bends by tracking pressure at depth.
@@ -1750,8 +1807,13 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
             </div>
           </div>
 
-          <p style={{ color: colors.textSecondary, fontSize: typo.body, lineHeight: 1.7, marginBottom: '24px' }}>
+          <p style={{ color: colors.textSecondary, fontSize: typo.body, lineHeight: 1.7, marginBottom: '16px' }}>
             {app.description}
+          </p>
+
+          {/* How it works detail */}
+          <p style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.6, marginBottom: '24px' }}>
+            <strong style={{ color: colors.textPrimary }}>How it works:</strong> {app.howItWorks}
           </p>
 
           {/* Physics connection */}
@@ -2088,7 +2150,7 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
           {passed ? 'Pressure Master!' : 'Keep Diving Deeper!'}
         </h1>
 
-        {/* Score */}
+        {/* Score result */}
         <div style={{
           fontSize: '56px',
           fontWeight: 800,
@@ -2097,8 +2159,11 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
         }}>
           {percentage}%
         </div>
-        <p style={{ color: colors.textSecondary, marginBottom: '36px', fontSize: typo.bodyLarge }}>
+        <p style={{ color: colors.textSecondary, marginBottom: '12px', fontSize: typo.bodyLarge }}>
           {testScore}/10 correct answers
+        </p>
+        <p style={{ color: colors.textMuted, marginBottom: '36px', fontSize: typo.body }}>
+          {passed ? 'Great achievement! You have mastered hydrostatic pressure concepts.' : 'Your score result shows areas to review. Keep learning and try again!'}
         </p>
 
         {/* Concepts mastered */}

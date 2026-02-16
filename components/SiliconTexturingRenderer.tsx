@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
 const realWorldApps = [
    {
@@ -147,12 +147,12 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
   const [textureDepth, setTextureDepth] = useState(50);
   const [lightAngle, setLightAngle] = useState(30);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [rayBounces, setRayBounces] = useState<number[][]>([]);
+  // computedRayBounces is now computed via useMemo (computedRayBounces)
 
   // Phase-specific state
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set([0]));
   const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
@@ -222,40 +222,43 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
     };
   }, [surfaceType, textureDepth, lightAngle]);
 
-  // Generate ray paths for visualization
-  useEffect(() => {
-    const generateRayPaths = () => {
-      const output = calculateAbsorption();
-      const paths: number[][] = [];
-      const numRays = 5;
+  // Generate ray paths for visualization - deterministic based on inputs
+  const computedRayBounces = useMemo(() => {
+    const output = calculateAbsorption();
+    const paths: number[][] = [];
+    const numRays = 5;
 
-      for (let i = 0; i < numRays; i++) {
-        const path: number[] = [];
-        const startX = 50 + i * 60;
-        path.push(startX, 30); // Start point
-
-        if (surfaceType === 'smooth') {
-          // Single reflection, most light passes through
-          path.push(startX + 20, 150);
-          path.push(startX + 40, 30); // Reflected out
-        } else {
-          // Multiple bounces
-          let x = startX;
-          let y = 30;
-          for (let bounce = 0; bounce < output.bounces; bounce++) {
-            const dx = (Math.random() - 0.5) * 40;
-            const dy = 40 + Math.random() * 20;
-            x += dx;
-            y = Math.min(200, y + dy);
-            path.push(x, y);
-          }
-        }
-        paths.push(path);
-      }
-      setRayBounces(paths);
+    // Deterministic pseudo-random based on textureDepth
+    const seed = textureDepth * 137 + (surfaceType === 'random' ? 1 : surfaceType === 'periodic' ? 2 : 0) * 31;
+    const pseudoRandom = (i: number, j: number) => {
+      const val = Math.sin(seed + i * 7 + j * 13) * 10000;
+      return val - Math.floor(val);
     };
 
-    generateRayPaths();
+    for (let i = 0; i < numRays; i++) {
+      const path: number[] = [];
+      const startX = 50 + i * 60;
+      path.push(startX, 30); // Start point
+
+      if (surfaceType === 'smooth') {
+        // Single reflection, most light passes through
+        path.push(startX + 20, 150);
+        path.push(startX + 40, 30); // Reflected out
+      } else {
+        // Multiple bounces
+        let x = startX;
+        let y = 30;
+        for (let bounce = 0; bounce < output.bounces; bounce++) {
+          const dx = (pseudoRandom(i, bounce) - 0.5) * 40;
+          const dy = 40 + pseudoRandom(i, bounce + 10) * 20;
+          x += dx;
+          y = Math.min(200, y + dy);
+          path.push(x, y);
+        }
+      }
+      paths.push(path);
+    }
+    return paths;
   }, [surfaceType, textureDepth, calculateAbsorption]);
 
   // Animation
@@ -471,10 +474,21 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
             </filter>
           </defs>
 
+          {/* Grid lines for visual reference */}
+          <line x1="50" y1="90" x2="350" y2="90" stroke="rgba(255,255,255,0.2)" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="50" y1="130" x2="350" y2="130" stroke="rgba(255,255,255,0.2)" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="50" y1="170" x2="350" y2="170" stroke="rgba(255,255,255,0.2)" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="150" y1="30" x2="150" y2="280" stroke="rgba(255,255,255,0.2)" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="250" y1="30" x2="250" y2="280" stroke="rgba(255,255,255,0.2)" strokeDasharray="4 4" opacity="0.3" />
+
+          {/* Axis labels */}
+          <text x="200" y="16" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Light Angle / Intensity</text>
+          <text x="30" y="150" fill={colors.textSecondary} fontSize="11" textAnchor="middle" transform="rotate(-90 30 150)">Distance</text>
+
           {/* Light source */}
           <circle cx="50" cy="30" r="20" fill={colors.light} opacity={0.8} />
           <circle cx="50" cy="30" r="12" fill="#fff" opacity={0.9} />
-          <text x="50" y="60" fill={colors.textSecondary} fontSize="10" textAnchor="middle">
+          <text x="50" y="60" fill={colors.textSecondary} fontSize="11" textAnchor="middle">
             Light ({lightAngle}deg)
           </text>
 
@@ -490,7 +504,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
           />
 
           {/* Light rays with bounces */}
-          {rayBounces.map((path, i) => (
+          {computedRayBounces.map((path, i) => (
             <g key={i}>
               <polyline
                 points={path.map((p, j) => j % 2 === 0 ? `${p},${path[j + 1]}` : '').filter(Boolean).join(' ')}
@@ -517,7 +531,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
 
           {/* Absorption meter */}
           <rect x="280" y="20" width="100" height="100" fill="rgba(0,0,0,0.6)" rx="8" stroke={colors.accent} strokeWidth="1" />
-          <text x="330" y="40" fill={colors.textSecondary} fontSize="10" textAnchor="middle">ABSORPTION</text>
+          <text x="330" y="40" fill={colors.textSecondary} fontSize="11" textAnchor="middle">ABSORPTION</text>
 
           {/* Meter bar */}
           <rect x="295" y="50" width="70" height="20" fill="rgba(255,255,255,0.1)" rx="4" />
@@ -526,11 +540,27 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
             {output.absorption.toFixed(1)}%
           </text>
 
-          <text x="330" y="90" fill={colors.textSecondary} fontSize="9" textAnchor="middle">
+          <text x="330" y="85" fill={colors.textSecondary} fontSize="11" textAnchor="middle">
             Path: {output.pathLength.toFixed(1)}x
           </text>
-          <text x="330" y="105" fill={colors.textSecondary} fontSize="9" textAnchor="middle">
+          <text x="330" y="102" fill={colors.textSecondary} fontSize="11" textAnchor="middle">
             Bounces: {output.bounces}
+          </text>
+
+          {/* Interactive point showing current absorption level */}
+          <circle
+            cx={50 + textureDepth * 2.5}
+            cy={300 - lightAngle * 2}
+            r={10}
+            fill={colors.accent}
+            stroke="#ffffff"
+            strokeWidth="2"
+            filter="url(#glow)"
+          />
+
+          {/* Current parameter display */}
+          <text x="200" y="298" fill={colors.textMuted} fontSize="11" textAnchor="middle" fontWeight="normal">
+            Depth: {textureDepth}% | Angle: {lightAngle}°
           </text>
 
           {/* Surface type label */}
@@ -631,7 +661,8 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
           step="5"
           value={textureDepth}
           onChange={(e) => setTextureDepth(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          onInput={(e) => setTextureDepth(parseInt((e.target as HTMLInputElement).value))}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y' as const, WebkitAppearance: 'none' as const, accentColor: '#3b82f6' }}
         />
       </div>
 
@@ -646,7 +677,8 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
           step="5"
           value={lightAngle}
           onChange={(e) => setLightAngle(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          onInput={(e) => setLightAngle(parseInt((e.target as HTMLInputElement).value))}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y' as const, WebkitAppearance: 'none' as const, accentColor: '#3b82f6' }}
         />
       </div>
 
@@ -839,7 +871,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Silicon Surface Texturing
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', fontWeight: 400 }}>
               Would a rough surface absorb more light than a smooth one?
             </p>
           </div>
@@ -999,7 +1031,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
             <p style={{ color: colors.textPrimary }}>
-              Textured surfaces trap light through multiple internal reflections, dramatically
+              As you predicted in your experiment, textured surfaces trap light through multiple internal reflections, dramatically
               increasing absorption from ~65% to over 95%!
             </p>
           </div>
@@ -1025,6 +1057,12 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
                 <strong style={{ color: colors.textPrimary }}>Effective Path Length:</strong> With
                 pyramid textures, light can travel 4-10x further through the silicon before
                 escaping, dramatically increasing absorption probability.
+              </p>
+              <p style={{ marginBottom: '12px' }}>
+                <strong style={{ color: colors.textPrimary }}>Key Equation:</strong> The relationship
+                between texture depth and absorption can be expressed as: Absorption = 1 - (1 - A)^N,
+                where A is the single-bounce absorption coefficient and N is the number of bounces.
+                This formula shows that even a modest increase in bounces dramatically reduces reflection.
               </p>
               <p>
                 <strong style={{ color: colors.textPrimary }}>Efficiency Gain:</strong> Texturing
@@ -1343,6 +1381,19 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
               <span style={{ color: colors.textSecondary, fontWeight: 'bold' }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
             </div>
+            <div style={{
+              background: 'rgba(59, 130, 246, 0.1)',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              marginBottom: '16px',
+              borderLeft: `3px solid ${colors.solar}`,
+            }}>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0, fontWeight: 'normal' }}>
+                Scenario: You are a solar cell engineer evaluating different surface texturing techniques for a new production line.
+                Consider how pyramid textures, random roughness, and nano-scale structures affect light absorption, effective path length,
+                and overall cell efficiency when answering these questions about silicon surface texturing.
+              </p>
+            </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
                 <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
@@ -1443,7 +1494,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '68px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered silicon surface texturing!</p>
           </div>

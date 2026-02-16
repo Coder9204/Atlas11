@@ -620,7 +620,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
             fill={colors.success}
             stroke="white"
             strokeWidth="2"
-            filter="url(#glow)"
+            filter="url(#dropShadow)"
           >
             {isSimulating && (
               <animate attributeName="r" values="8;10;8" dur="0.5s" repeatCount="indefinite" />
@@ -664,6 +664,18 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
             Power: {heatingPower}W
           </text>
         </g>
+
+        {/* Power level indicator point - moves with slider */}
+        <circle
+          cx={40 + ((heatingPower - 20) / 80) * (width - 60)}
+          cy={height - 20}
+          r="8"
+          fill={colors.accent}
+          stroke="white"
+          strokeWidth="2"
+          filter="url(#glow)"
+          opacity="0.9"
+        />
       </svg>
     );
   };
@@ -1047,7 +1059,10 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        padding: '24px',
+        paddingTop: '48px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        paddingBottom: '100px',
         textAlign: 'center',
         overflow: 'auto',
       }}>
@@ -1166,7 +1181,10 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        paddingTop: '48px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        paddingBottom: '100px',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'auto',
@@ -1220,7 +1238,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
           </button>
         </div>
 
-        <div style={{ maxWidth: '700px', margin: '24px auto 0', flex: 1, overflowY: 'auto' }}>
+        <div style={{ maxWidth: '700px', margin: '24px auto 0', flex: 1, overflowY: 'auto', paddingTop: '48px' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -1344,7 +1362,10 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        paddingTop: '48px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        paddingBottom: '100px',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'auto',
@@ -1397,7 +1418,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
           </button>
         </div>
 
-        <div style={{ maxWidth: '800px', margin: '24px auto 0', flex: 1, overflowY: 'auto' }}>
+        <div style={{ maxWidth: '800px', margin: '24px auto 0', flex: 1, overflowY: 'auto', paddingTop: '48px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Heat the Ice
           </h2>
@@ -1438,10 +1459,13 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
                 onChange={(e) => setHeatingPower(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   background: `linear-gradient(to right, ${colors.accent} ${((heatingPower - 20) / 80) * 100}%, ${colors.border} ${((heatingPower - 20) / 80) * 100}%)`,
                   cursor: 'pointer',
+                  touchAction: 'pan-y' as const,
+                  WebkitAppearance: 'none' as const,
+                  accentColor: '#3b82f6',
                 }}
               />
             </div>
@@ -1596,7 +1620,10 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        paddingTop: '48px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        paddingBottom: '100px',
       }}>
         {renderProgressBar()}
 
@@ -1704,7 +1731,10 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        paddingTop: '48px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        paddingBottom: '100px',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'auto',
@@ -1740,7 +1770,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
           <span style={{ ...typo.small, color: colors.textMuted }}>Step 5 of 10</span>
         </div>
 
-        <div style={{ maxWidth: '700px', margin: '24px auto 0', flex: 1, overflowY: 'auto' }}>
+        <div style={{ maxWidth: '700px', margin: '24px auto 0', flex: 1, overflowY: 'auto', paddingTop: '48px' }}>
           <div style={{
             background: `${colors.steam}22`,
             borderRadius: '12px',
@@ -1794,9 +1824,9 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
               </g>
               {/* Question mark */}
               <text x={twistWidth / 2} y="95" textAnchor="middle" fill={colors.warning} fontSize="28" fontWeight="bold">?</text>
-              <text x={twistWidth / 2} y="115" textAnchor="middle" fill="#9CA3AF" fontSize="10">Which causes worse burns?</text>
+              <text x={twistWidth / 2} y="115" textAnchor="middle" fill="#9CA3AF" fontSize="11">Which causes worse burns?</text>
               {/* Bottom label */}
-              <text x={twistWidth / 2} y={twistHeight - 10} textAnchor="middle" fill="#6B7280" fontSize="10">Both at exactly the same temperature</text>
+              <text x={twistWidth / 2} y={twistHeight - 10} textAnchor="middle" fill="#6B7280" fontSize="11">Both at exactly the same temperature</text>
             </svg>
             <p style={{ ...typo.body, color: '#9CA3AF', marginTop: '16px' }}>
               Both steam and water are at exactly 100C.
@@ -1861,7 +1891,10 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        paddingTop: '48px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        paddingBottom: '100px',
       }}>
         {renderProgressBar()}
 
@@ -1946,7 +1979,10 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        paddingTop: '48px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        paddingBottom: '100px',
       }}>
         {renderProgressBar()}
 
@@ -2041,14 +2077,17 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        paddingTop: '48px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        paddingBottom: '100px',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'auto',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0', flex: 1, overflowY: 'auto' }}>
+        <div style={{ maxWidth: '800px', margin: '60px auto 0', flex: 1, overflowY: 'auto', paddingTop: '48px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
@@ -2230,7 +2269,10 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          paddingTop: '48px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+          paddingBottom: '100px',
         }}>
           {renderProgressBar()}
 
@@ -2286,7 +2328,10 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        paddingTop: '48px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        paddingBottom: '100px',
       }}>
         {renderProgressBar()}
 
@@ -2456,7 +2501,10 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px',
+        paddingTop: '48px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        paddingBottom: '100px',
         textAlign: 'center',
       }}>
         {renderProgressBar()}

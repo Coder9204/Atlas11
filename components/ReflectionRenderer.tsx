@@ -909,7 +909,7 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
       <div style={{ marginBottom: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
           <span style={{ color: colors.textSecondary, fontSize: typo.body }}>Incident Angle</span>
-          <span style={{ color: colors.incident, fontWeight: 600, fontSize: typo.body }}>{incidentAngle}°</span>
+          <span style={{ color: colors.incident, fontWeight: 600, fontSize: typo.body }}>{incidentAngle}° ({(incidentAngle * Math.PI / 180).toFixed(2)} rad)</span>
         </div>
         <input
           type="range"
@@ -1182,16 +1182,16 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
             margin: '0 auto 16px',
           }}>
             <div style={{ background: 'rgba(30,41,59,0.8)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
-              <div style={{ color: colors.incident, fontSize: typo.small, marginBottom: '4px' }}>Incident</div>
+              <div style={{ color: colors.incident, fontSize: typo.small, marginBottom: '4px' }}>Incident Angle</div>
               <div style={{ color: '#FFFFFF', fontWeight: 700, fontSize: typo.bodyLarge }}>{incidentAngle}°</div>
             </div>
             <div style={{ background: 'rgba(30,41,59,0.8)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
-              <div style={{ color: colors.reflected, fontSize: typo.small, marginBottom: '4px' }}>Reflected</div>
+              <div style={{ color: colors.reflected, fontSize: typo.small, marginBottom: '4px' }}>Output Angle</div>
               <div style={{ color: '#FFFFFF', fontWeight: 700, fontSize: typo.bodyLarge }}>{incidentAngle}°</div>
             </div>
             <div style={{ background: 'rgba(30,41,59,0.8)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
-              <div style={{ color: colors.accent, fontSize: typo.small, marginBottom: '4px' }}>Match</div>
-              <div style={{ color: '#10B981', fontWeight: 700, fontSize: typo.bodyLarge }}>✓ Equal</div>
+              <div style={{ color: colors.accent, fontSize: typo.small, marginBottom: '4px' }}>Ratio</div>
+              <div style={{ color: '#10B981', fontWeight: 700, fontSize: typo.bodyLarge }}>1.00×</div>
             </div>
           </div>
 
@@ -1201,13 +1201,15 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
             maxWidth: '500px',
             margin: '0 auto 16px',
           }}>
-            <div style={{
-              background: incidentAngle < 30 ? 'rgba(16,185,129,0.15)' : incidentAngle > 60 ? 'rgba(239,68,68,0.15)' : 'rgba(59,130,246,0.15)',
-              border: `1px solid ${incidentAngle < 30 ? '#10B981' : incidentAngle > 60 ? '#EF4444' : '#3b82f6'}`,
-              padding: '10px 16px',
-              borderRadius: '8px',
-              textAlign: 'center',
-            }}>
+            <div
+              data-feedback={incidentAngle < 30 ? 'success' : incidentAngle > 60 ? 'warning' : 'info'}
+              style={{
+                background: incidentAngle < 30 ? 'rgba(16,185,129,0.15)' : incidentAngle > 60 ? 'rgba(239,68,68,0.15)' : 'rgba(59,130,246,0.15)',
+                borderLeft: `4px solid ${incidentAngle < 30 ? '#10B981' : incidentAngle > 60 ? '#EF4444' : '#3b82f6'}`,
+                padding: '10px 16px',
+                borderRadius: '8px',
+                textAlign: 'center',
+              }}>
               <span style={{ color: incidentAngle < 30 ? '#10B981' : incidentAngle > 60 ? '#EF4444' : '#3b82f6', fontWeight: 600, fontSize: typo.body }}>
                 {incidentAngle < 30 ? 'Small angle — near-normal reflection' : incidentAngle > 60 ? 'Large angle — grazing reflection' : 'Medium angle — typical reflection'}
               </span>

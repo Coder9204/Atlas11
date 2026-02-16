@@ -459,7 +459,7 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
   // Interactive simulation state
   const [incidentAngle, setIncidentAngle] = useState(30);
   const [material, setMaterial] = useState<'water' | 'glass' | 'acrylic' | 'diamond'>('water');
-  const [streamCurvature, setStreamCurvature] = useState(50);
+  const [streamCurvature, setStreamCurvature] = useState(30);
   const [showLightPath, setShowLightPath] = useState(true);
   const [animationFrame, setAnimationFrame] = useState(0);
 
@@ -858,9 +858,9 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
           <circle
             cx={streamStartX}
             cy={streamStartY}
-            r="12"
+            r="5"
             fill={defined.colors.light.beam}
-            filter="url(#lightGlow)"
+            opacity="0.9"
           />
           <text
             x={streamStartX - 45}
@@ -938,7 +938,7 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
                       x={escapeX + 30}
                       y={escapeY - 35}
                       fill={defined.colors.warning}
-                      fontSize="9"
+                      fontSize="11"
                       fontFamily={defined.typography.fontFamily}
                     >
                       escapes
@@ -957,10 +957,60 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
             ry="15"
             fill="rgba(56, 189, 248, 0.3)"
           />
-          <path
-            d={`M ${streamEndX - 50} ${streamEndY + 15} Q ${streamEndX - 50} ${streamEndY + 50}, ${streamEndX} ${streamEndY + 55} Q ${streamEndX + 50} ${streamEndY + 50}, ${streamEndX + 50} ${streamEndY + 15}`}
+          <rect
+            x={streamEndX - 50}
+            y={streamEndY + 15}
+            width={100}
+            height={40}
+            rx="8"
             fill="rgba(56, 189, 248, 0.2)"
           />
+
+          {/* Interactive angle marker - moves with incidentAngle slider */}
+          <circle
+            cx={streamStartX + (incidentAngle / 85) * (streamEndX - streamStartX)}
+            cy={streamStartY + (incidentAngle / 85) * (streamEndY - streamStartY)}
+            r="10"
+            fill={isTIR ? defined.colors.light.trapped : defined.colors.light.beam}
+            filter="url(#lightGlow)"
+            stroke="white"
+            strokeWidth="2"
+          />
+
+          {/* Axis labels */}
+          <text
+            x={width / 2}
+            y={height - 5}
+            fill={defined.colors.text.secondary}
+            fontSize="12"
+            fontFamily={defined.typography.fontFamily}
+            textAnchor="middle"
+          >
+            Distance
+          </text>
+          <text
+            x={12}
+            y={height / 2}
+            fill={defined.colors.text.secondary}
+            fontSize="12"
+            fontFamily={defined.typography.fontFamily}
+            textAnchor="middle"
+            transform={`rotate(-90, 12, ${height / 2})`}
+          >
+            Intensity
+          </text>
+
+          {/* Formula */}
+          <text
+            x={width / 2}
+            y={height - 25}
+            fill={defined.colors.text.secondary}
+            fontSize="11"
+            fontFamily={defined.typography.fontFamily}
+            textAnchor="middle"
+          >
+            θc = arcsin(n₂/n₁)
+          </text>
 
           {/* TIR Status indicator */}
           <rect
@@ -986,7 +1036,7 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
             x={width - 75}
             y={62}
             fill={defined.colors.text.muted}
-            fontSize="10"
+            fontSize="11"
             fontFamily={defined.typography.fontFamily}
             textAnchor="middle"
           >
@@ -1116,7 +1166,7 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
           x={centerX + Math.sin(criticalRad) * 75}
           y={centerY - Math.cos(criticalRad) * 75}
           fill={defined.colors.warning}
-          fontSize="9"
+          fontSize="11"
           fontFamily={defined.typography.fontFamily}
         >
           θc={currentMaterial.criticalAngle}°
@@ -1227,7 +1277,10 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
             onChange={(e) => setIncidentAngle(Number(e.target.value))}
             style={{
               width: '100%',
-              accentColor: isTIR ? defined.colors.success : defined.colors.primary,
+              height: '20px',
+              touchAction: 'pan-y' as const,
+              WebkitAppearance: 'none' as const,
+              accentColor: '#3b82f6',
             }}
           />
           <div
@@ -1267,7 +1320,10 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
             onChange={(e) => setStreamCurvature(Number(e.target.value))}
             style={{
               width: '100%',
-              accentColor: defined.colors.primary,
+              height: '20px',
+              touchAction: 'pan-y' as const,
+              WebkitAppearance: 'none' as const,
+              accentColor: '#3b82f6',
             }}
           />
         </div>
@@ -1699,7 +1755,7 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
         <line x1="160" y1="100" x2="200" y2="160" stroke="#F472B6" strokeWidth="3" filter="url(#predictGlow)" />
         <text x="10" y="20" fill="#94a3b8" fontSize="11" fontFamily="-apple-system, sans-serif">Air (n=1.0)</text>
         <text x="10" y="190" fill="#94a3b8" fontSize="11" fontFamily="-apple-system, sans-serif">Water (n=1.33)</text>
-        <text x="165" y="85" fill="#22D3EE" fontSize="10" fontFamily="-apple-system, sans-serif">?</text>
+        <text x="165" y="85" fill="#22D3EE" fontSize="11" fontFamily="-apple-system, sans-serif">?</text>
         <circle cx="160" cy="100" r="4" fill="#F472B6" />
       </svg>
 
@@ -1789,9 +1845,10 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
         }}
       >
         Increase the incident angle and watch what happens when you cross the critical angle. Can
-        you trap all the light? This is why total internal reflection is so important in real-world
-        technology - this same principle is used in fiber optic cables, medical endoscopes, and
-        diamond cutting. Engineers design these applications to harness light trapping at 99% efficiency!
+        you trap all the light? The critical angle formula is θc = arcsin(n₂/n₁), where n₁ {'>'} n₂.
+        When θ {'>'} θc, the reflection coefficient R = 1 (100%). This relationship is proportional
+        to the refractive index ratio. This same principle is used in fiber optic cables, medical
+        endoscopes, and diamond cutting.
       </p>
 
       <div
@@ -2064,13 +2121,13 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
         <line x1="80" y1="40" x2="80" y2="170" stroke="rgba(255,255,255,0.3)" strokeWidth="1" strokeDasharray="3,3" />
         <line x1="240" y1="40" x2="240" y2="170" stroke="rgba(255,255,255,0.3)" strokeWidth="1" strokeDasharray="3,3" />
         <path d="M 50 150 L 80 90 L 110 150" fill="none" stroke="#22D3EE" strokeWidth="2" />
-        <text x="55" y="80" fill="#F59E0B" fontSize="10">48.6°</text>
+        <text x="55" y="80" fill="#F59E0B" fontSize="11">48.6°</text>
         <path d="M 210 150 L 240 90 L 270 150" fill="none" stroke="#A855F7" strokeWidth="2" />
-        <text x="220" y="80" fill="#F59E0B" fontSize="10">24.4°</text>
+        <text x="220" y="80" fill="#F59E0B" fontSize="11">24.4°</text>
         <circle cx="80" cy="90" r="3" fill="#22D3EE" />
         <circle cx="240" cy="90" r="3" fill="#A855F7" />
-        <text x="50" y="175" fill="#64748b" fontSize="9">Large critical angle</text>
-        <text x="200" y="175" fill="#64748b" fontSize="9">Small critical angle</text>
+        <text x="50" y="175" fill="#64748b" fontSize="11">Large critical angle</text>
+        <text x="200" y="175" fill="#64748b" fontSize="11">Small critical angle</text>
       </svg>
 
       <div

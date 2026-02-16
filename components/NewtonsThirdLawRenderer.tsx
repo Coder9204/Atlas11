@@ -733,7 +733,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
         flexDirection: 'column',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
@@ -841,7 +841,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
         flexDirection: 'column',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -943,6 +943,9 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
                   </>
                 )}
               </g>
+
+              {/* Force magnitude curve */}
+              <path d={`M50,${170 - forceMagnitude * 3} Q200,${170 - forceMagnitude * 8} 350,${170 - forceMagnitude * 10} Q500,${170 - forceMagnitude * 8} 650,${170 - forceMagnitude * 3}`} fill="none" stroke="#22d3ee" strokeWidth="1.5" strokeDasharray="6 3" opacity="0.4" />
 
               {/* Educational labels */}
               <text x="350" y="25" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">Balloon Rocket Simulation</text>
@@ -1302,7 +1305,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
               {[0, 100, 200, 300, 400, 500, 600].map(d => (
                 <g key={d}>
                   <line x1={60 + d} y1="160" x2={60 + d} y2="175" stroke="#4b5563" strokeWidth="2" />
-                  <text x={60 + d} y="190" textAnchor="middle" fill="#9ca3af" fontSize="9">{d}</text>
+                  <text x={60 + d} y="190" textAnchor="middle" fill="#9ca3af" fontSize="11">{d}</text>
                 </g>
               ))}
 
@@ -1517,7 +1520,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
         flexDirection: 'column',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1713,7 +1716,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
       return (
         <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
           <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>{passed ? '🏆' : '📚'}</div>
             <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
@@ -1744,7 +1747,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <span style={{ ...typo.small, color: colors.textSecondary }}>

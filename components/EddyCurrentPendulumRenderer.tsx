@@ -263,7 +263,7 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
 
   // Pendulum simulation state
-  const [magnetStrength, setMagnetStrength] = useState(80);
+  const [magnetStrength, setMagnetStrength] = useState(50);
   const [hasSlits, setHasSlits] = useState(false);
 
   // Test state
@@ -552,17 +552,19 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
     const pts = computeBrakingCurve(magnetStrength);
     const pathD = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
 
-    // Envelope curves
-    const envUpper: string[] = [];
-    const envLower: string[] = [];
+    // Envelope area - combined upper + lower as a single filled path
+    const envUpperPts: string[] = [];
+    const envLowerPts: string[] = [];
     for (let i = 0; i <= 30; i++) {
       const t = i / 30;
       const x = 60 + t * 360;
       const dampFactor = (magnetStrength / 100) * 0.65 * 3;
       const env = 100 * Math.exp(-dampFactor * t);
-      envUpper.push(`${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${(160 - env).toFixed(1)}`);
-      envLower.push(`${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${(160 + env).toFixed(1)}`);
+      envUpperPts.push(`${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${(160 - env).toFixed(1)}`);
+      envLowerPts.push(`L ${x.toFixed(1)} ${(160 + env).toFixed(1)}`);
     }
+    // Combined envelope: upper path forward, then lower path reversed
+    const envAreaPath = envUpperPts.join(' ') + ' ' + envLowerPts.reverse().join(' ') + ' Z';
 
     // Interactive point position depends on magnetStrength
     const dampFactor = (magnetStrength / 100) * 0.65 * 3;
@@ -611,7 +613,7 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
         {/* Axis labels group */}
         <g>
           <text x="240" y="316" fill={colors.textSecondary} fontSize="13" textAnchor="middle">Time (s)</text>
-          <text x="14" y="165" fill={colors.textSecondary} fontSize="13" textAnchor="middle" transform="rotate(-90, 14, 165)">Amplitude</text>
+          <text x="8" y="165" fill={colors.textSecondary} fontSize="11" textAnchor="middle" transform="rotate(-90, 8, 165)">Amplitude</text>
           <text x="50" y="83" fill="rgba(148,163,184,0.7)" fontSize="11" textAnchor="end">+100</text>
           <text x="50" y="163" fill="rgba(148,163,184,0.7)" fontSize="11" textAnchor="end">0</text>
           <text x="50" y="243" fill="rgba(148,163,184,0.7)" fontSize="11" textAnchor="end">-100</text>
@@ -622,8 +624,7 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
 
         {/* Curves group */}
         <g>
-          <path d={envUpper.join(' ')} fill="none" stroke={curveColor} strokeWidth="1" strokeDasharray="6 3" opacity="0.4" />
-          <path d={envLower.join(' ')} fill="none" stroke={curveColor} strokeWidth="1" strokeDasharray="6 3" opacity="0.4" />
+          <path d={envAreaPath} fill={curveColor} opacity="0.08" stroke={curveColor} strokeWidth="1" strokeDasharray="6 3" />
           <path d={pathD} fill="none" stroke="url(#curveGrad)" strokeWidth="2.5" />
         </g>
 

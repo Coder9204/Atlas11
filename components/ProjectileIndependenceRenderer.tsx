@@ -910,6 +910,13 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
         </p>
       </div>
 
+      {/* Key formula and definition */}
+      <div style={{ padding: '14px', background: colors.bgCardLight, borderRadius: '12px', border: `1px solid ${colors.border}`, marginBottom: '16px', maxWidth: '520px', marginLeft: 'auto', marginRight: 'auto' }}>
+        <p style={{ fontSize: '14px', color: '#e2e8f0', margin: 0, lineHeight: 1.6 }}>
+          <strong style={{ color: colors.textPrimary }}>Independence of motion</strong> is defined as the principle where horizontal velocity v = v0 remains constant while vertical position y = y0 + 0.5·g·t² is calculated independently. The fall time t = √(2h/g) depends only on height, not horizontal speed.
+        </p>
+      </div>
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
         {renderSimulation(true)}
       </div>

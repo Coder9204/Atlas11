@@ -498,38 +498,59 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
         <line x1={s1.x} y1={s1.y} x2={probePos.x} y2={probePos.y} stroke={colors.wave1} strokeWidth="2" strokeDasharray="5,5" opacity="0.6" />
         <line x1={s2.x} y1={s2.y} x2={probePos.x} y2={probePos.y} stroke={colors.wave2} strokeWidth="2" strokeDasharray="5,5" opacity="0.6" />
 
+        {/* First constructive max indicator - moves with wavelength */}
+        {(() => {
+          const firstMaxY = sourceY + wavelength * 2.5;
+          const clampedY = Math.min(firstMaxY, canvasHeight - 60);
+          return (
+            <circle cx={canvasWidth / 2} cy={clampedY} r={8}
+              fill={colors.success} opacity="0.5" filter="url(#wiGlow)"
+              stroke="#fff" strokeWidth="1" />
+          );
+        })()}
+
         {/* Probe point */}
-        <g transform={`translate(${probePos.x}, ${probePos.y})`}>
-          <circle r={20 + Math.abs(interferenceAmplitude) * 15}
-            fill={interferenceType === 'constructive' ? colors.success : interferenceType === 'destructive' ? colors.error : colors.warning}
-            opacity="0.3" />
-          <circle r={12} fill={interferenceType === 'constructive' ? colors.success : interferenceType === 'destructive' ? colors.error : colors.warning} />
-          <text y={35} textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="bold">
-            {interferenceType === 'constructive' ? 'CONSTRUCTIVE' : interferenceType === 'destructive' ? 'DESTRUCTIVE' : 'INTERMEDIATE'}
-          </text>
+        <circle cx={probePos.x} cy={probePos.y} r={20 + Math.abs(interferenceAmplitude) * 15}
+          fill={interferenceType === 'constructive' ? colors.success : interferenceType === 'destructive' ? colors.error : colors.warning}
+          opacity="0.3" />
+        <circle cx={probePos.x} cy={probePos.y} r={12}
+          fill={interferenceType === 'constructive' ? colors.success : interferenceType === 'destructive' ? colors.error : colors.warning}
+          filter="url(#wiGlow)" />
+        <text x={probePos.x} y={probePos.y + 35} textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="bold">
+          {interferenceType === 'constructive' ? 'CONSTRUCTIVE' : interferenceType === 'destructive' ? 'DESTRUCTIVE' : 'INTERMEDIATE'}
+        </text>
+
+        {/* Decorative wave path showing interference pattern */}
+        <path d={`M 0 ${canvasHeight - 10} ${Array.from({length: 50}, (_, i) => {
+          const xp = i * (canvasWidth / 50);
+          const d1p = Math.sqrt(Math.pow(xp - s1.x, 2) + Math.pow(canvasHeight - 80 - s1.y, 2));
+          const d2p = Math.sqrt(Math.pow(xp - s2.x, 2) + Math.pow(canvasHeight - 80 - s2.y, 2));
+          const amp = Math.cos(Math.PI * Math.abs(d1p - d2p) / wavelength);
+          return `L ${xp} ${canvasHeight - 10 - Math.abs(amp) * 8}`;
+        }).join(' ')}`} fill="none" stroke={colors.wave1} strokeWidth="1.5" opacity="0.4" />
+
+        {/* Info panel - Path Difference (top-left) */}
+        <g className="info-panel-left">
+          <rect x="20" y="20" width="140" height="60" rx="8" fill="#1e293b" opacity="0.95" />
+          <text x="30" y="38" fill="#94a3b8" fontSize="11" fontWeight="bold">PATH DIFFERENCE</text>
+          <text x="30" y="56" fill="#e2e8f0" fontSize="14" fontWeight="bold">{pathDiff.toFixed(1)} px</text>
+          <text x="30" y="72" fill="#5eead4" fontSize="11">= {pathDiffInWavelengths.toFixed(2)} lambda</text>
         </g>
 
-        {/* Info panels */}
-        <g transform="translate(20, 20)">
-          <rect x="0" y="0" width="140" height="60" rx="8" fill="#1e293b" opacity="0.95" />
-          <text x="10" y="18" fill="#64748b" fontSize="11" fontWeight="bold">PATH DIFFERENCE</text>
-          <text x="10" y="38" fill="#e2e8f0" fontSize="14" fontWeight="bold">{pathDiff.toFixed(1)} px</text>
-          <text x="10" y="54" fill="#5eead4" fontSize="11">= {pathDiffInWavelengths.toFixed(2)} lambda</text>
+        {/* Info panel - Wavelength (top-right) */}
+        <g className="info-panel-right">
+          <rect x={canvasWidth - 150} y="20" width="140" height="60" rx="8" fill="#1e293b" opacity="0.95" />
+          <text x={canvasWidth - 140} y="38" fill="#94a3b8" fontSize="11" fontWeight="bold">WAVELENGTH</text>
+          <text x={canvasWidth - 140} y="56" fill={colors.accent} fontSize="14" fontWeight="bold">lambda = {wavelength} px</text>
         </g>
 
-        <g transform={`translate(${canvasWidth - 150}, 20)`}>
-          <rect x="0" y="0" width="140" height="60" rx="8" fill="#1e293b" opacity="0.95" />
-          <text x="10" y="18" fill="#64748b" fontSize="11" fontWeight="bold">WAVELENGTH</text>
-          <text x="10" y="38" fill={colors.accent} fontSize="14" fontWeight="bold">lambda = {wavelength} px</text>
-        </g>
-
-        {/* Amplitude indicator */}
-        <g transform={`translate(${canvasWidth / 2}, ${canvasHeight - 40})`}>
-          <rect x="-100" y="-15" width="200" height="30" rx="8" fill="#1e293b" opacity="0.95" />
-          <text x="-85" y="5" fill="#64748b" fontSize="11" fontWeight="bold">AMPLITUDE:</text>
-          <rect x="0" y="-8" width={80 * Math.abs(interferenceAmplitude)} height="16" rx="4"
+        {/* Amplitude indicator (bottom-center) */}
+        <g className="amplitude-panel">
+          <rect x={canvasWidth / 2 - 100} y={canvasHeight - 55} width="200" height="30" rx="8" fill="#1e293b" opacity="0.95" />
+          <text x={canvasWidth / 2 - 85} y={canvasHeight - 35} fill="#94a3b8" fontSize="11" fontWeight="bold">AMPLITUDE:</text>
+          <rect x={canvasWidth / 2} y={canvasHeight - 48} width={80 * Math.abs(interferenceAmplitude)} height="16" rx="4"
             fill={interferenceAmplitude > 0 ? colors.success : colors.error} />
-          <text x="85" y="5" textAnchor="end" fill="#e2e8f0" fontSize="11" fontWeight="bold">
+          <text x={canvasWidth / 2 + 85} y={canvasHeight - 35} textAnchor="end" fill="#e2e8f0" fontSize="11" fontWeight="bold">
             {(interferenceAmplitude * 100).toFixed(0)}%
           </text>
         </g>
@@ -1095,15 +1116,15 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
                 justifyContent: 'space-around',
               }}>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Path Diff</div>
+                  <div style={{ ...typo.small, color: '#e2e8f0' }}>Path Diff</div>
                   <div style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>{pathDiff.toFixed(1)} px</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Ratio</div>
+                  <div style={{ ...typo.small, color: '#e2e8f0' }}>Ratio</div>
                   <div style={{ ...typo.body, color: colors.accent, fontWeight: 600 }}>{pathDiffInWavelengths.toFixed(2)} lambda</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Amplitude Factor</div>
+                  <div style={{ ...typo.small, color: '#e2e8f0' }}>Amplitude Factor</div>
                   <div style={{ ...typo.body, color: interferenceAmplitude > 0 ? colors.success : colors.error, fontWeight: 600 }}>{(Math.abs(interferenceAmplitude) * 2).toFixed(2)}x</div>
                 </div>
               </div>

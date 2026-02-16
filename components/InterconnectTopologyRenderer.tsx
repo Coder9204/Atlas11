@@ -30,7 +30,9 @@ const phaseLabels: Record<Phase, string> = {
 const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
   if (typeof window === 'undefined') return;
   try {
-    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return;
+    const audioContext = new AudioCtx();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
     oscillator.connect(gainNode);
@@ -624,10 +626,10 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
               />
               <text
                 x={pos.x}
-                y={pos.y + chipSize / 2 + 16}
+                y={pos.y + chipSize / 2 + 18}
                 textAnchor="middle"
                 fill={colors.textSecondary}
-                fontSize={10}
+                fontSize={11}
                 fontWeight="bold"
               >
                 GPU {i}
@@ -642,18 +644,18 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
         })}
 
         {/* Stats panel */}
-        <g transform={`translate(12, ${height - 90})`}>
-          <rect x={0} y={0} width={180} height={78} rx={10} fill="rgba(15, 23, 42, 0.95)" stroke="#334155" strokeWidth={1} />
+        <g transform={`translate(12, ${height - 100})`}>
+          <rect x={0} y={0} width={190} height={88} rx={10} fill="rgba(15, 23, 42, 0.95)" stroke="#334155" strokeWidth={1} />
           <text x={12} y={18} fill={spec.color} fontSize={11} fontWeight="bold">NETWORK METRICS</text>
-          <line x1={12} y1={24} x2={168} y2={24} stroke="#334155" strokeWidth={1} />
-          <text x={12} y={42} fill={colors.textMuted} fontSize={10}>Latency Steps</text>
+          <line x1={12} y1={24} x2={178} y2={24} stroke="#334155" strokeWidth={1} />
+          <text x={12} y={40} fill={colors.textMuted} fontSize={11}>Latency Steps</text>
           <text x={12} y={56} fill={spec.color} fontSize={16} fontWeight="bold">{latencySteps}</text>
-          <text x={95} y={42} fill={colors.textMuted} fontSize={10}>Bandwidth Eff.</text>
-          <text x={95} y={56} fill={bandwidthEfficiency > 80 ? colors.success : colors.warning} fontSize={16} fontWeight="bold">
+          <text x={100} y={40} fill={colors.textMuted} fontSize={11}>BW Eff.</text>
+          <text x={100} y={56} fill={bandwidthEfficiency > 80 ? colors.success : colors.warning} fontSize={16} fontWeight="bold">
             {bandwidthEfficiency}%
           </text>
-          <text x={12} y={72} fill={colors.textMuted} fontSize={9}>
-            Total Links: {connections.length} | Complexity: {spec.latency}
+          <text x={12} y={78} fill={colors.textMuted} fontSize={11}>
+            Links: {connections.length} | {spec.latency}
           </text>
         </g>
 
@@ -997,10 +999,10 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
               />
               <text
                 x={pos.x}
-                y={pos.y + chipSize / 2 + 14}
+                y={pos.y + chipSize / 2 + 16}
                 textAnchor="middle"
                 fill={colors.textSecondary}
-                fontSize={10}
+                fontSize={11}
                 fontWeight="bold"
               >
                 GPU {i}

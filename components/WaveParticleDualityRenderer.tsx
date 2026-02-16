@@ -916,6 +916,19 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                <circle key={x} cx={x} cy="325" r="3" fill="#0a0a0a" />
             ))}
 
+            {/* Interactive rate indicator - moves with firingRate slider */}
+            {interactive && (
+               <g>
+                  <circle cx={100 + firingRate * 10} cy="15" r="8" fill="#3b82f6" filter="url(#wpdElectronBlur)" opacity="0.9" />
+                  <circle cx={100 + firingRate * 10} cy="15" r="4" fill="#60a5fa" />
+               </g>
+            )}
+
+            {/* de Broglie wavelength equation: λ = h/p */}
+            {interactive && (
+               <text x="500" y="15" fontSize="11" fill="#cbd5e1">λ = h/p</text>
+            )}
+
             {/* === PREMIUM ELECTRON GUN === */}
             <g transform="translate(25, 175)">
                {/* Main housing with depth */}
@@ -944,7 +957,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                <circle cx="22" cy="77" r="6" fill="#22c55e">
                   <animate attributeName="opacity" values="0.4;1;0.4" dur="1.2s" repeatCount="indefinite" />
                </circle>
-               <text x="22" y="95" textAnchor="middle" className="text-[5px] fill-emerald-400 font-bold">POWER</text>
+               <text x="-15" y="95" textAnchor="middle" className="text-[5px] fill-emerald-400 font-bold">POWER</text>
 
                <rect x="38" y="68" width="40" height="18" rx="3" fill="#030712" stroke="#1f2937" />
                <text x="58" y="80" textAnchor="middle" className="text-[8px] fill-cyan-400 font-mono font-bold">READY</text>
@@ -998,8 +1011,8 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                <text x="40" y="175" textAnchor="middle" className="text-[8px] fill-cyan-400 font-bold">Slit B</text>
 
                {/* Frame label */}
-               <rect x="-15" y="-30" width="40" height="14" rx="3" fill="#111827" />
-               <text x="5" y="-21" textAnchor="middle" className="text-[9px] fill-slate-200 font-bold uppercase">Barrier</text>
+               <rect x="-15" y="-47" width="40" height="14" rx="3" fill="#111827" />
+               <text x="5" y="-38" textAnchor="middle" className="text-[9px] fill-slate-200 font-bold uppercase">Barrier</text>
             </g>
 
             {/* === WHICH-PATH DETECTOR (enhanced) === */}
@@ -1143,8 +1156,8 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                )}
 
                {/* Screen label */}
-               <rect x="-5" y="-30" width="55" height="14" rx="3" fill="#111827" />
-               <text x="22" y="-21" textAnchor="middle" className="text-[9px] fill-emerald-400 font-bold uppercase">Detector</text>
+               <rect x="-5" y="-34" width="55" height="14" rx="3" fill="#111827" />
+               <text x="22" y="-24" textAnchor="middle" className="text-[9px] fill-emerald-400 font-bold uppercase">Detector</text>
             </g>
 
             {/* === LIVE HISTOGRAM showing intensity distribution === */}
@@ -1198,6 +1211,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   <text x="0" y="12" textAnchor="middle" className="text-[16px] fill-cyan-400 font-mono font-black">{particleCount}</text>
                </g>
             )}
+
          </svg>
       );
    };

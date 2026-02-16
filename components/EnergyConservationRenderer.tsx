@@ -572,16 +572,28 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
               x2={width - 30}
               y2={30 + frac * (height - 100)}
               stroke={colors.border}
-              strokeDasharray="3,3"
-              opacity="0.5"
+              strokeDasharray="4 4"
+              opacity="0.3"
+            />
+          ))}
+          {[0.25, 0.5, 0.75].map(frac => (
+            <line
+              key={`v-${frac}`}
+              x1={30 + frac * (width - 60)}
+              y1="30"
+              x2={30 + frac * (width - 60)}
+              y2={height - 70}
+              stroke={colors.border}
+              strokeDasharray="4 4"
+              opacity="0.3"
             />
           ))}
         </g>
 
         {/* Labels layer */}
         <g className="labels-layer">
-          <text x="15" y="40" fill={colors.potential} fontSize="10" fontWeight="600">High</text>
-          <text x="15" y={height - 80} fill={colors.kinetic} fontSize="10" fontWeight="600">Low</text>
+          <text x="15" y="40" fill={colors.potential} fontSize="12" fontWeight="600">Height</text>
+          <text x="15" y={height - 80} fill={colors.kinetic} fontSize="12" fontWeight="600">Energy</text>
         </g>
 
         {/* Track layer */}
@@ -642,14 +654,14 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
           {/* PE bar */}
           <rect x="0" y="0" width={(width - 80) / 3} height="16" rx="4" fill={colors.potential + '33'} />
           <rect x="0" y="0" width={potentialEnergy * (width - 80) / 300} height="16" rx="4" fill={colors.potential} />
-          <text x={(width - 80) / 6} y="30" textAnchor="middle" fill={colors.potential} fontSize="10" fontWeight="600">
+          <text x={(width - 80) / 6} y="32" textAnchor="middle" fill={colors.potential} fontSize="12" fontWeight="600">
             PE: {Math.round(potentialEnergy)}%
           </text>
 
           {/* KE bar */}
           <rect x={(width - 80) / 3 + 10} y="0" width={(width - 80) / 3} height="16" rx="4" fill={colors.kinetic + '33'} />
           <rect x={(width - 80) / 3 + 10} y="0" width={kineticEnergy * (width - 80) / 300} height="16" rx="4" fill={colors.kinetic} />
-          <text x={(width - 80) / 2 + 10} y="30" textAnchor="middle" fill={colors.kinetic} fontSize="10" fontWeight="600">
+          <text x={(width - 80) / 2 + 10} y="32" textAnchor="middle" fill={colors.kinetic} fontSize="12" fontWeight="600">
             KE: {Math.round(kineticEnergy)}%
           </text>
 
@@ -658,7 +670,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
             <>
               <rect x={2 * (width - 80) / 3 + 20} y="0" width={(width - 80) / 3} height="16" rx="4" fill={colors.thermal + '33'} />
               <rect x={2 * (width - 80) / 3 + 20} y="0" width={thermalEnergy * (width - 80) / 300} height="16" rx="4" fill={colors.thermal} />
-              <text x={5 * (width - 80) / 6 + 20} y="30" textAnchor="middle" fill={colors.thermal} fontSize="10" fontWeight="600">
+              <text x={5 * (width - 80) / 6 + 20} y="32" textAnchor="middle" fill={colors.thermal} fontSize="12" fontWeight="600">
                 Heat: {Math.round(thermalEnergy)}%
               </text>
             </>
@@ -754,7 +766,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          paddingTop: '24px',
+          paddingTop: '48px',
           paddingLeft: '24px',
           paddingRight: '24px',
           paddingBottom: '80px',
@@ -851,7 +863,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
         background: colors.bgPrimary,
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '80px' }}>
           <div style={{ maxWidth: '700px', margin: '60px auto 0', padding: '0 24px' }}>
             <div style={{
               background: `${colors.accent}22`,
@@ -971,7 +983,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
         background: colors.bgPrimary,
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '80px' }}>
           <div style={{ maxWidth: '800px', margin: '60px auto 0', padding: '0 24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Energy Conservation Lab
@@ -994,7 +1006,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
               {/* Track type selector */}
               <div style={{ marginBottom: '20px' }}>
                 <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>Track Shape:</p>
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ display: 'flex', flexDirection: 'row' as const, gap: '8px' }}>
                   {[
                     { id: 'valley', label: 'U-Valley', icon: '⌣' },
                     { id: 'bowl', label: 'Bowl', icon: '◡' },
@@ -1034,15 +1046,31 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
                   onChange={(e) => {
                     const newHeight = parseInt(e.target.value);
                     setReleaseHeight(newHeight);
-                    // Update potential energy display immediately
+                    // Update potential energy display and marble position immediately
                     setPotentialEnergy(newHeight);
+                    if (!isSimulating) {
+                      const marbleY = getTrackY(10) * (1 - newHeight / 100) + 5;
+                      setMarblePosition({ x: 10, y: marbleY });
+                    }
+                  }}
+                  onInput={(e) => {
+                    const newHeight = parseInt((e.target as HTMLInputElement).value);
+                    setReleaseHeight(newHeight);
+                    setPotentialEnergy(newHeight);
+                    if (!isSimulating) {
+                      const marbleY = getTrackY(10) * (1 - newHeight / 100) + 5;
+                      setMarblePosition({ x: 10, y: marbleY });
+                    }
                   }}
                   style={{
                     width: '100%',
-                    height: '8px',
+                    height: '20px',
                     borderRadius: '4px',
                     background: `linear-gradient(to right, ${colors.potential} ${((releaseHeight - 20) / 80) * 100}%, ${colors.border} ${((releaseHeight - 20) / 80) * 100}%)`,
                     cursor: 'pointer',
+                    touchAction: 'pan-y' as const,
+                    WebkitAppearance: 'none' as const,
+                    accentColor: '#3b82f6',
                   }}
                 />
               </div>
@@ -1129,7 +1157,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
         background: colors.bgPrimary,
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '80px' }}>
           <div style={{ maxWidth: '700px', margin: '60px auto 0', padding: '0 24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
               Conservation of Mechanical Energy
@@ -1246,7 +1274,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
         background: colors.bgPrimary,
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '80px' }}>
           <div style={{ maxWidth: '700px', margin: '60px auto 0', padding: '0 24px' }}>
             <div style={{
               background: `${colors.warning}22`,
@@ -1385,7 +1413,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
         background: colors.bgPrimary,
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '80px' }}>
           <div style={{ maxWidth: '800px', margin: '60px auto 0', padding: '0 24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Energy Dissipation Lab
@@ -1418,12 +1446,16 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
                   max="80"
                   value={frictionLevel}
                   onChange={(e) => setFrictionLevel(parseInt(e.target.value))}
+                  onInput={(e) => setFrictionLevel(parseInt((e.target as HTMLInputElement).value))}
                   style={{
                     width: '100%',
-                    height: '8px',
+                    height: '20px',
                     borderRadius: '4px',
                     background: `linear-gradient(to right, ${colors.success} 0%, ${colors.warning} 50%, ${colors.thermal} 100%)`,
                     cursor: 'pointer',
+                    touchAction: 'pan-y' as const,
+                    WebkitAppearance: 'none' as const,
+                    accentColor: '#3b82f6',
                   }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1500,7 +1532,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
         background: colors.bgPrimary,
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '80px' }}>
           <div style={{ maxWidth: '700px', margin: '60px auto 0', padding: '0 24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
               Energy Transforms, Never Disappears
@@ -1605,7 +1637,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
         background: colors.bgPrimary,
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '80px' }}>
           <div style={{ maxWidth: '800px', margin: '60px auto 0', padding: '0 24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1819,7 +1851,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
           background: colors.bgPrimary,
         }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '80px' }}>
             <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center', padding: '0 24px' }}>
               <div style={{
                 fontSize: '80px',
@@ -1906,7 +1938,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
         background: colors.bgPrimary,
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '80px' }}>
           <div style={{ maxWidth: '700px', margin: '60px auto 0', padding: '0 24px' }}>
             {/* Progress */}
             <div style={{
@@ -2128,7 +2160,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          paddingTop: '24px',
+          paddingTop: '48px',
           paddingLeft: '24px',
           paddingRight: '24px',
           paddingBottom: '80px',

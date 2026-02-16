@@ -40,7 +40,7 @@ const colors = {
 
 const realWorldApps = [
   {
-    icon: '📡',
+    icon: '\u{1F4E1}',
     title: 'RF Antenna Systems',
     short: 'Maximum power transfer to antennas',
     tagline: 'Every watt counts in wireless',
@@ -48,9 +48,9 @@ const realWorldApps = [
     connection: 'The reflection coefficient Gamma = (ZL-Z0)/(ZL+Z0) determines how much power reflects. Perfect matching (Gamma=0) transfers all power to the antenna.',
     howItWorks: 'Antenna tuners and matching networks transform antenna impedance to 50 ohms. SWR meters measure VSWR to verify proper matching. Ferrite beads suppress reflections.',
     stats: [
-      { value: '50ohm', label: 'Standard RF impedance', icon: '📊' },
-      { value: '1.5:1', label: 'Acceptable VSWR', icon: '✅' },
-      { value: '3dB', label: 'Loss at 6:1 VSWR', icon: '📉' }
+      { value: '50ohm', label: 'Standard RF impedance', icon: '\u{1F4CA}' },
+      { value: '1.5:1', label: 'Acceptable VSWR', icon: '\u2705' },
+      { value: '3dB', label: 'Loss at 6:1 VSWR', icon: '\u{1F4C9}' }
     ],
     examples: ['Ham radio', 'Cell towers', 'WiFi routers', 'Radar systems'],
     companies: ['Rohde & Schwarz', 'Keysight', 'CommScope', 'Qualcomm'],
@@ -58,7 +58,7 @@ const realWorldApps = [
     color: '#3B82F6'
   },
   {
-    icon: '💻',
+    icon: '\u{1F4BB}',
     title: 'High-Speed PCB Design',
     short: 'Signal integrity at gigahertz speeds',
     tagline: 'Where traces become transmission lines',
@@ -66,9 +66,9 @@ const realWorldApps = [
     connection: 'Trace width, spacing, and dielectric thickness determine characteristic impedance. Even via transitions and connectors must be impedance-matched.',
     howItWorks: 'Controlled-impedance traces use precise geometry. Differential pairs maintain impedance while rejecting noise. Termination resistors absorb reflections at endpoints.',
     stats: [
-      { value: '100ohm', label: 'Differential impedance', icon: '📐' },
-      { value: '10Gbps+', label: 'Modern data rates', icon: '⚡' },
-      { value: '±10%', label: 'Impedance tolerance', icon: '🎯' }
+      { value: '100ohm', label: 'Differential impedance', icon: '\u{1F4D0}' },
+      { value: '10Gbps+', label: 'Modern data rates', icon: '\u26A1' },
+      { value: '\u00B110%', label: 'Impedance tolerance', icon: '\u{1F3AF}' }
     ],
     examples: ['DDR5 memory', 'PCIe 5.0', 'USB4', 'Ethernet'],
     companies: ['Intel', 'Cadence', 'Altium', 'Ansys'],
@@ -76,7 +76,7 @@ const realWorldApps = [
     color: '#8B5CF6'
   },
   {
-    icon: '📺',
+    icon: '\u{1F4FA}',
     title: 'Cable TV Systems',
     short: 'Delivering signals without reflections',
     tagline: '75 ohms of entertainment',
@@ -84,9 +84,9 @@ const realWorldApps = [
     connection: 'Unterminated outlets cause reflections that create ghost images. Proper termination absorbs signals at unused ports.',
     howItWorks: 'Coax cable maintains 75-ohm characteristic impedance. Splitters divide power while matching impedance. Amplifiers boost signals to overcome splitting losses.',
     stats: [
-      { value: '75ohm', label: 'Coax impedance', icon: '📊' },
-      { value: '3.5dB', label: '2-way splitter loss', icon: '📉' },
-      { value: '1GHz', label: 'Bandwidth capacity', icon: '📶' }
+      { value: '75ohm', label: 'Coax impedance', icon: '\u{1F4CA}' },
+      { value: '3.5dB', label: '2-way splitter loss', icon: '\u{1F4C9}' },
+      { value: '1GHz', label: 'Bandwidth capacity', icon: '\u{1F4F6}' }
     ],
     examples: ['Cable TV', 'Satellite dishes', 'Security cameras', 'Cable modems'],
     companies: ['Comcast', 'Charter', 'Commscope', 'Belden'],
@@ -94,7 +94,7 @@ const realWorldApps = [
     color: '#10B981'
   },
   {
-    icon: '🔬',
+    icon: '\u{1F52C}',
     title: 'Laboratory Instrumentation',
     short: 'Precision measurements require matching',
     tagline: 'Accuracy starts with termination',
@@ -102,9 +102,9 @@ const realWorldApps = [
     connection: 'A 50-ohm scope input with 50-ohm termination absorbs the entire signal. High-Z inputs cause reflections that distort waveforms.',
     howItWorks: '50-ohm BNC cables connect instruments. Scope inputs can switch between high-Z and 50-ohm modes. Network analyzers measure S-parameters including reflection.',
     stats: [
-      { value: '50ohm', label: 'Lab standard impedance', icon: '📏' },
-      { value: '1Mohm', label: 'High-Z input', icon: '🔋' },
-      { value: '0.1dB', label: 'Measurement accuracy', icon: '🎯' }
+      { value: '50ohm', label: 'Lab standard impedance', icon: '\u{1F4CF}' },
+      { value: '1Mohm', label: 'High-Z input', icon: '\u{1F50B}' },
+      { value: '0.1dB', label: 'Measurement accuracy', icon: '\u{1F3AF}' }
     ],
     examples: ['Oscilloscopes', 'Spectrum analyzers', 'VNAs', 'Signal generators'],
     companies: ['Keysight', 'Tektronix', 'R&S', 'Keithley'],
@@ -121,11 +121,20 @@ const phaseLabels: Record<Phase, string> = {
   play: 'Experiment',
   review: 'Understanding',
   twist_predict: 'New Variable',
-  twist_play: 'Open vs Short',
+  twist_play: 'Twist Explore',
   twist_review: 'Deep Insight',
   transfer: 'Real World',
   test: 'Knowledge Test',
   mastery: 'Mastery'
+};
+
+// Common slider style for cross-browser compatibility
+const sliderStyle: React.CSSProperties = {
+  width: '100%',
+  height: '20px',
+  touchAction: 'pan-y' as const,
+  WebkitAppearance: 'none' as const,
+  accentColor: '#3b82f6',
 };
 
 const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
@@ -307,6 +316,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
   const testQuestions = [
     {
       question: 'What is the reflection coefficient when a 50-ohm line is terminated with a 150-ohm load?',
+      scenario: 'Consider an RF engineer testing a new antenna feed system. The 50-ohm coaxial cable is connected to a 150-ohm antenna element.',
       options: [
         { text: 'Gamma = 0 (no reflection)', correct: false },
         { text: 'Gamma = 0.5 (50% of voltage reflected)', correct: true },
@@ -316,6 +326,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
     },
     {
       question: 'What happens when a transmission line is terminated with an open circuit?',
+      scenario: 'A technician accidentally leaves a coaxial cable disconnected at the far end during a signal integrity test.',
       options: [
         { text: 'All energy is absorbed by the air gap', correct: false },
         { text: 'Total reflection with same polarity (Gamma = +1)', correct: true },
@@ -325,6 +336,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
     },
     {
       question: 'A VSWR of 2:1 corresponds to what percentage of power reflected?',
+      scenario: 'A ham radio operator measures the standing wave ratio on their antenna feedline and reads VSWR = 2:1 on the meter.',
       options: [
         { text: 'About 11% power reflected', correct: true },
         { text: 'About 50% power reflected', correct: false },
@@ -334,6 +346,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
     },
     {
       question: 'Why do high-speed digital signals need impedance matching?',
+      scenario: 'A PCB designer is routing a 10 Gbps SerDes link between two chips on a circuit board with 6-inch traces.',
       options: [
         { text: 'To increase the signal amplitude', correct: false },
         { text: 'To prevent reflections that cause ringing and timing errors', correct: true },
@@ -343,6 +356,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
     },
     {
       question: 'What is the characteristic impedance of a typical USB cable?',
+      scenario: 'An engineer is designing a USB4 host controller and needs to specify the correct PCB trace impedance for the connector interface.',
       options: [
         { text: '50 ohms', correct: false },
         { text: '75 ohms', correct: false },
@@ -352,6 +366,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
     },
     {
       question: 'At what frequency does a 15cm PCB trace start behaving as a transmission line?',
+      scenario: 'A junior engineer is debugging noise on a 15 cm trace carrying a clock signal and wonders if transmission line effects are relevant.',
       options: [
         { text: 'Above 1 MHz', correct: false },
         { text: 'Above 100 MHz', correct: false },
@@ -361,6 +376,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
     },
     {
       question: 'What termination scheme uses a resistor at the far end of a transmission line?',
+      scenario: 'A signal integrity engineer is choosing a termination strategy for a point-to-point DDR5 memory bus with 3-inch traces.',
       options: [
         { text: 'Series termination', correct: false },
         { text: 'Parallel termination', correct: true },
@@ -370,6 +386,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
     },
     {
       question: 'Why does signal ringing occur on unterminated transmission lines?',
+      scenario: 'An oscilloscope shows damped oscillations on a rising edge of a digital signal traveling down an unterminated microstrip trace.',
       options: [
         { text: 'The line acts as an antenna and picks up noise', correct: false },
         { text: 'Reflections bounce back and forth, creating standing waves', correct: true },
@@ -379,6 +396,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
     },
     {
       question: 'What return loss indicates a well-matched transmission line?',
+      scenario: 'A network analyzer displays the S11 parameter of a 50-ohm coaxial connector under test.',
       options: [
         { text: '0 dB (no return loss)', correct: false },
         { text: '3 dB (half power returned)', correct: false },
@@ -388,6 +406,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
     },
     {
       question: 'How does a quarter-wave transformer achieve impedance matching?',
+      scenario: 'An antenna designer needs to match a 100-ohm dipole to a 50-ohm feedline at 2.4 GHz using a quarter-wave section.',
       options: [
         { text: 'It absorbs the reflected energy as heat', correct: false },
         { text: 'It uses a section with Z = sqrt(Z1 x Z2) to transform impedance', correct: true },
@@ -437,7 +456,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
           <div className="navigation-dots" style={{ display: 'flex', gap: isMobile ? '4px' : '6px' }}>
             {phaseOrder.map((p, i) => (
-              <div
+              <button
                 key={p}
                 className="nav-dot"
                 onClick={() => i < currentIdx && goToPhase(p)}
@@ -449,7 +468,9 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
                   cursor: i < currentIdx ? 'pointer' : 'default',
                   transition: 'all 0.3s ease',
                   minWidth: isMobile ? '10px' : '8px',
-                  minHeight: isMobile ? '10px' : '8px'
+                  minHeight: isMobile ? '10px' : '8px',
+                  border: 'none',
+                  padding: 0,
                 }}
                 title={phaseLabels[p]}
                 aria-label={phaseLabels[p]}
@@ -723,6 +744,14 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
               </feMerge>
             </filter>
 
+            <filter id="txlnInteractiveGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
             {/* Grid pattern for oscilloscope */}
             <pattern id="txlnOscGrid" width="20" height="20" patternUnits="userSpaceOnUse">
               <rect width="20" height="20" fill="none" stroke="#0d9488" strokeWidth="0.3" strokeOpacity="0.4" />
@@ -739,42 +768,41 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
           <rect width={width} height={height} fill="url(#txlnLabGrid)" />
 
           {/* Title banner */}
-          <text x={width/2} y={28} fill={colors.textPrimary} fontSize={16} fontWeight="bold" textAnchor="middle" letterSpacing="1">
+          <text x={width/2} y={22} fill={colors.textPrimary} fontSize={16} fontWeight="bold" textAnchor="middle" letterSpacing="1">
             TRANSMISSION LINE ANALYSIS
           </text>
-          <text x={width/2} y={48} fill={colors.textMuted} fontSize={11} textAnchor="middle">
-            Characteristic Impedance: Z0 = {characteristicImpedance} Ohm
+          <text x={width/2} y={42} fill={colors.textMuted} fontSize={12} textAnchor="middle">
+            Z0 = {characteristicImpedance} Ohm
           </text>
 
           {/* === SOURCE EQUIPMENT === */}
-          <g transform="translate(30, 85)">
+          <g transform="translate(30, 60)">
             {/* Main housing */}
-            <rect x="0" y="0" width="100" height="90" rx="8" fill="url(#txlnSourceMetal)" stroke="#475569" strokeWidth="1.5" />
-            <rect x="5" y="5" width="90" height="80" rx="6" fill="#1e293b" opacity="0.4" />
+            <rect x="0" y="0" width="100" height="80" rx="8" fill="url(#txlnSourceMetal)" stroke="#475569" strokeWidth="1.5" />
+            <rect x="5" y="5" width="90" height="70" rx="6" fill="#1e293b" opacity="0.4" />
 
             {/* Display panel */}
-            <rect x="10" y="10" width="80" height="35" rx="4" fill="#030712" stroke="#334155" />
-            <text x="50" y="25" fill="#06b6d4" fontSize="8" textAnchor="middle" fontWeight="bold">SIGNAL GEN</text>
-            <text x="50" y="38" fill="#22d3ee" fontSize="10" textAnchor="middle" fontFamily="monospace">{signalFrequency} MHz</text>
+            <rect x="10" y="8" width="80" height="30" rx="4" fill="#030712" stroke="#334155" />
+            <text x="50" y="22" fill="#06b6d4" fontSize="11" textAnchor="middle" fontWeight="bold">SIGNAL GEN</text>
+            <text x="50" y="50" fill="#22d3ee" fontSize="12" textAnchor="middle" fontFamily="monospace">{signalFrequency} MHz</text>
 
             {/* Power indicator */}
             <circle cx="25" cy="65" r="6" fill="url(#txlnPowerGlow)">
               <animate attributeName="opacity" values="0.6;1;0.6" dur="1.5s" repeatCount="indefinite" />
             </circle>
-            <text x="25" y="80" fill={colors.textSecondary} fontSize="8" textAnchor="middle">PWR</text>
 
             {/* Output connector */}
-            <rect x="75" y="52" width="20" height="24" rx="2" fill="#374151" stroke="#4b5563" />
-            <circle cx="85" cy="64" r="5" fill="#fbbf24" stroke="#f59e0b" strokeWidth="1" />
+            <rect x="75" y="45" width="20" height="24" rx="2" fill="#374151" stroke="#4b5563" />
+            <circle cx="85" cy="57" r="5" fill="#fbbf24" stroke="#f59e0b" strokeWidth="1" />
 
             {/* Label */}
-            <text x="50" y="-8" fill={colors.textSecondary} fontSize="10" textAnchor="middle" fontWeight="bold">
-              RF SOURCE ({characteristicImpedance} Ohm)
+            <text x="50" y="-8" fill={colors.textSecondary} fontSize="12" textAnchor="middle" fontWeight="bold">
+              SOURCE
             </text>
           </g>
 
           {/* === TRANSMISSION LINE STRUCTURE === */}
-          <g transform="translate(145, 100)">
+          <g transform="translate(145, 70)">
             {/* Dielectric substrate base */}
             <rect x="0" y="25" width="360" height="30" rx="3" fill="url(#txlnDielectric)" opacity="0.8" />
 
@@ -786,16 +814,12 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
             <rect x="0" y="20" width="360" height="8" rx="1" fill="url(#txlnConductorTop)" />
             <rect x="0" y="20" width="360" height="2" fill="#fef3c7" opacity="0.4" />
 
-            {/* Conductor spacing indicators */}
-            <line x1="-5" y1="24" x2="-5" y2="56" stroke={colors.textSecondary} strokeWidth="1" strokeDasharray="2,2" />
-            <text x="-15" y="42" fill={colors.textSecondary} fontSize="8" textAnchor="middle" transform="rotate(-90, -15, 42)">Z0</text>
-
-            {/* Distance markers */}
-            {[0, 90, 180, 270, 360].map((pos, i) => (
+            {/* Distance markers along bottom */}
+            {[0, 180, 360].map((pos, i) => (
               <g key={`marker-${i}`}>
                 <line x1={pos} y1="65" x2={pos} y2="70" stroke={colors.textSecondary} strokeWidth="1" />
-                <text x={pos} y="80" fill={colors.textSecondary} fontSize="8" textAnchor="middle">
-                  {(lineLength * (i / 4)).toFixed(1)}m
+                <text x={pos} y="82" fill={colors.textSecondary} fontSize="11" textAnchor="middle">
+                  {(lineLength * (i / 2)).toFixed(2)}m
                 </text>
               </g>
             ))}
@@ -852,31 +876,31 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
             )}
 
             {/* Transmission line label */}
-            <text x="180" y="-5" fill={colors.textSecondary} fontSize="10" textAnchor="middle" fontWeight="bold">
-              COAXIAL TRANSMISSION LINE
+            <text x="180" y="-8" fill={colors.textSecondary} fontSize="12" textAnchor="middle" fontWeight="bold">
+              COAXIAL LINE
             </text>
           </g>
 
           {/* === LOAD EQUIPMENT === */}
-          <g transform="translate(520, 85)">
+          <g transform="translate(520, 60)">
             {/* Main housing */}
-            <rect x="0" y="0" width="100" height="90" rx="8"
+            <rect x="0" y="0" width="100" height="80" rx="8"
               fill={output.isMatched ? "url(#txlnLoadMatched)" : "url(#txlnLoadMismatched)"}
               stroke={output.isMatched ? "#059669" : "#dc2626"} strokeWidth="1.5" />
-            <rect x="5" y="5" width="90" height="80" rx="6" fill="#1e293b" opacity="0.3" />
+            <rect x="5" y="5" width="90" height="70" rx="6" fill="#1e293b" opacity="0.3" />
 
             {/* Display panel */}
-            <rect x="10" y="10" width="80" height="35" rx="4" fill="#030712" stroke="#334155" />
-            <text x="50" y="25" fill={output.isMatched ? "#10b981" : "#ef4444"} fontSize="8" textAnchor="middle" fontWeight="bold">
+            <rect x="10" y="8" width="80" height="30" rx="4" fill="#030712" stroke="#334155" />
+            <text x="50" y="22" fill={output.isMatched ? "#10b981" : "#ef4444"} fontSize="11" textAnchor="middle" fontWeight="bold">
               LOAD
             </text>
-            <text x="50" y="38" fill={output.isMatched ? "#34d399" : "#fca5a5"} fontSize="10" textAnchor="middle" fontFamily="monospace">
+            <text x="50" y="50" fill={output.isMatched ? "#34d399" : "#fca5a5"} fontSize="12" textAnchor="middle" fontFamily="monospace">
               {loadImpedance > 1000 ? 'OPEN' : loadImpedance < 1 ? 'SHORT' : `${loadImpedance} Ohm`}
             </text>
 
             {/* Input connector */}
-            <rect x="5" y="52" width="20" height="24" rx="2" fill="#374151" stroke="#4b5563" />
-            <circle cx="15" cy="64" r="5" fill={output.isMatched ? "#22c55e" : "#ef4444"} stroke={output.isMatched ? "#16a34a" : "#dc2626"} strokeWidth="1" />
+            <rect x="5" y="45" width="20" height="24" rx="2" fill="#374151" stroke="#4b5563" />
+            <circle cx="15" cy="57" r="5" fill={output.isMatched ? "#22c55e" : "#ef4444"} stroke={output.isMatched ? "#16a34a" : "#dc2626"} strokeWidth="1" />
 
             {/* Impedance match indicator with glow */}
             <g filter="url(#txlnMatchIndicatorGlow)">
@@ -884,39 +908,36 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
                 <animate attributeName="opacity" values="0.7;1;0.7" dur="1s" repeatCount="indefinite" />
               </circle>
               <circle cx="75" cy="65" r="8" fill={output.isMatched ? "#22c55e" : "#ef4444"} />
-              <text x="75" y="69" fill="white" fontSize="10" textAnchor="middle" fontWeight="bold">
-                {output.isMatched ? 'OK' : '!'}
-              </text>
             </g>
 
             {/* Label */}
-            <text x="50" y="-8" fill={colors.textSecondary} fontSize="10" textAnchor="middle" fontWeight="bold">
-              {output.isMatched ? 'MATCHED LOAD' : 'MISMATCHED LOAD'}
+            <text x="50" y="-8" fill={colors.textSecondary} fontSize="12" textAnchor="middle" fontWeight="bold">
+              {output.isMatched ? 'MATCHED' : 'MISMATCHED'}
             </text>
           </g>
 
           {/* === OSCILLOSCOPE DISPLAY === */}
-          <g transform="translate(30, 210)">
+          <g transform="translate(30, 180)">
             {/* Oscilloscope housing */}
-            <rect x="0" y="0" width="640" height="170" rx="10" fill="#111827" stroke="#1f2937" strokeWidth="2" />
+            <rect x="0" y="0" width="640" height="200" rx="10" fill="#111827" stroke="#1f2937" strokeWidth="2" />
 
             {/* Screen bezel */}
-            <rect x="10" y="10" width="540" height="130" rx="6" fill="#030712" stroke="#334155" />
+            <rect x="10" y="10" width="540" height="160" rx="6" fill="#030712" stroke="#334155" />
 
             {/* Screen display area */}
-            <rect x="15" y="15" width="530" height="120" rx="4" fill="url(#txlnOscScreen)" />
-            <rect x="15" y="15" width="530" height="120" rx="4" fill="url(#txlnOscGrid)" />
+            <rect x="15" y="15" width="530" height="150" rx="4" fill="url(#txlnOscScreen)" />
+            <rect x="15" y="15" width="530" height="150" rx="4" fill="url(#txlnOscGrid)" />
+
+            {/* Grid reference lines */}
+            <line x1="20" y1="90" x2="540" y2="90" stroke="#0d9488" strokeWidth="1" strokeOpacity="0.3" strokeDasharray="4 4" />
 
             {/* Screen labels */}
-            <text x="25" y="30" fill="#0d9488" fontSize="9" fontWeight="bold">VOLTAGE AT LOAD</text>
-            <text x="520" y="30" fill="#0d9488" fontSize="8" textAnchor="end">
-              {output.isMatched ? 'NO REFLECTIONS' : `VSWR: ${output.vswr.toFixed(1)}:1`}
+            <text x="25" y="32" fill="#0d9488" fontSize="11" fontWeight="bold">VOLTAGE</text>
+            <text x="520" y="32" fill="#0d9488" fontSize="11" textAnchor="end">
+              {output.isMatched ? 'NO REFLECTIONS' : `VSWR ${output.vswr.toFixed(1)}:1`}
             </text>
 
-            {/* Center reference line */}
-            <line x1="20" y1="75" x2="540" y2="75" stroke="#0d9488" strokeWidth="1" strokeOpacity="0.5" strokeDasharray="4,4" />
-
-            {/* Waveform with glow effect */}
+            {/* Waveform with glow effect - uses more vertical space */}
             <g filter="url(#txlnWaveformGlow)">
               <path
                 d={[...Array(260)].map((_, i) => {
@@ -924,7 +945,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
                   const incident = Math.sin(signalPhase - i * 0.08);
                   const reflected = Math.sin(reflectionPhase + i * 0.08) * output.gamma;
                   const combined = incident + reflected;
-                  const y = 75 - combined * 35;
+                  const y = 90 - combined * 55;
                   return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
                 }).join(' ')}
                 fill="none"
@@ -938,7 +959,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
               d={[...Array(260)].map((_, i) => {
                 const x = 20 + i * 2;
                 const incident = Math.sin(signalPhase - i * 0.08);
-                const y = 75 - incident * 25;
+                const y = 90 - incident * 40;
                 return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
               }).join(' ')}
               fill="none"
@@ -948,55 +969,58 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
               strokeDasharray="6,3"
             />
 
+            {/* Interactive current-value marker point */}
+            <circle cx="280" cy="90" r="10" fill="#f59e0b" filter="url(#txlnInteractiveGlow)" opacity="0.9" />
+
             {/* Control panel */}
-            <rect x="560" y="10" width="70" height="130" rx="4" fill="#1e293b" stroke="#334155" />
+            <rect x="560" y="10" width="70" height="160" rx="4" fill="#1e293b" stroke="#334155" />
 
             {/* Metrics display */}
-            <text x="595" y="28" fill={colors.textSecondary} fontSize="8" textAnchor="middle" fontWeight="bold">METRICS</text>
+            <text x="595" y="30" fill={colors.textSecondary} fontSize="11" textAnchor="middle" fontWeight="bold">METRICS</text>
 
-            <text x="565" y="48" fill={colors.textSecondary} fontSize="8">Gamma:</text>
-            <text x="625" y="48" fill="#22d3ee" fontSize="9" textAnchor="end" fontFamily="monospace">
+            <text x="567" y="52" fill={colors.textSecondary} fontSize="11">Gamma</text>
+            <text x="625" y="52" fill="#22d3ee" fontSize="12" textAnchor="end" fontFamily="monospace">
               {output.gamma >= 0 ? '+' : ''}{output.gamma.toFixed(3)}
             </text>
 
-            <text x="565" y="66" fill={colors.textSecondary} fontSize="8">VSWR:</text>
-            <text x="625" y="66" fill="#22d3ee" fontSize="9" textAnchor="end" fontFamily="monospace">
+            <text x="567" y="76" fill={colors.textSecondary} fontSize="11">VSWR</text>
+            <text x="625" y="76" fill="#22d3ee" fontSize="12" textAnchor="end" fontFamily="monospace">
               {output.vswr.toFixed(1)}:1
             </text>
 
-            <text x="565" y="84" fill={colors.textSecondary} fontSize="8">R.Loss:</text>
-            <text x="625" y="84" fill="#22d3ee" fontSize="9" textAnchor="end" fontFamily="monospace">
+            <text x="567" y="100" fill={colors.textSecondary} fontSize="11">R.Loss</text>
+            <text x="625" y="100" fill="#22d3ee" fontSize="12" textAnchor="end" fontFamily="monospace">
               {output.returnLoss.toFixed(1)}dB
             </text>
 
-            <text x="565" y="102" fill={colors.textSecondary} fontSize="8">Pwr Ref:</text>
-            <text x="625" y="102" fill={output.powerReflected > 10 ? "#f87171" : "#22d3ee"} fontSize="9" textAnchor="end" fontFamily="monospace">
+            <text x="567" y="124" fill={colors.textSecondary} fontSize="11">Power</text>
+            <text x="625" y="124" fill={output.powerReflected > 10 ? "#f87171" : "#22d3ee"} fontSize="12" textAnchor="end" fontFamily="monospace">
               {output.powerReflected.toFixed(1)}%
             </text>
 
             {/* Status indicator */}
-            <rect x="565" y="115" width="60" height="20" rx="3"
+            <rect x="565" y="138" width="60" height="22" rx="3"
               fill={output.isMatched ? "rgba(16, 185, 129, 0.2)" : "rgba(239, 68, 68, 0.2)"}
               stroke={output.isMatched ? "#10b981" : "#ef4444"} />
-            <text x="595" y="129" fill={output.isMatched ? "#10b981" : "#ef4444"} fontSize="8" textAnchor="middle" fontWeight="bold">
-              {output.isMatched ? 'MATCHED' : 'MISMATCH'}
+            <text x="595" y="153" fill={output.isMatched ? "#10b981" : "#ef4444"} fontSize="11" textAnchor="middle" fontWeight="bold">
+              {output.isMatched ? 'MATCH' : 'MISMATCH'}
             </text>
 
-            {/* Legend */}
-            <g transform="translate(20, 145)">
-              <line x1="0" y1="0" x2="20" y2="0" stroke="#22d3ee" strokeWidth="2" />
-              <text x="25" y="4" fill={colors.textMuted} fontSize="8">Combined Signal</text>
+            {/* Legend row at bottom */}
+            <g transform="translate(25, 178)">
+              <line x1="0" y1="0" x2="15" y2="0" stroke="#22d3ee" strokeWidth="2" />
+              <text x="20" y="4" fill={colors.textMuted} fontSize="11">Combined</text>
 
-              <line x1="120" y1="0" x2="140" y2="0" stroke="#3b82f6" strokeWidth="1" strokeDasharray="4,2" />
-              <text x="145" y="4" fill={colors.textMuted} fontSize="8">Incident Only</text>
+              <line x1="110" y1="0" x2="125" y2="0" stroke="#3b82f6" strokeWidth="1" strokeDasharray="4,2" />
+              <text x="130" y="4" fill={colors.textMuted} fontSize="11">Incident</text>
 
-              <circle cx="270" cy="0" r="4" fill="url(#txlnSignalGlow)" />
-              <text x="280" y="4" fill={colors.textMuted} fontSize="8">Forward Wave</text>
+              <circle cx="220" cy="0" r="4" fill="url(#txlnSignalGlow)" />
+              <text x="230" y="4" fill={colors.textMuted} fontSize="11">Forward</text>
 
               {!output.isMatched && (
                 <>
-                  <circle cx="380" cy="0" r="4" fill="url(#txlnReflectionGlow)" />
-                  <text x="390" y="4" fill={colors.textMuted} fontSize="8">Reflected Wave</text>
+                  <circle cx="320" cy="0" r="4" fill="url(#txlnReflectionGlow)" />
+                  <text x="330" y="4" fill={colors.textMuted} fontSize="11">Reflected</text>
                 </>
               )}
             </g>
@@ -1062,7 +1086,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
             step="5"
             value={Math.min(loadImpedance, 200)}
             onChange={(e) => setLoadImpedance(parseInt(e.target.value))}
-            style={{ width: '100%' }}
+            style={sliderStyle}
           />
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
             <button onClick={() => setLoadImpedance(0)} style={{ padding: '4px 8px', fontSize: '11px', background: colors.bgCard, border: `1px solid ${colors.textMuted}`, color: colors.textMuted, borderRadius: '4px', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>Short</button>
@@ -1082,7 +1106,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
             step="5"
             value={characteristicImpedance}
             onChange={(e) => setCharacteristicImpedance(parseInt(e.target.value))}
-            style={{ width: '100%' }}
+            style={sliderStyle}
           />
         </div>
 
@@ -1097,7 +1121,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
             step="10"
             value={signalFrequency}
             onChange={(e) => setSignalFrequency(parseInt(e.target.value))}
-            style={{ width: '100%' }}
+            style={sliderStyle}
           />
         </div>
 
@@ -1121,9 +1145,9 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
 
   // Render wrapper with progress bar
   const renderPhaseContent = (content: React.ReactNode, bottomBar: React.ReactNode) => (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '80px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
         {content}
       </div>
       {bottomBar}
@@ -1152,7 +1176,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
             borderRadius: '12px',
             marginBottom: '16px',
           }}>
-            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6, fontWeight: 400 }}>
               At high frequencies, electrical signals behave like waves traveling down a wire.
               When they encounter a change in impedance, part of the signal bounces back -
               just like sound echoing off a wall!
@@ -1165,13 +1189,13 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
             borderRadius: '8px',
             borderLeft: `3px solid ${colors.accent}`,
           }}>
-            <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+            <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 400 }}>
               Try changing the load impedance and watch what happens to the signal!
             </p>
           </div>
         </div>
       </>,
-      renderBottomBar(false, true, 'Make a Prediction')
+      renderBottomBar(false, true, 'Start Exploring')
     );
   }
 
@@ -1189,7 +1213,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
             marginBottom: '16px',
           }}>
             <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Scenario:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5, fontWeight: 400 }}>
               A 50-ohm transmission line is connected to a 150-ohm load.
               What happens to the signal when it reaches the load?
             </p>
@@ -1212,6 +1236,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
                   cursor: 'pointer',
                   textAlign: 'left',
                   fontSize: '14px',
+                  fontWeight: 400,
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -1221,7 +1246,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
           </div>
         </div>
       </>,
-      renderBottomBar(true, !!prediction, 'Test My Prediction')
+      renderBottomBar(true, !!prediction, 'Continue to Experiment')
     );
   }
 
@@ -1231,7 +1256,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
       <>
         <div style={{ padding: '16px', textAlign: 'center' }}>
           <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Transmission Line Behavior</h2>
-          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
             Adjust impedances and observe reflections
           </p>
         </div>
@@ -1243,8 +1268,8 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
           borderRadius: '8px',
           borderLeft: `3px solid ${colors.primary}`,
         }}>
-          <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
-            <strong style={{ color: colors.primary }}>Observe:</strong> Watch how changing load impedance affects signal reflections and VSWR readings.
+          <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
+            <strong style={{ color: colors.primary }}>This is important for real-world engineering:</strong> Impedance matching is essential in every high-speed design, from PCB traces to antenna systems. Understanding reflections helps engineers design reliable communication technology used in industry worldwide.
           </p>
         </div>
 
@@ -1286,9 +1311,10 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
           <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
             {wasCorrect ? 'Correct!' : 'Not Quite!'}
           </h3>
-          <p style={{ color: colors.textPrimary }}>
-            When impedance changes, part of the signal reflects back. This is described by the
-            reflection coefficient Gamma = (Z_L - Z_0) / (Z_L + Z_0).
+          <p style={{ color: colors.textPrimary, fontWeight: 400 }}>
+            As you observed in the experiment, when impedance changes, part of the signal reflects back.
+            Your prediction {wasCorrect ? 'was right' : 'can be updated with what you saw'} - the result shows that the
+            reflection coefficient Gamma = (Z_L - Z_0) / (Z_L + Z_0) governs how much signal bounces back.
           </p>
         </div>
 
@@ -1300,19 +1326,19 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
         }}>
           <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Reflections</h3>
           <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-            <p style={{ marginBottom: '12px' }}>
+            <p style={{ marginBottom: '12px', fontWeight: 400 }}>
               <strong style={{ color: colors.textPrimary }}>Reflection Coefficient (Gamma):</strong> Ranges from
               -1 (short circuit) to +1 (open circuit). Gamma = 0 means perfect match.
             </p>
-            <p style={{ marginBottom: '12px' }}>
+            <p style={{ marginBottom: '12px', fontWeight: 400 }}>
               <strong style={{ color: colors.textPrimary }}>VSWR:</strong> Voltage Standing Wave Ratio measures
               the severity of mismatch. VSWR = 1:1 is perfect; higher ratios mean more reflection.
             </p>
-            <p style={{ marginBottom: '12px' }}>
+            <p style={{ marginBottom: '12px', fontWeight: 400 }}>
               <strong style={{ color: colors.textPrimary }}>Return Loss:</strong> Expressed in dB, measures how
               much power is reflected. 20 dB means only 1% power reflected.
             </p>
-            <p>
+            <p style={{ fontWeight: 400 }}>
               <strong style={{ color: colors.textPrimary }}>Signal Integrity:</strong> Reflections cause ringing,
               overshoot, and timing problems in high-speed digital circuits.
             </p>
@@ -1329,7 +1355,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
       <>
         <div style={{ padding: '16px', textAlign: 'center' }}>
           <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist: Unterminated Lines</h2>
-          <p style={{ color: colors.textSecondary }}>
+          <p style={{ color: colors.textSecondary, fontWeight: 400 }}>
             What happens with open or short circuits?
           </p>
         </div>
@@ -1343,7 +1369,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
           borderRadius: '12px',
         }}>
           <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Challenge:</h3>
-          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5, fontWeight: 400 }}>
             In real circuits, lines are sometimes left unterminated (open) or accidentally shorted.
             Both cases cause 100% reflection, but there is an important difference...
           </p>
@@ -1367,6 +1393,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
                   cursor: 'pointer',
                   textAlign: 'left',
                   fontSize: '14px',
+                  fontWeight: 400,
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -1376,7 +1403,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
           </div>
         </div>
       </>,
-      renderBottomBar(true, !!twistPrediction, 'Test My Prediction')
+      renderBottomBar(true, !!twistPrediction, 'Continue to Experiment')
     );
   }
 
@@ -1386,7 +1413,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
       <>
         <div style={{ padding: '16px', textAlign: 'center' }}>
           <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Open vs Short Circuit</h2>
-          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
             Compare the reflection behavior
           </p>
         </div>
@@ -1398,7 +1425,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
           borderRadius: '8px',
           borderLeft: `3px solid ${colors.primary}`,
         }}>
-          <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
             <strong style={{ color: colors.primary }}>Observe:</strong> Toggle between Open and Short terminations and watch how the reflection phase changes.
           </p>
         </div>
@@ -1414,7 +1441,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
           borderLeft: `3px solid ${colors.warning}`,
         }}>
           <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
-          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
             Open circuit: Gamma = +1 (voltage doubles at the end)<br/>
             Short circuit: Gamma = -1 (voltage inverts, current doubles)<br/>
             Both cause total reflection but with opposite phase!
@@ -1441,7 +1468,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
           <h3 style={{ color: colors.warning, marginBottom: '8px' }}>
             The Surprising Truth!
           </h3>
-          <p style={{ color: colors.textPrimary }}>
+          <p style={{ color: colors.textPrimary, fontWeight: 400 }}>
             Open and short circuits both reflect 100% of the signal power, but with opposite phase.
             Open: Gamma = +1 (voltage doubles). Short: Gamma = -1 (voltage cancels, current doubles).
             {wasCorrect ? ' You correctly identified they are similar in magnitude!' : ''}
@@ -1456,22 +1483,22 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
         }}>
           <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Why Ringing Occurs</h3>
           <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-            <p style={{ marginBottom: '12px' }}>
+            <p style={{ marginBottom: '12px', fontWeight: 400 }}>
               <strong style={{ color: colors.textPrimary }}>Multiple Reflections:</strong> The reflected wave
               travels back to the source, where it may reflect again if the source is not matched.
             </p>
-            <p style={{ marginBottom: '12px' }}>
+            <p style={{ marginBottom: '12px', fontWeight: 400 }}>
               <strong style={{ color: colors.textPrimary }}>Ringing:</strong> These back-and-forth reflections
               create oscillations (ringing) that can take several round-trips to settle.
             </p>
-            <p>
+            <p style={{ fontWeight: 400 }}>
               <strong style={{ color: colors.textPrimary }}>Signal Integrity:</strong> In high-speed digital
               circuits, ringing can cause false triggers, violate timing margins, and corrupt data.
             </p>
           </div>
         </div>
       </>,
-      renderBottomBar(true, true, 'Apply This Knowledge')
+      renderBottomBar(true, true, 'Continue to Applications')
     );
   }
 
@@ -1486,6 +1513,44 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
           Complete all 4 applications to unlock the test
         </p>
 
+        {/* Stats summary from real-world applications */}
+        <div style={{
+          background: colors.bgCard,
+          padding: '16px',
+          borderRadius: '12px',
+          marginBottom: '16px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '12px',
+          justifyContent: 'center',
+        }}>
+          <div style={{ textAlign: 'center', minWidth: '80px' }}>
+            <div style={{ color: colors.accent, fontSize: '18px', fontWeight: 700 }}>50 ohm</div>
+            <div style={{ color: colors.textSecondary, fontSize: '11px', fontWeight: 400 }}>RF Standard</div>
+          </div>
+          <div style={{ textAlign: 'center', minWidth: '80px' }}>
+            <div style={{ color: colors.accent, fontSize: '18px', fontWeight: 700 }}>75 ohm</div>
+            <div style={{ color: colors.textSecondary, fontSize: '11px', fontWeight: 400 }}>Video/Cable</div>
+          </div>
+          <div style={{ textAlign: 'center', minWidth: '80px' }}>
+            <div style={{ color: colors.accent, fontSize: '18px', fontWeight: 700 }}>10 Gbps</div>
+            <div style={{ color: colors.textSecondary, fontSize: '11px', fontWeight: 400 }}>PCIe 5.0 Rate</div>
+          </div>
+          <div style={{ textAlign: 'center', minWidth: '80px' }}>
+            <div style={{ color: colors.accent, fontSize: '18px', fontWeight: 700 }}>100 ohm</div>
+            <div style={{ color: colors.textSecondary, fontSize: '11px', fontWeight: 400 }}>Diff. Pairs</div>
+          </div>
+          <div style={{ textAlign: 'center', minWidth: '80px' }}>
+            <div style={{ color: colors.accent, fontSize: '18px', fontWeight: 700 }}>1 GHz</div>
+            <div style={{ color: colors.textSecondary, fontSize: '11px', fontWeight: 400 }}>Cable BW</div>
+          </div>
+        </div>
+
+        {/* Company mention */}
+        <p style={{ color: colors.textSecondary, fontSize: '13px', textAlign: 'center', marginBottom: '16px', fontWeight: 400 }}>
+          Used by Intel, Qualcomm, Keysight, Tektronix, Rohde & Schwarz, CommScope, and Belden across the industry.
+        </p>
+
         {transferApplications.map((app, index) => (
           <div
             key={index}
@@ -1498,10 +1563,10 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-              {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
+              <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>App {index + 1} of {transferApplications.length}: {app.title}</h3>
+              {transferCompleted.has(index) && <span style={{ color: colors.success }}>{'\u2705'} Done</span>}
             </div>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px', fontWeight: 400 }}>{app.description}</p>
             <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
               <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
             </div>
@@ -1510,26 +1575,25 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
                 onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
                 style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px', minHeight: '44px', WebkitTapHighlightColor: 'transparent' }}
               >
-                Reveal Answer
+                Got It - Reveal Answer
               </button>
             ) : (
-              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
-                <p style={{ color: colors.textPrimary, fontSize: '13px', margin: 0 }}>{app.answer}</p>
-              </div>
-            )}
-            {transferCompleted.has(index) && (
-              <button
-                onClick={() => {
-                  // Find next incomplete or just mark as complete
-                  const nextIncomplete = transferApplications.findIndex((_, i) => !transferCompleted.has(i) && i > index);
-                  if (nextIncomplete >= 0) {
-                    // Scroll to next incomplete
-                  }
-                }}
-                style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', background: colors.success, color: 'white', cursor: 'pointer', fontSize: '13px', minHeight: '44px', fontWeight: 600, WebkitTapHighlightColor: 'transparent' }}
-              >
-                {index < transferApplications.length - 1 ? 'Got It - Next Application' : 'Got It'}
-              </button>
+              <>
+                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
+                  <p style={{ color: colors.textPrimary, fontSize: '13px', margin: 0, fontWeight: 400 }}>{app.answer}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    const nextIncomplete = transferApplications.findIndex((_, i) => !transferCompleted.has(i) && i > index);
+                    if (nextIncomplete >= 0) {
+                      // Scroll to next incomplete
+                    }
+                  }}
+                  style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', background: colors.success, color: 'white', cursor: 'pointer', fontSize: '13px', minHeight: '44px', fontWeight: 600, WebkitTapHighlightColor: 'transparent' }}
+                >
+                  {index < transferApplications.length - 1 ? 'Continue to Next App' : 'Got It'}
+                </button>
+              </>
             )}
           </div>
         ))}
@@ -1554,7 +1618,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
               {testScore >= 7 ? 'Excellent!' : 'Keep Learning!'}
             </h2>
             <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
-            <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
+            <p style={{ color: colors.textSecondary, marginTop: '8px', fontWeight: 400 }}>
               {testScore >= 7 ? 'You understand transmission line reflections!' : 'Review the material and try again.'}
             </p>
           </div>
@@ -1565,7 +1629,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
               <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
                 <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
                 {q.options.map((opt, oIndex) => (
-                  <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
+                  <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary, fontWeight: 400 }}>
                     {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
                   </div>
                 ))}
@@ -1573,7 +1637,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
             );
           })}
         </>,
-        renderBottomBar(true, testScore >= 7, testScore >= 7 ? 'Complete Mastery' : 'Review & Retry', () => {
+        renderBottomBar(true, testScore >= 7, testScore >= 7 ? 'Continue to Mastery' : 'Review & Retry', () => {
           if (testScore >= 7) {
             goNext();
           } else {
@@ -1597,12 +1661,16 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
             <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
           ))}
         </div>
+        {/* Scenario context */}
+        <div style={{ background: 'rgba(6, 182, 212, 0.1)', padding: '12px 16px', borderRadius: '8px', marginBottom: '12px', borderLeft: `3px solid ${colors.primary}` }}>
+          <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0, fontStyle: 'italic', fontWeight: 400 }}>{currentQ.scenario}</p>
+        </div>
         <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-          <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
+          <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5, fontWeight: 500 }}>{currentQ.question}</p>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {currentQ.options.map((opt, oIndex) => (
-            <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px', WebkitTapHighlightColor: 'transparent' }}>
+            <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px', fontWeight: 400, WebkitTapHighlightColor: 'transparent' }}>
               {opt.text}
             </button>
           ))}
@@ -1625,13 +1693,13 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
     return renderPhaseContent(
       <>
         <div style={{ padding: '24px', textAlign: 'center' }}>
-          <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+          <div style={{ fontSize: '64px', marginBottom: '16px' }}>{'\u{1F3C6}'}</div>
           <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-          <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You have mastered transmission line reflections!</p>
+          <p style={{ color: colors.textSecondary, marginBottom: '24px', fontWeight: 400 }}>You have mastered transmission line reflections!</p>
         </div>
         <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
           <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
-          <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+          <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0, fontWeight: 400 }}>
             <li>Reflection coefficient Gamma = (Z_L - Z_0) / (Z_L + Z_0)</li>
             <li>VSWR and return loss as mismatch metrics</li>
             <li>Open circuit (Gamma=+1) vs short circuit (Gamma=-1)</li>
@@ -1641,7 +1709,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
         </div>
         <div style={{ background: 'rgba(245, 158, 11, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
           <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Real-World Impact:</h3>
-          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, fontWeight: 400 }}>
             Understanding transmission line reflections is essential for designing high-speed digital
             circuits, RF systems, and any application where signal integrity matters. From USB cables
             to 5G antennas, proper impedance matching ensures reliable communication!

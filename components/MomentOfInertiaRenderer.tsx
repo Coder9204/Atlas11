@@ -492,14 +492,42 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
 
   // Skater SVG Component
   const SkaterVisualization = ({ size = 200 }: { size?: number }) => {
-    const centerX = size / 2;
+    // Use a wider viewBox to meet minimum 300x200 SVG requirements
+    const svgWidth = Math.max(size + 200, 420);
+    const svgHeight = Math.max(size + 40, 300);
+    const skaterCenterX = 160;
     const centerY = size / 2 + 20;
     const armLength = 25 + armExtension * 40;
     const armAngle = 70 - armExtension * 60;
     const intensity = Math.min(1, currentOmega / 10);
 
+    // Chart area: I vs omega relationship
+    const chartLeft = 260;
+    const chartTop = 30;
+    const chartW = 140;
+    const chartH = 200;
+
+    // Generate I vs omega curve: as I goes from 1 to 3, omega = L/I
+    const chartPoints: string[] = [];
+    for (let i = 0; i <= 20; i++) {
+      const t = i / 20;
+      const Ival = 1 + 2 * t; // I from 1 to 3
+      const omegaVal = initialL / Ival;
+      const maxOmega = initialL / 1; // max omega when I=1
+      const x = chartLeft + t * chartW;
+      const y = chartTop + chartH - (omegaVal / maxOmega) * chartH;
+      chartPoints.push(`${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`);
+    }
+
+    // Current point on chart
+    const currentT = armExtension;
+    const currentChartX = chartLeft + currentT * chartW;
+    const maxOmega = initialL / 1;
+    const currentChartY = chartTop + chartH - (currentOmega / maxOmega) * chartH;
+
     return (
-      <svg width={size} height={size + 40} viewBox={`0 0 ${size} ${size + 40}`} style={{ overflow: 'visible' }}>
+      <svg width={svgWidth} height={svgHeight} viewBox={`0 0 ${svgWidth} ${svgHeight}`} style={{ overflow: 'visible' }}>
+        <title>Moment of Inertia - Angular Momentum Conservation Simulation</title>
         <defs>
           <linearGradient id="iceGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#a5f3fc" stopOpacity="0.2" />
@@ -521,13 +549,20 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+          <filter id="pointGlow">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
 
         {/* Ice surface */}
-        <ellipse cx={centerX} cy={size + 20} rx={80} ry={15} fill="url(#iceGrad)" />
+        <ellipse cx={skaterCenterX} cy={size + 20} rx={80} ry={15} fill="url(#iceGrad)" />
 
         {/* Rotation trail */}
-        <g transform={`translate(${centerX}, ${centerY})`}>
+        <g transform={`translate(${skaterCenterX}, ${centerY})`}>
           <ellipse
             cx="0" cy="60"
             rx="50" ry="12"
@@ -541,20 +576,20 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
         </g>
 
         {/* Skater body */}
-        <g transform={`translate(${centerX}, ${centerY}) rotate(${rotation * 0.5})`}>
+        <g transform={`translate(${skaterCenterX}, ${centerY}) rotate(${rotation * 0.5})`}>
           {/* Head */}
           <circle cx="0" cy="-55" r="15" fill="url(#skinGrad)" stroke="#d4a574" strokeWidth="1.5" />
           <ellipse cx="-5" cy="-58" rx="2" ry="2" fill="#2d3748" />
           <ellipse cx="5" cy="-58" rx="2" ry="2" fill="#2d3748" />
 
           {/* Hair */}
-          <path d="M-12,-62 Q-15,-75 0,-72 Q15,-75 12,-62" fill="#8B4513" />
+          <path d="M-12,-62 Q0,-75 12,-62" fill="#8B4513" />
 
           {/* Torso */}
-          <path d="M-15,-40 L-12,-10 L12,-10 L15,-40 Z" fill="url(#dressGrad)" />
+          <rect x="-15" y="-40" width="30" height="30" rx="3" fill="url(#dressGrad)" />
 
           {/* Skirt */}
-          <path d="M-15,-10 Q-25,10 -30,40 L30,40 Q25,10 15,-10 Z" fill="url(#dressGrad)" />
+          <polygon points="-15,-10 -30,40 30,40 15,-10" fill="url(#dressGrad)" />
 
           {/* Arms */}
           <g transform={`rotate(${-armAngle})`}>
@@ -577,10 +612,37 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
           <rect x="-2" y="73" width="16" height="2" rx="1" fill="#a0a0a0" />
         </g>
 
+        {/* Chart: I vs omega relationship */}
+        <text x={chartLeft + chartW / 2} y={chartTop - 10} textAnchor="middle" fill="#e2e8f0" fontSize="13" fontWeight="700">I = m × r² Relationship</text>
+
+        {/* Grid lines */}
+        <line x1={chartLeft} y1={chartTop} x2={chartLeft + chartW} y2={chartTop} stroke="#4a5568" strokeDasharray="4 4" opacity="0.3" />
+        <line x1={chartLeft} y1={chartTop + chartH / 2} x2={chartLeft + chartW} y2={chartTop + chartH / 2} stroke="#4a5568" strokeDasharray="4 4" opacity="0.3" />
+        <line x1={chartLeft} y1={chartTop + chartH} x2={chartLeft + chartW} y2={chartTop + chartH} stroke="#4a5568" strokeDasharray="4 4" opacity="0.3" />
+        <line x1={chartLeft} y1={chartTop + chartH / 4} x2={chartLeft + chartW} y2={chartTop + chartH / 4} stroke="#4a5568" strokeDasharray="4 4" opacity="0.3" />
+        <line x1={chartLeft} y1={chartTop + 3 * chartH / 4} x2={chartLeft + chartW} y2={chartTop + 3 * chartH / 4} stroke="#4a5568" strokeDasharray="4 4" opacity="0.3" />
+
+        {/* Chart axes */}
+        <line x1={chartLeft} y1={chartTop} x2={chartLeft} y2={chartTop + chartH} stroke="#94a3b8" strokeWidth="1.5" />
+        <line x1={chartLeft} y1={chartTop + chartH} x2={chartLeft + chartW} y2={chartTop + chartH} stroke="#94a3b8" strokeWidth="1.5" />
+
+        {/* Axis labels */}
+        <text x={chartLeft + chartW / 2} y={chartTop + chartH + 20} textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">Moment of Inertia (I)</text>
+        <text x={chartLeft - 12} y={chartTop + chartH / 2} textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600" transform={`rotate(-90, ${chartLeft - 12}, ${chartTop + chartH / 2})`}>Angular Velocity</text>
+
+        {/* Curve path */}
+        <path d={chartPoints.join(' ')} fill="none" stroke="#EC4899" strokeWidth="2.5" />
+
+        {/* Interactive point */}
+        <circle cx={currentChartX} cy={currentChartY} r="8" fill="#EC4899" stroke="#ffffff" strokeWidth="2" filter="url(#pointGlow)" />
+
         {/* Educational labels */}
-        <text x={centerX} y="15" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">Angular Momentum Conservation</text>
-        <text x={centerX} y={size + 35} textAnchor="middle" fill="#64748b" fontSize="10">Rotation Axis</text>
-        <text x={centerX + 70} y={centerY - 30} textAnchor="start" fill="#EC4899" fontSize="9">Arm Extension</text>
+        <text x={skaterCenterX} y="15" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">Angular Momentum Conservation</text>
+        <text x={skaterCenterX} y={size + 35} textAnchor="middle" fill="#94a3b8" fontSize="11">Rotation Axis</text>
+        <text x={skaterCenterX + 70} y={centerY - 30} textAnchor="start" fill="#EC4899" fontSize="11">Arm Extension</text>
+
+        {/* Formula label */}
+        <text x={chartLeft + chartW / 2} y={chartTop + chartH + 36} textAnchor="middle" fill="#EC4899" fontSize="11" fontWeight="600">L = I × ω (constant)</text>
       </svg>
     );
   };
@@ -933,12 +995,15 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
                 step="0.05"
                 value={armExtension}
                 onChange={(e) => setArmExtension(parseFloat(e.target.value))}
+                onInput={(e) => setArmExtension(parseFloat((e.target as HTMLInputElement).value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
-                  accentColor: colors.accent,
+                  accentColor: '#3b82f6',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none' as const,
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -959,12 +1024,15 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
                 max="25"
                 value={initialL}
                 onChange={(e) => setInitialL(parseInt(e.target.value))}
+                onInput={(e) => setInitialL(parseInt((e.target as HTMLInputElement).value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
-                  accentColor: colors.success,
+                  accentColor: '#3b82f6',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none' as const,
                 }}
               />
               <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
@@ -2024,8 +2092,8 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
   }; // end renderPhaseContent
 
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, overflowY: 'auto' }}>
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary, overflow: 'hidden' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px' }}>
         {renderPhaseContent()}
       </div>
       {renderBottomBar()}

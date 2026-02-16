@@ -632,12 +632,12 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
         )}
 
         {/* Info panel */}
-        <rect x={vbWidth - 100} y={10} width={90} height={60} rx={8} fill={colors.bgSecondary} stroke={colors.border} />
-        <text x={vbWidth - 55} y={30} textAnchor="middle" fill={colors.textSecondary} fontSize="11">Acceleration</text>
+        <rect x={vbWidth - 100} y={10} width={90} height={72} rx={8} fill={colors.bgSecondary} stroke={colors.border} />
+        <text x={vbWidth - 55} y={28} textAnchor="middle" fill={colors.textSecondary} fontSize="11">Acceleration</text>
         <text x={vbWidth - 55} y={50} textAnchor="middle" fill={colors.success} fontSize="18" fontWeight="bold">
           {netAcceleration.toFixed(2)}
         </text>
-        <text x={vbWidth - 55} y={62} textAnchor="middle" fill={colors.textMuted} fontSize="11">m/s^2</text>
+        <text x={vbWidth - 55} y={72} textAnchor="middle" fill={colors.textMuted} fontSize="11">m/s^2</text>
 
         {/* Legend */}
         <g transform={`translate(10, ${vbHeight - 90})`}>
@@ -701,9 +701,9 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
       const a = gVal * Math.sin(rad);
       const x = padL + (deg / 90) * plotW;
       const y = padT + plotH - (a / gVal) * plotH;
-      dangerAreaPoints.push(`${x},${y}`);
+      dangerAreaPoints.push(`${x} ${y}`);
     }
-    const dangerAreaD = `M${dangerX},${padT + plotH} L${dangerAreaPoints.map(pt => pt).join(' L')} L${padL + plotW},${padT + plotH} Z`;
+    const dangerAreaD = `M${dangerX} ${padT + plotH} L${dangerAreaPoints.map(pt => pt).join(' L')} L${padL + plotW} ${padT + plotH} Z`;
 
     // Safe zone area path under curve from 0 to 45 degrees
     const safeAreaPoints: string[] = [];
@@ -712,9 +712,9 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
       const a = gVal * Math.sin(rad);
       const x = padL + (deg / 90) * plotW;
       const y = padT + plotH - (a / gVal) * plotH;
-      safeAreaPoints.push(`${x},${y}`);
+      safeAreaPoints.push(`${x} ${y}`);
     }
-    const safeAreaD = `M${padL},${padT + plotH} L${safeAreaPoints.map(pt => pt).join(' L')} L${dangerX},${padT + plotH} Z`;
+    const safeAreaD = `M${padL} ${padT + plotH} L${safeAreaPoints.map(pt => pt).join(' L')} L${dangerX} ${padT + plotH} Z`;
 
     return (
       <svg viewBox={`0 0 ${graphW} ${graphH}`} width="100%" style={{ background: colors.bgCard, borderRadius: '12px' }}>

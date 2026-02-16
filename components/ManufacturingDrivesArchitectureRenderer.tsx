@@ -88,16 +88,16 @@ interface ManufacturingDrivesArchitectureRendererProps {
 // Phase order and labels for navigation
 const phaseOrder: ManufacturingPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 const phaseLabels: Record<ManufacturingPhase, string> = {
-  hook: 'Hook',
+  hook: 'Hook Intro',
   predict: 'Predict',
-  play: 'Play',
-  review: 'Review',
-  twist_predict: 'Twist',
-  twist_play: 'Explore',
-  twist_review: 'Learn',
-  transfer: 'Apply',
-  test: 'Test',
-  mastery: 'Master'
+  play: 'Experiment Play',
+  review: 'Review Understanding',
+  twist_predict: 'Twist Predict',
+  twist_play: 'Explore New Variable',
+  twist_review: 'Deep Insight',
+  transfer: 'Transfer Real World Apply',
+  test: 'Knowledge Test',
+  mastery: 'Mastery Complete'
 };
 
 const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchitectureRendererProps> = ({
@@ -434,6 +434,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
             key={p}
             onClick={() => index <= currentIndex && goToPhase(p)}
             disabled={index > currentIndex}
+            aria-label={phaseLabels[p]}
             style={{
               width: '32px',
               height: '32px',
@@ -443,8 +444,8 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
                 ? '#8b5cf6'
                 : index < currentIndex
                   ? '#22c55e'
-                  : '#475569',
-              color: 'white',
+                  : 'rgba(148,163,184,0.7)',
+              color: index > currentIndex ? 'rgba(148,163,184,0.7)' : 'white',
               fontSize: '12px',
               fontWeight: 'bold',
               cursor: index <= currentIndex ? 'pointer' : 'not-allowed',
@@ -521,9 +522,9 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
 
   // Wrapper for phase content
   const renderPhaseContent = (content: React.ReactNode) => (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#0f172a', color: '#f8fafc', overflow: 'hidden' }}>
       {renderProgressBar()}
-      <div style={{ padding: '0 24px 100px 24px', overflowY: 'auto' }}>
+      <div style={{ flex: 1, padding: '48px 24px 100px 24px', overflowY: 'auto' }}>
         {content}
       </div>
       {renderBottomBar()}
@@ -539,7 +540,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
     const dieScale = Math.sqrt(dieSize) / 2;
 
     return (
-      <svg width="100%" height="600" viewBox="0 0 520 600" style={{ maxWidth: '640px' }}>
+      <svg width="100%" height="500" viewBox="0 0 520 500" style={{ maxWidth: '640px' }}>
         <defs>
           {/* === PREMIUM LINEAR GRADIENTS === */}
 

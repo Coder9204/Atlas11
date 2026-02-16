@@ -565,44 +565,56 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
         <rect width={svgW} height={svgH} fill="#1a1a24" rx="8" />
 
         {/* Grid lines */}
-        {gridLines.map((y, i) => (
-          <line key={`h${i}`} x1={pad.left} y1={y} x2={svgW - pad.right} y2={y} stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
-        ))}
-        {wlTicks.map((wl, i) => (
-          <line key={`v${i}`} x1={toX(wl)} y1={pad.top} x2={toX(wl)} y2={pad.top + plotH} stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
-        ))}
+        <g className="grid-lines">
+          {gridLines.map((y, i) => (
+            <line key={`h${i}`} x1={pad.left} y1={y} x2={svgW - pad.right} y2={y} stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+          ))}
+          {wlTicks.map((wl, i) => (
+            <line key={`v${i}`} x1={toX(wl)} y1={pad.top} x2={toX(wl)} y2={pad.top + plotH} stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+          ))}
+        </g>
 
-        {/* Y axis */}
-        <line x1={pad.left} y1={pad.top} x2={pad.left} y2={pad.top + plotH} stroke="#64748b" strokeWidth="1.5" />
-        {/* X axis */}
-        <line x1={pad.left} y1={pad.top + plotH} x2={svgW - pad.right} y2={pad.top + plotH} stroke="#64748b" strokeWidth="1.5" />
+        {/* Axes */}
+        <g className="axes">
+          {/* Y axis */}
+          <line x1={pad.left} y1={pad.top} x2={pad.left} y2={pad.top + plotH} stroke="#64748b" strokeWidth="1.5" />
+          {/* X axis */}
+          <line x1={pad.left} y1={pad.top + plotH} x2={svgW - pad.right} y2={pad.top + plotH} stroke="#64748b" strokeWidth="1.5" />
+        </g>
 
         {/* Axis labels */}
-        <text x={pad.left - 8} y={pad.top + plotH / 2} textAnchor="middle" fill={colors.textSecondary} fontSize="12" transform={`rotate(-90, ${pad.left - 8}, ${pad.top + plotH / 2})`}>Intensity (a.u.)</text>
-        <text x={pad.left + plotW / 2} y={svgH - 8} textAnchor="middle" fill={colors.textSecondary} fontSize="12">Wavelength (nm)</text>
+        <g className="axis-labels">
+          <text x={12} y={pad.top + plotH / 2} textAnchor="end" fill={colors.textSecondary} fontSize="12" transform={`rotate(-90, ${12}, ${pad.top + plotH / 2})`}>Intensity (a.u.)</text>
+          <text x={pad.left + plotW / 2} y={svgH - 8} textAnchor="middle" fill={colors.textSecondary} fontSize="12">Wavelength (nm)</text>
 
-        {/* Tick labels on X axis */}
-        {wlTicks.map((wl, i) => (
-          <text key={`xt${i}`} x={toX(wl)} y={pad.top + plotH + 18} textAnchor="middle" fill={colors.textMuted} fontSize="11">{wl}</text>
-        ))}
+          {/* Tick labels on X axis */}
+          {wlTicks.map((wl, i) => (
+            <text key={`xt${i}`} x={toX(wl)} y={pad.top + plotH + 18} textAnchor="middle" fill={colors.textMuted} fontSize="11">{wl}</text>
+          ))}
 
-        {/* Y axis tick labels */}
-        {[0, 0.25, 0.5, 0.75, 1.0].map((v, i) => (
-          <text key={`yt${i}`} x={pad.left - 12} y={toY(v) + 4} textAnchor="end" fill={colors.textMuted} fontSize="11">{v.toFixed(1)}</text>
-        ))}
+          {/* Y axis tick labels */}
+          {[0, 0.25, 0.5, 0.75, 1.0].map((v, i) => (
+            <text key={`yt${i}`} x={pad.left - 12} y={toY(v) + 4} textAnchor="end" fill={colors.textMuted} fontSize="11">{v.toFixed(1)}</text>
+          ))}
+        </g>
 
-        {/* Excitation curve (UV absorption) */}
-        <path d={excitationPoints.join(' ')} fill="none" stroke="#8b5cf6" strokeWidth="2.5" />
+        {/* Curves */}
+        <g className="curves">
+          {/* Excitation curve (UV absorption) */}
+          <path d={excitationPoints.join(' ')} fill="none" stroke="#8b5cf6" strokeWidth="2.5" />
 
-        {/* Emission curve (visible fluorescence) - area fill */}
-        <path d={emissionPoints.join(' ') + ` L ${toX(wlMax).toFixed(1)} ${toY(0).toFixed(1)} L ${toX(wlMin).toFixed(1)} ${toY(0).toFixed(1)} Z`} fill="url(#emissionFill)" />
-        {/* Emission curve stroke */}
-        <path d={emissionPoints.join(' ')} fill="none" stroke="#22c55e" strokeWidth="2.5" />
+          {/* Emission curve (visible fluorescence) - area fill */}
+          <path d={emissionPoints.join(' ') + ` L ${toX(wlMax).toFixed(1)} ${toY(0).toFixed(1)} L ${toX(wlMin).toFixed(1)} ${toY(0).toFixed(1)} Z`} fill="url(#emissionFill)" />
+          {/* Emission curve stroke */}
+          <path d={emissionPoints.join(' ')} fill="none" stroke="#22c55e" strokeWidth="2.5" />
+        </g>
 
-        {/* Stokes shift arrow */}
-        <line x1={stokesX1} y1={toY(0.4)} x2={stokesX2} y2={toY(0.4)} stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="6 3" />
-        <text x={(stokesX1 + stokesX2) / 2} y={toY(0.4) - 8} textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="600">Stokes Shift</text>
-        <text x={(stokesX1 + stokesX2) / 2} y={toY(0.4) + 16} textAnchor="middle" fill="#f59e0b" fontSize="11">{emissionPeak - excitationPeak} nm</text>
+        {/* Stokes shift annotation */}
+        <g className="stokes-shift">
+          <line x1={stokesX1} y1={toY(0.4)} x2={stokesX2} y2={toY(0.4)} stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="6 3" />
+          <text x={(stokesX1 + stokesX2) / 2} y={toY(0.4) - 8} textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="600">Stokes Shift</text>
+          <text x={(stokesX1 + stokesX2) / 2} y={toY(0.4) + 16} textAnchor="middle" fill="#f59e0b" fontSize="11">{emissionPeak - excitationPeak} nm</text>
+        </g>
 
         {/* Peak labels */}
         <text x={stokesX1} y={pad.top + 16} textAnchor="middle" fill="#a78bfa" fontSize="12" fontWeight="600">UV Excitation</text>

@@ -270,7 +270,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
 
   // Simulation state - Venturi tube
   const [flowRate, setFlowRate] = useState(50); // percentage
-  const [constrictionSize, setConstrictionSize] = useState(50); // percentage of original
+  const [constrictionSize, setConstrictionSize] = useState(30); // percentage of original
   const [showPressure, setShowPressure] = useState(true);
   const [showVelocity, setShowVelocity] = useState(true);
   const [isFlowing, setIsFlowing] = useState(true);
@@ -518,10 +518,10 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
   // Venturi Tube Visualization
   const VenturiVisualization = () => {
     const width = isMobile ? 340 : 480;
-    const height = isMobile ? 320 : 400;
+    const height = isMobile ? 360 : 440;
     const constrict = (50 - constrictionSize) * 1.2;
-    const tubeTop = 60;
-    const tubeBot = 220;
+    const tubeTop = 80;
+    const tubeBot = 260;
     const mid = (tubeTop + tubeBot) / 2;
 
     return (
@@ -547,15 +547,12 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
         </defs>
 
         {/* Title */}
-        <text x={width/2} y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="700">
-          Venturi Tube - Continuity + Bernoulli
+        <text x={width/2} y="18" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="700">
+          Venturi Tube
         </text>
 
-        {/* Axis labels */}
-        <text x={width/2} y="38" textAnchor="middle" fill={colors.textSecondary} fontSize="10">
-          Position along tube
-        </text>
-        <text x="12" y={mid} textAnchor="middle" fill={colors.textSecondary} fontSize="10" transform={`rotate(-90, 12, ${mid})`}>
+        {/* Axis label - rotated so it doesn't overlap */}
+        <text x="12" y={mid} textAnchor="middle" fill={colors.textSecondary} fontSize="11" transform={`rotate(-90, 12, ${mid})`}>
           Pressure (kPa)
         </text>
 
@@ -624,54 +621,54 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
             {/* Left pressure gauge */}
             <rect x="50" y={tubeTop - 35} width="16" height="30" rx="3" fill="#1a2a3a" stroke={colors.pressure} strokeWidth="1" />
             <rect x="53" y={tubeTop - 8 - widePressure * 0.2} width="10" height={widePressure * 0.2} fill="#ef4444" rx="2" />
-            <text x="58" y={tubeTop - 40} fontSize="9" fill="#f87171" textAnchor="middle" fontWeight="bold">P1</text>
+            <text x="58" y={tubeTop - 40} fontSize="11" fill="#f87171" textAnchor="middle" fontWeight="bold">P1</text>
 
             {/* Middle pressure gauge */}
             <rect x={width/2 - 8} y={tubeTop - 40} width="16" height="35" rx="3" fill="#1a2a3a" stroke={colors.pressure} strokeWidth="1" />
             <rect x={width/2 - 5} y={tubeTop - 8 - Math.max(narrowPressure, 10) * 0.25} width="10" height={Math.max(narrowPressure, 10) * 0.25} fill="#3b82f6" rx="2" />
-            <text x={width/2} y={tubeTop - 45} fontSize="9" fill="#60a5fa" textAnchor="middle" fontWeight="bold">P2</text>
+            <text x={width/2} y={tubeTop - 45} fontSize="11" fill="#60a5fa" textAnchor="middle" fontWeight="bold">P2</text>
 
             {/* Right pressure gauge */}
             <rect x={width - 66} y={tubeTop - 35} width="16" height="30" rx="3" fill="#1a2a3a" stroke={colors.pressure} strokeWidth="1" />
             <rect x={width - 63} y={tubeTop - 8 - widePressure * 0.2} width="10" height={widePressure * 0.2} fill="#ef4444" rx="2" />
-            <text x={width - 58} y={tubeTop - 40} fontSize="9" fill="#f87171" textAnchor="middle" fontWeight="bold">P3</text>
+            <text x={width - 58} y={tubeTop - 40} fontSize="11" fill="#f87171" textAnchor="middle" fontWeight="bold">P3</text>
           </g>
         )}
 
         {/* Velocity arrows */}
         {showVelocity && (
           <g>
-            <line x1="35" y1={tubeBot + 40} x2={35 + wideVelocity * 12} y2={tubeBot + 40} stroke="#22c55e" strokeWidth="4" strokeLinecap="round" />
-            <polygon points={`${40 + wideVelocity * 12},${tubeBot + 40} ${30 + wideVelocity * 12},${tubeBot + 32} ${30 + wideVelocity * 12},${tubeBot + 48}`} fill="#22c55e" />
-            <text x="70" y={tubeBot + 62} fontSize="10" fill="#4ade80" textAnchor="middle" fontWeight="bold">v1={wideVelocity.toFixed(1)} m/s</text>
+            <line x1="35" y1={tubeBot + 30} x2={35 + wideVelocity * 12} y2={tubeBot + 30} stroke="#22c55e" strokeWidth="4" strokeLinecap="round" />
+            <polygon points={`${40 + wideVelocity * 12},${tubeBot + 30} ${30 + wideVelocity * 12},${tubeBot + 22} ${30 + wideVelocity * 12},${tubeBot + 38}`} fill="#22c55e" />
+            <text x="70" y={tubeBot + 55} fontSize="11" fill="#4ade80" textAnchor="middle" fontWeight="bold">v1={wideVelocity.toFixed(1)} m/s</text>
 
-            <line x1={width/2 - 30} y1={tubeBot + 40} x2={width/2 - 30 + Math.min(narrowVelocity, 15) * 6} y2={tubeBot + 40} stroke="#22d3ee" strokeWidth="5" strokeLinecap="round" />
-            <polygon points={`${width/2 - 25 + Math.min(narrowVelocity, 15) * 6},${tubeBot + 40} ${width/2 - 35 + Math.min(narrowVelocity, 15) * 6},${tubeBot + 32} ${width/2 - 35 + Math.min(narrowVelocity, 15) * 6},${tubeBot + 48}`} fill="#22d3ee" />
-            <text x={width/2} y={tubeBot + 62} fontSize="10" fill="#67e8f9" textAnchor="middle" fontWeight="bold">v2={narrowVelocity.toFixed(1)} m/s</text>
+            <line x1={width/2 - 30} y1={tubeBot + 30} x2={width/2 - 30 + Math.min(narrowVelocity, 15) * 6} y2={tubeBot + 30} stroke="#22d3ee" strokeWidth="5" strokeLinecap="round" />
+            <polygon points={`${width/2 - 25 + Math.min(narrowVelocity, 15) * 6},${tubeBot + 30} ${width/2 - 35 + Math.min(narrowVelocity, 15) * 6},${tubeBot + 22} ${width/2 - 35 + Math.min(narrowVelocity, 15) * 6},${tubeBot + 38}`} fill="#22d3ee" />
+            <text x={width/2} y={tubeBot + 55} fontSize="11" fill="#67e8f9" textAnchor="middle" fontWeight="bold">v2={narrowVelocity.toFixed(1)} m/s</text>
 
-            <line x1={width - 100} y1={tubeBot + 40} x2={width - 100 + wideVelocity * 12} y2={tubeBot + 40} stroke="#22c55e" strokeWidth="4" strokeLinecap="round" />
-            <polygon points={`${width - 95 + wideVelocity * 12},${tubeBot + 40} ${width - 105 + wideVelocity * 12},${tubeBot + 32} ${width - 105 + wideVelocity * 12},${tubeBot + 48}`} fill="#22c55e" />
-            <text x={width - 70} y={tubeBot + 62} fontSize="10" fill="#4ade80" textAnchor="middle" fontWeight="bold">v3={wideVelocity.toFixed(1)} m/s</text>
+            <line x1={width - 100} y1={tubeBot + 30} x2={width - 100 + wideVelocity * 12} y2={tubeBot + 30} stroke="#22c55e" strokeWidth="4" strokeLinecap="round" />
+            <polygon points={`${width - 95 + wideVelocity * 12},${tubeBot + 30} ${width - 105 + wideVelocity * 12},${tubeBot + 22} ${width - 105 + wideVelocity * 12},${tubeBot + 38}`} fill="#22c55e" />
+            <text x={width - 70} y={tubeBot + 55} fontSize="11" fill="#4ade80" textAnchor="middle" fontWeight="bold">v3={wideVelocity.toFixed(1)} m/s</text>
           </g>
         )}
 
         {/* Velocity axis label */}
-        <text x={width/2} y={tubeBot + 80} textAnchor="middle" fill={colors.textSecondary} fontSize="10">
+        <text x={width/2} y={tubeBot + 75} textAnchor="middle" fill={colors.textSecondary} fontSize="11">
           Velocity (m/s)
         </text>
 
         {/* Section labels */}
-        <text x="50" y={tubeBot + 95} fontSize="10" fill={colors.textMuted} textAnchor="middle">Wide</text>
-        <text x={width/2} y={tubeBot + 95} fontSize="10" fill="#22d3ee" textAnchor="middle" fontWeight="600">Narrow</text>
-        <text x={width - 50} y={tubeBot + 95} fontSize="10" fill={colors.textMuted} textAnchor="middle">Wide</text>
+        <text x="50" y={tubeBot + 95} fontSize="11" fill={colors.textMuted} textAnchor="middle">Wide</text>
+        <text x={width/2} y={tubeBot + 95} fontSize="11" fill="#22d3ee" textAnchor="middle" fontWeight="600">Narrow</text>
+        <text x={width - 50} y={tubeBot + 95} fontSize="11" fill={colors.textMuted} textAnchor="middle">Wide</text>
 
         {/* Bernoulli equation */}
         <rect x={width/2 - 80} y={height - 45} width="160" height="18" rx="4" fill="#0a1a2a" stroke={colors.accent} strokeWidth="1" />
-        <text x={width/2} y={height - 33} fontSize="10" fill={colors.accent} textAnchor="middle" fontWeight="bold" fontFamily="monospace">P + ½ρv² = const</text>
+        <text x={width/2} y={height - 33} fontSize="11" fill={colors.accent} textAnchor="middle" fontWeight="bold" fontFamily="monospace">P + 1/2 pv2 = const</text>
 
         {/* Continuity equation */}
         <rect x={width/2 - 55} y={height - 22} width="110" height="18" rx="4" fill="#0a1a2a" stroke={colors.accent} strokeWidth="1" />
-        <text x={width/2} y={height - 10} fontSize="10" fill={colors.accent} textAnchor="middle" fontWeight="bold" fontFamily="monospace">A1v1 = A2v2</text>
+        <text x={width/2} y={height - 10} fontSize="11" fill={colors.accent} textAnchor="middle" fontWeight="bold" fontFamily="monospace">A1v1 = A2v2</text>
       </svg>
     );
   };
@@ -691,7 +688,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
           </linearGradient>
         </defs>
 
-        <text x={width/2} y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+        <text x={width/2} y="16" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
           Venturi Flow Meter
         </text>
 
@@ -727,30 +724,30 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
             {/* Inlet pressure */}
             <rect x={(width - 380) / 2 + 55} y="30" width="18" height="50" rx="3" fill="#1a2a3a" stroke="#ef4444" strokeWidth="1" />
             <rect x={(width - 380) / 2 + 58} y={80 - REFERENCE_PRESSURE * 0.4} width="12" height={REFERENCE_PRESSURE * 0.4} fill="#ef4444" rx="2" />
-            <text x={(width - 380) / 2 + 64} y="25" fontSize="9" fill="#f87171" textAnchor="middle" fontWeight="bold">P1</text>
-            <text x={(width - 380) / 2 + 64} y="155" fontSize="9" fill="#f87171" textAnchor="middle">{REFERENCE_PRESSURE.toFixed(0)} kPa</text>
+            <text x={(width - 380) / 2 + 64} y="25" fontSize="11" fill="#f87171" textAnchor="middle" fontWeight="bold">P1</text>
+            <text x={(width - 380) / 2 + 64} y="158" fontSize="11" fill="#f87171" textAnchor="middle">{REFERENCE_PRESSURE.toFixed(0)} kPa</text>
 
             {/* Throat pressure */}
-            <rect x={width/2 - 9} y="20" width="18" height="60" rx="3" fill="#1a2a3a" stroke="#3b82f6" strokeWidth="1" />
+            <rect x={width/2 - 9} y="30" width="18" height="50" rx="3" fill="#1a2a3a" stroke="#3b82f6" strokeWidth="1" />
             <rect x={width/2 - 6} y={80 - Math.max(meterNarrowPressure, 10) * 0.5} width="12" height={Math.max(meterNarrowPressure, 10) * 0.5} fill="#3b82f6" rx="2" />
-            <text x={width/2} y="15" fontSize="9" fill="#60a5fa" textAnchor="middle" fontWeight="bold">P2</text>
-            <text x={width/2} y="155" fontSize="9" fill="#60a5fa" textAnchor="middle">{meterNarrowPressure.toFixed(0)} kPa</text>
+            <text x={width/2 + 30} y="25" fontSize="11" fill="#60a5fa" textAnchor="middle" fontWeight="bold">P2</text>
+            <text x={width/2} y="158" fontSize="11" fill="#60a5fa" textAnchor="middle">{meterNarrowPressure.toFixed(0)} kPa</text>
 
             {/* Delta P display */}
-            <rect x={width/2 - 60} y="170" width="120" height="35" rx="6" fill="#0a1a2a" stroke="#22c55e" strokeWidth="2" />
-            <text x={width/2} y="185" fontSize="10" fill="#4ade80" textAnchor="middle" fontWeight="bold">
-              Delta P = {(REFERENCE_PRESSURE - meterNarrowPressure).toFixed(1)} kPa
+            <rect x={width/2 - 60} y="175" width="120" height="35" rx="6" fill="#0a1a2a" stroke="#22c55e" strokeWidth="2" />
+            <text x={width/2} y="190" fontSize="11" fill="#4ade80" textAnchor="middle" fontWeight="bold">
+              dP = {(REFERENCE_PRESSURE - meterNarrowPressure).toFixed(1)} kPa
             </text>
-            <text x={width/2} y="198" fontSize="9" fill="#86efac" textAnchor="middle">
+            <text x={width/2} y="205" fontSize="11" fill="#86efac" textAnchor="middle">
               Flow = {meterFlowRate}%
             </text>
           </g>
         )}
 
         {/* Labels */}
-        <text x={(width - 380) / 2 + 60} y={height - 25} fontSize="9" fill={colors.textMuted} textAnchor="middle">Inlet</text>
-        <text x={width/2} y={height - 25} fontSize="9" fill="#22d3ee" textAnchor="middle" fontWeight="600">Throat</text>
-        <text x={(width + 380) / 2 - 60} y={height - 25} fontSize="9" fill={colors.textMuted} textAnchor="middle">Outlet</text>
+        <text x={(width - 380) / 2 + 60} y={height - 20} fontSize="11" fill={colors.textMuted} textAnchor="middle">Inlet</text>
+        <text x={width/2} y={height - 20} fontSize="11" fill="#22d3ee" textAnchor="middle" fontWeight="600">Throat</text>
+        <text x={(width + 380) / 2 - 60} y={height - 20} fontSize="11" fill={colors.textMuted} textAnchor="middle">Outlet</text>
       </svg>
     );
   };
@@ -780,6 +777,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
           alignItems: 'center',
           justifyContent: 'center',
           padding: '24px',
+          paddingTop: '48px',
           paddingBottom: '100px',
           textAlign: 'center',
         }}>
@@ -848,7 +846,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
             <div style={{
               background: `${colors.accent}22`,
@@ -888,11 +886,11 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
                   <line x1="280" y1="50" x2="340" y2="50" stroke="#3b82f6" strokeWidth="3" />
                   <polygon points="340,44 352,50 340,56" fill="#3b82f6" />
                 </g>
-                <text x="85" y="15" textAnchor="middle" fill="#94a3b8" fontSize="10">Wide</text>
+                <text x="85" y="15" textAnchor="middle" fill="#94a3b8" fontSize="11">Wide</text>
                 <text x="200" y="35" textAnchor="middle" fill="#f97316" fontSize="11" fontWeight="600">Narrow (?)</text>
-                <text x="315" y="15" textAnchor="middle" fill="#94a3b8" fontSize="10">Wide</text>
+                <text x="315" y="15" textAnchor="middle" fill="#94a3b8" fontSize="11">Wide</text>
               </g>
-              <text x="200" y="165" textAnchor="middle" fill="#64748b" fontSize="10">Same water volume per second must pass through each section</text>
+              <text x="200" y="165" textAnchor="middle" fill="#64748b" fontSize="11">Same water volume per second must pass through each section</text>
             </svg>
 
             {/* Options */}
@@ -953,7 +951,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Venturi Tube Simulator
@@ -1144,7 +1142,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
               The Physics of the Venturi Effect
@@ -1245,7 +1243,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
             <div style={{
               background: `${colors.warning}22`,
@@ -1263,24 +1261,24 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
               Engineers need to measure flow rate in a pipe without inserting any probes. What do you predict - how can a Venturi tube help?
             </h2>
 
-            <svg viewBox="0 0 400 160" width="400" style={{ maxWidth: '100%', marginBottom: '20px' }}>
+            <svg viewBox="0 0 400 200" width="400" style={{ maxWidth: '100%', marginBottom: '20px' }}>
               <defs>
                 <filter id="twistPGlow"><feGaussianBlur stdDeviation="2" /><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
                 <linearGradient id="twistPGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#f59e0b" /><stop offset="100%" stopColor="#ef4444" /></linearGradient>
               </defs>
-              <rect width="400" height="160" fill="#0f172a" rx="12" />
-              <g transform="translate(0,30)">
-                <path d="M 30 20 L 140 20 L 160 35 L 240 35 L 260 20 L 370 20" stroke="#64748b" strokeWidth="2" fill="none" />
-                <path d="M 30 80 L 140 80 L 160 65 L 240 65 L 260 80 L 370 80" stroke="#64748b" strokeWidth="2" fill="none" />
-                <path d="M 30 20 L 140 20 L 160 35 L 240 35 L 260 20 L 370 20 L 370 80 L 260 80 L 240 65 L 160 65 L 140 80 L 30 80 Z" fill="url(#twistPGrad)" opacity="0.15" />
+              <rect width="400" height="200" fill="#0f172a" rx="12" />
+              <g transform="translate(0,10)">
+                <path d="M 30 20 L 140 20 L 160 55 L 240 55 L 260 20 L 370 20" stroke="#64748b" strokeWidth="2" fill="none" />
+                <path d="M 30 120 L 140 120 L 160 85 L 240 85 L 260 120 L 370 120" stroke="#64748b" strokeWidth="2" fill="none" />
+                <path d="M 30 20 L 140 20 L 160 55 L 240 55 L 260 20 L 370 20 L 370 120 L 260 120 L 240 85 L 160 85 L 140 120 L 30 120 Z" fill="url(#twistPGrad)" opacity="0.15" />
                 {/* Pressure gauges */}
                 <g filter="url(#twistPGlow)">
                   <rect x="75" y="-5" width="30" height="25" rx="4" fill="#1e293b" stroke="#f59e0b" strokeWidth="1" />
-                  <text x="90" y="14" textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="600">P1</text>
-                  <rect x="185" y="10" width="30" height="25" rx="4" fill="#1e293b" stroke="#ef4444" strokeWidth="1" />
-                  <text x="200" y="27" textAnchor="middle" fill="#ef4444" fontSize="10" fontWeight="600">P2</text>
+                  <text x="90" y="14" textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="600">P1</text>
+                  <rect x="185" y="30" width="30" height="25" rx="4" fill="#1e293b" stroke="#ef4444" strokeWidth="1" />
+                  <text x="200" y="47" textAnchor="middle" fill="#ef4444" fontSize="11" fontWeight="600">P2</text>
                 </g>
-                <text x="200" y="95" textAnchor="middle" fill="#94a3b8" fontSize="10">Measure ΔP to find flow rate?</text>
+                <text x="200" y="145" textAnchor="middle" fill="#94a3b8" fontSize="11">Measure delta-P to find flow rate?</text>
               </g>
             </svg>
 
@@ -1355,7 +1353,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Venturi Flow Meter
@@ -1481,7 +1479,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
               How Venturi Meters Measure Flow
@@ -1590,7 +1588,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1794,7 +1792,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
         }}>
           {renderProgressBar()}
 
-          <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '100px' }}>
             <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
               <div style={{
                 fontSize: '80px',
@@ -1843,7 +1841,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           {/* Progress */}
           <div style={{
@@ -2023,6 +2021,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
           alignItems: 'center',
           justifyContent: 'center',
           padding: '24px',
+          paddingTop: '48px',
           paddingBottom: '100px',
           textAlign: 'center',
         }}>

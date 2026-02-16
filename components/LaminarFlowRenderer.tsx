@@ -576,6 +576,7 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
         minHeight: 0,
         overflowY: 'auto',
         overflowX: 'hidden',
+        paddingTop: '48px',
         paddingBottom: showBottomBar ? '100px' : '20px',
       }}>
         {content}
@@ -592,7 +593,7 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
     const Re = calculateReynolds(flowVelocity, pipeDiameter, fluidViscosity);
     const flowType = getFlowType(Re);
     const width = isMobile ? 340 : 450;
-    const height = 200;
+    const height = 220;
 
     return (
       <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block', background: colors.bgSecondary, borderRadius: '12px' }}>
@@ -616,48 +617,54 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
           </filter>
         </defs>
 
-        {/* Group: Title and labels */}
-        <g className="labels-group">
-          <text x={width / 2} y="20" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="600">
-            Pipe Flow Visualization
-          </text>
-          <text x={width / 2} y="190" fill={colors.textSecondary} fontSize="11" textAnchor="middle">
-            Flow Direction --&gt;
-          </text>
-        </g>
+        {/* Grid lines for visual reference */}
+        <line x1="40" y1="30" x2="40" y2="190" stroke="#555" strokeDasharray="4 4" opacity="0.3" />
+        <line x1={width - 40} y1="30" x2={width - 40} y2="190" stroke="#555" strokeDasharray="4 4" opacity="0.3" />
+        <line x1="40" y1="110" x2={width - 40} y2="110" stroke="#555" strokeDasharray="4 4" opacity="0.3" />
+
+        {/* Axis labels */}
+        <text x={width / 2} y="16" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="600">
+          Velocity Profile in Pipe
+        </text>
+        <text x={width / 2} y="210" fill={colors.textSecondary} fontSize="12" textAnchor="middle">
+          Distance Along Pipe (Flow Direction)
+        </text>
+        <text x="14" y="115" fill={colors.textSecondary} fontSize="11" textAnchor="middle" transform={`rotate(-90, 14, 115)`}>
+          Velocity
+        </text>
 
         {/* Group: Pipe structure */}
         <g className="pipe-group">
           <rect x="25" y="55" width={width - 50} height="10" fill="url(#pipeWall)" />
-          <rect x="25" y="135" width={width - 50} height="10" fill="url(#pipeWall)" />
-          <rect x="25" y="65" width={width - 50} height="70" fill="url(#pipeInterior)" />
+          <rect x="25" y="155" width={width - 50} height="10" fill="url(#pipeWall)" />
+          <rect x="25" y="65" width={width - 50} height="90" fill="url(#pipeInterior)" />
         </g>
 
         {/* Group: Flow streamlines based on type */}
         <g className="streamlines-group">
           {flowType === 'laminar' ? (
-            [75, 90, 100, 110, 125].map((y, i) => (
+            [70, 85, 110, 135, 150].map((y, i) => (
               <line key={i} x1="40" y1={y} x2={width - 40} y2={y} stroke={colors.laminar} strokeWidth="2" opacity="0.5" strokeDasharray="8,4">
                 <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1s" repeatCount="indefinite" />
               </line>
             ))
           ) : flowType === 'turbulent' ? (
-            [75, 90, 100, 110, 125].map((y, i) => (
+            [70, 85, 110, 135, 150].map((y, i) => (
               <path key={i}
-                d={`M 40 ${y} Q ${width * 0.3} ${y + (i % 2 === 0 ? 15 : -15)} ${width * 0.5} ${y} Q ${width * 0.7} ${y + (i % 2 === 0 ? -10 : 10)} ${width - 40} ${y}`}
+                d={`M 40 ${y} Q ${width * 0.3} ${y + (i % 2 === 0 ? 35 : -35)} ${width * 0.5} ${y} Q ${width * 0.7} ${y + (i % 2 === 0 ? -30 : 30)} ${width - 40} ${y}`}
                 fill="none" stroke={colors.turbulent} strokeWidth="2" opacity="0.5">
                 <animate attributeName="d"
-                  values={`M 40 ${y} Q ${width * 0.3} ${y + 15} ${width * 0.5} ${y} Q ${width * 0.7} ${y - 10} ${width - 40} ${y};M 40 ${y} Q ${width * 0.3} ${y - 12} ${width * 0.5} ${y} Q ${width * 0.7} ${y + 8} ${width - 40} ${y};M 40 ${y} Q ${width * 0.3} ${y + 15} ${width * 0.5} ${y} Q ${width * 0.7} ${y - 10} ${width - 40} ${y}`}
+                  values={`M 40 ${y} Q ${width * 0.3} ${y + 35} ${width * 0.5} ${y} Q ${width * 0.7} ${y - 30} ${width - 40} ${y};M 40 ${y} Q ${width * 0.3} ${y - 32} ${width * 0.5} ${y} Q ${width * 0.7} ${y + 28} ${width - 40} ${y};M 40 ${y} Q ${width * 0.3} ${y + 35} ${width * 0.5} ${y} Q ${width * 0.7} ${y - 30} ${width - 40} ${y}`}
                   dur="0.5s" repeatCount="indefinite" />
               </path>
             ))
           ) : (
-            [75, 90, 100, 110, 125].map((y, i) => (
+            [70, 85, 110, 135, 150].map((y, i) => (
               <path key={i}
-                d={`M 40 ${y} Q ${width * 0.4} ${y + (i % 2 === 0 ? 8 : -8)} ${width * 0.6} ${y} Q ${width * 0.8} ${y + (i % 2 === 0 ? -6 : 6)} ${width - 40} ${y}`}
+                d={`M 40 ${y} Q ${width * 0.4} ${y + (i % 2 === 0 ? 30 : -30)} ${width * 0.6} ${y} Q ${width * 0.8} ${y + (i % 2 === 0 ? -28 : 28)} ${width - 40} ${y}`}
                 fill="none" stroke={colors.warning} strokeWidth="2" opacity="0.5">
                 <animate attributeName="d"
-                  values={`M 40 ${y} Q ${width * 0.4} ${y + 8} ${width * 0.6} ${y} Q ${width * 0.8} ${y - 6} ${width - 40} ${y};M 40 ${y} Q ${width * 0.4} ${y - 6} ${width * 0.6} ${y} Q ${width * 0.8} ${y + 8} ${width - 40} ${y};M 40 ${y} Q ${width * 0.4} ${y + 8} ${width * 0.6} ${y} Q ${width * 0.8} ${y - 6} ${width - 40} ${y}`}
+                  values={`M 40 ${y} Q ${width * 0.4} ${y + 30} ${width * 0.6} ${y} Q ${width * 0.8} ${y - 28} ${width - 40} ${y};M 40 ${y} Q ${width * 0.4} ${y - 28} ${width * 0.6} ${y} Q ${width * 0.8} ${y + 30} ${width - 40} ${y};M 40 ${y} Q ${width * 0.4} ${y + 30} ${width * 0.6} ${y} Q ${width * 0.8} ${y - 28} ${width - 40} ${y}`}
                   dur="1.5s" repeatCount="indefinite" />
               </path>
             ))
@@ -674,10 +681,15 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
           ))}
         </g>
 
+        {/* Interactive highlighted indicator for current Re - position changes with velocity */}
+        <circle cx={40 + (flowVelocity / 5) * (width - 80)} cy={110} r="10"
+          fill={flowType === 'laminar' ? colors.laminar : flowType === 'turbulent' ? colors.turbulent : colors.warning}
+          filter="url(#glow)" opacity="0.8" />
+
         {/* Group: Flow info */}
         <g className="info-group">
-          <text x={width / 2} y="170" fill={flowType === 'laminar' ? colors.laminar : flowType === 'turbulent' ? colors.turbulent : colors.warning}
-            fontSize="16" textAnchor="middle" fontWeight="700">
+          <text x={width / 2} y="192" fill={flowType === 'laminar' ? colors.laminar : flowType === 'turbulent' ? colors.turbulent : colors.warning}
+            fontSize="14" textAnchor="middle" fontWeight="700">
             {flowType.toUpperCase()} FLOW (Re = {Re.toFixed(0)})
           </text>
         </g>
@@ -930,7 +942,7 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
                 step="0.1"
                 value={flowVelocity}
                 onChange={(e) => setFlowVelocity(parseFloat(e.target.value))}
-                style={{ width: '100%', height: '8px', accentColor: colors.accent }}
+                style={{ width: '100%', height: '20px', accentColor: colors.accent, touchAction: 'pan-y', WebkitAppearance: 'none' as const }}
               />
               <p style={{ ...typo.small, color: colors.textSecondary, margin: '4px 0 0 0', fontStyle: 'italic' }}>
                 ↑ Higher velocity → Higher Re → More likely turbulent
@@ -949,7 +961,7 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
                 step="0.5"
                 value={pipeDiameter}
                 onChange={(e) => setPipeDiameter(parseFloat(e.target.value))}
-                style={{ width: '100%', height: '8px', accentColor: colors.success }}
+                style={{ width: '100%', height: '20px', accentColor: colors.success, touchAction: 'pan-y', WebkitAppearance: 'none' as const }}
               />
               <p style={{ ...typo.small, color: colors.textSecondary, margin: '4px 0 0 0', fontStyle: 'italic' }}>
                 ↑ Larger diameter → Higher Re → More room for turbulence
@@ -968,7 +980,7 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
                 step="0.1"
                 value={fluidViscosity}
                 onChange={(e) => setFluidViscosity(parseFloat(e.target.value))}
-                style={{ width: '100%', height: '8px', accentColor: colors.warning }}
+                style={{ width: '100%', height: '20px', accentColor: colors.warning, touchAction: 'pan-y', WebkitAppearance: 'none' as const }}
               />
               <p style={{ ...typo.small, color: colors.textSecondary, margin: '4px 0 0 0', fontStyle: 'italic' }}>
                 ↑ Higher viscosity → Lower Re → Viscous forces resist turbulence
@@ -1035,7 +1047,7 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
               <line x1="0" y1="0" x2="80" y2="0" stroke={colors.accent} strokeWidth="4" />
               <polygon points="80,0 70,-8 70,8" fill={colors.accent} />
               <text x="40" y="-15" fill={colors.accent} fontSize="12" textAnchor="middle">Inertial</text>
-              <text x="40" y="25" fill={colors.textSecondary} fontSize="10" textAnchor="middle">rho * v * L</text>
+              <text x="40" y="25" fill={colors.textSecondary} fontSize="11" textAnchor="middle">rho * v * L</text>
             </g>
 
             {/* Viscous forces arrow */}
@@ -1043,7 +1055,7 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
               <line x1="80" y1="0" x2="0" y2="0" stroke={colors.warning} strokeWidth="4" />
               <polygon points="0,0 10,-8 10,8" fill={colors.warning} />
               <text x="40" y="-15" fill={colors.warning} fontSize="12" textAnchor="middle">Viscous</text>
-              <text x="40" y="25" fill={colors.textSecondary} fontSize="10" textAnchor="middle">mu</text>
+              <text x="40" y="25" fill={colors.textSecondary} fontSize="11" textAnchor="middle">mu</text>
             </g>
 
             {/* Result indicators */}
@@ -1215,21 +1227,21 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
             </text>
 
             {/* Surface */}
-            <rect x="50" y="140" width="350" height="20" fill="#4a5568" rx="10" />
-            <text x="225" y="175" textAnchor="middle" fill={colors.textMuted} fontSize="11">Object Surface</text>
+            <rect x="50" y="155" width="350" height="15" fill="#4a5568" rx="8" />
+            <text x="225" y="185" textAnchor="middle" fill={colors.textMuted} fontSize="11">Object Surface</text>
 
-            {/* Laminar BL */}
-            <path d="M 50 140 Q 100 120 150 130 Q 200 135 200 140" fill="url(#blGrad)" stroke={colors.laminar} strokeWidth="2" />
-            <text x="125" y="110" fill={colors.laminar} fontSize="11" textAnchor="middle">Laminar BL</text>
+            {/* Laminar BL - more dramatic vertical range */}
+            <path d="M 50 155 Q 90 85 140 100 Q 175 115 200 155" fill="url(#blGrad)" stroke={colors.laminar} strokeWidth="2" />
+            <text x="125" y="75" fill={colors.laminar} fontSize="11" textAnchor="middle">Laminar BL</text>
 
-            {/* Turbulent BL */}
-            <path d="M 200 140 Q 250 100 300 120 Q 350 130 400 140" fill="url(#blGrad)" stroke={colors.turbulent} strokeWidth="2" strokeDasharray="5,3" />
-            <text x="300" y="90" fill={colors.turbulent} fontSize="11" textAnchor="middle">Turbulent BL</text>
+            {/* Turbulent BL - more dramatic vertical range */}
+            <path d="M 200 155 Q 240 55 310 90 Q 370 120 400 155" fill="url(#blGrad)" stroke={colors.turbulent} strokeWidth="2" strokeDasharray="5,3" />
+            <text x="310" y="45" fill={colors.turbulent} fontSize="11" textAnchor="middle">Turbulent BL</text>
 
             {/* Separation point */}
-            <circle cx="200" cy="140" r="6" fill={colors.warning} />
+            <circle cx="200" cy="155" r="6" fill={colors.warning} />
             <text x="200" y="60" fill={colors.warning} fontSize="11" textAnchor="middle">Transition Point</text>
-            <line x1="200" y1="70" x2="200" y2="130" stroke={colors.warning} strokeDasharray="3,3" />
+            <line x1="200" y1="70" x2="200" y2="145" stroke={colors.warning} strokeDasharray="3,3" />
           </svg>
         </div>
 

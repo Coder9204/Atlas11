@@ -351,7 +351,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
   const [showExplanation, setShowExplanation] = useState(false);
 
   // Simulation state
-  const [heatIntensity, setHeatIntensity] = useState(50);
+  const [heatIntensity, setHeatIntensity] = useState(70);
   const [isHeating, setIsHeating] = useState(true);
   const [particles, setParticles] = useState<Particle[]>([]);
   const [showFlowLines, setShowFlowLines] = useState(true);
@@ -991,18 +991,45 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
             </g>
           )}
 
+          {/* Grid lines for visual reference */}
+          <line x1="35" y1="80" x2="265" y2="80" stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="35" y1="120" x2="265" y2="120" stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="35" y1="160" x2="265" y2="160" stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="100" y1="35" x2="100" y2="205" stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="200" y1="35" x2="200" y2="205" stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+
+          {/* Temperature profile curve (data path using vertical space) */}
+          <path
+            d={`M40,${40 + (1 - heatIntensity / 100) * 80} L80,${60 + (1 - heatIntensity / 100) * 60} L120,${90 + (1 - heatIntensity / 100) * 40} L160,${120 + (1 - heatIntensity / 100) * 30} L200,${150 + (1 - heatIntensity / 100) * 20} L240,${170 + (1 - heatIntensity / 100) * 15} L260,${180 + (1 - heatIntensity / 100) * 10}`}
+            fill="none"
+            stroke="#fbbf24"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            opacity="0.8"
+          />
+          {/* Interactive point on temperature curve */}
+          <circle
+            cx={150}
+            cy={120 + (1 - heatIntensity / 100) * 30}
+            r={9}
+            fill="#fbbf24"
+            stroke="#ffffff"
+            strokeWidth="2"
+            filter="url(#convParticleGlow)"
+          />
+
           {/* Temperature legend bar */}
           <g transform="translate(272, 45)">
             <rect x="0" y="0" width="10" height="60" fill="url(#convTempGradient)" rx="3" stroke="#475569" strokeWidth="1" />
-            <text x="5" y="-4" textAnchor="middle" fill="#ef4444" fontSize="8">Hot</text>
-            <text x="5" y="72" textAnchor="middle" fill="#3b82f6" fontSize="8">Cold</text>
+            <text x="5" y="-4" textAnchor="middle" fill="#ef4444" fontSize="11">Hot</text>
+            <text x="5" y="72" textAnchor="middle" fill="#3b82f6" fontSize="11">Cold</text>
           </g>
 
           {/* Educational labels */}
-          <text x="150" y="18" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="600">Convection Cell</text>
-          <text x="150" y="250" textAnchor="middle" fill="#f97316" fontSize="9">Heat Source</text>
-          <text x="55" y="130" textAnchor="middle" fill="#60a5fa" fontSize="8">Cool Sinks</text>
-          <text x="245" y="130" textAnchor="middle" fill="#f97316" fontSize="8">Warm Rises</text>
+          <text x="150" y="18" textAnchor="middle" fill="#94a3b8" fontSize="13" fontWeight="700">Convection Cell — Temperature Profile</text>
+          <text x="150" y="250" textAnchor="middle" fill="#f97316" fontSize="12">Heat Intensity: {heatIntensity}%</text>
+          <text x="55" y="130" textAnchor="middle" fill="#60a5fa" fontSize="11">Cool Sinks</text>
+          <text x="245" y="130" textAnchor="middle" fill="#f97316" fontSize="11">Warm Rises</text>
         </svg>
 
         {/* Labels */}
@@ -1269,7 +1296,10 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
                 setHeatIntensity(Number(e.target.value));
                 onGameEvent?.({ type: 'heat_intensity_changed', data: { value: Number(e.target.value) } });
               }}
-              style={{ width: '100%', height: '8px', cursor: 'pointer', accentColor: '#ef4444' }}
+              onInput={(e) => {
+                setHeatIntensity(Number((e.target as HTMLInputElement).value));
+              }}
+              style={{ width: '100%', height: '20px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
             />
             <p style={{ fontSize: '12px', color: '#93c5fd' }}>When you increase heat, more particles become hot (red) and rise faster. This causes stronger circulation.</p>
           </div>
@@ -1503,14 +1533,18 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 text-center">
+      <div className="grid grid-cols-3 gap-3 text-center">
         <div className="bg-purple-900/30 rounded-lg p-3 border border-purple-500/30">
           <p className="text-sm text-slate-400">Fan Speed</p>
           <p className="font-bold text-purple-400">{fanSpeed}%</p>
         </div>
+        <div className="bg-red-900/30 rounded-lg p-3 border border-red-500/30">
+          <p className="text-sm text-slate-400">Heat Power</p>
+          <p className="font-bold text-red-400">{heatIntensity}%</p>
+        </div>
         <div className="bg-cyan-900/30 rounded-lg p-3 border border-cyan-500/30">
-          <p className="text-sm text-slate-400">Convection Type</p>
-          <p className="font-bold text-cyan-400">{fanSpeed > 0 ? 'Forced' : 'Natural'}</p>
+          <p className="text-sm text-slate-400">Heat Transfer Rate</p>
+          <p className="font-bold text-cyan-400">{Math.round((5 + fanSpeed * 2.45) * 0.1 * (heatIntensity * 0.8))} W</p>
         </div>
       </div>
 
@@ -1532,7 +1566,11 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
               if (newSpeed > 0 && fanSpeed === 0) playSound('whoosh');
               onGameEvent?.({ type: 'fan_speed_changed', data: { value: newSpeed } });
             }}
-            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+            onInput={(e) => {
+              const newSpeed = Number((e.target as HTMLInputElement).value);
+              setFanSpeed(newSpeed);
+            }}
+            style={{ width: '100%', height: '20px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
           />
         </div>
 
@@ -1547,7 +1585,10 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
             max="100"
             value={heatIntensity}
             onChange={(e) => setHeatIntensity(Number(e.target.value))}
-            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500"
+            onInput={(e) => {
+              setHeatIntensity(Number((e.target as HTMLInputElement).value));
+            }}
+            style={{ width: '100%', height: '20px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
           />
         </div>
       </div>

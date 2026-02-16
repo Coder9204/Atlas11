@@ -370,7 +370,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Two-Phase',
+    twist_play: 'Explore Two-Phase',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -694,7 +694,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
             height: '8px',
             borderRadius: '4px',
             border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : 'rgba(148,163,184,0.7)',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
           }}
@@ -990,10 +990,13 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
                 onChange={(e) => setFlowRate(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   background: `linear-gradient(to right, ${colors.accent} ${((flowRate - 1) / 19) * 100}%, ${colors.border} ${((flowRate - 1) / 19) * 100}%)`,
                   cursor: 'pointer',
+                  touchAction: 'pan-y' as const,
+                  WebkitAppearance: 'none' as const,
+                  accentColor: '#3b82f6',
                 }}
               />
             </div>
@@ -1013,10 +1016,13 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
                 onChange={(e) => setHeatLoad(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   background: `linear-gradient(to right, ${colors.warning} ${((heatLoad - 100) / 900) * 100}%, ${colors.border} ${((heatLoad - 100) / 900) * 100}%)`,
                   cursor: 'pointer',
+                  touchAction: 'pan-y' as const,
+                  WebkitAppearance: 'none' as const,
+                  accentColor: '#3b82f6',
                 }}
               />
             </div>
@@ -1388,9 +1394,12 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
                 onChange={(e) => setTwistHeatLoad(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  touchAction: 'pan-y' as const,
+                  WebkitAppearance: 'none' as const,
+                  accentColor: '#3b82f6',
                 }}
               />
             </div>

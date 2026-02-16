@@ -115,7 +115,7 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'LER Effect',
+    twist_play: 'Explore LER',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -1061,19 +1061,19 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
         <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 400 }}>
           Focus Position: {focus}% - Controls how sharp the projected image is on the wafer. When you increase focus error, the printed features become blurry. ({focus < 40 ? 'Under-focused' : focus > 60 ? 'Over-focused' : 'Optimal'})
         </label>
-        <input type="range" min="0" max="100" step="2" value={focus} onChange={(e) => setFocus(parseInt(e.target.value))} style={{ width: '100%' }} />
+        <input type="range" min="0" max="100" step="2" value={focus} onChange={(e) => setFocus(parseInt(e.target.value))} style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }} />
       </div>
       <div>
         <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 400 }}>
           Exposure Dose: {dose}% - Controls the light energy hitting the photoresist. Higher doses cause wider features, lower doses cause narrower features. ({dose < 40 ? 'Under-exposed' : dose > 60 ? 'Over-exposed' : 'Optimal'})
         </label>
-        <input type="range" min="0" max="100" step="2" value={dose} onChange={(e) => setDose(parseInt(e.target.value))} style={{ width: '100%' }} />
+        <input type="range" min="0" max="100" step="2" value={dose} onChange={(e) => setDose(parseInt(e.target.value))} style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }} />
       </div>
       <div>
         <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 400 }}>
           Target Linewidth: {targetWidth} nm - The intended feature size. As features shrink, the process window becomes tighter.
         </label>
-        <input type="range" min="20" max="100" step="5" value={targetWidth} onChange={(e) => setTargetWidth(parseInt(e.target.value))} style={{ width: '100%' }} />
+        <input type="range" min="20" max="100" step="5" value={targetWidth} onChange={(e) => setTargetWidth(parseInt(e.target.value))} style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }} />
       </div>
       {showLERControl && (
         <div>
@@ -1094,7 +1094,7 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
   const renderWrapper = (content: React.ReactNode, footer: React.ReactNode) => (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, transition: 'all 0.3s ease' }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', marginTop: '52px', marginBottom: '68px', transition: 'all 0.3s ease' }}>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '52px', paddingBottom: '100px', transition: 'all 0.3s ease' }}>
         {content}
       </div>
       {footer}
@@ -1126,7 +1126,7 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
           </div>
         </div>
       </>,
-      renderBottomBar(true, true, 'Make a Prediction')
+      renderBottomBar(true, true, 'Start Predicting')
     );
   }
 

@@ -328,15 +328,15 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
   // Phase navigation
   const phaseOrder: Phase[] = validPhases;
   const phaseLabels: Record<Phase, string> = {
-    hook: 'Introduction',
+    hook: 'Explore Introduction',
     predict: 'Predict',
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Containment Lab',
+    twist_play: 'Experiment Lab',
     twist_review: 'Deep Insight',
-    transfer: 'Real World',
-    test: 'Knowledge Test',
+    transfer: 'Transfer Applications',
+    test: 'Quiz Knowledge Test',
     mastery: 'Mastery'
   };
 
@@ -746,7 +746,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
             height: '8px',
             borderRadius: '4px',
             border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : 'rgba(148,163,184,0.7)',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
           }}

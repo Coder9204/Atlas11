@@ -352,7 +352,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'High-Impedance Faults',
+    twist_play: 'Explore Faults',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -405,7 +405,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
   const renderNavigationBar = () => {
     const currentIndex = phaseOrder.indexOf(phase);
     const canGoBack = currentIndex > 0;
-    const canGoNext = currentIndex < phaseOrder.length - 1;
+    const canGoNext = currentIndex < phaseOrder.length - 1 && phase !== 'test';
 
     return (
       <div style={{
@@ -534,7 +534,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
     // Chart area for current imbalance graph
     const chartLeft = 60;
     const chartRight = width - 20;
-    const chartTop = 240;
+    const chartTop = 230;
     const chartBottom = height - 20;
     const chartH = chartBottom - chartTop;
     // Build current imbalance curve data points
@@ -599,7 +599,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
           <text x="240" y="72" textAnchor="middle" fill={colors.accent} fontSize="13" fontWeight="bold">GFCI</text>
           <ellipse cx="240" cy="95" rx="25" ry="8" fill="none" stroke={colors.textMuted} strokeWidth="2" />
           <ellipse cx="240" cy="95" rx="18" ry="5" fill="none" stroke={colors.textSecondary} strokeWidth="1" />
-          <circle cx="240" cy="140" r="11" fill={gfciTripped ? colors.error : colors.success} filter="url(#glow)" />
+          <circle cx="240" cy="140" r="5" fill={gfciTripped ? colors.error : colors.success} filter="url(#glow)" />
           <text x="240" y="162" textAnchor="middle" fill={gfciStatus.color} fontSize="11" fontWeight="bold">{gfciStatus.status}</text>
         </g>
 
@@ -731,7 +731,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
             "In a healthy circuit, current flows out through hot and returns through neutral. If current escapes through another path - like a person - there's an imbalance. That imbalance is detectable, and it saves lives."
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+          <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', marginTop: '8px' }}>
             - Electrical Safety Engineering
           </p>
         </div>
@@ -935,24 +935,8 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
               {renderCircuitVisualization()}
             </div>
 
-            {/* Load current slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Load Current</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{hotCurrent} A</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="15"
-                value={hotCurrent}
-                onChange={(e) => setHotCurrent(parseInt(e.target.value))}
-                style={sliderStyle}
-              />
-            </div>
-
             {/* Leakage current slider */}
-            <div style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>Ground Fault Leakage</span>
                 <span style={{
@@ -981,6 +965,22 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
                 <span style={{ ...typo.small, color: colors.error }}>5 mA (Trip Threshold)</span>
                 <span style={{ ...typo.small, color: 'rgba(148,163,184,0.7)' }}>10 mA</span>
               </div>
+            </div>
+
+            {/* Load current slider */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Load Current</span>
+                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{hotCurrent} A</span>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="15"
+                value={hotCurrent}
+                onChange={(e) => setHotCurrent(parseInt(e.target.value))}
+                style={sliderStyle}
+              />
             </div>
 
             {/* Reset button */}
@@ -1161,7 +1161,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Explore Hidden Dangers →
+            Continue →
           </button>
         </div>
 
@@ -1323,6 +1323,58 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
             See when different protection devices can detect the fault
           </p>
 
+          {/* Fault current vs impedance SVG */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <svg width="480" height="260" viewBox="0 0 480 260" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
+              <defs>
+                <filter id="twistPointGlow"><feGaussianBlur stdDeviation="3" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+              </defs>
+              {/* Grid lines */}
+              <line x1="60" y1="30" x2="460" y2="30" stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+              <line x1="60" y1="85" x2="460" y2="85" stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+              <line x1="60" y1="140" x2="460" y2="140" stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+              <line x1="60" y1="195" x2="460" y2="195" stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+              {/* Axes */}
+              <line x1="60" y1="30" x2="60" y2="220" stroke={colors.textMuted} strokeWidth="1" />
+              <line x1="60" y1="220" x2="460" y2="220" stroke={colors.textMuted} strokeWidth="1" />
+              {/* Axis labels */}
+              <text x="55" y="35" textAnchor="end" fill={colors.textMuted} fontSize="11">120A</text>
+              <text x="55" y="90" textAnchor="end" fill={colors.textMuted} fontSize="11">90A</text>
+              <text x="55" y="145" textAnchor="end" fill={colors.textMuted} fontSize="11">60A</text>
+              <text x="55" y="200" textAnchor="end" fill={colors.textMuted} fontSize="11">30A</text>
+              <text x="55" y="225" textAnchor="end" fill={colors.textMuted} fontSize="11">0</text>
+              <text x="260" y="250" textAnchor="middle" fill={colors.textMuted} fontSize="11">Fault Impedance (Ohms)</text>
+              <text x="20" y="130" textAnchor="middle" fill={colors.textMuted} fontSize="11" transform="rotate(-90, 20, 130)">Fault Current</text>
+              {/* GFCI threshold */}
+              <line x1="60" y1={220 - (5 / 120000) * 190} x2="460" y2={220 - (5 / 120000) * 190} stroke={colors.success} strokeWidth="1" strokeDasharray="6,3" />
+              <text x="462" y={220 - (5 / 120000) * 190 + 4} textAnchor="start" fill={colors.success} fontSize="11">5mA GFCI</text>
+              {/* Breaker threshold */}
+              <line x1="60" y1={220 - (15 / 120) * 190} x2="460" y2={220 - (15 / 120) * 190} stroke={colors.error} strokeWidth="1" strokeDasharray="6,3" />
+              <text x="462" y={220 - (15 / 120) * 190 + 4} textAnchor="start" fill={colors.error} fontSize="11">15A Breaker</text>
+              {/* Curve: I = 120/R, scaled logarithmically for display */}
+              <path d={(() => {
+                const pts: string[] = [];
+                for (let i = 0; i <= 40; i++) {
+                  const frac = i / 40;
+                  const imp = 1 + frac * 49999; // 1 to 50000
+                  const current = 120 / imp; // Amps
+                  const x = 60 + frac * 400;
+                  const y = 220 - (current / 120) * 190;
+                  pts.push(`${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`);
+                }
+                return pts.join(' ');
+              })()} fill="none" stroke={colors.warning} strokeWidth="2" />
+              {/* Interactive point */}
+              {(() => {
+                const frac = (faultImpedance - 1) / 49999;
+                const current = 120 / faultImpedance;
+                const px = 60 + frac * 400;
+                const py = 220 - (current / 120) * 190;
+                return <circle cx={px} cy={py} r={8} fill={colors.warning} filter="url(#twistPointGlow)" stroke="#fff" strokeWidth={2} />;
+              })()}
+            </svg>
+          </div>
+
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -1345,12 +1397,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
                   setFaultImpedance(parseInt(e.target.value));
                   setShowArcingSparks(parseInt(e.target.value) > 100 && parseInt(e.target.value) < 10000);
                 }}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
+                style={sliderStyle}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                 <span style={{ ...typo.small, color: colors.textMuted }}>1Ω (Direct short)</span>
@@ -1642,6 +1689,20 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
               </h4>
               <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
                 {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
               </p>
             </div>
 

@@ -694,7 +694,7 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
 
         {/* Wire connection to output */}
         <path
-          d={`M 180 190 L 180 280 L 350 280 L 350 200`}
+          d={`M 180 190 L 180 310 L 350 310 L 350 200`}
           fill="none"
           stroke="#fbbf24"
           strokeWidth="2"
@@ -709,7 +709,7 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
           d={`M 385 160 ${Array.from({ length: 40 }, (_, i) => {
             const x = 385 + i * 4.5;
             const freqFactor = soundFrequency / 440; // normalize to base frequency
-            const y = 160 + Math.sin((i * freqFactor + time * 10) * 0.3 * freqFactor) * signalStrength * 120;
+            const y = 160 + Math.sin((i * freqFactor + time * 10) * 0.3 * freqFactor) * signalStrength * 160;
             return `L ${x} ${y}`;
           }).join(' ')}`}
           fill="none"

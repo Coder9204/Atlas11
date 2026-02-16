@@ -835,7 +835,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
             "A data center's diesel generator must spin a multi-ton flywheel to exactly 1800 RPM, stabilize voltage, and synchronize frequency - all before accepting critical server loads."
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+          <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', marginTop: '8px' }}>
             - Data Center Infrastructure 101
           </p>
         </div>

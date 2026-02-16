@@ -455,15 +455,15 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
 
         {/* Focal points */}
         <circle cx={focalX_left} cy={centerY} r={6} fill="#fbbf24" filter="url(#glow)"/>
-        <text x={focalX_left} y={centerY + 18} textAnchor="middle" fill="#fbbf24" fontSize="10">F</text>
+        <text x={focalX_left} y={centerY + 18} textAnchor="middle" fill="#fbbf24" fontSize="12">F</text>
         <circle cx={focalX_right} cy={centerY} r={6} fill="#fbbf24" filter="url(#glow)"/>
-        <text x={focalX_right} y={centerY + 18} textAnchor="middle" fill="#fbbf24" fontSize="10">F'</text>
+        <text x={focalX_right} y={centerY + 18} textAnchor="middle" fill="#fbbf24" fontSize="12">F&apos;</text>
 
         {/* 2F points */}
         <circle cx={focalX_left - fLen * scale / 2} cy={centerY} r={4} fill="#a78bfa" opacity={0.7}/>
-        <text x={focalX_left - fLen * scale / 2} y={centerY + 16} textAnchor="middle" fill="#a78bfa" fontSize="9">2F</text>
+        <text x={focalX_left - fLen * scale / 2} y={centerY + 16} textAnchor="middle" fill="#a78bfa" fontSize="11">2F</text>
         <circle cx={focalX_right + fLen * scale / 2} cy={centerY} r={4} fill="#a78bfa" opacity={0.7}/>
-        <text x={focalX_right + fLen * scale / 2} y={centerY + 16} textAnchor="middle" fill="#a78bfa" fontSize="9">2F'</text>
+        <text x={focalX_right + fLen * scale / 2} y={centerY + 16} textAnchor="middle" fill="#a78bfa" fontSize="11">2F&apos;</text>
 
         {/* Lens */}
         <ellipse cx={lensX} cy={centerY} rx={12} ry={90} fill="url(#lensGrad)" stroke={colors.lens} strokeWidth={2}/>
@@ -612,14 +612,14 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
         {/* Info box */}
         <g transform={`translate(${width - 110}, 35)`}>
           <rect x="0" y="0" width="100" height="70" rx="8" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="1"/>
-          <text x="50" y="18" textAnchor="middle" fill={colors.textMuted} fontSize="10">Image Distance</text>
+          <text x="50" y="18" textAnchor="middle" fill={colors.textMuted} fontSize="11">Image Distance</text>
           <text x="50" y="35" textAnchor="middle" fill={colors.accent} fontSize="14" fontWeight="700">
             {imgData.imageDistance.toFixed(0)} px
           </text>
-          <text x="50" y="52" textAnchor="middle" fill={colors.textMuted} fontSize="10">
+          <text x="50" y="52" textAnchor="middle" fill={colors.textMuted} fontSize="11">
             {imgData.isReal ? 'Real' : 'Virtual'}, {imgData.isUpright ? 'Upright' : 'Inverted'}
           </text>
-          <text x="50" y="65" textAnchor="middle" fill={colors.success} fontSize="10">
+          <text x="50" y="67" textAnchor="middle" fill={colors.success} fontSize="11">
             M = {imgData.magnification.toFixed(2)}x
           </text>
         </g>
@@ -845,22 +845,22 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
             <g className="objects">
               <rect x="30" y="50" width="6" height="80" fill="#f59e0b" rx="2" />
               <circle cx="33" cy="45" r="8" fill="#f59e0b" filter="url(#predictLensGlow)" />
-              <text x="20" y="150" fill="rgba(148,163,184,1)" fontSize="10">Candle</text>
+              <text x="20" y="150" fill="rgba(148,163,184,1)" fontSize="11">Candle</text>
             </g>
             <g className="lens">
               <ellipse cx="200" cy="90" rx="8" ry="55" fill="url(#lensGrad)" stroke={colors.accent} strokeWidth="2" />
-              <text x="180" y="165" fill={colors.accent} fontSize="10" fontWeight="600">Lens</text>
+              <text x="180" y="165" fill={colors.accent} fontSize="11" fontWeight="600">Lens</text>
             </g>
             <g className="screen">
               <rect x="360" y="30" width="8" height="120" fill="#64748b" rx="2" />
-              <text x="345" y="165" fill="rgba(148,163,184,1)" fontSize="10">Screen</text>
+              <text x="345" y="165" fill="rgba(148,163,184,1)" fontSize="11">Screen</text>
             </g>
             <g className="rays">
               <line x1="38" y1="60" x2="192" y2="60" stroke="#fbbf24" strokeWidth="1.5" strokeDasharray="4,3" />
               <line x1="208" y1="60" x2="365" y2="120" stroke="#fbbf24" strokeWidth="1.5" strokeDasharray="4,3" />
               <line x1="38" y1="120" x2="192" y2="120" stroke="#fbbf24" strokeWidth="1.5" strokeDasharray="4,3" />
               <line x1="208" y1="120" x2="365" y2="60" stroke="#fbbf24" strokeWidth="1.5" strokeDasharray="4,3" />
-              <text x="340" y="25" fill="#34d399" fontSize="10">Image?</text>
+              <text x="340" y="25" fill="#34d399" fontSize="11">Image?</text>
             </g>
           </svg>
 
@@ -924,21 +924,24 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
         display: 'flex',
         flexDirection: 'column',
         background: colors.bgPrimary,
-        padding: '24px',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Lens Optics Lab
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '12px' }}>
-            This visualization shows how light rays bend through a convex lens to form images.
+            Thin Lens Equation: 1/f = 1/d_o + 1/d_i. Magnification M = -d_i/d_o.
             Watch how the image changes as you adjust the controls.
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '12px' }}>
             When you increase the object distance, the image becomes smaller. When you decrease the focal length, light bends more sharply which affects where the image forms.
             This is why camera lenses are used in photography - adjusting focus allows us to capture sharp images at different distances.
+          </p>
+          <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '24px' }}>
+            Image distance = {imageData.imageDistance.toFixed(1)} mm | Magnification factor = {imageData.magnification.toFixed(2)}×
           </p>
 
           {/* Main visualization */}
@@ -966,10 +969,12 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
                 onChange={(e) => setFocalLength(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
-                  accentColor: colors.accent,
+                  accentColor: '#3b82f6',
+                  touchAction: 'pan-y' as const,
+                  WebkitAppearance: 'none' as const,
                 }}
               />
             </div>
@@ -991,10 +996,12 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
                 onChange={(e) => setObjectDistance(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
-                  accentColor: colors.success,
+                  accentColor: '#3b82f6',
+                  touchAction: 'pan-y' as const,
+                  WebkitAppearance: 'none' as const,
                 }}
               />
             </div>
@@ -1111,6 +1118,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
         </div>
 
         {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -1259,27 +1267,27 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
             <g className="background"><rect x="0" y="0" width="400" height="180" fill="#0f172a" rx="12" /></g>
             <g className="lens">
               <ellipse cx="250" cy="90" rx="8" ry="55" fill="url(#twistLensGrad)" stroke={colors.accent} strokeWidth="2" />
-              <text x="235" y="165" fill={colors.accent} fontSize="10" fontWeight="600">Lens</text>
+              <text x="235" y="165" fill={colors.accent} fontSize="11" fontWeight="600">Lens</text>
               <line x1="250" y1="90" x2="310" y2="90" stroke={colors.accent} strokeWidth="1" strokeDasharray="3,3" />
-              <text x="265" y="85" fill={colors.accent} fontSize="9">f</text>
+              <text x="265" y="85" fill={colors.accent} fontSize="11">f</text>
             </g>
             <g className="object">
               <rect x="200" y="55" width="4" height="70" fill="#f59e0b" rx="2" />
               <circle cx="202" cy="50" r="6" fill="#f59e0b" filter="url(#twistLensGlow)" />
-              <text x="185" y="145" fill="rgba(148,163,184,1)" fontSize="10">Object</text>
-              <text x="175" y="158" fill={colors.warning} fontSize="9">(inside f)</text>
+              <text x="185" y="145" fill="rgba(148,163,184,1)" fontSize="11">Object</text>
+              <text x="175" y="160" fill={colors.warning} fontSize="11">(inside f)</text>
             </g>
             <g className="eye">
               <ellipse cx="370" cy="90" rx="15" ry="10" fill="none" stroke="#94a3b8" strokeWidth="1.5" />
               <circle cx="370" cy="90" r="5" fill="#64748b" />
-              <text x="355" y="115" fill="rgba(148,163,184,1)" fontSize="10">Eye</text>
+              <text x="355" y="115" fill="rgba(148,163,184,1)" fontSize="11">Eye</text>
             </g>
             <g className="rays">
               <line x1="202" y1="60" x2="242" y2="70" stroke="#fbbf24" strokeWidth="1.5" strokeDasharray="4,3" />
               <line x1="258" y1="70" x2="360" y2="85" stroke="#fbbf24" strokeWidth="1.5" />
               <line x1="202" y1="120" x2="242" y2="110" stroke="#fbbf24" strokeWidth="1.5" strokeDasharray="4,3" />
               <line x1="258" y1="110" x2="360" y2="95" stroke="#fbbf24" strokeWidth="1.5" />
-              <text x="30" y="90" fill="#34d399" fontSize="10">Virtual image?</text>
+              <text x="30" y="90" fill="#34d399" fontSize="11">Virtual image?</text>
             </g>
           </svg>
 
@@ -1375,9 +1383,12 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
                 onChange={(e) => setTwistObjectDistance(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  accentColor: '#3b82f6',
+                  touchAction: 'pan-y' as const,
+                  WebkitAppearance: 'none' as const,
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>

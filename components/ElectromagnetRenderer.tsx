@@ -887,13 +887,13 @@ export default function ElectromagnetRenderer({
 
           {/* Battery/power source with premium gradient */}
           <g>
-            <rect x="168" y="218" width="64" height="34" rx="6" fill="url(#emagBatteryGrad)" stroke="#4b5563" strokeWidth="1.5" />
+            <rect x="168" y="228" width="64" height="28" rx="6" fill="url(#emagBatteryGrad)" stroke="#4b5563" strokeWidth="1.5" />
             {/* Battery terminals */}
-            <rect x="175" y="215" width="8" height="6" rx="1" fill="#dc2626" />
-            <rect x="217" y="215" width="8" height="6" rx="1" fill="#3b82f6" />
+            <rect x="175" y="225" width="8" height="6" rx="1" fill="#dc2626" />
+            <rect x="217" y="225" width="8" height="6" rx="1" fill="#3b82f6" />
             {/* Battery label background */}
-            <rect x="174" y="225" width="52" height="20" rx="3" fill="#1f2937" opacity="0.5" />
-            <text x="200" y="238" textAnchor="middle" fill="#9ca3af" fontSize="11">
+            <rect x="174" y="232" width="52" height="18" rx="3" fill="#1f2937" opacity="0.5" />
+            <text x="200" y="245" textAnchor="middle" fill="#9ca3af" fontSize="11">
               {Math.abs(curr).toFixed(1)}A
             </text>
           </g>
@@ -902,7 +902,7 @@ export default function ElectromagnetRenderer({
           <g>
             {/* Left wire */}
             <path
-              d="M 160 170 L 160 218 L 168 218"
+              d="M 160 170 L 160 242 L 168 242"
               fill="none"
               stroke={curr > 0 ? 'url(#emagWirePositive)' : curr < 0 ? 'url(#emagWireNegative)' : 'url(#emagWireNeutral)'}
               strokeWidth="4"
@@ -910,7 +910,7 @@ export default function ElectromagnetRenderer({
             />
             {/* Right wire */}
             <path
-              d={`M ${coilEndX} 170 L ${coilEndX} 218 L 232 218`}
+              d={`M ${coilEndX} 170 L ${coilEndX} 242 L 232 242`}
               fill="none"
               stroke={curr > 0 ? 'url(#emagWireNegative)' : curr < 0 ? 'url(#emagWirePositive)' : 'url(#emagWireNeutral)'}
               strokeWidth="4"
@@ -922,8 +922,8 @@ export default function ElectromagnetRenderer({
               <g filter="url(#emagCurrentBlur)">
                 {[0, 1, 2].map((i) => {
                   const offset = ((animTime + i * 33) % 100) / 100;
-                  const leftY = 170 + offset * 48;
-                  const rightY = 170 + (1 - offset) * 48;
+                  const leftY = 170 + offset * 72;
+                  const rightY = 170 + (1 - offset) * 72;
                   return (
                     <g key={i}>
                       {/* Left wire particles */}
@@ -982,6 +982,62 @@ export default function ElectromagnetRenderer({
               {polarity}
             </text>
           </g>
+
+          {/* Grid lines for visual reference */}
+          <line x1="140" y1="80" x2="260" y2="80" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="140" y1="140" x2="260" y2="140" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="140" y1="200" x2="260" y2="200" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+
+          {/* Axis labels for current and field strength */}
+          <text x="200" y="272" textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11">Current (A)</text>
+
+          {/* Interactive field strength indicator point */}
+          {(() => {
+            const normalizedCurrent = Math.abs(curr) / 5;
+            const indicatorY = 250 - normalizedCurrent * 180;
+            return (
+              <circle
+                cx="200"
+                cy={indicatorY}
+                r="10"
+                fill="#a855f7"
+                filter="url(#emagPoleGlow)"
+                opacity="0.9"
+              />
+            );
+          })()}
+
+          {/* Field response curve showing B vs position */}
+          {(() => {
+            const nf = Math.abs(curr) / 5;
+            const coreBoost = core ? 1.5 : 1;
+            const amp = Math.min(nf * coreBoost, 1);
+            const pts = [
+              { x: 130, y: 250 - amp * 10 },
+              { x: 142, y: 245 - amp * 25 },
+              { x: 154, y: 235 - amp * 50 },
+              { x: 166, y: 220 - amp * 80 },
+              { x: 178, y: 200 - amp * 120 },
+              { x: 190, y: 180 - amp * 145 },
+              { x: 200, y: 170 - amp * 150 },
+              { x: 210, y: 180 - amp * 145 },
+              { x: 222, y: 200 - amp * 120 },
+              { x: 234, y: 220 - amp * 80 },
+              { x: 246, y: 235 - amp * 50 },
+              { x: 258, y: 245 - amp * 25 },
+              { x: 270, y: 250 - amp * 10 },
+            ];
+            const d = `M ${pts[0].x} ${pts[0].y} ` + pts.slice(1).map(p => `L ${p.x} ${p.y}`).join(' ');
+            return (
+              <path
+                d={d}
+                fill="none"
+                stroke="#a855f7"
+                strokeWidth="2"
+                opacity="0.6"
+              />
+            );
+          })()}
         </svg>
       </div>
     );
@@ -1085,7 +1141,7 @@ export default function ElectromagnetRenderer({
             {/* Waveform visualization */}
             {ac ? (
               <path
-                d={`M 25 52 ${[...Array(22)].map((_, i) => `L ${25 + i * 5} ${52 + Math.sin((i / 3.5) + phaseAngle) * 12}`).join(' ')}`}
+                d={`M 25 52 ${[...Array(22)].map((_, i) => `L ${25 + i * 5} ${52 + Math.sin((i / 3.5) + phaseAngle) * 40}`).join(' ')}`}
                 fill="none"
                 stroke="#22c55e"
                 strokeWidth="2.5"
@@ -1706,7 +1762,7 @@ export default function ElectromagnetRenderer({
     const currentApp = realWorldApps[activeAppTab];
 
     return (
-      <div className="flex flex-col items-center p-6">
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', overflowY: 'auto' }}>
         <h2 className="text-2xl font-bold text-white mb-2">Real-World Applications</h2>
         <p className="text-slate-400 mb-6">Explore how electromagnets power our world</p>
 
@@ -1723,7 +1779,7 @@ export default function ElectromagnetRenderer({
                   ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
                   : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
               }`}
-              style={activeAppTab === index ? { backgroundColor: currentApp.color } : {}}
+              style={activeAppTab === index ? { backgroundColor: currentApp.color, borderRadius: '8px' } : { borderRadius: '8px' }}
             >
               {app.icon} {app.title.split(' ')[0]}
             </button>
@@ -1731,7 +1787,7 @@ export default function ElectromagnetRenderer({
         </div>
 
         {/* App content card */}
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-3xl w-full">
+        <div style={{ borderRadius: '16px', padding: '24px', maxWidth: '768px', width: '100%', background: 'rgba(30,41,59,0.5)' }}>
           {/* Header */}
           <div className="flex items-center gap-4 mb-4">
             <span className="text-5xl">{currentApp.icon}</span>
@@ -1745,13 +1801,13 @@ export default function ElectromagnetRenderer({
           <p className="text-slate-300 mb-4">{currentApp.description}</p>
 
           {/* Connection to lesson */}
-          <div className="bg-purple-900/30 border border-purple-600/30 rounded-xl p-4 mb-4">
+          <div style={{ borderRadius: '12px', padding: '16px', marginBottom: '16px', background: 'rgba(88,28,135,0.3)', border: '1px solid rgba(147,51,234,0.3)' }}>
             <h4 className="text-purple-400 font-semibold mb-1">Connection to What You Learned:</h4>
             <p className="text-slate-300 text-sm">{currentApp.connection}</p>
           </div>
 
           {/* How it works */}
-          <div className="bg-slate-700/50 rounded-xl p-4 mb-4">
+          <div style={{ borderRadius: '12px', padding: '16px', marginBottom: '16px', background: 'rgba(51,65,85,0.5)' }}>
             <h4 className="text-cyan-400 font-semibold mb-1">How It Works:</h4>
             <p className="text-slate-300 text-sm">{currentApp.howItWorks}</p>
           </div>
@@ -1792,7 +1848,7 @@ export default function ElectromagnetRenderer({
           </div>
 
           {/* Future impact */}
-          <div className="bg-green-900/30 border border-green-600/30 rounded-xl p-4 mb-4">
+          <div style={{ borderRadius: '12px', padding: '16px', marginBottom: '16px', background: 'rgba(20,83,45,0.3)', border: '1px solid rgba(34,197,94,0.3)' }}>
             <h4 className="text-green-400 font-semibold mb-1">Future Impact:</h4>
             <p className="text-slate-300 text-sm">{currentApp.futureImpact}</p>
           </div>
@@ -2105,7 +2161,7 @@ export default function ElectromagnetRenderer({
       </div>
 
       {/* Content area */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '0' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
         {renderPhase()}
       </div>
 

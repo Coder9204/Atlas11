@@ -739,6 +739,9 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
           {/* Background */}
           <rect x="0" y="0" width={width} height={height} fill="url(#magfLabBg)" rx="8" />
 
+          {/* Test point with glow - y offset shows field strength response to current */}
+          <circle cx={centerX + wireDistance * 1500} cy={centerY - wireCurrent * 3} r="8" fill="url(#magfTestPoint)" filter="url(#magfTestGlow)" />
+
           {/* Wire cross-section with premium gradient and glow */}
           <circle cx={centerX} cy={centerY} r="20" fill="url(#magfCurrentGlow)" filter="url(#magfWireGlow)" />
           <circle cx={centerX} cy={centerY} r="15" fill="url(#magfWireCore)" stroke="url(#magfWireCopper)" strokeWidth="3" />
@@ -775,9 +778,6 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
               </g>
             );
           })}
-
-          {/* Test point with glow - y offset shows field strength response to current */}
-          <circle cx={centerX + wireDistance * 1500} cy={centerY - wireCurrent * 3} r="8" fill="url(#magfTestPoint)" filter="url(#magfTestGlow)" />
 
           {/* Grid reference lines */}
           <line x1={40} y1={centerY} x2={width - 40} y2={centerY} stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />

@@ -490,7 +490,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
             height: '8px',
             borderRadius: '4px',
             border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : 'rgba(148,163,184,0.7)',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
           }}
@@ -499,6 +499,72 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
       ))}
     </div>
   );
+
+  // Previous phase
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  // Bottom navigation bar
+  const renderBottomBar = () => {
+    const isFirst = phaseOrder.indexOf(phase) === 0;
+    const isLast = phaseOrder.indexOf(phase) === phaseOrder.length - 1;
+    const isTestActive = phase === 'test' && !testSubmitted;
+    return (
+      <nav style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgSecondary,
+        borderTop: `1px solid ${colors.border}`,
+        boxShadow: '0 -2px 10px rgba(0,0,0,0.3)',
+        zIndex: 1000,
+        padding: '8px 16px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+      }}>
+        <button
+          onClick={prevPhase}
+          disabled={isFirst}
+          style={{
+            padding: '12px 20px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.border}`,
+            background: 'transparent',
+            color: isFirst ? colors.border : colors.textSecondary,
+            cursor: isFirst ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
+            minHeight: '44px',
+            opacity: isFirst ? 0.4 : 1,
+          }}
+        >
+          ← Back
+        </button>
+        <button
+          onClick={isTestActive ? undefined : nextPhase}
+          disabled={isTestActive}
+          style={{
+            padding: '12px 20px',
+            borderRadius: '8px',
+            border: 'none',
+            background: isTestActive ? colors.border : colors.accent,
+            color: 'white',
+            cursor: isTestActive ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
+            minHeight: '44px',
+            opacity: isTestActive ? 0.4 : 1,
+          }}
+        >
+          {isLast ? 'Finish' : 'Next →'}
+        </button>
+      </nav>
+    );
+  };
 
   // Primary button style - with minHeight 44px for touch targets
   const primaryButtonStyle: React.CSSProperties = {

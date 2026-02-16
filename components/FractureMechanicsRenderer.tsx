@@ -387,7 +387,7 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Crack Arrest',
+    twist_play: 'Twist Explore',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -660,7 +660,7 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
 
           {/* Stress distribution curve (path) */}
           <path
-            d={`M 0 ${(height - 100) / 2 - 40} L 30 ${(height - 100) / 2 - 35} L 60 ${(height - 100) / 2 - 30} L 80 ${(height - 100) / 2 - localStress / 5} L 100 ${(height - 100) / 2 - localStress / 3} L 120 ${(height - 100) / 2 - localStress / 5} L 140 ${(height - 100) / 2 - 30} L 170 ${(height - 100) / 2 - 35} L 200 ${(height - 100) / 2 - 40}`}
+            d={`M 0 ${(height - 100) / 2 + 10} L 20 ${(height - 100) / 2 + 8} L 40 ${(height - 100) / 2 + 4} L 60 ${(height - 100) / 2 - 5} L 75 ${(height - 100) / 2 - 20 - localStress / 3} L 90 ${(height - 100) / 2 - 40 - localStress / 2} L 100 ${(height - 100) / 2 - 55 - localStress / 1.5} L 110 ${(height - 100) / 2 - 40 - localStress / 2} L 125 ${(height - 100) / 2 - 20 - localStress / 3} L 140 ${(height - 100) / 2 - 5} L 160 ${(height - 100) / 2 + 4} L 180 ${(height - 100) / 2 + 8} L 200 ${(height - 100) / 2 + 10}`}
             fill="none"
             stroke={colors.accent}
             strokeWidth="2"
@@ -670,7 +670,7 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
           {/* Interactive point on stress curve */}
           <circle
             cx={100}
-            cy={(height - 100) / 2 - localStress / 3}
+            cy={(height - 100) / 2 - 55 - localStress / 1.5}
             r={8}
             fill={colors.accent}
             filter="url(#glow)"
@@ -697,13 +697,13 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
         </g>
 
         {/* Info panel */}
-        <g transform={`translate(${width - 100}, 60)`}>
-          <rect x="0" y="0" width="85" height="100" rx="8" fill={colors.bgSecondary} stroke={colors.border} />
-          <text x="42" y="25" textAnchor="middle" fill={colors.textMuted} fontSize="11">Applied</text>
-          <text x="42" y="42" textAnchor="middle" fill={colors.textPrimary} fontSize="16" fontWeight="bold">{appliedStress} MPa</text>
+        <g transform={`translate(${width - 100}, 50)`}>
+          <rect x="0" y="0" width="85" height="120" rx="8" fill={colors.bgSecondary} stroke={colors.border} />
+          <text x="42" y="20" textAnchor="middle" fill={colors.textMuted} fontSize="11">Applied</text>
+          <text x="42" y="40" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">{appliedStress} MPa</text>
           <text x="42" y="60" textAnchor="middle" fill={colors.textMuted} fontSize="11">Kt</text>
-          <text x="42" y="77" textAnchor="middle" fill={colors.warning} fontSize="16" fontWeight="bold">x{kt}</text>
-          <text x="42" y="94" textAnchor="middle" fill={colors.accent} fontSize="11">Local: {localStress.toFixed(0)}</text>
+          <text x="42" y="80" textAnchor="middle" fill={colors.warning} fontSize="14" fontWeight="bold">x{kt}</text>
+          <text x="42" y="100" textAnchor="middle" fill={colors.accent} fontSize="11">Local: {localStress.toFixed(0)}</text>
         </g>
 
         {/* Fractured label */}
@@ -816,7 +816,7 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
 
         {/* Stress distribution path */}
         <path
-          d={`M 50 ${height / 2 - 40} L 100 ${height / 2 - 35} L ${crackTipX - 20} ${height / 2 - 50} L ${crackTipX} ${height / 2 - 80} L ${crackTipX + 20} ${height / 2 - 50} L ${width - 100} ${height / 2 - 35} L ${width - 50} ${height / 2 - 40}`}
+          d={`M 50 ${height / 2 - 10} L 80 ${height / 2 - 15} L 110 ${height / 2 - 25} L ${crackTipX - 20} ${height / 2 - 45} L ${crackTipX - 5} ${height / 2 - 70} L ${crackTipX} ${height / 2 - 85} L ${crackTipX + 5} ${height / 2 - 70} L ${crackTipX + 20} ${height / 2 - 45} L ${width - 130} ${height / 2 - 25} L ${width - 100} ${height / 2 - 15} L ${width - 50} ${height / 2 - 10}`}
           fill="none"
           stroke={colors.warning}
           strokeWidth="2"
@@ -1142,7 +1142,7 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
           {/* Stress slider */}
           <div style={{ marginBottom: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>Applied Stress</span>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>Applied Stress (Force per Area)</span>
               <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{appliedStress} MPa</span>
             </div>
             <input
@@ -1210,7 +1210,7 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
             padding: '16px',
           }}>
             <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              <strong style={{ color: colors.success }}>Try adjusting the slider:</strong> Notice how when you increase stress with a V-notch or crack, fracture occurs at much lower loads because the local stress is multiplied by Kt. This principle is why airplane windows have rounded corners and why bridges use curved transitions at joints.
+              <strong style={{ color: colors.success }}>Why this is important:</strong> This is why airplane windows have rounded corners and bridges use curved transitions at joints. Try adjusting the slider and notice how when you increase stress with a V-notch or crack, fracture occurs at much lower loads because the local stress is multiplied by Kt. This principle is used in engineering design across every industry.
             </p>
           </div>
         </div>

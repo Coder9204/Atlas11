@@ -485,8 +485,8 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
           <text x={padL + plotW / 2} y={h - 5} fill={colors.textSecondary} fontSize="12" textAnchor="middle">
             Fan Speed (%)
           </text>
-          <text x="14" y={padT + plotH / 2} fill={colors.textSecondary} fontSize="12" textAnchor="middle"
-            transform={`rotate(-90, 14, ${padT + plotH / 2})`}>
+          <text x="12" y={padT + plotH / 2} fill={colors.textSecondary} fontSize="12" textAnchor="end"
+            transform={`rotate(-90, 12, ${padT + plotH / 2})`}>
             Output (%)
           </text>
 
@@ -529,14 +529,14 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
           filter="url(#glow)" stroke="#fff" strokeWidth={2} />
 
         {/* Legend */}
-        <g transform={`translate(${padL + 10}, ${padT + 8})`}>
-          <rect x="0" y="0" width="120" height="56" rx="4" fill="rgba(10,10,15,0.8)" />
-          <line x1="6" y1="12" x2="22" y2="12" stroke="#3B82F6" strokeWidth="2" />
-          <text x="28" y="15" fill="#3B82F6" fontSize="11">Airflow (Q = N)</text>
-          <line x1="6" y1="28" x2="22" y2="28" stroke="#F59E0B" strokeWidth="2" />
-          <text x="28" y="31" fill="#F59E0B" fontSize="11">Pressure (P = N{'\u00B2'})</text>
-          <line x1="6" y1="44" x2="22" y2="44" stroke="#10B981" strokeWidth="2" />
-          <text x="28" y="47" fill="#10B981" fontSize="11">Power (W = N{'\u00B3'})</text>
+        <g className="legend">
+          <rect x={padL + 10} y={padT + 8} width="120" height="56" rx="4" fill="rgba(10,10,15,0.8)" />
+          <line x1={padL + 16} y1={padT + 20} x2={padL + 32} y2={padT + 20} stroke="#3B82F6" strokeWidth="2" />
+          <text x={padL + 38} y={padT + 23} fill="#3B82F6" fontSize="11">Airflow (Q = N)</text>
+          <line x1={padL + 16} y1={padT + 36} x2={padL + 32} y2={padT + 36} stroke="#F59E0B" strokeWidth="2" />
+          <text x={padL + 38} y={padT + 39} fill="#F59E0B" fontSize="11">Pressure (P = N{'\u00B2'})</text>
+          <line x1={padL + 16} y1={padT + 52} x2={padL + 32} y2={padT + 52} stroke="#10B981" strokeWidth="2" />
+          <text x={padL + 38} y={padT + 55} fill="#10B981" fontSize="11">Power (W = N{'\u00B3'})</text>
         </g>
 
         {/* Current values annotation */}

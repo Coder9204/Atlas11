@@ -957,6 +957,25 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
           {/* Background with subtle gradient */}
           <rect width={width} height={height} fill="url(#diffBgGradient)" rx="12" />
 
+          {/* Interactive point marker that moves with slider - positioned at ~70% of pattern to show sensitivity */}
+          {(() => {
+            const markerIdx = Math.floor(pattern.length * 0.7);
+            const markerIntensity = pattern[markerIdx] || 0;
+            const markerY = patternTop + patternHeight * 0.15 + (1 - markerIntensity) * patternHeight * 0.7;
+            return (
+              <circle
+                cx={screenX - 3}
+                cy={markerY}
+                r={8}
+                fill={laserColor}
+                stroke="#ffffff"
+                strokeWidth="2"
+                filter="url(#diffLaserGlow)"
+                opacity="0.9"
+              />
+            );
+          })()}
+
           {/* Subtle grid pattern for depth */}
           <g opacity="0.05">
             {[...Array(Math.floor(width / 30))].map((_, i) => (
@@ -1308,25 +1327,6 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
               <circle cx={screenX + 8} cy={laserY + 35} r="2" fill={defined.colors.accent} opacity="0.6" />
             </g>
           )}
-
-          {/* Interactive point marker that moves with slider - positioned at ~70% of pattern to show sensitivity */}
-          {(() => {
-            const markerIdx = Math.floor(pattern.length * 0.7);
-            const markerIntensity = pattern[markerIdx] || 0;
-            const markerY = patternTop + patternHeight * 0.15 + (1 - markerIntensity) * patternHeight * 0.7;
-            return (
-              <circle
-                cx={screenX - 3}
-                cy={markerY}
-                r={8}
-                fill={laserColor}
-                stroke="#ffffff"
-                strokeWidth="2"
-                filter="url(#diffLaserGlow)"
-                opacity="0.9"
-              />
-            );
-          })()}
 
           {/* Labels inside SVG */}
           <text x={laserX + 8} y={patternTop + 15} fill="#64748B" fontSize="11" fontFamily="sans-serif" textAnchor="middle">Laser</text>

@@ -322,10 +322,10 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
     const Ea = 0.7; // eV (typical for copper)
     const k = 8.617e-5; // eV/K
     const n = 2; // current density exponent
-    const A = 1e12; // constant
+    const A = 1.75e-7; // calibrated constant for realistic MTTF in years
 
     const mttf = A * Math.pow(J, -n) * Math.exp(Ea / (k * T));
-    return Math.min(mttf / 1e6, 1000); // Return in years, cap at 1000
+    return Math.min(mttf, 1000); // Return in years, cap at 1000
   }, [currentDensity, temperature]);
 
   const mttf = calculateMTTF();
@@ -1070,7 +1070,7 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
               const jMin = 1, jMax = 20;
               const calcMTTFForJ = (j: number) => {
                 const T = temperature + 273;
-                return Math.min(1e12 * Math.pow(j, -2) * Math.exp(0.7 / (8.617e-5 * T)) / 1e6, 1000);
+                return Math.min(1.75e-7 * Math.pow(j, -2) * Math.exp(0.7 / (8.617e-5 * T)), 1000);
               };
               // Use log scale for Y axis to show the wide MTTF range
               const logMin = Math.log10(0.01); // -2
@@ -1587,7 +1587,7 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     // Calculate baseline MTTF at 25C for comparison
-    const baselineMTTF = 1e12 * Math.pow(currentDensity, -2) * Math.exp(0.7 / (8.617e-5 * 298)) / 1e6;
+    const baselineMTTF = Math.min(1.75e-7 * Math.pow(currentDensity, -2) * Math.exp(0.7 / (8.617e-5 * 298)), 1000);
     const lifetimeRatio = (mttf / baselineMTTF) * 100;
 
     return (

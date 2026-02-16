@@ -932,11 +932,14 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
           step="1"
           value={polishTime}
           onChange={(e) => { setPolishTime(parseInt(e.target.value)); setIsAnimating(false); }}
+          onInput={(e) => { setPolishTime(parseInt((e.target as HTMLInputElement).value)); setIsAnimating(false); }}
           style={{
             width: '100%',
-            accentColor: colors.accent,
-            height: '8px',
+            accentColor: '#3b82f6',
+            height: '20px',
             cursor: 'pointer',
+            touchAction: 'pan-y' as const,
+            WebkitAppearance: 'none' as const,
           }}
           aria-label={`Polish Time: ${polishTime}%`}
         />
@@ -954,11 +957,14 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
           step="5"
           value={polishPressure}
           onChange={(e) => setPolishPressure(parseInt(e.target.value))}
+          onInput={(e) => setPolishPressure(parseInt((e.target as HTMLInputElement).value))}
           style={{
             width: '100%',
-            accentColor: colors.accent,
-            height: '8px',
+            accentColor: '#3b82f6',
+            height: '20px',
             cursor: 'pointer',
+            touchAction: 'pan-y' as const,
+            WebkitAppearance: 'none' as const,
           }}
           aria-label={`Polish Pressure: ${polishPressure}%`}
         />
@@ -1003,7 +1009,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
   const PageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', marginTop: '60px', marginBottom: '70px', padding: '16px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px', paddingLeft: '16px', paddingRight: '16px' }}>
         {children}
       </div>
     </div>
@@ -1125,7 +1131,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', marginTop: '60px', marginBottom: '70px', padding: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ textAlign: 'center', marginBottom: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore CMP Planarization</h2>
             <p style={{ color: colors.textSecondary, fontSize: typo.small }}>

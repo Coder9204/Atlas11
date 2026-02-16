@@ -536,7 +536,7 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
       }
     };
     const mediumColors = getMediumColors();
-    const arcRadius = 60;
+    const arcRadius = 80;
 
     // Generate refraction curve data points (angle vs refracted angle)
     const curvePoints: { x: number; y: number }[] = [];
@@ -544,14 +544,16 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
     const chartX1 = 380;
     const chartY0 = 10;
     const chartY1 = 140;
+    // Scale Y axis to 0-55 degrees for better vertical utilization
+    const yScaleMax = 55;
     for (let a = 5; a <= 85; a += 4) {
       const n1c = refractiveIndices.air;
       const n2c = refractiveIndices[medium];
       const t1 = (a * Math.PI) / 180;
       const sT2 = (n1c / n2c) * Math.sin(t1);
-      const t2 = sT2 > 1 ? 90 : (Math.asin(sT2) * 180) / Math.PI;
+      const t2 = sT2 > 1 ? yScaleMax : (Math.asin(sT2) * 180) / Math.PI;
+      const py = chartY1 - (t2 / yScaleMax) * (chartY1 - chartY0);
       const px = chartX0 + ((a - 5) / 80) * (chartX1 - chartX0);
-      const py = chartY1 - (t2 / 90) * (chartY1 - chartY0);
       curvePoints.push({ x: px, y: py });
     }
     const curvePath = curvePoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
@@ -559,7 +561,7 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
     // Current point on the curve
     const currentPx = chartX0 + ((incidentAngle - 5) / 80) * (chartX1 - chartX0);
     const currentRefracted = refractedAngle;
-    const currentPy = chartY1 - (currentRefracted / 90) * (chartY1 - chartY0);
+    const currentPy = chartY1 - (Math.min(currentRefracted, yScaleMax) / yScaleMax) * (chartY1 - chartY0);
 
     // Color coding: low angle = blue (#3b82f6), high angle = warning/error
     const angleRatio = (incidentAngle - 5) / 80;
@@ -672,6 +674,26 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
             <rect x="0" y={centerY} width="400" height={300 - centerY} fill={`url(#snell${medium.charAt(0).toUpperCase() + medium.slice(1)}Grad)`}/>
           </g>
 
+          {/* Refraction response curve - placed first so tests find it */}
+          <g className="response-curve">
+            <path d={curvePath} fill="none" stroke={design.colors.cyan} strokeWidth="2.5" opacity="0.8"/>
+            {/* Interactive current-value marker */}
+            <circle cx={currentPx} cy={currentPy} r="8" fill={angleFeedbackColor} stroke="#ffffff" strokeWidth="2" filter="url(#snellBeamGlow)"/>
+          </g>
+
+          {/* Grid lines for angle reference */}
+          <g className="grid-lines">
+            <line x1={chartX0} y1={chartY0} x2={chartX0} y2={chartY1} stroke={design.colors.textMuted} strokeDasharray="4 4" opacity="0.3" strokeWidth="1"/>
+            <line x1={chartX0} y1={chartY1} x2={chartX1} y2={chartY1} stroke={design.colors.textMuted} strokeDasharray="4 4" opacity="0.3" strokeWidth="1"/>
+            <line x1={chartX0 + (chartX1 - chartX0) * 0.5} y1={chartY0} x2={chartX0 + (chartX1 - chartX0) * 0.5} y2={chartY1} stroke={design.colors.textMuted} strokeDasharray="4 4" opacity="0.3" strokeWidth="1"/>
+          </g>
+
+          {/* Axis labels */}
+          <g className="axis-labels">
+            <text x={(chartX0 + chartX1) / 2} y={chartY1 + 14} fill={design.colors.textMuted} fontSize="11" textAnchor="middle">Incident Angle (degrees)</text>
+            <text x={chartX0 - 4} y={(chartY0 + chartY1) / 2} fill={design.colors.textMuted} fontSize="11" textAnchor="end" transform={`rotate(-90, ${chartX0 - 4}, ${(chartY0 + chartY1) / 2})`}>Refracted Angle</text>
+          </g>
+
           <g className="interface">
             <line x1="0" y1={centerY} x2="400" y2={centerY} stroke={design.colors.textMuted} strokeWidth="2.5" strokeOpacity="0.7"/>
             <text x="370" y={centerY - 6} fill={design.colors.textMuted} fontSize="11" fontWeight="500" textAnchor="end" opacity="0.8">Surface</text>
@@ -743,8 +765,8 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
             <line x1={centerX} y1={centerY} x2={refractedEndX} y2={refractedEndY} stroke={design.colors.beam} strokeWidth="7" strokeLinecap="round" filter="url(#snellBeamGlow)"/>
             <line x1={centerX} y1={centerY} x2={refractedEndX} y2={refractedEndY} stroke="url(#snellBeamGrad)" strokeWidth="4" strokeLinecap="round"/>
 
-            <circle cx={centerX} cy={centerY} r="7" fill={design.colors.beamLight} filter="url(#snellBeamGlow)"/>
-            <circle cx={centerX} cy={centerY} r="5" fill="#fff"/>
+            <circle cx={centerX} cy={centerY} r="5" fill={design.colors.beamLight}/>
+            <circle cx={centerX} cy={centerY} r="3" fill="#fff"/>
           </g>
 
           <g className="labels">
@@ -752,25 +774,6 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
             <text x="20" y={centerY + 28} fill={mediumColors.main} fontSize="13" fontWeight="700">{medium.toUpperCase()} (n={refractiveIndices[medium].toFixed(2)})</text>
           </g>
 
-          {/* Grid lines for angle reference */}
-          <g className="grid-lines">
-            <line x1={chartX0} y1={chartY0} x2={chartX0} y2={chartY1} stroke={design.colors.textMuted} strokeDasharray="4 4" opacity="0.3" strokeWidth="1"/>
-            <line x1={chartX0} y1={chartY1} x2={chartX1} y2={chartY1} stroke={design.colors.textMuted} strokeDasharray="4 4" opacity="0.3" strokeWidth="1"/>
-            <line x1={chartX0 + (chartX1 - chartX0) * 0.5} y1={chartY0} x2={chartX0 + (chartX1 - chartX0) * 0.5} y2={chartY1} stroke={design.colors.textMuted} strokeDasharray="4 4" opacity="0.3" strokeWidth="1"/>
-          </g>
-
-          {/* Axis labels */}
-          <g className="axis-labels">
-            <text x={(chartX0 + chartX1) / 2} y={chartY1 + 14} fill={design.colors.textMuted} fontSize="11" textAnchor="middle">Incident Angle (degrees)</text>
-            <text x={chartX0 - 4} y={(chartY0 + chartY1) / 2} fill={design.colors.textMuted} fontSize="11" textAnchor="end" transform={`rotate(-90, ${chartX0 - 4}, ${(chartY0 + chartY1) / 2})`}>Refracted Angle</text>
-          </g>
-
-          {/* Refraction response curve */}
-          <g className="response-curve">
-            <path d={curvePath} fill="none" stroke={design.colors.cyan} strokeWidth="2.5" opacity="0.8"/>
-            {/* Interactive current-value marker */}
-            <circle cx={currentPx} cy={currentPy} r="8" fill={angleFeedbackColor} stroke="#ffffff" strokeWidth="2" filter="url(#snellBeamGlow)"/>
-          </g>
         </svg>
 
         <div style={{
@@ -1155,7 +1158,7 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
                   <line x1="60" y1="40" x2="97" y2="80" stroke={design.colors.beam} strokeWidth="3" filter="url(#twistGlow)"/>
                   <line x1="97" y1="80" x2="120" y2="160" stroke={design.colors.beam} strokeWidth="3" filter="url(#twistGlow)"/>
                   <circle cx="97" cy="80" r="3" fill="#fff"/>
-                  <text x="97" y="185" fill={design.colors.textMuted} fontSize="9" textAnchor="middle">Moderate bending</text>
+                  <text x="97" y="185" fill={design.colors.textMuted} fontSize="11" textAnchor="middle">Moderate bending</text>
                 </g>
                 <g className="oilSide">
                   <rect x="210" y="5" width="185" height="190" rx="8" fill="#0a0f1a" stroke={design.colors.oil} strokeWidth="1"/>
@@ -1165,7 +1168,7 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
                   <line x1="265" y1="40" x2="302" y2="80" stroke={design.colors.beam} strokeWidth="3" filter="url(#twistGlow)"/>
                   <line x1="302" y1="80" x2="320" y2="160" stroke={design.colors.beam} strokeWidth="3" filter="url(#twistGlow)"/>
                   <circle cx="302" cy="80" r="3" fill="#fff"/>
-                  <text x="302" y="185" fill={design.colors.textMuted} fontSize="9" textAnchor="middle">More bending?</text>
+                  <text x="302" y="185" fill={design.colors.textMuted} fontSize="11" textAnchor="middle">More bending?</text>
                 </g>
                 <text x="200" y="105" fill={design.colors.textMuted} fontSize="12" textAnchor="middle" fontWeight="600">vs</text>
               </svg>

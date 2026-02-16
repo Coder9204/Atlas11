@@ -440,24 +440,16 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
     const lightY = 60;
     const cellX = 320;
     const cellY = 180;
-    const cellWidth = 280;
-    const cellHeight = 160;
+    const cellWidth = 240;
+    const cellHeight = 140;
 
     const numRays = 6;
     const rays = [];
-    const photonPositions: { x: number; y: number; progress: number }[] = [];
 
     for (let i = 0; i < numRays; i++) {
-      const targetY = cellY - 20 + (i * 50);
+      const targetY = cellY - 20 + (i * 40);
       const opacity = Math.max(0.2, output.effectiveIntensity * 0.5);
       const rayEndX = cellX - 10;
-      const animPhase = ((Date.now() / 800) + i * 0.15) % 1;
-      const photonX = lightX + (rayEndX - lightX) * animPhase;
-      const photonY = lightY + (targetY - lightY) * animPhase;
-
-      if (animPhase > 0.1 && animPhase < 0.95) {
-        photonPositions.push({ x: photonX, y: photonY, progress: animPhase });
-      }
 
       rays.push(
         <line
@@ -479,8 +471,40 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
       { x: cellX + 80, y: cellY + 35, delay: 0.3 },
       { x: cellX + 130, y: cellY + 20, delay: 0.6 },
       { x: cellX + 180, y: cellY + 40, delay: 0.15 },
-      { x: cellX + 220, y: cellY + 30, delay: 0.45 },
     ];
+
+    // Power response curve: maps effective intensity to a visual Y position
+    // Build a curve showing power vs intensity relationship across the chart
+    const curveBaseX = 15;
+    const curveWidth = 130;
+    const curveTopY = 30;
+    const curveBottomY = 370;
+    const curveRange = curveBottomY - curveTopY;
+    const curvePoints: string[] = [];
+    const numCurvePoints = 20;
+    for (let i = 0; i <= numCurvePoints; i++) {
+      const frac = i / numCurvePoints;
+      const dist = 20 + frac * 80; // distance from 20 to 100
+      const distFactor = Math.pow(50 / dist, 2);
+      const angleRad = (panelAngle * Math.PI) / 180;
+      const aFactor = Math.max(0, Math.cos(angleRad));
+      const magFactor = useMagnifier ? 2.5 : 1;
+      const effI = (lightIntensity / 100) * distFactor * aFactor * magFactor;
+      const v = Math.min(0.6, 0.45 + 0.15 * Math.sqrt(effI));
+      const c = effI * 100;
+      const pw = Math.min(v * c, 150);
+      const normalizedPower = pw / 150;
+      const cy = curveBottomY - normalizedPower * curveRange;
+      const cx = curveBaseX + frac * curveWidth;
+      curvePoints.push(`${i === 0 ? 'M' : 'L'} ${cx.toFixed(1)} ${cy.toFixed(1)}`);
+    }
+    const curvePath = curvePoints.join(' ');
+
+    // Interactive point: current operating point on the curve
+    const currentFrac = (lightDistance - 20) / 80;
+    const pointX = curveBaseX + currentFrac * curveWidth;
+    const normalizedCurrentPower = Math.min(output.power, 150) / 150;
+    const pointY = curveBottomY - normalizedCurrentPower * curveRange;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -594,12 +618,6 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
               <stop offset="100%" stopColor="#6366f1" />
             </linearGradient>
 
-            <linearGradient id="solcOutputPanel" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1e293b" />
-              <stop offset="50%" stopColor="#0f172a" />
-              <stop offset="100%" stopColor="#020617" />
-            </linearGradient>
-
             <filter id="solcSunBlur" x="-100%" y="-100%" width="300%" height="300%">
               <feGaussianBlur stdDeviation="8" result="blur" />
               <feMerge>
@@ -638,6 +656,14 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
               <feComposite in="SourceGraphic" in2="shadow" operator="over" />
             </filter>
 
+            <filter id="solcPointGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
             <pattern id="solcLabGrid" width="30" height="30" patternUnits="userSpaceOnUse">
               <rect width="30" height="30" fill="none" stroke="#1e3a5f" strokeWidth="0.3" strokeOpacity={0.3} />
             </pattern>
@@ -645,6 +671,12 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
 
           <rect width={width} height={height} fill="url(#solcLabBg)" />
           <rect width={width} height={height} fill="url(#solcLabGrid)" />
+
+          {/* Power Response Curve (left side) */}
+          <path d={curvePath} stroke="#f59e0b" strokeWidth={2} fill="none" opacity={0.7} />
+          <circle cx={pointX} cy={pointY} r={8} fill="#f59e0b" filter="url(#solcPointGlow)" opacity={0.9} />
+          <text x={curveBaseX} y={18} fill="#f59e0b" fontSize="11" fontWeight="bold">Power</text>
+          <text x={curveBaseX + curveWidth + 5} y={385} fill={`rgba(148,163,184,0.7)`} fontSize="11">Dist</text>
 
           {/* Light Source */}
           <g transform={`translate(${lightX}, ${lightY})`}>
@@ -655,29 +687,12 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
             <circle r={12} fill="#fffbeb" opacity={0.9}>
               <animate attributeName="opacity" values="0.85;1;0.85" dur="1.5s" repeatCount="indefinite" />
             </circle>
-            <text y={-40} textAnchor="middle" fill="#fcd34d" fontSize="10" fontWeight="bold">
+            <text y={-44} textAnchor="middle" fill="#fcd34d" fontSize="11" fontWeight="bold">
               LIGHT SOURCE
-            </text>
-            <text y={45} textAnchor="middle" fill="#94a3b8" fontSize="9">
-              {lightIntensity}% intensity
             </text>
           </g>
 
           {rays}
-
-          {photonPositions.map((photon, i) => (
-            <g key={`solcPhoton${i}`} filter="url(#solcPhotonBlur)">
-              <circle cx={photon.x} cy={photon.y} r={8} fill="url(#solcPhotonGlow)" opacity={0.8} />
-              <circle cx={photon.x} cy={photon.y} r={4} fill="#fef9c3" />
-              <path
-                d={`M ${photon.x - 12} ${photon.y} Q ${photon.x - 6} ${photon.y - 4}, ${photon.x} ${photon.y} Q ${photon.x + 6} ${photon.y + 4}, ${photon.x + 12} ${photon.y}`}
-                stroke="#fde047"
-                strokeWidth="1.5"
-                fill="none"
-                opacity={0.6}
-              />
-            </g>
-          ))}
 
           {showMagnifier && useMagnifier && (
             <g transform={`translate(${(lightX + cellX) / 2}, ${(lightY + cellY) / 2})`}>
@@ -685,55 +700,50 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
               <ellipse rx={20} ry={35} fill="none" stroke="#bae6fd" strokeWidth={1} opacity={0.5} />
               <line x1={-25} y1={-40} x2={0} y2={0} stroke="#fcd34d" strokeWidth="1" strokeDasharray="4,2" opacity={0.4} />
               <line x1={25} y1={-40} x2={0} y2={0} stroke="#fcd34d" strokeWidth="1" strokeDasharray="4,2" opacity={0.4} />
-              <text y={70} textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="bold">
-                2.5x CONCENTRATOR
+              <text y={72} textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="bold">
+                CONCENTRATOR
               </text>
             </g>
           )}
 
           {/* Solar Cell Cross-Section */}
           <g transform={`translate(${cellX}, ${cellY})`}>
-            <rect x={-10} y={-30} width={cellWidth + 20} height={cellHeight + 50} rx={6} fill="#111827" stroke="#1f2937" strokeWidth={1.5} />
+            <rect x={-10} y={-25} width={cellWidth + 20} height={cellHeight + 40} rx={6} fill="#111827" stroke="#1f2937" strokeWidth={1.5} />
             <rect x={0} y={0} width={cellWidth} height={8} rx={2} fill="url(#solcARCoating)" filter="url(#solcInnerShadow)" />
-            <text x={cellWidth + 15} y={6} fill="#06b6d4" fontSize="8" fontWeight="bold">AR Coating</text>
 
-            {[0, 1, 2, 3, 4, 5, 6].map(i => (
+            {[0, 1, 2, 3, 4, 5].map(i => (
               <rect
                 key={`solcTopContact${i}`}
-                x={20 + i * 40}
+                x={15 + i * 44}
                 y={-5}
                 width={8}
-                height={20}
+                height={18}
                 rx={1}
                 fill="url(#solcMetalContact)"
               />
             ))}
 
-            <rect x={0} y={8} width={cellWidth} height={45} fill="url(#solcNType)" />
-            <text x={-8} y={28} fill="#60a5fa" fontSize="9" fontWeight="bold" textAnchor="end">N-type</text>
-            <text x={-8} y={46} fill="#94a3b8" fontSize="8" textAnchor="end">(e- rich)</text>
+            <rect x={0} y={8} width={cellWidth} height={38} fill="url(#solcNType)" />
+            <text x={cellWidth + 15} y={20} fill="#60a5fa" fontSize="11" fontWeight="bold">N-type</text>
 
-            <rect x={0} y={53} width={cellWidth} height={20} fill="url(#solcDepletion)" filter="url(#solcDepletionGlow)" opacity={0.9} />
-            {[40, 100, 160, 220].map((xPos, i) => (
-              <g key={`solcEFieldArrow${i}`} transform={`translate(${xPos}, 63)`}>
-                <line x1={0} y1={-6} x2={0} y2={6} stroke="url(#solcEField)" strokeWidth={2} />
-                <polygon points="0,8 -4,2 4,2" fill="#a855f7" />
+            <rect x={0} y={46} width={cellWidth} height={16} fill="url(#solcDepletion)" filter="url(#solcDepletionGlow)" opacity={0.9} />
+            {[35, 85, 135, 195].map((xPos, i) => (
+              <g key={`solcEFieldArrow${i}`} transform={`translate(${xPos}, 54)`}>
+                <line x1={0} y1={-5} x2={0} y2={5} stroke="url(#solcEField)" strokeWidth={2} />
+                <polygon points="0,7 -3,2 3,2" fill="#a855f7" />
               </g>
             ))}
-            <text x={cellWidth + 15} y={58} fill="#c084fc" fontSize="8" fontWeight="bold">Depletion</text>
-            <text x={cellWidth + 15} y={78} fill="#94a3b8" fontSize="8">Region (E Field)</text>
+            <text x={cellWidth + 15} y={56} fill="#c084fc" fontSize="11" fontWeight="bold">Junction</text>
 
-            <rect x={0} y={73} width={cellWidth} height={60} fill="url(#solcPType)" />
-            <text x={-8} y={95} fill="#fb923c" fontSize="9" fontWeight="bold" textAnchor="end">P-type</text>
-            <text x={-8} y={115} fill="#94a3b8" fontSize="8" textAnchor="end">(h+ rich)</text>
+            <rect x={0} y={62} width={cellWidth} height={50} fill="url(#solcPType)" />
+            <text x={cellWidth + 15} y={90} fill="#fb923c" fontSize="11" fontWeight="bold">P-type</text>
 
-            <rect x={0} y={133} width={cellWidth} height={10} rx={2} fill="url(#solcMetalContact)" />
-            <text x={cellWidth + 15} y={140} fill="#9ca3af" fontSize="8">Back Contact</text>
+            <rect x={0} y={112} width={cellWidth} height={8} rx={2} fill="url(#solcMetalContact)" />
+            <text x={cellWidth + 15} y={122} fill="#9ca3af" fontSize="11">Contact</text>
 
             {ehPairs.map((pair, i) => {
               const animTime = ((Date.now() / 1000) + pair.delay) % 2;
               const showPair = animTime < 1.5 && output.effectiveIntensity > 0.2;
-              // Ensure minimum 25px separation between particles at all times
               const electronY = pair.y - 15 - Math.min(animTime * 30, 35);
               const holeY = pair.y + 15 + Math.min(animTime * 25, 30);
 
@@ -745,11 +755,11 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
                     <circle cx={pair.x - cellX} cy={pair.y - cellY} r={10 * (1 - animTime / 0.3)} fill="#fef9c3" opacity={0.8} filter="url(#solcPhotonBlur)" />
                   )}
                   <g filter="url(#solcParticleGlow)">
-                    <circle cx={pair.x - cellX} cy={electronY - cellY} r={6} fill="url(#solcElectronGlow)" />
+                    <circle cx={pair.x - cellX} cy={electronY - cellY} r={5} fill="url(#solcElectronGlow)" />
                     <circle cx={pair.x - cellX} cy={electronY - cellY} r={3} fill="#93c5fd" />
                   </g>
                   <g filter="url(#solcParticleGlow)">
-                    <circle cx={pair.x - cellX} cy={holeY - cellY} r={6} fill="url(#solcHoleGlow)" />
+                    <circle cx={pair.x - cellX} cy={holeY - cellY} r={5} fill="url(#solcHoleGlow)" />
                     <circle cx={pair.x - cellX} cy={holeY - cellY} r={3} fill="#fed7aa" stroke="#ea580c" strokeWidth={1} fillOpacity={0.3} />
                   </g>
                 </g>
@@ -757,55 +767,26 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
             })}
 
             <g transform={`translate(${cellWidth + 5}, 0)`}>
-              <line x1={5} y1={10} x2={5} y2={130} stroke="#22c55e" strokeWidth={2} strokeDasharray="6,3">
+              <line x1={5} y1={10} x2={5} y2={110} stroke="#22c55e" strokeWidth={2} strokeDasharray="6,3">
                 <animate attributeName="stroke-dashoffset" values="0;-18" dur="0.8s" repeatCount="indefinite" />
               </line>
               <polygon points="5,-5 0,5 10,5" fill="#22c55e" />
-              <text x={15} y={110} fill="#22c55e" fontSize="8" fontWeight="bold">I</text>
             </g>
           </g>
 
-          <g transform={`translate(${(lightX + cellX) / 2}, ${height - 50})`}>
-            <line x1={-80} y1={0} x2={80} y2={0} stroke="#475569" strokeWidth={1} />
-            <line x1={-80} y1={-5} x2={-80} y2={5} stroke="#475569" strokeWidth={2} />
-            <line x1={80} y1={-5} x2={80} y2={5} stroke="#475569" strokeWidth={2} />
-            <text y={-10} textAnchor="middle" fill="#94a3b8" fontSize="10">
-              Distance: {lightDistance} cm
-            </text>
-          </g>
-
-          <g transform="translate(10, 260)">
-            <rect width={145} height={130} rx={8} fill="url(#solcOutputPanel)" stroke="#f59e0b" strokeWidth={1.5} />
-            <text x={72} y={20} textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="bold">OUTPUT READINGS</text>
-            <line x1={10} y1={28} x2={135} y2={28} stroke="#334155" strokeWidth={1} />
-            <text x={15} y={48} fill="#94a3b8" fontSize="9">Voltage:</text>
-            <text x={130} y={48} textAnchor="end" fill="#f8fafc" fontSize="11" fontWeight="bold">{output.voltage.toFixed(2)} V</text>
-            <text x={15} y={68} fill="#94a3b8" fontSize="9">Current:</text>
-            <text x={130} y={68} textAnchor="end" fill="#f8fafc" fontSize="11" fontWeight="bold">{output.current.toFixed(1)} mA</text>
-            <text x={15} y={88} fill="#94a3b8" fontSize="9">Power:</text>
-            <text x={130} y={88} textAnchor="end" fill="#10b981" fontSize="12" fontWeight="bold">{output.power.toFixed(1)} mW</text>
-            <line x1={10} y1={96} x2={135} y2={96} stroke="#334155" strokeWidth={1} />
-            <text x={15} y={114} fill="#94a3b8" fontSize="8">Efficiency:</text>
-            <text x={130} y={114} textAnchor="end" fill="#06b6d4" fontSize="10" fontWeight="bold">{output.efficiency.toFixed(1)}%</text>
-          </g>
-
-          <g transform={`translate(${width - 120}, 15)`}>
-            <rect x={-10} y={-10} width={125} height={85} rx={6} fill="rgba(15,23,42,0.9)" stroke="#334155" />
-            <text x={52} y={8} textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold">LEGEND</text>
-            <circle cx={10} cy={28} r={5} fill="url(#solcElectronGlow)" />
-            <text x={22} y={31} fill="#60a5fa" fontSize="8">Electron (e-)</text>
-            <circle cx={10} cy={48} r={5} fill="url(#solcHoleGlow)" />
-            <text x={22} y={51} fill="#fb923c" fontSize="8">Hole (h+)</text>
-            <circle cx={10} cy={68} r={5} fill="url(#solcPhotonGlow)" />
-            <text x={22} y={71} fill="#fcd34d" fontSize="8">Photon</text>
-          </g>
-
-          <g transform={`translate(${cellX + 140}, ${cellY + cellHeight + 35})`}>
-            <text textAnchor="middle" fill="#94a3b8" fontSize="9">
-              Panel Angle: {panelAngle} deg from perpendicular
-            </text>
-          </g>
+          {/* Distance indicator */}
+          <text x={350} y={390} textAnchor="middle" fill={`rgba(148,163,184,0.7)`} fontSize="11">
+            Distance: {lightDistance} cm | Angle: {panelAngle} deg | {output.power.toFixed(1)} mW
+          </text>
         </svg>
+
+        {/* Output readings as HTML (moved out of SVG to prevent text overlap) */}
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', fontSize: '13px', color: colors.textSecondary }}>
+          <span style={{ color: '#f8fafc', fontWeight: 700 }}>{output.voltage.toFixed(2)} V</span>
+          <span style={{ color: '#f8fafc', fontWeight: 700 }}>{output.current.toFixed(1)} mA</span>
+          <span style={{ color: colors.success, fontWeight: 700 }}>{output.power.toFixed(1)} mW</span>
+          <span style={{ color: '#06b6d4', fontWeight: 700 }}>{output.efficiency.toFixed(1)}%</span>
+        </div>
 
         {interactive && (
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
@@ -826,7 +807,7 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
               {isAnimating ? 'Stop Animation' : 'Animate Distance'}
             </button>
             <button
-              onClick={() => { setLightDistance(50); setPanelAngle(0); setLightIntensity(100); setUseMagnifier(false); }}
+              onClick={() => { setLightDistance(50); setPanelAngle(15); setLightIntensity(100); setUseMagnifier(false); }}
               style={{
                 padding: '12px 24px',
                 borderRadius: '8px',
@@ -846,6 +827,14 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
     );
   };
 
+  const sliderStyle: React.CSSProperties = {
+    width: '100%',
+    height: '20px',
+    accentColor: '#3b82f6',
+    touchAction: 'pan-y' as const,
+    WebkitAppearance: 'none' as const,
+  };
+
   const renderControls = (showMagnifier: boolean = false) => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
@@ -859,7 +848,7 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
           step="5"
           value={lightDistance}
           onChange={(e) => setLightDistance(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={sliderStyle}
         />
       </div>
 
@@ -874,7 +863,7 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
           step="5"
           value={panelAngle}
           onChange={(e) => setPanelAngle(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={sliderStyle}
         />
       </div>
 
@@ -889,7 +878,7 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
           step="5"
           value={lightIntensity}
           onChange={(e) => setLightIntensity(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={sliderStyle}
         />
       </div>
 
@@ -1101,6 +1090,7 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
   // Premium wrapper with proper scroll structure
   const renderPremiumWrapper = (children: React.ReactNode, footer?: React.ReactNode) => (
     <div style={{
+      minHeight: '100vh',
       height: '100dvh',
       display: 'flex',
       flexDirection: 'column',
@@ -1123,7 +1113,8 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
         overflowX: 'hidden',
         position: 'relative',
         WebkitOverflowScrolling: 'touch',
-        paddingBottom: '80px'
+        paddingTop: '48px',
+        paddingBottom: '100px'
       }}>
         {children}
       </div>

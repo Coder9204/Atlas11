@@ -283,7 +283,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
   const [testSubmitted, setTestSubmitted] = useState(false);
 
   // Pendulum simulation state
-  const [pendulumLength, setPendulumLength] = useState(150);
+  const [pendulumLength, setPendulumLength] = useState(100);
   const [bobMass, setBobMass] = useState(1);
   const [angle, setAngle] = useState(0);
   const [angVel, setAngVel] = useState(0);
@@ -428,16 +428,16 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
           <rect width={svgW} height={svgH} fill="url(#pendBgGrad)" />
 
           {/* Grid */}
-          <g opacity="0.06">
-            {[1,2,3,4,5].map(i => <line key={`h${i}`} x1="0" y1={i * svgH / 6} x2={svgW} y2={i * svgH / 6} stroke="#fff" strokeWidth="0.5" />)}
-            {[1,2,3,4,5,6,7].map(i => <line key={`v${i}`} x1={i * svgW / 8} y1="0" x2={i * svgW / 8} y2={svgH} stroke="#fff" strokeWidth="0.5" />)}
+          <g>
+            {[1,2,3,4,5].map(i => <line key={`h${i}`} x1="0" y1={i * svgH / 6} x2={svgW} y2={i * svgH / 6} stroke="#fff" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />)}
+            {[1,2,3,4,5,6,7].map(i => <line key={`v${i}`} x1={i * svgW / 8} y1="0" x2={i * svgW / 8} y2={svgH} stroke="#fff" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />)}
           </g>
 
           {/* Length indicator - changes with slider */}
           <g opacity={0.3 + pendulumLength / 400}>
             <circle cx={svgW - 30} cy={30} r={8 + pendulumLength / 30} fill="url(#pendLenGlow)" />
             <circle cx={svgW - 30} cy={30} r={3} fill={colors.primary} />
-            <path d={`M ${svgW - 42} 30 Q ${svgW - 36} ${30 - pendulumLength / 30} ${svgW - 30} 30`} fill="none" stroke={colors.primary} strokeWidth="1.5" />
+            <path d={`M ${svgW - 60} ${svgH * 0.7} Q ${svgW - 45} ${svgH * 0.7 - pendulumLength * 0.6} ${svgW - 30} ${svgH * 0.7}`} fill="none" stroke={colors.primary} strokeWidth="1.5" />
           </g>
 
           {/* Pivot support */}
@@ -464,11 +464,18 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
           {/* Pivot dot */}
           <circle cx={pivotX} cy={pivotY} r={4} fill="#5a5a68" />
 
+          {/* Title */}
+          <text x={svgW / 2} y={18} fill={colors.textPrimary} fontSize="14" fontWeight="700" textAnchor="middle">Pendulum Simulation</text>
+
+          {/* Axis labels */}
+          <text x={pivotX} y={svgH - 26} fill="#94a3b8" fontSize="11" textAnchor="middle">Angle (position)</text>
+          <text x={16} y={svgH / 2} fill="#94a3b8" fontSize="11" textAnchor="middle" transform={`rotate(-90, 16, ${svgH / 2})`}>Time</text>
+
           {/* Labels */}
           <g>
-            <text x={pivotX} y={svgH - 10} fill="#71717a" fontSize="9" textAnchor="middle">Equilibrium</text>
-            <text x={svgW - 30} y={svgH - 10} fill={colors.primary} fontSize="8" textAnchor="middle">T={period}s</text>
-            <text x={30} y={svgH - 10} fill={massColor} fontSize="8" textAnchor="start">m={bobMass}kg</text>
+            <text x={pivotX} y={svgH - 11} fill="#71717a" fontSize="11" textAnchor="middle">Equilibrium</text>
+            <text x={svgW - 40} y={svgH - 11} fill={colors.primary} fontSize="11" textAnchor="middle">T={period}s</text>
+            <text x={40} y={svgH - 11} fill={massColor} fontSize="11" textAnchor="start">m={bobMass}kg</text>
           </g>
         </svg>
 
@@ -476,19 +483,23 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '380px', padding: '16px', background: colors.bgCard, borderRadius: '12px', border: `1px solid ${colors.border}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <span style={{ fontSize: '13px', color: colors.textSecondary, minWidth: '80px', fontWeight: 500 }}>Length (cm):</span>
-              <input type="range" min="30" max="250" step="5" value={pendulumLength} onChange={(e) => { setPendulumLength(Number(e.target.value)); stopSwing(); }} style={{ flex: 1, accentColor: colors.primary }} />
+              <span style={{ fontSize: '11px', color: colors.textMuted }}>30</span>
+              <input type="range" min="30" max="250" step="5" value={pendulumLength} onChange={(e) => { setPendulumLength(Number(e.target.value)); stopSwing(); }} style={{ flex: 1, width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: colors.primary }} />
+              <span style={{ fontSize: '11px', color: colors.textMuted }}>250</span>
               <span style={{ fontSize: '13px', color: colors.textPrimary, minWidth: '50px', fontWeight: 600 }}>{pendulumLength} cm</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <span style={{ fontSize: '13px', color: colors.textSecondary, minWidth: '80px', fontWeight: 500 }}>Mass (kg):</span>
-              <input type="range" min="0.5" max="5" step="0.5" value={bobMass} onChange={(e) => { setBobMass(Number(e.target.value)); stopSwing(); }} style={{ flex: 1, accentColor: colors.accent }} />
+              <span style={{ fontSize: '11px', color: colors.textMuted }}>0.5</span>
+              <input type="range" min="0.5" max="5" step="0.5" value={bobMass} onChange={(e) => { setBobMass(Number(e.target.value)); stopSwing(); }} style={{ flex: 1, width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: colors.accent }} />
+              <span style={{ fontSize: '11px', color: colors.textMuted }}>5</span>
               <span style={{ fontSize: '13px', color: colors.textPrimary, minWidth: '50px', fontWeight: 600 }}>{bobMass} kg</span>
             </div>
             <button onClick={() => isSwinging ? stopSwing() : startSwing()} style={{ ...primaryBtnStyle, padding: '12px 16px', fontSize: '14px', background: isSwinging ? `linear-gradient(135deg, ${colors.danger}, #dc2626)` : `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})` }}>
               {isSwinging ? 'Stop' : 'Release Pendulum'}
             </button>
             <div style={{ padding: '12px', background: colors.bgCardLight, borderRadius: '8px', border: `1px solid ${colors.border}`, textAlign: 'center' }}>
-              <span style={{ fontSize: '13px', color: colors.textSecondary }}>Period T = 2pi*sqrt(L/g) = <strong style={{ color: colors.primary }}>{period} s</strong> (independent of mass!)</span>
+              <span style={{ fontSize: '13px', color: colors.textSecondary }}>Period T = 2π√(L/g) = <strong style={{ color: colors.primary }}>{period} s</strong> | L² proportional to T² (independent of mass!)</span>
             </div>
           </div>
         )}
@@ -571,6 +582,16 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
         <p style={{ fontSize: '14px', color: colors.textSecondary, margin: 0, lineHeight: 1.6 }}>When you increase the length, the period increases because the pendulum has farther to travel. This is why clocks use precise pendulum lengths. When you change the mass, observe what happens to the period - this practical experiment helps engineers design timekeeping devices.</p>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>{renderPendulum(true)}</div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '16px', maxWidth: '380px', width: '100%', margin: '16px auto 0' }}>
+        <div style={{ padding: '12px', background: colors.bgCardLight, borderRadius: '8px', border: `1px solid ${colors.border}`, textAlign: 'center' }}>
+          <div style={{ fontSize: '12px', color: colors.textMuted, marginBottom: '4px' }}>Reference (1m)</div>
+          <div style={{ fontSize: '16px', fontWeight: 700, color: colors.primary }}>{(2 * Math.PI * Math.sqrt(1 / gravity)).toFixed(2)} s</div>
+        </div>
+        <div style={{ padding: '12px', background: colors.bgCardLight, borderRadius: '8px', border: `1px solid ${colors.border}`, textAlign: 'center' }}>
+          <div style={{ fontSize: '12px', color: colors.textMuted, marginBottom: '4px' }}>Current ({pendulumLength} cm)</div>
+          <div style={{ fontSize: '16px', fontWeight: 700, color: colors.accent }}>{(2 * Math.PI * Math.sqrt(pendulumLength / 100 / gravity)).toFixed(2)} s</div>
+        </div>
+      </div>
     </div>
   );
 
@@ -816,7 +837,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
         <span style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(255,255,255,0.8)', letterSpacing: '0.025em' }}>Pendulum Period</span>
         <span style={{ fontSize: '14px', fontWeight: 500, color: colors.primary }}>{phaseLabels[phase]}</span>
       </div>
-      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%', overflowY: 'auto' }}>{renderPhase()}</div>
+      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%', overflowY: 'auto', paddingTop: '48px' }}>{renderPhase()}</div>
       {renderBottomBar()}
     </div>
   );
