@@ -523,7 +523,7 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
             opacity: currentIndex === phaseOrder.length - 1 ? 0.5 : 1,
           }}
         >
-          Next
+          Next →
         </button>
       </div>
     );
@@ -537,8 +537,8 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
       const t = i / numPoints; // 0 to 1 (time fraction)
       const x = 60 + t * 360; // chart area x from 60 to 420
       // Exponential decay: amplitude = initial * e^(-damping*t)
-      const dampFactor = (strength / 100) * 0.65 * 5;
-      const amplitude = 60 * Math.exp(-dampFactor * t) * Math.cos(2 * Math.PI * 3 * t);
+      const dampFactor = (strength / 100) * 0.65 * 3;
+      const amplitude = 100 * Math.exp(-dampFactor * t) * Math.cos(2 * Math.PI * 3 * t);
       const y = 160 - amplitude; // center at y=160
       points.push({ x, y });
     }
@@ -558,17 +558,17 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
     for (let i = 0; i <= 30; i++) {
       const t = i / 30;
       const x = 60 + t * 360;
-      const dampFactor = (magnetStrength / 100) * 0.65 * 5;
-      const env = 60 * Math.exp(-dampFactor * t);
+      const dampFactor = (magnetStrength / 100) * 0.65 * 3;
+      const env = 100 * Math.exp(-dampFactor * t);
       envUpper.push(`${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${(160 - env).toFixed(1)}`);
       envLower.push(`${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${(160 + env).toFixed(1)}`);
     }
 
     // Interactive point position depends on magnetStrength
-    const dampFactor = (magnetStrength / 100) * 0.65 * 5;
-    const tMark = 0.3;
+    const dampFactor = (magnetStrength / 100) * 0.65 * 3;
+    const tMark = 0.5;
     const xMark = 60 + tMark * 360;
-    const ampMark = 60 * Math.exp(-dampFactor * tMark) * Math.cos(2 * Math.PI * 3 * tMark);
+    const ampMark = 100 * Math.exp(-dampFactor * tMark) * Math.cos(2 * Math.PI * 3 * tMark);
     const yMark = 160 - ampMark;
 
     // Color based on damping strength
@@ -610,11 +610,11 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
 
         {/* Axis labels group */}
         <g>
-          <text x="240" y="306" fill={colors.textSecondary} fontSize="13" textAnchor="middle">Time (s)</text>
+          <text x="240" y="316" fill={colors.textSecondary} fontSize="13" textAnchor="middle">Time (s)</text>
           <text x="14" y="165" fill={colors.textSecondary} fontSize="13" textAnchor="middle" transform="rotate(-90, 14, 165)">Amplitude</text>
-          <text x="50" y="103" fill="rgba(148,163,184,0.7)" fontSize="11" textAnchor="end">+60</text>
+          <text x="50" y="83" fill="rgba(148,163,184,0.7)" fontSize="11" textAnchor="end">+100</text>
           <text x="50" y="163" fill="rgba(148,163,184,0.7)" fontSize="11" textAnchor="end">0</text>
-          <text x="50" y="223" fill="rgba(148,163,184,0.7)" fontSize="11" textAnchor="end">-60</text>
+          <text x="50" y="243" fill="rgba(148,163,184,0.7)" fontSize="11" textAnchor="end">-100</text>
           <text x="60" y="296" fill="rgba(148,163,184,0.7)" fontSize="11" textAnchor="middle">0</text>
           <text x="240" y="296" fill="rgba(148,163,184,0.7)" fontSize="11" textAnchor="middle">0.5</text>
           <text x="420" y="296" fill="rgba(148,163,184,0.7)" fontSize="11" textAnchor="middle">1.0</text>
@@ -1323,7 +1323,7 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
           ))}
 
           {/* Axis labels */}
-          <text x="240" y="306" fill={colors.textSecondary} fontSize="13" textAnchor="middle">Time (s)</text>
+          <text x="240" y="316" fill={colors.textSecondary} fontSize="13" textAnchor="middle">Time (s)</text>
           <text x="18" y="165" fill={colors.textSecondary} fontSize="13" textAnchor="middle" transform="rotate(-90, 18, 165)">Amplitude</text>
 
           {/* Center line */}
@@ -1808,14 +1808,14 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
             </div>
 
             {/* Take the Test button */}
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px', opacity: allAppsCompleted ? 1 : 0.5 }}
-            >
-              Take the Test
-            </button>
-
-            {!allAppsCompleted && (
+            {allAppsCompleted ? (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px' }}
+              >
+                Continue to Knowledge Test
+              </button>
+            ) : (
               <p className="text-muted" style={{ ...typo.small, color: colors.textMuted, textAlign: 'center' }}>
                 Explore all 4 applications to continue ({completedApps.filter(c => c).length}/4 completed)
               </p>

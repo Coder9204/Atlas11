@@ -459,56 +459,62 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
         </text>
 
         {/* Grid lines */}
-        {[0.25, 0.5, 0.75, 1.0].map((frac, i) => {
-          const gy = padT + plotH - frac * plotH;
-          return (
-            <line key={`hgrid-${i}`} x1={padL} y1={gy} x2={padL + plotW} y2={gy}
-              stroke={colors.border} strokeDasharray="4 4" opacity={0.3} />
-          );
-        })}
-        {[0.25, 0.5, 0.75, 1.0].map((frac, i) => {
-          const gx = padL + frac * plotW;
-          return (
-            <line key={`vgrid-${i}`} x1={gx} y1={padT} x2={gx} y2={padT + plotH}
-              stroke={colors.border} strokeDasharray="4 4" opacity={0.3} />
-          );
-        })}
+        <g className="grid-lines">
+          {[0.25, 0.5, 0.75, 1.0].map((frac, i) => {
+            const gy = padT + plotH - frac * plotH;
+            return (
+              <line key={`hgrid-${i}`} x1={padL} y1={gy} x2={padL + plotW} y2={gy}
+                stroke={colors.border} strokeDasharray="4 4" opacity={0.3} />
+            );
+          })}
+          {[0.25, 0.5, 0.75, 1.0].map((frac, i) => {
+            const gx = padL + frac * plotW;
+            return (
+              <line key={`vgrid-${i}`} x1={gx} y1={padT} x2={gx} y2={padT + plotH}
+                stroke={colors.border} strokeDasharray="4 4" opacity={0.3} />
+            );
+          })}
+        </g>
 
         {/* Axes */}
-        <line x1={padL} y1={padT} x2={padL} y2={padT + plotH} stroke={colors.textSecondary} strokeWidth="1.5" />
-        <line x1={padL} y1={padT + plotH} x2={padL + plotW} y2={padT + plotH} stroke={colors.textSecondary} strokeWidth="1.5" />
+        <g className="axes">
+          <line x1={padL} y1={padT} x2={padL} y2={padT + plotH} stroke={colors.textSecondary} strokeWidth="1.5" />
+          <line x1={padL} y1={padT + plotH} x2={padL + plotW} y2={padT + plotH} stroke={colors.textSecondary} strokeWidth="1.5" />
 
-        {/* Axis labels */}
-        <text x={padL + plotW / 2} y={h - 5} fill={colors.textSecondary} fontSize="12" textAnchor="middle">
-          Fan Speed (%)
-        </text>
-        <text x="14" y={padT + plotH / 2} fill={colors.textSecondary} fontSize="12" textAnchor="middle"
-          transform={`rotate(-90, 14, ${padT + plotH / 2})`}>
-          Output (%)
-        </text>
+          {/* Axis labels */}
+          <text x={padL + plotW / 2} y={h - 5} fill={colors.textSecondary} fontSize="12" textAnchor="middle">
+            Fan Speed (%)
+          </text>
+          <text x="14" y={padT + plotH / 2} fill={colors.textSecondary} fontSize="12" textAnchor="middle"
+            transform={`rotate(-90, 14, ${padT + plotH / 2})`}>
+            Output (%)
+          </text>
 
-        {/* Tick labels */}
-        {[0, 25, 50, 75, 100].map((v) => {
-          const tx = padL + (v / 100) * plotW;
-          return (
-            <text key={`xlabel-${v}`} x={tx} y={padT + plotH + 15} fill={colors.textSecondary} fontSize="11" textAnchor="middle">
-              {v}
-            </text>
-          );
-        })}
-        {[0, 25, 50, 75, 100].map((v) => {
-          const ty = padT + plotH - (v / 100) * plotH;
-          return (
-            <text key={`ylabel-${v}`} x={padL - 8} y={ty + 4} fill={colors.textSecondary} fontSize="11" textAnchor="end">
-              {v}
-            </text>
-          );
-        })}
+          {/* Tick labels */}
+          {[0, 25, 50, 75, 100].map((v) => {
+            const tx = padL + (v / 100) * plotW;
+            return (
+              <text key={`xlabel-${v}`} x={tx} y={padT + plotH + 15} fill={colors.textSecondary} fontSize="11" textAnchor="middle">
+                {v}
+              </text>
+            );
+          })}
+          {[0, 25, 50, 75, 100].map((v) => {
+            const ty = padT + plotH - (v / 100) * plotH;
+            return (
+              <text key={`ylabel-${v}`} x={padL - 8} y={ty + 4} fill={colors.textSecondary} fontSize="11" textAnchor="end">
+                {v}
+              </text>
+            );
+          })}
+        </g>
 
         {/* Curves */}
-        <path d={airflowPts.join(' ')} fill="none" stroke="url(#airflowGrad)" strokeWidth="2.5" />
-        <path d={pressurePts.join(' ')} fill="none" stroke="url(#pressureGrad)" strokeWidth="2.5" />
-        <path d={powerPts.join(' ')} fill="none" stroke="url(#powerGrad)" strokeWidth="2.5" />
+        <g className="curves">
+          <path d={airflowPts.join(' ')} fill="none" stroke="url(#airflowGrad)" strokeWidth="2.5" />
+          <path d={pressurePts.join(' ')} fill="none" stroke="url(#pressureGrad)" strokeWidth="2.5" />
+          <path d={powerPts.join(' ')} fill="none" stroke="url(#powerGrad)" strokeWidth="2.5" />
+        </g>
 
         {/* Current speed vertical indicator */}
         <line x1={currentX} y1={padT} x2={currentX} y2={padT + plotH}
@@ -524,13 +530,13 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
 
         {/* Legend */}
         <g transform={`translate(${padL + 10}, ${padT + 8})`}>
-          <rect x="0" y="0" width="120" height="50" rx="4" fill="rgba(10,10,15,0.8)" />
+          <rect x="0" y="0" width="120" height="56" rx="4" fill="rgba(10,10,15,0.8)" />
           <line x1="6" y1="12" x2="22" y2="12" stroke="#3B82F6" strokeWidth="2" />
           <text x="28" y="15" fill="#3B82F6" fontSize="11">Airflow (Q = N)</text>
-          <line x1="6" y1="26" x2="22" y2="26" stroke="#F59E0B" strokeWidth="2" />
-          <text x="28" y="29" fill="#F59E0B" fontSize="11">Pressure (P = N{'\u00B2'})</text>
-          <line x1="6" y1="40" x2="22" y2="40" stroke="#10B981" strokeWidth="2" />
-          <text x="28" y="43" fill="#10B981" fontSize="11">Power (W = N{'\u00B3'})</text>
+          <line x1="6" y1="28" x2="22" y2="28" stroke="#F59E0B" strokeWidth="2" />
+          <text x="28" y="31" fill="#F59E0B" fontSize="11">Pressure (P = N{'\u00B2'})</text>
+          <line x1="6" y1="44" x2="22" y2="44" stroke="#10B981" strokeWidth="2" />
+          <text x="28" y="47" fill="#10B981" fontSize="11">Power (W = N{'\u00B3'})</text>
         </g>
 
         {/* Current values annotation */}
@@ -732,8 +738,8 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '24px',
-          paddingTop: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
           textAlign: 'center',
         }}>
           <div style={{
@@ -810,8 +816,8 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
           overflowY: 'auto',
           paddingTop: '48px',
           paddingBottom: '100px',
-          padding: '24px',
-          paddingTop: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
@@ -922,8 +928,8 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
           overflowY: 'auto',
           paddingTop: '48px',
           paddingBottom: '100px',
-          padding: '24px',
-          paddingTop: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1071,8 +1077,8 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
           overflowY: 'auto',
           paddingTop: '48px',
           paddingBottom: '100px',
-          padding: '24px',
-          paddingTop: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1196,8 +1202,8 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
           overflowY: 'auto',
           paddingTop: '48px',
           paddingBottom: '100px',
-          padding: '24px',
-          paddingTop: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
@@ -1463,8 +1469,8 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
           overflowY: 'auto',
           paddingTop: '48px',
           paddingBottom: '100px',
-          padding: '24px',
-          paddingTop: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1598,8 +1604,8 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
           overflowY: 'auto',
           paddingTop: '48px',
           paddingBottom: '100px',
-          padding: '24px',
-          paddingTop: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1691,8 +1697,8 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
           overflowY: 'auto',
           paddingTop: '48px',
           paddingBottom: '100px',
-          padding: '24px',
-          paddingTop: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
@@ -1895,8 +1901,8 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
             overflowY: 'auto',
             paddingTop: '48px',
             paddingBottom: '100px',
-            padding: '24px',
-            paddingTop: '80px',
+            paddingLeft: '24px',
+            paddingRight: '24px',
           }}>
             <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
               <div style={{ fontSize: '80px', marginBottom: '24px' }}>
@@ -1954,8 +1960,8 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
           overflowY: 'auto',
           paddingTop: '48px',
           paddingBottom: '100px',
-          padding: '24px',
-          paddingTop: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
@@ -2128,8 +2134,8 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '24px',
-          paddingTop: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
           textAlign: 'center',
         }}>
           <div style={{ fontSize: '100px', marginBottom: '24px', animation: 'bounce 1s infinite' }}>

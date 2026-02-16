@@ -180,7 +180,7 @@ const realWorldApps = [
     stats: [
       { value: '20 nm', label: 'Super-resolution limit', icon: '🔍' },
       { value: '$6B', label: 'Microscopy market', icon: '💰' },
-      { value: '2008', label: 'Nobel Prize for GFP', icon: '🏆' }
+      { value: '200×', label: 'Magnification range', icon: '🏆' }
     ],
     examples: ['Cancer cell tracking', 'Neuron activity imaging', 'Protein localization studies', 'Live cell imaging'],
     companies: ['Zeiss', 'Leica Microsystems', 'Nikon Instruments', 'Olympus'],
@@ -263,7 +263,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
   const [isMobile, setIsMobile] = useState(false);
 
   // Simulation state
-  const [uvIntensity, setUvIntensity] = useState(70);
+  const [uvIntensity, setUvIntensity] = useState(50);
 
   // Twist phase - phosphorescence and quantum yield
   const [excitationWavelength, setExcitationWavelength] = useState(365);
@@ -321,7 +321,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Advanced Lab',
+    twist_play: 'Explore',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',

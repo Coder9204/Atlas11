@@ -673,6 +673,14 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
           <rect x="0" y="0" width={width} height={height} fill="#1a1a24" rx="12" />
         </g>
 
+        {/* Grid lines for visual reference */}
+        <g className="grid-lines">
+          <line x1={50} y1={mirrorY - 80} x2={width - 50} y2={mirrorY - 80} stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+          <line x1={50} y1={mirrorY - 40} x2={width - 50} y2={mirrorY - 40} stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+          <line x1={centerX - 80} y1={40} x2={centerX - 80} y2={mirrorY} stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+          <line x1={centerX + 80} y1={40} x2={centerX + 80} y2={mirrorY} stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+        </g>
+
         {/* Title */}
         <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
           Law of Reflection: Angle In = Angle Out
@@ -682,7 +690,7 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
         {showVirtualImage && (
           <>
             <rect x={50} y={mirrorY} width={width - 100} height={height - mirrorY - 10} fill="rgba(100,100,150,0.1)" />
-            <text x={70} y={mirrorY + 25} fill={colors.textSecondary} fontSize="10">Virtual Space</text>
+            <text x={70} y={mirrorY + 25} fill={colors.textSecondary} fontSize="11">Virtual Space</text>
           </>
         )}
 
@@ -697,7 +705,7 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
             <>
               <line x1={centerX} y1={mirrorY - 110} x2={centerX} y2={mirrorY + 50}
                 stroke={colors.normal} strokeWidth={1} strokeDasharray="5,5" />
-              <text x={centerX + 8} y={mirrorY - 95} fill={colors.textSecondary} fontSize="10">Normal</text>
+              <text x={centerX + 8} y={mirrorY - 95} fill={colors.textSecondary} fontSize="11">Normal</text>
             </>
           )}
 
@@ -831,7 +839,7 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
 
           {/* Corner point */}
           <circle cx={cornerX} cy={cornerY} r={5} fill="#f472b6" />
-          <text x={cornerX + 12} y={cornerY + 5} fill="#f472b6" fontSize="10">90deg Corner</text>
+          <text x={cornerX + 12} y={cornerY + 5} fill="#f472b6" fontSize="11">90° Corner</text>
         </g>
 
         {/* Normal lines */}
@@ -878,8 +886,8 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
         })}
 
         {/* Labels */}
-        <text x={rayStart.x} y={rayStart.y - 10} fill={colors.incident} fontSize="10">Incoming Light</text>
-        <text x={rayEnd.x} y={rayEnd.y - 10} fill={colors.reflected} fontSize="10">Returns Parallel</text>
+        <text x={rayStart.x} y={rayStart.y - 10} fill={colors.incident} fontSize="11">Incoming Light</text>
+        <text x={rayEnd.x} y={rayEnd.y - 10} fill={colors.reflected} fontSize="11">Returns Parallel</text>
 
         {/* Explanation box */}
         <rect x={20} y={height - 70} width={width - 40} height={55} rx="8" fill="rgba(30, 41, 59, 0.9)" />
@@ -901,7 +909,7 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
       <div style={{ marginBottom: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
           <span style={{ color: colors.textSecondary, fontSize: typo.body }}>Incident Angle</span>
-          <span style={{ color: colors.incident, fontWeight: 600, fontSize: typo.body }}>{incidentAngle}deg</span>
+          <span style={{ color: colors.incident, fontWeight: 600, fontSize: typo.body }}>{incidentAngle}°</span>
         </div>
         <input
           type="range"
@@ -909,7 +917,7 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
           max="85"
           value={incidentAngle}
           onChange={(e) => setIncidentAngle(parseInt(e.target.value))}
-          style={{ width: '100%', height: '8px', accentColor: colors.incident, cursor: 'pointer' }}
+          style={{ width: '100%', height: '20px', accentColor: '#3b82f6', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
         />
       </div>
 
@@ -1092,7 +1100,7 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
             <g className="mirror">
               <rect x="60" y="140" width="240" height="8" fill="url(#predictMirrorGrad)" rx="2" />
               <line x1="180" y1="60" x2="180" y2="140" stroke={colors.normal} strokeWidth="1.5" strokeDasharray="6,4" />
-              <text x="186" y="75" fill={colors.textSecondary} fontSize="10">Normal</text>
+              <text x="186" y="75" fill={colors.textSecondary} fontSize="11">Normal</text>
             </g>
             <g className="rays">
               <line x1="110" y1="60" x2="180" y2="140" stroke="#fbbf24" strokeWidth="3" filter="url(#predictGlow)" />
@@ -1101,8 +1109,8 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
               <text x="248" y="55" fill="#34d399" fontSize="11" fontWeight="600">?</text>
             </g>
             <g className="labels">
-              <text x="90" y="190" fill="#fbbf24" fontSize="10">Incident Ray</text>
-              <text x="230" y="190" fill="#34d399" fontSize="10">Reflected Ray</text>
+              <text x="90" y="190" fill="#fbbf24" fontSize="11">Incident Ray</text>
+              <text x="230" y="190" fill="#34d399" fontSize="11">Reflected Ray</text>
             </g>
           </svg>
 
@@ -1163,6 +1171,48 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
 
           {renderReflectionVisualization()}
           {renderControls()}
+
+          {/* Real-time calculated values */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '12px',
+            padding: `0 ${typo.pagePadding}`,
+            maxWidth: '500px',
+            margin: '0 auto 16px',
+          }}>
+            <div style={{ background: 'rgba(30,41,59,0.8)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
+              <div style={{ color: colors.incident, fontSize: typo.small, marginBottom: '4px' }}>Incident</div>
+              <div style={{ color: '#FFFFFF', fontWeight: 700, fontSize: typo.bodyLarge }}>{incidentAngle}°</div>
+            </div>
+            <div style={{ background: 'rgba(30,41,59,0.8)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
+              <div style={{ color: colors.reflected, fontSize: typo.small, marginBottom: '4px' }}>Reflected</div>
+              <div style={{ color: '#FFFFFF', fontWeight: 700, fontSize: typo.bodyLarge }}>{incidentAngle}°</div>
+            </div>
+            <div style={{ background: 'rgba(30,41,59,0.8)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
+              <div style={{ color: colors.accent, fontSize: typo.small, marginBottom: '4px' }}>Match</div>
+              <div style={{ color: '#10B981', fontWeight: 700, fontSize: typo.bodyLarge }}>✓ Equal</div>
+            </div>
+          </div>
+
+          {/* Color-coded angle feedback */}
+          <div style={{
+            padding: `0 ${typo.pagePadding}`,
+            maxWidth: '500px',
+            margin: '0 auto 16px',
+          }}>
+            <div style={{
+              background: incidentAngle < 30 ? 'rgba(16,185,129,0.15)' : incidentAngle > 60 ? 'rgba(239,68,68,0.15)' : 'rgba(59,130,246,0.15)',
+              border: `1px solid ${incidentAngle < 30 ? '#10B981' : incidentAngle > 60 ? '#EF4444' : '#3b82f6'}`,
+              padding: '10px 16px',
+              borderRadius: '8px',
+              textAlign: 'center',
+            }}>
+              <span style={{ color: incidentAngle < 30 ? '#10B981' : incidentAngle > 60 ? '#EF4444' : '#3b82f6', fontWeight: 600, fontSize: typo.body }}>
+                {incidentAngle < 30 ? 'Small angle — near-normal reflection' : incidentAngle > 60 ? 'Large angle — grazing reflection' : 'Medium angle — typical reflection'}
+              </span>
+            </div>
+          </div>
 
           <div style={{
             background: 'rgba(30, 41, 59, 0.8)',
@@ -1312,14 +1362,14 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
               <rect x="200" y="50" width="8" height="120" fill="url(#twistMirrorGrad)" rx="2" />
               <rect x="80" y="162" width="128" height="8" fill="url(#twistMirrorGrad)" rx="2" />
               <circle cx="208" cy="166" r="5" fill="#f472b6" />
-              <text x="215" y="172" fill="#f472b6" fontSize="10">90deg</text>
+              <text x="215" y="172" fill="#f472b6" fontSize="11">90°</text>
             </g>
             <g className="rays">
               <line x1="50" y1="80" x2="160" y2="162" stroke="#fbbf24" strokeWidth="3" filter="url(#twistGlow)" />
               <line x1="160" y1="162" x2="200" y2="110" stroke="#818cf8" strokeWidth="3" filter="url(#twistGlow)" />
               <line x1="200" y1="110" x2="50" y2="110" stroke="#34d399" strokeWidth="3" strokeDasharray="8,4" filter="url(#twistGlow)" />
-              <text x="30" y="75" fill="#fbbf24" fontSize="10">Incoming</text>
-              <text x="30" y="107" fill="#34d399" fontSize="10">Outgoing = ?</text>
+              <text x="30" y="75" fill="#fbbf24" fontSize="11">Incoming</text>
+              <text x="30" y="107" fill="#34d399" fontSize="11">Outgoing = ?</text>
             </g>
           </svg>
 

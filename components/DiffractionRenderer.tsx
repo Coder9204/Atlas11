@@ -540,12 +540,12 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
   // =============================================================================
   const calculateSingleSlitPattern = useCallback(() => {
     const points: number[] = [];
-    const lambda = WAVELENGTHS[wavelength].wavelength / 500; // Normalized
-    const a = slitWidth / 50; // Normalized slit width
+    const lambda = WAVELENGTHS[wavelength].wavelength; // nm
+    const a = slitWidth; // arbitrary units mapped to produce good patterns
 
     for (let i = -100; i <= 100; i++) {
-      const theta = (i / 100) * 0.15; // Small angle approximation
-      const beta = (Math.PI * a * Math.sin(theta)) / lambda;
+      const theta = (i / 100) * 0.5; // Wider angular range for visible pattern
+      const beta = (Math.PI * a * Math.sin(theta)) / (lambda * 0.08);
 
       // Single slit intensity: I = I0 * (sin(β)/β)²
       const intensity = beta === 0 ? 1 : Math.pow(Math.sin(beta) / beta, 2);
@@ -556,14 +556,14 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
 
   const calculateDoubleSlitPattern = useCallback(() => {
     const points: number[] = [];
-    const lambda = WAVELENGTHS[wavelength].wavelength / 500;
-    const a = slitWidth / 50;
-    const d = slitSeparation / 50;
+    const lambda = WAVELENGTHS[wavelength].wavelength; // nm
+    const a = slitWidth;
+    const d = slitSeparation;
 
     for (let i = -100; i <= 100; i++) {
-      const theta = (i / 100) * 0.15;
-      const beta = (Math.PI * a * Math.sin(theta)) / lambda;
-      const delta = (Math.PI * d * Math.sin(theta)) / lambda;
+      const theta = (i / 100) * 0.5;
+      const beta = (Math.PI * a * Math.sin(theta)) / (lambda * 0.08);
+      const delta = (Math.PI * d * Math.sin(theta)) / (lambda * 0.08);
 
       // Double slit: single-slit envelope × double-slit interference
       const singleSlitFactor = beta === 0 ? 1 : Math.pow(Math.sin(beta) / beta, 2);
@@ -1309,11 +1309,30 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
             </g>
           )}
 
+          {/* Interactive point marker that moves with slider - positioned at ~70% of pattern to show sensitivity */}
+          {(() => {
+            const markerIdx = Math.floor(pattern.length * 0.7);
+            const markerIntensity = pattern[markerIdx] || 0;
+            const markerY = patternTop + patternHeight * 0.15 + (1 - markerIntensity) * patternHeight * 0.7;
+            return (
+              <circle
+                cx={screenX - 3}
+                cy={markerY}
+                r={8}
+                fill={laserColor}
+                stroke="#ffffff"
+                strokeWidth="2"
+                filter="url(#diffLaserGlow)"
+                opacity="0.9"
+              />
+            );
+          })()}
+
           {/* Labels inside SVG */}
-          <text x={laserX + 8} y={patternTop + 15} fill="#64748B" fontSize="9" fontFamily="sans-serif" textAnchor="middle">Laser</text>
-          <text x={slitX} y={patternTop + 15} fill="#64748B" fontSize="9" fontFamily="sans-serif" textAnchor="middle">Slit Barrier</text>
-          <text x={screenX} y={patternTop + 15} fill="#64748B" fontSize="9" fontFamily="sans-serif" textAnchor="middle">Screen</text>
-          <text x={(slitX + screenX) / 2} y={patternTop + patternHeight + 28} fill="#64748B" fontSize="9" fontFamily="sans-serif" textAnchor="middle">Diffraction Pattern</text>
+          <text x={laserX + 8} y={patternTop + 15} fill="#64748B" fontSize="11" fontFamily="sans-serif" textAnchor="middle">Laser</text>
+          <text x={slitX} y={patternTop + 30} fill="#64748B" fontSize="11" fontFamily="sans-serif" textAnchor="middle">Slit</text>
+          <text x={screenX} y={patternTop + 15} fill="#64748B" fontSize="11" fontFamily="sans-serif" textAnchor="middle">Screen</text>
+          <text x={(slitX + screenX) / 2} y={patternTop + patternHeight + 28} fill="#64748B" fontSize="11" fontFamily="sans-serif" textAnchor="middle">Intensity Pattern</text>
         </svg>
 
         {/* Labels moved outside SVG using typo system */}
@@ -1377,7 +1396,7 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
           >
             Intensity Distribution I(\u03B8)
           </div>
-          <svg width="100%" height="70" viewBox="0 0 200 70" preserveAspectRatio="none">
+          <svg width="100%" height="70" viewBox="0 0 200 70" preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="diffGraphFill" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor={laserColor} stopOpacity="0.6" />
@@ -1524,7 +1543,10 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
             onChange={(e) => setSlitWidth(Number(e.target.value))}
             style={{
               width: '100%',
-              accentColor: defined.colors.primary,
+              height: '20px',
+              accentColor: '#3b82f6',
+              touchAction: 'pan-y',
+              WebkitAppearance: 'none',
             }}
           />
           <div
@@ -1563,7 +1585,10 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
               onChange={(e) => setSlitSeparation(Number(e.target.value))}
               style={{
                 width: '100%',
-                accentColor: defined.colors.accent,
+                height: '20px',
+                accentColor: '#3b82f6',
+                touchAction: 'pan-y',
+                WebkitAppearance: 'none',
               }}
             />
           </div>

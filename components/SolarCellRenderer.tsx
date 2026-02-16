@@ -153,7 +153,7 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
 
   // Simulation state
   const [lightDistance, setLightDistance] = useState(50);
-  const [panelAngle, setPanelAngle] = useState(0);
+  const [panelAngle, setPanelAngle] = useState(15);
   const [lightIntensity, setLightIntensity] = useState(100);
   const [useMagnifier, setUseMagnifier] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);

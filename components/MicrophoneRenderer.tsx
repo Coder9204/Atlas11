@@ -387,7 +387,8 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
       color: colors.textPrimary,
       overflow: 'hidden',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      zIndex: 100
+      zIndex: 100,
+      minHeight: '100vh'
     }}>
       {/* Background gradient */}
       <div style={{
@@ -490,7 +491,8 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
         overflowY: 'auto',
         overflowX: 'hidden',
         position: 'relative',
-        paddingBottom: '80px'
+        paddingTop: '48px',
+        paddingBottom: '100px'
       }}>
         {children}
       </div>
@@ -657,7 +659,7 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
         {/* Diaphragm */}
         <g transform={`translate(0, ${coilDisplacement})`}>
           <ellipse cx="145" cy="160" rx="8" ry="60" fill="#94a3b8" stroke="#cbd5e1" strokeWidth="2" />
-          <text x="110" y="160" fill={colors.primary} fontSize="10" fontWeight="700" textAnchor="end">Diaphragm</text>
+          <text x="110" y="160" fill={colors.primary} fontSize="11" fontWeight="700" textAnchor="end">Diaphragm</text>
           <line x1="115" y1="160" x2="135" y2="160" stroke={colors.primary} strokeWidth="1" opacity="0.5" />
         </g>
 
@@ -667,14 +669,14 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
           {[0, 1, 2, 3, 4, 5].map(i => (
             <line key={i} x1="162" y1={135 + i * 10} x2="178" y2={135 + i * 10} stroke="#92400e" strokeWidth="1" />
           ))}
-          <text x="170" y="205" textAnchor="middle" fill="#fbbf24" fontSize="10" fontWeight="600">Voice Coil</text>
+          <text x="170" y="205" textAnchor="middle" fill="#fbbf24" fontSize="11" fontWeight="600">Voice Coil</text>
         </g>
 
         {/* Permanent magnet */}
         <rect x="200" y="100" width="100" height="120" rx="5" fill="url(#magnetGrad)" />
         <text x="210" y="155" fill="white" fontSize="14" fontWeight="900">N</text>
         <text x="280" y="155" fill="white" fontSize="14" fontWeight="900">S</text>
-        <text x="250" y="235" textAnchor="middle" fill={colors.textSecondary} fontSize="10" fontWeight="600">Permanent Magnet</text>
+        <text x="250" y="235" textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="600">Permanent Magnet</text>
 
         {/* Magnetic field lines */}
         <g opacity="0.4">
@@ -707,7 +709,7 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
           d={`M 385 160 ${Array.from({ length: 40 }, (_, i) => {
             const x = 385 + i * 4.5;
             const freqFactor = soundFrequency / 440; // normalize to base frequency
-            const y = 160 + Math.sin((i * freqFactor + time * 10) * 0.3 * freqFactor) * signalStrength * 50;
+            const y = 160 + Math.sin((i * freqFactor + time * 10) * 0.3 * freqFactor) * signalStrength * 120;
             return `L ${x} ${y}`;
           }).join(' ')}`}
           fill="none"
@@ -916,7 +918,7 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
           <svg viewBox="0 0 400 100" style={{ width: '100%', height: '80px' }}>
             {/* Sound wave */}
             <path d="M 30 50 Q 50 30, 70 50 T 110 50" fill="none" stroke={colors.primary} strokeWidth="2" />
-            <text x="70" y="85" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Sound</text>
+            <text x="70" y="85" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Sound</text>
 
             {/* Arrow */}
             <path d="M 120 50 L 150 50 M 145 45 L 150 50 L 145 55" fill="none" stroke={colors.textMuted} strokeWidth="2" />
@@ -924,7 +926,7 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
             {/* Microphone */}
             <rect x="160" y="25" width="80" height="50" rx="8" fill={colors.bgCardLight} stroke={colors.border} />
             <ellipse cx="175" cy="50" rx="5" ry="20" fill={colors.primary} opacity="0.5" />
-            <text x="200" y="90" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Microphone</text>
+            <text x="200" y="90" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Microphone</text>
 
             {/* Arrow */}
             <path d="M 250 50 L 280 50 M 275 45 L 280 50 L 275 55" fill="none" stroke={colors.textMuted} strokeWidth="2" />
@@ -932,7 +934,7 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
             {/* Question mark */}
             <rect x="290" y="25" width="80" height="50" rx="8" fill={`${colors.warning}20`} stroke={colors.warning} strokeDasharray="4" />
             <text x="330" y="58" textAnchor="middle" fill={colors.warning} fontSize="24" fontWeight="bold">?</text>
-            <text x="330" y="90" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Signal</text>
+            <text x="330" y="90" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Signal</text>
           </svg>
         </div>
 
@@ -1059,7 +1061,7 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
                 max="100"
                 value={soundAmplitude}
                 onChange={(e) => setSoundAmplitude(parseInt(e.target.value))}
-                style={{ width: '100%', height: '8px', borderRadius: '4px', background: colors.bgCardLight, accentColor: colors.primary, cursor: 'pointer' }}
+                style={{ width: '100%', height: '20px', borderRadius: '4px', background: colors.bgCardLight, accentColor: '#3b82f6', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
               />
               <p style={{ fontSize: typo.small, color: colors.textSecondary, marginTop: '4px' }}>
                 Louder sound = Larger diaphragm movement = Stronger signal
@@ -1298,7 +1300,7 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
                 max="2000"
                 value={soundFrequency}
                 onChange={(e) => setSoundFrequency(parseInt(e.target.value))}
-                style={{ width: '100%', height: '8px', borderRadius: '4px', background: colors.bgCardLight, accentColor: colors.accent, cursor: 'pointer' }}
+                style={{ width: '100%', height: '20px', borderRadius: '4px', background: colors.bgCardLight, accentColor: '#3b82f6', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                 <span style={{ fontSize: typo.small, color: colors.textMuted }}>Bass</span>
@@ -1318,7 +1320,7 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
                 max="100"
                 value={soundAmplitude}
                 onChange={(e) => setSoundAmplitude(parseInt(e.target.value))}
-                style={{ width: '100%', height: '8px', borderRadius: '4px', background: colors.bgCardLight, accentColor: colors.primary, cursor: 'pointer' }}
+                style={{ width: '100%', height: '20px', borderRadius: '4px', background: colors.bgCardLight, accentColor: '#3b82f6', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
               />
             </div>
 

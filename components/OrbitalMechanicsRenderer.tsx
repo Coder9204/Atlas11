@@ -647,18 +647,18 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
 
         {/* Labels for key elements */}
         <text x={EARTH_CENTER.x} y={EARTH_CENTER.y + EARTH_RADIUS + 20} textAnchor="middle" fill="#60a5fa" fontSize="11">Earth</text>
-        <text x={EARTH_CENTER.x + 20} y={EARTH_CENTER.y - EARTH_RADIUS - 45} textAnchor="start" fill="#9ca3af" fontSize="10">Cannon</text>
-        <text x={EARTH_CENTER.x - 55} y={EARTH_CENTER.y - EARTH_RADIUS + 5} textAnchor="end" fill="#9ca3af" fontSize="10">Mountain</text>
+        <text x={EARTH_CENTER.x + 20} y={EARTH_CENTER.y - EARTH_RADIUS - 45} textAnchor="start" fill="#9ca3af" fontSize="11">Cannon</text>
+        <text x={EARTH_CENTER.x - 55} y={EARTH_CENTER.y - EARTH_RADIUS + 5} textAnchor="end" fill="#9ca3af" fontSize="11">Mountain</text>
 
         {/* Legend */}
         <g transform="translate(10, 10)">
-          <text x="0" y="12" fill="#9ca3af" fontSize="10" fontWeight="600">Legend:</text>
+          <text x="0" y="12" fill="#9ca3af" fontSize="11" fontWeight="600">Legend:</text>
           <line x1="0" y1="22" x2="20" y2="22" stroke="#22c55e" strokeWidth="3" />
-          <text x="25" y="26" fill="#22c55e" fontSize="9">Orbit (~8 km/s)</text>
+          <text x="25" y="26" fill="#22c55e" fontSize="11">Orbit (~8 km/s)</text>
           <line x1="0" y1="36" x2="20" y2="36" stroke="#ef4444" strokeWidth="3" />
-          <text x="25" y="40" fill="#ef4444" fontSize="9">Crash (too slow)</text>
+          <text x="25" y="40" fill="#ef4444" fontSize="11">Crash (too slow)</text>
           <line x1="0" y1="50" x2="20" y2="50" stroke="#8B5CF6" strokeWidth="3" />
-          <text x="25" y="54" fill="#8B5CF6" fontSize="9">Escape (11+ km/s)</text>
+          <text x="25" y="54" fill="#8B5CF6" fontSize="11">Escape (11+ km/s)</text>
         </g>
 
         <text x="200" y="340" textAnchor="middle" fill="#9ca3af" fontSize="12">
@@ -734,18 +734,18 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
         <g transform="translate(20, 20)">
           <rect width="120" height="50" rx="8" fill="#1e293b" opacity="0.9" />
           <text x="10" y="18" fill="#94a3b8" fontSize="11" fontWeight="600">ISS Status</text>
-          <text x="10" y="34" fill="#22d3ee" fontSize="10">Altitude: 408 km</text>
-          <text x="10" y="46" fill="#fbbf24" fontSize="10">Speed: 7.66 km/s</text>
+          <text x="10" y="34" fill="#22d3ee" fontSize="11">Altitude: 408 km</text>
+          <text x="10" y="46" fill="#fbbf24" fontSize="11">Speed: 7.66 km/s</text>
         </g>
 
         <g transform="translate(270, 20)">
           <rect width="110" height="50" rx="8" fill="#1e293b" opacity="0.9" />
           <text x="10" y="18" fill="#94a3b8" fontSize="11" fontWeight="600">Inside ISS</text>
           <text x="55" y="38" textAnchor="middle" fontSize="18">&#x1F9D1;&#x200D;&#x1F680;</text>
-          <text x="55" y="48" textAnchor="middle" fill="#a78bfa" fontSize="9">Free falling!</text>
+          <text x="55" y="48" textAnchor="middle" fill="#a78bfa" fontSize="11">Free falling!</text>
         </g>
 
-        <text x="200" y="268" textAnchor="middle" fill="#64748b" fontSize="10">
+        <text x="200" y="268" textAnchor="middle" fill="#64748b" fontSize="11">
           ISS falls toward Earth at 7.66 km/s - but misses because it's moving sideways!
         </text>
       </svg>
@@ -869,10 +869,10 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
 
         {/* Labels */}
         <text x="200" y="290" textAnchor="middle" fill="#60a5fa" fontSize="11">Earth</text>
-        <text x="200" y="140" textAnchor="middle" fill="#9ca3af" fontSize="10">Cannon</text>
-        <text x="330" y="75" textAnchor="start" fill="#22c55e" fontSize="10">Escape?</text>
-        <text x="310" y="185" textAnchor="start" fill="#ef4444" fontSize="10">Crash?</text>
-        <text x="355" y="155" textAnchor="start" fill="#8B5CF6" fontSize="10">Orbit?</text>
+        <text x="200" y="140" textAnchor="middle" fill="#9ca3af" fontSize="11">Cannon</text>
+        <text x="330" y="75" textAnchor="start" fill="#22c55e" fontSize="11">Escape?</text>
+        <text x="310" y="185" textAnchor="start" fill="#ef4444" fontSize="11">Crash?</text>
+        <text x="355" y="155" textAnchor="start" fill="#8B5CF6" fontSize="11">Orbit?</text>
 
         {/* Title */}
         <text x="200" y="25" textAnchor="middle" fill="#9ca3af" fontSize="12">
@@ -1265,8 +1265,8 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
           ISS at 400 km - Gravity still 90% of surface!
         </text>
         <text x="200" y="230" textAnchor="middle" fill="#60a5fa" fontSize="11">Earth</text>
-        <text x="100" y="100" textAnchor="middle" fill="#fbbf24" fontSize="10">ISS</text>
-        <text x="280" y="120" fill="#f59e0b" fontSize="10">Why do they float?</text>
+        <text x="100" y="100" textAnchor="middle" fill="#fbbf24" fontSize="11">ISS</text>
+        <text x="280" y="120" fill="#f59e0b" fontSize="11">Why do they float?</text>
       </svg>
     );
   };

@@ -802,11 +802,11 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
           </g>
 
           {/* Educational labels directly on SVG */}
-          <text x={ball1Pos} y="22" textAnchor="middle" fill="#60a5fa" fontSize="10" fontWeight="bold">Ball 1</text>
-          <text x={ball1Pos} y="105" textAnchor="middle" fill="#93c5fd" fontSize="9">{displayMass1}</text>
-          <text x={ball2Pos} y="22" textAnchor="middle" fill={type === 'elastic' ? '#f87171' : '#fbbf24'} fontSize="10" fontWeight="bold">Ball 2</text>
-          <text x={ball2Pos} y="105" textAnchor="middle" fill={type === 'elastic' ? '#fca5a5' : '#fcd34d'} fontSize="9">{displayMass2}</text>
-          <text x="200" y="116" textAnchor="middle" fill="#94a3b8" fontSize="8">Collision Track</text>
+          <text x={ball1Pos} y="22" textAnchor="middle" fill="#60a5fa" fontSize="11" fontWeight="bold">Ball 1</text>
+          <text x={ball1Pos} y="105" textAnchor="middle" fill="#93c5fd" fontSize="11">{displayMass1}</text>
+          <text x={ball2Pos} y="22" textAnchor="middle" fill={type === 'elastic' ? '#f87171' : '#fbbf24'} fontSize="11" fontWeight="bold">Ball 2</text>
+          <text x={ball2Pos} y="105" textAnchor="middle" fill={type === 'elastic' ? '#fca5a5' : '#fcd34d'} fontSize="11">{displayMass2}</text>
+          <text x="200" y="120" textAnchor="middle" fill="#94a3b8" fontSize="11">Collision Track</text>
         </svg>
 
         {/* Labels outside SVG using typo system for responsive typography */}
@@ -918,13 +918,13 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
               <text x="150" y="10" textAnchor="middle" fill={colors.elastic} fontSize="11" fontWeight="bold">SUPER BALL</text>
               <rect x="20" y="45" width="260" height="8" fill="#334155" rx="4" />
               <circle cx="80" cy="40" r="18" fill={colors.ball1} />
-              <text x="80" y="45" textAnchor="middle" fill="white" fontSize="10">→</text>
+              <text x="80" y="45" textAnchor="middle" fill="white" fontSize="11">→</text>
               <circle cx="180" cy="40" r="18" fill={colors.ball2} />
-              <text x="250" y="45" textAnchor="middle" fill="#94a3b8" fontSize="10">After:</text>
+              <text x="250" y="45" textAnchor="middle" fill="#94a3b8" fontSize="11">After:</text>
               <circle cx="50" cy="40" r="10" fill={colors.ball1} opacity="0.5" />
-              <text x="50" y="43" textAnchor="middle" fill="white" fontSize="8">←</text>
+              <text x="50" y="43" textAnchor="middle" fill="white" fontSize="11">←</text>
               <circle cx="250" cy="40" r="10" fill={colors.ball2} opacity="0.5" />
-              <text x="250" y="43" textAnchor="middle" fill="white" fontSize="8">→</text>
+              <text x="250" y="43" textAnchor="middle" fill="white" fontSize="11">→</text>
             </g>
 
             {/* Inelastic scenario (bottom) */}
@@ -932,11 +932,11 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
               <text x="150" y="10" textAnchor="middle" fill={colors.inelastic} fontSize="11" fontWeight="bold">CLAY BALL</text>
               <rect x="20" y="45" width="260" height="8" fill="#334155" rx="4" />
               <circle cx="80" cy="40" r="18" fill={colors.ball1} />
-              <text x="80" y="45" textAnchor="middle" fill="white" fontSize="10">→</text>
+              <text x="80" y="45" textAnchor="middle" fill="white" fontSize="11">→</text>
               <circle cx="180" cy="40" r="18" fill={colors.inelastic} />
-              <text x="250" y="45" textAnchor="middle" fill="#94a3b8" fontSize="10">After:</text>
+              <text x="250" y="45" textAnchor="middle" fill="#94a3b8" fontSize="11">After:</text>
               <ellipse cx="200" cy="40" rx="25" ry="15" fill={colors.inelastic} opacity="0.7" />
-              <text x="200" y="45" textAnchor="middle" fill="white" fontSize="8">→ (stuck)</text>
+              <text x="200" y="45" textAnchor="middle" fill="white" fontSize="11">→ (stuck)</text>
             </g>
           </svg>
 
@@ -1017,15 +1017,15 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
             {/* Ball 1 - Moving */}
             <circle cx="80" cy="60" r="22" fill={colors.ball1} />
             <text x="80" y="65" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">→</text>
-            <text x="80" y="100" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Ball 1 (moving)</text>
+            <text x="80" y="100" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Ball 1 (moving)</text>
 
             {/* Ball 2 - Stationary */}
             <circle cx="200" cy="60" r="22" fill={colors.ball2} />
-            <text x="200" y="100" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Ball 2 (still)</text>
+            <text x="200" y="100" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Ball 2 (still)</text>
 
             {/* Question mark */}
             <text x="300" y="70" textAnchor="middle" fill={colors.warning} fontSize="36" fontWeight="bold">?</text>
-            <text x="300" y="100" textAnchor="middle" fill={colors.warning} fontSize="10">What happens?</text>
+            <text x="300" y="100" textAnchor="middle" fill={colors.warning} fontSize="11">What happens?</text>
 
             {/* Velocity arrow */}
             <line x1="110" y1="60" x2="150" y2="60" stroke={colors.primary} strokeWidth="3" markerEnd="url(#arrow)" />
@@ -1399,34 +1399,34 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
           {/* Momentum bar (always conserved) */}
           <text x="150" y="20" textAnchor="middle" fill={colors.primary} fontSize="12" fontWeight="bold">MOMENTUM (p = mv)</text>
           <rect x="30" y="30" width="100" height="25" fill={colors.ball1} rx="5" />
-          <text x="80" y="48" textAnchor="middle" fill="white" fontSize="10">Before</text>
+          <text x="80" y="48" textAnchor="middle" fill="white" fontSize="11">Before</text>
           <rect x="170" y="30" width="100" height="25" fill={colors.success} rx="5" />
-          <text x="220" y="48" textAnchor="middle" fill="white" fontSize="10">After</text>
+          <text x="220" y="48" textAnchor="middle" fill="white" fontSize="11">After</text>
           <text x="145" y="48" textAnchor="middle" fill={colors.success} fontSize="16">=</text>
-          <text x="150" y="70" textAnchor="middle" fill={colors.success} fontSize="10" fontWeight="bold">✓ ALWAYS CONSERVED</text>
+          <text x="150" y="70" textAnchor="middle" fill={colors.success} fontSize="11" fontWeight="bold">✓ ALWAYS CONSERVED</text>
 
           {/* Energy bars (elastic only) */}
           <text x="150" y="95" textAnchor="middle" fill={colors.secondary} fontSize="12" fontWeight="bold">KINETIC ENERGY (KE = ½mv²)</text>
 
           {/* Elastic */}
-          <text x="80" y="115" textAnchor="middle" fill={colors.elastic} fontSize="10">Elastic:</text>
+          <text x="80" y="115" textAnchor="middle" fill={colors.elastic} fontSize="11">Elastic:</text>
           <rect x="30" y="120" width="60" height="20" fill={colors.elastic} rx="3" />
           <rect x="110" y="120" width="60" height="20" fill={colors.elastic} rx="3" />
           <text x="95" y="135" textAnchor="middle" fill={colors.success} fontSize="12">=</text>
 
           {/* Inelastic */}
-          <text x="220" y="115" textAnchor="middle" fill={colors.inelastic} fontSize="10">Inelastic:</text>
+          <text x="220" y="115" textAnchor="middle" fill={colors.inelastic} fontSize="11">Inelastic:</text>
           <rect x="180" y="120" width="60" height="20" fill={colors.inelastic} rx="3" />
           <rect x="250" y="120" width="30" height="20" fill={colors.inelastic} rx="3" opacity="0.5" />
           <text x="245" y="135" textAnchor="middle" fill={colors.danger} fontSize="12">≠</text>
 
           {/* Legend */}
-          <text x="80" y="160" textAnchor="middle" fill={colors.elastic} fontSize="9">✓ Conserved</text>
-          <text x="220" y="160" textAnchor="middle" fill={colors.inelastic} fontSize="9">Lost to heat/sound</text>
+          <text x="80" y="160" textAnchor="middle" fill={colors.elastic} fontSize="11">✓ Conserved</text>
+          <text x="220" y="160" textAnchor="middle" fill={colors.inelastic} fontSize="11">Lost to heat/sound</text>
 
           {/* Key equation */}
           <rect x="60" y="170" width="180" height="25" fill="#F8FAFC" rx="5" stroke={colors.primary} strokeWidth="1" />
-          <text x="150" y="188" textAnchor="middle" fill={colors.primary} fontSize="10">p₁ᵢ + p₂ᵢ = p₁f + p₂f (ALWAYS!)</text>
+          <text x="150" y="188" textAnchor="middle" fill={colors.primary} fontSize="11">p₁ᵢ + p₂ᵢ = p₁f + p₂f (ALWAYS!)</text>
         </svg>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1487,7 +1487,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
             {/* Heavy ball (3m) - large */}
             <circle cx="70" cy="50" r="28" fill={colors.ball1} />
             <text x="70" y="55" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">3m</text>
-            <text x="70" y="90" textAnchor="middle" fill={colors.textSecondary} fontSize="9">Heavy</text>
+            <text x="70" y="90" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Heavy</text>
 
             {/* Arrow */}
             <line x1="105" y1="50" x2="135" y2="50" stroke={colors.primary} strokeWidth="2" />
@@ -1496,11 +1496,11 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
             {/* Light ball (m) - small */}
             <circle cx="180" cy="50" r="18" fill={colors.ball2} />
             <text x="180" y="55" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">m</text>
-            <text x="180" y="90" textAnchor="middle" fill={colors.textSecondary} fontSize="9">Light</text>
+            <text x="180" y="90" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Light</text>
 
             {/* Question mark */}
             <text x="280" y="60" textAnchor="middle" fill={colors.secondary} fontSize="32" fontWeight="bold">?</text>
-            <text x="280" y="90" textAnchor="middle" fill={colors.secondary} fontSize="9">Predict outcome</text>
+            <text x="280" y="90" textAnchor="middle" fill={colors.secondary} fontSize="11">Predict outcome</text>
 
             {/* Versus text */}
             <text x="230" y="55" textAnchor="middle" fill={colors.textMuted} fontSize="11">vs</text>
@@ -1655,40 +1655,40 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
           {/* Equal masses */}
           <g transform="translate(50, 30)">
             <circle cx="0" cy="0" r="15" fill={colors.ball1} />
-            <text x="25" y="5" fill={colors.neutral} fontSize="10">→</text>
+            <text x="25" y="5" fill={colors.neutral} fontSize="11">→</text>
             <circle cx="50" cy="0" r="15" fill={colors.ball2} />
-            <text x="80" y="5" fill={colors.neutral} fontSize="10">⇒</text>
+            <text x="80" y="5" fill={colors.neutral} fontSize="11">⇒</text>
             <circle cx="100" cy="0" r="8" fill={colors.ball1} opacity="0.5" />
             <circle cx="130" cy="0" r="15" fill={colors.ball2} />
-            <text x="130" y="5" textAnchor="middle" fill="white" fontSize="8">→</text>
+            <text x="130" y="5" textAnchor="middle" fill="white" fontSize="11">→</text>
           </g>
-          <text x="150" y="60" textAnchor="middle" fill={colors.neutral} fontSize="9">Equal: Complete transfer</text>
+          <text x="150" y="60" textAnchor="middle" fill={colors.neutral} fontSize="11">Equal: Complete transfer</text>
 
           {/* Heavy → Light */}
           <g transform="translate(50, 90)">
             <circle cx="0" cy="0" r="22" fill={colors.ball1} />
-            <text x="30" y="5" fill={colors.neutral} fontSize="10">→</text>
+            <text x="30" y="5" fill={colors.neutral} fontSize="11">→</text>
             <circle cx="55" cy="0" r="12" fill={colors.ball2} />
-            <text x="85" y="5" fill={colors.neutral} fontSize="10">⇒</text>
+            <text x="85" y="5" fill={colors.neutral} fontSize="11">⇒</text>
             <circle cx="110" cy="0" r="15" fill={colors.ball1} opacity="0.7" />
-            <text x="110" y="5" textAnchor="middle" fill="white" fontSize="8">→</text>
+            <text x="110" y="5" textAnchor="middle" fill="white" fontSize="11">→</text>
             <circle cx="150" cy="0" r="12" fill={colors.ball2} />
-            <text x="150" y="5" textAnchor="middle" fill="white" fontSize="8">→→</text>
+            <text x="150" y="5" textAnchor="middle" fill="white" fontSize="11">→→</text>
           </g>
-          <text x="150" y="125" textAnchor="middle" fill={colors.neutral} fontSize="9">Heavy→Light: Both move forward, light faster</text>
+          <text x="150" y="125" textAnchor="middle" fill={colors.neutral} fontSize="11">Heavy→Light: Both move forward, light faster</text>
 
           {/* Light → Heavy */}
           <g transform="translate(50, 155)">
             <circle cx="0" cy="0" r="12" fill={colors.ball1} />
-            <text x="20" y="5" fill={colors.neutral} fontSize="10">→</text>
+            <text x="20" y="5" fill={colors.neutral} fontSize="11">→</text>
             <circle cx="45" cy="0" r="22" fill={colors.ball2} />
-            <text x="80" y="5" fill={colors.neutral} fontSize="10">⇒</text>
+            <text x="80" y="5" fill={colors.neutral} fontSize="11">⇒</text>
             <circle cx="95" cy="0" r="12" fill={colors.ball1} />
-            <text x="95" y="5" textAnchor="middle" fill="white" fontSize="8">←</text>
+            <text x="95" y="5" textAnchor="middle" fill="white" fontSize="11">←</text>
             <circle cx="140" cy="0" r="22" fill={colors.ball2} opacity="0.7" />
-            <text x="140" y="5" textAnchor="middle" fill="white" fontSize="8">→</text>
+            <text x="140" y="5" textAnchor="middle" fill="white" fontSize="11">→</text>
           </g>
-          <text x="150" y="178" textAnchor="middle" fill={colors.neutral} fontSize="9">Light→Heavy: Light bounces, heavy moves slowly</text>
+          <text x="150" y="178" textAnchor="middle" fill={colors.neutral} fontSize="11">Light→Heavy: Light bounces, heavy moves slowly</text>
         </svg>
       </div>
 

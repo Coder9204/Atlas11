@@ -692,7 +692,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
         {showVirtualImage && (
           <>
             <rect x={50} y={mirrorY} width={width - 100} height={height - mirrorY - 10} fill="rgba(100,100,150,0.1)" />
-            <text x={70} y={mirrorY + 25} fill={colors.textMuted} fontSize="10">Virtual Space</text>
+            <text x={70} y={mirrorY + 25} fill={colors.textMuted} fontSize="11">Virtual Space</text>
           </>
         )}
 
@@ -707,7 +707,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
           <>
             <line x1={centerX} y1={mirrorY - 110} x2={centerX} y2={mirrorY + 50}
               stroke={colors.normal} strokeWidth={1} strokeDasharray="5,5" />
-            <text x={centerX + 8} y={mirrorY - 95} fill={colors.normal} fontSize="10">Normal</text>
+            <text x={centerX + 8} y={mirrorY - 95} fill={colors.normal} fontSize="11">Normal</text>
           </>
         )}
 
@@ -842,7 +842,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
 
         {/* Corner point */}
         <circle cx={cornerX} cy={cornerY} r={5} fill="#f472b6" />
-        <text x={cornerX + 12} y={cornerY + 5} fill="#f472b6" fontSize="10">90deg</text>
+        <text x={cornerX + 12} y={cornerY + 5} fill="#f472b6" fontSize="11">90deg</text>
         </g>
 
         {/* Normal lines */}
@@ -889,8 +889,8 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
         })}
 
         {/* Labels */}
-        <text x={rayStart.x} y={rayStart.y - 10} fill={colors.incident} fontSize="10">In</text>
-        <text x={rayEnd.x} y={rayEnd.y - 10} fill={colors.reflected} fontSize="10">Out (parallel!)</text>
+        <text x={rayStart.x} y={rayStart.y - 10} fill={colors.incident} fontSize="11">In</text>
+        <text x={rayEnd.x} y={rayEnd.y - 10} fill={colors.reflected} fontSize="11">Out (parallel!)</text>
 
         {/* Explanation box */}
         <rect x={20} y={height - 70} width={width - 40} height={55} rx="8" fill="rgba(30, 41, 59, 0.9)" />
@@ -1099,7 +1099,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
             <g className="mirror">
               <rect x="60" y="140" width="240" height="8" fill="url(#predictMirrorGrad)" rx="2" />
               <line x1="180" y1="60" x2="180" y2="140" stroke="#94a3b8" strokeWidth="1.5" strokeDasharray="6,4" />
-              <text x="186" y="75" fill="#94a3b8" fontSize="10">Normal</text>
+              <text x="186" y="75" fill="#94a3b8" fontSize="11">Normal</text>
             </g>
             <g className="rays">
               <line x1="110" y1="60" x2="180" y2="140" stroke="#fbbf24" strokeWidth="3" filter="url(#predictGlow)" />
@@ -1108,8 +1108,8 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
               <text x="248" y="55" fill="#34d399" fontSize="11" fontWeight="600">?</text>
             </g>
             <g className="labels">
-              <text x="90" y="190" fill="#fbbf24" fontSize="10">Incident Ray</text>
-              <text x="230" y="190" fill="#34d399" fontSize="10">Reflected Ray</text>
+              <text x="90" y="190" fill="#fbbf24" fontSize="11">Incident Ray</text>
+              <text x="230" y="190" fill="#34d399" fontSize="11">Reflected Ray</text>
             </g>
           </svg>
 
@@ -1353,14 +1353,14 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
               <rect x="200" y="50" width="8" height="120" fill="url(#twistMirrorGrad)" rx="2" />
               <rect x="80" y="162" width="128" height="8" fill="url(#twistMirrorGrad)" rx="2" />
               <circle cx="208" cy="166" r="5" fill="#f472b6" />
-              <text x="215" y="172" fill="#f472b6" fontSize="10">90deg</text>
+              <text x="215" y="172" fill="#f472b6" fontSize="11">90deg</text>
             </g>
             <g className="rays">
               <line x1="50" y1="80" x2="160" y2="162" stroke="#fbbf24" strokeWidth="3" filter="url(#twistGlow)" />
               <line x1="160" y1="162" x2="200" y2="110" stroke="#818cf8" strokeWidth="3" filter="url(#twistGlow)" />
               <line x1="200" y1="110" x2="50" y2="110" stroke="#34d399" strokeWidth="3" strokeDasharray="8,4" filter="url(#twistGlow)" />
-              <text x="30" y="75" fill="#fbbf24" fontSize="10">In</text>
-              <text x="30" y="107" fill="#34d399" fontSize="10">Out = ?</text>
+              <text x="30" y="75" fill="#fbbf24" fontSize="11">In</text>
+              <text x="30" y="107" fill="#34d399" fontSize="11">Out = ?</text>
             </g>
           </svg>
 

@@ -369,7 +369,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
     textSecondary: '#e2e8f0', // High contrast for accessibility
-    textMuted: '#cbd5e1', // High contrast for accessibility
+    textMuted: '#94a3b8', // Muted color for accessibility
     border: '#2a2a3a',
   };
 
@@ -569,19 +569,17 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
         <rect x="15" y={height - 75} width={width - 30} height="60" fill={colors.bgCard} rx="8" stroke={colors.border} strokeWidth="1" />
 
         {/* Status values */}
-        <g transform={`translate(0, ${height - 55})`}>
-          {[
-            { label: 'STATE', value: generatorState.toUpperCase(), color: generatorState === 'online' ? colors.success : generatorState === 'stopped' ? colors.error : colors.warning },
-            { label: 'RPM', value: rpm.toFixed(0), color: colors.textPrimary },
-            { label: 'FREQ', value: `${frequency.toFixed(1)} Hz`, color: frequency >= 59 ? colors.success : colors.warning },
-            { label: 'TIME', value: `${startupTime.toFixed(1)}s`, color: colors.textPrimary },
-          ].map((item, i) => (
-            <g key={i} transform={`translate(${30 + i * (isMobile ? 75 : 110)}, 0)`}>
-              <text y="12" fill={colors.textMuted} fontSize="11" fontWeight="500">{item.label}</text>
-              <text y="32" fill={item.color} fontSize={isMobile ? "14" : "16"} fontWeight="700">{item.value}</text>
-            </g>
-          ))}
-        </g>
+        {[
+          { label: 'STATE', value: generatorState.toUpperCase(), color: generatorState === 'online' ? colors.success : generatorState === 'stopped' ? colors.error : colors.warning },
+          { label: 'RPM', value: rpm.toFixed(0), color: colors.textPrimary },
+          { label: 'FREQ', value: `${frequency.toFixed(1)} Hz`, color: frequency >= 59 ? colors.success : colors.warning },
+          { label: 'TIME', value: `${startupTime.toFixed(1)}s`, color: colors.textPrimary },
+        ].map((item, i) => (
+          <g key={i}>
+            <text x={30 + i * (isMobile ? 75 : 110)} y={height - 43} fill={colors.textMuted} fontSize="11" fontWeight="500">{item.label}</text>
+            <text x={30 + i * (isMobile ? 75 : 110)} y={height - 23} fill={item.color} fontSize={isMobile ? "14" : "16"} fontWeight="700">{item.value}</text>
+          </g>
+        ))}
       </svg>
     );
   };
@@ -1809,6 +1807,56 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
                   <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
                 </div>
               ))}
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                Real Examples:
+              </h4>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
+                {app.examples.map((ex, i) => (
+                  <span key={i} style={{ ...typo.small, color: colors.textSecondary, background: colors.bgCard, padding: '4px 10px', borderRadius: '6px' }}>
+                    {ex}
+                  </span>
+                ))}
+              </div>
+              <p style={{ ...typo.small, color: colors.textMuted, margin: '8px 0 0 0' }}>
+                Key companies: {app.companies.join(', ')}
+              </p>
+            </div>
+
+            <div style={{
+              background: `${app.color}11`,
+              border: `1px solid ${app.color}33`,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '20px',
+            }}>
+              <h4 style={{ ...typo.small, color: app.color, marginBottom: '8px', fontWeight: 600 }}>
+                Future Impact:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.futureImpact}
+              </p>
             </div>
 
             {/* Got It button for within-phase navigation */}

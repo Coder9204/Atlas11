@@ -909,11 +909,16 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
                 <line x1="40" y1="103" x2="680" y2="103" stroke="#1f2937" strokeWidth="1" />
               </g>
 
+              {/* Grid lines */}
+              {[0, 100, 200, 300, 400, 500, 600].map(d => (
+                <line key={`grid-${d}`} x1={50 + d} y1="30" x2={50 + d} y2="105" stroke="#4b5563" strokeDasharray="4 4" opacity="0.3" />
+              ))}
+
               {/* Distance markers */}
               {[0, 100, 200, 300, 400, 500, 600].map(d => (
                 <g key={d}>
                   <line x1={50 + d} y1="110" x2={50 + d} y2="125" stroke="#4b5563" strokeWidth="2" />
-                  <text x={50 + d} y="145" textAnchor="middle" fill="#9ca3af" fontSize="10">{d}</text>
+                  <text x={50 + d} y="145" textAnchor="middle" fill="#9ca3af" fontSize="11">{d}</text>
                 </g>
               ))}
               <text x="350" y="170" textAnchor="middle" fill="#64748b" fontSize="11">DISTANCE (cm)</text>
@@ -932,21 +937,21 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
                 {isLaunched && airRemaining > 0 && (
                   <>
                     <line x1="-20" y1="0" x2={-35 - forceMagnitude} y2="0" stroke="#22d3ee" strokeWidth="4" markerEnd="url(#arrowBlue)" />
-                    <text x="-45" y="-15" textAnchor="middle" fill="#22d3ee" fontSize="10">ACTION</text>
+                    <text x="-45" y="-15" textAnchor="middle" fill="#22d3ee" fontSize="11">ACTION</text>
                     <line x1={displaySize + 15} y1="0" x2={displaySize + 30 + forceMagnitude} y2="0" stroke="#fb923c" strokeWidth="4" markerEnd="url(#arrowOrange)" />
-                    <text x={displaySize + 45} y="-15" textAnchor="middle" fill="#fb923c" fontSize="10">REACTION</text>
+                    <text x={displaySize + 45} y="-15" textAnchor="middle" fill="#fb923c" fontSize="11">REACTION</text>
                   </>
                 )}
               </g>
 
               {/* Educational labels */}
               <text x="350" y="25" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">Balloon Rocket Simulation</text>
-              <text x={balloonX + 10} y="70" textAnchor="middle" fill="#fca5a5" fontSize="9">Balloon</text>
-              <text x="60" y="88" fill="#9ca3af" fontSize="8">Launch Track</text>
+              <text x={balloonX + 10} y="68" textAnchor="middle" fill="#fca5a5" fontSize="11">Balloon</text>
+              <text x="60" y="86" fill="#9ca3af" fontSize="11">Launch Track</text>
 
               {/* Equation */}
               <text x="350" y="190" textAnchor="middle" fill="#e2e8f0" fontSize="13" fontFamily="monospace">
-                F_action = -F_reaction
+                F = -F&#x2032; (Action-Reaction)
               </text>
             </svg>
           </div>
@@ -977,11 +982,12 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
                 style={{
                   width: '100%',
                   cursor: isLaunched ? 'not-allowed' : 'pointer',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   background: `linear-gradient(to right, ${colors.accent} ${(balloonSize - 20) / 0.8}%, ${colors.border} ${(balloonSize - 20) / 0.8}%)`,
-                  appearance: 'auto',
-                  accentColor: colors.accent,
+                  WebkitAppearance: 'none' as const,
+                  touchAction: 'pan-y',
+                  accentColor: '#3b82f6',
                 }}
               />
               <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>More air = More thrust!</p>

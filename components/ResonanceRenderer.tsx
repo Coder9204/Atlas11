@@ -644,6 +644,10 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
     const massSize = 30 + addedMass * 0.3;
     const motionBlurAmount = isAtResonance ? 4 + responseAmplitude * 0.03 : 0;
 
+    // Interactive point position based on driving frequency (maps to response curve)
+    const chartX = 260 + (drivingFrequency - 50) * (220 / 350);
+    const chartY = 270 - (responseAmplitude / 100) * 200;
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', width: '100%' }}>
         <svg viewBox="0 0 500 280" style={{ width: '100%', height: '100%', maxHeight: '280px' }}>
@@ -820,6 +824,30 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
               filter={isAtResonance ? "url(#resAmplitudeGlow)" : undefined}
             />
           </g>
+
+          {/* Grid lines for visual reference */}
+          <line x1="35" y1="70" x2="480" y2="70" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="35" y1="140" x2="480" y2="140" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="35" y1="210" x2="480" y2="210" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+
+          {/* Interactive point showing current frequency/amplitude on response curve */}
+          <circle
+            cx={chartX}
+            cy={chartY}
+            r={10}
+            fill={isAtResonance ? '#10b981' : '#ec4899'}
+            stroke="#ffffff"
+            strokeWidth="2"
+            filter="url(#resGlowPremium)"
+          />
+          <text x={chartX} y={chartY - 16} textAnchor="middle" fill={isAtResonance ? '#10b981' : '#ec4899'} fontSize="11" fontWeight="bold">
+            {responseAmplitude.toFixed(0)}%
+          </text>
+
+          {/* Formula: A = F₀ / √((ω²-ω₀²)² + γ²ω²) */}
+          <text x="250" y="268" textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11">
+            A = F₀ / √((ω² - ω₀²)² + γ²ω²)
+          </text>
         </svg>
 
         {/* Legend panel */}
@@ -1069,8 +1097,28 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
                 <input
                   type="range" min="50" max="400" value={drivingFrequency}
                   onChange={(e) => setDrivingFrequency(parseInt(e.target.value))}
-                  style={{ width: '100%', accentColor: '#ec4899' }}
+                  style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
                 />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ fontSize: '11px', color: 'rgba(148,163,184,0.7)' }}>Low 50 Hz</span>
+                  <span style={{ fontSize: '11px', color: 'rgba(148,163,184,0.7)' }}>High 400 Hz</span>
+                </div>
+              </div>
+
+              {/* Comparison readout: current vs reference */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px' }}>
+                <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(51, 65, 85, 0.5)', textAlign: 'center' }}>
+                  <div style={{ fontSize: '11px', color: 'rgba(148,163,184,0.7)', marginBottom: '2px' }}>Current</div>
+                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#ec4899' }}>{drivingFrequency} Hz</div>
+                </div>
+                <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(51, 65, 85, 0.5)', textAlign: 'center' }}>
+                  <div style={{ fontSize: '11px', color: 'rgba(148,163,184,0.7)', marginBottom: '2px' }}>Reference</div>
+                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#a855f7' }}>{resonantFreq} Hz</div>
+                </div>
+                <div style={{ padding: '10px', borderRadius: '10px', background: isAtResonance ? 'rgba(16, 185, 129, 0.15)' : frequencyDiff > 80 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(51, 65, 85, 0.5)', textAlign: 'center' }}>
+                  <div style={{ fontSize: '11px', color: 'rgba(148,163,184,0.7)', marginBottom: '2px' }}>Amplitude</div>
+                  <div style={{ fontSize: '16px', fontWeight: 800, color: isAtResonance ? '#10b981' : frequencyDiff > 80 ? '#EF4444' : '#F59E0B' }}>{responseAmplitude.toFixed(0)}%</div>
+                </div>
               </div>
 
               {/* Status and continue */}
@@ -1249,8 +1297,12 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
                 <input
                   type="range" min="0" max="60" value={addedMass}
                   onChange={(e) => setAddedMass(parseInt(e.target.value))}
-                  style={{ width: '100%', accentColor: '#a855f7' }}
+                  style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
                 />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ fontSize: '11px', color: 'rgba(148,163,184,0.7)' }}>None 0g</span>
+                  <span style={{ fontSize: '11px', color: 'rgba(148,163,184,0.7)' }}>Max 60g</span>
+                </div>
               </div>
 
               {/* Frequency slider */}
@@ -1264,8 +1316,12 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
                 <input
                   type="range" min="50" max="400" value={drivingFrequency}
                   onChange={(e) => setDrivingFrequency(parseInt(e.target.value))}
-                  style={{ width: '100%', accentColor: '#ec4899' }}
+                  style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
                 />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ fontSize: '11px', color: 'rgba(148,163,184,0.7)' }}>Low 50 Hz</span>
+                  <span style={{ fontSize: '11px', color: 'rgba(148,163,184,0.7)' }}>High 400 Hz</span>
+                </div>
               </div>
 
               <div style={{

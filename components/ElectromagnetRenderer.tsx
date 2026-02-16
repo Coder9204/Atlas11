@@ -893,7 +893,7 @@ export default function ElectromagnetRenderer({
             <rect x="217" y="215" width="8" height="6" rx="1" fill="#3b82f6" />
             {/* Battery label background */}
             <rect x="174" y="225" width="52" height="20" rx="3" fill="#1f2937" opacity="0.5" />
-            <text x="200" y="238" textAnchor="middle" fill="#9ca3af" fontSize="10">
+            <text x="200" y="238" textAnchor="middle" fill="#9ca3af" fontSize="11">
               {Math.abs(curr).toFixed(1)}A
             </text>
           </g>
@@ -969,7 +969,7 @@ export default function ElectromagnetRenderer({
             {/* Field strength panel */}
             <rect x="15" y="15" width="110" height="55" rx="8" fill="url(#emagPanelGrad)" stroke="#374151" strokeWidth="1.5" />
             <rect x="15" y="15" width="110" height="55" rx="8" fill="none" stroke="white" strokeWidth="0.5" opacity="0.1" />
-            <text x="70" y="35" textAnchor="middle" fill="#9ca3af" fontSize="10">Field Strength</text>
+            <text x="70" y="35" textAnchor="middle" fill="#9ca3af" fontSize="11">Field Strength</text>
             <text x="70" y="55" textAnchor="middle" fill="#a855f7" fontSize="16" fontWeight="bold">
               {fieldStrength.toFixed(2)} T
             </text>
@@ -977,7 +977,7 @@ export default function ElectromagnetRenderer({
             {/* Polarity panel */}
             <rect x="275" y="15" width="110" height="55" rx="8" fill="url(#emagPanelGrad)" stroke="#374151" strokeWidth="1.5" />
             <rect x="275" y="15" width="110" height="55" rx="8" fill="none" stroke="white" strokeWidth="0.5" opacity="0.1" />
-            <text x="330" y="35" textAnchor="middle" fill="#9ca3af" fontSize="10">Polarity</text>
+            <text x="330" y="35" textAnchor="middle" fill="#9ca3af" fontSize="11">Polarity</text>
             <text x="330" y="55" textAnchor="middle" fill={curr === 0 ? '#6b7280' : curr > 0 ? '#3b82f6' : '#ef4444'} fontSize="16" fontWeight="bold">
               {polarity}
             </text>
@@ -1062,14 +1062,14 @@ export default function ElectromagnetRenderer({
             <g filter="url(#emagPoleGlow)">
               <path d="M 200 98 L 212 126 L 188 126 Z" fill="url(#emagNorthPole)" />
               <path d="M 200 98 L 212 126 L 188 126 Z" fill="none" stroke="white" strokeWidth="1" opacity="0.3" />
-              <text x="200" y="118" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">N</text>
+              <text x="200" y="118" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">N</text>
             </g>
 
             {/* S pole with premium gradient */}
             <g filter="url(#emagPoleGlow)">
               <path d="M 200 182 L 212 154 L 188 154 Z" fill="url(#emagSouthPole)" />
               <path d="M 200 182 L 212 154 L 188 154 Z" fill="none" stroke="white" strokeWidth="1" opacity="0.3" />
-              <text x="200" y="170" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">S</text>
+              <text x="200" y="170" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">S</text>
             </g>
           </g>
 
@@ -1080,7 +1080,7 @@ export default function ElectromagnetRenderer({
           <g>
             {/* Current waveform panel */}
             <rect x="15" y="15" width="125" height="65" rx="8" fill="url(#emagPanelGrad)" stroke="#374151" strokeWidth="1.5" />
-            <text x="77" y="32" textAnchor="middle" fill="#9ca3af" fontSize="10">Current Type</text>
+            <text x="77" y="32" textAnchor="middle" fill="#9ca3af" fontSize="11">Current Type</text>
 
             {/* Waveform visualization */}
             {ac ? (
@@ -1097,7 +1097,7 @@ export default function ElectromagnetRenderer({
 
             {/* Mode panel */}
             <rect x="260" y="15" width="125" height="65" rx="8" fill="url(#emagPanelGrad)" stroke="#374151" strokeWidth="1.5" />
-            <text x="322" y="32" textAnchor="middle" fill="#9ca3af" fontSize="10">Motor Mode</text>
+            <text x="322" y="32" textAnchor="middle" fill="#9ca3af" fontSize="11">Motor Mode</text>
             <text x="322" y="55" textAnchor="middle" fill={ac ? '#22c55e' : '#fbbf24'} fontSize="14" fontWeight="bold">
               {ac ? 'AC ROTATING' : 'DC STATIC'}
             </text>
@@ -1169,7 +1169,7 @@ export default function ElectromagnetRenderer({
           <rect width="300" height="120" fill="#1e293b" rx="8" />
           {/* Battery */}
           <rect x="20" y="45" width="40" height="30" fill="#374151" stroke="#6b7280" strokeWidth="2" rx="3" />
-          <text x="40" y="65" textAnchor="middle" fill="#9ca3af" fontSize="10">BATT</text>
+          <text x="40" y="65" textAnchor="middle" fill="#9ca3af" fontSize="11">BATT</text>
           {/* Wire to nail */}
           <path d="M60,60 L100,60" fill="none" stroke="#ef4444" strokeWidth="3" />
           {/* Nail with coil */}
@@ -1269,7 +1269,7 @@ export default function ElectromagnetRenderer({
                   onGameEvent?.({ type: 'current_changed', data: { current: Number(e.target.value) } });
                 }}
                 className="w-full accent-yellow-500"
-                style={{ width: '100%', accentColor: '#eab308', cursor: 'pointer' }}
+                style={{ width: '100%', height: '20px', accentColor: '#3b82f6', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
               />
               <div className="flex justify-between text-xs text-slate-500 mt-1">
                 <span>-5A</span>
@@ -1293,7 +1293,7 @@ export default function ElectromagnetRenderer({
                   onGameEvent?.({ type: 'parameter_changed', data: { coilTurns: Number(e.target.value) } });
                 }}
                 className="w-full accent-orange-500"
-                style={{ width: '100%', accentColor: '#f97316', cursor: 'pointer' }}
+                style={{ width: '100%', height: '20px', accentColor: '#3b82f6', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
               />
             </div>
           </div>
@@ -1472,12 +1472,12 @@ export default function ElectromagnetRenderer({
         ))}
         <text x="30" y="70" fill="#3b82f6" fontSize="12" fontWeight="bold" fontFamily="sans-serif">S</text>
         <text x="125" y="70" fill="#ef4444" fontSize="12" fontWeight="bold" fontFamily="sans-serif">N</text>
-        <path d="M 30,65 C 30,40 130,40 130,65" fill="none" stroke="#8b5cf6" strokeWidth="1" strokeDasharray="3,2" opacity="0.5" />
-        <path d="M 30,65 C 30,90 130,90 130,65" fill="none" stroke="#8b5cf6" strokeWidth="1" strokeDasharray="3,2" opacity="0.5" />
+        <path d="M 30,65 C 30,15 130,15 130,65" fill="none" stroke="#8b5cf6" strokeWidth="1" strokeDasharray="3,2" opacity="0.5" />
+        <path d="M 30,65 C 30,115 130,115 130,65" fill="none" stroke="#8b5cf6" strokeWidth="1" strokeDasharray="3,2" opacity="0.5" />
         {/* Arrow showing steady current */}
         <line x1="60" y1="100" x2="100" y2="100" stroke="#eab308" strokeWidth="2" />
         <polygon points="100,95 110,100 100,105" fill="#eab308" />
-        <text x="80" y="115" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="sans-serif">Fixed poles</text>
+        <text x="80" y="115" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="sans-serif">Fixed poles</text>
         {/* AC side */}
         <text x="240" y="20" textAnchor="middle" fill="#22c55e" fontSize="11" fontWeight="bold" fontFamily="sans-serif">AC (alternating)</text>
         <rect x="200" y="55" width="80" height="20" rx="3" fill="url(#twpEmagCore)" />
@@ -1488,11 +1488,11 @@ export default function ElectromagnetRenderer({
         <text x="285" y="70" fill="#3b82f6" fontSize="12" fontWeight="bold" fontFamily="sans-serif">S</text>
         <text x="240" y="50" fill="#22c55e" fontSize="14" fontFamily="sans-serif">???</text>
         {/* AC wave */}
-        <path d="M 210,100 Q 220,85 230,100 Q 240,115 250,100 Q 260,85 270,100" fill="none" stroke="#22c55e" strokeWidth="2" />
-        <text x="240" y="125" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="sans-serif">Poles flip?</text>
+        <path d="M 210,100 Q 220,55 230,100 Q 240,145 250,100 Q 260,55 270,100" fill="none" stroke="#22c55e" strokeWidth="2" />
+        <text x="240" y="125" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="sans-serif">Poles flip?</text>
         {/* Divider */}
         <line x1="160" y1="25" x2="160" y2="165" stroke="#334155" strokeWidth="1" strokeDasharray="4,4" />
-        <text x="160" y="170" textAnchor="middle" fill="#64748b" fontSize="9" fontFamily="sans-serif">vs</text>
+        <text x="160" y="170" textAnchor="middle" fill="#64748b" fontSize="11" fontFamily="sans-serif">vs</text>
       </svg>
 
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">

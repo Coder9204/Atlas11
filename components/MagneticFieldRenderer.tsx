@@ -776,8 +776,12 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
             );
           })}
 
-          {/* Test point with glow */}
-          <circle cx={centerX + wireDistance * 1500} cy={centerY} r="8" fill="url(#magfTestPoint)" filter="url(#magfTestGlow)" />
+          {/* Test point with glow - y offset shows field strength response to current */}
+          <circle cx={centerX + wireDistance * 1500} cy={centerY - wireCurrent * 3} r="8" fill="url(#magfTestPoint)" filter="url(#magfTestGlow)" />
+
+          {/* Grid reference lines */}
+          <line x1={40} y1={centerY} x2={width - 40} y2={centerY} stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+          <line x1={centerX} y1={40} x2={centerX} y2={height - 50} stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
 
           {/* Distance line */}
           <line
@@ -797,8 +801,8 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
 
           {/* Educational labels */}
           <text x={centerX} y={20} textAnchor="middle" fill="#93c5fd" fontSize="11" fontWeight="bold">Magnetic Field Lines</text>
-          <text x={centerX + wireDistance * 1500} y={centerY - 14} textAnchor="middle" fill="#4ade80" fontSize="10">Test Point</text>
-          <text x={centerX} y={centerY + 25} textAnchor="middle" fill="#fbbf24" fontSize="9">Current-Carrying Wire</text>
+          <text x={centerX + wireDistance * 1500} y={centerY - wireCurrent * 3 - 14} textAnchor="middle" fill="#4ade80" fontSize="11">Test Point</text>
+          <text x={centerX} y={centerY + 40} textAnchor="middle" fill="#fbbf24" fontSize="11">Current-Carrying Wire</text>
 
           {/* Formula box with current value */}
           <rect x="10" y={height - 45} width="180" height="35" fill="#0f172a" stroke="#334155" strokeWidth="1" rx="6" />
@@ -989,8 +993,8 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
 
           {/* Educational labels */}
           <text x={centerX} y={20} textAnchor="middle" fill="#93c5fd" fontSize="11" fontWeight="bold">Solenoid Field</text>
-          <text x={centerX} y={centerY - 45} textAnchor="middle" fill="#fbbf24" fontSize="9">Copper Coil Windings</text>
-          <text x={width - 10} y={20} textAnchor="end" fill="#a78bfa" fontSize="9">Uniform Interior Field</text>
+          <text x={centerX} y={centerY - 45} textAnchor="middle" fill="#fbbf24" fontSize="11">Copper Coil Windings</text>
+          <text x={width - 10} y={20} textAnchor="end" fill="#a78bfa" fontSize="11">Uniform Interior Field</text>
 
           {/* Formula box */}
           <rect x="10" y={height - 55} width="170" height="45" fill="#0f172a" stroke="#334155" strokeWidth="1" rx="6" />
@@ -1442,10 +1446,10 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
         <circle cx="230" cy="100" r="18" fill="#1e293b" stroke="#64748b" strokeWidth="2" />
         <line x1="230" y1="88" x2="225" y2="108" stroke="#ef4444" strokeWidth="2" />
         <line x1="230" y1="88" x2="235" y2="108" stroke="#94a3b8" strokeWidth="2" />
-        <text x="222" y="84" fill="#94a3b8" fontSize="9" fontFamily="sans-serif">N</text>
+        <text x="222" y="84" fill="#94a3b8" fontSize="11" fontFamily="sans-serif">N</text>
         <circle cx="230" cy="100" r="2" fill="#e2e8f0" />
         {/* Label */}
-        <text x="160" y="195" fill="#94a3b8" fontSize="10" textAnchor="middle" fontFamily="sans-serif">Wire carrying current with nearby compass</text>
+        <text x="160" y="195" fill="#94a3b8" fontSize="11" textAnchor="middle" fontFamily="sans-serif">Wire carrying current with nearby compass</text>
       </svg>
 
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
@@ -1573,6 +1577,9 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
           <>
             <div className="p-3 bg-slate-700/50 rounded-xl text-center">
               <div className="text-sm text-slate-400">Current (A)</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'rgba(148,163,184,0.7)' }}>
+                <span>Low 1</span><span>Strong 20</span>
+              </div>
               <input
                 type="range"
                 min="1"
@@ -1580,13 +1587,16 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
                 value={wireCurrent}
                 onChange={(e) => setWireCurrent(parseFloat(e.target.value))}
                 className="w-full"
-                style={{ width: '100%', accentColor: '#06b6d4', cursor: 'pointer' }}
+                style={{ width: '100%', height: '20px', accentColor: '#3b82f6', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none' }}
               />
               <div className="text-cyan-400 font-bold">{wireCurrent.toFixed(1)}</div>
             </div>
 
             <div className="p-3 bg-slate-700/50 rounded-xl text-center">
               <div className="text-sm text-slate-400">Distance (cm)</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'rgba(148,163,184,0.7)' }}>
+                <span>Min 1</span><span>Max 20</span>
+              </div>
               <input
                 type="range"
                 min="1"
@@ -1594,7 +1604,7 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
                 value={wireDistance * 100}
                 onChange={(e) => setWireDistance(parseFloat(e.target.value) / 100)}
                 className="w-full"
-                style={{ width: '100%', accentColor: '#06b6d4', cursor: 'pointer' }}
+                style={{ width: '100%', height: '20px', accentColor: '#3b82f6', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none' }}
               />
               <div className="text-cyan-400 font-bold">{(wireDistance * 100).toFixed(1)}</div>
             </div>
@@ -1603,6 +1613,9 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
           <>
             <div className="p-3 bg-slate-700/50 rounded-xl text-center">
               <div className="text-sm text-slate-400">Current (A)</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'rgba(148,163,184,0.7)' }}>
+                <span>Low 0.5</span><span>Strong 10</span>
+              </div>
               <input
                 type="range"
                 min="0.5"
@@ -1611,13 +1624,16 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
                 value={electromagnetCurrent}
                 onChange={(e) => setElectromagnetCurrent(parseFloat(e.target.value))}
                 className="w-full"
-                style={{ width: '100%', accentColor: '#06b6d4', cursor: 'pointer' }}
+                style={{ width: '100%', height: '20px', accentColor: '#3b82f6', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none' }}
               />
               <div className="text-cyan-400 font-bold">{electromagnetCurrent.toFixed(1)}</div>
             </div>
 
             <div className="p-3 bg-slate-700/50 rounded-xl text-center">
               <div className="text-sm text-slate-400">Turns</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'rgba(148,163,184,0.7)' }}>
+                <span>Min 10</span><span>Max 200</span>
+              </div>
               <input
                 type="range"
                 min="10"
@@ -1626,7 +1642,7 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
                 value={electromagnetCoils}
                 onChange={(e) => setElectromagnetCoils(parseInt(e.target.value))}
                 className="w-full"
-                style={{ width: '100%', accentColor: '#06b6d4', cursor: 'pointer' }}
+                style={{ width: '100%', height: '20px', accentColor: '#3b82f6', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none' }}
               />
               <div className="text-cyan-400 font-bold">{electromagnetCoils}</div>
             </div>
@@ -1750,7 +1766,7 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
         <rect width="320" height="200" rx="12" fill="#0f172a" />
         {/* Iron core */}
         <rect x="80" y="85" width="160" height="30" rx="4" fill="url(#twpIronCore)" stroke="#475569" strokeWidth="1" />
-        <text x="160" y="105" textAnchor="middle" fill="#1e293b" fontSize="10" fontWeight="bold" fontFamily="sans-serif">Iron Core</text>
+        <text x="160" y="105" textAnchor="middle" fill="#1e293b" fontSize="11" fontWeight="bold" fontFamily="sans-serif">Iron Core</text>
         {/* Coil windings */}
         {[0,1,2,3,4,5,6,7].map(i => (
           <g key={i}>
@@ -1771,7 +1787,7 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
         <line x1="95" y1="160" x2="150" y2="160" stroke="#fbbf24" strokeWidth="2" />
         <line x1="185" y1="160" x2="240" y2="160" stroke="#fbbf24" strokeWidth="2" />
         <rect x="150" y="152" width="35" height="16" rx="3" fill="#1e293b" stroke="#fbbf24" strokeWidth="1.5" />
-        <text x="167" y="163" textAnchor="middle" fill="#fbbf24" fontSize="8" fontFamily="sans-serif">Battery</text>
+        <text x="167" y="163" textAnchor="middle" fill="#fbbf24" fontSize="11" fontFamily="sans-serif">Battery</text>
         {/* Current arrow */}
         <polygon points="130,157 135,153 135,161" fill="#fbbf24" />
         {/* Title */}
@@ -1846,6 +1862,9 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
       <div className="grid grid-cols-2 gap-4 w-full max-w-md mb-4">
         <div className="p-4 bg-slate-700/50 rounded-xl text-center">
           <div className="text-sm text-slate-400 mb-2">Current (Amperes)</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'rgba(148,163,184,0.7)' }}>
+            <span>Zero 0</span><span>Strong 5</span>
+          </div>
           <input
             type="range"
             min="0"
@@ -1854,13 +1873,16 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
             value={electromagnetCurrent}
             onChange={(e) => setElectromagnetCurrent(parseFloat(e.target.value))}
             className="w-full mb-2"
-            style={{ width: '100%', accentColor: '#06b6d4', cursor: 'pointer' }}
+            style={{ width: '100%', height: '20px', accentColor: '#3b82f6', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none' }}
           />
           <div className="text-cyan-400 font-bold text-xl">{electromagnetCurrent.toFixed(1)} A</div>
         </div>
 
         <div className="p-4 bg-slate-700/50 rounded-xl text-center">
           <div className="text-sm text-slate-400 mb-2">Number of Coils</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'rgba(148,163,184,0.7)' }}>
+            <span>Min 10</span><span>Max 100</span>
+          </div>
           <input
             type="range"
             min="10"
@@ -1869,7 +1891,7 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
             value={electromagnetCoils}
             onChange={(e) => setElectromagnetCoils(parseInt(e.target.value))}
             className="w-full mb-2"
-            style={{ width: '100%', accentColor: '#06b6d4', cursor: 'pointer' }}
+            style={{ width: '100%', height: '20px', accentColor: '#3b82f6', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none' }}
           />
           <div className="text-cyan-400 font-bold text-xl">{electromagnetCoils} turns</div>
         </div>
@@ -2176,7 +2198,7 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
         </div>
         <span style={{ fontSize: '14px', color: '#64748b' }}>{pidx + 1}/10</span>
       </div>
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative' }}>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', paddingTop: '48px', paddingBottom: '100px' }}>
         <div style={{ position: 'fixed', top: 0, left: 0, width: `${((pidx + 1) / 10) * 100}%`, height: '3px', background: 'linear-gradient(90deg, #06b6d4, #3b82f6)', transition: 'width 0.3s ease', zIndex: 20 }} />
         {renderPhase()}
       </div>

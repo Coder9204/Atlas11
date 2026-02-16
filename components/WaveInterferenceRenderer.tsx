@@ -487,11 +487,11 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
         {/* Sources */}
         <g filter="url(#wiGlow)">
           <circle cx={s1.x} cy={s1.y} r={12} fill={colors.wave1} />
-          <text x={s1.x} y={s1.y + 4} textAnchor="middle" fill="#0a1628" fontSize="10" fontWeight="bold">S1</text>
+          <text x={s1.x} y={s1.y + 4} textAnchor="middle" fill="#0a1628" fontSize="11" fontWeight="bold">S1</text>
         </g>
         <g filter="url(#wiGlow)">
           <circle cx={s2.x} cy={s2.y} r={12} fill={colors.wave2} />
-          <text x={s2.x} y={s2.y + 4} textAnchor="middle" fill="#0a1628" fontSize="10" fontWeight="bold">S2</text>
+          <text x={s2.x} y={s2.y + 4} textAnchor="middle" fill="#0a1628" fontSize="11" fontWeight="bold">S2</text>
         </g>
 
         {/* Path lines */}
@@ -511,25 +511,25 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
 
         {/* Info panels */}
         <g transform="translate(20, 20)">
-          <rect x="0" y="0" width="130" height="55" rx="8" fill="#1e293b" opacity="0.95" />
-          <text x="10" y="18" fill="#64748b" fontSize="9" fontWeight="bold">PATH DIFFERENCE</text>
+          <rect x="0" y="0" width="140" height="60" rx="8" fill="#1e293b" opacity="0.95" />
+          <text x="10" y="18" fill="#64748b" fontSize="11" fontWeight="bold">PATH DIFFERENCE</text>
           <text x="10" y="38" fill="#e2e8f0" fontSize="14" fontWeight="bold">{pathDiff.toFixed(1)} px</text>
-          <text x="70" y="38" fill="#5eead4" fontSize="11">= {pathDiffInWavelengths.toFixed(2)} lambda</text>
+          <text x="10" y="54" fill="#5eead4" fontSize="11">= {pathDiffInWavelengths.toFixed(2)} lambda</text>
         </g>
 
         <g transform={`translate(${canvasWidth - 150}, 20)`}>
-          <rect x="0" y="0" width="130" height="55" rx="8" fill="#1e293b" opacity="0.95" />
-          <text x="10" y="18" fill="#64748b" fontSize="9" fontWeight="bold">WAVELENGTH</text>
+          <rect x="0" y="0" width="140" height="60" rx="8" fill="#1e293b" opacity="0.95" />
+          <text x="10" y="18" fill="#64748b" fontSize="11" fontWeight="bold">WAVELENGTH</text>
           <text x="10" y="38" fill={colors.accent} fontSize="14" fontWeight="bold">lambda = {wavelength} px</text>
         </g>
 
         {/* Amplitude indicator */}
         <g transform={`translate(${canvasWidth / 2}, ${canvasHeight - 40})`}>
           <rect x="-100" y="-15" width="200" height="30" rx="8" fill="#1e293b" opacity="0.95" />
-          <text x="-85" y="5" fill="#64748b" fontSize="9" fontWeight="bold">AMPLITUDE:</text>
+          <text x="-85" y="5" fill="#64748b" fontSize="11" fontWeight="bold">AMPLITUDE:</text>
           <rect x="0" y="-8" width={80 * Math.abs(interferenceAmplitude)} height="16" rx="4"
             fill={interferenceAmplitude > 0 ? colors.success : colors.error} />
-          <text x="85" y="5" textAnchor="end" fill="#e2e8f0" fontSize="10" fontWeight="bold">
+          <text x="85" y="5" textAnchor="end" fill="#e2e8f0" fontSize="11" fontWeight="bold">
             {(interferenceAmplitude * 100).toFixed(0)}%
           </text>
         </g>
@@ -588,12 +588,12 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
 
         {/* Top reflection */}
         <line x1="180" y1="120" x2="100" y2="150" stroke={colors.error} strokeWidth="2" strokeDasharray="5,5" />
-        <text x="70" y="165" fill={colors.error} fontSize="10">Reflection 1</text>
+        <text x="70" y="165" fill={colors.error} fontSize="11">Reflection 1</text>
 
         {/* Bottom reflection */}
         <line x1="180" y1="120" x2="200" y2="180" stroke={colors.success} strokeWidth="2" opacity="0.5" />
         <line x1="200" y1="180" x2="120" y2="210" stroke={colors.success} strokeWidth="2" strokeDasharray="5,5" />
-        <text x="70" y="225" fill={colors.success} fontSize="10">Reflection 2</text>
+        <text x="70" y="225" fill={colors.success} fontSize="11">Reflection 2</text>
 
         {/* Film thickness indicator */}
         <line x1="380" y1="125" x2="380" y2="225" stroke="#5eead4" strokeWidth="2" />
@@ -603,14 +603,14 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
 
         {/* Color result panel */}
         <rect x="320" y="260" width="160" height="70" rx="8" fill="#1e293b" opacity="0.95" />
-        <text x="330" y="280" fill="#64748b" fontSize="10" fontWeight="bold">RESULTING COLOR</text>
+        <text x="330" y="280" fill="#64748b" fontSize="11" fontWeight="bold">RESULTING COLOR</text>
         <rect x="330" y="290" width="140" height="30" rx="4" fill={resultColor} />
 
         {/* Path difference info */}
         <rect x="20" y="260" width="180" height="70" rx="8" fill="#1e293b" opacity="0.95" />
-        <text x="30" y="280" fill="#64748b" fontSize="10" fontWeight="bold">PATH DIFFERENCE</text>
+        <text x="30" y="280" fill="#64748b" fontSize="11" fontWeight="bold">PATH DIFFERENCE</text>
         <text x="30" y="305" fill="#e2e8f0" fontSize="14" fontWeight="bold">2t = {2 * filmThickness} nm</text>
-        <text x="30" y="320" fill="#5eead4" fontSize="10">+ phase shift at reflection</text>
+        <text x="30" y="320" fill="#5eead4" fontSize="11">+ phase shift at reflection</text>
       </svg>
     );
   };
@@ -889,9 +889,9 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
 
         {/* Sources */}
         <circle cx={canvasWidth / 2 - 60} cy={50} r={12} fill={colors.wave1} />
-        <text x={canvasWidth / 2 - 60} y={54} textAnchor="middle" fill="#0a1628" fontSize="10" fontWeight="bold">S1</text>
+        <text x={canvasWidth / 2 - 60} y={54} textAnchor="middle" fill="#0a1628" fontSize="11" fontWeight="bold">S1</text>
         <circle cx={canvasWidth / 2 + 60} cy={50} r={12} fill={colors.wave2} />
-        <text x={canvasWidth / 2 + 60} y={54} textAnchor="middle" fill="#0a1628" fontSize="10" fontWeight="bold">S2</text>
+        <text x={canvasWidth / 2 + 60} y={54} textAnchor="middle" fill="#0a1628" fontSize="11" fontWeight="bold">S2</text>
 
         {/* Question mark at center */}
         <circle cx={canvasWidth / 2} cy={180} r={20} fill={colors.warning} opacity={0.3} />
@@ -1031,9 +1031,10 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
           flex: 1,
           overflowY: 'auto',
           padding: '24px',
+          paddingTop: '48px',
           paddingBottom: '100px',
         }}>
-          <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <div style={{ maxWidth: '800px', margin: '24px auto 0' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Interactive Two-Source Interference
             </h2>
@@ -1069,13 +1070,42 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
                   onChange={(e) => setWavelength(parseInt(e.target.value))}
                   style={{
                     width: '100%',
-                    height: '8px',
+                    height: '20px',
                     borderRadius: '4px',
                     cursor: 'pointer',
-                    accentColor: colors.accent,
+                    accentColor: '#3b82f6',
                     background: colors.bgSecondary,
-                  }}
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none',
+                  } as React.CSSProperties}
                 />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>20 (short)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>80 (long)</span>
+                </div>
+              </div>
+
+              {/* Real-time calculated values */}
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px 16px',
+                marginBottom: '16px',
+                display: 'flex',
+                justifyContent: 'space-around',
+              }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Path Diff</div>
+                  <div style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>{pathDiff.toFixed(1)} px</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Ratio</div>
+                  <div style={{ ...typo.body, color: colors.accent, fontWeight: 600 }}>{pathDiffInWavelengths.toFixed(2)} lambda</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Amplitude Factor</div>
+                  <div style={{ ...typo.body, color: interferenceAmplitude > 0 ? colors.success : colors.error, fontWeight: 600 }}>{(Math.abs(interferenceAmplitude) * 2).toFixed(2)}x</div>
+                </div>
               </div>
 
               {/* Discovery trackers */}
@@ -1451,12 +1481,14 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
                 onChange={(e) => setFilmThickness(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
-                  accentColor: colors.warning,
+                  accentColor: '#3b82f6',
                   background: colors.bgSecondary,
-                }}
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                } as React.CSSProperties}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                 <span style={{ ...typo.small, color: colors.textMuted }}>100 nm (thin)</span>

@@ -571,13 +571,13 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
         </text>
 
         {/* Temperature scale */}
-        <text x="35" y="255" textAnchor="end" fill={colors.textMuted} fontSize="9">-20</text>
-        <text x="35" y="225" textAnchor="end" fill={colors.textMuted} fontSize="9">0</text>
-        <text x="35" y="105" textAnchor="end" fill={colors.textMuted} fontSize="9">100</text>
+        <text x="35" y="255" textAnchor="end" fill={colors.textMuted} fontSize="11">-20</text>
+        <text x="35" y="225" textAnchor="end" fill={colors.textMuted} fontSize="11">0</text>
+        <text x="35" y="105" textAnchor="end" fill={colors.textMuted} fontSize="11">100</text>
 
         {/* The heating curve */}
         <path
-          d="M 40 250 L 80 220 L 140 220 L 220 100 L 320 100 L 360 80"
+          d="M 40 250 L 50 245 L 60 238 L 70 230 L 80 220 L 100 220 L 120 220 L 140 220 L 160 195 L 180 165 L 200 135 L 220 100 L 250 100 L 280 100 L 300 100 L 320 100 L 340 90 L 360 80"
           fill="none"
           stroke="url(#curveGradient)"
           strokeWidth="3"
@@ -585,20 +585,20 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
         />
 
         {/* Phase labels */}
-        <text x="60" y="270" textAnchor="middle" fill={colors.ice} fontSize="10">Ice</text>
-        <text x="110" y="210" textAnchor="middle" fill={colors.ice} fontSize="10">Melting</text>
-        <text x="180" y="160" textAnchor="middle" fill={colors.water} fontSize="10">Water</text>
-        <text x="270" y="90" textAnchor="middle" fill={colors.steam} fontSize="10">Boiling</text>
-        <text x="340" y="70" textAnchor="middle" fill={colors.steam} fontSize="10">Steam</text>
+        <text x="60" y="270" textAnchor="middle" fill={colors.ice} fontSize="11">Ice</text>
+        <text x="110" y="210" textAnchor="middle" fill={colors.ice} fontSize="11">Melting</text>
+        <text x="180" y="160" textAnchor="middle" fill={colors.water} fontSize="11">Water</text>
+        <text x="270" y="85" textAnchor="middle" fill={colors.steam} fontSize="11">Boiling</text>
+        <text x="340" y="68" textAnchor="middle" fill={colors.steam} fontSize="11">Steam</text>
 
         {/* Plateau annotations */}
         <g>
-          <rect x="90" y="230" width="60" height="20" rx="4" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="1" />
-          <text x="120" y="244" textAnchor="middle" fill={colors.accent} fontSize="9">334 kJ/kg</text>
+          <rect x="85" y="230" width="70" height="20" rx="4" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="1" />
+          <text x="120" y="244" textAnchor="middle" fill={colors.accent} fontSize="11">334 kJ/kg</text>
         </g>
         <g>
-          <rect x="240" y="110" width="70" height="20" rx="4" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="1" />
-          <text x="275" y="124" textAnchor="middle" fill={colors.accent} fontSize="9">2,260 kJ/kg</text>
+          <rect x="235" y="110" width="80" height="20" rx="4" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="1" />
+          <text x="275" y="124" textAnchor="middle" fill={colors.accent} fontSize="11">2,260 kJ/kg</text>
         </g>
 
         {/* Current position marker */}
@@ -650,17 +650,17 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
         {/* Stats box */}
         <g transform={`translate(${width - 130}, 45)`}>
           <rect x="0" y="0" width="115" height="95" rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
-          <text x="57" y="16" textAnchor="middle" fill={colors.textMuted} fontSize="10">Current State</text>
+          <text x="57" y="16" textAnchor="middle" fill={colors.textMuted} fontSize="11">Current State</text>
           <text x="57" y="34" textAnchor="middle" fill={colors.accent} fontSize="16" fontWeight="700">
             {temperature.toFixed(1)}C
           </text>
-          <text x="57" y="50" textAnchor="middle" fill={colors.textMuted} fontSize="9">
+          <text x="57" y="52" textAnchor="middle" fill={colors.textMuted} fontSize="11">
             Phase: {materialPhase}
           </text>
-          <text x="57" y="65" textAnchor="middle" fill={colors.success} fontSize="10">
+          <text x="57" y="67" textAnchor="middle" fill={colors.success} fontSize="11">
             Q: {heatAdded.toFixed(1)} kJ
           </text>
-          <text x="57" y="85" textAnchor="middle" fill={colors.warning} fontSize="9">
+          <text x="57" y="85" textAnchor="middle" fill={colors.warning} fontSize="11">
             Power: {heatingPower}W
           </text>
         </g>
@@ -712,7 +712,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
         </g>
 
         {/* Power indicator */}
-        <text x={width/2} y={height - 2} textAnchor="middle" fill={colors.accent} fontSize="10" fontWeight="600">
+        <text x={width/2} y={height - 2} textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="600">
           {heatingPower}W
         </text>
 
@@ -924,7 +924,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
             </>
           )}
 
-          <text x="60" y="165" textAnchor="middle" fill={colors.textMuted} fontSize="10">
+          <text x="60" y="165" textAnchor="middle" fill={colors.textMuted} fontSize="11">
             Latent + Sensible
           </text>
           <text x="60" y="180" textAnchor="middle" fill={colors.steam} fontSize="14" fontWeight="700">
@@ -951,7 +951,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
 
           <rect x="15" y="80" width="90" height="60" fill={colors.water} opacity="0.4" rx="4" />
 
-          <text x="60" y="165" textAnchor="middle" fill={colors.textMuted} fontSize="10">
+          <text x="60" y="165" textAnchor="middle" fill={colors.textMuted} fontSize="11">
             Sensible Only
           </text>
           <text x="60" y="180" textAnchor="middle" fill={colors.water} fontSize="14" fontWeight="700">
@@ -1280,7 +1280,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
               {/* Question mark box */}
               <rect x={predWidth / 2 + 120} y="60" width="80" height="80" rx="8" fill={colors.bgSecondary} stroke={colors.warning} strokeWidth="2" strokeDasharray="5,3" />
               <text x={predWidth / 2 + 160} y="110" textAnchor="middle" fill={colors.warning} fontSize="32" fontWeight="bold">?</text>
-              <text x={predWidth / 2 + 160} y="130" textAnchor="middle" fill={colors.textMuted} fontSize="10">T vs Time</text>
+              <text x={predWidth / 2 + 160} y="130" textAnchor="middle" fill={colors.textMuted} fontSize="11">T vs Time</text>
               {/* Heat label */}
               <text x={predWidth / 2} y={predHeight - 10} textAnchor="middle" fill={colors.accent} fontSize="12">+ Continuous Heat</text>
             </svg>

@@ -538,6 +538,33 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
     const mediumColors = getMediumColors();
     const arcRadius = 60;
 
+    // Generate refraction curve data points (angle vs refracted angle)
+    const curvePoints: { x: number; y: number }[] = [];
+    const chartX0 = 40;
+    const chartX1 = 380;
+    const chartY0 = 10;
+    const chartY1 = 140;
+    for (let a = 5; a <= 85; a += 4) {
+      const n1c = refractiveIndices.air;
+      const n2c = refractiveIndices[medium];
+      const t1 = (a * Math.PI) / 180;
+      const sT2 = (n1c / n2c) * Math.sin(t1);
+      const t2 = sT2 > 1 ? 90 : (Math.asin(sT2) * 180) / Math.PI;
+      const px = chartX0 + ((a - 5) / 80) * (chartX1 - chartX0);
+      const py = chartY1 - (t2 / 90) * (chartY1 - chartY0);
+      curvePoints.push({ x: px, y: py });
+    }
+    const curvePath = curvePoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+
+    // Current point on the curve
+    const currentPx = chartX0 + ((incidentAngle - 5) / 80) * (chartX1 - chartX0);
+    const currentRefracted = refractedAngle;
+    const currentPy = chartY1 - (currentRefracted / 90) * (chartY1 - chartY0);
+
+    // Color coding: low angle = blue (#3b82f6), high angle = warning/error
+    const angleRatio = (incidentAngle - 5) / 80;
+    const angleFeedbackColor = angleRatio > 0.7 ? '#EF4444' : angleRatio > 0.4 ? '#F59E0B' : '#10B981';
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
         <div style={{
@@ -555,6 +582,9 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
           </span>
           <span style={{ fontSize: typo.small, color: design.colors.textMuted }}>
             <span style={{ color: mediumColors.main }}>{medium.charAt(0).toUpperCase() + medium.slice(1)}</span> n={refractiveIndices[medium].toFixed(2)}
+          </span>
+          <span style={{ fontSize: typo.small, color: angleFeedbackColor, fontWeight: 600 }}>
+            Bending: {angleRatio > 0.7 ? 'Strong' : angleRatio > 0.4 ? 'Moderate' : 'Gentle'}
           </span>
         </div>
 
@@ -644,9 +674,9 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
 
           <g className="interface">
             <line x1="0" y1={centerY} x2="400" y2={centerY} stroke={design.colors.textMuted} strokeWidth="2.5" strokeOpacity="0.7"/>
-            <text x="370" y={centerY - 6} fill={design.colors.textMuted} fontSize="10" fontWeight="500" textAnchor="end" opacity="0.8">Surface</text>
+            <text x="370" y={centerY - 6} fill={design.colors.textMuted} fontSize="11" fontWeight="500" textAnchor="end" opacity="0.8">Surface</text>
             <line x1={centerX} y1={centerY - 130} x2={centerX} y2={centerY + 130} stroke="url(#snellNormalGrad)" strokeWidth="2" strokeDasharray="6,4"/>
-            <text x={centerX + 6} y={centerY - 118} fill={design.colors.accentPrimary} fontSize="10" fontWeight="600" opacity="0.9">Normal</text>
+            <text x={centerX + 6} y={centerY - 118} fill={design.colors.accentPrimary} fontSize="11" fontWeight="600" opacity="0.9">Normal</text>
           </g>
 
           <g className="angle-wedges">
@@ -720,6 +750,26 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
           <g className="labels">
             <text x="20" y="30" fill={design.colors.air} fontSize="13" fontWeight="700">AIR (n=1.00)</text>
             <text x="20" y={centerY + 28} fill={mediumColors.main} fontSize="13" fontWeight="700">{medium.toUpperCase()} (n={refractiveIndices[medium].toFixed(2)})</text>
+          </g>
+
+          {/* Grid lines for angle reference */}
+          <g className="grid-lines">
+            <line x1={chartX0} y1={chartY0} x2={chartX0} y2={chartY1} stroke={design.colors.textMuted} strokeDasharray="4 4" opacity="0.3" strokeWidth="1"/>
+            <line x1={chartX0} y1={chartY1} x2={chartX1} y2={chartY1} stroke={design.colors.textMuted} strokeDasharray="4 4" opacity="0.3" strokeWidth="1"/>
+            <line x1={chartX0 + (chartX1 - chartX0) * 0.5} y1={chartY0} x2={chartX0 + (chartX1 - chartX0) * 0.5} y2={chartY1} stroke={design.colors.textMuted} strokeDasharray="4 4" opacity="0.3" strokeWidth="1"/>
+          </g>
+
+          {/* Axis labels */}
+          <g className="axis-labels">
+            <text x={(chartX0 + chartX1) / 2} y={chartY1 + 14} fill={design.colors.textMuted} fontSize="11" textAnchor="middle">Incident Angle (degrees)</text>
+            <text x={chartX0 - 4} y={(chartY0 + chartY1) / 2} fill={design.colors.textMuted} fontSize="11" textAnchor="end" transform={`rotate(-90, ${chartX0 - 4}, ${(chartY0 + chartY1) / 2})`}>Refracted Angle</text>
+          </g>
+
+          {/* Refraction response curve */}
+          <g className="response-curve">
+            <path d={curvePath} fill="none" stroke={design.colors.cyan} strokeWidth="2.5" opacity="0.8"/>
+            {/* Interactive current-value marker */}
+            <circle cx={currentPx} cy={currentPy} r="8" fill={angleFeedbackColor} stroke="#ffffff" strokeWidth="2" filter="url(#snellBeamGlow)"/>
           </g>
         </svg>
 
@@ -980,7 +1030,7 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
                     setIncidentAngle(Number(e.target.value));
                     emitEvent('parameter_changed', { incidentAngle: Number(e.target.value) });
                   }}
-                  style={{ width: '100%', cursor: 'pointer', accentColor: design.colors.accentPrimary }}
+                  style={{ width: '100%', cursor: 'pointer', height: '20px', touchAction: 'pan-y' as any, WebkitAppearance: 'none' as any, accentColor: '#3b82f6' }}
                 />
               </div>
 
@@ -1178,7 +1228,7 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
                   max="85"
                   value={incidentAngle}
                   onChange={(e) => setIncidentAngle(Number(e.target.value))}
-                  style={{ width: '100%', cursor: 'pointer' }}
+                  style={{ width: '100%', cursor: 'pointer', height: '20px', touchAction: 'pan-y' as any, WebkitAppearance: 'none' as any, accentColor: '#3b82f6' }}
                 />
               </div>
 

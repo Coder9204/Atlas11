@@ -183,7 +183,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
 
   // Simulation state
   const [ionEnergy, setIonEnergy] = useState(50); // keV
-  const [doseExponent, setDoseExponent] = useState(14); // 10^14 to 10^16 ions/cm^2
+  const [doseExponent, setDoseExponent] = useState(15); // 10^14 to 10^16 ions/cm^2
   const [annealTemp, setAnnealTemp] = useState(600); // Celsius
   const [annealTime, setAnnealTime] = useState(30); // seconds
   const [crystalOrientation, setCrystalOrientation] = useState<'100' | '110' | '111'>('100');
@@ -757,7 +757,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
           <g id="backgroundLayer">
             {/* Ion beam source */}
             <rect x={200} y={5} width={100} height={30} fill="#4b5563" rx={4} filter="url(#softShadow)" />
-            <text x={250} y={22} fill={colors.textSecondary} fontSize={10} textAnchor="middle">
+            <text x={250} y={22} fill={colors.textSecondary} fontSize={11} textAnchor="middle">
               Ion Beam ({ionEnergy} keV)
             </text>
 
@@ -807,8 +807,8 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
             <rect x={50} y={100} width={350} height={200} fill="rgba(0,0,0,0.4)" rx={4} />
 
             {/* Concentration scale */}
-            <text x={45} y={110} fill={colors.textSecondary} fontSize={9} textAnchor="end">High</text>
-            <text x={45} y={290} fill={colors.textSecondary} fontSize={9} textAnchor="end">Low</text>
+            <text x={45} y={110} fill={colors.textSecondary} fontSize={11} textAnchor="end">High</text>
+            <text x={45} y={290} fill={colors.textSecondary} fontSize={11} textAnchor="end">Low</text>
 
             {/* Profile curve */}
             <path
@@ -837,7 +837,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
               x={50 + (profile.projectedRange / 300) * 350}
               y={95}
               fill={colors.accent}
-              fontSize={10}
+              fontSize={11}
               textAnchor="middle"
             >
               Rp={Math.round(profile.projectedRange)}nm
@@ -847,13 +847,13 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
           {/* Info panel layer group */}
           <g id="infoLayer">
             <rect x={10} y={340} width={200} height={55} fill="rgba(0,0,0,0.6)" rx={8} stroke={colors.accent} strokeWidth={1} />
-            <text x={20} y={355} fill={colors.textSecondary} fontSize={10}>
+            <text x={20} y={355} fill={colors.textSecondary} fontSize={11}>
               Dose: 10^{doseExponent} ions/cm2
             </text>
-            <text x={20} y={370} fill={colors.textSecondary} fontSize={10}>
+            <text x={20} y={370} fill={colors.textSecondary} fontSize={11}>
               Damage: {Math.round(profile.damageLevel)}%
             </text>
-            <text x={20} y={385} fill={colors.success} fontSize={10}>
+            <text x={20} y={387} fill={colors.success} fontSize={11}>
               Activation: {Math.round(profile.activation)}%
             </text>
 
@@ -863,13 +863,13 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
                 <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />
               </rect>
             )}
-            <text x={300} y={355} fill={isAnnealing ? colors.success : colors.textMuted} fontSize={10}>
+            <text x={300} y={355} fill={isAnnealing ? colors.success : colors.textMuted} fontSize={11}>
               Anneal: {annealTemp}C
             </text>
-            <text x={300} y={370} fill={isAnnealing ? colors.success : colors.textMuted} fontSize={10}>
+            <text x={300} y={370} fill={isAnnealing ? colors.success : colors.textMuted} fontSize={11}>
               Time: {annealTime}s
             </text>
-            <text x={300} y={385} fill={isAnnealing ? colors.success : colors.textMuted} fontSize={10}>
+            <text x={300} y={387} fill={isAnnealing ? colors.success : colors.textMuted} fontSize={11}>
               Diffusion: {profile.diffusionLength.toFixed(1)}nm
             </text>
           </g>
@@ -931,13 +931,14 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
   // Slider styling for visibility
   const sliderStyle: React.CSSProperties = {
     width: '100%',
-    height: '8px',
+    height: '20px',
     borderRadius: '4px',
     background: `linear-gradient(90deg, ${colors.accent} 0%, ${colors.primary} 100%)`,
     appearance: 'none' as const,
     WebkitAppearance: 'none' as const,
     cursor: 'pointer',
-    accentColor: colors.accent,
+    accentColor: '#3b82f6',
+    touchAction: 'pan-y' as const,
   };
 
   const renderControls = (showChannelingControls: boolean = false) => (

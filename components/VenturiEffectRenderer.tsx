@@ -327,7 +327,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
     textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textMuted: 'rgba(148,163,184,0.7)',
     border: '#2a2a3a',
     flow: '#22D3EE',
     pressure: '#3B82F6',
@@ -344,16 +344,16 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
   // Phase navigation
   const phaseOrder: Phase[] = validPhases;
   const phaseLabels: Record<Phase, string> = {
-    hook: 'Introduction',
+    hook: 'Intro Hook',
     predict: 'Predict',
     play: 'Experiment',
-    review: 'Understanding',
+    review: 'Review',
     twist_predict: 'Twist Predict',
-    twist_play: 'Twist Play',
+    twist_play: 'Twist Explore',
     twist_review: 'Twist Review',
-    transfer: 'Real World',
+    transfer: 'Transfer',
     test: 'Knowledge Test',
-    mastery: 'Mastery'
+    mastery: 'Mastery Complete'
   };
 
   const goToPhase = useCallback((p: Phase) => {
@@ -990,10 +990,13 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
                   onChange={(e) => setFlowRate(parseInt(e.target.value))}
                   style={{
                     width: '100%',
-                    height: '8px',
+                    height: '20px',
                     borderRadius: '4px',
                     background: `linear-gradient(to right, ${colors.accent} ${((flowRate - 20) / 80) * 100}%, ${colors.border} ${((flowRate - 20) / 80) * 100}%)`,
                     cursor: 'pointer',
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none',
+                    accentColor: '#3b82f6',
                   }}
                 />
               </div>
@@ -1012,10 +1015,13 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
                   onChange={(e) => setConstrictionSize(parseInt(e.target.value))}
                   style={{
                     width: '100%',
-                    height: '8px',
+                    height: '20px',
                     borderRadius: '4px',
                     background: `linear-gradient(to right, ${colors.flow} ${((constrictionSize - 20) / 60) * 100}%, ${colors.border} ${((constrictionSize - 20) / 60) * 100}%)`,
                     cursor: 'pointer',
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none',
+                    accentColor: '#3b82f6',
                   }}
                 />
               </div>
@@ -1382,9 +1388,12 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
                   onChange={(e) => setMeterFlowRate(parseInt(e.target.value))}
                   style={{
                     width: '100%',
-                    height: '8px',
+                    height: '20px',
                     borderRadius: '4px',
                     cursor: 'pointer',
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none',
+                    accentColor: '#3b82f6',
                   }}
                 />
               </div>

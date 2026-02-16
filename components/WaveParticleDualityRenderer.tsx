@@ -551,7 +551,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
    const renderPremiumWrapper = (children: React.ReactNode, footer?: React.ReactNode) => (
       <div
          className="absolute inset-0 flex flex-col"
-         style={{ backgroundColor: colors.bgDark, color: colors.textPrimary }}
+         style={{ backgroundColor: colors.bgDark, color: colors.textPrimary, minHeight: '100vh' }}
       >
          {/* Subtle background gradient - purely decorative */}
          <div style={{
@@ -1847,7 +1847,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                      <input
                         type="range" min="1" max="20" value={firingRate}
                         onChange={(e) => setFiringRate(parseInt(e.target.value))}
-                        style={{ width: '100%', height: '8px', borderRadius: '4px', background: colors.bgCardLight, accentColor: colors.primary, cursor: 'pointer' }}
+                        style={{ width: '100%', height: '20px', borderRadius: '4px', background: colors.bgCardLight, accentColor: '#3b82f6', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
                      />
                      <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: 0, marginTop: '4px' }}>
                         When you increase the rate, more electrons hit the screen faster, causing the pattern to emerge more quickly.

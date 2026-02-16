@@ -741,7 +741,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
         })}
         {/* Distance label */}
         <rect x="194" y="153" width="92" height="24" fill="#0f172a" rx="5" stroke="#334155" />
-        <text x="240" y="170" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="700">{distance.toLocaleString()} km</text>
+        <text x="240" y="170" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="700">Distance: {distance.toLocaleString()} km</text>
         {/* FSPL label */}
         <rect x="184" y="228" width="112" height="24" fill="rgba(239,68,68,0.15)" rx="4" stroke="#ef4444" strokeWidth="0.5" />
         <text x="240" y="245" textAnchor="middle" fill="#f87171" fontSize="11">FSPL: -{budget.fspl} dB</text>
@@ -797,7 +797,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
 
         {/* Frequency */}
         <rect x="188" y="441" width="144" height="28" fill="#1e293b" rx="5" stroke="#334155" />
-        <text x="260" y="460" textAnchor="middle" fill="#a855f7" fontSize="12" fontWeight="600">Freq: {frequency} GHz</text>
+        <text x="260" y="460" textAnchor="middle" fill="#a855f7" fontSize="12" fontWeight="600">Frequency: {frequency} GHz</text>
       </svg>
     );
   };

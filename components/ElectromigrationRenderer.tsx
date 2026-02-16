@@ -643,24 +643,35 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
     <div style={{
       display: 'flex',
       justifyContent: 'center',
-      gap: '8px',
-      padding: '16px 0',
+      gap: '2px',
+      padding: '0',
     }}>
       {phaseOrder.map((p, i) => (
         <button
           key={p}
           onClick={() => goToPhase(p)}
           style={{
+            minWidth: '16px',
+            minHeight: '44px',
+            border: 'none',
+            background: 'transparent',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '0 2px',
+          }}
+          aria-label={phaseLabels[p]}
+        >
+          <span style={{
+            display: 'block',
             width: phase === p ? '24px' : '8px',
             height: '8px',
             borderRadius: '4px',
-            border: 'none',
             background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
             transition: 'all 0.3s ease',
-          }}
-          aria-label={phaseLabels[p]}
-        />
+          }} />
+        </button>
       ))}
     </div>
   );
@@ -1052,8 +1063,8 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
             {/* MTTF vs Current Density Chart */}
             {(() => {
               const chartW = isMobile ? 340 : 480;
-              const chartH = 220;
-              const padL = 60, padR = 20, padT = 20, padB = 40;
+              const chartH = 340;
+              const padL = 60, padR = 40, padT = 20, padB = 40;
               const plotW = chartW - padL - padR;
               const plotH = chartH - padT - padB;
               const jMin = 1, jMax = 20;

@@ -484,7 +484,7 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
         <rect x={20} y={trackY + cartHeight} width={width - 40} height={3} rx={1.5} fill="rgba(255,255,255,0.1)" />
 
         {/* Track label */}
-        <text x={width - 30} y={trackY + cartHeight + 25} textAnchor="end" fill={colors.textMuted} fontSize="10">
+        <text x={width - 30} y={trackY + cartHeight + 25} textAnchor="end" fill={colors.textMuted} fontSize="11">
           {hasFriction ? 'Rough surface' : 'Frictionless'}
         </text>
 
@@ -493,7 +493,7 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
           {isCompressed ? (
             <g>
               <path
-                d={`M0 0 ${Array.from({length: 6}, (_, i) => `L${3 + i * 3} ${i % 2 === 0 ? -35 : 35}`).join(' ')} L${rightCartX - leftCartX - cartWidth - 4} 0`}
+                d={`M0 0 ${Array.from({length: 12}, (_, i) => `L${2 + i * 2} ${i % 2 === 0 ? -35 : 35}`).join(' ')} L${rightCartX - leftCartX - cartWidth - 4} 0`}
                 stroke="#22C55E"
                 strokeWidth={3}
                 fill="none"
@@ -545,7 +545,7 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
               points={`${leftCartX + cartWidth / 2 + leftVel * 5},${trackY - 15} ${leftCartX + cartWidth / 2 + leftVel * 5 + (leftVel > 0 ? -8 : 8)},${trackY - 20} ${leftCartX + cartWidth / 2 + leftVel * 5 + (leftVel > 0 ? -8 : 8)},${trackY - 10}`}
               fill="#60A5FA"
             />
-            <text x={leftCartX + cartWidth / 2} y={trackY - 25} textAnchor="middle" fill="#60A5FA" fontSize="10">
+            <text x={leftCartX + cartWidth / 2} y={trackY - 25} textAnchor="middle" fill="#60A5FA" fontSize="11">
               v = {Math.abs(leftVel).toFixed(1)} m/s
             </text>
           </g>
@@ -560,7 +560,7 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
               points={`${rightCartX + cartWidth / 2 + rightVel * 5},${trackY - 15} ${rightCartX + cartWidth / 2 + rightVel * 5 + (rightVel > 0 ? -8 : 8)},${trackY - 20} ${rightCartX + cartWidth / 2 + rightVel * 5 + (rightVel > 0 ? -8 : 8)},${trackY - 10}`}
               fill="#FDBA74"
             />
-            <text x={rightCartX + cartWidth / 2} y={trackY - 25} textAnchor="middle" fill="#FDBA74" fontSize="10">
+            <text x={rightCartX + cartWidth / 2} y={trackY - 25} textAnchor="middle" fill="#FDBA74" fontSize="11">
               v = {Math.abs(rightVel).toFixed(1)} m/s
             </text>
           </g>
@@ -568,7 +568,7 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
 
         {/* Momentum display */}
         <rect x={width - 110} y={15} width={95} height={50} rx={8} fill={colors.bgSecondary} stroke={Math.abs(totalMomentum) < 0.5 ? colors.success : colors.border} strokeWidth={2} />
-        <text x={width - 63} y={33} textAnchor="middle" fill={colors.textMuted} fontSize="10">Total Momentum</text>
+        <text x={width - 63} y={33} textAnchor="middle" fill={colors.textMuted} fontSize="11">Total Momentum</text>
         <text x={width - 63} y={53} textAnchor="middle" fill={Math.abs(totalMomentum) < 0.5 ? colors.success : colors.textPrimary} fontSize="16" fontWeight="700">
           {totalMomentum.toFixed(1)} kg*m/s
         </text>

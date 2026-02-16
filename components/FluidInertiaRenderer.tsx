@@ -414,7 +414,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
     const n = 40;
     // Pressure spike model: ΔP = ρ × c × v
     // Normalized spike amplitude proportional to velocity
-    const amplitude = 0.3 + 0.6 * (velocity / 100);
+    const amplitude = 0.5 + 0.5 * (velocity / 100);
     for (let i = 0; i <= n; i++) {
       const t = i / n;
       const x = padL + t * plotW;
@@ -589,7 +589,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
     const curvePath = computePressureCurve(flowVelocity);
 
     // Interactive point at the spike peak
-    const amplitude = 0.3 + 0.6 * (flowVelocity / 100);
+    const amplitude = 0.5 + 0.5 * (flowVelocity / 100);
     const peakT = 0.22;
     const peakX = padL + peakT * plotW;
     const peakDt = Math.max(0, peakT - 0.18);

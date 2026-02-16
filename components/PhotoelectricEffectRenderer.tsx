@@ -448,7 +448,7 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
     const idx = phaseOrder.indexOf(phase);
 
     return (
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', backgroundColor: colors.bgDark, color: colors.textPrimary }}>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', backgroundColor: colors.bgDark, color: colors.textPrimary, minHeight: '100vh' }}>
         {/* Animated background orbs */}
         <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
           <div style={{ position: 'absolute', top: '10%', left: '20%', width: '300px', height: '300px', background: `radial-gradient(circle, ${colors.primary}10 0%, transparent 70%)`, borderRadius: '50%', filter: 'blur(40px)' }} />
@@ -554,7 +554,7 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
         {/* Light source */}
         <circle cx="70" cy="100" r="25" fill="#f59e0b" opacity="0.8" />
         <circle cx="70" cy="100" r="15" fill="#fbbf24" />
-        <text x="70" y="140" textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="600">Light Source</text>
+        <text x="70" y="140" textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="600">Light Source</text>
 
         {/* Photon wave indicators */}
         <g opacity="0.6">
@@ -567,18 +567,18 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
         <circle cx="170" cy="95" r="6" fill="#fbbf24" />
         <circle cx="200" cy="100" r="6" fill="#fbbf24" />
         <circle cx="230" cy="105" r="6" fill="#fbbf24" />
-        <text x="200" y="75" textAnchor="middle" fill="#f59e0b" fontSize="9">Photons (E=hf)</text>
+        <text x="200" y="75" textAnchor="middle" fill="#f59e0b" fontSize="11">Photons (E=hf)</text>
 
         {/* Metal plate */}
         <rect x="270" y="55" width="25" height="90" rx="4" fill="#9ca3af" stroke="#6b7280" strokeWidth="1" />
-        <text x="282" y="160" textAnchor="middle" fill="#94a3b8" fontSize="10">Metal</text>
+        <text x="282" y="160" textAnchor="middle" fill="#94a3b8" fontSize="11">Metal</text>
 
         {/* Electron ejection (question mark for prediction) */}
         <g transform="translate(320, 100)">
           <circle cx="0" cy="0" r="10" fill="#1e293b" stroke="#38bdf8" strokeWidth="2" strokeDasharray="3,2" />
           <text x="0" y="5" textAnchor="middle" fill="#38bdf8" fontSize="12" fontWeight="700">?</text>
         </g>
-        <text x="340" y="125" textAnchor="middle" fill="#38bdf8" fontSize="9">Electrons?</text>
+        <text x="340" y="125" textAnchor="middle" fill="#38bdf8" fontSize="11">Electrons?</text>
 
         {/* Title */}
         <text x="200" y="22" textAnchor="middle" fill="#f8fafc" fontSize="12" fontWeight="700">What happens when light hits metal?</text>
@@ -586,11 +586,11 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
         {/* Legend */}
         <g transform="translate(30, 170)">
           <circle cx="5" cy="0" r="4" fill="#fbbf24" />
-          <text x="14" y="4" fill="#94a3b8" fontSize="8">Photon</text>
+          <text x="14" y="4" fill="#94a3b8" fontSize="11">Photon</text>
           <rect x="65" y="-4" width="8" height="8" fill="#9ca3af" />
-          <text x="78" y="4" fill="#94a3b8" fontSize="8">Metal</text>
+          <text x="78" y="4" fill="#94a3b8" fontSize="11">Metal</text>
           <circle cx="125" cy="0" r="4" fill="#38bdf8" opacity="0.6" />
-          <text x="134" y="4" fill="#94a3b8" fontSize="8">Electron</text>
+          <text x="134" y="4" fill="#94a3b8" fontSize="11">Electron</text>
         </g>
       </svg>
     );
@@ -613,7 +613,7 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
         <circle cx="70" cy="100" r="30" fill="#f59e0b" opacity="0.9" />
         <circle cx="70" cy="100" r="20" fill="#fbbf24" />
         <circle cx="70" cy="100" r="10" fill="#ffffff" opacity="0.8" />
-        <text x="70" y="145" textAnchor="middle" fill="#f59e0b" fontSize="9" fontWeight="600">BRIGHT Light</text>
+        <text x="70" y="145" textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="600">BRIGHT Light</text>
 
         {/* Many photons */}
         <g>
@@ -628,7 +628,7 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
           <circle cx="195" cy="110" r="5" fill="#fbbf24" />
           <circle cx="220" cy="100" r="5" fill="#fbbf24" />
         </g>
-        <text x="170" y="125" textAnchor="middle" fill="#f59e0b" fontSize="9">More photons!</text>
+        <text x="170" y="125" textAnchor="middle" fill="#f59e0b" fontSize="11">More photons!</text>
 
         {/* Metal plate */}
         <rect x="270" y="55" width="25" height="90" rx="4" fill="#9ca3af" stroke="#6b7280" strokeWidth="1" />
@@ -636,17 +636,17 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
         {/* Question marks for electrons */}
         <g transform="translate(320, 85)">
           <circle cx="0" cy="0" r="8" fill="#1e293b" stroke="#38bdf8" strokeWidth="2" strokeDasharray="3,2" />
-          <text x="0" y="4" textAnchor="middle" fill="#38bdf8" fontSize="10" fontWeight="700">?</text>
+          <text x="0" y="4" textAnchor="middle" fill="#38bdf8" fontSize="11" fontWeight="700">?</text>
         </g>
         <g transform="translate(340, 105)">
           <circle cx="0" cy="0" r="8" fill="#1e293b" stroke="#38bdf8" strokeWidth="2" strokeDasharray="3,2" />
-          <text x="0" y="4" textAnchor="middle" fill="#38bdf8" fontSize="10" fontWeight="700">?</text>
+          <text x="0" y="4" textAnchor="middle" fill="#38bdf8" fontSize="11" fontWeight="700">?</text>
         </g>
-        <text x="330" y="135" textAnchor="middle" fill="#38bdf8" fontSize="9">Faster electrons?</text>
+        <text x="330" y="135" textAnchor="middle" fill="#38bdf8" fontSize="11">Faster electrons?</text>
 
         {/* Legend */}
         <g transform="translate(30, 175)">
-          <text x="0" y="0" fill="#8b5cf6" fontSize="8" fontWeight="600">Classical prediction: Brighter = Faster electrons?</text>
+          <text x="0" y="0" fill="#8b5cf6" fontSize="11" fontWeight="600">Classical prediction: Brighter = Faster electrons?</text>
         </g>
       </svg>
     );
@@ -968,23 +968,27 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
 
           {/* SVG text labels for educational clarity */}
           <text x="300" y="25" textAnchor="middle" fill="#f8fafc" fontSize="14" fontWeight="700">Photoelectric Effect</text>
-          <text x="300" y="42" textAnchor="middle" fill="#94a3b8" fontSize="10">Vacuum Chamber Experiment</text>
+          <text x="300" y="42" textAnchor="middle" fill="#94a3b8" fontSize="11">Vacuum Chamber Experiment</text>
           <text x="100" y="260" textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="600">Light Source</text>
-          <text x="405" y="248" textAnchor="middle" fill="#94a3b8" fontSize="10">Metal</text>
-          <text x="405" y="262" textAnchor="middle" fill="#94a3b8" fontSize="10">Plate</text>
-          <text x="520" y="145" textAnchor="middle" fill="#38bdf8" fontSize="10">Electrons</text>
-          <text x="200" y="145" textAnchor="middle" fill="#f59e0b" fontSize="10">Photons</text>
+          <text x="405" y="248" textAnchor="middle" fill="#94a3b8" fontSize="11">Metal</text>
+          <text x="405" y="262" textAnchor="middle" fill="#94a3b8" fontSize="11">Plate</text>
+          <text x="520" y="145" textAnchor="middle" fill="#38bdf8" fontSize="11">Electrons</text>
+          <text x="200" y="145" textAnchor="middle" fill="#f59e0b" fontSize="11">Photons</text>
 
           {/* Legend */}
           <g transform="translate(20, 55)">
-            <text x="0" y="0" fill="#94a3b8" fontSize="9" fontWeight="600">LEGEND:</text>
+            <text x="0" y="0" fill="#94a3b8" fontSize="11" fontWeight="600">LEGEND:</text>
             <circle cx="8" cy="14" r="5" fill="#f59e0b" />
-            <text x="18" y="18" fill="#94a3b8" fontSize="9">Photon (E=hf)</text>
+            <text x="18" y="18" fill="#94a3b8" fontSize="11">Photon (E=hf)</text>
             <circle cx="8" cy="32" r="5" fill="#38bdf8" />
-            <text x="18" y="36" fill="#94a3b8" fontSize="9">Electron (e-)</text>
+            <text x="18" y="36" fill="#94a3b8" fontSize="11">Electron (e-)</text>
             <rect x="3" y="44" width="10" height="10" fill="url(#photoMetalGrad)" />
-            <text x="18" y="52" fill="#94a3b8" fontSize="9">Metal surface</text>
+            <text x="18" y="52" fill="#94a3b8" fontSize="11">Metal surface</text>
           </g>
+
+          {/* Axis labels for energy diagram */}
+          <text x="160" y="310" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">Photon Energy (eV)</text>
+          <text x="500" y="310" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">Wavelength (nm)</text>
         </svg>
 
         {/* Text labels outside SVG using typo system */}
@@ -1181,11 +1185,12 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
               onChange={(e) => { setWavelength(parseInt(e.target.value)); setHasExperimented(true); }}
               style={{
                 width: '100%',
-                accentColor: colors.primary,
+                accentColor: '#3b82f6',
                 cursor: 'pointer',
-                height: '8px',
+                height: '20px',
                 WebkitAppearance: 'none',
                 appearance: 'none',
+                touchAction: 'pan-y',
                 background: `linear-gradient(to right, ${colors.accent}, ${colors.primary}, ${colors.warning}, ${colors.danger})`,
                 borderRadius: '4px',
                 outline: 'none'
@@ -1356,8 +1361,9 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
             <label style={{ display: 'block', fontSize: typo.label, fontWeight: 700, color: colors.textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>Intensity (# photons)</label>
             <input
               type="range" min="20" max="100" value={intensity}
+              onInput={(e) => { setIntensity(parseInt((e.target as HTMLInputElement).value)); setHasTestedIntensity(true); }}
               onChange={(e) => { setIntensity(parseInt(e.target.value)); setHasTestedIntensity(true); }}
-              style={{ width: '100%' }}
+              style={{ width: '100%', height: '20px', WebkitAppearance: 'none', appearance: 'none', accentColor: '#3b82f6', touchAction: 'pan-y', cursor: 'pointer' }}
             />
             <p style={{ fontSize: typo.small, color: colors.textMuted, marginTop: '4px' }}>{intensity}% → {emissionOccurs ? Math.floor(intensity / 12) : 0} electrons/cycle</p>
           </div>
@@ -1367,8 +1373,9 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
             <label style={{ display: 'block', fontSize: typo.label, fontWeight: 700, color: colors.primary, marginBottom: '8px', textTransform: 'uppercase' }}>Wavelength (photon energy)</label>
             <input
               type="range" min="200" max="700" value={wavelength}
+              onInput={(e) => { setWavelength(parseInt((e.target as HTMLInputElement).value)); setHasTestedIntensity(true); }}
               onChange={(e) => { setWavelength(parseInt(e.target.value)); setHasTestedIntensity(true); }}
-              style={{ width: '100%', accentColor: colors.primary }}
+              style={{ width: '100%', height: '20px', WebkitAppearance: 'none', appearance: 'none', accentColor: '#3b82f6', touchAction: 'pan-y', cursor: 'pointer' }}
             />
             <p style={{ fontSize: typo.small, color: colors.textMuted, marginTop: '4px' }}>{wavelength}nm → {photonEnergy.toFixed(2)} eV/photon</p>
           </div>

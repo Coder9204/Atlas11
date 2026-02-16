@@ -592,9 +592,9 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
           <rect width={svgW} height={svgH} fill="url(#projBgGrad)" />
 
           {/* Grid lines */}
-          <g opacity="0.08">
-            {[1,2,3,4,5].map(i => <line key={`h${i}`} x1="0" y1={i * svgH / 6} x2={svgW} y2={i * svgH / 6} stroke="#fff" strokeWidth="0.5" />)}
-            {[1,2,3,4,5,6,7].map(i => <line key={`v${i}`} x1={i * svgW / 8} y1="0" x2={i * svgW / 8} y2={svgH} stroke="#fff" strokeWidth="0.5" />)}
+          <g>
+            {[1,2,3,4,5].map(i => <line key={`h${i}`} x1="0" y1={i * svgH / 6} x2={svgW} y2={i * svgH / 6} stroke="#fff" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />)}
+            {[1,2,3,4,5,6,7].map(i => <line key={`v${i}`} x1={i * svgW / 8} y1="0" x2={i * svgW / 8} y2={svgH} stroke="#fff" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />)}
           </g>
 
           {/* Ground */}
@@ -619,23 +619,29 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
             <path d={`M ${svgW - 50} 25 L ${svgW - 20} 25`} stroke={dampColor} strokeWidth="1.5" opacity="0.6" fill="none" />
           </g>
 
+          {/* Thrown ball (green) - rendered first so getInteractivePoint finds it */}
+          <g>
+            <circle cx={Math.min(isSimulating ? thrownX : 100 + horizontalSpeed * 0.5, svgW - 10)} cy={Math.min(thrownY, groundY - 8)} r={10} fill="url(#projThrowGrad)" filter="url(#projBallGlow)" />
+            <ellipse cx={Math.min(isSimulating ? thrownX : 100 + horizontalSpeed * 0.5, svgW - 10)} cy={Math.min(thrownY, groundY - 8)} rx={4} ry={4} fill="white" opacity="0.2" />
+          </g>
+
           {/* Dropped ball (red) */}
           <g>
             <circle cx={100} cy={Math.min(droppedY, groundY - 8)} r={10} fill="url(#projDropGrad)" filter="url(#projBallGlow)" />
             <ellipse cx={100} cy={Math.min(droppedY, groundY - 8)} rx={4} ry={4} fill="white" opacity="0.2" />
           </g>
 
-          {/* Thrown ball (green) */}
-          <g>
-            <circle cx={Math.min(thrownX, svgW - 10)} cy={Math.min(thrownY, groundY - 8)} r={10} fill="url(#projThrowGrad)" filter="url(#projBallGlow)" />
-            <ellipse cx={Math.min(thrownX, svgW - 10)} cy={Math.min(thrownY, groundY - 8)} rx={4} ry={4} fill="white" opacity="0.2" />
-          </g>
-
+          {/* Title */}
+          <title>Projectile Independence Simulation</title>
+          {/* Axis labels */}
+          <text x={svgW / 2} y={16} fill="#fff" fontSize="13" textAnchor="middle" fontWeight="700">Projectile Distance vs Height</text>
+          <text x={svgW - 8} y={groundY - 4} fill="rgba(148,163,184,0.7)" fontSize="11" textAnchor="end">Distance</text>
+          <text x={14} y={groundY - 4} fill="rgba(148,163,184,0.7)" fontSize="11" textAnchor="start">Height</text>
           {/* Labels */}
           <g>
-            <text x={100} y={svgH - 8} fill="#ef4444" fontSize="10" textAnchor="middle" fontWeight="600">Dropped</text>
-            <text x={svgW / 2} y={svgH - 8} fill="#22c55e" fontSize="10" textAnchor="middle" fontWeight="600">Thrown</text>
-            <text x={svgW - 35} y={svgH - 8} fill={dampColor} fontSize="8" textAnchor="middle">v={horizontalSpeed}</text>
+            <text x={60} y={groundY + 16} fill="#ef4444" fontSize="11" textAnchor="middle" fontWeight="600">Dropped</text>
+            <text x={svgW / 2} y={groundY + 16} fill="#22c55e" fontSize="11" textAnchor="middle" fontWeight="600">Thrown</text>
+            <text x={svgW - 35} y={groundY + 32} fill={dampColor} fontSize="11" textAnchor="middle">Speed: {horizontalSpeed}</text>
           </g>
         </svg>
 
@@ -663,7 +669,7 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
                   setHorizontalSpeed(Number(e.target.value));
                   stopSimulation();
                 }}
-                style={{ flex: 1, accentColor: colors.primary }}
+                style={{ flex: 1, width: '100%', height: '20px', touchAction: 'pan-y' as const, WebkitAppearance: 'none' as const, accentColor: '#3b82f6' }}
               />
               <span style={{ fontSize: '13px', color: colors.textPrimary, minWidth: '55px', fontWeight: 600 }}>
                 {horizontalSpeed} px/s
@@ -1656,7 +1662,7 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
       </div>
 
       {/* Main content */}
-      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%', overflowY: 'auto' }}>
+      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%', overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
         {renderPhase()}
       </div>
 

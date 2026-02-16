@@ -368,11 +368,12 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
     const height = 350;
     const intensity = calculateIntensity();
     const intensityPercent = Math.round(intensity * 100);
+    const intensityWatts = (intensity * 1.0).toFixed(2);
 
     // Premium polarizer rendering with gradient glass effect
     const renderPolarizer = (x: number, y: number, rotation: number, color: string, label: string, polarizerId: string) => {
-      const gridSize = 60;
-      const lineCount = 10;
+      const gridSize = 50;
+      const lineCount = 8;
       const lines = [];
 
       for (let i = 0; i <= lineCount; i++) {
@@ -396,10 +397,10 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
         <g transform={`translate(${x}, ${y}) rotate(${rotation})`}>
           {/* Outer frame with metallic effect */}
           <rect
-            x={-gridSize / 2 - 8}
-            y={-gridSize / 2 - 8}
-            width={gridSize + 16}
-            height={gridSize + 16}
+            x={-gridSize / 2 - 6}
+            y={-gridSize / 2 - 6}
+            width={gridSize + 12}
+            height={gridSize + 12}
             fill={`url(#polrFrame${polarizerId})`}
             stroke="#475569"
             strokeWidth={1.5}
@@ -426,30 +427,6 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
             opacity={0.15}
             rx={2}
           />
-          {/* Label background */}
-          <g transform={`rotate(${-rotation})`}>
-            <rect
-              x={-35}
-              y={gridSize / 2 + 8}
-              width={70}
-              height={18}
-              fill="#111827"
-              stroke={color}
-              strokeWidth={1}
-              rx={4}
-              opacity={0.9}
-            />
-            <text
-              x={0}
-              y={gridSize / 2 + 20}
-              fill={color}
-              fontSize={10}
-              textAnchor="middle"
-              fontWeight="bold"
-            >
-              {label}
-            </text>
-          </g>
         </g>
       );
     };
@@ -500,6 +477,14 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
         </g>
       );
     };
+
+    // Compute interactive marker position based on angle
+    // Map angle (0-90) to X position in the chart area, intensity to Y position
+    const markerX = 30 + (angle / 90) * (width - 60);
+    const markerY = 30 + (1 - intensity) * (height - 100);
+
+    // Pol2 x-position depends on whether third polarizer is shown
+    const pol2X = showThirdPolarizer ? 290 : 240;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -653,9 +638,9 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
               </feMerge>
             </filter>
 
-            {/* Text shadow filter */}
-            <filter id="polrTextShadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="1" result="blur" />
+            {/* Interactive point glow */}
+            <filter id="polrPointGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
@@ -673,129 +658,101 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
           <rect width={width} height={height} fill="url(#polrLabGrid)" />
 
           {/* === PREMIUM LIGHT SOURCE === */}
-          <g transform={`translate(40, ${height / 2})`}>
-            {/* Outer halo */}
-            <circle cx={0} cy={0} r={35} fill="url(#polrLightHalo)" />
-            {/* Main light glow */}
-            <circle cx={0} cy={0} r={22} fill="url(#polrLightSource)" filter="url(#polrSourceGlow)">
-              <animate attributeName="r" values="20;23;20" dur="2s" repeatCount="indefinite" />
-            </circle>
-            {/* Core bright center */}
-            <circle cx={0} cy={0} r={8} fill="#fef3c7">
-              <animate attributeName="opacity" values="0.9;1;0.9" dur="1.5s" repeatCount="indefinite" />
-            </circle>
-            {/* Housing ring */}
-            <circle cx={0} cy={0} r={25} fill="none" stroke="#475569" strokeWidth={3} />
-            <circle cx={0} cy={0} r={27} fill="none" stroke="#374151" strokeWidth={1} />
-          </g>
+          <circle cx={40} cy={height / 2} r={35} fill="url(#polrLightHalo)" />
+          <circle cx={40} cy={height / 2} r={22} fill="url(#polrLightSource)">
+            <animate attributeName="r" values="20;23;20" dur="2s" repeatCount="indefinite" />
+          </circle>
+          <circle cx={40} cy={height / 2} r={8} fill="#fef3c7">
+            <animate attributeName="opacity" values="0.9;1;0.9" dur="1.5s" repeatCount="indefinite" />
+          </circle>
+          <circle cx={40} cy={height / 2} r={25} fill="none" stroke="#475569" strokeWidth={3} />
+          <circle cx={40} cy={height / 2} r={27} fill="none" stroke="#374151" strokeWidth={1} />
+
           {/* Light source label */}
-          <rect x={10} y={height / 2 + 36} width={60} height={34} fill="#111827" stroke="#334155" strokeWidth={1} rx={4} opacity={0.9} />
-          <text x={40} y={height / 2 + 48} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="bold">
-            Unpolarized
-          </text>
-          <text x={40} y={height / 2 + 64} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="bold">
-            Light Source
+          <rect x={10} y={height / 2 + 36} width={60} height={18} fill="#111827" stroke="#334155" strokeWidth={1} rx={4} opacity={0.9} />
+          <text x={40} y={height / 2 + 49} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontWeight="bold">
+            Source
           </text>
 
           {/* === LIGHT WAVES === */}
-          {/* Incoming light wave (unpolarized - show multiple directions) */}
-          {renderLightWave(65, 105, height / 2, 12, 0, 'in1')}
-          {renderLightWave(65, 105, height / 2, 10, 45, 'in2')}
-          {renderLightWave(65, 105, height / 2, 10, -45, 'in3')}
-          {renderLightWave(65, 105, height / 2, 12, 90, 'in4')}
+          {renderLightWave(65, 100, height / 2, 12, 0, 'in1')}
+          {renderLightWave(65, 100, height / 2, 10, 45, 'in2')}
+          {renderLightWave(65, 100, height / 2, 10, -45, 'in3')}
+          {renderLightWave(65, 100, height / 2, 12, 90, 'in4')}
 
           {/* === POLARIZERS === */}
-          {/* First polarizer (fixed at 0 degrees - vertical) */}
-          {renderPolarizer(130, height / 2, 0, colors.polarizer1, 'Polarizer 1 (0 deg)', '1')}
+          {renderPolarizer(120, height / 2, 0, colors.polarizer1, 'P1', '1')}
+          {renderLightWave(150, showThirdPolarizer ? 175 : 215, height / 2, 14, 0, 'mid1')}
 
-          {/* After first polarizer - vertically polarized */}
-          {renderLightWave(160, showThirdPolarizer ? 185 : 235, height / 2, 14, 0, 'mid1')}
-
-          {/* Third polarizer (optional, in middle) */}
           {showThirdPolarizer && (
             <>
-              {renderPolarizer(210, height / 2, thirdPolarizerAngle, colors.polarizer3, `Middle (${thirdPolarizerAngle} deg)`, '3')}
-              {renderLightWave(240, 285, height / 2, 14 * Math.cos(thirdPolarizerAngle * Math.PI / 180), thirdPolarizerAngle, 'mid2')}
+              {renderPolarizer(200, height / 2, thirdPolarizerAngle, colors.polarizer3, 'M', '3')}
+              {renderLightWave(230, 265, height / 2, 14 * Math.cos(thirdPolarizerAngle * Math.PI / 180), thirdPolarizerAngle, 'mid2')}
             </>
           )}
 
-          {/* Second polarizer (rotatable) */}
-          {renderPolarizer(showThirdPolarizer ? 310 : 260, height / 2, angle, colors.polarizer2, `Polarizer 2 (${angle} deg)`, '2')}
+          {renderPolarizer(pol2X, height / 2, angle, colors.polarizer2, 'P2', '2')}
+          {renderLightWave(pol2X + 30, pol2X + 70, height / 2, 14 * Math.sqrt(intensity), angle, 'out')}
 
-          {/* Output light */}
-          {renderLightWave(showThirdPolarizer ? 340 : 290, showThirdPolarizer ? 385 : 355, height / 2, 14 * Math.sqrt(intensity), angle, 'out')}
-
-          {/* === PREMIUM INTENSITY METER === */}
-          <g transform={`translate(${width - 55}, 15)`}>
-            {/* Meter housing */}
-            <rect x={-5} y={-5} width={50} height={180} fill="#111827" stroke="#334155" strokeWidth={1} rx={6} />
-
-            {/* Meter frame with gradient */}
-            <rect x={0} y={0} width={40} height={155} fill="url(#polrMeterFrame)" stroke="#4b5563" strokeWidth={1} rx={4} />
-
-            {/* Meter background */}
-            <rect x={2} y={2} width={36} height={151} fill="#030712" rx={3} />
-
-            {/* Scale markings */}
-            {[0, 25, 50, 75, 100].map((mark, i) => (
-              <g key={mark}>
-                <line x1={3} y1={150 - (mark / 100) * 148} x2={8} y2={150 - (mark / 100) * 148} stroke="#6b7280" strokeWidth={1} />
-                <text x={-3} y={154 - (mark / 100) * 148} fill="#64748b" fontSize={8} textAnchor="end">{mark}</text>
-              </g>
-            ))}
-
-            {/* Intensity fill with gradient and glow */}
-            <rect
-              x={4}
-              y={4 + 147 * (1 - intensity)}
-              width={32}
-              height={147 * intensity}
-              fill="url(#polrMeterFill)"
-              rx={2}
-              filter="url(#polrMeterGlow)"
-            >
-              <animate attributeName="opacity" values="0.85;1;0.85" dur="2s" repeatCount="indefinite" />
-            </rect>
-
-            {/* Current value indicator line */}
-            <line x1={0} y1={4 + 147 * (1 - intensity)} x2={40} y2={4 + 147 * (1 - intensity)} stroke="#f8fafc" strokeWidth={1.5} opacity={0.8} />
-
-            {/* Value display */}
-            <rect x={-2} y={158} width={44} height={22} fill="#0f172a" stroke={intensity > 0.5 ? colors.success : intensity > 0.1 ? colors.warning : colors.error} strokeWidth={1} rx={4} />
-            <text x={20} y={172} fill={colors.textPrimary} fontSize={13} textAnchor="middle" fontWeight="bold" filter="url(#polrTextShadow)">
-              {intensityPercent}%
+          {/* === POLARIZER LABELS (absolute positions, no nesting in g transforms) === */}
+          <text x={120} y={height / 2 + 42} fill={colors.polarizer1} fontSize={11} textAnchor="middle" fontWeight="bold">
+            P1 (0 deg)
+          </text>
+          <text x={pol2X} y={height / 2 + 42} fill={colors.polarizer2} fontSize={11} textAnchor="middle" fontWeight="bold">
+            P2 ({angle} deg)
+          </text>
+          {showThirdPolarizer && (
+            <text x={200} y={height / 2 + 42} fill={colors.polarizer3} fontSize={11} textAnchor="middle" fontWeight="bold">
+              Mid ({thirdPolarizerAngle} deg)
             </text>
+          )}
 
-            {/* Label */}
-            <text x={20} y={190} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="bold">
-              Transmitted
-            </text>
-            <text x={20} y={205} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="bold">
-              Intensity
-            </text>
-          </g>
+          {/* === INTENSITY READOUT (right side) === */}
+          <rect x={370} y={12} width={70} height={64} fill="#0f172a" stroke="#334155" strokeWidth={1} rx={6} opacity={0.95} />
+          <text x={405} y={30} fill={colors.textPrimary} fontSize={11} textAnchor="middle" fontWeight="bold">
+            Output
+          </text>
+          <text x={405} y={48} fill={intensity > 0.5 ? colors.success : intensity > 0.1 ? colors.warning : colors.error} fontSize={14} textAnchor="middle" fontWeight="bold">
+            {intensityPercent}%
+          </text>
+          <text x={405} y={68} fill={colors.textSecondary} fontSize={11} textAnchor="middle">
+            {intensityWatts} W
+          </text>
 
-          {/* === INFO PANEL === */}
-          <g transform="translate(10, 10)">
-            <rect x={0} y={0} width={145} height={58} fill="#0f172a" stroke="#334155" strokeWidth={1} rx={6} opacity={0.95} />
-            <text x={10} y={20} fill={colors.textPrimary} fontSize={12} fontWeight="bold">
-              Angle: {angle} deg
-            </text>
-            <text x={10} y={36} fill={colors.accent} fontSize={10}>
-              I = I0 x cos2({angle} deg)
-            </text>
-            <text x={10} y={52} fill={colors.textSecondary} fontSize={9}>
-              = {intensityPercent}% transmission
-            </text>
-          </g>
+          {/* === INFO PANEL (top-left) === */}
+          <rect x={10} y={10} width={155} height={50} fill="#0f172a" stroke="#334155" strokeWidth={1} rx={6} opacity={0.95} />
+          <text x={20} y={30} fill={colors.textPrimary} fontSize={12} fontWeight="bold">
+            Angle: {angle} deg
+          </text>
+          <text x={20} y={48} fill={colors.accent} fontSize={11}>
+            I = I0 x cos2({angle} deg)
+          </text>
 
-          {/* === MALUS'S LAW FORMULA DISPLAY === */}
-          <g transform={`translate(10, ${height - 35})`}>
-            <rect x={0} y={0} width={180} height={28} fill="#0f172a" stroke={colors.accent} strokeWidth={1} rx={6} opacity={0.95} />
-            <text x={90} y={18} fill={colors.accent} fontSize={10} textAnchor="middle" fontWeight="bold">
-              Malus's Law: I = I0 * cos^2(theta)
-            </text>
-          </g>
+          {/* === MALUS'S LAW (bottom-left) === */}
+          <rect x={10} y={height - 33} width={195} height={24} fill="#0f172a" stroke={colors.accent} strokeWidth={1} rx={6} opacity={0.95} />
+          <text x={108} y={height - 16} fill={colors.accent} fontSize={11} textAnchor="middle" fontWeight="bold">
+            Malus Law: I = I0 cos2(theta)
+          </text>
+
+          {/* === CALCULATED VALUE DISPLAY (bottom-right) === */}
+          <rect x={280} y={height - 33} width={160} height={24} fill="#0f172a" stroke="#334155" strokeWidth={1} rx={6} opacity={0.95} />
+          <text x={360} y={height - 16} fill={colors.textSecondary} fontSize={11} textAnchor="middle">
+            Power: {intensityWatts} W
+          </text>
+
+          {/* === INTERACTIVE MARKER - moves with angle/intensity === */}
+          {/* Reference baseline at 0 degrees (full intensity) */}
+          <circle cx={30} cy={30} r={5} fill={colors.success} opacity={0.5} />
+          {/* Dynamic interactive point */}
+          <circle
+            cx={markerX}
+            cy={markerY}
+            r={8}
+            fill={colors.accent}
+            stroke="#ffffff"
+            strokeWidth={2}
+            filter="url(#polrPointGlow)"
+          />
         </svg>
 
         {interactive && (

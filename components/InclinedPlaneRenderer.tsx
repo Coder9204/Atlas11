@@ -592,7 +592,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
                 points={`0,${-normalForce * vectorScale - 8} -5,${-normalForce * vectorScale} 5,${-normalForce * vectorScale}`}
                 fill={colors.normal}
               />
-              <text x={-16} y={-normalForce * vectorScale / 2} fill={colors.normal} fontSize="10" fontWeight="600">N</text>
+              <text x={-16} y={-normalForce * vectorScale / 2} fill={colors.normal} fontSize="11" fontWeight="600">N</text>
             </g>
 
             {/* Parallel component */}
@@ -608,7 +608,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
                 points={`${gravityParallel * vectorScale + 8},0 ${gravityParallel * vectorScale},-5 ${gravityParallel * vectorScale},5`}
                 fill={colors.parallel}
               />
-              <text x={gravityParallel * vectorScale / 2} y={-14} fill={colors.parallel} fontSize="10" fontWeight="600">mg sin θ</text>
+              <text x={gravityParallel * vectorScale / 2} y={-14} fill={colors.parallel} fontSize="11" fontWeight="600">mg sin θ</text>
 
               {/* Friction */}
               {hasFriction && frictionForce > 0 && (
@@ -624,7 +624,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
                     points={`${-frictionForce * vectorScale - 8},0 ${-frictionForce * vectorScale},-5 ${-frictionForce * vectorScale},5`}
                     fill={colors.friction}
                   />
-                  <text x={-frictionForce * vectorScale / 2} y={-14} fill={colors.friction} fontSize="10" fontWeight="600">f</text>
+                  <text x={-frictionForce * vectorScale / 2} y={-14} fill={colors.friction} fontSize="11" fontWeight="600">f</text>
                 </>
               )}
             </g>
@@ -633,11 +633,11 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
 
         {/* Info panel */}
         <rect x={vbWidth - 100} y={10} width={90} height={60} rx={8} fill={colors.bgSecondary} stroke={colors.border} />
-        <text x={vbWidth - 55} y={30} textAnchor="middle" fill={colors.textSecondary} fontSize="10">Acceleration</text>
+        <text x={vbWidth - 55} y={30} textAnchor="middle" fill={colors.textSecondary} fontSize="11">Acceleration</text>
         <text x={vbWidth - 55} y={50} textAnchor="middle" fill={colors.success} fontSize="18" fontWeight="bold">
           {netAcceleration.toFixed(2)}
         </text>
-        <text x={vbWidth - 55} y={62} textAnchor="middle" fill={colors.textMuted} fontSize="9">m/s^2</text>
+        <text x={vbWidth - 55} y={62} textAnchor="middle" fill={colors.textMuted} fontSize="11">m/s^2</text>
 
         {/* Legend */}
         <g transform={`translate(10, ${vbHeight - 90})`}>
@@ -678,7 +678,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
       const a = gVal * Math.sin(rad);
       const x = padL + (deg / 90) * plotW;
       const y = padT + plotH - (a / gVal) * plotH;
-      curvePoints.push(`${x},${y}`);
+      curvePoints.push(`${x} ${y}`);
     }
 
     // Current angle marker
@@ -686,12 +686,73 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
     const curA = gVal * Math.sin((angle * Math.PI) / 180);
     const curY = padT + plotH - (curA / gVal) * plotH;
 
+    // Build path d attribute for the curve
+    const pathD = curvePoints.map((pt, i) => `${i === 0 ? 'M' : 'L'}${pt}`).join(' ');
+
+    // Danger zone threshold (>= 45 degrees)
+    const dangerX = padL + (45 / 90) * plotW;
+    const dangerA = gVal * Math.sin((45 * Math.PI) / 180);
+    const dangerY = padT + plotH - (dangerA / gVal) * plotH;
+
+    // Build filled area path under curve from 45 to 90 degrees (danger zone)
+    const dangerAreaPoints: string[] = [];
+    for (let deg = 45; deg <= 90; deg += 2) {
+      const rad = (deg * Math.PI) / 180;
+      const a = gVal * Math.sin(rad);
+      const x = padL + (deg / 90) * plotW;
+      const y = padT + plotH - (a / gVal) * plotH;
+      dangerAreaPoints.push(`${x},${y}`);
+    }
+    const dangerAreaD = `M${dangerX},${padT + plotH} L${dangerAreaPoints.map(pt => pt).join(' L')} L${padL + plotW},${padT + plotH} Z`;
+
+    // Safe zone area path under curve from 0 to 45 degrees
+    const safeAreaPoints: string[] = [];
+    for (let deg = 0; deg <= 45; deg += 2) {
+      const rad = (deg * Math.PI) / 180;
+      const a = gVal * Math.sin(rad);
+      const x = padL + (deg / 90) * plotW;
+      const y = padT + plotH - (a / gVal) * plotH;
+      safeAreaPoints.push(`${x},${y}`);
+    }
+    const safeAreaD = `M${padL},${padT + plotH} L${safeAreaPoints.map(pt => pt).join(' L')} L${dangerX},${padT + plotH} Z`;
+
     return (
       <svg viewBox={`0 0 ${graphW} ${graphH}`} width="100%" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="curveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#10B981" />
+            <stop offset="50%" stopColor="#F59E0B" />
+            <stop offset="100%" stopColor="#EF4444" />
+          </linearGradient>
+          <radialGradient id="markerGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={colors.warning} stopOpacity="0.8" />
+            <stop offset="100%" stopColor={colors.warning} stopOpacity="0" />
+          </radialGradient>
+          <filter id="chartGlow">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="markerShadow">
+            <feDropShadow dx="0" dy="1" stdDeviation="2" floodColor={colors.warning} floodOpacity="0.5" />
+          </filter>
+        </defs>
+
         {/* Title */}
         <text x={graphW / 2} y={18} textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="700">
           Acceleration vs Angle
         </text>
+
+        {/* Safe zone fill (green) */}
+        <path d={safeAreaD} fill="#10B981" opacity="0.08" />
+        {/* Danger zone fill (red) */}
+        <path d={dangerAreaD} fill="#EF4444" opacity="0.08" />
+
+        {/* Zone labels */}
+        <text x={padL + (22.5 / 90) * plotW} y={padT + plotH - 8} textAnchor="middle" fill="#10B981" fontSize="11" opacity="0.6">Safe</text>
+        <text x={padL + (67.5 / 90) * plotW} y={padT + plotH - 8} textAnchor="middle" fill="#EF4444" fontSize="11" opacity="0.6">Steep</text>
 
         {/* Axes */}
         <line x1={padL} y1={padT} x2={padL} y2={padT + plotH} stroke={colors.border} strokeWidth={1.5} />
@@ -703,12 +764,12 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
           return (
             <g key={i}>
               <line x1={padL - 4} y1={y} x2={padL} y2={y} stroke={colors.textMuted} strokeWidth={1} />
-              <text x={padL - 8} y={y + 4} textAnchor="end" fill={colors.textMuted} fontSize="9">{val.toFixed(1)}</text>
+              <text x={padL - 8} y={y + 4} textAnchor="end" fill={colors.textMuted} fontSize="11">{val.toFixed(1)}</text>
               <line x1={padL} y1={y} x2={padL + plotW} y2={y} stroke={colors.border} strokeWidth={0.5} strokeDasharray="4,4" opacity={0.4} />
             </g>
           );
         })}
-        <text x={12} y={padT + plotH / 2} textAnchor="end" fill={colors.textSecondary} fontSize="10" transform={`rotate(-90, 12, ${padT + plotH / 2})`}>
+        <text x={12} y={padT + plotH / 2} textAnchor="end" fill={colors.textSecondary} fontSize="11" transform={`rotate(-90, 12, ${padT + plotH / 2})`}>
           Acceleration (m/s²)
         </text>
 
@@ -718,33 +779,45 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
           return (
             <g key={i}>
               <line x1={x} y1={padT + plotH} x2={x} y2={padT + plotH + 4} stroke={colors.textMuted} strokeWidth={1} />
-              <text x={x} y={padT + plotH + 16} textAnchor="middle" fill={colors.textMuted} fontSize="9">{deg}°</text>
+              <text x={x} y={padT + plotH + 16} textAnchor="middle" fill={colors.textMuted} fontSize="11">{deg}°</text>
             </g>
           );
         })}
-        <text x={padL + plotW / 2} y={graphH - 4} textAnchor="middle" fill={colors.textSecondary} fontSize="10">
+        <text x={padL + plotW / 2} y={graphH - 4} textAnchor="middle" fill={colors.textSecondary} fontSize="11">
           Angle θ (degrees)
         </text>
 
-        {/* Curve */}
-        <polyline
-          points={curvePoints.join(' ')}
+        {/* Curve as path with gradient stroke */}
+        <path
+          d={pathD}
           fill="none"
-          stroke={colors.accent}
+          stroke="url(#curveGrad)"
           strokeWidth={2.5}
+          strokeLinecap="round"
         />
+
+        {/* 45-degree boundary line */}
+        <line x1={dangerX} y1={padT} x2={dangerX} y2={padT + plotH} stroke="#EF4444" strokeWidth={1} strokeDasharray="4,4" opacity="0.3" />
 
         {/* Dashed vertical line at current angle */}
         <line x1={curX} y1={padT} x2={curX} y2={padT + plotH} stroke={colors.warning} strokeWidth={1.5} strokeDasharray="6,4" />
 
+        {/* Marker glow */}
+        <circle cx={curX} cy={curY} r={14} fill="url(#markerGlow)" />
         {/* Current angle marker */}
-        <circle cx={curX} cy={curY} r={6} fill={colors.warning} stroke="white" strokeWidth={2} />
+        <circle cx={curX} cy={curY} r={6} fill={colors.warning} stroke="white" strokeWidth={2} filter="url(#markerShadow)" />
         <text x={curX + 10} y={curY - 8} fill={colors.warning} fontSize="11" fontWeight="700">
           {curA.toFixed(2)} m/s²
         </text>
-        <text x={curX + 10} y={curY + 6} fill={colors.textMuted} fontSize="9">
+        <text x={curX + 10} y={curY + 6} fill={colors.textMuted} fontSize="11">
           at {angle}°
         </text>
+
+        {/* Animated pulse on marker */}
+        <circle cx={curX} cy={curY} r={6} fill="none" stroke={colors.warning} strokeWidth={1} opacity="0.6">
+          <animate attributeName="r" from="6" to="14" dur="1.5s" repeatCount="indefinite" />
+          <animate attributeName="opacity" from="0.6" to="0" dur="1.5s" repeatCount="indefinite" />
+        </circle>
       </svg>
     );
   };
@@ -917,7 +990,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
               {/* Weight arrow */}
               <line x1="180" y1="120" x2="180" y2="165" stroke={colors.gravity} strokeWidth="2" />
               <polygon points="180,170 175,160 185,160" fill={colors.gravity} />
-              <text x="188" y="150" fill={colors.gravity} fontSize="10">mg</text>
+              <text x="188" y="150" fill={colors.gravity} fontSize="11">mg</text>
               {/* Labels */}
               <text x="220" y="30" fill={colors.textPrimary} fontSize="13" textAnchor="middle" fontWeight="600">100 kg Box on a 30 Ramp</text>
             </svg>
@@ -1281,11 +1354,11 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
               {/* Friction arrow (opposing motion) */}
               <line x1="170" y1="78" x2="130" y2="90" stroke={colors.friction} strokeWidth="3" />
               <polygon points="127,91 137,88 133,95" fill={colors.friction} />
-              <text x="110" y="105" fill={colors.friction} fontSize="10" fontWeight="600">Friction</text>
+              <text x="110" y="105" fill={colors.friction} fontSize="11" fontWeight="600">Friction</text>
               {/* Push arrow */}
               <line x1="155" y1="72" x2="195" y2="60" stroke={colors.success} strokeWidth="3" />
               <polygon points="198,59 189,56 191,66" fill={colors.success} />
-              <text x="200" y="55" fill={colors.success} fontSize="10" fontWeight="600">Push</text>
+              <text x="200" y="55" fill={colors.success} fontSize="11" fontWeight="600">Push</text>
               {/* Label */}
               <text x={isMobile ? 150 : 200} y="20" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Rough Surface (mu = 0.3)</text>
             </svg>
@@ -1527,11 +1600,11 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
               {/* Friction arrow (opposing motion, pointing uphill) */}
               <line x1={155} y1={78} x2={115} y2={90} stroke={colors.friction} strokeWidth={3} />
               <polygon points="112,91 122,87 119,97" fill={colors.friction} />
-              <text x={80} y={105} fill={colors.friction} fontSize="10" fontWeight="700">f = μN</text>
+              <text x={80} y={105} fill={colors.friction} fontSize="11" fontWeight="700">f = μN</text>
               {/* mg sin θ arrow (pointing downhill) */}
               <line x1={185} y1={78} x2={225} y2={90} stroke={colors.parallel} strokeWidth={3} />
               <polygon points="228,91 219,87 221,97" fill={colors.parallel} />
-              <text x={215} y={108} fill={colors.parallel} fontSize="10" fontWeight="700">mg sin θ</text>
+              <text x={215} y={108} fill={colors.parallel} fontSize="11" fontWeight="700">mg sin θ</text>
             </svg>
           </div>
 

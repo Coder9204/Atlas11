@@ -417,13 +417,18 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
     const phaseAngle = (animationTime / 360) * 2 * Math.PI;
     const switchState = Math.sin(phaseAngle * switchingFrequency / 10) > 0;
 
+    // Absolute offsets for waveform area (no <g transform>)
+    const waveOffX = 140;
+    const vdsOffY = 42;
+    const idOffY = 200;
+
     // Generate more data points for the waveforms (>= 10 points per path)
     const wavePoints = 12;
     const waveWidth = 280;
     const waveStartX = 10;
     const stepX = waveWidth / (wavePoints - 1);
 
-    // Vds waveform path - uses full vertical range of its area (40-155)
+    // Vds waveform path - uses full vertical range of its area
     let vdsPath = '';
     let idPath = '';
     const vdsHigh = 45;
@@ -432,7 +437,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
     const idLow = 145;
 
     for (let i = 0; i < wavePoints; i++) {
-      const x = waveStartX + i * stepX;
+      const x = waveOffX + waveStartX + i * stepX;
       const cycle = Math.floor(i / 3) % 2;
       const pos = i % 3;
       let vdsY: number, idY: number;
@@ -448,28 +453,32 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
         idY = cycle === 0 ? idLow : idHigh;
       }
 
-      vdsPath += `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${vdsY.toFixed(1)} `;
-      idPath += `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${idY.toFixed(1)} `;
+      vdsPath += `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${(vdsOffY + vdsY).toFixed(1)} `;
+      idPath += `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${(idOffY + idY).toFixed(1)} `;
     }
 
-    // Power loss spikes at transitions
+    // Power loss spikes at transitions (absolute coords)
     let powerPath = '';
-    const powerBase = 145;
-    const powerPeak = 45;
-    let pIdx = 0;
+    const powerBase = vdsOffY + 145;
+    const powerPeak = vdsOffY + 45;
     for (let i = 0; i < wavePoints; i++) {
-      const x = waveStartX + i * stepX;
+      const x = waveOffX + waveStartX + i * stepX;
       const pos = i % 3;
       if (pos === 1) {
-        // Transition point - spike
-        if (pIdx === 0) {
-          powerPath += `M ${(x - 5).toFixed(1)} ${powerBase} L ${x.toFixed(1)} ${powerPeak} L ${(x + 5).toFixed(1)} ${powerBase} `;
-        } else {
-          powerPath += `M ${(x - 5).toFixed(1)} ${powerBase} L ${x.toFixed(1)} ${powerPeak} L ${(x + 5).toFixed(1)} ${powerBase} `;
-        }
-        pIdx++;
+        powerPath += `M ${(x - 5).toFixed(1)} ${powerBase} L ${x.toFixed(1)} ${powerPeak} L ${(x + 5).toFixed(1)} ${powerBase} `;
       }
     }
+
+    // Interactive point position depends on switchingFrequency
+    // Map freq 10-500 to x position along the waveform
+    const freqFraction = (switchingFrequency - 10) / (500 - 10);
+    const interactiveX = waveOffX + waveStartX + freqFraction * waveWidth;
+    // Map to a y position showing the loss level (higher freq = higher loss = lower y)
+    const interactiveY = vdsOffY + vdsLow - freqFraction * (vdsLow - vdsHigh);
+
+    // MOSFET symbol absolute offsets
+    const mosX = 20;
+    const mosY = 50;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -503,95 +512,91 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
           </defs>
 
           {/* Title */}
-          <text x={width/2} y={25} fill={colors.textPrimary} fontSize={14} fontWeight="bold" textAnchor="middle">
+          <text x={width / 2} y={25} fill={colors.textPrimary} fontSize={14} fontWeight="bold" textAnchor="middle">
             MOSFET Switching Losses
           </text>
 
-          {/* MOSFET Symbol */}
-          <g transform="translate(20, 50)">
-            {/* Gate */}
-            <line x1={0} y1={40} x2={20} y2={40} stroke={colors.gate} strokeWidth={3} />
-            <line x1={20} y1={20} x2={20} y2={60} stroke={colors.gate} strokeWidth={2} />
+          {/* MOSFET Symbol - absolute coordinates */}
+          <g>
+          {/* Gate */}
+          <line x1={mosX} y1={mosY + 40} x2={mosX + 20} y2={mosY + 40} stroke={colors.gate} strokeWidth={3} />
+          <line x1={mosX + 20} y1={mosY + 20} x2={mosX + 20} y2={mosY + 60} stroke={colors.gate} strokeWidth={2} />
 
-            {/* Channel */}
-            <line x1={30} y1={20} x2={30} y2={60} stroke={colors.textPrimary} strokeWidth={2} />
+          {/* Channel */}
+          <line x1={mosX + 30} y1={mosY + 20} x2={mosX + 30} y2={mosY + 60} stroke={colors.textPrimary} strokeWidth={2} />
 
-            {/* Drain */}
-            <line x1={30} y1={20} x2={60} y2={20} stroke={colors.textPrimary} strokeWidth={2} />
-            <line x1={60} y1={0} x2={60} y2={20} stroke={colors.textPrimary} strokeWidth={2} />
-            <text x={70} y={8} fill={colors.textSecondary} fontSize={11}>Drain</text>
+          {/* Drain */}
+          <line x1={mosX + 30} y1={mosY + 20} x2={mosX + 60} y2={mosY + 20} stroke={colors.textPrimary} strokeWidth={2} />
+          <line x1={mosX + 60} y1={mosY} x2={mosX + 60} y2={mosY + 20} stroke={colors.textPrimary} strokeWidth={2} />
+          <text x={mosX + 70} y={mosY + 8} fill={colors.textSecondary} fontSize={11}>Drain</text>
 
-            {/* Source */}
-            <line x1={30} y1={60} x2={60} y2={60} stroke={colors.textPrimary} strokeWidth={2} />
-            <line x1={60} y1={60} x2={60} y2={80} stroke={colors.textPrimary} strokeWidth={2} />
-            <text x={70} y={68} fill={colors.textSecondary} fontSize={11}>Source</text>
+          {/* Source */}
+          <line x1={mosX + 30} y1={mosY + 60} x2={mosX + 60} y2={mosY + 60} stroke={colors.textPrimary} strokeWidth={2} />
+          <line x1={mosX + 60} y1={mosY + 60} x2={mosX + 60} y2={mosY + 80} stroke={colors.textPrimary} strokeWidth={2} />
+          <text x={mosX + 70} y={mosY + 68} fill={colors.textSecondary} fontSize={11}>Source</text>
 
-            {/* Gate label */}
-            <text x={-5} y={44} fill={colors.textSecondary} fontSize={11} textAnchor="end">Gate</text>
+          {/* Gate label */}
+          <text x={mosX - 5} y={mosY + 44} fill={colors.textSecondary} fontSize={11} textAnchor="end">Gate</text>
 
-            {/* On/Off indicator */}
-            <circle cx={45} cy={40} r={8} fill={switchState ? colors.success : colors.error} opacity={0.8} filter="url(#glowFilter)">
-              <animate attributeName="opacity" values="0.6;1;0.6" dur="0.5s" repeatCount="indefinite" />
-            </circle>
-            <text x={45} y={100} fill={colors.textSecondary} fontSize={11} textAnchor="middle">
-              {switchState ? 'ON' : 'OFF'}
-            </text>
+          {/* On/Off indicator */}
+          <circle cx={mosX + 45} cy={mosY + 40} r={5} fill={switchState ? colors.success : colors.error} opacity={0.8}>
+            <animate attributeName="opacity" values="0.6;1;0.6" dur="0.5s" repeatCount="indefinite" />
+          </circle>
+          <text x={mosX + 45} y={mosY + 100} fill={colors.textSecondary} fontSize={11} textAnchor="middle">
+            {switchState ? 'ON' : 'OFF'}
+          </text>
           </g>
 
-          {/* Waveforms area */}
-          <g transform="translate(140, 35)">
-            {/* Vds waveform */}
-            <text x={0} y={0} fill={colors.accent} fontSize={12} fontWeight="bold">Vds (Drain-Source)</text>
+          {/* Waveforms group */}
+          <g>
+          {/* Vds waveform label */}
+          <text x={waveOffX} y={vdsOffY} fill={colors.accent} fontSize={12} fontWeight="bold">Vds (Drain-Source)</text>
 
-            {/* Grid lines for Vds area */}
-            <line x1={0} y1={45} x2={waveWidth + 20} y2={45} stroke="rgba(255,255,255,0.1)" strokeWidth={1} strokeDasharray="4,4" />
-            <line x1={0} y1={95} x2={waveWidth + 20} y2={95} stroke="rgba(255,255,255,0.1)" strokeWidth={1} strokeDasharray="4,4" />
-            <line x1={0} y1={145} x2={waveWidth + 20} y2={145} stroke="rgba(255,255,255,0.1)" strokeWidth={1} strokeDasharray="4,4" />
+          {/* Grid lines for Vds area */}
+          <line x1={waveOffX} y1={vdsOffY + 45} x2={waveOffX + waveWidth + 20} y2={vdsOffY + 45} stroke="rgba(255,255,255,0.1)" strokeWidth={1} strokeDasharray="4 4" opacity="0.3" />
+          <line x1={waveOffX} y1={vdsOffY + 95} x2={waveOffX + waveWidth + 20} y2={vdsOffY + 95} stroke="rgba(255,255,255,0.1)" strokeWidth={1} strokeDasharray="4 4" opacity="0.3" />
+          <line x1={waveOffX} y1={vdsOffY + 145} x2={waveOffX + waveWidth + 20} y2={vdsOffY + 145} stroke="rgba(255,255,255,0.1)" strokeWidth={1} strokeDasharray="4 4" opacity="0.3" />
 
-            {/* Y-axis tick marks for Vds */}
-            <line x1={0} y1={45} x2={5} y2={45} stroke="rgba(255,255,255,0.3)" strokeWidth={1} />
-            <line x1={0} y1={95} x2={5} y2={95} stroke="rgba(255,255,255,0.3)" strokeWidth={1} />
-            <line x1={0} y1={145} x2={5} y2={145} stroke="rgba(255,255,255,0.3)" strokeWidth={1} />
+          {/* Y-axis tick marks for Vds */}
+          <line x1={waveOffX} y1={vdsOffY + 45} x2={waveOffX + 5} y2={vdsOffY + 45} stroke="rgba(255,255,255,0.3)" strokeWidth={1} />
+          <line x1={waveOffX} y1={vdsOffY + 95} x2={waveOffX + 5} y2={vdsOffY + 95} stroke="rgba(255,255,255,0.3)" strokeWidth={1} />
+          <line x1={waveOffX} y1={vdsOffY + 145} x2={waveOffX + 5} y2={vdsOffY + 145} stroke="rgba(255,255,255,0.3)" strokeWidth={1} />
 
-            <rect x={0} y={10} width={waveWidth + 20} height={150} fill="rgba(0,0,0,0.3)" rx={4} />
-            <path
-              d={vdsPath}
-              stroke={colors.accent}
-              strokeWidth={2}
-              fill="none"
-            />
+          <rect x={waveOffX} y={vdsOffY + 10} width={waveWidth + 20} height={150} fill="rgba(0,0,0,0.3)" rx={4} />
+          <path
+            d={vdsPath}
+            stroke={colors.accent}
+            strokeWidth={2}
+            fill="none"
+          />
 
-            {/* Reference line for baseline at mid frequency */}
-            <circle cx={waveStartX + 3 * stepX} cy={vdsHigh} r={6} fill={colors.accent} stroke="#ffffff" strokeWidth={2} filter="url(#glowFilter)" />
+          {/* Interactive point - moves with switchingFrequency slider */}
+          <circle cx={interactiveX} cy={interactiveY} r={8} fill={colors.accent} stroke="#ffffff" strokeWidth={2} filter="url(#glowFilter)" />
+
+          {/* Id waveform label */}
+          <text x={waveOffX} y={idOffY} fill={colors.success} fontSize={12} fontWeight="bold">Id (Drain Current)</text>
+          <rect x={waveOffX} y={idOffY + 10} width={waveWidth + 20} height={150} fill="rgba(0,0,0,0.3)" rx={4} />
+          <path
+            d={idPath}
+            stroke={colors.success}
+            strokeWidth={2}
+            fill="none"
+          />
           </g>
 
-          {/* Id waveform */}
-          <g transform="translate(140, 195)">
-            <text x={0} y={0} fill={colors.success} fontSize={12} fontWeight="bold">Id (Drain Current)</text>
-            <rect x={0} y={10} width={waveWidth + 20} height={150} fill="rgba(0,0,0,0.3)" rx={4} />
-            <path
-              d={idPath}
-              stroke={colors.success}
-              strokeWidth={2}
-              fill="none"
-            />
-          </g>
-
-          {/* Loss breakdown bar */}
-          <g transform="translate(20, 360)">
-            <text x={0} y={0} fill={colors.textSecondary} fontSize={12} fontWeight="500">
-              Switching: {losses.switchingLoss.toFixed(1)} mW
-            </text>
-            <text x={170} y={0} fill={colors.textSecondary} fontSize={12} fontWeight="500">
-              Gate: {losses.gateDriverLoss.toFixed(1)} mW
-            </text>
-            <text x={320} y={0} fill={colors.textSecondary} fontSize={12} fontWeight="500">
-              Efficiency: {losses.efficiency.toFixed(1)}%
-            </text>
-          </g>
+          {/* Loss breakdown bar - absolute coordinates, well-spaced */}
+          <text x={20} y={365} fill={colors.textSecondary} fontSize={12} fontWeight="500">
+            Switching: {losses.switchingLoss.toFixed(1)} mW
+          </text>
+          <text x={200} y={365} fill={colors.textSecondary} fontSize={12} fontWeight="500">
+            Gate: {losses.gateDriverLoss.toFixed(1)} mW
+          </text>
+          <text x={350} y={365} fill={colors.textSecondary} fontSize={12} fontWeight="500">
+            Eff: {losses.efficiency.toFixed(1)}%
+          </text>
 
           {/* Frequency indicator */}
-          <text x={width/2} y={height - 5} fill={colors.textMuted} fontSize={12} textAnchor="middle">
+          <text x={width / 2} y={height - 5} fill={colors.textMuted} fontSize={12} textAnchor="middle">
             Switching at {switchingFrequency} MHz | Total Loss: {losses.totalLoss.toFixed(1)} mW
           </text>
         </svg>
