@@ -799,7 +799,7 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '80px',
+          paddingTop: '48px',
           paddingRight: '24px',
           paddingBottom: '100px',
           paddingLeft: '24px',
@@ -915,7 +915,7 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '80px',
+          paddingTop: '48px',
           paddingRight: '24px',
           paddingBottom: '100px',
           paddingLeft: '24px',
@@ -1030,7 +1030,7 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '80px',
+          paddingTop: '48px',
           paddingRight: '24px',
           paddingBottom: '100px',
           paddingLeft: '24px',
@@ -1230,7 +1230,7 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '80px',
+          paddingTop: '48px',
           paddingRight: '24px',
           paddingBottom: '100px',
           paddingLeft: '24px',
@@ -1354,7 +1354,7 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '80px',
+          paddingTop: '48px',
           paddingRight: '24px',
           paddingBottom: '100px',
           paddingLeft: '24px',
@@ -1480,7 +1480,7 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '80px',
+          paddingTop: '48px',
           paddingRight: '24px',
           paddingBottom: '100px',
           paddingLeft: '24px',
@@ -1625,7 +1625,7 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '80px',
+          paddingTop: '48px',
           paddingRight: '24px',
           paddingBottom: '100px',
           paddingLeft: '24px',
@@ -1721,7 +1721,7 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '80px',
+          paddingTop: '48px',
           paddingRight: '24px',
           paddingBottom: '100px',
           paddingLeft: '24px',
@@ -1940,7 +1940,7 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
           <div style={{
             flex: 1,
             overflowY: 'auto',
-            paddingTop: '80px',
+            paddingTop: '48px',
             paddingRight: '24px',
             paddingBottom: '100px',
             paddingLeft: '24px',
@@ -2007,7 +2007,7 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '80px',
+          paddingTop: '48px',
           paddingRight: '24px',
           paddingBottom: '100px',
           paddingLeft: '24px',

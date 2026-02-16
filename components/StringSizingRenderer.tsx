@@ -1735,7 +1735,7 @@ export default function StringSizingRenderer({
           </p>
 
           {/* Show explanations for incorrect answers */}
-          <div style={{ textAlign: 'left', marginBottom: '24px' }}>
+          <div style={{ textAlign: 'left', marginBottom: '24px', maxHeight: '500px', overflowY: 'auto' }}>
             {testQuestions.map((q, qIndex) => {
               const userAnswer = testAnswers[qIndex];
               const correctOption = q.options.find(opt => opt.correct);
@@ -1750,7 +1750,7 @@ export default function StringSizingRenderer({
                   marginBottom: '8px',
                 }}>
                   <p style={{ color: '#f8fafc', fontSize: '13px', marginBottom: '8px' }}>
-                    <strong>{qIndex + 1}.</strong> {q.question}
+                    <strong>Question {qIndex + 1}:</strong> {q.question}
                   </p>
                   <p style={{ color: isCorrect ? '#86efac' : '#fca5a5', fontSize: '12px' }}>
                     {isCorrect ? '✓ Correct' : `✗ Your answer: ${q.options.find(o => o.id === userAnswer)?.text || 'None'}`}
@@ -2105,7 +2105,6 @@ export default function StringSizingRenderer({
         return (
           <>
             <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>{renderTest()}</div>
-            {!testSubmitted && renderBottomBar(true, false, 'Submit')}
             {testSubmitted && renderBottomBar(true, true, 'Complete')}
           </>
         );

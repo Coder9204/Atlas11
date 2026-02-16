@@ -620,10 +620,10 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
         </text>
 
         {/* Tick labels */}
-        <text x={padL} y={padT + plotH + 16} fill={colors.muted} fontSize="11" textAnchor="middle">1</text>
-        <text x={padL + plotW} y={padT + plotH + 16} fill={colors.muted} fontSize="11" textAnchor="middle">10</text>
-        <text x={padL - 8} y={padT + 5} fill={colors.muted} fontSize="11" textAnchor="end">5.0</text>
-        <text x={padL - 8} y={padT + plotH + 4} fill={colors.muted} fontSize="11" textAnchor="end">0</text>
+        <text x={padL} y={padT + plotH + 16} fill="#cbd5e1" fontSize="11" textAnchor="middle">1</text>
+        <text x={padL + plotW} y={padT + plotH + 16} fill="#cbd5e1" fontSize="11" textAnchor="middle">10</text>
+        <text x={padL - 8} y={padT + 5} fill="#cbd5e1" fontSize="11" textAnchor="end">5.0</text>
+        <text x={padL - 8} y={padT + plotH + 4} fill="#cbd5e1" fontSize="11" textAnchor="end">0</text>
 
         {/* Current value readout */}
         <text x={curX} y={curY - 14} fill="#fff" fontSize="12" fontWeight="700" textAnchor="middle">
@@ -631,7 +631,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
         </text>
 
         {/* Reference label */}
-        <text x={refX + 4} y={padT + 14} fill="#94a3b8" fontSize="11" textAnchor="start">reference</text>
+        <text x={refX + 4} y={padT + 14} fill="#cbd5e1" fontSize="11" textAnchor="start">reference</text>
 
         {/* Title */}
         <text x={padL + plotW / 2} y={14} fill="#fafafa" fontSize="13" fontWeight="700" textAnchor="middle">
@@ -877,10 +877,10 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
           </g>
 
           {/* SVG Labels */}
-          <text x="280" y="35" fill="#a78bfa" fontSize="12" fontWeight="600">L = Angular Momentum</text>
+          <text x="280" y="25" fill="#a78bfa" fontSize="12" fontWeight="600">L = Angular Momentum</text>
           <text x="280" y="275" fill="#ef4444" fontSize="12" fontWeight="600">\u03C4 = Torque (Gravity)</text>
-          <text x="140" y="45" fill="#34d399" fontSize="12" fontWeight="600">Precession Path</text>
-          <text x="260" y="180" fill="#fbbf24" fontSize="11" fontWeight="600">Spinning Wheel</text>
+          <text x="120" y="60" fill="#34d399" fontSize="12" fontWeight="600">Precession Path</text>
+          <text x="240" y="195" fill="#fbbf24" fontSize="11" fontWeight="600">Spinning Wheel</text>
         </svg>
 
         {/* Labels outside SVG */}
@@ -893,13 +893,13 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
           padding: `0 ${space.sm}`,
         }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span style={{ fontSize: '14px', fontWeight: 400, color: colors.muted }}>
+            <span style={{ fontSize: '14px', fontWeight: 400, color: colors.textSecondary }}>
               Spin: <span style={{ color: colors.textPrimary, fontWeight: 600 }}>{spinSpeed.toFixed(1)} rad/s</span>
             </span>
-            <span style={{ fontSize: '14px', fontWeight: 400, color: colors.muted }}>
+            <span style={{ fontSize: '14px', fontWeight: 400, color: colors.textSecondary }}>
               L = <span style={{ color: colors.accent, fontWeight: 600 }}>{angularMomentum.toFixed(2)} kg\u00B7m\u00B2/s</span>
             </span>
-            <span style={{ fontSize: '14px', fontWeight: 400, color: colors.muted }}>
+            <span style={{ fontSize: '14px', fontWeight: 400, color: colors.textSecondary }}>
               Precession: <span style={{ color: colors.success, fontWeight: 600 }}>\u03A9 = {precessionRate.toFixed(2)} rad/s</span>
             </span>
           </div>
@@ -908,6 +908,18 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
             <span style={{ fontSize: '12px', color: colors.danger }}>\u03C4 = Torque (Push)</span>
             <span style={{ fontSize: '12px', color: colors.success }}>Precession Direction</span>
           </div>
+        </div>
+
+        {/* Formula Display */}
+        <div style={{
+          marginTop: space.sm,
+          padding: space.md,
+          background: colors.bgTertiary,
+          borderRadius: radius.md,
+          border: `1px solid ${colors.border}`,
+        }}>
+          <p style={{ fontSize: '12px', fontWeight: 700, color: colors.primary, marginBottom: '4px' }}>Precession Equation</p>
+          <p style={{ fontSize: '16px', fontWeight: 700, color: colors.textPrimary }}>Ω = τ / L = τ / (I × ω)</p>
         </div>
 
         {interactive && (
@@ -929,9 +941,10 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 <span style={{ fontSize: '14px', color: colors.textPrimary, fontWeight: 700 }}>{spinSpeed.toFixed(1)} rad/s</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: space.sm }}>
-                <span style={{ fontSize: '12px', color: colors.muted, minWidth: '28px' }}>1</span>
+                <span style={{ fontSize: '12px', color: colors.textSecondary, minWidth: '28px' }}>1</span>
                 <input
                   type="range" min="1" max="10" step="0.5" value={spinSpeed}
+                  aria-label="Spin Speed"
                   onChange={(e) => {
                     const val = parseFloat(e.target.value);
                     setSpinSpeed(val);
@@ -943,7 +956,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                   }}
                   style={sliderStyle}
                 />
-                <span style={{ fontSize: '12px', color: colors.muted, minWidth: '28px', textAlign: 'right' }}>10</span>
+                <span style={{ fontSize: '12px', color: colors.textSecondary, minWidth: '28px', textAlign: 'right' }}>10</span>
               </div>
             </div>
 
@@ -1057,13 +1070,14 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: space.sm,
             padding: `${space.sm} ${space.md}`,
-            background: 'rgba(6, 182, 212, 0.1)',
+            background: '#fff',
             border: '1px solid rgba(6, 182, 212, 0.2)',
             borderRadius: radius.full,
             marginBottom: space.xl,
+            boxShadow: '0 0 20px rgba(6, 182, 212, 0.3)',
           }}>
             <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22d3ee' }} />
-            <span style={{ fontSize: '12px', fontWeight: 600, color: '#22d3ee', letterSpacing: '0.1em' }}>PHYSICS EXPLORATION</span>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: '#0a0a0f', letterSpacing: '0.1em' }}>PHYSICS EXPLORATION</span>
           </div>
 
           <h1 style={{

@@ -2236,7 +2236,8 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
                   marginBottom: '8px',
                   borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
                 }}>
-                  <p style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>
+                  <p style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '18px' }}>{isCorrect ? '✓' : '✗'}</span>
                     Q{i + 1}: {isCorrect ? 'Correct' : 'Incorrect'}
                   </p>
                   <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '4px' }}>
@@ -2557,8 +2558,8 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
         position: 'absolute',
         top: '10%',
         left: '20%',
-        width: '400px',
-        height: '400px',
+        width: isMobile ? '250px' : '400px',
+        height: isMobile ? '250px' : '400px',
         background: `radial-gradient(circle, ${colors.accent}10, transparent)`,
         pointerEvents: 'none',
       }} />

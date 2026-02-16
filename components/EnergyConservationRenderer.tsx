@@ -448,8 +448,17 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
     };
   }, [isSimulating, runSimulation]);
 
+  // Sync marble position with release height when not simulating
+  useEffect(() => {
+    if (!isSimulating) {
+      const marbleY = 5 + (100 - releaseHeight) * 0.75;
+      setMarblePosition({ x: 10, y: marbleY });
+      setPotentialEnergy(releaseHeight);
+    }
+  }, [releaseHeight, isSimulating]);
+
   const startSimulation = () => {
-    setMarblePosition({ x: 10, y: getTrackY(10) * (1 - releaseHeight / 100) + 5 });
+    setMarblePosition({ x: 10, y: 5 + (100 - releaseHeight) * 0.75 });
     setMarbleVelocity({ x: 30, y: 0 });
     setPotentialEnergy(releaseHeight);
     setKineticEnergy(0);
@@ -1347,11 +1356,11 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
                 <g className="labels-layer">
                   {/* Height comparison */}
                   <line x1={isMobile ? 25 : 35} y1={isMobile ? 40 : 50} x2={isMobile ? 25 : 35} y2={isMobile ? 130 : 160} stroke={colors.potential} strokeWidth="2" strokeDasharray="4,4" />
-                  <text x={isMobile ? 12 : 18} y={isMobile ? 85 : 105} fill={colors.potential} fontSize="10" fontWeight="600">h₁</text>
+                  <text x={isMobile ? 12 : 18} y={isMobile ? 85 : 105} fill={colors.potential} fontSize="11" fontWeight="600">h₁</text>
                   <line x1={isMobile ? 275 : 365} y1={isMobile ? 70 : 90} x2={isMobile ? 275 : 365} y2={isMobile ? 130 : 160} stroke={colors.warning} strokeWidth="2" strokeDasharray="4,4" />
-                  <text x={isMobile ? 280 : 372} y={isMobile ? 100 : 125} fill={colors.warning} fontSize="10" fontWeight="600">h₂</text>
+                  <text x={isMobile ? 268 : 368} y={isMobile ? 100 : 125} fill={colors.warning} fontSize="11" fontWeight="600">h₂</text>
                   {/* Heat label */}
-                  <text x={isMobile ? 150 : 200} y={isMobile ? 155 : 195} fill={colors.thermal} fontSize="10" fontWeight="600" textAnchor="middle">Heat?</text>
+                  <text x={isMobile ? 150 : 200} y={isMobile ? 155 : 195} fill={colors.thermal} fontSize="11" fontWeight="600" textAnchor="middle">Heat?</text>
                 </g>
               </svg>
               <p style={{ ...typo.small, color: colors.textMuted, marginTop: '16px' }}>

@@ -951,7 +951,7 @@ export default function ElectromagnetRenderer({
           {clips.map((clip, i) => (
             <g key={i} transform={`translate(${clip.x}, ${clip.y})`}>
               <path
-                d="M -12 -36 L 12 -36 L 12 36 L -8 36 L -8 -12 L 8 -12"
+                d="M -12 -36 L -8 -36 L -4 -36 L 0 -36 L 4 -36 L 8 -36 L 12 -36 L 12 -24 L 12 -12 L 12 0 L 12 12 L 12 24 L 12 36 L 8 36 L 4 36 L 0 36 L -4 36 L -8 36 L -8 24 L -8 12 L -8 0 L -8 -12 L -4 -12 L 0 -12 L 4 -12 L 8 -12"
                 fill="none"
                 stroke={clip.attracted ? 'url(#emagClipAttracted)' : 'url(#emagClipMetal)'}
                 strokeWidth="2.5"
@@ -1116,16 +1116,16 @@ export default function ElectromagnetRenderer({
 
             {/* N pole with premium gradient */}
             <g filter="url(#emagPoleGlow)">
-              <path d="M 200 98 L 212 126 L 188 126 Z" fill="url(#emagNorthPole)" />
-              <path d="M 200 98 L 212 126 L 188 126 Z" fill="none" stroke="white" strokeWidth="1" opacity="0.3" />
-              <text x="200" y="118" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">N</text>
+              <path d="M 200 60 L 224 130 L 176 130 Z" fill="url(#emagNorthPole)" />
+              <path d="M 200 60 L 224 130 L 176 130 Z" fill="none" stroke="white" strokeWidth="1" opacity="0.3" />
+              <text x="200" y="108" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">N</text>
             </g>
 
             {/* S pole with premium gradient */}
             <g filter="url(#emagPoleGlow)">
-              <path d="M 200 182 L 212 154 L 188 154 Z" fill="url(#emagSouthPole)" />
-              <path d="M 200 182 L 212 154 L 188 154 Z" fill="none" stroke="white" strokeWidth="1" opacity="0.3" />
-              <text x="200" y="170" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">S</text>
+              <path d="M 200 220 L 224 150 L 176 150 Z" fill="url(#emagSouthPole)" />
+              <path d="M 200 220 L 224 150 L 176 150 Z" fill="none" stroke="white" strokeWidth="1" opacity="0.3" />
+              <text x="200" y="178" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">S</text>
             </g>
           </g>
 

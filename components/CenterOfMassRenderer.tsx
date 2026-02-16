@@ -1344,6 +1344,28 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
             The Universal Stability Principle
           </h2>
 
+          {/* Visual diagram comparing stable vs unstable configurations */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '16px', marginBottom: '16px' }}>
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ ...typo.small, color: colors.success, marginBottom: '8px', fontWeight: 600 }}>Stable (Weight on Fork Side)</p>
+                {renderForkVisualization({ showWeight: true, weightPos: -0.7, tiltAngle: 0, clayWeight: 60 })}
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ ...typo.small, color: colors.error, marginBottom: '8px', fontWeight: 600 }}>Unstable (Weight on Handle)</p>
+                {renderForkVisualization({ showWeight: true, weightPos: 0.7, tiltAngle: 25, clayWeight: 60 })}
+              </div>
+            </div>
+            <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', fontStyle: 'italic' }}>
+              Adding weight shifts the center of mass. Left: COM stays low (stable). Right: COM rises (unstable).
+            </p>
+          </div>
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
             <div style={{
               background: colors.bgCard,

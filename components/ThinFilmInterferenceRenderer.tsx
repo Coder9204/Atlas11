@@ -308,14 +308,14 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
     bgCard: '#1a1a24',
-    accent: '#8B5CF6',
-    accentGlow: 'rgba(139, 92, 246, 0.3)',
+    accent: '#3b82f6',
+    accentGlow: 'rgba(59, 130, 246, 0.3)',
     success: '#10B981',
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
     textSecondary: '#D1D5DB',
-    textMuted: '#9CA3AF',
+    textMuted: 'rgba(148,163,184,0.7)',
     border: '#2a2a3a',
     filmTop: '#60a5fa',
     filmBottom: '#3b82f6',
@@ -437,7 +437,7 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
     }
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${isMobile ? 340 : 500} ${isMobile ? 320 : 400}`} style={{ minHeight: '100vh', background: colors.bgCard, borderRadius: '12px', display: 'block', margin: '0 auto' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${isMobile ? 340 : 500} ${isMobile ? 320 : 400}`} style={{ background: colors.bgCard, borderRadius: '12px', display: 'block', margin: '0 auto' }}>
         <defs>
           {/* Lab background gradient */}
           <linearGradient id="tfiLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1707,7 +1707,7 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
       </div>
       {/* Scrollable content area */}
       <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', paddingTop: '48px' }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%', paddingBottom: '20px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%', paddingBottom: '100px', minHeight: '100vh' }}>
           {renderPhase()}
         </div>
       </div>

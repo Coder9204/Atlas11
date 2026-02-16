@@ -2290,6 +2290,35 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
             {score >= 7 ? 'Excellent! Buckling physics mastered!' : 'Keep studying the concepts!'}
           </p>
 
+          {/* Answer Review Section */}
+          <div className="w-full max-w-2xl mb-6 max-h-96 overflow-y-auto">
+            <h3 className="text-lg font-semibold text-white mb-3">Answer Review</h3>
+            <div className="space-y-3">
+              {testQuestions.map((q, i) => {
+                const userAnswer = testAnswers[i];
+                const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+                return (
+                  <div key={i} className="bg-slate-800/50 rounded-lg p-3 text-left">
+                    <div className="flex items-start gap-2 mb-2">
+                      <span className="text-xl flex-shrink-0">{isCorrect ? '✓' : '✗'}</span>
+                      <p className="text-sm text-slate-300 flex-1">{i + 1}. {q.question}</p>
+                    </div>
+                    <div className="ml-7 text-xs space-y-1">
+                      <p className={isCorrect ? 'text-emerald-400' : 'text-red-400'}>
+                        Your answer: {userAnswer !== null ? q.options[userAnswer].text : 'No answer'}
+                      </p>
+                      {!isCorrect && (
+                        <p className="text-emerald-400">
+                          Correct answer: {q.options.find(o => o.correct)?.text}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           {score >= 7 ? (
             <button
               onClick={() => {

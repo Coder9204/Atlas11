@@ -641,8 +641,8 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
         <text x={skaterCenterX} y={size + 35} textAnchor="middle" fill="#94a3b8" fontSize="11">Rotation Axis</text>
         <text x={skaterCenterX + 70} y={centerY - 30} textAnchor="start" fill="#EC4899" fontSize="11">Arm Extension</text>
 
-        {/* Formula label - moved to the right to avoid overlap */}
-        <text x={chartLeft + chartW + 15} y={chartTop + chartH / 2} textAnchor="start" fill="#EC4899" fontSize="11" fontWeight="600">L = I × ω</text>
+        {/* Formula label - positioned above the X-axis to avoid overlap */}
+        <text x={chartLeft + chartW / 2} y={chartTop + chartH + 45} textAnchor="middle" fill="#EC4899" fontSize="11" fontWeight="600">L = I × ω (constant)</text>
       </svg>
     );
   };
@@ -1079,7 +1079,7 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
                 padding: '16px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: currentOmega > 10 ? '#EF4444' : currentOmega > 7 ? '#F59E0B' : '#06B6D4' }}>{currentOmega.toFixed(2)}</div>
+                <div style={{ ...typo.h3, color: currentOmega > 10 ? colors.error : currentOmega > 7 ? colors.warning : colors.success }}>{currentOmega.toFixed(2)}</div>
                 <div style={{ ...typo.small, color: colors.textMuted }}>Angular Velocity (omega)</div>
               </div>
               <div style={{
@@ -2101,4 +2101,4 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
   );
 };
 
-export default MomentOfInertiaRenderer;
+export default MomentOfInert

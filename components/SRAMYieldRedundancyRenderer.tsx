@@ -1212,7 +1212,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
           step="8"
           value={arrayRows}
           onChange={(e) => { const v = Math.max(16, Math.min(64, parseInt(e.target.value) || 16)); setArrayRows(v); setArrayCols(v); }}
-          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: '#3b82f6' }}
         />
       </div>
 
@@ -1231,7 +1231,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
           step="0.1"
           value={defectDensity}
           onChange={(e) => setDefectDensity(Math.max(0.1, Math.min(3, parseFloat(e.target.value) || 0.1)))}
-          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: '#3b82f6' }}
         />
       </div>
 
@@ -1246,7 +1246,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
           step="1"
           value={spareRows}
           onChange={(e) => setSpareRows(Math.max(0, Math.min(8, parseInt(e.target.value) || 0)))}
-          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: '#3b82f6' }}
         />
       </div>
 
@@ -1261,7 +1261,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
           step="1"
           value={spareCols}
           onChange={(e) => setSpareCols(Math.max(0, Math.min(8, parseInt(e.target.value) || 0)))}
-          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
+          style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: '#3b82f6' }}
         />
       </div>
 
@@ -1297,7 +1297,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
                 step="1"
                 value={eccBits}
                 onChange={(e) => setEccBits(parseInt(e.target.value))}
-                style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.accent }}
+                style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: '#3b82f6' }}
               />
             </div>
           )}

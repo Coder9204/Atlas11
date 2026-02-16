@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GPU Occupancy - Complete 10-Phase Game
@@ -365,8 +365,8 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
     }
   }, [phase, goToPhase]);
 
-  // Calculate occupancy based on resources
-  const calculateOccupancy = useCallback(() => {
+  // Calculate occupancy based on resources (memoized for performance)
+  const occupancyData = useMemo(() => {
     const warpsPerBlock = Math.ceil(threadsPerBlock / smConfig.warpSize);
     const registersPerBlock = registersPerThread * threadsPerBlock;
     const sharedMemPerBlockBytes = sharedMemoryPerBlock * 1024;
@@ -408,12 +408,10 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
       registersUsed: maxBlocks * registersPerBlock,
       sharedMemUsed: maxBlocks * sharedMemoryPerBlock,
     };
-  }, [registersPerThread, sharedMemoryPerBlock, threadsPerBlock, smConfig]);
+  }, [registersPerThread, sharedMemoryPerBlock, threadsPerBlock, smConfig.warpSize, smConfig.maxRegisters, smConfig.maxSharedMemory, smConfig.maxThreadsPerSM, smConfig.maxBlocksPerSM, smConfig.maxWarpsPerSM]);
 
-  const occupancyData = calculateOccupancy();
-
-  // SM Visualization Component
-  const SMVisualization = () => {
+  // SM Visualization Component (memoized for performance)
+  const SMVisualization = useMemo(() => {
     const width = isMobile ? 320 : 500;
     const height = isMobile ? 300 : 350;
     const warpsPerRow = 8;
@@ -538,10 +536,10 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
         </g>
       </svg>
     );
-  };
+  }, [isMobile, occupancyData.activeWarps, occupancyData.occupancy, animationFrame, colors.bgCard, colors.accent, colors.registerColor, colors.border, colors.bgPrimary, colors.success, colors.warning, colors.error, smConfig.maxWarpsPerSM]);
 
-  // Resource Bars Component
-  const ResourceBars = () => {
+  // Resource Bars Component (memoized for performance)
+  const ResourceBars = useMemo(() => {
     const registerUsage = (occupancyData.registersUsed / smConfig.maxRegisters) * 100;
     const sharedMemUsage = (occupancyData.sharedMemUsed / smConfig.maxSharedMemory) * 100;
     const threadUsage = (occupancyData.activeWarps * 32 / smConfig.maxThreadsPerSM) * 100;
@@ -584,7 +582,7 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
         ))}
       </div>
     );
-  };
+  }, [occupancyData.registersUsed, occupancyData.sharedMemUsed, occupancyData.activeWarps, occupancyData.limitingFactor, smConfig.maxRegisters, smConfig.maxSharedMemory, smConfig.maxThreadsPerSM, colors.registerColor, colors.sharedMemColor, colors.accent, colors.textSecondary, colors.textMuted, colors.border, typo.small]);
 
   // Progress bar component
   const renderProgressBar = () => (

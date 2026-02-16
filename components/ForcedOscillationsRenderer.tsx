@@ -222,12 +222,12 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase })
   // ============================================================================
 
   const renderProgressBar = () => (
-    <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000, display: 'flex', alignItems: 'center', gap: '4px', padding: '12px 20px', background: C.bgSecondary, borderBottom: `1px solid ${C.border}` }}>
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000, display: 'flex', alignItems: 'center', gap: '4px', padding: '12px 20px', background: C.bgSecondary, borderBottom: `1px solid ${C.border}` }}>
       {PHASES.map((p, i) => (
         <button key={p} aria-label={PHASE_LABELS[p]} style={{ flex: 1, height: '8px', borderRadius: '9999px', background: i <= curIdx ? `linear-gradient(90deg, ${C.primary}, ${C.primaryLight})` : C.bgTertiary, transition: 'all 0.4s ease', border: 'none', cursor: 'pointer', padding: 0 }} onClick={() => i <= curIdx && setPhase(p)} />
       ))}
       <span style={{ marginLeft: '12px', fontSize: '13px', color: C.textSecondary, fontWeight: 600, minWidth: '40px' }}>{curIdx + 1}/{PHASES.length}</span>
-    </nav>
+    </div>
   );
 
   const renderBottomBar = (onNext: () => void, label: string = 'Next →', disabled: boolean = false) => (
@@ -324,6 +324,9 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase })
         {/* Current position indicator line */}
         <line x1={ptX} y1={plotTop} x2={ptX} y2={plotBottom} stroke={C.accent} strokeWidth="1.5" strokeDasharray="4 2" opacity="0.7" />
 
+        {/* Reference baseline point (at resonance with base damping) */}
+        <circle cx={resX} cy={plotBottom - (Math.min(calcAmplitude(1.0, omega0, baseDamping) / 10, 1) * plotH)} r={5} fill={C.textMuted} opacity="0.6" stroke={C.textSecondary} strokeWidth={1} />
+
         {/* Interactive point with glow */}
         <circle cx={ptX} cy={ptY} r="16" fill="url(#pointGlow)" />
         <circle cx={ptX} cy={ptY} r={8} fill={C.accent} filter="url(#glow)" stroke="#fff" strokeWidth={2} />
@@ -332,14 +335,14 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase })
         <line x1={plotLeft} y1={plotBottom} x2={plotRight} y2={plotBottom} stroke={C.textSecondary} strokeWidth="1.5" />
         <line x1={plotLeft} y1={plotTop} x2={plotLeft} y2={plotBottom} stroke={C.textSecondary} strokeWidth="1.5" />
 
-        {/* Axis labels */}
-        <text x={plotLeft + plotW / 2} y={plotBottom + 28} textAnchor="middle" fill={C.textSecondary} fontSize="13" fontWeight="600">Driving Frequency (ω/ω₀)</text>
-        <text x={plotLeft - 14} y={plotTop + plotH / 2} textAnchor="middle" fill={C.textSecondary} fontSize="13" fontWeight="600" transform={`rotate(-90, ${plotLeft - 14}, ${plotTop + plotH / 2})`}>Amplitude</text>
-
         {/* Tick labels */}
         {[0.5, 1.0, 1.5, 2.0].map((v, i) => (
           <text key={`tl${i}`} x={plotLeft + (v / 2.5) * plotW} y={plotBottom + 14} textAnchor="middle" fill={C.textMuted} fontSize="11">{v.toFixed(1)}</text>
         ))}
+
+        {/* Axis labels */}
+        <text x={plotLeft + plotW / 2} y={plotBottom + 35} textAnchor="middle" fill={C.textSecondary} fontSize="13" fontWeight="600">Driving Frequency (ω/ω₀)</text>
+        <text x={plotLeft - 14} y={plotTop + plotH / 2} textAnchor="middle" fill={C.textSecondary} fontSize="13" fontWeight="600" transform={`rotate(-90, ${plotLeft - 14}, ${plotTop + plotH / 2})`}>Amplitude</text>
 
         {/* Value display */}
         <g transform={`translate(${plotRight - 130}, ${plotTop + 10})`}>
@@ -455,6 +458,84 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase })
   );
 
   // ============================================================================
+  // REVIEW PHASE SVG - Resonance concept diagram
+  // ============================================================================
+  const renderReviewSVG = () => (
+    <svg width="100%" viewBox="0 0 500 280" style={{ borderRadius: '12px' }}>
+      <defs>
+        <linearGradient id="reviewBg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={C.bgSecondary} />
+          <stop offset="100%" stopColor={C.bgPrimary} />
+        </linearGradient>
+      </defs>
+      <rect width="500" height="280" fill="url(#reviewBg)" rx="12" />
+      {/* Three scenarios showing below, at, and above resonance */}
+      {[
+        { x: 80, label: 'ω < ω₀', desc: 'Low Amplitude', color: C.accent, height: 40 },
+        { x: 250, label: 'ω = ω₀', desc: 'RESONANCE!', color: C.primary, height: 120 },
+        { x: 420, label: 'ω > ω₀', desc: 'Low Amplitude', color: C.secondary, height: 35 }
+      ].map((item, idx) => (
+        <g key={idx}>
+          {/* Base */}
+          <rect x={item.x - 30} y="220" width="60" height="8" fill={C.bgTertiary} rx="2" />
+          {/* Spring/oscillator */}
+          <rect x={item.x - 12} y={220 - item.height} width="24" height={item.height} fill={item.color} opacity="0.3" rx="4" />
+          {/* Mass */}
+          <rect x={item.x - 20} y={220 - item.height - 30} width="40" height="30" fill={item.color} rx="6" />
+          {/* Arrow indicating amplitude */}
+          <line x1={item.x + 35} y1="220" x2={item.x + 35} y2={220 - item.height - 15} stroke={item.color} strokeWidth="2" strokeDasharray="3 2" />
+          <text x={item.x + 45} y={220 - item.height / 2} fill={item.color} fontSize="11" fontWeight="600">A</text>
+          {/* Labels */}
+          <text x={item.x} y="250" textAnchor="middle" fill={C.textPrimary} fontSize="13" fontWeight="bold">{item.label}</text>
+          <text x={item.x} y="268" textAnchor="middle" fill={item.color} fontSize="11" fontWeight="600">{item.desc}</text>
+        </g>
+      ))}
+      {/* Title */}
+      <text x="250" y="25" textAnchor="middle" fill={C.textPrimary} fontSize="14" fontWeight="bold">Amplitude Response to Driving Frequency</text>
+    </svg>
+  );
+
+  // ============================================================================
+  // TWIST REVIEW SVG - Damping comparison diagram
+  // ============================================================================
+  const renderTwistReviewSVG = () => (
+    <svg width="100%" viewBox="0 0 500 280" style={{ borderRadius: '12px' }}>
+      <defs>
+        <linearGradient id="twistReviewBg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={C.bgSecondary} />
+          <stop offset="100%" stopColor={C.bgPrimary} />
+        </linearGradient>
+      </defs>
+      <rect width="500" height="280" fill="url(#twistReviewBg)" rx="12" />
+      {/* Two damping scenarios */}
+      {[
+        { x: 140, label: 'Low Damping', desc: 'Sharp Peak (Dangerous!)', color: C.danger, curve: [0, 20, 50, 100, 50, 20, 0] },
+        { x: 360, label: 'High Damping', desc: 'Broad Peak (Safe)', color: C.success, curve: [10, 25, 35, 40, 35, 25, 10] }
+      ].map((item, idx) => {
+        const baseY = 210;
+        const points = item.curve.map((h, i) => `${item.x - 60 + i * 20},${baseY - h}`).join(' ');
+        return (
+          <g key={idx}>
+            {/* Resonance curve */}
+            <polyline points={points} fill="none" stroke={item.color} strokeWidth="2.5" />
+            {/* Fill under curve */}
+            <polygon points={`${points} ${item.x + 60},${baseY} ${item.x - 60},${baseY}`} fill={item.color} opacity="0.15" />
+            {/* Peak marker */}
+            <circle cx={item.x} cy={baseY - item.curve[3]} r={6} fill={item.color} stroke="#fff" strokeWidth={2} />
+            {/* Base line */}
+            <line x1={item.x - 65} y1={baseY} x2={item.x + 65} y2={baseY} stroke={C.border} strokeWidth="2" />
+            {/* Labels */}
+            <text x={item.x} y="245" textAnchor="middle" fill={C.textPrimary} fontSize="13" fontWeight="bold">{item.label}</text>
+            <text x={item.x} y="263" textAnchor="middle" fill={item.color} fontSize="11" fontWeight="600">{item.desc}</text>
+          </g>
+        );
+      })}
+      {/* Title */}
+      <text x="250" y="25" textAnchor="middle" fill={C.textPrimary} fontSize="14" fontWeight="bold">Effect of Damping on Resonance Peak</text>
+    </svg>
+  );
+
+  // ============================================================================
   // TWIST PLAY SVG - Damping effect
   // ============================================================================
   const renderTwistPlaySVG = () => {
@@ -545,25 +626,26 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase })
 
   const renderHook = () => (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: C.bgPrimary }}>
+      {renderProgressBar()}
       <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '48px 24px 100px' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 14px', background: `${C.primary}15`, border: `1px solid ${C.primary}30`, borderRadius: '9999px', marginBottom: '24px' }}>
           <span style={{ width: '8px', height: '8px', background: C.primary, borderRadius: '50%' }} />
           <span style={{ fontSize: '14px', fontWeight: 600, color: C.primary }}>WAVE PHYSICS</span>
         </div>
 
-        <h1 style={{ fontSize: '40px', fontWeight: 800, background: `linear-gradient(135deg, ${C.textPrimary}, ${C.primaryLight}, ${C.accent})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '16px', letterSpacing: '-1px' }}>
+        <h1 style={{ fontSize: '40px', fontWeight: 800, color: '#fff', marginBottom: '16px', letterSpacing: '-1px' }}>
           How Do Opera Singers Break Glass?
         </h1>
 
-        <p style={{ fontSize: '18px', color: C.textSecondary, maxWidth: '500px', marginBottom: '32px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: '18px', color: C.textSecondary, fontWeight: 400, maxWidth: '500px', marginBottom: '32px', lineHeight: 1.6 }}>
           Discover the power of resonance — when frequency matching creates extraordinary amplification
         </p>
 
         <div style={{ background: `linear-gradient(135deg, ${C.bgSecondary}, ${C.bgTertiary})`, borderRadius: '20px', padding: '24px', maxWidth: '600px', width: '100%', border: `1px solid ${C.border}`, boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}>
-          <p style={{ fontSize: '16px', color: C.textPrimary, lineHeight: 1.7, marginBottom: '12px' }}>
+          <p style={{ fontSize: '16px', color: C.textPrimary, lineHeight: 1.7, marginBottom: '12px', fontWeight: 400 }}>
             A trained opera singer can shatter a wine glass using only their voice! What makes one specific pitch so destructive?
           </p>
-          <p style={{ fontSize: '14px', color: C.textSecondary, lineHeight: 1.6 }}>
+          <p style={{ fontSize: '14px', color: C.textSecondary, lineHeight: 1.6, fontWeight: 400 }}>
             The answer lies in <strong style={{ color: C.primary }}>resonance</strong> — a phenomenon that shapes everything from bridges to radios to musical instruments.
           </p>
         </div>
@@ -572,12 +654,13 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase })
           Discover Resonance →
         </button>
 
-        <div style={{ display: 'flex', gap: '24px', marginTop: '24px', color: C.textMuted, fontSize: '14px' }}>
+        <div style={{ display: 'flex', gap: '24px', marginTop: '24px', color: C.textMuted, fontSize: '14px', fontWeight: 400 }}>
           <span>Interactive Lab</span>
           <span>Real-World Examples</span>
           <span>Knowledge Test</span>
         </div>
       </div>
+      {renderBottomBar(() => goTo('predict'), 'Next →')}
     </div>
   );
 
@@ -664,6 +747,20 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase })
         </p>
       </div>
 
+      {/* Before-after comparison */}
+      <div style={{ display: 'flex', flexDirection: 'row', gap: '12px', marginBottom: '16px' }}>
+        <div style={{ flex: 1, padding: '16px', background: C.bgTertiary, borderRadius: '12px', border: `1px solid ${C.border}` }}>
+          <h4 style={{ fontSize: '14px', color: C.textMuted, marginBottom: '8px', fontWeight: 700 }}>Initial State (ω = 0.5)</h4>
+          <div style={{ fontSize: '24px', fontWeight: 800, color: C.accent }}>{calcAmplitude(0.5, omega0, baseDamping).toFixed(2)}×</div>
+          <p style={{ fontSize: '12px', color: C.textSecondary, margin: '4px 0 0' }}>Below resonance</p>
+        </div>
+        <div style={{ flex: 1, padding: '16px', background: `${C.primary}15`, borderRadius: '12px', border: `1px solid ${C.primary}40` }}>
+          <h4 style={{ fontSize: '14px', color: C.primary, marginBottom: '8px', fontWeight: 700 }}>Current State (ω = {drivingFreq.toFixed(2)})</h4>
+          <div style={{ fontSize: '24px', fontWeight: 800, color: C.primary }}>{amplitude.toFixed(2)}×</div>
+          <p style={{ fontSize: '12px', color: C.textSecondary, margin: '4px 0 0' }}>{freqLabel(drivingFreq)}</p>
+        </div>
+      </div>
+
       {/* Physics explanation cards */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {[
@@ -687,6 +784,10 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase })
       <p style={{ fontSize: '15px', color: C.textSecondary, lineHeight: 1.7, marginBottom: '20px' }}>
         As you observed in the experiment, the amplitude peaked dramatically when the driving frequency matched the natural frequency. This confirms your prediction — resonance occurs because energy transfer is maximized when forces are applied in sync with the system&apos;s natural motion.
       </p>
+
+      <div style={{ background: C.bgSecondary, borderRadius: '16px', padding: '16px', marginBottom: '20px', border: `1px solid ${C.border}` }}>
+        {renderReviewSVG()}
+      </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
         <div style={{ padding: '16px', background: `${C.primary}12`, borderRadius: '12px', border: `1px solid ${C.primary}30` }}>
@@ -809,6 +910,10 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase })
   const renderTwistReview = () => phaseWrap(
     <>
       <h2 style={{ fontSize: '22px', fontWeight: 800, color: C.textPrimary, marginBottom: '16px' }}>Key Discovery: Hidden Periodic Forces</h2>
+
+      <div style={{ background: C.bgSecondary, borderRadius: '16px', padding: '16px', marginBottom: '20px', border: `1px solid ${C.border}` }}>
+        {renderTwistReviewSVG()}
+      </div>
 
       <div style={{ padding: '20px', background: `${C.secondary}15`, borderRadius: '16px', border: `1px solid ${C.secondary}40`, marginBottom: '20px' }}>
         <h3 style={{ fontSize: '20px', color: C.secondary, marginBottom: '16px', fontWeight: 700 }}>Even Steady Forces Can Cause Resonance!</h3>
@@ -953,6 +1058,21 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase })
           <div style={{ padding: '24px', background: score >= 7 ? `${C.success}15` : `${C.accent}15`, borderRadius: '16px', border: `1px solid ${score >= 7 ? C.success : C.accent}40`, textAlign: 'center', marginBottom: '20px' }}>
             <div style={{ fontSize: '48px', fontWeight: 800, color: score >= 7 ? C.success : C.accent }}>{score}/10</div>
             <p style={{ fontSize: '16px', color: C.textPrimary, margin: '8px 0 0', fontWeight: 600 }}>You scored {score} out of 10 correct</p>
+          </div>
+
+          <div style={{ marginBottom: '16px', padding: '16px', background: C.bgSecondary, borderRadius: '12px', border: `1px solid ${C.border}` }}>
+            <h3 style={{ fontSize: '16px', color: C.textPrimary, marginBottom: '12px', fontWeight: 700 }}>Answer Review</h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
+              {testQuestions.map((q, idx) => {
+                const isCorrect = testAnswers[idx] !== null && q.options[testAnswers[idx] as number]?.correct;
+                return (
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 12px', background: isCorrect ? `${C.success}15` : `${C.danger}15`, borderRadius: '8px', border: `1px solid ${isCorrect ? C.success : C.danger}40` }}>
+                    <span style={{ fontSize: '16px', color: isCorrect ? C.success : C.danger, fontWeight: 700 }}>{isCorrect ? '✓' : '✗'}</span>
+                    <span style={{ fontSize: '13px', color: C.textPrimary, fontWeight: 600 }}>Q{idx + 1}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '400px', overflowY: 'auto' }}>
@@ -1139,10 +1259,4 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase })
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: C.bgPrimary, color: C.textPrimary, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
-      {renderPhase()}
-    </div>
-  );
-};
-
-export default ForcedOscillationsRenderer;
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: C.bgPrimary, color: C.textPrimary, fontFamily: '-apple
