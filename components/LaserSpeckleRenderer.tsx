@@ -1312,6 +1312,22 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
 
       <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '24px', marginBottom: '24px', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
         {renderSpeckleVisualization()}
+
+        {/* Real-time calculated values display */}
+        <div style={{ display: 'flex', gap: '12px', marginTop: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <div style={{ background: 'rgba(34, 197, 94, 0.1)', borderRadius: '8px', padding: '8px 12px', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
+            <span style={{ color: '#22c55e', fontWeight: 600, fontSize: '12px' }}>Speckle Contrast: </span>
+            <span style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: 700 }}>{(coherenceLength / 100).toFixed(2)}</span>
+          </div>
+          <div style={{ background: 'rgba(245, 158, 11, 0.1)', borderRadius: '8px', padding: '8px 12px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+            <span style={{ color: '#f59e0b', fontWeight: 600, fontSize: '12px' }}>Scatter Points: </span>
+            <span style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: 700 }}>{50 + Math.floor(surfaceRoughness * 0.5)}</span>
+          </div>
+          <div style={{ background: 'rgba(139, 92, 246, 0.1)', borderRadius: '8px', padding: '8px 12px', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
+            <span style={{ color: '#8b5cf6', fontWeight: 600, fontSize: '12px' }}>Pattern Shift: </span>
+            <span style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: 700 }}>{Math.abs(viewpointOffset)}°</span>
+          </div>
+        </div>
       </div>
 
       {/* Controls */}
@@ -1375,15 +1391,29 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
       {/* Key insight */}
       <div style={{ background: 'rgba(34, 197, 94, 0.1)', borderRadius: '12px', padding: '16px', maxWidth: '400px', border: '1px solid rgba(34, 197, 94, 0.3)', marginBottom: '16px' }}>
         <p style={{ color: '#22c55e', fontWeight: 600, marginBottom: '8px' }}>Key Insight</p>
-        <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
+        <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: '1.5' }}>
           Higher coherence = stronger speckle contrast. The pattern shifts as you change viewing angle because you're sampling different parts of the 3D interference field.
+        </p>
+      </div>
+
+      {/* Formula */}
+      <div style={{ background: 'rgba(59, 130, 246, 0.1)', borderRadius: '12px', padding: '16px', maxWidth: '400px', border: '1px solid rgba(59, 130, 246, 0.3)', marginBottom: '16px', textAlign: 'center' }}>
+        <p style={{ color: '#60a5fa', fontWeight: 600, marginBottom: '8px', fontSize: '14px' }}>Speckle Contrast Formula</p>
+        <div style={{ fontFamily: 'monospace', fontSize: '18px', color: 'white', marginBottom: '8px', lineHeight: '1.6' }}>
+          Contrast = σ/⟨I⟩
+        </div>
+        <div style={{ fontFamily: 'monospace', fontSize: '16px', color: '#94a3b8', marginBottom: '8px', lineHeight: '1.6' }}>
+          Speckle Size ∝ λ/θ
+        </div>
+        <p style={{ color: '#e2e8f0', fontSize: '13px', lineHeight: '1.5' }}>
+          σ = intensity std dev, ⟨I⟩ = mean intensity, λ = wavelength, θ = aperture angle
         </p>
       </div>
 
       {/* Real-world relevance */}
       <div style={{ background: 'rgba(251, 191, 36, 0.1)', borderRadius: '12px', padding: '16px', maxWidth: '400px', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
         <p style={{ color: '#fbbf24', fontWeight: 600, marginBottom: '8px' }}>Real-World Relevance</p>
-        <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
+        <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: '1.5' }}>
           Laser speckle is used in medical imaging to measure blood flow non-invasively, in materials science to detect surface roughness at nanometer scales, and in structural engineering to measure tiny deformations in bridges and buildings.
         </p>
       </div>

@@ -1945,7 +1945,13 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
             </div>
             <p style={{ fontSize: '16px', color: '#e2e8f0', marginBottom: '12px', fontStyle: 'italic', fontWeight: '600' }}>{currentApp.tagline}</p>
             <p style={{ fontSize: '16px', color: '#e2e8f0', marginBottom: '12px' }}>{currentApp.description}</p>
-            <p style={{ fontSize: '14px', color: '#e2e8f0', marginBottom: '16px' }}>{currentApp.howItWorks}</p>
+            <p style={{ fontSize: '14px', color: '#e2e8f0', marginBottom: '8px' }}>{currentApp.howItWorks}</p>
+            <p style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '16px' }}>{currentApp.connection}</p>
+
+            {/* Key Stats Summary */}
+            <div style={{ background: 'rgba(15, 23, 42, 0.5)', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px', color: '#e2e8f0' }}>
+              <strong>Key Metrics:</strong> {currentApp.stats.map((s, i) => s.value).join(' • ')}
+            </div>
 
             {/* Statistics */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px' }}>

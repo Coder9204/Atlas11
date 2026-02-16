@@ -620,10 +620,10 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
           <rect width={width} height={height} fill="url(#pasrLabGrid)" />
 
           {/* Title and technology label */}
-          <text x={width / 2} y="22" fill={colors.accent} fontSize="16" textAnchor="middle" fontWeight="bold" letterSpacing="0.5">
+          <text x={width / 2} y="18" fill={colors.accent} fontSize="16" textAnchor="middle" fontWeight="bold" letterSpacing="0.5">
             {passivationPresets[passivationType].name}
           </text>
-          <text x={width / 2} y="40" fill={colors.textMuted} fontSize="11" textAnchor="middle">
+          <text x={width / 2} y="34" fill={colors.textMuted} fontSize="11" textAnchor="middle">
             SRV: {output.effectiveSRV} cm/s
           </text>
 
@@ -647,7 +647,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
               <text x="450" y={passivationType === 'HJT' ? 78 : 75} fill={
                 passivationType === 'PERC' ? '#10b981' :
                 passivationType === 'TOPCon' ? '#3b82f6' : '#a855f7'
-              } fontSize="8" textAnchor="end" fontWeight="bold">
+              } fontSize="11" textAnchor="end" fontWeight="bold">
                 {passivationType === 'PERC' ? 'Al2O3' : passivationType === 'TOPCon' ? 'SiO2/poly-Si' : 'a-Si:H'}
               </text>
             </g>
@@ -671,7 +671,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
           />
 
           {/* Silicon wafer label */}
-          <text x="75" y="175" fill={colors.textMuted} fontSize="9" fontWeight="bold" opacity="0.6">
+          <text x="75" y="175" fill={colors.textMuted} fontSize="11" fontWeight="bold" opacity="0.6">
             c-Si Wafer
           </text>
 
@@ -705,7 +705,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
           {topDefects.map((d, i) => (
             <g key={`top-${i}`} filter="url(#pasrDefectGlow)">
               <circle cx={d.x} cy={d.y} r="8" fill="url(#pasrDefectTrap)" />
-              <text x={d.x} y={d.y + 4} textAnchor="middle" fontSize="8" fill="#fff" fontWeight="bold">X</text>
+              <text x={d.x} y={d.y + 4} textAnchor="middle" fontSize="11" fill="#fff" fontWeight="bold">X</text>
               {/* Dangling bond indicator lines */}
               <line x1={d.x} y1={d.y - 10} x2={d.x} y2={d.y - 18} stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" opacity="0.7" />
             </g>
@@ -713,14 +713,14 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
           {bottomDefects.map((d, i) => (
             <g key={`bottom-${i}`} filter="url(#pasrDefectGlow)">
               <circle cx={d.x} cy={d.y} r="8" fill="url(#pasrDefectTrap)" />
-              <text x={d.x} y={d.y + 4} textAnchor="middle" fontSize="8" fill="#fff" fontWeight="bold">X</text>
+              <text x={d.x} y={d.y + 4} textAnchor="middle" fontSize="11" fill="#fff" fontWeight="bold">X</text>
               <line x1={d.x} y1={d.y + 10} x2={d.x} y2={d.y + 18} stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" opacity="0.7" />
             </g>
           ))}
 
           {/* Defect label */}
           {passivationType === 'none' && topDefects.length > 0 && (
-            <text x="30" y="85" fill="#f87171" fontSize="8" fontWeight="bold">
+            <text x="30" y="85" fill="#f87171" fontSize="11" fontWeight="bold">
               Dangling Bonds
             </text>
           )}
@@ -774,58 +774,32 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
             </g>
           )}
 
-          {/* === PREMIUM LEGEND === */}
-          <g transform="translate(30, 340)">
-            <rect x="0" y="0" width="220" height="80" rx="6" fill="rgba(15, 23, 42, 0.9)" stroke={colors.border} strokeWidth="0.5" />
+          {/* === LEGEND & OUTPUT (BOTTOM ROW) === */}
+          {/* Legend row */}
+          <text x="40" y="420" fill={colors.textSecondary} fontSize="11" fontWeight="600">e-</text>
+          <circle cx="28" cy="417" r="4" fill="#22d3ee" />
 
-            {/* Electron */}
-            <circle cx="20" cy="18" r="6" fill="url(#pasrElectronGlow)" />
-            <circle cx="20" cy="18" r="3" fill="#22d3ee" />
-            <text x="34" y="22" fill={colors.textSecondary} fontSize="11" fontWeight="600">Electron (e-)</text>
+          <text x="90" y="420" fill={colors.textSecondary} fontSize="11" fontWeight="600">h+</text>
+          <circle cx="78" cy="417" r="4" fill="#f472b6" />
 
-            {/* Hole */}
-            <circle cx="120" cy="18" r="6" fill="url(#pasrHoleGlow)" />
-            <circle cx="120" cy="18" r="3" fill="#f472b6" />
-            <text x="134" y="22" fill={colors.textSecondary} fontSize="11" fontWeight="600">Hole (h+)</text>
+          <text x="140" y="420" fill={colors.textSecondary} fontSize="11" fontWeight="600">Defect</text>
+          <circle cx="125" cy="417" r="4" fill="#ef4444" />
 
-            {/* Defect */}
-            <circle cx="20" cy="50" r="6" fill="url(#pasrDefectTrap)" />
-            <text x="20" y="53" textAnchor="middle" fontSize="8" fill="#fff" fontWeight="bold">X</text>
-            <text x="34" y="54" fill={colors.textSecondary} fontSize="11" fontWeight="600">Surface Defect</text>
+          {/* Output row */}
+          <text x="230" y="415" fill={colors.textMuted} fontSize="11">Voc:</text>
+          <text x="268" y="415" fill={colors.textPrimary} fontSize="11" fontWeight="bold">
+            {output.voc.toFixed(3)} V
+          </text>
 
-            {/* Recombination */}
-            <circle cx="120" cy="50" r="6" fill="url(#pasrRecombFlash)" />
-            <text x="134" y="54" fill={colors.textSecondary} fontSize="11" fontWeight="600">Recombination</text>
-          </g>
+          <text x="340" y="415" fill={colors.textMuted} fontSize="11">Eff:</text>
+          <text x="372" y="415" fill={colors.success} fontSize="11" fontWeight="bold">
+            {output.efficiency.toFixed(1)}%
+          </text>
 
-          {/* === PREMIUM OUTPUT PANEL === */}
-          <g transform="translate(260, 340)">
-            <rect x="0" y="0" width="210" height="105" rx="8" fill="url(#pasrOutputPanel)" stroke={colors.accent} strokeWidth="1.5" />
-
-            {/* Panel header */}
-            <rect x="0" y="0" width="210" height="28" rx="8" fill="rgba(245, 158, 11, 0.15)" />
-            <text x="105" y="19" fill={colors.accent} fontSize="12" textAnchor="middle" fontWeight="bold" letterSpacing="1">
-              CELL OUTPUT
-            </text>
-
-            {/* Voc */}
-            <text x="16" y="50" fill={colors.textMuted} fontSize="11">Voc</text>
-            <text x="194" y="50" fill={colors.textPrimary} fontSize="12" textAnchor="end" fontWeight="bold">
-              {output.voc.toFixed(3)} V
-            </text>
-
-            {/* Efficiency */}
-            <text x="16" y="72" fill={colors.textMuted} fontSize="11">Efficiency</text>
-            <text x="194" y="72" fill={colors.success} fontSize="12" textAnchor="end" fontWeight="bold">
-              {output.efficiency.toFixed(1)}%
-            </text>
-
-            {/* Lifetime */}
-            <text x="16" y="94" fill={colors.textMuted} fontSize="11">Lifetime</text>
-            <text x="194" y="94" fill={colors.textSecondary} fontSize="12" textAnchor="end" fontWeight="600">
-              {output.effectiveLifetime} us
-            </text>
-          </g>
+          <text x="230" y="435" fill={colors.textMuted} fontSize="11">Lifetime:</text>
+          <text x="300" y="435" fill={colors.textSecondary} fontSize="11" fontWeight="600">
+            {output.effectiveLifetime} us
+          </text>
 
           {/* === FIELD EFFECT ARROWS (for passivation) === */}
           {passivationType !== 'none' && (
@@ -863,7 +837,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
               <circle cx={width - 25} cy="25" r="6" fill={colors.success}>
                 <animate attributeName="opacity" values="1;0.4;1" dur="1s" repeatCount="indefinite" />
               </circle>
-              <text x={width - 35} y="28" fill={colors.success} fontSize="8" textAnchor="end" fontWeight="bold">ACTIVE</text>
+              <text x={width - 35} y="28" fill={colors.success} fontSize="11" textAnchor="end" fontWeight="bold">ACTIVE</text>
             </g>
           )}
         </svg>

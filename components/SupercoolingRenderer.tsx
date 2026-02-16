@@ -630,17 +630,17 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
         {/* Solid region */}
         <path d="M 55 35 L 55 175 L 115 175 L 115 85 L 55 35" fill="url(#scoolSolidPhase)" />
         <text x="75" y="125" fontSize="12" fill="#7dd3fc" fontWeight="bold" opacity="0.9">SOLID</text>
-        <text x="75" y="138" fontSize="8" fill="#7dd3fc" opacity="0.6">(Ice)</text>
+        <text x="75" y="138" fontSize="12" fill="#7dd3fc" opacity="0.6">(Ice)</text>
 
         {/* Liquid region */}
         <path d="M 115 85 L 115 175 L 205 175 L 205 55 L 115 85" fill="url(#scoolLiquidPhase)" />
         <text x="155" y="105" fontSize="12" fill="#60a5fa" fontWeight="bold" opacity="0.9">LIQUID</text>
-        <text x="155" y="118" fontSize="8" fill="#60a5fa" opacity="0.6">(Water)</text>
+        <text x="155" y="118" fontSize="12" fill="#60a5fa" opacity="0.6">(Water)</text>
 
         {/* Gas region */}
         <path d="M 205 55 L 205 175 L 290 175 L 290 35 L 205 55" fill="url(#scoolGasPhase)" />
         <text x="245" y="105" fontSize="12" fill="#4ade80" fontWeight="bold" opacity="0.9">GAS</text>
-        <text x="245" y="118" fontSize="8" fill="#4ade80" opacity="0.6">(Vapor)</text>
+        <text x="245" y="118" fontSize="12" fill="#4ade80" opacity="0.6">(Vapor)</text>
 
         {/* Metastable supercooled region with highlight */}
         <g filter="url(#scoolMetastableGlow)">
@@ -652,7 +652,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
             strokeDasharray="6,3"
           />
         </g>
-        <text x="85" y="162" fontSize="8" fill="#22d3ee" fontWeight="bold">SUPERCOOLED</text>
+        <text x="85" y="162" fontSize="12" fill="#22d3ee" fontWeight="bold">SUPERCOOLED</text>
         <text x="85" y="172" fontSize="7" fill="#06b6d4" opacity="0.8">(Metastable)</text>
 
         {/* === PHASE BOUNDARIES === */}
@@ -664,7 +664,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
 
         {/* Triple point indicator */}
         <circle cx="115" cy="85" r="5" fill="#f97316" stroke="#fbbf24" strokeWidth="2" />
-        <text x="130" y="82" fontSize="8" fill="#f97316" fontWeight="bold">Triple Point</text>
+        <text x="130" y="82" fontSize="12" fill="#f97316" fontWeight="bold">Triple Point</text>
 
         {/* === AXES === */}
         {/* X-axis (Temperature) */}
@@ -683,7 +683,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
           return (
             <g key={temp}>
               <line x1={x} y1="180" x2={x} y2="185" stroke={temp === 0 ? '#ef4444' : '#64748b'} strokeWidth={temp === 0 ? 2 : 1} />
-              <text x={x} y="195" fontSize="8" fill={temp === 0 ? '#ef4444' : '#94a3b8'} textAnchor="middle">
+              <text x={x} y="195" fontSize="12" fill={temp === 0 ? '#ef4444' : '#94a3b8'} textAnchor="middle">
                 {temp}°C
               </text>
             </g>
@@ -738,7 +738,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
         {/* === LEGEND === */}
         <g transform="translate(220, 30)">
           <rect x="0" y="0" width="90" height="55" rx="6" fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth="1" />
-          <text x="45" y="14" fontSize="8" fill="#94a3b8" textAnchor="middle" fontWeight="bold">LEGEND</text>
+          <text x="45" y="14" fontSize="12" fill="#94a3b8" textAnchor="middle" fontWeight="bold">LEGEND</text>
 
           <rect x="8" y="22" width="10" height="10" rx="2" fill="url(#scoolMetastableRegion)" stroke="#22d3ee" strokeWidth="1" />
           <text x="22" y="30" fontSize="7" fill="#94a3b8">Metastable Zone</text>
@@ -1123,7 +1123,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
             return (
               <g key={temp}>
                 <line x1="-18" y1={y} x2="-12" y2={y} stroke={temp === 0 ? '#ef4444' : '#64748b'} strokeWidth={temp === 0 ? 2 : 1} />
-                <text x="-22" y={y + 3} textAnchor="end" fontSize="8" fill={temp === 0 ? '#ef4444' : '#94a3b8'}>
+                <text x="-22" y={y + 3} textAnchor="end" fontSize="12" fill={temp === 0 ? '#ef4444' : '#94a3b8'}>
                   {temp}
                 </text>
               </g>
@@ -1636,7 +1636,8 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
             onClick={handleBack}
             disabled={isFirstPhase}
             style={{
-              padding: '10px 20px',
+              padding: '12px 24px',
+              minHeight: '44px',
               borderRadius: '8px',
               border: '1px solid rgba(148, 163, 184, 0.3)',
               background: isFirstPhase ? 'transparent' : 'rgba(30, 41, 59, 0.8)',
@@ -1659,7 +1660,8 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
             onClick={handleNext}
             disabled={!canProceed || isLastPhase}
             style={{
-              padding: '10px 24px',
+              padding: '12px 28px',
+              minHeight: '44px',
               borderRadius: '8px',
               border: 'none',
               background: canProceed && !isLastPhase ? 'linear-gradient(to right, #06b6d4, #0891b2)' : 'rgba(100, 116, 139, 0.3)',
@@ -1772,9 +1774,42 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
       <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}>Make Your Prediction</h2>
+
+          {/* Static visualization */}
+          <svg viewBox="0 0 320 240" style={{ width: '100%', maxWidth: '320px', marginBottom: '20px' }}>
+            <defs>
+              <linearGradient id="predictWater" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#0284c7" stopOpacity="0.9" />
+              </linearGradient>
+            </defs>
+
+            {/* Container */}
+            <rect x="80" y="60" width="160" height="140" rx="8" fill="rgba(30, 41, 59, 0.5)" stroke="#64748b" strokeWidth="2" />
+
+            {/* Supercooled water */}
+            <rect x="85" y="80" width="150" height="110" rx="4" fill="url(#predictWater)" />
+
+            {/* Temperature label */}
+            <text x="160" y="135" textAnchor="middle" fontSize="24" fontWeight="bold" fill="white">-5°C</text>
+            <text x="160" y="155" textAnchor="middle" fontSize="14" fill="#60a5fa">Supercooled Liquid</text>
+
+            {/* Ice crystal dropping */}
+            <g>
+              <circle cx="160" cy="50" r="8" fill="#bae6fd" stroke="#38bdf8" strokeWidth="2" />
+              <text x="160" y="40" textAnchor="middle" fontSize="12" fill="#38bdf8" fontWeight="bold">❄️</text>
+            </g>
+
+            {/* Arrow */}
+            <line x1="160" y1="58" x2="160" y2="75" stroke="#f59e0b" strokeWidth="3" markerEnd="url(#arrowhead)" />
+
+            {/* Labels */}
+            <text x="160" y="225" textAnchor="middle" fontSize="13" fill="#94a3b8">Ice crystal added to supercooled water</text>
+          </svg>
+
           <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '24px', maxWidth: '640px', marginBottom: '24px' }}>
             <p style={{ fontSize: '18px', color: '#cbd5e1', marginBottom: '16px' }}>
-              You carefully cool very pure water below 0C. It stays liquid! Now you drop a tiny ice crystal into it.
+              You carefully cool very pure water below 0°C. It stays liquid! Now you drop a tiny ice crystal into it.
             </p>
             <p style={{ fontSize: '18px', color: '#06b6d4', fontWeight: '500' }}>
               What happens?
@@ -1832,7 +1867,16 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
       <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '16px' }}>Supercooling Lab</h2>
-          <p style={{ color: '#94a3b8', marginBottom: '16px' }}>Cool the water below 0C, then add a seed crystal!</p>
+          <p style={{ color: '#94a3b8', marginBottom: '8px', fontSize: '16px', textAlign: 'center', maxWidth: '600px' }}>
+            This visualization shows water being cooled below its freezing point. Watch what happens when you add a nucleation site!
+          </p>
+          <div style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', maxWidth: '600px' }}>
+            <p style={{ color: '#60a5fa', fontSize: '14px', lineHeight: 1.5, margin: 0 }}>
+              <strong>How it works:</strong> Cool water below 0°C to enter the <strong>metastable</strong> supercooled state.
+              Add an ice seed to trigger <strong>nucleation</strong> - instant crystallization releases <strong>latent heat</strong> (334 J/g).
+              This matters for organ preservation, ice cream texture, and weather phenomena like freezing rain.
+            </p>
+          </div>
 
           <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flexWrap: 'wrap', justifyContent: 'center' }}>
             {/* Water container */}
@@ -1851,7 +1895,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
                   value={temperature}
                   onChange={(e) => handleTemperatureChange(parseInt(e.target.value))}
                   disabled={waterState === 'crystallizing' || waterState === 'frozen'}
-                  style={{ width: '100%', accentColor: '#06b6d4' }}
+                  style={{ width: '100%', accentColor: '#06b6d4', touchAction: 'pan-y' }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b' }}>
                   <span>-40C</span>
@@ -1982,10 +2026,33 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
       <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '24px' }}>The Hand Warmer Twist</h2>
+
+          {/* Static hand warmer visualization */}
+          <svg viewBox="0 0 320 200" style={{ width: '100%', maxWidth: '320px', marginBottom: '20px' }}>
+            <defs>
+              <linearGradient id="twistSolution" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.7" />
+                <stop offset="100%" stopColor="#2563eb" stopOpacity="0.8" />
+              </linearGradient>
+            </defs>
+
+            {/* Hand warmer pouch */}
+            <rect x="60" y="40" width="200" height="120" rx="12" fill="rgba(30, 41, 59, 0.6)" stroke="#64748b" strokeWidth="2" />
+            <rect x="70" y="50" width="180" height="100" rx="8" fill="url(#twistSolution)" />
+
+            {/* Metal disc */}
+            <circle cx="160" cy="100" r="20" fill="#94a3b8" stroke="#cbd5e1" strokeWidth="2" />
+            <text x="160" y="106" textAnchor="middle" fontSize="14" fill="#1e293b" fontWeight="bold">CLICK</text>
+
+            {/* Temp label */}
+            <text x="160" y="180" textAnchor="middle" fontSize="16" fill="#60a5fa">25°C → 54°C</text>
+            <text x="160" y="195" textAnchor="middle" fontSize="12" fill="#94a3b8">Supersaturated Solution</text>
+          </svg>
+
           <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '24px', maxWidth: '640px', marginBottom: '24px' }}>
             <p style={{ fontSize: '18px', color: '#cbd5e1', marginBottom: '16px' }}>
               Reusable hand warmers contain sodium acetate solution that can be supercooled (actually "supersaturated").
-              When you click the metal disc, crystals form instantly and the pack heats to 54C!
+              When you click the metal disc, crystals form instantly and the pack heats to 54°C!
             </p>
             <p style={{ fontSize: '18px', color: '#f59e0b', fontWeight: '500' }}>
               Where does the heat come from?
@@ -2283,7 +2350,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', width: '100%', maxWidth: '640px' }}>
             <h2 style={{ color: 'white', fontSize: '20px' }}>Knowledge Test</h2>
-            <span style={{ color: '#94a3b8' }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+            <span style={{ color: '#06b6d4', fontSize: '16px', fontWeight: '600' }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
           </div>
 
           <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', width: '100%', maxWidth: '640px' }}>

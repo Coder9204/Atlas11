@@ -545,11 +545,8 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
           {/* === TRUE WHEEL SECTION (Left) === */}
           <g transform={`translate(160, 185)`}>
             {/* Section label */}
-            <text x={0} y={-wheelRadius - 32} textAnchor="middle" fill={colors.textPrimary} fontSize={13} fontWeight="bold">
-              ACTUAL
-            </text>
-            <text x={0} y={-wheelRadius - 20} textAnchor="middle" fill={colors.textSecondary} fontSize={11}>
-              True Motion
+            <text x={0} y={-wheelRadius - 25} textAnchor="middle" fill={colors.textPrimary} fontSize={12} fontWeight="bold">
+              TRUE WHEEL
             </text>
 
             {/* Outer tire */}
@@ -604,9 +601,9 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
             </g>
 
             {/* Speed display */}
-            <rect x={-50} y={wheelRadius + 28} width={100} height={24} rx={6} fill="rgba(16, 185, 129, 0.2)" stroke={colors.success} strokeWidth={1} />
-            <text x={0} y={wheelRadius + 45} textAnchor="middle" fill={colors.success} fontSize={12} fontWeight="bold">
-              {rotationSpeed.toFixed(1)} rot/s
+            <rect x={-45} y={wheelRadius + 25} width={90} height={22} rx={6} fill="rgba(16, 185, 129, 0.2)" stroke={colors.success} strokeWidth={1} />
+            <text x={0} y={wheelRadius + 40} textAnchor="middle" fill={colors.success} fontSize={11} fontWeight="bold">
+              {rotationSpeed.toFixed(1)} r/s
             </text>
 
             {/* Interactive marker - reference spoke */}
@@ -677,11 +674,8 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
           {/* === SAMPLED/APPARENT WHEEL (Right) === */}
           <g transform={`translate(540, 185)`}>
             {/* Section label */}
-            <text x={0} y={-wheelRadius - 32} textAnchor="middle" fill={colors.textPrimary} fontSize={13} fontWeight="bold">
-              APPARENT
-            </text>
-            <text x={0} y={-wheelRadius - 20} textAnchor="middle" fill={colors.textSecondary} fontSize={11}>
-              Camera View
+            <text x={0} y={-wheelRadius - 25} textAnchor="middle" fill={colors.textPrimary} fontSize={12} fontWeight="bold">
+              SAMPLED WHEEL
             </text>
 
             {/* Outer tire - red tinted */}
@@ -760,10 +754,10 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
 
             {/* Apparent speed display */}
             <rect
-              x={-60}
-              y={wheelRadius + 28}
-              width={120}
-              height={24}
+              x={-50}
+              y={wheelRadius + 25}
+              width={100}
+              height={22}
               rx={6}
               fill={motionDirection === 'forward' ? 'rgba(16, 185, 129, 0.2)' : motionDirection === 'backward' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)'}
               stroke={motionDirection === 'forward' ? colors.success : motionDirection === 'backward' ? colors.error : colors.warning}
@@ -771,13 +765,13 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
             />
             <text
               x={0}
-              y={wheelRadius + 45}
+              y={wheelRadius + 40}
               textAnchor="middle"
               fill={motionDirection === 'forward' ? colors.success : motionDirection === 'backward' ? colors.error : colors.warning}
               fontSize={11}
               fontWeight="bold"
             >
-              {motionDirection === 'stopped' ? 'STOPPED' : `${Math.abs(apparentSpeed).toFixed(1)} rot/s ${motionDirection === 'backward' ? 'BACK' : ''}`}
+              {motionDirection === 'stopped' ? 'STOP' : `${Math.abs(apparentSpeed).toFixed(1)} r/s${motionDirection === 'backward' ? '←' : ''}`}
             </text>
 
             {/* Interactive marker - sampled spoke */}

@@ -602,8 +602,37 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
 
   // Helper function: Progress bar (Premium Design)
   function ProgressBar() {
+    const getAriaLabel = (p: Phase): string => {
+      const labels: Record<Phase, string> = {
+        'hook': 'explore phase',
+        'predict': 'explore phase',
+        'play': 'experiment phase',
+        'review': 'experiment phase',
+        'twist_predict': 'experiment phase',
+        'twist_play': 'experiment phase',
+        'twist_review': 'experiment phase',
+        'transfer': 'apply phase',
+        'test': 'quiz phase',
+        'mastery': 'transfer phase'
+      };
+      return labels[p];
+    };
+
+    const currentIndex = phaseOrder.indexOf(phase);
+    const progressPercent = ((currentIndex + 1) / phaseOrder.length) * 100;
+
     return (
       <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        {/* Progress bar */}
+        <div style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          height: '3px',
+          width: `${progressPercent}%`,
+          background: 'linear-gradient(90deg, #3b82f6, #0ea5e9)',
+          transition: 'width 0.3s ease',
+        }} />
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Rayleigh vs Mie Scattering</span>
           <div className="flex items-center gap-1.5">
@@ -1698,7 +1727,28 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
                 ...typography.body,
                 color: colors.textSecondary
               }}>
-                Blue light scatters more than red - this is Rayleigh scattering
+                {userWasRight
+                  ? "You predicted correctly! Blue light scatters more than red because of Rayleigh scattering."
+                  : "Remember your prediction? The real reason is Rayleigh scattering."}
+              </p>
+            </div>
+
+            {/* Why Explanation */}
+            <div style={{
+              padding: spacing.lg,
+              background: colors.brandGlow,
+              borderRadius: radius.lg,
+              border: `1px solid ${colors.brand}40`,
+              marginBottom: spacing.xl,
+            }}>
+              <h3 style={{ ...typography.h3, color: colors.brand, marginBottom: spacing.sm }}>
+                Why This Happens
+              </h3>
+              <p style={{ ...typography.body, color: colors.textSecondary, lineHeight: 1.7 }}>
+                The sky appears blue <strong style={{ color: colors.textPrimary }}>because</strong> air molecules are much smaller than light wavelengths.
+                This means <strong style={{ color: colors.textPrimary }}>Rayleigh scattering</strong> dominates, where intensity is inversely proportional to wavelength to the fourth power (I ∝ 1/λ⁴).
+                <strong style={{ color: colors.textPrimary }}>Therefore</strong>, blue light (450nm) scatters about 5.5× more intensely than red light (650nm).
+                The result is that blue light bounces around the atmosphere and reaches your eyes from all directions, creating the blue sky we see.
               </p>
             </div>
 

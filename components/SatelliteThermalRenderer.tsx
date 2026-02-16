@@ -844,7 +844,7 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
             ))}
 
             {/* Sun label */}
-            <text x="0" y="85" textAnchor="middle" fill="#fcd34d" fontSize="10" fontWeight="bold" letterSpacing="1">
+            <text x="0" y="85" textAnchor="middle" fill="#fcd34d" fontSize="11" fontWeight="bold" letterSpacing="1">
               SOLAR INPUT: {thermal.qAbsorbed}W
             </text>
           </g>
@@ -863,7 +863,7 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
             <text x="0" y="-70" textAnchor="middle" fill="#64748b" fontSize="11" fontWeight="bold" letterSpacing="2">
               ECLIPSE
             </text>
-            <text x="0" y="-55" textAnchor="middle" fill="#475569" fontSize="8">
+            <text x="0" y="-55" textAnchor="middle" fill="#475569" fontSize="11">
               NO SOLAR INPUT
             </text>
 
@@ -987,7 +987,7 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
             {[0, 1, 2, 3, 4, 5].map(i => (
               <line key={i} x1="0" y1={i * 7 + 7} x2="16" y2={i * 7 + 7} stroke="#64748b" strokeWidth="0.5" />
             ))}
-            <text x="8" y="56" textAnchor="middle" fill="#64748b" fontSize="7" fontWeight="bold">RAD</text>
+            <text x="8" y="56" textAnchor="middle" fill="#64748b" fontSize="11" fontWeight="bold">RAD</text>
           </g>
 
           {/* === LOUVERS (Adjustable thermal control) === */}
@@ -1007,8 +1007,8 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
                 transform={`rotate(${(louversOpen / 100) * 45}, 18, ${i * 7 + 2.5})`}
               />
             ))}
-            <text x="18" y="56" textAnchor="middle" fill="#64748b" fontSize="7" fontWeight="bold">LOUVERS</text>
-            <text x="18" y="64" textAnchor="middle" fill="#94a3b8" fontSize="6">{louversOpen}% OPEN</text>
+            <text x="18" y="56" textAnchor="middle" fill="#64748b" fontSize="11" fontWeight="bold">LOUVERS</text>
+            <text x="18" y="64" textAnchor="middle" fill="#94a3b8" fontSize="11">{louversOpen}% OPEN</text>
           </g>
 
           {/* === HEATER INDICATOR === */}
@@ -1021,7 +1021,7 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
                 <animate attributeName="opacity" values="0.6;0.9;0.6" dur="0.8s" repeatCount="indefinite" />
               </circle>
               <circle cx="0" cy="0" r="4" fill="#fca5a5" />
-              <text x="0" y="22" textAnchor="middle" fill="#ef4444" fontSize="6" fontWeight="bold">HEATER ON</text>
+              <text x="0" y="22" textAnchor="middle" fill="#ef4444" fontSize="11" fontWeight="bold">HEATER ON</text>
             </g>
           )}
 
@@ -1030,7 +1030,7 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
           <circle cx="0" cy="-48" r="4" fill="#475569" stroke="#64748b" strokeWidth="1" />
 
           {/* Satellite label */}
-          <text x="0" y="52" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold" letterSpacing="0.5">
+          <text x="0" y="52" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold" letterSpacing="0.5">
             SPACECRAFT
           </text>
         </g>
@@ -1072,10 +1072,10 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
           />
 
           {/* Radiation label */}
-          <text x="490" y="150" fill="#60a5fa" fontSize="9" fontWeight="bold">
+          <text x="490" y="150" fill="#60a5fa" fontSize="11" fontWeight="bold">
             IR RADIATION
           </text>
-          <text x="490" y="162" fill="#3b82f6" fontSize="8">
+          <text x="490" y="162" fill="#3b82f6" fontSize="11">
             {thermal.qRadiated}W
           </text>
         </g>
@@ -1092,22 +1092,22 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
           </text>
 
           {/* Data rows */}
-          <text x="12" y="46" fill="#94a3b8" fontSize="9">Solar Absorbed:</text>
-          <text x="163" y="46" textAnchor="end" fill="#fcd34d" fontSize="9" fontWeight="bold">{thermal.qAbsorbed} W</text>
+          <text x="12" y="46" fill="#94a3b8" fontSize="11">Solar Absorbed:</text>
+          <text x="163" y="46" textAnchor="end" fill="#fcd34d" fontSize="11" fontWeight="bold">{thermal.qAbsorbed} W</text>
 
-          <text x="12" y="63" fill="#94a3b8" fontSize="9">Internal Heat:</text>
-          <text x="163" y="63" textAnchor="end" fill="#f97316" fontSize="9" fontWeight="bold">{thermal.qInternal} W</text>
+          <text x="12" y="63" fill="#94a3b8" fontSize="11">Internal Heat:</text>
+          <text x="163" y="63" textAnchor="end" fill="#f97316" fontSize="11" fontWeight="bold">{thermal.qInternal} W</text>
 
-          <text x="12" y="80" fill="#94a3b8" fontSize="9">Heaters:</text>
-          <text x="163" y="80" textAnchor="end" fill={heatersOn ? '#ef4444' : '#475569'} fontSize="9" fontWeight="bold">{thermal.qHeater} W</text>
+          <text x="12" y="80" fill="#94a3b8" fontSize="11">Heaters:</text>
+          <text x="163" y="80" textAnchor="end" fill={heatersOn ? '#ef4444' : '#475569'} fontSize="11" fontWeight="bold">{thermal.qHeater} W</text>
 
-          <text x="12" y="97" fill="#94a3b8" fontSize="9">Radiated Out:</text>
-          <text x="163" y="97" textAnchor="end" fill="#3b82f6" fontSize="9" fontWeight="bold">{thermal.qRadiated} W</text>
+          <text x="12" y="97" fill="#94a3b8" fontSize="11">Radiated Out:</text>
+          <text x="163" y="97" textAnchor="end" fill="#3b82f6" fontSize="11" fontWeight="bold">{thermal.qRadiated} W</text>
 
           <line x1="12" y1="107" x2="163" y2="107" stroke="#334155" strokeWidth="1" />
 
           {/* Temperature display */}
-          <text x="12" y="126" fill="#e2e8f0" fontSize="10" fontWeight="bold">Temperature:</text>
+          <text x="12" y="126" fill="#e2e8f0" fontSize="11" fontWeight="bold">Temperature:</text>
           <text x="163" y="126" textAnchor="end" fill={tempColor} fontSize="12" fontWeight="bold">{thermal.tempC}°C</text>
 
           {/* Temperature gauge */}
@@ -1116,16 +1116,16 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
           <rect x="12" y="136" width={151 * tempPercent / 100} height="10" rx="5" fill="url(#satthTempGauge)" />
 
           {/* Gauge markers */}
-          <text x="12" y="156" fill="#3b82f6" fontSize="6">-100°C</text>
-          <text x="87" y="156" textAnchor="middle" fill="#22c55e" fontSize="6">0°C</text>
-          <text x="163" y="156" textAnchor="end" fill="#ef4444" fontSize="6">+100°C</text>
+          <text x="12" y="156" fill="#3b82f6" fontSize="11">-100°C</text>
+          <text x="87" y="156" textAnchor="middle" fill="#22c55e" fontSize="11">0°C</text>
+          <text x="163" y="156" textAnchor="end" fill="#ef4444" fontSize="11">+100°C</text>
 
           {/* Status indicator */}
           <rect x="45" y="148" width="85" height="18" rx="9" fill={tempColor} opacity="0.2" stroke={tempColor} strokeWidth="1" />
           <circle cx="55" cy="157" r="4" fill={tempColor}>
             <animate attributeName="opacity" values="1;0.5;1" dur="1.5s" repeatCount="indefinite" />
           </circle>
-          <text x="95" y="161" textAnchor="middle" fill={tempColor} fontSize="10" fontWeight="bold">{tempStatus}</text>
+          <text x="95" y="161" textAnchor="middle" fill={tempColor} fontSize="11" fontWeight="bold">{tempStatus}</text>
         </g>
 
         {/* === PHYSICS PARAMETERS PANEL === */}
@@ -1134,33 +1134,33 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
 
           <rect x="0" y="0" width="165" height="26" rx="10" fill="#1e293b" />
           <rect x="0" y="16" width="165" height="10" fill="#1e293b" />
-          <text x="82" y="17" textAnchor="middle" fill="#a855f7" fontSize="10" fontWeight="bold" letterSpacing="1">
+          <text x="82" y="17" textAnchor="middle" fill="#a855f7" fontSize="11" fontWeight="bold" letterSpacing="1">
             PARAMETERS
           </text>
 
-          <text x="10" y="44" fill="#94a3b8" fontSize="8">Absorptivity (alpha):</text>
-          <text x="155" y="44" textAnchor="end" fill="#f59e0b" fontSize="9" fontWeight="bold">{absorptivity.toFixed(2)}</text>
+          <text x="10" y="44" fill="#94a3b8" fontSize="11">Absorptivity (alpha):</text>
+          <text x="155" y="44" textAnchor="end" fill="#f59e0b" fontSize="11" fontWeight="bold">{absorptivity.toFixed(2)}</text>
 
-          <text x="10" y="61" fill="#94a3b8" fontSize="8">Base Emissivity (eps):</text>
-          <text x="155" y="61" textAnchor="end" fill="#3b82f6" fontSize="9" fontWeight="bold">{emissivity.toFixed(2)}</text>
+          <text x="10" y="61" fill="#94a3b8" fontSize="11">Base Emissivity (eps):</text>
+          <text x="155" y="61" textAnchor="end" fill="#3b82f6" fontSize="11" fontWeight="bold">{emissivity.toFixed(2)}</text>
 
-          <text x="10" y="78" fill="#94a3b8" fontSize="8">Effective Emissivity:</text>
-          <text x="155" y="78" textAnchor="end" fill="#22d3ee" fontSize="9" fontWeight="bold">{thermal.effectiveEmissivity}</text>
+          <text x="10" y="78" fill="#94a3b8" fontSize="11">Effective Emissivity:</text>
+          <text x="155" y="78" textAnchor="end" fill="#22d3ee" fontSize="11" fontWeight="bold">{thermal.effectiveEmissivity}</text>
 
           <line x1="10" y1="88" x2="155" y2="88" stroke="#334155" strokeWidth="0.5" />
 
-          <text x="10" y="103" fill="#94a3b8" fontSize="8">Solar Constant:</text>
-          <text x="155" y="103" textAnchor="end" fill="#fcd34d" fontSize="8" fontWeight="bold">{solarInput} W/m²</text>
+          <text x="10" y="103" fill="#94a3b8" fontSize="11">Solar Constant:</text>
+          <text x="155" y="103" textAnchor="end" fill="#fcd34d" fontSize="11" fontWeight="bold">{solarInput} W/m²</text>
 
-          <text x="10" y="119" fill="#94a3b8" fontSize="8">Stefan-Boltzmann:</text>
-          <text x="155" y="119" textAnchor="end" fill="#94a3b8" fontSize="7">5.67×10⁻⁸ W/m²K⁴</text>
+          <text x="10" y="119" fill="#94a3b8" fontSize="11">Stefan-Boltzmann:</text>
+          <text x="155" y="119" textAnchor="end" fill="#94a3b8" fontSize="11">5.67×10⁻⁸ W/m²K⁴</text>
         </g>
 
         {/* === TITLE LABEL === */}
         <text x="300" y="25" textAnchor="middle" fill="#e2e8f0" fontSize="14" fontWeight="bold" letterSpacing="1">
           SATELLITE THERMAL CONTROL SYSTEM
         </text>
-        <text x="300" y="40" textAnchor="middle" fill="#64748b" fontSize="9">
+        <text x="300" y="40" textAnchor="middle" fill="#64748b" fontSize="11">
           Stefan-Boltzmann Law: Q = ε·σ·A·T⁴
         </text>
       </svg>

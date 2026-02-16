@@ -110,11 +110,24 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Internal phase state management for self-contained mode
+  const [internalPhase, setInternalPhase] = useState<typeof PHASE_ORDER[number]>('hook');
+
   // Handle invalid phase gracefully - support both phase and gamePhase props
-  const phase = (gamePhase || propPhase || 'hook') as typeof PHASE_ORDER[number];
+  // If external phase provided, use it; otherwise use internal state
+  const phase = (gamePhase || propPhase || internalPhase) as typeof PHASE_ORDER[number];
   const validPhase = PHASE_ORDER.includes(phase) ? phase : 'hook';
   const currentPhaseIndex = PHASE_ORDER.indexOf(validPhase);
   const progressPercent = ((currentPhaseIndex + 1) / PHASE_ORDER.length) * 100;
+
+  // Internal navigation handler
+  const handleInternalPhaseComplete = useCallback(() => {
+    const nextIndex = Math.min(currentPhaseIndex + 1, PHASE_ORDER.length - 1);
+    setInternalPhase(PHASE_ORDER[nextIndex]);
+    if (onPhaseComplete) {
+      onPhaseComplete();
+    }
+  }, [currentPhaseIndex, onPhaseComplete]);
 
   // Simulation state
   const [objectHeight, setObjectHeight] = useState(150);
@@ -1209,6 +1222,8 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
         <button
           onClick={() => {
             // Go to previous phase - this triggers internal navigation
+            const prevIndex = Math.max(currentPhaseIndex - 1, 0);
+            setInternalPhase(PHASE_ORDER[prevIndex]);
           }}
           aria-label="Back"
           style={{
@@ -1229,7 +1244,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
         <div />
       )}
       <button
-        onClick={onPhaseComplete}
+        onClick={handleInternalPhaseComplete}
         disabled={disabled && !canProceed}
         aria-label={buttonText}
         style={{

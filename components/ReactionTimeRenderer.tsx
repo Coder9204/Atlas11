@@ -843,7 +843,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
       </div>
 
       {/* Main title with gradient */}
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-indigo-100 to-purple-200 bg-clip-text text-transparent">
+      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-indigo-100 to-purple-200 bg-clip-text text-transparent" style={{ fontSize: '36px', fontWeight: 800, lineHeight: 1.2 }}>
         The Reaction Time Test
       </h1>
 
@@ -1123,7 +1123,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
                 onChange={(e) => setGravity(parseFloat(e.target.value))}
                 onInput={(e) => setGravity(parseFloat((e.target as HTMLInputElement).value))}
                 className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
-                style={{ accentColor: "#f59e0b", cursor: "pointer", touchAction: "pan-y", WebkitAppearance: "none", MozAppearance: "none", appearance: "none" }}
+                style={{ width: "100%", accentColor: "#f59e0b", cursor: "pointer", touchAction: "pan-y", WebkitAppearance: "none", MozAppearance: "none", appearance: "none" }}
                 disabled={rulerState !== 'ready'}
               />
               <div className="flex justify-between mt-2 gap-2">
@@ -1160,7 +1160,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
                 onChange={(e) => setRulerLength(parseInt(e.target.value))}
                 onInput={(e) => setRulerLength(parseInt((e.target as HTMLInputElement).value))}
                 className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                style={{ accentColor: "#3b82f6", cursor: "pointer", touchAction: "pan-y", WebkitAppearance: "none", MozAppearance: "none", appearance: "none" }}
+                style={{ width: "100%", accentColor: "#3b82f6", cursor: "pointer", touchAction: "pan-y", WebkitAppearance: "none", MozAppearance: "none", appearance: "none" }}
                 disabled={rulerState !== 'ready'}
               />
             </div>
@@ -2151,7 +2151,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
       {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50" style={{ borderBottom: '1px solid rgba(148, 163, 184, 0.2)' }}>
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto" style={{ maxWidth: '1024px', padding: '12px 24px', margin: '0 auto' }}>
-          <span className="text-sm font-semibold text-white/80 tracking-wide" style={{ fontSize: '14px', fontWeight: '600' }}>Reaction Time</span>
+          <span className="text-sm font-semibold text-white/80 tracking-wide" style={{ fontSize: '14px', fontWeight: 600 }}>Reaction Time</span>
           <div className="flex items-center gap-1.5" style={{ display: 'flex', gap: '6px' }}>
             {PHASES.map((p) => (
               <button

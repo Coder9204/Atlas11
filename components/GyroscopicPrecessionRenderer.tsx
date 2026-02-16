@@ -1055,8 +1055,8 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
       <text x="200" y="245" fill="#e2e8f0" fontSize="13" fontWeight="600" textAnchor="middle">
         Which way does the wheel move when pushed down?
       </text>
-      <text x="310" y="140" fill="#ef4444" fontSize="12" fontWeight="600">PUSH DOWN</text>
-      <text x="200" y="20" fill="#fbbf24" fontSize="12" fontWeight="600" textAnchor="middle">Spinning Wheel</text>
+      <text x="320" y="130" fill="#ef4444" fontSize="12" fontWeight="600">PUSH DOWN</text>
+      <text x="200" y="15" fill="#fbbf24" fontSize="12" fontWeight="600" textAnchor="middle">Spinning Wheel</text>
     </svg>
   );
 
@@ -1121,7 +1121,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 textAlign: 'center',
               }}>
                 <span style={{ fontSize: '24px', display: 'block', marginBottom: space.sm }}>{item.icon}</span>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: colors.textTertiary }}>{item.label}</span>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: colors.textSecondary }}>{item.label}</span>
               </div>
             ))}
           </div>
@@ -1197,7 +1197,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                   }} />
                   <div>
                     <p style={{ fontSize: '14px', fontWeight: 700, color: prediction === opt.id ? '#fafafa' : '#e2e8f0' }}>{opt.label}</p>
-                    <p style={{ fontSize: '12px', fontWeight: 400, color: colors.textTertiary }}>{opt.desc}</p>
+                    <p style={{ fontSize: '12px', fontWeight: 400, color: colors.textSecondary }}>{opt.desc}</p>
                   </div>
                 </button>
               ))}
@@ -1377,7 +1377,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                   }} />
                   <div>
                     <p style={{ fontSize: '14px', fontWeight: 700, color: twistPrediction === opt.id ? colors.textPrimary : colors.textSecondary }}>{opt.label}</p>
-                    <p style={{ fontSize: '12px', fontWeight: 400, color: colors.textTertiary }}>{opt.desc}</p>
+                    <p style={{ fontSize: '12px', fontWeight: 400, color: colors.textSecondary }}>{opt.desc}</p>
                   </div>
                 </button>
               ))}

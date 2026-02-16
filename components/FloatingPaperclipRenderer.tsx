@@ -1116,7 +1116,20 @@ export default function FloatingPaperclipRenderer({
     return (
       <div className="flex flex-col items-center p-6">
         <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-4">Surface Tension Laboratory</h2>
-        <p style={{ fontSize: typo.body }} className="text-slate-400 mb-4">Adjust parameters to explore surface tension physics</p>
+        <p style={{ fontSize: typo.body }} className="text-slate-400 mb-2">Adjust parameters to explore surface tension physics</p>
+
+        {/* Educational context */}
+        <div className="bg-blue-900/20 border border-blue-700/30 rounded-xl p-4 mb-4 max-w-xl">
+          <p style={{ fontSize: typo.body }} className="text-blue-200 mb-2">
+            <strong className="text-blue-100">What you're seeing:</strong> The visualization shows how surface tension creates an invisible "skin" on water that can support objects denser than water itself. The dimple in the water's surface shows the deformation that generates the upward force.
+          </p>
+          <p style={{ fontSize: typo.body }} className="text-blue-200 mb-2">
+            <strong className="text-blue-100">How it works:</strong> When you decrease surface tension (by lowering the coefficient or increasing temperature), the water's "skin" weakens and can no longer support the paperclip's weight. Increasing the paperclip weight requires stronger surface tension to maintain balance.
+          </p>
+          <p style={{ fontSize: typo.body }} className="text-blue-200">
+            <strong className="text-blue-100">Why this matters:</strong> Surface tension enables water striders to walk on water, drives microfluidic medical devices, controls inkjet printing precision, and helps detect oil spills through surface tension changes. Understanding this physics unlocks technologies from lab-on-chip diagnostics to environmental monitoring.
+          </p>
+        </div>
 
         {/* Interactive Controls */}
         <div className="bg-slate-800/60 rounded-2xl p-4 mb-4 w-full max-w-xl border border-slate-700/50">
@@ -1290,10 +1303,23 @@ export default function FloatingPaperclipRenderer({
 
   const renderReview = () => (
     <div className="flex flex-col items-center p-6">
-      <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-6">The Physics of Surface Support</h2>
+      <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-4">The Physics of Surface Support</h2>
+
+      {prediction && (
+        <div className="bg-blue-900/20 border border-blue-700/30 rounded-xl p-4 mb-4 max-w-xl">
+          <p style={{ fontSize: typo.body }} className="text-blue-200">
+            {prediction === predictions.initial.correct
+              ? '✓ You predicted correctly! As you saw, the paperclip floats because surface tension creates an invisible "skin" strong enough to support it.'
+              : `You predicted "${predictions.initial.options.find(o => o.id === prediction)?.text}", but as you observed, surface tension actually creates enough upward force to support the paperclip despite steel being 8 times denser than water.`}
+          </p>
+        </div>
+      )}
 
       <div className="bg-gradient-to-br from-blue-900/50 to-cyan-900/50 rounded-2xl p-6 max-w-xl mb-6">
-        <h3 style={{ fontSize: typo.bodyLarge }} className="font-bold text-blue-400 mb-4">Why It Floats</h3>
+        <h3 style={{ fontSize: typo.bodyLarge }} className="font-bold text-blue-400 mb-4">Why Does It Float?</h3>
+        <p style={{ fontSize: typo.body }} className="text-slate-300 mb-4">
+          The paperclip floats because water molecules create hydrogen bonds that form an invisible "skin" on the surface. When the paperclip is gently placed, this membrane deforms and creates an upward force along the contact perimeter. This force is strong enough to balance the weight because the paperclip distributes its weight across a large perimeter relative to its mass.
+        </p>
 
         <svg viewBox="0 0 300 140" className="w-full h-32 mb-4">
           <PremiumSVGDefs />
@@ -1674,6 +1700,8 @@ export default function FloatingPaperclipRenderer({
         <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-2">Surface Tension in the Real World</h2>
         <p style={{ fontSize: typo.body }} className="text-slate-400 mb-6 text-center">Explore all 4 applications to unlock the test</p>
 
+        {/* Scrollable container for applications */}
+        <div style={{ maxHeight: '70vh', overflowY: 'auto', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         {/* App tabs */}
         <div className="flex gap-2 mb-6 flex-wrap justify-center">
           {realWorldApps.map((app, index) => (
@@ -1774,6 +1802,7 @@ export default function FloatingPaperclipRenderer({
             </button>
           )}
         </div>
+        </div>
 
         {/* Progress */}
         <div className="mt-6 flex items-center gap-2">
@@ -1863,7 +1892,24 @@ export default function FloatingPaperclipRenderer({
     return (
       <div className="flex flex-col items-center p-6">
         <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-2">Surface Tension Mastery Test</h2>
-        <p style={{ fontSize: typo.body }} className="text-slate-400 mb-6">Answer all 10 scenario-based questions</p>
+        <div className="flex items-center gap-3 mb-4">
+          <p style={{ fontSize: typo.body }} className="text-slate-400">Progress:</p>
+          <div className="flex gap-1">
+            {testQuestions.map((_, i) => (
+              <div
+                key={i}
+                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                  testAnswers[i] !== -1 ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-400'
+                }`}
+              >
+                {i + 1}
+              </div>
+            ))}
+          </div>
+          <p style={{ fontSize: typo.body }} className="text-blue-400 font-semibold">
+            {testAnswers.filter(a => a !== -1).length} of 10 answered
+          </p>
+        </div>
 
         <div className="space-y-4 max-w-2xl w-full max-h-[60vh] overflow-y-auto mb-4">
           {testQuestions.map((q, qIndex) => (
@@ -1876,11 +1922,16 @@ export default function FloatingPaperclipRenderer({
                     key={oIndex}
                     onClick={() => handleTestAnswer(qIndex, oIndex)}
                     style={{ zIndex: 10 }}
-                    className={`p-3 rounded-lg text-left transition-all ${
-                      testAnswers[qIndex] === oIndex ? 'bg-blue-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
+                    className={`p-3 rounded-lg text-left transition-all border-2 ${
+                      testAnswers[qIndex] === oIndex
+                        ? 'bg-blue-600 text-white border-blue-400 shadow-lg shadow-blue-500/30'
+                        : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 border-slate-600/50'
                     }`}
                   >
-                    <span style={{ fontSize: typo.small }}>{opt.id.toUpperCase()}. {opt.text}</span>
+                    <span style={{ fontSize: typo.small }}>
+                      {testAnswers[qIndex] === oIndex && '✓ '}
+                      {opt.id.toUpperCase()}. {opt.text}
+                    </span>
                   </button>
                 ))}
               </div>

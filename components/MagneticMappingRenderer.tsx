@@ -1577,9 +1577,11 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({ gameP
   // Navigation phases for progress tracking
   const NAV_PHASES = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
   const currentPhaseIndex = NAV_PHASES.indexOf(phase);
+  const isFirstPhase = currentPhaseIndex === 0;
+  const isLastPhase = currentPhaseIndex === NAV_PHASES.length - 1;
 
   const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string, showBack: boolean = true) => (
-    <div style={{
+    <nav style={{
       position: 'fixed',
       bottom: 0,
       left: 0,
@@ -1598,45 +1600,84 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({ gameP
       </div>
 
       {/* Back Button */}
-      {showBack && currentPhaseIndex > 0 ? (
-        <button
-          onClick={() => {/* Back navigation handled by parent */}}
-          data-testid="back-button"
-          style={{
-            padding: '12px 24px',
-            borderRadius: '8px',
-            border: `1px solid rgba(255,255,255,0.2)`,
-            background: 'transparent',
-            color: colors.textSecondary,
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            fontSize: '16px',
-            minHeight: '44px',
-          }}
-        >
-          Back
-        </button>
-      ) : <div />}
+      <button
+        onClick={() => !isFirstPhase && goToPhase(NAV_PHASES[currentPhaseIndex - 1] as Phase)}
+        data-testid="back-button"
+        disabled={isFirstPhase}
+        style={{
+          padding: '12px 24px',
+          borderRadius: '8px',
+          border: `1px solid rgba(255,255,255,0.2)`,
+          background: 'transparent',
+          color: isFirstPhase ? colors.textMuted : colors.textSecondary,
+          fontWeight: 600,
+          cursor: isFirstPhase ? 'not-allowed' : 'pointer',
+          fontSize: '16px',
+          minHeight: '48px',
+          opacity: isFirstPhase ? 0.4 : 1,
+          transition: 'all 0.3s ease',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+        }}
+      >
+        ← Back
+      </button>
+
+      {/* Phase Progress Dots */}
+      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+        {NAV_PHASES.map((p, i) => (
+          <button
+            key={p}
+            onClick={() => i <= currentPhaseIndex && goToPhase(p as Phase)}
+            aria-label={phaseLabels[p as Phase]}
+            title={phaseLabels[p as Phase]}
+            disabled={i > currentPhaseIndex}
+            style={{
+              minHeight: '44px',
+              minWidth: '44px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: 'none',
+              background: 'transparent',
+              cursor: i <= currentPhaseIndex ? 'pointer' : 'default',
+              padding: '0',
+            }}
+          >
+            <div style={{
+              width: i === currentPhaseIndex ? '12px' : '8px',
+              height: i === currentPhaseIndex ? '12px' : '8px',
+              borderRadius: '50%',
+              background: i <= currentPhaseIndex ? colors.accent : 'rgba(255,255,255,0.2)',
+              transition: 'all 0.3s ease',
+              boxShadow: i === currentPhaseIndex ? `0 0 12px ${colors.accent}` : 'none'
+            }} />
+          </button>
+        ))}
+      </div>
 
       {/* Next Button */}
       <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
+        onClick={() => canProceed && !isLastPhase && goToPhase(NAV_PHASES[currentPhaseIndex + 1] as Phase)}
+        disabled={!canProceed}
+        data-testid="next-button"
         style={{
           padding: '12px 32px',
           borderRadius: '8px',
           border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
+          background: canProceed ? `linear-gradient(135deg, ${colors.accent}, ${colors.secondary})` : 'rgba(255,255,255,0.1)',
           color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
+          fontWeight: 700,
           cursor: canProceed ? 'pointer' : 'not-allowed',
           fontSize: '16px',
-          minHeight: '44px',
+          minHeight: '48px',
+          transition: 'all 0.3s ease',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+          boxShadow: canProceed ? `0 4px 12px rgba(6, 182, 212, 0.3)` : 'none',
         }}
       >
         {buttonText}
       </button>
-    </div>
+    </nav>
   );
 
   // ===============================================================================
@@ -1899,6 +1940,16 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({ gameP
           <div className="flex flex-col items-center p-6">
             <h2 className="text-2xl font-bold text-white mb-4">Magnetic Field Mapper</h2>
 
+            {/* Educational Explanation */}
+            <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-xl p-4 mb-4 w-full max-w-2xl border border-blue-500/30">
+              <p style={{ fontSize: typo.body, color: colors.textSecondary, lineHeight: '1.6' }}>
+                <strong style={{ color: colors.accent }}>What you're seeing:</strong> This visualization shows the invisible magnetic field around a bar magnet. Field lines emerge from the North pole and curve around to the South pole. Watch how the field strength decreases rapidly with distance.
+              </p>
+              <p style={{ fontSize: typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}>
+                <strong style={{ color: colors.secondary }}>Cause and Effect:</strong> When you increase magnet strength, field lines become denser and the field extends farther. Moving the probe closer to the magnet shows dramatically higher field strength (B) because magnetic fields follow the inverse cube law - doubling the distance reduces field strength by 8×.
+              </p>
+            </div>
+
             {/* Interactive Visualization */}
             <div className="bg-slate-800/50 rounded-2xl p-6 mb-4 w-full max-w-2xl">
               {renderMagneticField(magnets, showFieldLines, showCompassGrid, true)}
@@ -1921,7 +1972,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({ gameP
                   value={magnetStrength}
                   onChange={(e) => setMagnetStrength(Number(e.target.value))}
                   className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500"
-                  style={{ zIndex: 10, touchAction: 'pan-y' }}
+                  style={{ zIndex: 10, touchAction: 'pan-y', WebkitAppearance: 'none', MozAppearance: 'none', width: '100%' }}
                 />
                 <div className="flex justify-between text-xs mt-1" style={{ color: colors.textSecondary }}>
                   <span>Weak</span>
@@ -1942,7 +1993,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({ gameP
                   value={probeDistance}
                   onChange={(e) => setProbeDistance(Number(e.target.value))}
                   className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                  style={{ zIndex: 10, touchAction: 'pan-y' }}
+                  style={{ zIndex: 10, touchAction: 'pan-y', WebkitAppearance: 'none', MozAppearance: 'none', width: '100%' }}
                 />
                 <div className="flex justify-between text-xs mt-1" style={{ color: colors.textSecondary }}>
                   <span>Close</span>
@@ -2285,7 +2336,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({ gameP
                       value={earthFieldIntensity}
                       onChange={(e) => setEarthFieldIntensity(Number(e.target.value))}
                       className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-green-500"
-                      style={{ zIndex: 10, touchAction: 'pan-y' }}
+                      style={{ zIndex: 10, touchAction: 'pan-y', WebkitAppearance: 'none', MozAppearance: 'none', width: '100%' }}
                     />
                     <p className="text-slate-500 text-xs mt-2 text-center">
                       Earth&apos;s field varies from ~25 uT (equator) to ~65 uT (poles)
@@ -2321,7 +2372,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({ gameP
                     value={electromagnetCurrent}
                     onChange={(e) => setElectromagnetCurrent(Number(e.target.value))}
                     className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-yellow-500"
-                    style={{ zIndex: 10, touchAction: 'pan-y' }}
+                    style={{ zIndex: 10, touchAction: 'pan-y', WebkitAppearance: 'none', MozAppearance: 'none', width: '100%' }}
                   />
                   <div className="flex justify-between text-xs text-slate-500 mt-1">
                     <span>Off</span>

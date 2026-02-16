@@ -209,7 +209,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
   // Phase-specific state
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set([0]));
   const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
@@ -303,7 +303,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
 
   const testQuestions = [
     {
-      question: 'A semiconductor fab wants to calculate the minimum feature size they can print. Their lithography system uses 193nm light with NA=1.35 and k1=0.4. What is the Rayleigh criterion formula they should use?',
+      question: 'A semiconductor fab is planning to upgrade their lithography equipment and wants to calculate the minimum feature size they can achieve. Their new lithography system uses 193nm ArF DUV light with a numerical aperture NA=1.35 (immersion) and a process k1 factor of 0.4. What is the correct Rayleigh criterion formula they should use to calculate the resolution limit?',
       options: [
         { text: 'Resolution = wavelength x NA', correct: false },
         { text: 'Resolution = k1 x wavelength / NA', correct: true },
@@ -415,7 +415,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
 
   const renderVisualization = (interactive: boolean) => {
     const width = 500;
-    const height = 440;
+    const height = 500;
     const output = calculateResolution();
 
     // Pattern visualization
@@ -622,11 +622,6 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
           <rect width={width} height={height} fill="url(#phlithLabBg)" />
           <rect width={width} height={height} fill="url(#phlithLabGrid)" />
 
-          {/* Title */}
-          <text x={width/2} y={22} fill={colors.textPrimary} fontSize={13} fontWeight="bold" textAnchor="middle" fontFamily="system-ui, sans-serif">
-            Photolithography System: {output.isEUV ? 'EUV' : 'DUV'} at {wavelength}nm
-          </text>
-
           {/* ============================================ */}
           {/* PREMIUM UV LIGHT SOURCE */}
           {/* ============================================ */}
@@ -644,7 +639,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
             </ellipse>
 
             {/* Source label */}
-            <text x={45} y={27} fill="white" fontSize={10} textAnchor="middle" fontWeight="bold" fontFamily="system-ui, sans-serif">
+            <text x={45} y={27} fill="white" fontSize={11} textAnchor="middle" fontWeight="bold" fontFamily="system-ui, sans-serif">
               {output.isEUV ? 'EUV' : 'DUV'}
             </text>
 
@@ -654,15 +649,15 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
             </circle>
 
             {/* Label */}
-            <text x={45} y={-5} fill={colors.textSecondary} fontSize={8} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
+            <text x={45} y={-7} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
               LIGHT SOURCE
             </text>
           </g>
 
           {/* Wavelength indicator */}
           <g transform="translate(150, 45)">
-            <rect x={0} y={0} width={55} height={18} rx={4} fill="#111827" stroke="#334155" strokeWidth="0.5" />
-            <text x={27} y={13} fill={output.isEUV ? colors.euv : colors.uv} fontSize={9} textAnchor="middle" fontFamily="monospace" fontWeight="bold">
+            <rect x={0} y={0} width={60} height={20} rx={4} fill="#111827" stroke="#334155" strokeWidth="0.5" />
+            <text x={30} y={14} fill={output.isEUV ? colors.euv : colors.uv} fontSize={11} textAnchor="middle" fontFamily="monospace" fontWeight="bold">
               {'\u03BB'}={wavelength}nm
             </text>
           </g>
@@ -733,7 +728,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
             <line x1={5} y1={28} x2={195} y2={28} stroke="#1f2937" strokeWidth="0.5" />
 
             {/* Label */}
-            <text x={100} y={-6} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
+            <text x={100} y={-8} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
               PHOTOMASK (RETICLE)
             </text>
           </g>
@@ -775,7 +770,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
             </text>
 
             {/* Label */}
-            <text x={30} y={-8} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
+            <text x={30} y={-10} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
               PROJECTION OPTICS
             </text>
           </g>
@@ -824,7 +819,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
           {/* ============================================ */}
           {/* PREMIUM WAFER WITH PHOTORESIST */}
           {/* ============================================ */}
-          <g transform="translate(50, 195)">
+          <g transform="translate(50, 210)">
             {/* Stage/chuck */}
             <rect x={-15} y={55} width={230} height={20} rx={4} fill="url(#phlithHousingMetal)" stroke="#334155" strokeWidth="1" />
             <rect x={-12} y={58} width={224} height={14} rx={3} fill="#111827" opacity="0.5" />
@@ -876,11 +871,11 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
             </g>
 
             {/* Labels */}
-            <text x={100} y={-25} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
+            <text x={100} y={-28} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
               WAFER WITH PHOTORESIST
             </text>
-            <text x={220} y={20} fill={colors.photoresist} fontSize={11} fontFamily="system-ui, sans-serif">Photoresist</text>
-            <text x={220} y={50} fill={colors.silicon} fontSize={11} fontFamily="system-ui, sans-serif">Silicon</text>
+            <text x={220} y={18} fill={colors.photoresist} fontSize={11} fontFamily="system-ui, sans-serif">Photoresist</text>
+            <text x={220} y={48} fill={colors.silicon} fontSize={11} fontFamily="system-ui, sans-serif">Silicon</text>
           </g>
 
           {/* ============================================ */}
@@ -906,41 +901,41 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
           {/* ============================================ */}
           {/* METRICS PANEL */}
           {/* ============================================ */}
-          <g transform="translate(20, 300)">
-            <rect x={0} y={0} width={460} height={130} rx={8} fill="url(#phlithControlPanel)" stroke="#334155" strokeWidth="1" />
-            <rect x={2} y={2} width={456} height={126} rx={7} fill="rgba(0,0,0,0.2)" />
+          <g transform="translate(20, 345)">
+            <rect x={0} y={0} width={460} height={135} rx={8} fill="url(#phlithControlPanel)" stroke="#334155" strokeWidth="1" />
+            <rect x={2} y={2} width={456} height={131} rx={7} fill="rgba(0,0,0,0.2)" />
 
             {/* Panel title */}
-            <text x={230} y={22} fill={colors.textPrimary} fontSize={12} textAnchor="middle" fontWeight="bold" fontFamily="system-ui, sans-serif">
+            <text x={230} y={24} fill={colors.textPrimary} fontSize={12} textAnchor="middle" fontWeight="bold" fontFamily="system-ui, sans-serif">
               SYSTEM PARAMETERS
             </text>
-            <line x1={20} y1={30} x2={440} y2={30} stroke="#334155" strokeWidth="0.5" />
+            <line x1={20} y1={33} x2={440} y2={33} stroke="#334155" strokeWidth="0.5" />
 
             {/* Left column */}
-            <text x={25} y={52} fill={colors.textSecondary} fontSize={11} fontFamily="system-ui, sans-serif">
+            <text x={25} y={55} fill={colors.textSecondary} fontSize={11} fontFamily="system-ui, sans-serif">
               Resolution: <tspan fill={colors.textPrimary} fontWeight="bold">{output.effectiveResolution.toFixed(1)}nm</tspan>
             </text>
-            <text x={25} y={74} fill={colors.textSecondary} fontSize={11} fontFamily="system-ui, sans-serif">
+            <text x={25} y={78} fill={colors.textSecondary} fontSize={11} fontFamily="system-ui, sans-serif">
               Diffraction limit: <tspan fill={colors.textPrimary}>{output.diffractionLimit.toFixed(1)}nm</tspan>
             </text>
-            <text x={25} y={96} fill={colors.textSecondary} fontSize={11} fontFamily="system-ui, sans-serif">
+            <text x={25} y={101} fill={colors.textSecondary} fontSize={11} fontFamily="system-ui, sans-serif">
               Depth of focus: <tspan fill={colors.textPrimary}>{output.depthOfFocus.toFixed(1)}nm</tspan>
             </text>
 
             {/* Right column */}
-            <text x={250} y={52} fill={colors.textSecondary} fontSize={11} fontFamily="system-ui, sans-serif">
+            <text x={250} y={55} fill={colors.textSecondary} fontSize={11} fontFamily="system-ui, sans-serif">
               Process node: <tspan fill={colors.textPrimary} fontWeight="bold">~{output.processNode}nm</tspan>
             </text>
-            <text x={250} y={74} fill={colors.textSecondary} fontSize={11} fontFamily="system-ui, sans-serif">
+            <text x={250} y={78} fill={colors.textSecondary} fontSize={11} fontFamily="system-ui, sans-serif">
               7nm capable: <tspan fill={output.canReach7nm ? colors.success : colors.error} fontWeight="bold">{output.canReach7nm ? 'YES' : 'NO'}</tspan>
             </text>
-            <text x={250} y={96} fill={colors.textSecondary} fontSize={11} fontFamily="system-ui, sans-serif">
+            <text x={250} y={101} fill={colors.textSecondary} fontSize={11} fontFamily="system-ui, sans-serif">
               5nm capable: <tspan fill={output.canReach5nm ? colors.success : colors.error} fontWeight="bold">{output.canReach5nm ? 'YES' : 'NO'}</tspan>
             </text>
 
             {/* Formula display */}
-            <rect x={25} y={104} width={410} height={22} rx={4} fill="#0f172a" stroke="#334155" strokeWidth="0.5" />
-            <text x={230} y={118} fill={colors.accent} fontSize={11} textAnchor="middle" fontFamily="monospace" fontWeight="bold">
+            <rect x={25} y={110} width={410} height={20} rx={4} fill="#0f172a" stroke="#334155" strokeWidth="0.5" />
+            <text x={230} y={124} fill={colors.accent} fontSize={11} textAnchor="middle" fontFamily="monospace" fontWeight="bold">
               Resolution = k1 x {'\u03BB'} / NA = {k1Factor.toFixed(2)} x {wavelength}nm / {numericalAperture.toFixed(2)} = {output.effectiveResolution.toFixed(1)}nm
             </text>
           </g>
@@ -950,6 +945,16 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
             <rect x={0} y={0} width={70} height={28} rx={6} fill={output.isEUV ? 'rgba(6, 182, 212, 0.2)' : 'rgba(139, 92, 246, 0.2)'} stroke={output.isEUV ? colors.euv : colors.uv} strokeWidth="1" />
             <text x={35} y={19} fill={output.isEUV ? colors.euv : colors.uv} fontSize={14} textAnchor="middle" fontWeight="bold" fontFamily="system-ui, sans-serif">
               {output.isEUV ? 'EUV' : 'DUV'}
+            </text>
+          </g>
+
+          {/* Axis labels for educational clarity */}
+          <g>
+            <text x={10} y={20} fill={colors.textMuted} fontSize={12} fontFamily="system-ui, sans-serif" fontWeight="600">
+              Y-axis: Light Path (top to bottom)
+            </text>
+            <text x={250} y={495} fill={colors.textMuted} fontSize={12} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
+              X-axis: Wafer Position →
             </text>
           </g>
         </svg>
@@ -1025,8 +1030,8 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
             onChange={(e) => setNumericalAperture(parseFloat(e.target.value))}
             style={{
               width: '100%',
-              height: '8px',
-              borderRadius: '4px',
+              height: '18px',
+              borderRadius: '9px',
               background: `linear-gradient(to right, ${colors.accent} 0%, ${colors.accent} ${((numericalAperture - 0.5) / (1.5 - 0.5)) * 100}%, ${colors.border} ${((numericalAperture - 0.5) / (1.5 - 0.5)) * 100}%, ${colors.border} 100%)`,
               outline: 'none',
               appearance: 'none',
@@ -1039,16 +1044,16 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
             input[type="range"]::-webkit-slider-thumb {
               appearance: none;
               -webkit-appearance: none;
-              width: 20px;
-              height: 20px;
+              width: 24px;
+              height: 24px;
               border-radius: 50%;
               background: ${colors.accent};
               cursor: pointer;
               box-shadow: 0 2px 8px rgba(245, 158, 11, 0.5);
             }
             input[type="range"]::-moz-range-thumb {
-              width: 20px;
-              height: 20px;
+              width: 24px;
+              height: 24px;
               border-radius: 50%;
               background: ${colors.accent};
               cursor: pointer;
@@ -1076,8 +1081,8 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
             onChange={(e) => setK1Factor(parseFloat(e.target.value))}
             style={{
               width: '100%',
-              height: '8px',
-              borderRadius: '4px',
+              height: '18px',
+              borderRadius: '9px',
               background: `linear-gradient(to right, ${colors.accent} 0%, ${colors.accent} ${((k1Factor - 0.25) / (0.6 - 0.25)) * 100}%, ${colors.border} ${((k1Factor - 0.25) / (0.6 - 0.25)) * 100}%, ${colors.border} 100%)`,
               outline: 'none',
               appearance: 'none',
@@ -1124,8 +1129,8 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
                 onChange={(e) => setPatterningSteps(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
+                  height: '18px',
+                  borderRadius: '9px',
                   background: `linear-gradient(to right, ${colors.accent} 0%, ${colors.accent} ${((patterningSteps - 2) / (4 - 2)) * 100}%, ${colors.border} ${((patterningSteps - 2) / (4 - 2)) * 100}%, ${colors.border} 100%)`,
                   outline: 'none',
                   appearance: 'none',
@@ -1264,7 +1269,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
         <span style={{
           fontSize: '12px',
           color: colors.textMuted,
-          fontWeight: 600
+          fontWeight: 'normal'
         }}>
           {phaseLabels[phase]}
         </span>
@@ -1715,14 +1720,45 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
               {!transferCompleted.has(index) ? (
                 <button
                   onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px', WebkitTapHighlightColor: 'transparent' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.03)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+                  style={{
+                    padding: '10px 18px',
+                    borderRadius: '8px',
+                    border: `1px solid ${colors.accent}`,
+                    background: 'transparent',
+                    color: colors.accent,
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease-in-out',
+                    transform: 'scale(1)',
+                    WebkitTapHighlightColor: 'transparent'
+                  }}
                 >
-                  Reveal Answer
+                  Show Answer
                 </button>
               ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
+                <>
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '14px', lineHeight: 1.6 }}>{app.answer}</p>
+                  </div>
+                  <button
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      background: colors.success,
+                      color: 'white',
+                      cursor: 'default',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      WebkitTapHighlightColor: 'transparent'
+                    }}
+                  >
+                    ✓ Got It
+                  </button>
+                </>
               )}
             </div>
           ))}
@@ -1841,7 +1877,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You have mastered photolithography resolution!</p>
           </div>

@@ -430,8 +430,8 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#D1D5DB', // Brighter secondary text
+    textMuted: '#9CA3AF', // Brighter muted text
     border: '#2a2a3a',
     bitZero: '#374151',
     bitOne: '#3B82F6',
@@ -760,7 +760,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        zIndex: 50,
+        zIndex: 100,
       }}>
         <button
           onClick={() => canGoBack && goToPhase(phaseOrder[currentIndex - 1])}
@@ -1686,14 +1686,22 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
         background: colors.bgPrimary,
-        padding: '24px',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
         <style>{keyframes}</style>
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1814,8 +1822,10 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
               Experiment with Node Size
             </button>
           )}
+          </div>
         </div>
 
+        {renderBottomNav()}
         {renderNavDots()}
       </div>
     );
@@ -1828,14 +1838,22 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
         background: colors.bgPrimary,
-        padding: '24px',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
         <style>{keyframes}</style>
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Process Node Sensitivity Lab
           </h2>
@@ -2052,8 +2070,10 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
           >
             Learn About Tradeoffs
           </button>
+          </div>
         </div>
 
+        {renderBottomNav()}
         {renderNavDots()}
       </div>
     );
@@ -2063,14 +2083,22 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
         background: colors.bgPrimary,
-        padding: '24px',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
         <style>{keyframes}</style>
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '100px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Protection Tradeoffs in Space
           </h2>
@@ -2188,8 +2216,10 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
           >
             See Real-World Applications
           </button>
+          </div>
         </div>
 
+        {renderBottomNav()}
         {renderNavDots()}
       </div>
     );

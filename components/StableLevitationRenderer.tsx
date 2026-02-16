@@ -1523,7 +1523,19 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
             borderRadius: '12px',
             borderLeft: `3px solid ${colors.warning}`,
           }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
+            <h4 style={{ color: colors.warning, marginBottom: '12px' }}>Comparison: Mass vs. Stability</h4>
+            <div style={{ display: 'flex', flexDirection: 'row', gap: '12px', marginBottom: '12px' }}>
+              <div style={{ flex: 1, background: 'rgba(16, 185, 129, 0.15)', padding: '12px', borderRadius: '8px' }}>
+                <div style={{ color: colors.success, fontWeight: 'bold', marginBottom: '4px' }}>Light Ball (0.5x)</div>
+                <div style={{ color: colors.textSecondary, fontSize: '13px' }}>Max tilt: ~50°</div>
+                <div style={{ color: colors.textSecondary, fontSize: '13px' }}>Stability: High</div>
+              </div>
+              <div style={{ flex: 1, background: 'rgba(239, 68, 68, 0.15)', padding: '12px', borderRadius: '8px' }}>
+                <div style={{ color: colors.error, fontWeight: 'bold', marginBottom: '4px' }}>Heavy Ball (2x)</div>
+                <div style={{ color: colors.textSecondary, fontSize: '13px' }}>Max tilt: ~12°</div>
+                <div style={{ color: colors.textSecondary, fontSize: '13px' }}>Stability: Low</div>
+              </div>
+            </div>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Lighter balls can handle more tilt! The restoring force (from pressure differences)
               is the same, but it accelerates lighter balls more effectively back to center.

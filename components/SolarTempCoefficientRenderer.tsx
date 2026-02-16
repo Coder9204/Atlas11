@@ -1,4 +1,48 @@
-import React, { useState, useEffect, useCallback } from 'react';
+'use client';
+
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+
+// ============================================================================
+// GAME EVENT INTERFACE AND UTILITIES
+// ============================================================================
+
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
+}
+
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
 
 const realWorldApps = [
   {
@@ -76,13 +120,52 @@ const realWorldApps = [
 ];
 
 interface SolarTempCoefficientRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
 }
 
-const colors = {
+
+  // Phase labels
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Twist Play',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
+
+  // Navigation
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    playSound('transition');
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'solar_temp_coefficient',
+        gameTitle: 'Solar Panel Temperature Coefficient',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
+    }
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [onGameEvent]);
+
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  // Colors
+  const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
   textMuted: '#94a3b8',
@@ -103,12 +186,15 @@ const colors = {
   cold: '#06b6d4',
 };
 
-const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> = ({
-  phase,
-  onPhaseComplete,
-  onCorrectAnswer,
-  onIncorrectAnswer,
-}) => {
+const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+  const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const initialPhase = (gamePhase && phaseOrder.includes(gamePhase as Phase)) ? gamePhase as Phase : 'hook';
+
+  const [phase, setPhase] = useState<Phase>(initialPhase);
+  const isNavigating = useRef(false);
+  const [isMobile, setIsMobile] = useState(false);
   // Simulation state
   const [panelTemperature, setPanelTemperature] = useState(25); // Celsius (-10 to 70)
   const [irradiance, setIrradiance] = useState(1000); // W/m² (200 to 1200)
@@ -124,7 +210,7 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
+  
 
   // Responsive detection
   useEffect(() => {
@@ -388,6 +474,109 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
     setTestSubmitted(true);
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
+
+  
+  // Progress bar
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
+
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #d97706)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+  };
+
+  // Bottom navigation bar
+  const currentIndex = phaseOrder.indexOf(phase);
+  const isFirst = currentIndex === 0;
+  const isLast = currentIndex === phaseOrder.length - 1;
+
+  const renderBottomBar = () => (
+    <div style={{
+      flexShrink: 0,
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: '12px 20px',
+      borderTop: `1px solid ${colors.border}`,
+      background: 'rgba(0,0,0,0.3)',
+    }}>
+      <button
+        onClick={() => !isFirst && goToPhase(phaseOrder[currentIndex - 1])}
+        style={{
+          padding: '8px 20px',
+          borderRadius: '8px',
+          border: `1px solid ${colors.border}`,
+          background: 'transparent',
+          color: isFirst ? 'rgba(255,255,255,0.3)' : 'white',
+          cursor: isFirst ? 'not-allowed' : 'pointer',
+          opacity: isFirst ? 0.4 : 1,
+          transition: 'all 0.3s ease',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+        }}
+      >
+        ← Back
+      </button>
+      <div style={{ display: 'flex', gap: '6px' }}>
+        {phaseOrder.map((p, i) => (
+          <div
+            key={p}
+            onClick={() => i <= currentIndex && goToPhase(p)}
+            style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+              cursor: i <= currentIndex ? 'pointer' : 'default',
+              transition: 'all 0.3s ease',
+            }}
+            title={phaseLabels[p]}
+          />
+        ))}
+      </div>
+      <button
+        onClick={() => !isLast && nextPhase()}
+        style={{
+          padding: '8px 20px',
+          borderRadius: '8px',
+          border: `1px solid ${colors.border}`,
+          background: 'transparent',
+          color: isLast ? 'rgba(255,255,255,0.3)' : 'white',
+          cursor: isLast ? 'not-allowed' : 'pointer',
+          opacity: isLast ? 0.4 : 1,
+          transition: 'all 0.3s ease',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+        }}
+      >
+        Next →
+      </button>
+    </div>
+  );
 
   const renderVisualization = (interactive: boolean) => {
     const width = 500;
@@ -1095,7 +1284,27 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingTop: '48px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+          paddingBottom: '24px',
+          textAlign: 'center',
+        }}>
+          {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>

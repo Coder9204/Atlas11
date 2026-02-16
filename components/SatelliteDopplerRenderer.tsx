@@ -12,9 +12,9 @@ const realWorldApps = [
       connection: 'The Doppler effect causes GPS signal frequencies to shift by several kHz as satellites move relative to receivers. Without compensation, position errors would accumulate rapidly.',
       howItWorks: 'GPS receivers track the carrier frequency of satellite signals and compute the Doppler shift. This reveals the satellite velocity vector, which combined with timing data gives position accuracy within centimeters.',
       stats: [
-         { value: '31', label: 'Active GPS satellites', icon: '🛰️' },
-         { value: '±5kHz', label: 'Typical Doppler shift', icon: '📊' },
-         { value: '<1m', label: 'Position accuracy', icon: '📍' }
+         { value: '31 satellites', label: 'Active GPS constellation', icon: '🛰️' },
+         { value: '5 MHz', label: 'Typical Doppler shift', icon: '📊' },
+         { value: '1 m', label: 'Position accuracy', icon: '📍' }
       ],
       examples: ['Smartphone navigation', 'Aircraft guidance', 'Precision agriculture', 'Autonomous vehicles'],
       companies: ['Garmin', 'Trimble', 'u-blox', 'Qualcomm'],
@@ -30,9 +30,9 @@ const realWorldApps = [
       connection: 'LEO satellites create massive Doppler shifts (±40 kHz at Ku-band) that change rapidly during each pass. Phased array antennas and software-defined radios handle this automatically.',
       howItWorks: 'Starlink dishes use electronically-steered phased arrays to track satellites. Onboard processors predict and compensate for Doppler shifts in real-time, maintaining stable connections during satellite handoffs.',
       stats: [
-         { value: '5,000+', label: 'Satellites in orbit', icon: '🛰️' },
+         { value: '5000 satellites', label: 'In orbit', icon: '🛰️' },
          { value: '7.5 km/s', label: 'Orbital velocity', icon: '⚡' },
-         { value: '~100ms', label: 'Latency to ground', icon: '📶' }
+         { value: '100 ms', label: 'Latency to ground', icon: '📶' }
       ],
       examples: ['Rural broadband', 'Maritime connectivity', 'Aviation WiFi', 'Disaster response'],
       companies: ['SpaceX', 'Amazon Kuiper', 'OneWeb', 'Telesat'],
@@ -48,9 +48,9 @@ const realWorldApps = [
       connection: 'At X-band frequencies, even small velocity changes produce measurable Doppler shifts. This allows tracking spacecraft motion to fractions of a millimeter per second.',
       howItWorks: 'Giant dish antennas receive extremely weak signals from distant spacecraft. Hydrogen maser atomic clocks provide the frequency stability needed to measure Doppler shifts of millihertz.',
       stats: [
-         { value: '70m', label: 'Largest DSN dishes', icon: '📡' },
+         { value: '70 m', label: 'Largest DSN dishes', icon: '📡' },
          { value: '0.1 mm/s', label: 'Velocity precision', icon: '📏' },
-         { value: '24B km', label: 'Voyager 1 distance', icon: '🌌' }
+         { value: '24 billion km', label: 'Voyager 1 distance', icon: '🌌' }
       ],
       examples: ['Mars rover communications', 'Voyager missions', 'James Webb telescope', 'Asteroid missions'],
       companies: ['NASA JPL', 'ESA ESTRACK', 'JAXA', 'ISRO'],
@@ -66,9 +66,9 @@ const realWorldApps = [
       connection: 'NOAA polar satellites experience significant Doppler shifts during each pass. Ground stations like HRPT receivers must track these shifts to download weather imagery.',
       howItWorks: 'Polar satellites transmit at L-band frequencies. As they pass overhead, receivers use phase-locked loops to track the changing frequency and decode high-resolution weather data.',
       stats: [
-         { value: '14', label: 'Orbits per day (polar)', icon: '🔄' },
+         { value: '14 orbits', label: 'Per day (polar)', icon: '🔄' },
          { value: '850 km', label: 'Typical altitude', icon: '📐' },
-         { value: '±25 kHz', label: 'Doppler range', icon: '📊' }
+         { value: '25 MHz', label: 'Doppler range', icon: '📊' }
       ],
       examples: ['Hurricane tracking', 'Climate monitoring', 'Search and rescue', 'Agriculture forecasting'],
       companies: ['NOAA', 'EUMETSAT', 'JMA', 'CMA'],
@@ -873,9 +873,9 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
             />
           )}
 
-          {/* Station label */}
-          <rect x="-35" y="40" width="70" height="14" rx="3" fill="#0f172a" stroke="#334155" strokeWidth="0.5" />
-          <text x="0" y="50" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">GROUND STATION</text>
+          {/* Station label - moved very far down to avoid all overlaps */}
+          <rect x="-30" y="95" width="60" height="14" rx="3" fill="#0f172a" stroke="#334155" strokeWidth="0.5" />
+          <text x="0" y="105" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">STATION</text>
         </g>
 
         {/* === PREMIUM SATELLITE === */}
@@ -952,8 +952,8 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
           );
         })}
 
-        {/* Direction indicator with velocity */}
-        <g transform={`translate(${satX}, ${satY - 42})`}>
+        {/* Direction indicator with velocity - moved below satellite */}
+        <g transform={`translate(${satX}, ${satY + 25})`}>
           <rect x="-35" y="-8" width="70" height="16" rx="4" fill="#0f172a" fillOpacity="0.9" stroke={isApproaching ? '#22c55e' : passProgress > 50 ? '#ef4444' : '#06b6d4'} strokeWidth="0.5" />
           <path
             d={isApproaching ? "M -25 0 L -15 0 L -18 -3 M -15 0 L -18 3" : passProgress > 50 ? "M 25 0 L 15 0 L 18 -3 M 15 0 L 18 3" : "M -5 0 L 5 0"}
@@ -962,7 +962,7 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
             fill="none"
           />
           <text x={isApproaching ? 5 : passProgress > 50 ? -5 : 0} y="4" textAnchor="middle" fill={isApproaching ? '#4ade80' : passProgress > 50 ? '#f87171' : '#67e8f9'} fontSize="11" fontWeight="bold">
-            {Math.abs(passProgress - 50) < 5 ? 'OVERHEAD' : isApproaching ? 'APPROACHING' : 'RECEDING'}
+            {Math.abs(passProgress - 50) < 5 ? 'AT ZENITH' : isApproaching ? 'APPROACH' : 'RECEDE'}
           </text>
         </g>
 
@@ -972,25 +972,25 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
           <rect x="2" y="2" width="161" height="20" rx="8" fill="#1e293b" />
           <text x="82" y="16" textAnchor="middle" fill="#22d3ee" fontSize="11" fontWeight="bold">DOPPLER TELEMETRY</text>
 
-          {/* Data rows with better styling */}
-          <text x="10" y="38" fill="#64748b" fontSize="11" fontWeight="600">TX FREQUENCY</text>
-          <text x="155" y="38" textAnchor="end" fill="#f59e0b" fontSize="11" fontWeight="bold">{doppler.txFreq} MHz</text>
+          {/* Data rows with better spacing to prevent overlap */}
+          <text x="10" y="40" fill="#64748b" fontSize="11" fontWeight="600">TX FREQ</text>
+          <text x="155" y="40" textAnchor="end" fill="#f59e0b" fontSize="11" fontWeight="bold">{doppler.txFreq} MHz</text>
 
-          <text x="10" y="55" fill="#64748b" fontSize="11" fontWeight="600">RX FREQUENCY</text>
-          <text x="155" y="55" textAnchor="end" fill="#22d3ee" fontSize="11" fontWeight="bold">{doppler.rxFreq} MHz</text>
+          <text x="10" y="58" fill="#64748b" fontSize="11" fontWeight="600">RX FREQ</text>
+          <text x="155" y="58" textAnchor="end" fill="#22d3ee" fontSize="11" fontWeight="bold">{doppler.rxFreq} MHz</text>
 
-          <line x1="10" y1="62" x2="155" y2="62" stroke="#334155" strokeWidth="0.5" />
+          <line x1="10" y1="66" x2="155" y2="66" stroke="#334155" strokeWidth="0.5" />
 
-          <text x="10" y="77" fill="#64748b" fontSize="11" fontWeight="600">DOPPLER SHIFT</text>
-          <text x="155" y="77" textAnchor="end" fill={shiftAmount > 0 ? '#ef4444' : shiftAmount < 0 ? '#22c55e' : '#64748b'} fontSize="11" fontWeight="bold">
+          <text x="10" y="82" fill="#64748b" fontSize="11" fontWeight="600">DOPPLER</text>
+          <text x="155" y="82" textAnchor="end" fill={shiftAmount > 0 ? '#ef4444' : shiftAmount < 0 ? '#22c55e' : '#64748b'} fontSize="11" fontWeight="bold">
             {shiftAmount > 0 ? '+' : ''}{doppler.dopplerShift} kHz
           </text>
 
-          <text x="10" y="94" fill="#64748b" fontSize="11" fontWeight="600">RADIAL VELOCITY</text>
-          <text x="155" y="94" textAnchor="end" fill="#a855f7" fontSize="11" fontWeight="bold">{doppler.radialVelocity} m/s</text>
+          <text x="10" y="100" fill="#64748b" fontSize="11" fontWeight="600">RADIAL VEL</text>
+          <text x="155" y="100" textAnchor="end" fill="#a855f7" fontSize="11" fontWeight="bold">{doppler.radialVelocity} m/s</text>
 
-          <text x="10" y="111" fill="#64748b" fontSize="11" fontWeight="600">MAX SHIFT ({orbitType})</text>
-          <text x="155" y="111" textAnchor="end" fill="#f97316" fontSize="11" fontWeight="bold">+/-{doppler.maxShift} kHz</text>
+          <text x="10" y="118" fill="#64748b" fontSize="11" fontWeight="600">MAX ({orbitType})</text>
+          <text x="155" y="118" textAnchor="end" fill="#f97316" fontSize="11" fontWeight="bold">±{doppler.maxShift} kHz</text>
 
           {/* Tracking status bar */}
           <rect x="10" y="120" width="145" height="18" rx="5" fill={isTracking ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'} stroke={isTracking ? '#22c55e' : '#ef4444'} strokeWidth="0.5" />
@@ -1003,7 +1003,7 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
         </g>
 
         {/* === FREQUENCY SPECTRUM VISUALIZATION === */}
-        <g transform="translate(325, 10)">
+        <g transform="translate(325, 165)">
           <rect x="0" y="0" width="165" height="95" fill="#0f172a" fillOpacity="0.95" rx="10" stroke="#334155" strokeWidth="1" />
           <rect x="2" y="2" width="161" height="18" rx="8" fill="#1e293b" />
           <text x="82" y="14" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold">FREQUENCY SPECTRUM</text>
@@ -1065,10 +1065,10 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
             rx="6"
           />
 
-          {/* Position markers */}
-          <text x="15" y="45" fill="#64748b" fontSize="11">RISE</text>
-          <text x="200" y="45" textAnchor="middle" fill="#64748b" fontSize="11">OVERHEAD</text>
-          <text x="395" y="45" textAnchor="end" fill="#64748b" fontSize="11">SET</text>
+          {/* Position markers - OVERHEAD moved way up to avoid panels */}
+          <text x="40" y="43" fill="#64748b" fontSize="11">RISE</text>
+          <text x="205" y="20" textAnchor="middle" fill="#64748b" fontSize="11">SATELLITE PASS</text>
+          <text x="370" y="43" textAnchor="end" fill="#64748b" fontSize="11">SET</text>
 
           {/* Current position indicator */}
           <circle cx={15 + passProgress * 3.8} cy="31" r="6" fill="#ffffff" stroke={isApproaching ? '#22c55e' : passProgress > 50 ? '#ef4444' : '#06b6d4'} strokeWidth="2" />
@@ -1108,7 +1108,7 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
           value={frequency}
           onChange={(e) => setFrequency(parseInt(e.target.value))}
           className="w-full"
-          style={{ accentColor: '#06b6d4', height: '20px', touchAction: 'none' }}
+          style={{ accentColor: '#06b6d4', height: '20px', touchAction: 'none', width: '100%' }}
         />
         <div className="flex justify-between text-xs text-slate-500 mt-1">
           <span>400 MHz</span>
@@ -1125,7 +1125,7 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
           value={passProgress}
           onChange={(e) => setPassProgress(parseInt(e.target.value))}
           className="w-full"
-          style={{ accentColor: '#06b6d4', height: '20px', touchAction: 'none' }}
+          style={{ accentColor: '#06b6d4', height: '20px', touchAction: 'none', width: '100%' }}
         />
         <div className="flex justify-between text-xs text-slate-500 mt-1">
           <span>Rise (0%)</span>
@@ -1190,13 +1190,13 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
                   key={option.id}
                   onClick={() => handlePrediction(option.id)}
                   disabled={showPredictionFeedback}
-                  style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
-                  className={`p-4 rounded-xl text-left transition-all ${
+                  style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10, cursor: 'pointer', fontWeight: 500 }}
+                  className={`p-4 rounded-xl text-left transition-all border-2 ${
                     showPredictionFeedback && option.id === 'shifts'
-                      ? 'bg-green-600 text-white ring-2 ring-green-400'
+                      ? 'bg-green-600 text-white border-green-400'
                       : showPredictionFeedback && selectedPrediction === option.id
-                      ? 'bg-red-600 text-white'
-                      : 'bg-slate-700 hover:bg-slate-600 text-white'
+                      ? 'bg-red-600 text-white border-red-400'
+                      : 'bg-slate-700 hover:bg-slate-600 text-white border-slate-600'
                   }`}
                 >
                   {option.text}
@@ -1228,13 +1228,15 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-cyan-400 mb-4">Satellite Doppler Simulator</h2>
-            <p className="text-slate-300 mb-4 text-center max-w-lg">
-              This visualization shows how <strong>radial velocity</strong> (the component of satellite motion toward or away from the ground station) changes the received frequency. The <strong>Doppler effect</strong> is the change in frequency when source and observer are in relative motion.
-            </p>
+            <div style={{ background: 'rgba(30, 41, 59, 0.4)', border: '2px solid rgba(51, 65, 85, 0.6)', borderRadius: '12px', padding: '16px', maxWidth: '512px', marginBottom: '16px' }}>
+              <p className="text-slate-300 text-center">
+                This visualization shows how <strong>radial velocity</strong> (the component of satellite motion toward or away from the ground station) changes the received frequency. The <strong>Doppler effect</strong> is the change in frequency when source and observer are in relative motion.
+              </p>
+            </div>
 
-            <div className="bg-slate-800/60 rounded-2xl p-4 max-w-2xl border border-slate-700/50 mb-4">
+            <div className="bg-slate-800/60 rounded-2xl p-4 max-w-2xl border-2 border-slate-700/70 mb-4">
               {renderVisualization()}
-              <div className="mt-4 p-3 bg-slate-900/70 rounded-lg border border-cyan-500/30">
+              <div className="mt-4 p-3 bg-slate-900/70 rounded-lg border-2 border-cyan-500/40">
                 <p className="text-center text-cyan-400 font-mono text-lg mb-1">
                   f<sub>received</sub> = f<sub>transmitted</sub> × (1 + v<sub>radial</sub>/c)
                 </p>
@@ -1246,7 +1248,7 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
 
             {renderControls()}
 
-            <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-4 max-w-lg mt-4">
+            <div className="bg-cyan-500/10 border-2 border-cyan-500/40 rounded-xl p-4 max-w-lg mt-4">
               <p className="text-cyan-400 text-sm mb-3">
                 <strong>What you're seeing:</strong> The satellite (top) transmits radio waves (concentric rings) down to the ground station (bottom dish). The wave spacing changes based on satellite motion - compressed when approaching (blue shift), stretched when receding (red shift).
               </p>
@@ -1265,13 +1267,19 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-cyan-400 mb-6">The Doppler Effect in Space</h2>
 
-            {selectedPrediction && (
-              <div className="bg-cyan-900/30 border border-cyan-500/30 p-4 rounded-xl max-w-xl mb-4">
-                <p className="text-cyan-300 text-sm">
-                  <strong>Remember your prediction:</strong> You thought the received frequency would {selectedPrediction === 'shifts' ? 'shift as the satellite passes' : selectedPrediction === 'same' ? 'stay the same' : selectedPrediction === 'random' ? 'vary randomly' : 'be half the transmitted frequency'}. {selectedPrediction === 'shifts' ? 'You were correct!' : 'The frequency actually shifts continuously!'} Let's understand why.
-                </p>
-              </div>
-            )}
+            <div className="bg-cyan-900/30 border border-cyan-500/30 p-4 rounded-xl max-w-xl mb-4">
+              <p className="text-cyan-300 text-sm">
+                {selectedPrediction ? (
+                  <>
+                    <strong>Remember your prediction:</strong> You thought the received frequency would {selectedPrediction === 'shifts' ? 'shift as the satellite passes' : selectedPrediction === 'same' ? 'stay the same' : selectedPrediction === 'random' ? 'vary randomly' : 'be half the transmitted frequency'}. {selectedPrediction === 'shifts' ? 'You were correct!' : 'The frequency actually shifts continuously!'} Let's understand why.
+                  </>
+                ) : (
+                  <>
+                    <strong>What you observed:</strong> The satellite signal frequency shifts as it passes overhead - higher when approaching, lower when receding. Your prediction about this behavior helps us understand the Doppler effect!
+                  </>
+                )}
+              </p>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mb-6">
               <div className="bg-slate-800 p-5 rounded-xl">
@@ -1351,13 +1359,13 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
                   key={option.id}
                   onClick={() => handleTwistPrediction(option.id)}
                   disabled={showTwistFeedback}
-                  style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
-                  className={`p-4 rounded-xl text-left transition-all ${
+                  style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10, cursor: 'pointer', fontWeight: 500 }}
+                  className={`p-4 rounded-xl text-left transition-all border-2 ${
                     showTwistFeedback && option.id === 'none'
-                      ? 'bg-green-600 text-white ring-2 ring-green-400'
+                      ? 'bg-green-600 text-white border-green-400'
                       : showTwistFeedback && twistPrediction === option.id
-                      ? 'bg-red-600 text-white'
-                      : 'bg-slate-700 hover:bg-slate-600 text-white'
+                      ? 'bg-red-600 text-white border-red-400'
+                      : 'bg-slate-700 hover:bg-slate-600 text-white border-slate-600'
                   }`}
                 >
                   {option.text}
@@ -1475,7 +1483,7 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
 
       case 'transfer':
         return (
-          <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
+          <div className="flex flex-col items-center min-h-[400px] p-6" style={{ overflowY: 'auto', flex: 1 }}>
             <h2 className="text-2xl font-bold text-green-400 mb-6">Real-World Applications</h2>
 
             <div className="flex gap-2 mb-4 flex-wrap justify-center">
@@ -1495,8 +1503,8 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
               ))}
             </div>
 
-            <div className="bg-gradient-to-r from-cyan-600 to-green-600 p-1 rounded-xl w-full max-w-2xl">
-              <div className="bg-slate-900 p-6 rounded-lg">
+            <div style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #22c55e 100%)', padding: '4px', borderRadius: '12px', width: '100%', maxWidth: '48rem' }}>
+              <div style={{ backgroundColor: '#0f172a', padding: '24px', borderRadius: '8px' }}>
                 <h3 className="text-xl font-bold text-white mb-2">{realWorldApps[activeAppTab].icon} {realWorldApps[activeAppTab].title}</h3>
                 <p className="text-sm text-cyan-400 mb-4">{realWorldApps[activeAppTab].tagline}</p>
                 <p className="text-slate-300 mb-4">{realWorldApps[activeAppTab].description}</p>
@@ -1531,8 +1539,8 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
                 {!completedApps.has(activeAppTab) && (
                   <button
                     onClick={() => handleAppComplete(activeAppTab)}
-                    style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10, background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' }}
-                    className="w-full py-3 text-white font-bold rounded-lg transition-all"
+                    style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10, background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', cursor: 'pointer', fontWeight: 700 }}
+                    className="w-full py-3 text-white rounded-lg transition-all"
                   >
                     Mark as Understood
                   </button>
@@ -1546,8 +1554,8 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
               {activeAppTab < realWorldApps.length - 1 && (
                 <button
                   onClick={() => setActiveAppTab(activeAppTab + 1)}
-                  style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
-                  className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition-all"
+                  style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10, background: '#334155', cursor: 'pointer', fontWeight: 700 }}
+                  className="px-6 py-3 text-white rounded-xl transition-all"
                 >
                   Next Application →
                 </button>
@@ -1586,7 +1594,13 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
                         key={oIndex}
                         onClick={() => handleTestAnswer(qIndex, oIndex)}
                         disabled={showTestResults}
-                        style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10, transition: 'all 0.2s ease-in-out' }}
+                        style={{
+                          WebkitTapHighlightColor: 'transparent',
+                          zIndex: 10,
+                          transition: 'all 0.2s ease-in-out',
+                          cursor: 'pointer',
+                          border: testAnswers[qIndex] === oIndex ? '2px solid #06b6d4' : '1px solid #475569'
+                        }}
                         className={`p-3 rounded-lg text-sm text-left ${
                           showTestResults && option.correct
                             ? 'bg-green-600 text-white'
@@ -1642,7 +1656,7 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
       case 'mastery':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6 text-center">
-            <div className="text-8xl mb-6">Trophy</div>
+            <div className="text-8xl mb-6">🏆</div>
             <h2 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-green-400 bg-clip-text text-transparent mb-4">
               Satellite Doppler Master!
             </h2>

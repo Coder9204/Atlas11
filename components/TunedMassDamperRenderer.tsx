@@ -301,7 +301,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
 
   const testQuestions = [
     {
-      question: 'What is the primary purpose of a tuned mass damper?',
+      question: 'A skyscraper experiences dangerous swaying during earthquakes and windstorms. Engineers propose installing a tuned mass damper. What is the primary purpose of a tuned mass damper?',
       options: [
         { text: 'To add weight to stabilize the building', correct: false },
         { text: 'To absorb vibration energy at specific frequencies', correct: true },
@@ -337,7 +337,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
       ],
     },
     {
-      question: 'Typical tuned mass dampers are what percentage of building mass?',
+      question: 'An engineer designs a TMD for a 10,000-ton building. The damper needs to be effective but not prohibitively expensive. Typical tuned mass dampers are what percentage of building mass?',
       options: [
         { text: '0.1-0.5%', correct: false },
         { text: '1-5%', correct: true },
@@ -940,7 +940,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
                   y={groundY - buildingHeight + 27}
                   textAnchor="middle"
                   fill="#ffffff"
-                  fontSize={10}
+                  fontSize={11}
                   fontWeight="bold"
                 >
                   TMD
@@ -1044,7 +1044,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
               y={groundY - buildingHeight - 55}
               textAnchor="middle"
               fill={colors.textMuted}
-              fontSize={10}
+              fontSize={11}
               fontWeight="bold"
             >
               Building Displacement
@@ -1073,7 +1073,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
               y={0}
               textAnchor="middle"
               fill={colors.textSecondary}
-              fontSize={9}
+              fontSize={11}
               fontWeight="bold"
             >
               AMPLITUDE
@@ -1115,7 +1115,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
               y={50}
               textAnchor="middle"
               fill={colors.textMuted}
-              fontSize={8}
+              fontSize={11}
             >
               max displacement
             </text>
@@ -1140,7 +1140,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
               x={20}
               y={73}
               fill={colors.textSecondary}
-              fontSize={9}
+              fontSize={11}
             >
               TMD: {damperEnabled ? 'ON' : 'OFF'}
             </text>
@@ -1150,7 +1150,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
               x={0}
               y={90}
               fill={colors.textMuted}
-              fontSize={8}
+              fontSize={11}
             >
               Tuning: {(damperTuning * 100).toFixed(0)}%
             </text>
@@ -1190,13 +1190,13 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
 
             {/* Building legend */}
             <rect x={0} y={2} width={14} height={14} fill="url(#tmdBuildingGradient)" rx={2} />
-            <text x={20} y={13} fill={colors.textSecondary} fontSize={10}>Building</text>
+            <text x={20} y={13} fill={colors.textSecondary} fontSize={11}>Building</text>
 
             {/* TMD legend */}
             {damperEnabled && (
               <>
                 <rect x={0} y={22} width={14} height={14} fill="url(#tmdMassRadial)" rx={2} />
-                <text x={20} y={33} fill={colors.textSecondary} fontSize={10}>TMD Mass</text>
+                <text x={20} y={33} fill={colors.textSecondary} fontSize={11}>TMD Mass</text>
               </>
             )}
 
@@ -1211,7 +1211,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
                     repeatCount="indefinite"
                   />
                 </circle>
-                <text x={20} y={10} fill={colors.warning} fontSize={9}>Earthquake Active</text>
+                <text x={20} y={10} fill={colors.warning} fontSize={11}>Earthquake Active</text>
               </g>
             )}
           </g>
@@ -1222,7 +1222,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
               x={15}
               y={height - 15}
               fill={colors.textMuted}
-              fontSize={10}
+              fontSize={11}
             >
               Earthquake Freq: {earthquakeFreq.toFixed(1)} Hz
             </text>
@@ -1352,6 +1352,9 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
         <div style={{ color: colors.textSecondary, fontSize: '12px' }}>
           {damperTuning === 1.0 ? '✓ Damper perfectly tuned!' : `Damper ${damperTuning > 1 ? 'too stiff' : 'too soft'}`}
         </div>
+        <div style={{ color: colors.textMuted, fontSize: '11px', marginTop: '8px', fontFamily: 'monospace' }}>
+          ω = √(k/m)
+        </div>
       </div>
     </div>
   );
@@ -1407,7 +1410,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
           border: 'none',
           background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
           color: canProceed ? 'white' : colors.textSecondary,
-          fontWeight: 'bold',
+          fontWeight: 700,
           cursor: canProceed ? 'pointer' : 'not-allowed',
           fontSize: '16px',
         }}
@@ -1537,8 +1540,8 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
             borderRadius: '8px',
             borderLeft: `3px solid ${colors.building}`,
           }}>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
-              <strong style={{ color: colors.textPrimary }}>Observe:</strong> Watch how the TMD (red mass) moves in the opposite direction to the building. This counter-motion absorbs vibration energy. When you increase the earthquake frequency near 1.0 Hz (the building's natural frequency), the amplitude increases dramatically - this is resonance.
+            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
+              <strong style={{ color: colors.textPrimary, fontWeight: 600 }}>Observe:</strong> Watch how the TMD (red mass) moves in the opposite direction to the building. This counter-motion absorbs vibration energy. When you increase the earthquake frequency near 1.0 Hz (the building's natural frequency), the amplitude increases dramatically - this is resonance.
             </p>
           </div>
 
@@ -1609,19 +1612,35 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
             <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Resonance Transfer:</strong> The damper
-                is tuned to the building's natural frequency. When the building sways, energy transfers
-                to the damper, making it move instead.
+                is tuned to the building's natural frequency because energy transfers most efficiently between oscillators at the same frequency. When the building sways, energy transfers
+                to the damper, making it move instead. This is why frequency matching is crucial.
               </p>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Opposite Motion:</strong> The damper
                 always moves opposite to the building. When the building sways left, the damper moves
                 right, counteracting the motion.
               </p>
-              <p>
+              <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Energy Dissipation:</strong> Internal
                 damping converts the damper's kinetic energy into heat. The building's energy is
                 literally absorbed and dissipated by the damper.
               </p>
+              <div style={{
+                background: 'rgba(249, 115, 22, 0.1)',
+                padding: '12px',
+                borderRadius: '8px',
+                fontFamily: 'monospace',
+                fontSize: '13px',
+                marginTop: '12px',
+              }}>
+                <strong style={{ color: colors.textPrimary }}>Tuning Condition:</strong><br />
+                <div style={{ marginTop: '8px', color: colors.textPrimary }}>
+                  ω<sub>damper</sub> = ω<sub>building</sub>
+                </div>
+                <div style={{ marginTop: '4px', fontSize: '12px' }}>
+                  where ω = √(k/m) is the natural frequency
+                </div>
+              </div>
             </div>
           </div>
         </div>

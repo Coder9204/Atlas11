@@ -1153,6 +1153,17 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
           <div style={{ padding: '16px 0' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center', fontWeight: '700', fontSize: '28px', lineHeight: 1.5 }}>Real-World Applications</h2>
             <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px', lineHeight: 1.7 }}>Retroreflection keeps us safe and enables precision measurement</p>
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap', margin: '16px 0' }}>
+              {realWorldApps.map((app, idx) => (
+                app.stats.slice(0, 3).map((stat, statIdx) => (
+                  <div key={`${idx}-${statIdx}`} style={{ background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95))', padding: '16px 20px', borderRadius: '8px', textAlign: 'center', minWidth: '120px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+                    <div style={{ fontSize: '24px', marginBottom: '4px' }}>{stat.icon}</div>
+                    <div style={{ color: colors.accent, fontSize: '20px', fontWeight: '800', marginBottom: '4px' }}>{stat.value}</div>
+                    <div style={{ color: colors.textMuted, fontSize: '12px', lineHeight: 1.4 }}>{stat.label}</div>
+                  </div>
+                ))
+              )).flat()}
+            </div>
           </div>
           {transferApplications.map((app, index) => (
             <div key={index} style={{ background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95))', margin: '16px 0', padding: '20px', borderRadius: '12px', border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>

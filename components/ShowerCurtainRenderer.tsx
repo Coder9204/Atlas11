@@ -150,6 +150,8 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
   // Test phase
   const [testAnswers, setTestAnswers] = useState<number[]>([]);
   const [showTestResults, setShowTestResults] = useState(false);
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [answerFeedback, setAnswerFeedback] = useState<{correct: boolean; message: string} | null>(null);
 
   // UI state
   const [isMobile, setIsMobile] = useState(false);
@@ -374,8 +376,25 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
 
   // Handle test answer
   const handleTestAnswer = (answer: number) => {
-    playSound('click');
-    setTestAnswers(prev => [...prev, answer]);
+    const currentQuestion = testAnswers.length;
+    const isCorrect = testQuestions[currentQuestion].options[answer]?.correct;
+
+    setSelectedAnswer(answer);
+    playSound(isCorrect ? 'success' : 'click');
+
+    // Show feedback
+    setAnswerFeedback({
+      correct: isCorrect,
+      message: isCorrect ? 'Correct!' : 'Not quite right'
+    });
+
+    // After a brief delay, move to next question (no delay in test environment)
+    const delay = typeof process !== 'undefined' && process.env.NODE_ENV === 'test' ? 0 : 800;
+    setTimeout(() => {
+      setTestAnswers(prev => [...prev, answer]);
+      setSelectedAnswer(null);
+      setAnswerFeedback(null);
+    }, delay);
   };
 
   // Calculate test score
@@ -1219,16 +1238,19 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
               )}
 
               {/* SVG Text Labels */}
-              {waterFlow > 0 && (
-                <g>
-                  <text x="200" y="215" fontSize="12" fill={colors.water} textAnchor="middle" fontWeight="600">Shower Head</text>
-                  <text x="85" y="115" fontSize="11" fill={colors.highPressure} textAnchor="middle" fontWeight="500">High P</text>
-                  <text x="315" y="115" fontSize="11" fill={colors.highPressure} textAnchor="middle" fontWeight="500">High P</text>
-                  <text x="200" y="115" fontSize="11" fill={colors.lowPressure} textAnchor="middle" fontWeight="500">Low P</text>
-                  <text x="85" y="200" fontSize="11" fill={colors.accent} textAnchor="middle">Curtain</text>
-                  <text x="315" y="200" fontSize="11" fill={colors.accent} textAnchor="middle">Curtain</text>
-                </g>
-              )}
+              <g>
+                <text x="200" y="15" fontSize="11" fill={colors.textSecondary} textAnchor="middle" fontWeight="500">Shower Enclosure</text>
+                {waterFlow > 0 && (
+                  <>
+                    <text x="200" y="215" fontSize="12" fill={colors.water} textAnchor="middle" fontWeight="600">Water Flow</text>
+                    <text x="60" y="115" fontSize="11" fill={colors.highPressure} textAnchor="middle" fontWeight="500">High P</text>
+                    <text x="340" y="115" fontSize="11" fill={colors.highPressure} textAnchor="middle" fontWeight="500">High P</text>
+                    <text x="200" y="145" fontSize="11" fill={colors.lowPressure} textAnchor="middle" fontWeight="600">Low Pressure Zone</text>
+                    <text x="95" y="35" fontSize="10" fill={colors.accent} textAnchor="middle">Curtain</text>
+                    <text x="305" y="35" fontSize="10" fill={colors.accent} textAnchor="middle">Curtain</text>
+                  </>
+                )}
+              </g>
             </svg>
 
             {/* Labels moved outside SVG using typo system */}
@@ -1270,7 +1292,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
                 max="100"
                 value={waterFlow}
                 onChange={(e) => setWaterFlow(Number(e.target.value))}
-                style={{ width: '100%', accentColor: colors.water }}
+                style={{ width: '100%', accentColor: colors.water, touchAction: 'none' }}
               />
             </div>
 
@@ -1286,7 +1308,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
                 max="50"
                 value={waterTemp}
                 onChange={(e) => setWaterTemp(Number(e.target.value))}
-                style={{ width: '100%', accentColor: waterTemp > 40 ? colors.accent : colors.primary }}
+                style={{ width: '100%', accentColor: waterTemp > 40 ? colors.accent : colors.primary, touchAction: 'none' }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: colors.textSecondary }}>
                 <span>Cold</span>
@@ -1454,9 +1476,37 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
           ))}
         </div>
 
-        {/* The debate */}
+        {/* Bernoulli's Equation */}
         <div style={{
           marginTop: '20px',
+          padding: '16px',
+          background: `${colors.primary}10`,
+          borderRadius: '12px',
+          border: `2px solid ${colors.primary}30`
+        }}>
+          <p style={{ color: colors.primary, fontWeight: '600', margin: '0 0 12px 0', fontSize: '15px' }}>
+            📐 Bernoulli's Equation
+          </p>
+          <div style={{
+            padding: '12px',
+            background: colors.background,
+            borderRadius: '8px',
+            marginBottom: '12px',
+            textAlign: 'center'
+          }}>
+            <p style={{ color: colors.text, margin: 0, fontSize: '16px', fontFamily: 'monospace', fontWeight: '600' }}>
+              P + ½ρv² + ρgh = constant
+            </p>
+          </div>
+          <p style={{ color: colors.textSecondary, margin: 0, fontSize: '13px', lineHeight: 1.6 }}>
+            Where <strong>P</strong> = pressure, <strong>ρ</strong> = density, <strong>v</strong> = velocity, <strong>g</strong> = gravity, <strong>h</strong> = height.
+            <br/>This shows that as velocity (v) increases, pressure (P) must decrease to maintain the constant. This is why faster-moving air inside the shower has lower pressure!
+          </p>
+        </div>
+
+        {/* The debate */}
+        <div style={{
+          marginTop: '16px',
           padding: '16px',
           background: colors.background,
           borderRadius: '12px'
@@ -1467,6 +1517,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
           <p style={{ color: colors.textSecondary, margin: 0, fontSize: '14px', lineHeight: 1.6 }}>
             Scientists have proposed multiple mechanisms! David Schmidt's CFD analysis found the horizontal vortex model
             best explains the effect. But likely all factors contribute — entrainment, Bernoulli, convection, and vortex dynamics.
+            Your prediction earlier helped you think about which mechanism is primary!
           </p>
         </div>
 
@@ -1974,7 +2025,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
   const renderTransfer = () => (
     <div style={{ padding: isMobile ? '16px' : '24px' }}>
       {renderProgressBar()}
-      {renderSectionHeader("🌍", "Entrainment in Engineering", "Beyond the bathroom")}
+      {renderSectionHeader("🌍", "Entrainment in Engineering", `Application ${activeApp + 1} of ${realWorldApps.length}`)}
 
       <div style={{
         background: colors.card,
@@ -2155,6 +2206,25 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
         }}>
           {!isComplete && !showTestResults ? (
             <>
+              {/* Question counter */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                marginBottom: '16px'
+              }}>
+                <span style={{
+                  color: colors.primary,
+                  fontSize: '18px',
+                  fontWeight: '700',
+                  padding: '8px 20px',
+                  background: `${colors.primary}20`,
+                  borderRadius: '8px',
+                  border: `2px solid ${colors.primary}`
+                }}>
+                  Question {currentQuestion + 1} of {testQuestions.length}
+                </span>
+              </div>
+
               <p style={{
                 color: colors.text,
                 fontSize: '17px',
@@ -2165,33 +2235,55 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {testQuestions[currentQuestion].options.map((option, i) => (
-                  <button
-                    key={i}
-                    onPointerDown={() => handleTestAnswer(i)}
-                    style={{
-                      padding: '14px 18px',
-                      fontSize: '14px',
-                      background: colors.background,
-                      color: colors.text,
-                      border: `2px solid #333`,
-                      borderRadius: '10px',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onPointerEnter={(e) => {
-                      e.currentTarget.style.borderColor = colors.primary;
-                      e.currentTarget.style.background = `${colors.primary}10`;
-                    }}
-                    onPointerLeave={(e) => {
-                      e.currentTarget.style.borderColor = '#333';
-                      e.currentTarget.style.background = colors.background;
-                    }}
-                  >
-                    {option.text}
-                  </button>
-                ))}
+                {testQuestions[currentQuestion].options.map((option, i) => {
+                  const isSelected = selectedAnswer === i;
+                  const showFeedback = answerFeedback && isSelected;
+                  const feedbackColor = showFeedback ? (answerFeedback.correct ? colors.success : colors.accent) : colors.primary;
+
+                  return (
+                    <button
+                      key={i}
+                      onPointerDown={() => !selectedAnswer && handleTestAnswer(i)}
+                      disabled={selectedAnswer !== null}
+                      style={{
+                        padding: '14px 18px',
+                        fontSize: '14px',
+                        background: isSelected ? `${feedbackColor}20` : colors.background,
+                        color: isSelected ? feedbackColor : colors.text,
+                        border: `2px solid ${isSelected ? feedbackColor : '#333'}`,
+                        borderRadius: '10px',
+                        cursor: selectedAnswer !== null ? 'not-allowed' : 'pointer',
+                        textAlign: 'left',
+                        transition: 'all 0.2s ease',
+                        opacity: selectedAnswer !== null && !isSelected ? 0.5 : 1,
+                        position: 'relative'
+                      }}
+                      onPointerEnter={(e) => {
+                        if (!selectedAnswer) {
+                          e.currentTarget.style.borderColor = colors.primary;
+                          e.currentTarget.style.background = `${colors.primary}10`;
+                        }
+                      }}
+                      onPointerLeave={(e) => {
+                        if (!selectedAnswer) {
+                          e.currentTarget.style.borderColor = '#333';
+                          e.currentTarget.style.background = colors.background;
+                        }
+                      }}
+                    >
+                      {option.text}
+                      {showFeedback && (
+                        <span style={{
+                          marginLeft: '12px',
+                          fontWeight: '600',
+                          fontSize: '16px'
+                        }}>
+                          {answerFeedback.correct ? '✓' : '✗'}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Progress dots */}
@@ -2413,7 +2505,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Premium background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
@@ -2440,6 +2532,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
                   }`}
                   style={{ cursor: 'pointer' }}
                   title={phaseLabels[p]}
+                  aria-label={phaseLabels[p]}
                 />
               );
             })}
@@ -2450,6 +2543,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
 
       {/* Main content */}
       <div className="relative pt-16 pb-24" style={{
+        flex: 1,
         maxHeight: 'calc(100vh - 64px)',
         overflowY: 'auto',
         overflowX: 'hidden'
@@ -2458,7 +2552,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
           maxWidth: '800px',
           margin: '0 auto',
           padding: isMobile ? '8px' : '16px',
-          paddingBottom: '80px'
+          paddingBottom: '100px'
         }}>
           {renderPhase()}
         </div>

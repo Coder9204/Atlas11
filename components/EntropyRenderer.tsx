@@ -298,7 +298,7 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
     if (onGameEvent) {
       onGameEvent({ eventType: 'phase_changed', gameType: 'entropy', gameTitle: 'Entropy & Thermodynamics', details: { phase: p }, timestamp: Date.now() });
     }
-    setTimeout(() => { isNavigating.current = false; }, 200);
+    isNavigating.current = false;
   }, [onGameEvent]);
 
   const nextPhase = useCallback(() => {

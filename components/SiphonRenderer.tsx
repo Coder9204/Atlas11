@@ -2242,6 +2242,22 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
         }}>
           {!isComplete && !showTestResults ? (
             <>
+              {/* Quiz scenario context */}
+              <div style={{
+                padding: '14px',
+                background: `${colors.primary}15`,
+                borderRadius: '10px',
+                border: `1px solid ${colors.primary}30`,
+                marginBottom: '20px'
+              }}>
+                <p style={{ color: colors.primary, fontSize: '13px', fontWeight: '600', margin: '0 0 6px 0' }}>
+                  🧪 Real-World Scenario:
+                </p>
+                <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0, lineHeight: 1.5 }}>
+                  You're setting up a siphon system to transfer water from an elevated storage tank on a hill to your garden below. The tank sits about 8 meters higher than the garden. Understanding how siphons work will help you design the system correctly, choose the right tube height, and troubleshoot any flow problems that might occur.
+                </p>
+              </div>
+
               <p style={{
                 color: colors.text,
                 fontSize: '17px',

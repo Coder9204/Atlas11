@@ -522,7 +522,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
     const particleSpacing = 1 - particleJamming * 0.4;
 
     // Generate particles
-    const particles = useMemo(() => {
+    const particles = (() => {
       const result = [];
       const numParticles = isMobile ? 30 : 60;
       for (let i = 0; i < numParticles; i++) {
@@ -536,7 +536,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
         });
       }
       return result;
-    }, [cx, bowlY, bowlWidth, bowlHeight, isMobile, animTime]);
+    })();
 
     // Legend items
     const legendItems = [
@@ -647,6 +647,14 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
             Cornstarch + Water = Shear-Thickening Fluid
           </text>
 
+          {/* Axis labels for reference */}
+          {interactive && (
+            <>
+              <text x="20" y={bowlY + 40} fill={colors.textSecondary} fontSize="11">Slow ←</text>
+              <text x={width - 60} y={bowlY + 40} fill={colors.textSecondary} fontSize="11">→ Fast</text>
+            </>
+          )}
+
           {/* Bowl */}
           <ellipse
             cx={cx}
@@ -733,15 +741,6 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
             </g>
           )}
 
-          {/* Physics formula */}
-          <g transform={`translate(${isMobile ? 15 : 25}, ${height - (isMobile ? 35 : 45)})`}>
-            <text fill={colors.textSecondary} fontSize={isMobile ? 11 : 12} fontWeight="600">
-              <tspan fill={colors.primaryLight}>η</tspan> = η₀ × (1 + (λ × <tspan fill={colors.accent}>γ̇</tspan>)ⁿ)
-            </text>
-            <text y="14" fill={colors.textMuted} fontSize={isMobile ? 11 : 12}>
-              Viscosity increases with shear rate (γ̇)
-            </text>
-          </g>
         </svg>
       </div>
     );
@@ -897,7 +896,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
             padding: '14px 28px',
             borderRadius: '12px',
             backgroundColor: colors.bgCardLight,
-            color: colors.textMuted,
+            color: colors.textSecondary,
             fontSize: '14px',
             fontWeight: 500,
             minHeight: '52px',
@@ -958,9 +957,10 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
               marginBottom: '32px',
               maxWidth: '600px',
               margin: '0 auto 32px auto',
-              lineHeight: 1.6
+              lineHeight: 1.6,
+              fontWeight: 400
             }}>
-              What if a substance could <strong style={{ color: colors.primaryLight }}>switch instantly</strong> between
+              What if a substance could <strong style={{ color: colors.primaryLight, fontWeight: 600 }}>switch instantly</strong> between
               liquid and solid... without changing temperature?
             </p>
 
@@ -988,7 +988,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
 
             <p style={{
               fontSize: '14px',
-              color: colors.textMuted,
+              color: colors.textSecondary,
               fontStyle: 'italic'
             }}>
               You might have played with this at school... it's called <strong style={{ color: colors.primaryLight }}>oobleck!</strong>
@@ -996,7 +996,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
           </div>
         </div>
 
-        {renderBottomBar(false, true, "Let's Explore →")}
+        {renderBottomBar(false, true, "Next: Let's Explore →")}
       </div>
     );
   }
@@ -1231,7 +1231,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
                     touchAction: 'pan-y'
                   }}
                 />
-                <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '8px', textAlign: 'center' }}>
+                <p style={{ color: colors.textSecondary, fontSize: '12px', marginTop: '8px', textAlign: 'center' }}>
                   ↑ Higher speed = higher shear rate = particles jam together
                 </p>
               </div>
@@ -1261,6 +1261,48 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
                 >
                   {isPoking ? '👇 Poking...' : '👆 Hold to Poke'}
                 </button>
+              </div>
+            </div>
+
+            {/* Comparison Display - Side by side */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'row',
+              gap: '12px',
+              marginBottom: '20px',
+              flexWrap: isMobile ? 'wrap' : 'nowrap'
+            }}>
+              <div style={{
+                flex: 1,
+                background: `${colors.flowingParticles}15`,
+                borderRadius: '12px',
+                padding: '16px',
+                border: `2px solid ${shearRate < 50 ? colors.flowingParticles : colors.border}40`,
+                minWidth: isMobile ? '100%' : '0'
+              }}>
+                <div style={{ fontSize: '32px', textAlign: 'center', marginBottom: '8px' }}>🐌</div>
+                <h4 style={{ color: colors.flowingParticles, fontSize: '14px', fontWeight: 700, textAlign: 'center', marginBottom: '8px' }}>
+                  SLOW Movement
+                </h4>
+                <p style={{ color: colors.textSecondary, fontSize: '12px', textAlign: 'center', margin: 0 }}>
+                  Flows like liquid<br/>Particles move freely
+                </p>
+              </div>
+              <div style={{
+                flex: 1,
+                background: `${colors.jammedParticles}15`,
+                borderRadius: '12px',
+                padding: '16px',
+                border: `2px solid ${shearRate >= 50 ? colors.jammedParticles : colors.border}40`,
+                minWidth: isMobile ? '100%' : '0'
+              }}>
+                <div style={{ fontSize: '32px', textAlign: 'center', marginBottom: '8px' }}>👊</div>
+                <h4 style={{ color: colors.jammedParticles, fontSize: '14px', fontWeight: 700, textAlign: 'center', marginBottom: '8px' }}>
+                  FAST Impact
+                </h4>
+                <p style={{ color: colors.textSecondary, fontSize: '12px', textAlign: 'center', margin: 0 }}>
+                  Acts like solid<br/>Particles jam together
+                </p>
               </div>
             </div>
 
@@ -1309,7 +1351,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
               <div style={{ fontSize: '12px', color: colors.textSecondary, lineHeight: 1.8 }}>
                 <div><span style={{ color: colors.primaryLight, fontWeight: 700 }}>η</span> = Viscosity (resistance to flow)</div>
                 <div><span style={{ color: colors.accent, fontWeight: 700 }}>γ̇</span> = Shear rate (how fast you move)</div>
-                <div><span style={{ color: colors.textMuted }}>n &gt; 1</span> = Shear-thickening behavior</div>
+                <div><span style={{ color: colors.textSecondary }}>n &gt; 1</span> = Shear-thickening behavior</div>
               </div>
             </div>
 
@@ -1383,7 +1425,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
               <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
                 {wasCorrect
                   ? 'You correctly predicted that fast impacts meet resistance!'
-                  : 'The answer is: Fast poke meets resistance; slow poke sinks in'
+                  : 'You predicted differently, but the correct answer is: Fast poke meets resistance; slow poke sinks in'
                 }
               </p>
             </div>
@@ -1548,17 +1590,17 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '40px', marginBottom: '8px' }}>🥣</div>
                   <p style={{ color: colors.starch, fontWeight: 600 }}>Standard (2:1)</p>
-                  <p style={{ color: colors.textMuted, fontSize: '12px' }}>67% starch</p>
+                  <p style={{ color: colors.textSecondary, fontSize: '12px' }}>67% starch</p>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '40px', marginBottom: '8px' }}>💧</div>
                   <p style={{ color: colors.water, fontWeight: 600 }}>More Water</p>
-                  <p style={{ color: colors.textMuted, fontSize: '12px' }}>50% starch</p>
+                  <p style={{ color: colors.textSecondary, fontSize: '12px' }}>50% starch</p>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '40px', marginBottom: '8px' }}>🌾</div>
                   <p style={{ color: colors.primaryLight, fontWeight: 600 }}>More Starch</p>
-                  <p style={{ color: colors.textMuted, fontSize: '12px' }}>80% starch</p>
+                  <p style={{ color: colors.textSecondary, fontSize: '12px' }}>80% starch</p>
                 </div>
               </div>
             </div>
@@ -1631,12 +1673,9 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
 
   if (phase === 'twist_play') {
     // Calculate effectiveness based on starch ratio
-    const effectiveness = useMemo(() => {
-      // Optimal is around 67% (2:1 ratio)
-      const optimal = 67;
-      const diff = Math.abs(starchRatio - optimal);
-      return Math.max(0, 100 - diff * 2);
-    }, [starchRatio]);
+    const optimal = 67;
+    const diff = Math.abs(starchRatio - optimal);
+    const effectiveness = Math.max(0, 100 - diff * 2);
 
     return (
       <div style={{
@@ -1662,6 +1701,52 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
               <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary }}>
                 Adjust the Starch Ratio
               </h2>
+            </div>
+
+            {/* SVG Visualization - Dynamic based on starchRatio */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              marginBottom: '20px',
+              border: `1px solid ${colors.border}`,
+              overflow: 'hidden'
+            }}>
+              <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto', display: 'block' }}>
+                <rect width="400" height="200" fill={colors.bgDark} />
+                <text x="200" y="30" textAnchor="middle" fill={colors.textPrimary} fontSize="16" fontWeight="700">
+                  Starch Ratio Effect
+                </text>
+
+                {/* Visual bar showing effectiveness */}
+                <rect x="50" y="70" width="300" height="40" fill={colors.bgCardLight} rx="8" />
+                <rect
+                  x="50"
+                  y="70"
+                  width={3 * effectiveness}
+                  height="40"
+                  fill={effectiveness > 80 ? colors.success : effectiveness > 60 ? colors.primaryLight : colors.warning}
+                  rx="8"
+                />
+                <text x="200" y="95" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+                  Armor Effectiveness: {Math.round(effectiveness)}%
+                </text>
+
+                {/* Particle visualization */}
+                {Array.from({ length: Math.floor(starchRatio / 5) }).map((_, i) => (
+                  <circle
+                    key={i}
+                    cx={60 + (i % 15) * 22}
+                    cy={140 + Math.floor(i / 15) * 20}
+                    r="8"
+                    fill={colors.starch}
+                    opacity="0.7"
+                  />
+                ))}
+
+                <text x="200" y="180" textAnchor="middle" fill={colors.textSecondary} fontSize="12">
+                  More particles = stronger jamming effect
+                </text>
+              </svg>
             </div>
 
             {/* Ratio visualization */}
@@ -2053,7 +2138,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
                   }}>
                     <div style={{ fontSize: '24px', marginBottom: '4px' }}>{stat.icon}</div>
                     <div style={{ color: app.color, fontSize: '18px', fontWeight: 700 }}>{stat.value}</div>
-                    <div style={{ color: colors.textMuted, fontSize: '11px' }}>{stat.label}</div>
+                    <div style={{ color: colors.textSecondary, fontSize: '11px' }}>{stat.label}</div>
                   </div>
                 ))}
               </div>
@@ -2126,7 +2211,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
             {/* Progress indicator */}
             <p style={{
               textAlign: 'center',
-              color: colors.textMuted,
+              color: colors.textSecondary,
               fontSize: '13px',
               marginTop: '12px'
             }}>
@@ -2173,7 +2258,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
                 <span style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700 }}>
                   Question {testQuestion + 1} of 10
                 </span>
-                <span style={{ color: colors.textMuted, fontSize: '14px' }}>
+                <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
                   {testAnswers.filter(a => a !== null).length} answered
                 </span>
               </div>
@@ -2204,7 +2289,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
               marginBottom: '16px',
               border: `1px solid ${colors.border}`
             }}>
-              <p style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>
                 SCENARIO
               </p>
               <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
@@ -2466,7 +2551,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
                   borderRadius: '4px'
                 }} />
               </div>
-              <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '8px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '12px', marginTop: '8px' }}>
                 70% required to pass
               </p>
             </div>

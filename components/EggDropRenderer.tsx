@@ -544,7 +544,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
               <text
                 x="40"
                 y={50 + i * 60 + 4}
-                fontSize="10"
+                fontSize="11"
                 fill={design.colors.textMuted}
                 textAnchor="end"
               >
@@ -553,7 +553,8 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
             </g>
           ))}
 
-          {/* Height indicator */}
+          {/* Height indicator with background */}
+          <rect x="120" y="15" width="160" height="24" fill={design.colors.bgCard} rx="6" opacity="0.9" />
           <text x="200" y="30" fontSize="14" fontWeight="700" fill={design.colors.textPrimary} textAnchor="middle">
             Drop Height: {height.toFixed(1)}m
           </text>
@@ -631,15 +632,15 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
           {/* Legend */}
           <g transform="translate(10, 370)">
             <rect x="0" y="0" width="12" height="12" fill="url(#foamGrad)" rx="2" />
-            <text x="18" y="10" fontSize="10" fill={design.colors.textSecondary}>
+            <text x="18" y="10" fontSize="11" fill={design.colors.textSecondary}>
               Padding
             </text>
             <rect x="80" y="0" width="12" height="12" fill="url(#eggGrad)" rx="2" />
-            <text x="98" y="10" fontSize="10" fill={design.colors.textSecondary}>
+            <text x="98" y="10" fontSize="11" fill={design.colors.textSecondary}>
               Egg
             </text>
             <rect x="140" y="0" width="12" height="12" fill={design.colors.ground} rx="2" />
-            <text x="158" y="10" fontSize="10" fill={design.colors.textSecondary}>
+            <text x="158" y="10" fontSize="11" fill={design.colors.textSecondary}>
               Ground
             </text>
           </g>
@@ -656,6 +657,8 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
               <text x="240" y={eggY} fontSize="11" fill={design.colors.error} fontWeight="600">
                 v
               </text>
+              {/* Motion blur effect */}
+              <ellipse cx="200" cy={eggY - 15} rx="18" ry="10" fill={design.colors.eggYellow} opacity="0.3" />
             </g>
           )}
         </svg>
@@ -802,7 +805,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
             <p style={{ fontSize: '14px', fontWeight: 600, color: design.colors.accentPrimary, marginBottom: design.spacing.sm }}>
               🎯 What You'll Learn
             </p>
-            <ul style={{ fontSize: '14px', color: design.colors.textSecondary, textAlign: 'left', lineHeight: 1.8, paddingLeft: '20px' }}>
+            <ul style={{ fontSize: '14px', color: '#94a3b8', textAlign: 'left', lineHeight: 1.8, paddingLeft: '20px' }}>
               <li>Why crumple zones save lives in car crashes</li>
               <li>The impulse-momentum theorem (F = Δp/Δt)</li>
               <li>How packaging protects fragile items</li>
@@ -906,7 +909,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
               Interactive Egg Drop Lab
             </h2>
             <p style={{ fontSize: '15px', color: design.colors.textSecondary, marginBottom: design.spacing.xl, textAlign: 'center', lineHeight: 1.6 }}>
-              Adjust the padding thickness and drop the egg. Watch how <strong style={{ color: design.colors.cyan }}>increasing padding time</strong> reduces the <strong style={{ color: design.colors.warning }}>impact force</strong>.
+              Adjust the padding thickness and drop the egg. Watch how <strong style={{ color: design.colors.cyan }}>increasing padding time</strong> reduces the <strong style={{ color: design.colors.warning }}>impact force</strong> compared to the baseline (no padding).
             </p>
 
             {/* Educational context */}
@@ -1039,7 +1042,9 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
       ? "You were right! Padding reduces the force."
       : prediction === 'stops'
       ? "Close! Padding doesn't stop the egg, it extends the stopping time."
-      : "Not quite. Padding does make a difference by extending the collision time.";
+      : prediction
+      ? "Not quite. Padding does make a difference by extending the collision time."
+      : "Let's see what you observed in the experiment.";
 
     return (
       <div style={containerStyle}>
@@ -1055,19 +1060,17 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
               The Impulse-Momentum Theorem
             </h2>
 
-            {prediction && (
-              <div style={{
-                padding: design.spacing.lg,
-                borderRadius: design.radius.lg,
-                background: prediction === 'reduces_force' ? design.colors.successMuted : design.colors.warning + '20',
-                border: `1px solid ${prediction === 'reduces_force' ? design.colors.success : design.colors.warning}60`,
-                marginBottom: design.spacing.xl
-              }}>
-                <p style={{ fontSize: '14px', color: design.colors.textPrimary, lineHeight: 1.6 }}>
-                  <strong>Your prediction:</strong> {userPredictionText}
-                </p>
-              </div>
-            )}
+            <div style={{
+              padding: design.spacing.lg,
+              borderRadius: design.radius.lg,
+              background: prediction === 'reduces_force' ? design.colors.successMuted : design.colors.warning + '20',
+              border: `1px solid ${prediction === 'reduces_force' ? design.colors.success : design.colors.warning}60`,
+              marginBottom: design.spacing.xl
+            }}>
+              <p style={{ fontSize: '14px', color: design.colors.textPrimary, lineHeight: 1.6 }}>
+                <strong>Your prediction:</strong> {userPredictionText}
+              </p>
+            </div>
 
             <div style={{
               padding: design.spacing.xl,
@@ -1425,9 +1428,20 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
             <h2 style={{ fontSize: '28px', fontWeight: 900, color: design.colors.textPrimary, marginBottom: design.spacing.lg, textAlign: 'center' }}>
               Real-World Impact
             </h2>
-            <p style={{ fontSize: '16px', color: design.colors.textSecondary, marginBottom: design.spacing.xl, textAlign: 'center', lineHeight: 1.6 }}>
-              The impulse-momentum theorem isn't just physics class—it saves lives and protects billions in goods every day.
+            <p style={{ fontSize: '16px', color: design.colors.textSecondary, marginBottom: design.spacing.lg, textAlign: 'center', lineHeight: 1.6 }}>
+              The impulse-momentum theorem isn't just physics class—it saves lives and protects billions in goods every day. From automotive engineering to package delivery, understanding F × Δt = Δp is critical.
             </p>
+            <div style={{
+              padding: design.spacing.lg,
+              borderRadius: design.radius.lg,
+              background: design.colors.accentPrimary + '10',
+              border: `1px solid ${design.colors.accentPrimary}40`,
+              marginBottom: design.spacing.xl
+            }}>
+              <p style={{ fontSize: '14px', color: design.colors.textSecondary, lineHeight: 1.7 }}>
+                <strong style={{ color: design.colors.accentPrimary }}>Key Principle:</strong> When momentum change is unavoidable, engineers design systems to maximize collision time. Every 0.01 second of extra time can mean the difference between protection and destruction. This principle applies across industries—from shipping fragile electronics to protecting passengers in vehicles to designing sports equipment.
+              </p>
+            </div>
 
             {/* Application cards with internal navigation */}
             <div style={{
@@ -1503,7 +1517,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
   if (phase === 'test') {
     const questions = [
       {
-        question: 'An egg drops from 3m onto foam padding. The padding works by:',
+        question: 'You are a packaging engineer designing protection for fragile eggs. An egg drops from 3 meters onto foam padding. The padding works by:',
         options: [
           { text: 'Reducing the egg\'s momentum before impact', correct: false },
           { text: 'Increasing the collision time to reduce force', correct: true },
@@ -1513,7 +1527,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
         explanation: 'Padding extends collision time (Δt). Since F = Δp/Δt and momentum change is fixed, longer time means less force.'
       },
       {
-        question: 'If an egg\'s momentum must change by 1 kg⋅m/s, and collision time doubles from 0.01s to 0.02s, the force:',
+        question: 'A physics lab measures an egg impact. The egg\'s momentum must change by 1 kg⋅m/s. If the collision time doubles from 0.01s to 0.02s, the impact force:',
         options: [
           { text: 'Stays the same', correct: false },
           { text: 'Doubles to 200 N', correct: false },
@@ -1523,7 +1537,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
         explanation: 'F = Δp/Δt. If Δt doubles and Δp is constant, force is cut in half: F = 1/0.02 = 50 N (vs 100 N originally).'
       },
       {
-        question: 'A car crash happens at 60 mph. Crumple zones extend collision time from 0.05s to 0.15s. Peak force on passengers:',
+        question: 'Safety engineers test crash protection. A car crash happens at 60 mph (27 m/s). Crumple zones extend collision time from 0.05s to 0.15s. The peak force on passengers:',
         options: [
           { text: 'Increases by 3×', correct: false },
           { text: 'Decreases by 3×', correct: true },
@@ -1533,7 +1547,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
         explanation: 'F = Δp/Δt. Tripling the time (0.05s → 0.15s) reduces force by 3×, which can mean survival vs fatal injury.'
       },
       {
-        question: 'An egg dropped from 6m has more momentum at impact than from 2m because:',
+        question: 'In a controlled experiment, researchers compare drops from different heights. An egg dropped from 6 meters has more momentum at impact than one dropped from 2 meters because:',
         options: [
           { text: 'It has more time to accelerate', correct: false },
           { text: 'Velocity increases with height: v = √(2gh)', correct: true },
@@ -1543,7 +1557,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
         explanation: 'Velocity at impact grows with √(height). Since p = mv, higher v means more momentum to dissipate on impact.'
       },
       {
-        question: 'Bubble wrap protects packages by:',
+        question: 'A shipping company like Amazon uses bubble wrap to protect millions of packages daily. Bubble wrap protects fragile items during transport by:',
         options: [
           { text: 'Reducing the package momentum during shipping', correct: false },
           { text: 'Preventing any force from reaching the item', correct: false },
@@ -1553,7 +1567,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
         explanation: 'Each air bubble compresses over time, extending the collision and reducing F = Δp/Δt. This is pure impulse physics.'
       },
       {
-        question: 'If you drop an egg on a hard floor (Δt = 0.005s) vs thick foam (Δt = 0.05s), the foam reduces force by:',
+        question: 'Compare two surfaces: dropping an egg on a hard tile floor gives a collision time of 0.005s, while thick foam gives 0.05s. The foam reduces the impact force by:',
         options: [
           { text: '2×', correct: false },
           { text: '5×', correct: false },
@@ -1563,7 +1577,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
         explanation: 'Force ratio = (0.05s / 0.005s) = 10×. The foam provides 10× longer impact time, so 10× less force.'
       },
       {
-        question: 'The impulse-momentum theorem states that:',
+        question: 'In physics class, you learn about the fundamental relationship between force and time. The impulse-momentum theorem states that:',
         options: [
           { text: 'Force × Distance = Work', correct: false },
           { text: 'Force × Time = Change in Momentum', correct: true },
@@ -1573,7 +1587,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
         explanation: 'Impulse (F × Δt) equals change in momentum (Δp). This is why extending time reduces force for a given momentum change.'
       },
       {
-        question: 'An NFL helmet reduces concussion risk by:',
+        question: 'Professional football players experience high-speed collisions at 25 mph. Modern NFL helmets with multi-density foam reduce concussion risk by:',
         options: [
           { text: 'Making the head heavier', correct: false },
           { text: 'Stopping all head motion instantly', correct: false },
@@ -1583,7 +1597,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
         explanation: 'Multi-layer foam extends impact time from ~6ms to ~15ms, reducing peak brain acceleration from 150g to 60g—below concussion threshold.'
       },
       {
-        question: 'A 2kg laptop in a box drops 1m. To keep force under 800 N (chassis limit), minimum collision time with packaging is:',
+        question: 'You design packaging for a 2kg laptop. During shipping, the box may drop 1 meter. To keep impact force under 800 N (the laptop chassis failure threshold), the minimum collision time needed with packaging is:',
         options: [
           { text: '0.005 s', correct: false },
           { text: '0.01 s', correct: false },
@@ -1593,7 +1607,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
         explanation: 'v = √(2×9.8×1) = 4.43 m/s. Δp = 2×4.43 = 8.86 kg⋅m/s. Δt = 8.86/800 = 0.011s minimum. With safety margin, 0.025s is correct.'
       },
       {
-        question: 'Why do cars have crumple zones but rigid passenger compartments?',
+        question: 'Modern automotive safety design uses a dual-zone approach. Engineers design cars with crumple zones at the front/rear but rigid passenger compartments in the middle. Why?',
         options: [
           { text: 'Crumple zones extend Δt for lower forces; rigid cabin protects occupants', correct: true },
           { text: 'Rigid compartments reduce momentum better', correct: false },

@@ -586,7 +586,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
         {/* Temperature scale */}
         <text x="35" y="255" textAnchor="end" fill={colors.textMuted} fontSize="11">-20</text>
         <text x="35" y="225" textAnchor="end" fill={colors.textMuted} fontSize="11">0</text>
-        <text x="35" y="105" textAnchor="end" fill={colors.textMuted} fontSize="11">100</text>
+        <text x="35" y="92" textAnchor="end" fill={colors.textMuted} fontSize="11">100</text>
 
         {/* The heating curve */}
         <path
@@ -662,18 +662,18 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
 
         {/* Stats box */}
         <g transform={`translate(${width - 130}, 150)`}>
-          <rect x="0" y="0" width="115" height="115" rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
+          <rect x="0" y="0" width="115" height="130" rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
           <text x="57" y="18" textAnchor="middle" fill={colors.textMuted} fontSize="11">Current State</text>
-          <text x="57" y="52" textAnchor="middle" fill={colors.accent} fontSize="16" fontWeight="700">
+          <text x="57" y="55" textAnchor="middle" fill={colors.accent} fontSize="16" fontWeight="700">
             {temperature.toFixed(1)}C
           </text>
-          <text x="57" y="70" textAnchor="middle" fill={colors.textMuted} fontSize="11">
+          <text x="57" y="73" textAnchor="middle" fill={colors.textMuted} fontSize="11">
             Phase: {materialPhase}
           </text>
-          <text x="57" y="88" textAnchor="middle" fill={colors.success} fontSize="11">
+          <text x="57" y="107" textAnchor="middle" fill={colors.success} fontSize="11">
             Q: {heatAdded.toFixed(1)} kJ
           </text>
-          <text x="57" y="106" textAnchor="middle" fill={colors.warning} fontSize="11">
+          <text x="57" y="122" textAnchor="middle" fill={colors.warning} fontSize="11">
             Power: {heatingPower}W
           </text>
         </g>
