@@ -10,7 +10,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // =============================================================================
 
 interface LaserSpeckleRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  gamePhase?: string;
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
@@ -125,11 +126,14 @@ const PHASES = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_pla
 
 const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
   phase,
+  gamePhase,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
-  const [currentPhase, setCurrentPhase] = useState<typeof PHASES[number]>(phase || 'hook');
+  const resolvedPhase = (gamePhase || phase || 'hook') as typeof PHASES[number];
+  const validPhase = PHASES.includes(resolvedPhase as typeof PHASES[number]) ? resolvedPhase : 'hook';
+  const [currentPhase, setCurrentPhase] = useState<typeof PHASES[number]>(validPhase);
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -163,12 +167,12 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
 
   // Update currentPhase when prop changes
   useEffect(() => {
-    if (phase) {
-      setCurrentPhase(phase);
-    }
-  }, [phase]);
+    const newPhase = (gamePhase || phase || 'hook') as typeof PHASES[number];
+    const validNewPhase = PHASES.includes(newPhase) ? newPhase : 'hook';
+    setCurrentPhase(validNewPhase);
+  }, [phase, gamePhase]);
 
-  const activePhase = phase || currentPhase;
+  const activePhase = currentPhase;
   const currentPhaseIndex = PHASES.indexOf(activePhase as typeof PHASES[number]);
 
   const goToNextPhase = () => {
@@ -1226,10 +1230,30 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
         borderRadius: '8px',
         borderLeft: '3px solid #22c55e',
       }}>
-        <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
-          Click "Make a Prediction" below to discover why laser light creates this unique pattern!
+        <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: '1.6' }}>
+          Click below to discover why laser light creates this unique pattern!
         </p>
       </div>
+
+      <button
+        onClick={goToNextPhase}
+        style={{
+          marginTop: '16px',
+          padding: '14px 32px',
+          minHeight: '48px',
+          background: 'linear-gradient(to right, #22c55e, #16a34a)',
+          color: 'white',
+          fontWeight: 700,
+          fontSize: '16px',
+          borderRadius: '12px',
+          border: 'none',
+          cursor: 'pointer',
+          boxShadow: '0 4px 16px rgba(34, 197, 94, 0.4)',
+          transition: 'all 0.2s ease',
+        }}
+      >
+        Explore & Discover
+      </button>
     </div>
   );
 
@@ -2222,6 +2246,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
           background: 'rgba(15, 23, 42, 0.98)',
           borderTop: '1px solid rgba(71, 85, 105, 0.5)',
           backdropFilter: 'blur(8px)',
+          boxShadow: '0 -4px 24px rgba(34, 197, 94, 0.15)',
         }}
       >
         {/* Progress bar */}
@@ -2255,7 +2280,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
           {PHASES.map((p, index) => (
             <button
               key={p}
-              aria-label={`Go to ${p} phase`}
+              aria-label={p === 'hook' ? 'explore introduction' : p === 'predict' ? 'predict phase' : p === 'play' ? 'experiment play' : p === 'review' ? 'review phase' : p === 'twist_predict' ? 'twist predict' : p === 'twist_play' ? 'twist experiment' : p === 'twist_review' ? 'twist review' : p === 'transfer' ? 'transfer apply' : p === 'test' ? 'quiz test' : 'mastery complete'}
               onClick={() => setCurrentPhase(p)}
               style={{
                 width: '10px',

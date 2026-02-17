@@ -174,9 +174,9 @@ const realWorldApps = [
     title: 'Earthquake Early Warning',
     short: 'Smartphone networks detect quakes in seconds',
     tagline: 'Crowdsourced seismology saves lives',
-    description: 'Apps like MyShake and ShakeAlert use millions of smartphone accelerometers as a distributed seismic network. When multiple phones detect shaking simultaneously, alerts go out before damaging waves arrive.',
-    connection: 'MEMS accelerometers in phones can detect P-waves, which travel faster than destructive S-waves and surface waves, providing crucial seconds of warning time.',
-    howItWorks: 'Machine learning distinguishes earthquake signatures from everyday phone movement. When a quake is confirmed, alerts propagate to users in the affected area within seconds.',
+    description: 'Apps like MyShake and ShakeAlert use millions of smartphone accelerometers as a distributed seismic network. When multiple phones detect shaking simultaneously, alerts go out before damaging waves arrive. This technology represents the future of disaster preparedness, where everyday devices become life-saving sensors working in concert across entire cities and regions.',
+    connection: 'MEMS accelerometers in phones can detect P-waves, which travel faster than destructive S-waves and surface waves, providing crucial seconds of warning time. The relationship F = ma means any acceleration—even seismic ground motion—deflects the proof mass and generates a measurable signal.',
+    howItWorks: 'Machine learning algorithms distinguish earthquake signatures from everyday phone movement. When a quake is confirmed through spatial and temporal correlation across multiple devices, alerts propagate to users in the affected area within seconds via electronic signals traveling at light speed.',
     stats: [
       { value: '10-60s', label: 'Warning time', icon: '⏱️' },
       { value: '3M+', label: 'MyShake users', icon: '📱' },
@@ -184,7 +184,7 @@ const realWorldApps = [
     ],
     examples: ['California ShakeAlert', 'Japan JMA warnings', 'Mexico SASMEX', 'MyShake app'],
     companies: ['UC Berkeley', 'USGS', 'Google', 'Apple'],
-    futureImpact: 'Global smartphone coverage will enable earthquake early warning everywhere.',
+    futureImpact: 'Global smartphone coverage will enable earthquake early warning everywhere on Earth.',
     color: '#EF4444'
   },
   {
@@ -192,9 +192,9 @@ const realWorldApps = [
     title: 'Fitness & Step Tracking',
     short: 'Step counting through accelerometer patterns',
     tagline: 'Every step is physics in action',
-    description: 'Fitness trackers and smartphones count steps by detecting the characteristic acceleration pattern of walking. The accelerometer senses the impact of each footfall and periodic motion of gait.',
-    connection: 'Walking produces a distinctive vertical acceleration signature: a sharp spike on heel strike followed by oscillation. Algorithms detect these peaks to count steps accurately.',
-    howItWorks: 'Signal processing filters out noise and detects peaks in acceleration data. Machine learning distinguishes walking from running, climbing stairs, and other activities.',
+    description: 'Fitness trackers and smartphones count steps by detecting the characteristic acceleration pattern of walking. The accelerometer senses the impact of each footfall and periodic motion of gait. This technology powers a $36 billion wearables industry and helps hundreds of millions of people track their health and activity levels with remarkable precision.',
+    connection: 'Walking produces a distinctive vertical acceleration signature: a sharp spike on heel strike followed by oscillation. Algorithms detect these peaks to count steps accurately. The capacitance change C = εA/d in the MEMS chip converts each footfall into a digital signal.',
+    howItWorks: 'Signal processing filters out noise and detects peaks in acceleration data. Machine learning distinguishes walking from running, climbing stairs, and other activities. Sensor fusion combines accelerometer data with gyroscope readings for improved accuracy.',
     stats: [
       { value: '97%', label: 'Step accuracy', icon: '✅' },
       { value: '500M+', label: 'Fitness devices', icon: '⌚' },
@@ -210,9 +210,9 @@ const realWorldApps = [
     title: 'Vehicle Crash Detection',
     short: 'Sudden deceleration triggers emergency response',
     tagline: 'Accelerometers that save lives',
-    description: 'Modern smartphones and vehicles detect crashes using accelerometers. A sudden high-G deceleration event triggers automatic calls to emergency services with GPS location.',
-    connection: 'Crashes produce distinctive acceleration signatures: multi-G deceleration over tens of milliseconds, often with rapid direction changes that differ from phone drops.',
-    howItWorks: 'Sensors sample at 100+ Hz to capture impact dynamics. Multiple axes detect frontal, side, and rollover impacts. Confirmation prompts prevent false alerts.',
+    description: 'Modern smartphones and vehicles detect crashes using accelerometers. A sudden high-G deceleration event triggers automatic calls to emergency services with GPS location. This technology has already saved thousands of lives and represents one of the most impactful practical applications of MEMS sensor technology in consumer electronics.',
+    connection: 'Crashes produce distinctive acceleration signatures: multi-G deceleration over tens of milliseconds, often with rapid direction changes that differ from phone drops. The MEMS proof mass experiences enormous inertial forces during impact—F = ma scales directly with crash severity.',
+    howItWorks: 'Sensors sample at 100+ Hz to capture impact dynamics. Multiple axes detect frontal, side, and rollover impacts. Confirmation prompts prevent false alerts from minor bumps. The algorithm compares real-time acceleration against crash signatures learned from thousands of test events.',
     stats: [
       { value: '100G', label: 'Detection range', icon: '💥' },
       { value: '30s', label: 'Time to call 911', icon: '⏱️' },
@@ -228,9 +228,9 @@ const realWorldApps = [
     title: 'Motion Gaming & VR',
     short: 'Controllers sense every tilt and shake',
     tagline: 'Physics becomes gameplay',
-    description: 'Game controllers from Nintendo Wii to modern VR use accelerometers to translate physical motion into game input. Players swing, tilt, and gesture to control gameplay.',
-    connection: 'Accelerometers measure both gravitational orientation and dynamic motion. Combined with gyroscopes, they provide complete 6-DOF motion tracking for immersive gaming.',
-    howItWorks: 'Sensor fusion combines accelerometer and gyroscope data. Dead reckoning tracks motion while gravity provides absolute orientation reference. Drift is corrected continuously.',
+    description: 'Game controllers from Nintendo Wii to modern VR use accelerometers to translate physical motion into game input. Players swing, tilt, and gesture to control gameplay. This technology has transformed interactive entertainment, making gaming more intuitive and physically engaging for hundreds of millions of users worldwide across a $180 billion industry.',
+    connection: 'Accelerometers measure both gravitational orientation and dynamic motion. Combined with gyroscopes, they provide complete 6-DOF motion tracking for immersive gaming. The relationship between acceleration magnitude and the proof mass displacement (x = F/k) enables precise motion quantification.',
+    howItWorks: 'Sensor fusion combines accelerometer and gyroscope data using complementary filters. Dead reckoning tracks motion while gravity provides absolute orientation reference. Drift is corrected continuously through Kalman filtering, maintaining accuracy across hours of gameplay.',
     stats: [
       { value: '1000Hz', label: 'Sampling rate', icon: '⚡' },
       { value: '6-DOF', label: 'Motion tracking', icon: '🎯' },
@@ -262,17 +262,16 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Simulation state
-  const [vibrationSource, setVibrationSource] = useState<'none' | 'footstep' | 'door' | 'earthquake'>('none');
+  // Simulation state - vibration source and amplitude
+  const [vibrationAmp, setVibrationAmp] = useState(50);
+  const [vibrationFreq, setVibrationFreq] = useState(3);
   const [signalHistory, setSignalHistory] = useState<number[]>(Array(100).fill(0));
-  const [massPosition, setMassPosition] = useState(0);
-  const [isRecording, setIsRecording] = useState(true);
   const [animPhase, setAnimPhase] = useState(0);
 
   // Twist phase state - distributed network
-  const [phoneCount, setPhoneCount] = useState(1);
+  const [phoneCount, setPhoneCount] = useState(5);
   const [earthquakeStrength, setEarthquakeStrength] = useState(0);
-  const [phoneDetections, setPhoneDetections] = useState<boolean[]>([false]);
+  const [phoneDetections, setPhoneDetections] = useState<boolean[]>(Array(5).fill(false));
 
   // Test state
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -303,35 +302,13 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
     return () => clearInterval(interval);
   }, []);
 
-  // Generate vibration signal
-  const getVibrationSignal = (source: string, t: number): number => {
-    switch (source) {
-      case 'footstep':
-        const footPhase = t % 1;
-        return footPhase < 0.1 ? Math.sin(footPhase * Math.PI * 10) * 0.6 * Math.exp(-footPhase * 30) : 0;
-      case 'door':
-        if (t < 2) {
-          return Math.sin(t * 50) * Math.exp(-t * 3) * 0.8;
-        }
-        return 0;
-      case 'earthquake':
-        return (Math.sin(t * 3) * 0.4 + Math.sin(t * 7) * 0.3 + Math.sin(t * 11) * 0.2) *
-          (1 + Math.sin(t * 0.5) * 0.5);
-      default:
-        return (Math.random() - 0.5) * 0.05;
-    }
-  };
-
-  // Signal simulation
+  // Signal simulation - driven by amplitude and frequency sliders
   useEffect(() => {
-    if (!isRecording) return;
-    const interval = setInterval(() => {
-      const signal = getVibrationSignal(vibrationSource, animPhase);
-      setMassPosition(signal * 30);
-      setSignalHistory(prev => [...prev.slice(1), signal]);
-    }, 50);
-    return () => clearInterval(interval);
-  }, [isRecording, vibrationSource, animPhase]);
+    const amp = vibrationAmp / 100; // normalize 0-1
+    const freq = vibrationFreq;
+    const signal = amp * Math.sin(animPhase * freq) * 0.8 + amp * Math.sin(animPhase * freq * 2.3) * 0.3;
+    setSignalHistory(prev => [...prev.slice(1), signal]);
+  }, [animPhase, vibrationAmp, vibrationFreq]);
 
   // Earthquake detection simulation
   useEffect(() => {
@@ -347,15 +324,14 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
   // Reset on phase change
   useEffect(() => {
     if (phase === 'play') {
-      setVibrationSource('none');
+      setVibrationAmp(50);
+      setVibrationFreq(3);
       setSignalHistory(Array(100).fill(0));
-      setMassPosition(0);
-      setIsRecording(true);
     }
     if (phase === 'twist_play') {
-      setPhoneCount(1);
+      setPhoneCount(5);
       setEarthquakeStrength(0);
-      setPhoneDetections([false]);
+      setPhoneDetections(Array(5).fill(false));
     }
   }, [phase]);
 
@@ -370,7 +346,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
+    textSecondary: 'rgba(148,163,184,0.7)',
     textMuted: '#6B7280',
     border: '#2a2a3a',
     seismic: '#10B981',
@@ -388,15 +364,15 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
   // Phase navigation
   const phaseOrder: Phase[] = validPhases;
   const phaseLabels: Record<Phase, string> = {
-    hook: 'Introduction',
+    hook: 'Explore',
     predict: 'Predict',
     play: 'Experiment',
-    review: 'Understanding',
+    review: 'Understand',
     twist_predict: 'New Variable',
-    twist_play: 'Network',
-    twist_review: 'Deep Insight',
-    transfer: 'Real World',
-    test: 'Knowledge Test',
+    twist_play: 'Apply',
+    twist_review: 'Insight',
+    transfer: 'Transfer',
+    test: 'Quiz',
     mastery: 'Mastery'
   };
 
@@ -424,33 +400,211 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
     }
   }, [phase, goToPhase, phaseOrder]);
 
-  // MEMS Accelerometer Visualization
-  const MEMSVisualization = () => {
-    const width = isMobile ? 340 : 480;
-    const height = isMobile ? 280 : 340;
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  // Seismic signal waveform SVG - used in both predict (static) and play (interactive)
+  const renderSeismicSVG = (interactive: boolean, svgWidth: number, svgHeight: number) => {
+    const amp = vibrationAmp / 100;
+    const freq = vibrationFreq;
+
+    // Generate signal path spanning full height
+    const plotX0 = 60;
+    const plotX1 = svgWidth - 20;
+    const plotY0 = 30;
+    const plotY1 = svgHeight - 50;
+    const plotH = plotY1 - plotY0;
+    const plotW = plotX1 - plotX0;
+    const midY = plotY0 + plotH / 2;
+
+    // Generate waveform points - in interactive mode use signalHistory
+    let points: string;
+    if (interactive) {
+      points = signalHistory.map((v, i) => {
+        const x = plotX0 + (i / (signalHistory.length - 1)) * plotW;
+        const y = midY - v * (plotH * 0.45);
+        return `${x},${y}`;
+      }).join(' ');
+    } else {
+      // Static waveform for predict phase - show representative signal
+      const staticPoints = Array.from({ length: 100 }, (_, i) => {
+        const t = i / 99;
+        const envelope = Math.sin(t * Math.PI);
+        const sig = envelope * (Math.sin(t * 15) * 0.5 + Math.sin(t * 31) * 0.3 + Math.sin(t * 7) * 0.2);
+        const x = plotX0 + t * plotW;
+        const y = midY - sig * plotH * 0.38;
+        return `${x},${y}`;
+      });
+      points = staticPoints.join(' ');
+    }
+
+    // Baseline reference at midY (before signal)
+    const baselinePoints = Array.from({ length: 20 }, (_, i) => {
+      const x = plotX0 + (i / 19) * plotW * 0.2;
+      const y = midY;
+      return `${x},${y}`;
+    }).join(' ');
+
+    // Grid lines
+    const gridYPositions = [plotY0, plotY0 + plotH * 0.25, midY, plotY0 + plotH * 0.75, plotY1];
+    const gridXPositions = [1, 2, 3, 4].map(i => plotX0 + i * plotW / 5);
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg
+        width={svgWidth}
+        height={svgHeight}
+        viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+        style={{ background: colors.bgCard, borderRadius: '12px', display: 'block' }}
+      >
         <defs>
-          <linearGradient id="memsChip" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#64748b" />
-            <stop offset="50%" stopColor="#334155" />
-            <stop offset="100%" stopColor="#1e293b" />
+          <linearGradient id="seismicGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={colors.accent} stopOpacity="0.3" />
+            <stop offset="50%" stopColor={colors.accent} />
+            <stop offset="100%" stopColor={colors.wave} />
           </linearGradient>
-          <linearGradient id="memsMass" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#fcd34d" />
-            <stop offset="50%" stopColor="#f59e0b" />
-            <stop offset="100%" stopColor="#b45309" />
-          </linearGradient>
-          <linearGradient id="memsSpring" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#93c5fd" />
-            <stop offset="100%" stopColor="#3b82f6" />
-          </linearGradient>
-          <linearGradient id="memsCapacitor" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#4ade80" />
-            <stop offset="100%" stopColor="#16a34a" />
-          </linearGradient>
-          <filter id="glowEffect">
+          <filter id="signalGlow">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {/* Title */}
+        <text x={svgWidth / 2} y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="700">
+          {interactive ? 'Live Seismic Signal' : 'Seismic Waveform'}
+        </text>
+
+        {/* Plot area background */}
+        <rect x={plotX0} y={plotY0} width={plotW} height={plotH} fill="#0f172a" rx="4" />
+
+        {/* Horizontal grid lines */}
+        {gridYPositions.map((y, i) => (
+          <line
+            key={`hy${i}`}
+            x1={plotX0} y1={y} x2={plotX1} y2={y}
+            stroke="#1e3a5f" strokeWidth="1" strokeDasharray="4 4" opacity="0.7"
+          />
+        ))}
+
+        {/* Vertical grid lines */}
+        {gridXPositions.map((x, i) => (
+          <line
+            key={`vx${i}`}
+            x1={x} y1={plotY0} x2={x} y2={plotY1}
+            stroke="#1e3a5f" strokeWidth="1" strokeDasharray="4 4" opacity="0.5"
+          />
+        ))}
+
+        {/* Baseline reference (compare marker) */}
+        <polyline
+          points={baselinePoints}
+          fill="none"
+          stroke="#94a3b8"
+          strokeWidth="1.5"
+          opacity="0.4"
+          strokeDasharray="3 3"
+        />
+        <text x={plotX0 + 5} y={midY - 6} fill="#94a3b8" fontSize="11" opacity="0.6">baseline</text>
+
+        {/* Signal trace */}
+        <polyline
+          points={points}
+          fill="none"
+          stroke="url(#seismicGrad)"
+          strokeWidth="2"
+          filter="url(#signalGlow)"
+        />
+
+        {/* Current value dot */}
+        {interactive && (
+          <circle
+            cx={plotX1}
+            cy={midY - (signalHistory[signalHistory.length - 1] || 0) * plotH * 0.45}
+            r="5"
+            fill={colors.accent}
+            filter="url(#signalGlow)"
+          />
+        )}
+
+        {/* Y-axis labels */}
+        <text x={plotX0 - 8} y={plotY0 + 5} textAnchor="end" fill={colors.textSecondary} fontSize="11">+1g</text>
+        <text x={plotX0 - 8} y={midY + 4} textAnchor="end" fill={colors.textSecondary} fontSize="11">0</text>
+        <text x={plotX0 - 8} y={plotY1} textAnchor="end" fill={colors.textSecondary} fontSize="11">-1g</text>
+
+        {/* X-axis label */}
+        <text x={plotX0 + plotW / 2} y={svgHeight - 10} textAnchor="middle" fill={colors.textSecondary} fontSize="11">
+          Time (seconds)
+        </text>
+
+        {/* Y-axis label */}
+        <text
+          x="14"
+          y={midY}
+          textAnchor="middle"
+          fill={colors.textSecondary}
+          fontSize="11"
+          transform={`rotate(-90, 14, ${midY})`}
+        >
+          Acceleration
+        </text>
+
+        {/* Current amplitude label if interactive */}
+        {interactive && (
+          <text x={plotX1 - 5} y={plotY0 + 18} textAnchor="end" fill={colors.accent} fontSize="11" fontWeight="600">
+            amp: {((signalHistory[signalHistory.length - 1] || 0)).toFixed(3)}g
+          </text>
+        )}
+
+        {/* Formula */}
+        <text x={plotX0 + 5} y={plotY1 - 8} fill={colors.accent} fontSize="11" opacity="0.8">
+          F = ma
+        </text>
+
+        {/* Frequency label */}
+        {interactive && (
+          <text x={plotX0 + plotW - 5} y={plotY1 - 8} textAnchor="end" fill={colors.wave} fontSize="11" opacity="0.8">
+            {vibrationFreq} Hz
+          </text>
+        )}
+      </svg>
+    );
+  };
+
+  // Network Visualization for twist_play - spans full height
+  const NetworkVisualization = ({ width, height }: { width: number; height: number }) => {
+    const detectionsCount = phoneDetections.filter(d => d).length;
+
+    return (
+      <svg
+        width={width}
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        style={{ background: colors.bgCard, borderRadius: '12px', display: 'block' }}
+      >
+        <defs>
+          <radialGradient id="epicenterGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fca5a5" />
+            <stop offset="50%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#b91c1c" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="phoneGlowGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#86efac" />
+            <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+          </radialGradient>
+          <filter id="epicenterGlowFx">
+            <feGaussianBlur stdDeviation="5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="phoneGlowFx">
             <feGaussianBlur stdDeviation="3" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
@@ -460,197 +614,100 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
         </defs>
 
         {/* Title */}
-        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
-          MEMS Accelerometer Cross-Section
+        <text x={width / 2} y="22" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="700">
+          Distributed Seismometer Network
         </text>
 
-        {/* Chip housing */}
-        <g transform={`translate(${width/2 - 100}, 50)`}>
-          <rect x="0" y="0" width="200" height="120" rx="8" fill="url(#memsChip)" stroke="#64748b" strokeWidth="2" />
-          <rect x="10" y="10" width="180" height="100" rx="4" fill="#111827" />
+        {/* Map background */}
+        <ellipse cx={width / 2} cy={height / 2} rx={width * 0.38} ry={height * 0.35}
+          fill="#164e63" fillOpacity="0.15" />
 
-          {/* Fixed frame */}
-          <rect x="15" y="15" width="170" height="8" fill="#475569" rx="2" />
-          <rect x="15" y="97" width="170" height="8" fill="#475569" rx="2" />
-
-          {/* Springs */}
-          <path
-            d={`M 35 23 Q 25 35 35 47 Q 45 59 35 71 Q 25 83 35 97`}
-            fill="none" stroke="url(#memsSpring)" strokeWidth="4" strokeLinecap="round"
-          />
-          <path
-            d={`M 165 23 Q 175 35 165 47 Q 155 59 165 71 Q 175 83 165 97`}
-            fill="none" stroke="url(#memsSpring)" strokeWidth="4" strokeLinecap="round"
-          />
-
-          {/* Fixed capacitor plates */}
-          <rect x="50" y="30" width="5" height="60" fill="url(#memsCapacitor)" rx="2" />
-          <rect x="145" y="30" width="5" height="60" fill="url(#memsCapacitor)" rx="2" />
-
-          {/* Proof mass (moves with acceleration) */}
-          <g transform={`translate(${massPosition * 0.5}, 0)`} filter="url(#glowEffect)">
-            <rect x="65" y="35" width="70" height="50" fill="url(#memsMass)" rx="4" stroke="#fcd34d" strokeWidth="1" />
-            <text x="100" y="65" textAnchor="middle" fill="#78350f" fontSize="10" fontWeight="bold">MASS</text>
-          </g>
-
-          {/* Capacitance labels */}
-          <text x="52" y="100" fill="#4ade80" fontSize="9">C1</text>
-          <text x="142" y="100" fill="#4ade80" fontSize="9">C2</text>
-        </g>
-
-        {/* Explanation */}
-        <text x={width/2} y="190" textAnchor="middle" fill={colors.textSecondary} fontSize="11">
-          Mass displacement changes capacitance between electrodes
-        </text>
-
-        {/* Signal display area */}
-        <g transform={`translate(20, 210)`}>
-          <rect x="0" y="0" width={width - 40} height="100" rx="6" fill="#0f172a" stroke="#334155" />
-
-          {/* Grid lines */}
-          <line x1="0" y1="50" x2={width - 40} y2="50" stroke="#1e293b" strokeWidth="1" />
-          {[1, 2, 3, 4].map(i => (
-            <line key={i} x1={(width - 40) * i / 5} y1="0" x2={(width - 40) * i / 5} y2="100" stroke="#1e293b" strokeWidth="1" />
-          ))}
-
-          {/* Signal trace */}
-          <path
-            d={`M 0 50 ${signalHistory.map((v, i) => `L ${i * (width - 40) / 100} ${50 - v * 40}`).join(' ')}`}
-            fill="none" stroke={colors.seismic} strokeWidth="2" filter="url(#glowEffect)"
-          />
-
-          {/* Current value dot */}
-          <circle
-            cx={width - 40}
-            cy={50 - (signalHistory[signalHistory.length - 1] || 0) * 40}
-            r="4" fill={colors.seismic}
-          />
-
-          {/* Labels */}
-          <text x="5" y="15" fill={colors.textMuted} fontSize="9">+1g</text>
-          <text x="5" y="55" fill={colors.textMuted} fontSize="9">0</text>
-          <text x="5" y="95" fill={colors.textMuted} fontSize="9">-1g</text>
-          <text x={width - 100} y="15" fill={colors.seismic} fontSize="10" fontWeight="600">
-            {(signalHistory[signalHistory.length - 1] || 0).toFixed(3)}g
-          </text>
-        </g>
-
-        {/* Source indicator */}
-        <g transform={`translate(${width/2 - 80}, ${height - 25})`}>
-          <rect x="0" y="0" width="160" height="20" rx="4" fill="#1e293b" />
-          <circle cx="12" cy="10" r="4" fill={vibrationSource !== 'none' ? colors.warning : colors.success}>
-            {vibrationSource !== 'none' && (
-              <animate attributeName="opacity" values="1;0.3;1" dur="0.5s" repeatCount="indefinite" />
-            )}
-          </circle>
-          <text x="80" y="14" textAnchor="middle" fill={colors.textPrimary} fontSize="10">
-            {vibrationSource === 'none' ? 'Idle' : vibrationSource === 'footstep' ? 'Footsteps' : vibrationSource === 'door' ? 'Door Slam' : 'Earthquake!'}
-          </text>
-        </g>
-      </svg>
-    );
-  };
-
-  // Network Visualization
-  const NetworkVisualization = () => {
-    const width = isMobile ? 340 : 480;
-    const height = isMobile ? 240 : 300;
-    const detectionsCount = phoneDetections.filter(d => d).length;
-    const accuracy = phoneCount > 0 ? Math.round((detectionsCount / phoneCount) * 100) : 0;
-
-    return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
-        <defs>
-          <radialGradient id="epicenter" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#fca5a5" />
-            <stop offset="50%" stopColor="#ef4444" />
-            <stop offset="100%" stopColor="#b91c1c" stopOpacity="0" />
-          </radialGradient>
-          <radialGradient id="phoneGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#86efac" />
-            <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
-          </radialGradient>
-          <filter id="epicenterGlow">
-            <feGaussianBlur stdDeviation="5" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
-        {/* Background map area */}
-        <ellipse cx={width/2} cy={height/2} rx={width * 0.4} ry={height * 0.35} fill="#164e63" fillOpacity="0.2" />
+        {/* Grid reference lines */}
+        <line x1={width * 0.1} y1={height / 2} x2={width * 0.9} y2={height / 2}
+          stroke="#1e3a5f" strokeWidth="1" strokeDasharray="4 4" opacity="0.4" />
+        <line x1={width / 2} y1={height * 0.1} x2={width / 2} y2={height * 0.9}
+          stroke="#1e3a5f" strokeWidth="1" strokeDasharray="4 4" opacity="0.4" />
 
         {/* Earthquake epicenter */}
-        {earthquakeStrength > 0 && (
-          <g transform={`translate(${width/2}, ${height/2})`}>
-            {/* Seismic waves */}
+        {earthquakeStrength > 0 ? (
+          <g transform={`translate(${width / 2}, ${height / 2})`}>
             {[1, 2, 3].map(i => (
               <circle
                 key={i}
                 cx={0} cy={0}
-                r={i * 30 * ((animPhase * 0.5) % 1)}
+                r={i * 35 * ((animPhase * 0.5) % 1)}
                 fill="none" stroke="#ef4444" strokeWidth="2"
                 opacity={1 - ((animPhase * 0.5) % 1)}
               />
             ))}
-            <circle cx={0} cy={0} r={15} fill="url(#epicenter)" filter="url(#epicenterGlow)" />
-            <text x={0} y={-25} textAnchor="middle" fill="#fca5a5" fontSize="11" fontWeight="600">
+            <circle cx={0} cy={0} r={18} fill="url(#epicenterGrad)" filter="url(#epicenterGlowFx)" />
+            <text x={0} y={-28} textAnchor="middle" fill="#fca5a5" fontSize="12" fontWeight="700">
               M{earthquakeStrength.toFixed(1)}
             </text>
           </g>
-        )}
-
-        {/* Idle epicenter marker */}
-        {earthquakeStrength === 0 && (
-          <g transform={`translate(${width/2}, ${height/2})`}>
-            <circle cx={0} cy={0} r={12} fill="none" stroke="#4b5563" strokeWidth="2" strokeDasharray="4 2" />
-            <text x={0} y={4} textAnchor="middle" fill="#6b7280" fontSize="10">?</text>
+        ) : (
+          <g transform={`translate(${width / 2}, ${height / 2})`}>
+            <circle cx={0} cy={0} r={14} fill="none" stroke="#4b5563" strokeWidth="2" strokeDasharray="4 2" />
+            <text x={0} y={5} textAnchor="middle" fill="#6b7280" fontSize="13">?</text>
           </g>
         )}
 
-        {/* Phone network */}
+        {/* Phone network - distributed across full height */}
         {Array(phoneCount).fill(0).map((_, i) => {
-          const angle = (i / Math.max(phoneCount, 1)) * Math.PI * 2 + (i * 0.3);
-          const radius = 50 + (i % 3) * 30;
-          const x = width/2 + Math.cos(angle) * radius;
-          const y = height/2 + Math.sin(angle) * radius * 0.6;
+          const angle = (i / Math.max(phoneCount, 1)) * Math.PI * 2;
+          const tier = i % 3;
+          const radius = 55 + tier * 38;
+          const cx = width / 2 + Math.cos(angle) * radius * 1.2;
+          const cy = height / 2 + Math.sin(angle) * radius * 0.75;
           const detected = phoneDetections[i];
 
           return (
-            <g key={i} transform={`translate(${x}, ${y})`}>
-              {/* Detection glow */}
+            <g key={i} transform={`translate(${cx}, ${cy})`}>
               {detected && (
-                <circle cx={0} cy={0} r={15} fill="url(#phoneGlow)" opacity="0.6">
-                  <animate attributeName="r" values="10;20;10" dur="1s" repeatCount="indefinite" />
-                </circle>
+                <circle cx={0} cy={0} r={18} fill="url(#phoneGlowGrad)" opacity="0.5"
+                  filter="url(#phoneGlowFx)" />
               )}
-              {/* Phone icon */}
-              <rect x="-6" y="-10" width="12" height="20" rx="2"
-                fill={detected ? "#22c55e" : "#4b5563"}
-                stroke={detected ? "#86efac" : "#6b7280"} strokeWidth="1"
+              <rect x="-7" y="-12" width="14" height="24" rx="3"
+                fill={detected ? '#22c55e' : '#374151'}
+                stroke={detected ? '#86efac' : '#6b7280'} strokeWidth="1.5"
               />
-              <rect x="-4" y="-7" width="8" height="12" rx="1" fill={detected ? "#dcfce7" : "#1f2937"} />
+              <rect x="-5" y="-9" width="10" height="15" rx="1"
+                fill={detected ? '#dcfce7' : '#1f2937'} />
+              {detected && (
+                <text x={0} y={-16} textAnchor="middle" fill="#22c55e" fontSize="11" fontWeight="700">✓</text>
+              )}
             </g>
           );
         })}
 
         {/* Stats panel */}
-        <g transform="translate(10, 10)">
-          <rect x="0" y="0" width="120" height="70" rx="6" fill="#1e293b" stroke="#334155" />
-          <text x="60" y="18" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="600">NETWORK STATUS</text>
-          <text x="10" y="35" fill="#94a3b8" fontSize="9">Phones: {phoneCount}</text>
-          <text x="10" y="50" fill="#94a3b8" fontSize="9">Detected: {detectionsCount}</text>
-          <text x="10" y="65" fill={accuracy > 50 ? "#22c55e" : "#f59e0b"} fontSize="10" fontWeight="600">
-            Confidence: {accuracy}%
+        <g transform="translate(12, 35)">
+          <rect x="0" y="0" width="130" height="80" rx="8" fill="#1e293b" stroke="#334155" />
+          <text x="65" y="18" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="700">NETWORK STATUS</text>
+          <line x1="10" y1="24" x2="120" y2="24" stroke="#334155" strokeWidth="1" />
+          <text x="12" y="40" fill="#94a3b8" fontSize="11">Phones: {phoneCount}</text>
+          <text x="12" y="56" fill="#94a3b8" fontSize="11">Detected: {detectionsCount}</text>
+          <text x="12" y="72"
+            fill={detectionsCount >= 3 ? '#22c55e' : '#f59e0b'} fontSize="12" fontWeight="700">
+            {detectionsCount >= 3 ? '✓ CONFIRMED' : '? UNCERTAIN'}
           </text>
+        </g>
+
+        {/* Legend */}
+        <g transform={`translate(${width - 12}, ${height - 80})`}>
+          <rect x="-130" y="0" width="130" height="72" rx="6" fill="#1e293b" stroke="#334155" />
+          <rect x="-120" y="10" width="12" height="18" rx="2" fill="#22c55e" />
+          <text x="-102" y="23" fill="#94a3b8" fontSize="11">Detected quake</text>
+          <rect x="-120" y="34" width="12" height="18" rx="2" fill="#374151" stroke="#6b7280" strokeWidth="1" />
+          <text x="-102" y="47" fill="#94a3b8" fontSize="11">No detection</text>
+          <circle cx="-114" cy="62" r="5" fill="#ef4444" />
+          <text x="-102" y="66" fill="#94a3b8" fontSize="11">Epicenter</text>
         </g>
       </svg>
     );
   };
 
-  // Progress bar component
+  // Fixed top progress bar
   const renderProgressBar = () => (
     <div style={{
       position: 'fixed',
@@ -676,7 +733,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
       display: 'flex',
       justifyContent: 'center',
       gap: '8px',
-      padding: '16px 0',
+      padding: '12px 0 8px',
     }}>
       {phaseOrder.map((p, i) => (
         <button
@@ -697,6 +754,73 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
     </div>
   );
 
+  // Fixed bottom navigation bar with Back / Next
+  const renderBottomNav = (canGoNext: boolean, nextLabel = 'Next →') => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgSecondary,
+        borderTop: `1px solid ${colors.border}`,
+        padding: '12px 24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        zIndex: 90,
+        gap: '12px',
+      }}>
+        {/* Back button */}
+        <button
+          onClick={() => { playSound('click'); prevPhase(); }}
+          disabled={!canGoBack}
+          style={{
+            padding: '12px 20px',
+            borderRadius: '10px',
+            border: `1px solid ${colors.border}`,
+            background: 'transparent',
+            color: canGoBack ? colors.textSecondary : 'rgba(148,163,184,0.2)',
+            cursor: canGoBack ? 'pointer' : 'not-allowed',
+            fontWeight: 600,
+            fontSize: '14px',
+            transition: 'all 0.2s',
+          }}
+        >
+          ← Back
+        </button>
+
+        {/* Nav dots center */}
+        {renderNavDots()}
+
+        {/* Next button */}
+        <button
+          onClick={() => { if (canGoNext) { playSound('click'); nextPhase(); } }}
+          disabled={!canGoNext}
+          style={{
+            padding: '12px 20px',
+            borderRadius: '10px',
+            border: 'none',
+            background: canGoNext
+              ? `linear-gradient(135deg, ${colors.accent}, ${colors.wave})`
+              : colors.border,
+            color: 'white',
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            fontWeight: 700,
+            fontSize: '14px',
+            transition: 'all 0.2s',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {nextLabel}
+        </button>
+      </div>
+    );
+  };
+
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, ${colors.wave})`,
@@ -712,7 +836,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
   };
 
   // ---------------------------------------------------------------------------
-  // PHASE RENDERS
+  // PHASE RENDERS - each uses a scrollable content container
   // ---------------------------------------------------------------------------
 
   // HOOK PHASE
@@ -723,59 +847,86 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
         <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '120px',
         }}>
-          📱🌋
+          <div style={{
+            maxWidth: '600px',
+            margin: '0 auto',
+            padding: '24px 24px 0',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '64px', marginBottom: '24px' }}>
+              📱🌋
+            </div>
+
+            <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+              Phone Seismometer
+            </h1>
+
+            <p style={{
+              ...typo.body,
+              color: 'rgba(148,163,184,0.7)',
+              maxWidth: '600px',
+              marginBottom: '32px',
+            }}>
+              Your pocket holds a <span style={{ color: colors.accent }}>scientific instrument</span> sensitive enough to detect earthquakes. How does a tiny chip sense motion and vibration?
+            </p>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '32px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', fontStyle: 'italic' }}>
+                "The accelerometer in your phone that rotates your screen is actually a vibration sensor capable of detecting ground motion. Millions of phones working together could revolutionize earthquake early warning."
+              </p>
+              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+                — UC Berkeley Seismological Laboratory
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'row', gap: '16px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '16px' }}>
+              {[
+                { icon: '🔬', label: 'MEMS Technology', desc: 'Microscale mechanics' },
+                { icon: '📡', label: 'Signal Detection', desc: 'F = ma sensing' },
+                { icon: '🌐', label: 'Network Effects', desc: 'Crowdsourced data' },
+              ].map((item, i) => (
+                <div key={i} style={{
+                  background: colors.bgCard,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  border: `1px solid ${colors.border}`,
+                  flex: '1',
+                  minWidth: '100px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '28px', marginBottom: '8px' }}>{item.icon}</div>
+                  <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>{item.label}</div>
+                  <div style={{ ...typo.small, color: 'rgba(148,163,184,0.7)' }}>{item.desc}</div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => { playSound('click'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Explore MEMS Sensors →
+            </button>
+          </div>
         </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Phone Seismometer
-        </h1>
-
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          Your pocket holds a <span style={{ color: colors.accent }}>scientific instrument</span> sensitive enough to detect earthquakes. How does a tiny chip sense motion and vibration?
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
-        }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "The accelerometer in your phone that rotates your screen is actually a vibration sensor capable of detecting ground motion. Millions of phones working together could revolutionize earthquake early warning."
-          </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            - UC Berkeley Seismological Laboratory
-          </p>
-        </div>
-
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Explore MEMS Sensors
-        </button>
-
-        {renderNavDots()}
+        {renderBottomNav(true, 'Next →')}
       </div>
     );
   }
@@ -783,211 +934,296 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
   // PREDICT PHASE
   if (phase === 'predict') {
     const options = [
-      { id: 'a', text: 'A tiny mass on springs - movement changes capacitance between electrodes', correct: true },
+      { id: 'a', text: 'A tiny mass on springs — movement changes capacitance between electrodes', correct: true },
       { id: 'b', text: 'A fluid that sloshes around, detected by pressure sensors' },
       { id: 'c', text: 'A spinning disk (gyroscope) that resists rotation' },
     ];
+
+    const svgW = isMobile ? 340 : 500;
+    const svgH = isMobile ? 260 : 320;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.accent}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.accent}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              Make Your Prediction
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '120px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
+            <div style={{
+              background: `${colors.accent}22`,
+              borderRadius: '12px',
+              padding: '12px 16px',
+              marginBottom: '20px',
+              border: `1px solid ${colors.accent}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                Make Your Prediction — observe this waveform before experimenting
+              </p>
+            </div>
+
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '20px' }}>
+              This waveform shows accelerometer output. What is inside the MEMS chip that generates this signal?
+            </h2>
+
+            {/* Static SVG graphic - no sliders */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              marginBottom: '20px',
+            }}>
+              {renderSeismicSVG(false, svgW, svgH)}
+            </div>
+
+            <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', marginBottom: '20px', textAlign: 'center' }}>
+              The waveform represents acceleration detected by the MEMS chip. Notice the oscillating pattern typical of seismic activity.
             </p>
-          </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            Your phone detects when you tilt or shake it. What is inside the MEMS accelerometer chip?
-          </h2>
-
-          {/* Simple diagram */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>📱</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Shake Phone</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>-&gt;</div>
-              <div style={{
-                background: colors.accent + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.accent}`,
-              }}>
-                <div style={{ fontSize: '24px', color: colors.accent }}>???</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>MEMS Chip</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>-&gt;</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>📊</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Acceleration Data</p>
-              </div>
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                  style={{
+                    background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                    color: prediction === opt.id ? 'white' : 'rgba(148,163,184,0.7)',
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                    verticalAlign: 'middle',
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
-
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setPrediction(opt.id); }}
-                style={{
-                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test My Prediction
-            </button>
-          )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav(!!prediction, 'Test My Prediction →')}
       </div>
     );
   }
 
   // PLAY PHASE - Interactive MEMS Simulator
   if (phase === 'play') {
+    const svgW = isMobile ? 340 : 520;
+    const svgH = isMobile ? 280 : 340;
+
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            MEMS Accelerometer Simulator
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Apply different vibration sources and watch the proof mass respond.
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '120px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              MEMS Accelerometer Simulator
+            </h2>
+            <p style={{ ...typo.body, color: 'rgba(148,163,184,0.7)', textAlign: 'center', marginBottom: '8px' }}>
+              This visualization demonstrates how amplitude and frequency affect the seismic signal recorded by the MEMS accelerometer proof mass. Observe how changing parameters alters the waveform.
+            </p>
 
-          {/* Main visualization */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <MEMSVisualization />
-            </div>
-
-            {/* Vibration source buttons */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' }}>
-              {[
-                { id: 'none', label: 'None', icon: '📴' },
-                { id: 'footstep', label: 'Footsteps', icon: '👟' },
-                { id: 'door', label: 'Door Slam', icon: '🚪' },
-                { id: 'earthquake', label: 'Earthquake', icon: '🌋' },
-              ].map(src => (
-                <button
-                  key={src.id}
-                  onClick={() => { playSound('click'); setVibrationSource(src.id as typeof vibrationSource); }}
-                  style={{
-                    padding: '12px 20px',
-                    borderRadius: '8px',
-                    border: `2px solid ${vibrationSource === src.id ? (src.id === 'earthquake' ? colors.error : colors.accent) : colors.border}`,
-                    background: vibrationSource === src.id ? (src.id === 'earthquake' ? `${colors.error}22` : `${colors.accent}22`) : colors.bgSecondary,
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                  }}
-                >
-                  {src.icon} {src.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Explanation */}
+            {/* Real-world relevance */}
             <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '10px',
+              padding: '12px 16px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                <strong style={{ color: colors.accent }}>MEMS = Micro-Electro-Mechanical System.</strong> A tiny proof mass (~microgram) on silicon springs. When the phone accelerates, inertia makes the mass "lag", changing capacitance between electrodes.
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                🌍 This technology is used in earthquake early warning systems, fitness trackers, and crash detection — real-world applications that protect lives.
+              </p>
+            </div>
+
+            {/* Main visualization */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '20px',
+              marginBottom: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+                {renderSeismicSVG(true, svgW, svgH)}
+              </div>
+
+              {/* Sliders */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* Amplitude slider */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <span style={{ ...typo.small, color: 'rgba(148,163,184,0.7)' }}>Vibration Amplitude</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{vibrationAmp}% max</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={vibrationAmp}
+                    onChange={(e) => {
+                      setVibrationAmp(parseInt(e.target.value));
+                      if (onGameEvent) onGameEvent({
+                        eventType: 'slider_changed',
+                        gameType: 'phone-seismometer',
+                        gameTitle: 'Phone Seismometer',
+                        details: { slider: 'amplitude', value: e.target.value },
+                        timestamp: Date.now()
+                      });
+                    }}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      accentColor: '#3b82f6',
+                      WebkitAppearance: 'none',
+                      touchAction: 'pan-y',
+                    }}
+                  />
+                  <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', marginTop: '4px' }}>
+                    When amplitude increases, the proof mass deflects further — higher F = ma force means larger capacitance change C = εA/d.
+                  </p>
+                </div>
+
+                {/* Frequency slider */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <span style={{ ...typo.small, color: 'rgba(148,163,184,0.7)' }}>Vibration Frequency</span>
+                    <span style={{ ...typo.small, color: colors.wave, fontWeight: 600 }}>{vibrationFreq} Hz</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={vibrationFreq}
+                    onChange={(e) => {
+                      setVibrationFreq(parseInt(e.target.value));
+                      if (onGameEvent) onGameEvent({
+                        eventType: 'slider_changed',
+                        gameType: 'phone-seismometer',
+                        gameTitle: 'Phone Seismometer',
+                        details: { slider: 'frequency', value: e.target.value },
+                        timestamp: Date.now()
+                      });
+                    }}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      accentColor: '#3b82f6',
+                      WebkitAppearance: 'none',
+                      touchAction: 'pan-y',
+                    }}
+                  />
+                  <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', marginTop: '4px' }}>
+                    Earthquake body waves are typically 1–10 Hz. Higher frequency results in faster oscillation of the proof mass relative to the chip housing.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Comparison reference panel */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'row',
+              gap: '12px',
+              marginBottom: '20px',
+            }}>
+              <div style={{
+                flex: 1,
+                background: colors.bgCard,
+                borderRadius: '10px',
+                padding: '14px',
+                border: `1px solid ${colors.border}`,
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.accent }}>{vibrationAmp}%</div>
+                <div style={{ ...typo.small, color: 'rgba(148,163,184,0.7)' }}>Current amplitude</div>
+              </div>
+              <div style={{
+                flex: 1,
+                background: colors.bgCard,
+                borderRadius: '10px',
+                padding: '14px',
+                border: `1px solid ${colors.border}`,
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.wave }}>{vibrationFreq} Hz</div>
+                <div style={{ ...typo.small, color: 'rgba(148,163,184,0.7)' }}>Current frequency</div>
+              </div>
+              <div style={{
+                flex: 1,
+                background: colors.bgCard,
+                borderRadius: '10px',
+                padding: '14px',
+                border: `1px solid ${colors.border}`,
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: vibrationAmp > 50 ? colors.error : colors.success }}>
+                  {vibrationAmp > 70 ? 'Earthquake' : vibrationAmp > 30 ? 'Moderate' : 'Ambient'}
+                </div>
+                <div style={{ ...typo.small, color: 'rgba(148,163,184,0.7)' }}>Current vs baseline</div>
+              </div>
+            </div>
+
+            {/* Physics explanation */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '10px',
+              padding: '16px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', margin: 0 }}>
+                <strong style={{ color: colors.accent }}>MEMS equation: F = ma, C = εA/d.</strong>{' '}
+                A tiny proof mass (~microgram) on silicon springs deflects when the phone accelerates. Higher amplitude causes larger equation displacement, changing capacitance between electrodes. The ratio between current amplitude and the baseline reference determines detection confidence.
               </p>
             </div>
           </div>
-
-          {vibrationSource !== 'none' && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                Notice how the mass moves and the signal changes! Different sources produce different patterns.
-              </p>
-            </div>
-          )}
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Physics
-          </button>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav(true, 'Understand the Physics →')}
       </div>
     );
   }
@@ -998,83 +1234,87 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            How MEMS Accelerometers Work
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '120px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              How MEMS Accelerometers Work
+            </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ ...typo.body, color: colors.textSecondary }}>
-              <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Newton&apos;s Second Law at Microscale</strong>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ ...typo.body, color: 'rgba(148,163,184,0.7)' }}>
+                <p style={{ marginBottom: '16px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Newton's Second Law at Microscale: F = ma</strong>
+                </p>
+                <p style={{ marginBottom: '16px' }}>
+                  When your phone accelerates, the proof mass inside the MEMS chip experiences <span style={{ color: colors.accent }}>inertial force (F = ma)</span>. This causes it to deflect against the silicon springs, with displacement proportional to applied acceleration.
+                </p>
+                <p style={{ marginBottom: '16px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Capacitive Sensing: C = εA/d</strong>
+                </p>
+                <p>
+                  The mass position changes the gap to fixed electrodes, altering <span style={{ color: colors.success }}>capacitance (C = ε × A / d)</span>. This tiny change — measured in femtofarads — is amplified and converted to an acceleration reading. The formula shows: smaller gap d = larger capacitance C.
+                </p>
+              </div>
+            </div>
+
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '20px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+                Key Insight: Incredible Sensitivity
+              </h3>
+              <p style={{ ...typo.body, color: 'rgba(148,163,184,0.7)', marginBottom: '8px' }}>
+                Modern MEMS accelerometers can detect:
               </p>
-              <p style={{ marginBottom: '16px' }}>
-                When your phone accelerates, the proof mass inside the MEMS chip experiences <span style={{ color: colors.accent }}>inertial force (F = ma)</span>. This causes it to deflect against the silicon springs.
-              </p>
-              <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Capacitive Sensing</strong>
-              </p>
-              <p>
-                The mass position changes the gap to fixed electrodes, altering <span style={{ color: colors.success }}>capacitance (C = epsilon * A / d)</span>. This tiny change is measured and converted to an acceleration reading.
+              <ul style={{ ...typo.body, color: 'rgba(148,163,184,0.7)', margin: 0, paddingLeft: '20px' }}>
+                <li>Accelerations as small as <strong>0.001g</strong> (one-thousandth of gravity)</li>
+                <li>Footsteps from across a room</li>
+                <li>Your heartbeat through a table</li>
+                <li>Earthquake P-waves before shaking arrives</li>
+              </ul>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>
+                Your Prediction: {prediction === 'a' ? '✓ Correct!' : '✗ Not quite'}
+              </h3>
+              <p style={{ ...typo.body, color: 'rgba(148,163,184,0.7)', margin: 0 }}>
+                {prediction === 'a'
+                  ? 'You correctly identified that MEMS accelerometers use a proof mass on springs with capacitive sensing. The equation F = ma drives the proof mass displacement.'
+                  : 'The correct answer is a tiny mass on springs. The capacitance change C = εA/d between the mass and fixed electrodes is what gets measured.'}
               </p>
             </div>
           </div>
-
-          <div style={{
-            background: `${colors.accent}11`,
-            border: `1px solid ${colors.accent}33`,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              Key Insight: Incredible Sensitivity
-            </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
-              Modern MEMS accelerometers can detect:
-            </p>
-            <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
-              <li>Accelerations as small as <strong>0.001g</strong> (one-thousandth of gravity)</li>
-              <li>Footsteps from across a room</li>
-              <li>Your heartbeat through a table</li>
-              <li>Earthquake P-waves before shaking arrives</li>
-            </ul>
-          </div>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>
-              Your Prediction: {prediction === 'a' ? 'Correct!' : 'Not quite'}
-            </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              {prediction === 'a'
-                ? 'You correctly identified that MEMS accelerometers use a proof mass on springs with capacitive sensing.'
-                : 'The correct answer is a tiny mass on springs. The capacitance change between the mass and fixed electrodes is what gets measured.'}
-            </p>
-          </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Discover the Twist
-          </button>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav(true, 'Discover the Twist →')}
       </div>
     );
   }
@@ -1087,92 +1327,91 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
       { id: 'c', text: 'Share battery power to keep sensors running longer' },
     ];
 
+    const svgW = isMobile ? 340 : 500;
+    const svgH = isMobile ? 260 : 320;
+
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.warning}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.warning}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              New Variable: Distributed Networks
-            </p>
-          </div>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '120px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
+            <div style={{
+              background: `${colors.warning}22`,
+              borderRadius: '12px',
+              padding: '12px 16px',
+              marginBottom: '20px',
+              border: `1px solid ${colors.warning}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+                New Variable: Distributed Networks — observe before predicting
+              </p>
+            </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            One phone can detect an earthquake. But what if millions of phones worked together?
-          </h2>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '20px' }}>
+              One phone can detect an earthquake. But what do millions of phones working together add that one cannot do alone?
+            </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <p style={{ ...typo.body, color: colors.textSecondary }}>
-              Instead of one expensive seismometer, imagine a network of <span style={{ color: colors.accent }}>millions of smartphone sensors</span> spread across a city...
+            {/* Static network diagram - no sliders */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+              {renderSeismicSVG(false, svgW, svgH)}
+            </div>
+
+            <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', marginBottom: '20px', textAlign: 'center' }}>
+              Notice how this waveform from a single sensor contains noise. What additional capabilities emerge from a distributed network of millions of sensors working together?
             </p>
-            <div style={{ marginTop: '16px', fontSize: '48px' }}>
-              📱📱📱📱📱 = 🌐
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                  style={{
+                    background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                    border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                    color: twistPrediction === opt.id ? 'white' : 'rgba(148,163,184,0.7)',
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                    verticalAlign: 'middle',
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
-                style={{
-                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
-                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
-                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {twistPrediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test the Network
-            </button>
-          )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav(!!twistPrediction, 'Test the Network →')}
       </div>
     );
   }
@@ -1180,135 +1419,130 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     const detectionsCount = phoneDetections.filter(d => d).length;
+    const svgW = isMobile ? 340 : 520;
+    const svgH = isMobile ? 300 : 380;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Distributed Seismometer Network
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Build a network and trigger an earthquake to see how detection improves with more phones.
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '120px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Distributed Seismometer Network
+            </h2>
+            <p style={{ ...typo.body, color: 'rgba(148,163,184,0.7)', textAlign: 'center', marginBottom: '20px' }}>
+              Build a network and trigger an earthquake to see how detection improves with more phones. More phones = better triangulation, fewer false alarms, and faster warnings.
+            </p>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <NetworkVisualization />
-            </div>
-
-            {/* Phone count slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Phones in Network</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{phoneCount}</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="20"
-                value={phoneCount}
-                onChange={(e) => {
-                  setPhoneCount(parseInt(e.target.value));
-                  setPhoneDetections(Array(parseInt(e.target.value)).fill(false));
-                }}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Trigger earthquake button */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <button
-                onClick={() => {
-                  playSound('click');
-                  setEarthquakeStrength(4 + Math.random() * 3);
-                }}
-                disabled={earthquakeStrength > 0}
-                style={{
-                  padding: '16px 32px',
-                  borderRadius: '12px',
-                  border: 'none',
-                  background: earthquakeStrength > 0 ? colors.border : colors.error,
-                  color: 'white',
-                  fontWeight: 700,
-                  fontSize: '16px',
-                  cursor: earthquakeStrength > 0 ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {earthquakeStrength > 0 ? 'Detecting...' : 'Simulate Earthquake'}
-              </button>
-            </div>
-
-            {/* Detection results */}
-            {earthquakeStrength > 0 && (
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-              }}>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{detectionsCount}/{phoneCount}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Phones Detected</div>
-                </div>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.h3, color: detectionsCount >= 3 ? colors.success : colors.warning }}>
-                    {detectionsCount >= 3 ? 'CONFIRMED' : 'UNCERTAIN'}
-                  </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Event Status</div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {phoneCount >= 5 && (
             <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '20px',
+              marginBottom: '20px',
+              border: `1px solid ${colors.border}`,
             }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                More phones = better triangulation, fewer false alarms, and faster warnings!
-              </p>
-            </div>
-          )}
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+                <NetworkVisualization width={svgW} height={svgH} />
+              </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Benefits
-          </button>
+              {/* Phone count slider */}
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <span style={{ ...typo.small, color: 'rgba(148,163,184,0.7)' }}>Phones in Network</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{phoneCount} devices</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="20"
+                  value={phoneCount}
+                  onChange={(e) => {
+                    const n = parseInt(e.target.value);
+                    setPhoneCount(n);
+                    setPhoneDetections(Array(n).fill(false));
+                  }}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    accentColor: '#3b82f6',
+                    WebkitAppearance: 'none',
+                    touchAction: 'pan-y',
+                  }}
+                />
+              </div>
+
+              {/* Trigger earthquake button */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                <button
+                  onClick={() => {
+                    playSound('click');
+                    setEarthquakeStrength(4 + Math.random() * 3);
+                  }}
+                  disabled={earthquakeStrength > 0}
+                  style={{
+                    padding: '14px 28px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: earthquakeStrength > 0 ? colors.border : colors.error,
+                    color: 'white',
+                    fontWeight: 700,
+                    fontSize: '15px',
+                    cursor: earthquakeStrength > 0 ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  {earthquakeStrength > 0 ? 'Detecting...' : 'Simulate Earthquake'}
+                </button>
+              </div>
+
+              {/* Detection results */}
+              {earthquakeStrength > 0 && (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '12px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.accent }}>{detectionsCount}/{phoneCount}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Phones Detected</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: detectionsCount >= 3 ? colors.success : colors.warning }}>
+                      {detectionsCount >= 3 ? 'CONFIRMED' : 'UNCERTAIN'}
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Event Status</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav(true, 'Understand the Benefits →')}
       </div>
     );
   }
@@ -1319,86 +1553,68 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Crowdsourced Seismology
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '120px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              Crowdsourced Seismology
+            </h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>📍</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Triangulation</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Multiple detection times from different locations allow precise calculation of earthquake epicenter and depth. Three or more observations enable triangulation.
-              </p>
-            </div>
-
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🚫</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>False Alarm Rejection</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                One phone shaking could be dropped. Many phones shaking in a pattern that propagates outward = real earthquake. Corroboration eliminates false positives.
-              </p>
-            </div>
-
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>⏰</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Early Warning</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Electronic signals travel at light speed (~300,000 km/s) while seismic waves travel at ~3-6 km/s. Phones near epicenter can alert phones farther away before shaking arrives.
-              </p>
-            </div>
-
-            <div style={{
-              background: `${colors.success}11`,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.success}33`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🌐</span>
-                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>MyShake Network</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                UC Berkeley&apos;s MyShake app has millions of users creating a global distributed seismometer network. It has successfully detected earthquakes worldwide and provides early warning alerts.
-              </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+              {[
+                {
+                  icon: '📍',
+                  title: 'Triangulation',
+                  text: 'Multiple detection times from different locations allow precise calculation of earthquake epicenter and depth. Three or more observations enable triangulation. The formula: distance = (P-wave arrival time) × (P-wave velocity) for each sensor.',
+                  color: colors.accent,
+                },
+                {
+                  icon: '🚫',
+                  title: 'False Alarm Rejection',
+                  text: 'One phone shaking could be dropped. Many phones shaking in a pattern that propagates outward = real earthquake. Corroboration eliminates false positives and improves detection accuracy to 99%.',
+                  color: colors.warning,
+                },
+                {
+                  icon: '⏰',
+                  title: 'Early Warning',
+                  text: 'Electronic signals travel at light speed (~300,000 km/s) while seismic waves travel at ~3-6 km/s. Phones near epicenter can alert phones farther away before shaking arrives, saving lives.',
+                  color: colors.error,
+                },
+                {
+                  icon: '🌐',
+                  title: 'MyShake Network',
+                  text: "UC Berkeley's MyShake app has millions of users creating a global distributed seismometer network. It has successfully detected earthquakes worldwide and provides early warning alerts with 99% detection accuracy.",
+                  color: colors.success,
+                },
+              ].map((item, idx) => (
+                <div key={idx} style={{
+                  background: colors.bgCard,
+                  borderRadius: '12px',
+                  padding: '20px',
+                  border: `1px solid ${colors.border}`,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+                    <span style={{ fontSize: '24px' }}>{item.icon}</span>
+                    <h3 style={{ ...typo.h3, color: item.color, margin: 0 }}>{item.title}</h3>
+                  </div>
+                  <p style={{ ...typo.body, color: 'rgba(148,163,184,0.7)', margin: 0 }}>{item.text}</p>
+                </div>
+              ))}
             </div>
           </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            See Real-World Applications
-          </button>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav(true, 'See Real-World Applications →')}
       </div>
     );
   }
@@ -1406,137 +1622,203 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
   // TRANSFER PHASE
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
+    const viewedCount = completedApps.filter(c => c).length;
     const allAppsCompleted = completedApps.every(c => c);
+
+    const handleSelectApp = (i: number) => {
+      playSound('click');
+      setSelectedApp(i);
+      const newCompleted = [...completedApps];
+      newCompleted[i] = true;
+      setCompletedApps(newCompleted);
+    };
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '120px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
+            <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', textAlign: 'center', marginBottom: '16px' }}>
+              App {selectedApp + 1} of {realWorldApps.length} — {viewedCount}/{realWorldApps.length} explored
+            </p>
 
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
-            {realWorldApps.map((a, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  playSound('click');
-                  setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
-                }}
-                style={{
-                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
-                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 8px',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  position: 'relative',
-                }}
-              >
-                {completedApps[i] && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-6px',
-                    right: '-6px',
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: colors.success,
-                    color: 'white',
-                    fontSize: '12px',
-                    lineHeight: '18px',
-                  }}>
-                    ✓
+            {/* App selector tabs */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '8px',
+              marginBottom: '20px',
+            }}>
+              {realWorldApps.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleSelectApp(i)}
+                  style={{
+                    background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                    border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '12px 6px',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    position: 'relative',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  {completedApps[i] && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-6px',
+                      right: '-6px',
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: colors.success,
+                      color: 'white',
+                      fontSize: '11px',
+                      lineHeight: '18px',
+                      textAlign: 'center',
+                    }}>
+                      ✓
+                    </div>
+                  )}
+                  <div style={{ fontSize: '24px', marginBottom: '4px' }}>{a.icon}</div>
+                  <div style={{ fontSize: '11px', color: colors.textPrimary, fontWeight: 500, lineHeight: 1.3 }}>
+                    {a.title.split(' ').slice(0, 2).join(' ')}
                   </div>
-                )}
-                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
-                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
-                  {a.title.split(' ').slice(0, 2).join(' ')}
-                </div>
-              </button>
-            ))}
-          </div>
+                </button>
+              ))}
+            </div>
 
-          {/* Selected app details */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            borderLeft: `4px solid ${app.color}`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-              <span style={{ fontSize: '48px' }}>{app.icon}</span>
-              <div>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
-                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+            {/* Selected app details */}
+            <div style={{
+              borderRadius: '16px',
+              overflow: 'hidden',
+              marginBottom: '16px',
+              border: `1px solid ${app.color}44`,
+            }}>
+              <div style={{
+                background: `${app.color}15`,
+                padding: '20px',
+                borderBottom: `1px solid ${app.color}33`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <span style={{ fontSize: '40px' }}>{app.icon}</span>
+                  <div>
+                    <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: '0 0 4px' }}>{app.title}</h3>
+                    <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ background: colors.bgCard, padding: '20px' }}>
+                <p style={{ ...typo.body, color: 'rgba(148,163,184,0.7)', marginBottom: '16px' }}>
+                  {app.description}
+                </p>
+
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '14px',
+                  marginBottom: '14px',
+                  borderLeft: `3px solid ${colors.accent}`,
+                }}>
+                  <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '6px', fontWeight: 600 }}>
+                    How MEMS Sensors Connect:
+                  </h4>
+                  <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', margin: 0 }}>
+                    {app.connection}
+                  </p>
+                </div>
+
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '14px',
+                  marginBottom: '14px',
+                }}>
+                  <h4 style={{ ...typo.small, color: colors.wave, marginBottom: '6px', fontWeight: 600 }}>
+                    How It Works:
+                  </h4>
+                  <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', margin: 0 }}>
+                    {app.howItWorks}
+                  </p>
+                </div>
+
+                {/* Stats */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '10px',
+                  marginBottom: '14px',
+                }}>
+                  {app.stats.map((stat, i) => (
+                    <div key={i} style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '8px',
+                      padding: '10px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ fontSize: '18px', marginBottom: '4px' }}>{stat.icon}</div>
+                      <div style={{ fontSize: '16px', color: app.color, fontWeight: 700 }}>{stat.value}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Got It button */}
+                <button
+                  onClick={() => {
+                    playSound('success');
+                    const newCompleted = [...completedApps];
+                    newCompleted[selectedApp] = true;
+                    setCompletedApps(newCompleted);
+                    // Advance to next app if available
+                    const nextUnseen = realWorldApps.findIndex((_, i) => !newCompleted[i]);
+                    if (nextUnseen >= 0) {
+                      setSelectedApp(nextUnseen);
+                    }
+                  }}
+                  style={{
+                    ...primaryButtonStyle,
+                    width: '100%',
+                    fontSize: '15px',
+                    padding: '12px 20px',
+                    background: `linear-gradient(135deg, ${app.color}, ${app.color}bb)`,
+                  }}
+                >
+                  Got It — Next App →
+                </button>
               </div>
             </div>
 
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
-              {app.description}
-            </p>
-
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '16px',
-            }}>
-              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                How MEMS Sensors Connect:
-              </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                {app.connection}
-              </p>
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}>
-              {app.stats.map((stat, i) => (
-                <div key={i} style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
-                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
-                </div>
-              ))}
-            </div>
+            {/* Take the Test button — appears after viewing all apps */}
+            {allAppsCompleted && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Take the Knowledge Test →
+              </button>
+            )}
           </div>
-
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav(allAppsCompleted, 'Take the Test →')}
       </div>
     );
   }
@@ -1549,52 +1831,105 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}>
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
-            <div style={{
-              fontSize: '80px',
-              marginBottom: '24px',
-            }}>
-              {passed ? '🏆' : '📚'}
-            </div>
-            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
-              {passed ? 'Excellent!' : 'Keep Learning!'}
-            </h2>
-            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
-              {testScore} / 10
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
-              {passed
-                ? 'You understand MEMS sensors and earthquake detection!'
-                : 'Review the concepts and try again.'}
-            </p>
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            paddingTop: '60px',
+            paddingBottom: '120px',
+          }}>
+            <div style={{ maxWidth: '600px', margin: '0 auto', padding: '24px', textAlign: 'center' }}>
+              <div style={{ fontSize: '80px', marginBottom: '24px' }}>
+                {passed ? '🏆' : '📚'}
+              </div>
+              <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+                {passed ? 'Excellent!' : 'Keep Learning!'}
+              </h2>
+              <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+                {testScore} / 10
+              </p>
+              <p style={{ ...typo.body, color: 'rgba(148,163,184,0.7)', marginBottom: '24px' }}>
+                {passed
+                  ? 'You understand MEMS sensors and earthquake detection!'
+                  : 'Review the concepts and try again.'}
+              </p>
 
-            {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
-                Complete Lesson
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
-                }}
-                style={primaryButtonStyle}
-              >
-                Review and Try Again
-              </button>
-            )}
+              {/* Answer review */}
+              <div style={{ textAlign: 'left', marginBottom: '24px' }}>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>
+                  Answer Review
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {testQuestions.map((q, i) => {
+                    const correctId = q.options.find(o => o.correct)?.id;
+                    const userAnswer = testAnswers[i];
+                    const isCorrect = userAnswer === correctId;
+                    return (
+                      <div key={i} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        background: colors.bgCard,
+                        borderRadius: '8px',
+                        padding: '10px 14px',
+                        border: `1px solid ${isCorrect ? colors.success + '44' : colors.error + '44'}`,
+                      }}>
+                        <span style={{
+                          fontSize: '16px',
+                          color: isCorrect ? colors.success : colors.error,
+                          fontWeight: 700,
+                          minWidth: '20px',
+                        }}>
+                          {isCorrect ? '✓' : '✗'}
+                        </span>
+                        <span style={{ ...typo.small, color: 'rgba(148,163,184,0.7)' }}>
+                          Q{i + 1}: {q.question.slice(0, 60)}...
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <button
+                  onClick={() => {
+                    setTestSubmitted(false);
+                    setTestAnswers(Array(10).fill(null));
+                    setCurrentQuestion(0);
+                    setTestScore(0);
+                    goToPhase('hook');
+                  }}
+                  style={{
+                    padding: '14px 24px',
+                    borderRadius: '10px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: 'rgba(148,163,184,0.7)',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                  }}
+                >
+                  Play Again
+                </button>
+                {passed && (
+                  <button
+                    onClick={() => { playSound('complete'); nextPhase(); }}
+                    style={primaryButtonStyle}
+                  >
+                    Complete Lesson →
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
-          {renderNavDots()}
+
+          {renderBottomNav(passed, 'Complete →')}
         </div>
       );
     }
@@ -1605,162 +1940,179 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          {/* Progress */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '24px',
-          }}>
-            <span style={{ ...typo.small, color: colors.textSecondary }}>
-              Question {currentQuestion + 1} of 10
-            </span>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {testQuestions.map((_, i) => (
-                <div key={i} style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: i === currentQuestion
-                    ? colors.accent
-                    : testAnswers[i]
-                      ? colors.success
-                      : colors.border,
-                }} />
-              ))}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '120px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
+            {/* Progress */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '20px',
+            }}>
+              <span style={{ ...typo.small, color: 'rgba(148,163,184,0.7)' }}>
+                Question {currentQuestion + 1} of 10
+              </span>
+              <div style={{ display: 'flex', gap: '5px' }}>
+                {testQuestions.map((_, i) => (
+                  <div key={i} style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: i === currentQuestion
+                      ? colors.accent
+                      : testAnswers[i]
+                        ? colors.success
+                        : colors.border,
+                  }} />
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Scenario */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '16px',
-            borderLeft: `3px solid ${colors.accent}`,
-          }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              {question.scenario}
-            </p>
-          </div>
+            {/* Scenario */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '14px 16px',
+              marginBottom: '14px',
+              borderLeft: `3px solid ${colors.accent}`,
+            }}>
+              <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', margin: 0 }}>
+                {question.scenario}
+              </p>
+            </div>
 
-          {/* Question */}
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
-            {question.question}
-          </h3>
+            {/* Question */}
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '18px' }}>
+              {question.question}
+            </h3>
 
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-            {question.options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => {
-                  playSound('click');
-                  const newAnswers = [...testAnswers];
-                  newAnswers[currentQuestion] = opt.id;
-                  setTestAnswers(newAnswers);
-                }}
-                style={{
-                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '10px',
-                  padding: '14px 16px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
-                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '24px',
-                  marginRight: '10px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.small }}>
-                  {opt.label}
-                </span>
-              </button>
-            ))}
-          </div>
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+              {question.options.map(opt => {
+                const isSelected = testAnswers[currentQuestion] === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => {
+                      playSound('click');
+                      const newAnswers = [...testAnswers];
+                      newAnswers[currentQuestion] = opt.id;
+                      setTestAnswers(newAnswers);
+                    }}
+                    style={{
+                      background: isSelected ? `${colors.accent}22` : colors.bgCard,
+                      border: `2px solid ${isSelected ? colors.accent : colors.border}`,
+                      borderRadius: '10px',
+                      padding: '14px 16px',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s',
+                      boxShadow: isSelected ? `0 0 12px ${colors.accentGlow}` : 'none',
+                    }}
+                  >
+                    <span style={{
+                      display: 'inline-block',
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      background: isSelected ? colors.accent : colors.bgSecondary,
+                      color: isSelected ? 'white' : 'rgba(148,163,184,0.7)',
+                      textAlign: 'center',
+                      lineHeight: '24px',
+                      marginRight: '10px',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      verticalAlign: 'middle',
+                    }}>
+                      {opt.id.toUpperCase()}
+                    </span>
+                    <span style={{ color: colors.textPrimary, ...typo.small }}>
+                      {opt.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
 
-          {/* Navigation */}
-          <div style={{ display: 'flex', gap: '12px' }}>
-            {currentQuestion > 0 && (
-              <button
-                onClick={() => setCurrentQuestion(currentQuestion - 1)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                }}
-              >
-                Previous
-              </button>
-            )}
-            {currentQuestion < 9 ? (
-              <button
-                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
-                disabled={!testAnswers[currentQuestion]}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
-                  color: 'white',
-                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  const score = testAnswers.reduce((acc, ans, i) => {
-                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
-                    return acc + (ans === correct ? 1 : 0);
-                  }, 0);
-                  setTestScore(score);
-                  setTestSubmitted(true);
-                  playSound(score >= 7 ? 'complete' : 'failure');
-                }}
-                disabled={testAnswers.some(a => a === null)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
-                  color: 'white',
-                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Submit Test
-              </button>
-            )}
+            {/* Navigation */}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {currentQuestion > 0 && (
+                <button
+                  onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                  style={{
+                    flex: 1,
+                    padding: '13px',
+                    borderRadius: '10px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: 'rgba(148,163,184,0.7)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  ← Previous
+                </button>
+              )}
+              {currentQuestion < 9 ? (
+                <button
+                  onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                  disabled={!testAnswers[currentQuestion]}
+                  style={{
+                    flex: 1,
+                    padding: '13px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                    color: 'white',
+                    cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                    fontWeight: 600,
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  Next →
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    const score = testAnswers.reduce((acc, ans, i) => {
+                      const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                      return acc + (ans === correct ? 1 : 0);
+                    }, 0);
+                    setTestScore(score);
+                    setTestSubmitted(true);
+                    playSound(score >= 7 ? 'complete' : 'failure');
+                  }}
+                  disabled={testAnswers.some(a => a === null)}
+                  style={{
+                    flex: 1,
+                    padding: '13px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                    color: 'white',
+                    cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                    fontWeight: 600,
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  Submit Test
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav(false)}
       </div>
     );
   }
@@ -1773,83 +2125,86 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
         <div style={{
-          fontSize: '100px',
-          marginBottom: '24px',
-          animation: 'bounce 1s infinite',
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '120px',
         }}>
-          🏆
-        </div>
-        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+          <div style={{ maxWidth: '600px', margin: '0 auto', padding: '24px', textAlign: 'center' }}>
+            <div style={{ fontSize: '100px', marginBottom: '24px' }}>
+              🏆
+            </div>
 
-        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
-          MEMS Sensor Master!
-        </h1>
+            <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+              MEMS Sensor Master!
+            </h1>
 
-        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You now understand how the tiny accelerometer in your phone can detect motion and contribute to global earthquake early warning systems.
-        </p>
+            <p style={{ ...typo.body, color: 'rgba(148,163,184,0.7)', maxWidth: '500px', margin: '0 auto 32px' }}>
+              You now understand how the tiny accelerometer in your phone can detect motion and contribute to global earthquake early warning systems. This technology represents a remarkable application of physics at the microscale.
+            </p>
 
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '400px',
-        }}>
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
-            You Learned:
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
-            {[
-              'MEMS accelerometers use a proof mass on silicon springs',
-              'Capacitive sensing measures tiny displacements',
-              'Phones can detect earthquakes, footsteps, and crashes',
-              'Distributed networks enable triangulation',
-              'Early warning saves lives by outrunning seismic waves',
-            ].map((item, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: colors.success }}>✓</span>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '32px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+                You Learned:
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
+                {[
+                  'MEMS accelerometers use a proof mass on silicon springs',
+                  'Equation F = ma drives the proof mass displacement',
+                  'Capacitive sensing: C = εA/d measures tiny displacements',
+                  'Phones can detect earthquakes, footsteps, and crashes',
+                  'Distributed networks enable triangulation and false alarm rejection',
+                  'Early warning saves lives by outrunning seismic waves at 3–6 km/s',
+                ].map((item, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ color: colors.success, fontSize: '16px' }}>✓</span>
+                    <span style={{ ...typo.small, color: 'rgba(148,163,184,0.7)' }}>{item}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => goToPhase('hook')}
+                style={{
+                  padding: '14px 28px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: 'rgba(148,163,184,0.7)',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                }}
+              >
+                Play Again
+              </button>
+              <a
+                href="/"
+                style={{
+                  ...primaryButtonStyle,
+                  textDecoration: 'none',
+                  display: 'inline-block',
+                }}
+              >
+                Return to Dashboard
+              </a>
+            </div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button
-            onClick={() => goToPhase('hook')}
-            style={{
-              padding: '14px 28px',
-              borderRadius: '10px',
-              border: `1px solid ${colors.border}`,
-              background: 'transparent',
-              color: colors.textSecondary,
-              cursor: 'pointer',
-            }}
-          >
-            Play Again
-          </button>
-          <a
-            href="/"
-            style={{
-              ...primaryButtonStyle,
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}
-          >
-            Return to Dashboard
-          </a>
-        </div>
-
-        {renderNavDots()}
+        {renderBottomNav(false)}
       </div>
     );
   }

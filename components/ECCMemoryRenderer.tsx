@@ -602,7 +602,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
           </button>
         ) : <div />}
 
-        {renderBottomNav()}
+        {renderNavDots()}
 
         {hasNext ? (
           <button

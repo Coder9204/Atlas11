@@ -1,171 +1,33 @@
-'use client';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-
-
-// ============================================================================
-// GAME EVENT INTERFACE AND UTILITIES
-// ============================================================================
-
-export interface GameEvent {
-  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
-    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
-    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
-    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
-  gameType: string;
-  gameTitle: string;
-  details: Record<string, unknown>;
-  timestamp: number;
-}
-
-// Sound utility
-const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
-  if (typeof window === 'undefined') return;
-  try {
-    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
-      click: { freq: 600, duration: 0.1, type: 'sine' },
-      success: { freq: 800, duration: 0.2, type: 'sine' },
-      failure: { freq: 300, duration: 0.3, type: 'sine' },
-      transition: { freq: 500, duration: 0.15, type: 'sine' },
-      complete: { freq: 900, duration: 0.4, type: 'sine' }
-    };
-    const sound = sounds[type];
-    oscillator.frequency.value = sound.freq;
-    oscillator.type = sound.type;
-    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + sound.duration);
-  } catch { /* Audio not available */ }
-};
-
-const realWorldApps = [
-  {
-    icon: '🏜️',
-    title: 'Desert Solar Farm Engineering',
-    short: 'Hot climates require careful design to manage efficiency losses',
-    tagline: 'Engineering for extreme heat',
-    description: 'Desert installations like those in Arizona, Saudi Arabia, and the Sahara face panel temperatures exceeding 70°C. Engineers must oversize systems and use advanced cooling strategies to compensate for temperature-related efficiency losses.',
-    connection: 'This simulation shows how hot panels produce less power despite receiving intense sunlight. Desert solar farms can lose 15-25% of potential output to temperature effects, making this a critical design consideration.',
-    howItWorks: 'Hot panels suffer voltage drops of ~0.3%/°C above 25°C STC. Engineers use elevated mounting for air circulation, wider row spacing, and cooling fins. Some advanced systems use water cooling or tracking that reduces time at peak sun angles.',
-    stats: [
-      { value: '20%', label: 'Typical summer efficiency loss', icon: '📉' },
-      { value: '70°C', label: 'Peak desert panel temp', icon: '🌡️' },
-      { value: '180 GW', label: 'Planned MENA solar by 2030', icon: '☀️' }
-    ],
-    examples: ['Noor-Ouarzazate (Morocco)', 'NEOM solar (Saudi Arabia)', 'Australian solar farms', 'Chile Atacama projects'],
-    companies: ['ACWA Power', 'Masdar', 'Enel Green Power', 'First Solar'],
-    futureImpact: 'New panel technologies with better temperature coefficients and passive cooling could unlock the vast solar potential of the world\'s deserts.',
-    color: '#F59E0B'
-  },
-  {
-    icon: '❄️',
-    title: 'Cold Climate Solar Advantages',
-    short: 'Snowy regions can achieve surprising solar performance',
-    tagline: 'Cold panels, hot performance',
-    description: 'Contrary to intuition, cold sunny regions like Colorado mountains or Scandinavian summers can achieve excellent solar yields. Cool panels maintain higher voltage and efficiency, often outperforming warmer locations.',
-    connection: 'The simulation demonstrates that cold panels (below 25°C STC) actually exceed rated efficiency. Combined with clean air, high altitude, and snow reflection, cold climate solar can match or exceed warmer regions.',
-    howItWorks: 'At 0°C, panels gain ~10% voltage compared to 25°C STC. Snow reflection (albedo) can add 20-30% to incident light. Clear mountain air provides higher direct normal irradiance. Net effect often exceeds hot climate production.',
-    stats: [
-      { value: '+10%', label: 'Cold weather efficiency gain', icon: '📈' },
-      { value: '30%', label: 'Boost from snow reflection', icon: '❄️' },
-      { value: '2200', label: 'Peak sun hours in Alaska summer', icon: '🌅' }
-    ],
-    examples: ['Swiss Alpine installations', 'Scandinavian solar parks', 'Canadian solar farms', 'High-altitude research stations'],
-    companies: ['Meyer Burger', 'REC Solar', 'Canadian Solar', 'Norwegian solar firms'],
-    futureImpact: 'As panel costs drop, previously overlooked cold regions are becoming attractive for solar development, especially for summer peak production.',
-    color: '#06B6D4'
-  },
-  {
-    icon: '🏢',
-    title: 'Building-Integrated Solar Design',
-    short: 'Architects balance aesthetics with thermal management',
-    tagline: 'Form meets function',
-    description: 'Building-integrated photovoltaics (BIPV) replace traditional building materials with solar elements. Designers must carefully consider ventilation and thermal mass to prevent efficiency losses from building-trapped heat.',
-    connection: 'This simulation shows why ventilation gaps behind panels are critical. Rooftop panels can run 20-30°C hotter than ground-mounted systems if air cannot circulate, significantly impacting annual energy yield.',
-    howItWorks: 'BIPV systems include solar facades, solar roof tiles, and transparent solar glazing. Ventilated cavities allow convective cooling. Some designs use phase-change materials to absorb heat peaks. Optimal designs balance thermal performance with structural integration.',
-    stats: [
-      { value: '$11B', label: 'BIPV market by 2028', icon: '🏗️' },
-      { value: '25°C', label: 'Typical roof temp difference', icon: '🏠' },
-      { value: '40%', label: 'Building energy from facades', icon: '🔋' }
-    ],
-    examples: ['Solar roof tiles', 'Glass curtain walls', 'Solar facades', 'Transparent skylights'],
-    companies: ['Tesla Solar Roof', 'SunPower', 'Onyx Solar', 'Solarcentury'],
-    futureImpact: 'Perovskite tandem cells and improved thermal management will enable net-zero buildings where every surface contributes to energy generation.',
-    color: '#10B981'
-  },
-  {
-    icon: '📊',
-    title: 'Solar Investment Analysis',
-    short: 'Financial models must account for temperature derating',
-    tagline: 'The economics of efficiency',
-    description: 'Solar project investors and banks use sophisticated models to predict energy yield and financial returns. Temperature coefficients are essential inputs that can make or break project economics in different climates.',
-    connection: 'The simulation shows real derating factors used in industry models. A -0.4%/°C power coefficient might reduce annual yield by 5-15% depending on location, directly impacting project revenue and loan repayment.',
-    howItWorks: 'PVsyst and similar software model hourly temperatures from weather data, apply panel temperature coefficients, and calculate derated output. Banks require P90/P99 estimates accounting for year-to-year climate variation.',
-    stats: [
-      { value: '$350B', label: 'Annual solar investment globally', icon: '💰' },
-      { value: '5-15%', label: 'Temperature derating range', icon: '📉' },
-      { value: '25 yrs', label: 'Typical financial model horizon', icon: '📆' }
-    ],
-    examples: ['Utility project finance', 'Solar REITs', 'Community solar funds', 'Residential loan underwriting'],
-    companies: ['Goldman Sachs', 'BlackRock', 'Brookfield', 'Climate finance firms'],
-    futureImpact: 'Better temperature prediction through satellite data and AI will reduce investment risk and enable financing in emerging solar markets.',
-    color: '#8B5CF6'
-  }
-];
+// ─────────────────────────────────────────────────────────────────────────────
+// Solar Panel Temperature Coefficient - Complete 10-Phase Self-Managing Game
+// ─────────────────────────────────────────────────────────────────────────────
 
 interface SolarTempCoefficientRendererProps {
-  onGameEvent?: (event: GameEvent) => void;
+  onGameEvent?: (event: Record<string, unknown>) => void;
   gamePhase?: string;
+  phase?: string;
 }
 
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
-  // Phase labels
-  const phaseLabels: Record<Phase, string> = {
-    hook: 'Introduction',
-    predict: 'Predict',
-    play: 'Experiment',
-    review: 'Understanding',
-    twist_predict: 'New Variable',
-    twist_play: 'Twist Play',
-    twist_review: 'Deep Insight',
-    transfer: 'Real World',
-    test: 'Knowledge Test',
-    mastery: 'Mastery'
-  };
+const VALID_PHASES: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
-  // Navigation
-  const goToPhase = useCallback((p: Phase) => {
-    if (isNavigating.current) return;
-    isNavigating.current = true;
-    playSound('transition');
-    setPhase(p);
-    if (onGameEvent) {
-      onGameEvent({
-        eventType: 'phase_changed',
-        gameType: 'solar_temp_coefficient',
-        gameTitle: 'Solar Panel Temperature Coefficient',
-        details: { phase: p },
-        timestamp: Date.now()
-      });
-    }
-    setTimeout(() => { isNavigating.current = false; }, 300);
-  }, [onGameEvent]);
+const PHASE_LABELS: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Explore',
+  review: 'Review Understanding',
+  twist_predict: 'New Variable',
+  twist_play: 'Experiment',
+  twist_review: 'Deep Review',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery Complete',
+};
 
-  const nextPhase = useCallback(() => {
-    const currentIndex = phaseOrder.indexOf(phase);
-    if (currentIndex < phaseOrder.length - 1) {
-      goToPhase(phaseOrder[currentIndex + 1]);
-    }
-  }, [phase, goToPhase, phaseOrder]);
-
-  // Colors
-  const colors = {
+const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
   textMuted: '#94a3b8',
@@ -178,28 +40,211 @@ interface SolarTempCoefficientRendererProps {
   warning: '#f59e0b',
   error: '#ef4444',
   solar: '#fbbf24',
-  solarGlow: 'rgba(251, 191, 36, 0.3)',
   voltage: '#3b82f6',
   current: '#22c55e',
   power: '#a855f7',
   temperature: '#ef4444',
   cold: '#06b6d4',
+  border: 'rgba(255,255,255,0.1)',
 };
 
-const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> = ({ onGameEvent, gamePhase }) => {
-  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+// Standard Test Conditions
+const STC_TEMP = 25;
+const STC_IRRADIANCE = 1000;
+const STC_VOC = 40;
+const STC_ISC = 10;
+const STC_PMAX = 350;
+const TEMP_COEFF_VOC = -0.003;
+const TEMP_COEFF_ISC = 0.0005;
+const TEMP_COEFF_PMAX = -0.004;
 
-  const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-  const initialPhase = (gamePhase && phaseOrder.includes(gamePhase as Phase)) ? gamePhase as Phase : 'hook';
+const testQuestions = [
+  {
+    scenario: 'A 350W silicon solar panel is installed on a rooftop in Phoenix, Arizona. On a sunny summer day, the panel temperature reaches 65°C while producing power at 1000 W/m² irradiance.',
+    question: 'What is the typical temperature coefficient of power for silicon solar panels?',
+    options: [
+      { text: 'A) +0.4%/°C (power increases with temperature)', correct: false },
+      { text: 'B) -0.3% to -0.5%/°C (power decreases with temperature)', correct: true },
+      { text: 'C) 0%/°C (temperature has no effect)', correct: false },
+      { text: 'D) -5%/°C (power drops dramatically)', correct: false },
+    ],
+    explanation: 'Silicon solar cells typically lose 0.3–0.5% of their rated power for every degree Celsius above STC (25°C). At 65°C, that is a 40°C rise — causing approximately 16% power loss.',
+  },
+  {
+    scenario: 'A solar panel datasheet states it is rated at Standard Test Conditions (STC). An engineer is calculating the expected output for a real installation.',
+    question: 'At Standard Test Conditions (STC), what is the defined cell temperature?',
+    options: [
+      { text: 'A) 0°C', correct: false },
+      { text: 'B) 25°C', correct: true },
+      { text: 'C) 40°C', correct: false },
+      { text: 'D) 20°C', correct: false },
+    ],
+    explanation: 'STC defines cell temperature at 25°C with 1000 W/m² irradiance and AM1.5 spectrum. Real panels often run 20–35°C hotter than ambient, so actual output is nearly always below the STC rating.',
+  },
+  {
+    scenario: 'A physics student is studying how temperature affects semiconductor devices. She heats a silicon solar panel from 25°C to 55°C and measures a voltage drop from 40V to 36.4V.',
+    question: 'Why does solar panel voltage decrease when temperature increases?',
+    options: [
+      { text: 'A) The wires expand and increase resistance', correct: false },
+      { text: 'B) The silicon bandgap decreases, reducing the voltage', correct: true },
+      { text: 'C) The sun appears dimmer when it is hot', correct: false },
+      { text: 'D) The panel glass absorbs more light when hot', correct: false },
+    ],
+    explanation: 'In silicon, the bandgap energy decreases approximately 0.45 meV per °C. This means less energy is needed to free electrons, which reduces the open-circuit voltage. This is fundamental semiconductor physics.',
+  },
+  {
+    scenario: 'A solar installer is calculating performance for a 350W panel in Saudi Arabia where panel temperatures regularly reach 55°C. The temperature coefficient is -0.4%/°C.',
+    question: 'A 350W panel at 25°C is heated to 55°C. How much power is lost? (Use -0.4%/°C)',
+    options: [
+      { text: 'A) About 4W (negligible)', correct: false },
+      { text: 'B) About 42W (12% loss)', correct: true },
+      { text: 'C) About 100W (almost 30% loss)', correct: false },
+      { text: 'D) No loss — power is independent of temperature', correct: false },
+    ],
+    explanation: 'Temperature rise = 55 − 25 = 30°C. Power loss = 0.4%/°C × 30°C × 350W = 42W. The panel outputs only 308W at 55°C, a significant 12% reduction that engineers must account for.',
+  },
+  {
+    scenario: 'A solar researcher is comparing how different electrical parameters respond to temperature changes in a silicon photovoltaic module.',
+    question: 'What happens to solar panel current when temperature increases?',
+    options: [
+      { text: 'A) It decreases significantly', correct: false },
+      { text: 'B) It stays exactly the same', correct: false },
+      { text: 'C) It increases slightly (around +0.05%/°C)', correct: true },
+      { text: 'D) It doubles', correct: false },
+    ],
+    explanation: 'Higher temperature increases the thermal generation of electron-hole pairs, slightly boosting the short-circuit current by about +0.05%/°C. However, this small current gain is far outweighed by the large voltage loss.',
+  },
+  {
+    scenario: 'A homeowner in Colorado wonders why her solar system sometimes produces more power on cold, clear winter days than on hot summer days, even though the summer sun is stronger.',
+    question: 'Why might a cold, clear winter day produce as much energy as a hot summer day?',
+    options: [
+      { text: 'A) Winter sun is actually brighter', correct: false },
+      { text: 'B) Higher voltage from cold panels compensates for lower sun angle', correct: true },
+      { text: 'C) Panels work better when covered in snow', correct: false },
+      { text: 'D) This never actually happens', correct: false },
+    ],
+    explanation: 'At 0°C (25°C below STC), panels gain approximately 10% more voltage. Combined with clear mountain air and potential snow reflection, cold sunny days can match or exceed hot summer production.',
+  },
+  {
+    scenario: 'A solar engineer is designing a large utility-scale installation in the Mojave Desert where ambient temperatures reach 45°C and panels can exceed 70°C in summer.',
+    question: 'How do installers compensate for temperature losses in hot climates?',
+    options: [
+      { text: 'A) Install fewer panels since they produce more heat', correct: false },
+      { text: 'B) Install more capacity and use designs that promote cooling', correct: true },
+      { text: 'C) Cover panels with white paint to reflect heat', correct: false },
+      { text: 'D) Only operate panels at night', correct: false },
+    ],
+    explanation: 'Engineers oversize the system by 10–20% to account for temperature derating. They also use elevated mounting for airflow, optimize tilt angles, and select panels with better temperature coefficients.',
+  },
+  {
+    scenario: 'A solar panel manufacturer publishes a NOCT value of 47°C in their datasheet. An energy auditor needs to understand what this means for real-world performance prediction.',
+    question: 'What is NOCT (Nominal Operating Cell Temperature)?',
+    options: [
+      { text: 'A) The maximum safe temperature for a panel', correct: false },
+      { text: 'B) The expected cell temperature at 800 W/m², 20°C air, 1 m/s wind', correct: true },
+      { text: 'C) The temperature where efficiency is highest', correct: false },
+      { text: 'D) The temperature used for warranty calculations', correct: false },
+    ],
+    explanation: 'NOCT is a standardized test condition representing realistic outdoor operating conditions. It helps predict how much hotter panels will run above ambient. A NOCT of 47°C means panels typically run ~27°C above ambient air.',
+  },
+  {
+    scenario: 'A solar developer is evaluating four potential sites for a large-scale installation and needs to select the location that will deliver the best panel efficiency.',
+    question: 'Which location would likely have the best solar panel efficiency?',
+    options: [
+      { text: 'A) A hot, humid tropical beach', correct: false },
+      { text: 'B) A cold, high-altitude desert', correct: true },
+      { text: 'C) A hot, sunny parking lot', correct: false },
+      { text: 'D) An indoor greenhouse', correct: false },
+    ],
+    explanation: 'Cold temperatures keep panel voltage high, while high altitude provides more intense direct radiation through less atmosphere. The Atacama Desert in Chile (cold nights, thin air, intense sun) has some of the world\'s highest solar yields per panel.',
+  },
+  {
+    scenario: 'A financial analyst is comparing two solar panel brands: Panel A has a power temperature coefficient of -0.35%/°C and Panel B has -0.45%/°C. Both are 400W panels.',
+    question: 'If a panel is rated at -0.35%/°C power temperature coefficient, what does this mean?',
+    options: [
+      { text: 'A) The panel loses 0.35W for every degree above 0°C', correct: false },
+      { text: 'B) The panel loses 0.35% of its STC power for every degree above 25°C', correct: true },
+      { text: 'C) The panel gains 0.35% efficiency when heated', correct: false },
+      { text: 'D) The coefficient only applies below freezing', correct: false },
+    ],
+    explanation: 'The coefficient applies relative to the STC reference temperature (25°C). Panel A loses 0.35% × 400W = 1.4W per degree above 25°C. At 55°C (30°C above STC), Panel A loses 42W vs Panel B\'s 54W — a meaningful difference over a 25-year lifetime.',
+  },
+];
 
-  const [phase, setPhase] = useState<Phase>(initialPhase);
-  const isNavigating = useRef(false);
-  const [isMobile, setIsMobile] = useState(false);
+const realWorldApps = [
+  {
+    icon: '🏜️',
+    title: 'Desert Solar Farm Engineering',
+    description: 'Solar farms in desert regions like Arizona or Saudi Arabia face extreme panel temperatures exceeding 70°C. Engineers must oversize systems and use advanced cooling strategies to compensate for temperature-related efficiency losses.',
+    question: 'How do engineers compensate for temperature losses in hot climates?',
+    answer: 'Engineers install 10–20% more panel capacity than the nameplate rating to compensate for efficiency losses. They use elevated mounting for air circulation, wider row spacing, and choose panels with better temperature coefficients (-0.35%/°C vs -0.45%/°C). Some advanced systems use single-axis trackers that reduce time at peak sun angles.',
+    stats: [
+      { value: '20%', label: 'Typical summer efficiency loss' },
+      { value: '70°C', label: 'Peak desert panel temp' },
+      { value: '180 GW', label: 'Planned MENA solar by 2030' },
+    ],
+    companies: ['ACWA Power', 'Masdar', 'First Solar', 'Enel Green Power'],
+  },
+  {
+    icon: '❄️',
+    title: 'Cold Climate Solar Advantages',
+    description: 'Contrary to intuition, cold sunny regions like Colorado mountains or Scandinavian summers can achieve excellent solar yields. Cool panels maintain higher voltage and efficiency, often outperforming warmer locations.',
+    question: 'Why do cold regions sometimes outperform hot sunny areas on a per-panel basis?',
+    answer: 'At 0°C, panels gain approximately 10% more voltage compared to 25°C STC. Snow reflection (albedo) can add 20–30% to incident light. Clear mountain air provides higher direct normal irradiance. The net effect often matches or exceeds hot climate production despite shorter days.',
+    stats: [
+      { value: '+10%', label: 'Cold weather efficiency gain' },
+      { value: '30%', label: 'Boost from snow reflection' },
+      { value: '2200', label: 'Peak sun hours in Alaska summer' },
+    ],
+    companies: ['Meyer Burger', 'REC Solar', 'Canadian Solar', 'Norwegian solar firms'],
+  },
+  {
+    icon: '🏢',
+    title: 'Building-Integrated Solar Design',
+    description: 'Building-integrated photovoltaics (BIPV) replace traditional building materials with solar elements. Designers must carefully consider ventilation and thermal management to prevent efficiency losses from building-trapped heat.',
+    question: 'Why is ventilation critical for rooftop solar panels?',
+    answer: 'Rooftop panels can run 20–30°C hotter than ground-mounted systems if air cannot circulate underneath. That extra heat causes 8–12% more power loss. Raised mounting rails that allow airflow reduce operating temperature, recovering much of this loss. BIPV facades with ventilated cavities can generate energy while improving building envelope performance.',
+    stats: [
+      { value: '$11B', label: 'BIPV market by 2028' },
+      { value: '25°C', label: 'Typical roof vs ground-mount temp difference' },
+      { value: '8–12%', label: 'Power loss from poor ventilation' },
+    ],
+    companies: ['Tesla Solar Roof', 'SunPower', 'Onyx Solar', 'Solarcentury'],
+  },
+  {
+    icon: '📊',
+    title: 'Solar Investment Analysis',
+    description: 'Solar project investors and banks use sophisticated models to predict energy yield and financial returns. Temperature coefficients are essential inputs that can make or break project economics in different climates.',
+    question: 'How do temperature coefficients affect solar project financing?',
+    answer: 'PVsyst and similar software model hourly temperatures from weather data, apply panel temperature coefficients, and calculate derated output. A -0.4%/°C coefficient might reduce annual yield by 5–15% depending on location. Banks require P90/P99 estimates accounting for year-to-year climate variation. Better temperature coefficients directly increase revenue and improve loan terms.',
+    stats: [
+      { value: '$350B', label: 'Annual solar investment globally' },
+      { value: '5–15%', label: 'Temperature derating range by location' },
+      { value: '25 yrs', label: 'Typical financial model horizon' },
+    ],
+    companies: ['Goldman Sachs', 'BlackRock', 'Brookfield', 'Climate finance firms'],
+  },
+];
+
+const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> = ({
+  onGameEvent,
+  gamePhase,
+  phase: phaseProp,
+}) => {
+  // Self-managing phase state
+  const getInitialPhase = (): Phase => {
+    const candidate = gamePhase || phaseProp;
+    if (candidate && VALID_PHASES.includes(candidate as Phase)) {
+      return candidate as Phase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+
   // Simulation state
-  const [panelTemperature, setPanelTemperature] = useState(25); // Celsius (-10 to 70)
-  const [irradiance, setIrradiance] = useState(1000); // W/m² (200 to 1200)
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [animationDirection, setAnimationDirection] = useState(1);
+  const [panelTemperature, setPanelTemperature] = useState(25);
+  const [irradiance, setIrradiance] = useState(1000);
   const [showSeason, setShowSeason] = useState<'summer' | 'winter' | null>(null);
 
   // Phase-specific state
@@ -210,7 +255,7 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
-  
+  const [isMobile, setIsMobile] = useState(false);
 
   // Responsive detection
   useEffect(() => {
@@ -220,64 +265,46 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
+  // Phase navigation
+  const phaseOrder = VALID_PHASES;
 
-  // Standard Test Conditions (STC)
-  const STC_TEMP = 25; // °C
-  const STC_IRRADIANCE = 1000; // W/m²
-  const STC_VOC = 40; // V (typical for 72-cell panel)
-  const STC_ISC = 10; // A
-  const STC_PMAX = 350; // W
+  const goToPhase = useCallback((p: Phase) => {
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({ eventType: 'phase_changed', details: { phase: p }, timestamp: Date.now() });
+    }
+  }, [onGameEvent]);
 
-  // Temperature coefficients (typical for silicon)
-  const TEMP_COEFF_VOC = -0.003; // -0.3%/°C (voltage decreases with temperature)
-  const TEMP_COEFF_ISC = 0.0005; // +0.05%/°C (current slightly increases with temperature)
-  const TEMP_COEFF_PMAX = -0.004; // -0.4%/°C (power decreases with temperature)
+  const nextPhase = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[idx + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
 
-  // Physics calculations
-  const calculateSolarValues = useCallback(() => {
-    // Temperature difference from STC
+  const prevPhase = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx > 0) {
+      goToPhase(phaseOrder[idx - 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  // Physics calculations with useMemo for performance
+  const values = useMemo(() => {
     const deltaT = panelTemperature - STC_TEMP;
-
-    // Irradiance ratio
     const irradianceRatio = irradiance / STC_IRRADIANCE;
-
-    // Voltage: decreases with temperature, slightly increases with irradiance (log)
     const voltageTemperatureEffect = 1 + TEMP_COEFF_VOC * deltaT;
     const voltageIrradianceEffect = 1 + 0.025 * Math.log(irradianceRatio + 0.001);
     const Voc = STC_VOC * voltageTemperatureEffect * Math.max(0.5, voltageIrradianceEffect);
-
-    // Current: slightly increases with temperature, linearly with irradiance
     const currentTemperatureEffect = 1 + TEMP_COEFF_ISC * deltaT;
     const Isc = STC_ISC * currentTemperatureEffect * irradianceRatio;
-
-    // Power: decreases with temperature, linear with irradiance
     const powerTemperatureEffect = 1 + TEMP_COEFF_PMAX * deltaT;
     const Pmax = STC_PMAX * powerTemperatureEffect * irradianceRatio;
-
-    // Actual efficiency (power out / power in)
-    const panelArea = 1.7; // m² typical for 350W panel
+    const panelArea = 1.7;
     const powerIn = irradiance * panelArea;
     const efficiency = (Pmax / powerIn) * 100;
-
-    // Voltage loss from temperature
     const voltageLoss = STC_VOC * TEMP_COEFF_VOC * deltaT;
-
-    // Power loss from temperature
     const powerLoss = STC_PMAX * TEMP_COEFF_PMAX * deltaT * irradianceRatio;
-
     return {
       Voc: Math.max(0, Voc),
       Isc: Math.max(0, Isc),
@@ -289,181 +316,27 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
     };
   }, [panelTemperature, irradiance]);
 
-  // Animation effect
-  useEffect(() => {
-    if (!isAnimating) return;
-    const interval = setInterval(() => {
-      setPanelTemperature(prev => {
-        let newVal = prev + animationDirection * 2;
-        if (newVal >= 70) {
-          setAnimationDirection(-1);
-          newVal = 70;
-        } else if (newVal <= -10) {
-          setAnimationDirection(1);
-          newVal = -10;
-        }
-        return newVal;
-      });
-    }, 100);
-    return () => clearInterval(interval);
-  }, [isAnimating, animationDirection]);
-
-  const values = calculateSolarValues();
-
-  // Preset scenarios
-  const setScenario = (scenario: 'summer' | 'winter') => {
+  const setScenario = useCallback((scenario: 'summer' | 'winter') => {
     if (scenario === 'summer') {
-      setPanelTemperature(55); // Hot roof in summer
-      setIrradiance(1000); // Good sun
+      setPanelTemperature(55);
+      setIrradiance(1000);
       setShowSeason('summer');
     } else {
-      setPanelTemperature(5); // Cold winter day
-      setIrradiance(800); // Lower sun angle but clear
+      setPanelTemperature(5);
+      setIrradiance(800);
       setShowSeason('winter');
     }
-  };
+  }, []);
 
-  const predictions = [
-    { id: 'more_power_hot', label: 'More sunlight = more heat = more power output' },
-    { id: 'less_power_hot', label: 'Hot panels produce LESS power despite more sunlight' },
-    { id: 'same_power', label: 'Temperature does not affect solar panel output' },
-    { id: 'only_current', label: 'Only current changes with temperature, not power' },
-  ];
+  const handleTestAnswer = useCallback((questionIndex: number, optionIndex: number) => {
+    setTestAnswers(prev => {
+      const next = [...prev];
+      next[questionIndex] = optionIndex;
+      return next;
+    });
+  }, []);
 
-  const twistPredictions = [
-    { id: 'summer_wins', label: 'Hot summer days always produce more energy' },
-    { id: 'winter_wins', label: 'Cold sunny winter days can match or beat hot summer days' },
-    { id: 'spring_fall', label: 'Only spring and fall produce good power' },
-    { id: 'temperature_irrelevant', label: 'Seasonal temperature differences are too small to matter' },
-  ];
-
-  const transferApplications = [
-    {
-      title: 'Solar Farm Design in Hot Climates',
-      description: 'Solar farms in desert regions like Arizona or Saudi Arabia face extreme panel temperatures exceeding 70°C.',
-      question: 'How do engineers compensate for temperature losses in hot climates?',
-      answer: 'Engineers install more panel capacity to compensate for efficiency losses (10-15% derating), use raised mounting for airflow cooling, install panels at steeper angles for self-cleaning and cooling, and choose panels with better temperature coefficients. Some farms use single-axis trackers that also improve cooling.',
-    },
-    {
-      title: 'Rooftop vs Ground-Mount Performance',
-      description: 'Rooftop solar panels often run 20-30°C hotter than ground-mount systems due to trapped heat.',
-      question: 'Why do ground-mount systems typically outperform rooftop per watt installed?',
-      answer: 'Ground mounts have free airflow underneath for passive cooling, keeping panels 10-20°C cooler. This alone can mean 4-8% more energy production. They can also be optimally angled and are easier to clean. However, rooftops use otherwise wasted space and avoid land costs.',
-    },
-    {
-      title: 'High-Altitude Solar Installations',
-      description: 'Solar installations at high altitude (mountains, highlands) experience intense UV but cooler temperatures.',
-      question: 'Why are high-altitude locations excellent for solar despite shorter days in some seasons?',
-      answer: 'Thinner atmosphere means more direct solar radiation (up to 15% more). Cooler temperatures (0-15°C typical) keep voltage high and efficiency up. Combined, high-altitude sites can produce 20-30% more per panel than sea-level installations. This explains why the Atacama Desert (high + dry) is ideal for solar.',
-    },
-    {
-      title: 'Bifacial Panel Temperature Effects',
-      description: 'Bifacial panels absorb light from both sides and have different temperature behavior than standard panels.',
-      question: 'How does temperature affect bifacial panels differently than monofacial?',
-      answer: 'Bifacial panels run cooler because the back glass conducts heat better than opaque backsheets, and ground reflection provides "free" energy without adding heat. They gain 5-15% more energy from the back while running 3-5°C cooler. Their temperature coefficient advantage compounds over time.',
-    },
-  ];
-
-  const testQuestions = [
-    {
-      question: 'What is the typical temperature coefficient of power for silicon solar panels?',
-      options: [
-        { text: '+0.4%/°C (power increases with temperature)', correct: false },
-        { text: '-0.3% to -0.5%/°C (power decreases with temperature)', correct: true },
-        { text: '0%/°C (temperature has no effect)', correct: false },
-        { text: '-5%/°C (power drops dramatically)', correct: false },
-      ],
-    },
-    {
-      question: 'At Standard Test Conditions (STC), what is the defined cell temperature?',
-      options: [
-        { text: '0°C', correct: false },
-        { text: '25°C', correct: true },
-        { text: '40°C', correct: false },
-        { text: '20°C', correct: false },
-      ],
-    },
-    {
-      question: 'Why does solar panel voltage decrease when temperature increases?',
-      options: [
-        { text: 'The wires expand and increase resistance', correct: false },
-        { text: 'The silicon bandgap decreases, reducing the voltage', correct: true },
-        { text: 'The sun appears dimmer when it is hot', correct: false },
-        { text: 'The panel glass absorbs more light when hot', correct: false },
-      ],
-    },
-    {
-      question: 'A 350W panel at 25°C is heated to 55°C. How much power is lost? (Use -0.4%/°C)',
-      options: [
-        { text: 'About 4W (negligible)', correct: false },
-        { text: 'About 42W (12% loss)', correct: true },
-        { text: 'About 100W (almost 30% loss)', correct: false },
-        { text: 'No loss - power is independent of temperature', correct: false },
-      ],
-    },
-    {
-      question: 'What happens to solar panel current when temperature increases?',
-      options: [
-        { text: 'It decreases significantly', correct: false },
-        { text: 'It stays exactly the same', correct: false },
-        { text: 'It increases slightly (around +0.05%/°C)', correct: true },
-        { text: 'It doubles', correct: false },
-      ],
-    },
-    {
-      question: 'Why might a cold, clear winter day produce as much energy as a hot summer day?',
-      options: [
-        { text: 'Winter sun is actually brighter', correct: false },
-        { text: 'Higher voltage from cold panels compensates for lower sun angle', correct: true },
-        { text: 'Panels work better when covered in snow', correct: false },
-        { text: 'This never actually happens', correct: false },
-      ],
-    },
-    {
-      question: 'How do installers compensate for temperature losses in hot climates?',
-      options: [
-        { text: 'Install fewer panels since they produce more heat', correct: false },
-        { text: 'Install more capacity and use designs that promote cooling', correct: true },
-        { text: 'Cover panels with white paint to reflect heat', correct: false },
-        { text: 'Only operate panels at night', correct: false },
-      ],
-    },
-    {
-      question: 'What is NOCT (Nominal Operating Cell Temperature)?',
-      options: [
-        { text: 'The maximum safe temperature for a panel', correct: false },
-        { text: 'The expected cell temperature at 800 W/m², 20°C air, 1 m/s wind', correct: true },
-        { text: 'The temperature where efficiency is highest', correct: false },
-        { text: 'The temperature used for warranty calculations', correct: false },
-      ],
-    },
-    {
-      question: 'Which location would likely have the best solar panel efficiency?',
-      options: [
-        { text: 'A hot, humid tropical beach', correct: false },
-        { text: 'A cold, high-altitude desert', correct: true },
-        { text: 'A hot, sunny parking lot', correct: false },
-        { text: 'An indoor greenhouse', correct: false },
-      ],
-    },
-    {
-      question: 'If a panel is rated at -0.35%/°C power temperature coefficient, what does this mean?',
-      options: [
-        { text: 'The panel loses 0.35W for every degree above 0°C', correct: false },
-        { text: 'The panel loses 0.35% of its STC power for every degree above 25°C', correct: true },
-        { text: 'The panel gains 0.35% efficiency when heated', correct: false },
-        { text: 'The coefficient only applies below freezing', correct: false },
-      ],
-    },
-  ];
-
-  const handleTestAnswer = (questionIndex: number, optionIndex: number) => {
-    const newAnswers = [...testAnswers];
-    newAnswers[questionIndex] = optionIndex;
-    setTestAnswers(newAnswers);
-  };
-
-  const submitTest = () => {
+  const submitTest = useCallback(() => {
     let score = 0;
     testQuestions.forEach((q, i) => {
       if (testAnswers[i] !== null && q.options[testAnswers[i]!].correct) {
@@ -472,117 +345,29 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
     });
     setTestScore(score);
     setTestSubmitted(true);
-    if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
-  };
+  }, [testAnswers]);
 
-  
-  // Progress bar
-  const renderProgressBar = () => (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      height: '4px',
-      background: colors.bgSecondary,
-      zIndex: 100,
-    }}>
-      <div style={{
-        height: '100%',
-        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
-        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
-        transition: 'width 0.3s ease',
-      }} />
-    </div>
-  );
-
-  // Primary button style
-  const primaryButtonStyle: React.CSSProperties = {
-    background: `linear-gradient(135deg, ${colors.accent}, #d97706)`,
-    color: 'white',
-    border: 'none',
-    padding: isMobile ? '14px 28px' : '16px 32px',
-    borderRadius: '12px',
-    fontSize: isMobile ? '16px' : '18px',
-    fontWeight: 700,
-    cursor: 'pointer',
-    boxShadow: `0 4px 20px ${colors.accentGlow}`,
-    transition: 'all 0.2s ease',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
-  };
-
-  // Bottom navigation bar
-  const currentIndex = phaseOrder.indexOf(phase);
-  const isFirst = currentIndex === 0;
-  const isLast = currentIndex === phaseOrder.length - 1;
-
-  const renderBottomBar = () => (
-    <div style={{
-      flexShrink: 0,
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: '12px 20px',
-      borderTop: `1px solid ${colors.border}`,
-      background: 'rgba(0,0,0,0.3)',
-    }}>
-      <button
-        onClick={() => !isFirst && goToPhase(phaseOrder[currentIndex - 1])}
-        style={{
-          padding: '8px 20px',
-          borderRadius: '8px',
-          border: `1px solid ${colors.border}`,
-          background: 'transparent',
-          color: isFirst ? 'rgba(255,255,255,0.3)' : 'white',
-          cursor: isFirst ? 'not-allowed' : 'pointer',
-          opacity: isFirst ? 0.4 : 1,
-          transition: 'all 0.3s ease',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
-        }}
-      >
-        ← Back
-      </button>
-      <div style={{ display: 'flex', gap: '6px' }}>
-        {phaseOrder.map((p, i) => (
-          <div
-            key={p}
-            onClick={() => i <= currentIndex && goToPhase(p)}
-            style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-              cursor: i <= currentIndex ? 'pointer' : 'default',
-              transition: 'all 0.3s ease',
-            }}
-            title={phaseLabels[p]}
-          />
-        ))}
-      </div>
-      <button
-        onClick={() => !isLast && nextPhase()}
-        style={{
-          padding: '8px 20px',
-          borderRadius: '8px',
-          border: `1px solid ${colors.border}`,
-          background: 'transparent',
-          color: isLast ? 'rgba(255,255,255,0.3)' : 'white',
-          cursor: isLast ? 'not-allowed' : 'pointer',
-          opacity: isLast ? 0.4 : 1,
-          transition: 'all 0.3s ease',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
-        }}
-      >
-        Next →
-      </button>
-    </div>
-  );
-
+  // ─── SVG Visualization ─────────────────────────────────────────────────────
   const renderVisualization = (interactive: boolean) => {
-    const width = 500;
-    const height = 520;
+    const svgWidth = 500;
+    const svgHeight = 400;
 
-    // Temperature color gradient - returns color based on panel temperature
+    // Graph dimensions — large enough to show visible change
+    const graphX = 55;
+    const graphY = 220;
+    const graphW = 420;
+    const graphH = 150;
+
+    // Power axis: 150W to 420W
+    const PWR_MIN = 150;
+    const PWR_MAX = 420;
+
+    // Compute interactive point position
+    const iX = graphX + ((panelTemperature + 10) / 80) * graphW;
+    const iY = graphY + graphH - ((values.Pmax - PWR_MIN) / (PWR_MAX - PWR_MIN)) * graphH;
+    const clampedIY = Math.max(graphY, Math.min(graphY + graphH, iY));
+
+    // Temperature gradient color
     const getTempColor = () => {
       if (panelTemperature < 10) return colors.cold;
       if (panelTemperature < 25) return colors.success;
@@ -590,596 +375,372 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
       return colors.temperature;
     };
 
-    // Get temperature blend for gradient (0 = cold, 1 = hot)
     const tempBlend = Math.max(0, Math.min(1, (panelTemperature + 10) / 80));
 
-    // Sun intensity visual
-    const sunOpacity = Math.min(1, irradiance / 1000);
-    const sunSize = 30 + (irradiance / 1000) * 20;
-
-    // Efficiency percentage for graph
-    const efficiencyPercent = (values.efficiency / 22) * 100; // 22% is max efficiency baseline
+    // Power curve path
+    const powerCurvePath = (() => {
+      const pts: string[] = [];
+      for (let t = -10; t <= 70; t += 5) {
+        const p = STC_PMAX * (1 + TEMP_COEFF_PMAX * (t - STC_TEMP)) * (irradiance / STC_IRRADIANCE);
+        const x = graphX + ((t + 10) / 80) * graphW;
+        const y = graphY + graphH - ((p - PWR_MIN) / (PWR_MAX - PWR_MIN)) * graphH;
+        const clampedY = Math.max(graphY, Math.min(graphY + graphH, y));
+        pts.push(`${pts.length === 0 ? 'M' : 'L'}${x.toFixed(1)},${clampedY.toFixed(1)}`);
+      }
+      return pts.join(' ');
+    })();
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
         <svg
           width="100%"
-          height={height}
-          viewBox={`0 0 ${width} ${height}`}
+          height={svgHeight}
+          viewBox={`0 0 ${svgWidth} ${svgHeight}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ borderRadius: '12px', maxWidth: '600px' }}
+          style={{ borderRadius: '12px', maxWidth: '560px' }}
         >
           <defs>
-            {/* === PREMIUM BACKGROUND GRADIENTS === */}
-            <linearGradient id="stcoefSkyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <linearGradient id="stcSkyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#0c1929" />
-              <stop offset="25%" stopColor="#162544" />
               <stop offset="50%" stopColor="#1a365d" />
-              <stop offset="75%" stopColor="#1e3a5f" />
               <stop offset="100%" stopColor="#0f172a" />
             </linearGradient>
-
-            {/* === SUN GRADIENTS === */}
-            <radialGradient id="stcoefSunCore" cx="50%" cy="50%" r="50%">
+            <radialGradient id="stcSunCore" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#fff7ed" />
-              <stop offset="20%" stopColor="#fef3c7" />
               <stop offset="40%" stopColor="#fde047" />
-              <stop offset="60%" stopColor="#fbbf24" />
               <stop offset="80%" stopColor="#f59e0b" />
               <stop offset="100%" stopColor="#d97706" />
             </radialGradient>
-
-            <radialGradient id="stcoefSunGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.6" />
-              <stop offset="30%" stopColor="#f59e0b" stopOpacity="0.4" />
-              <stop offset="60%" stopColor="#d97706" stopOpacity="0.2" />
+            <radialGradient id="stcSunGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.5" />
+              <stop offset="60%" stopColor="#f59e0b" stopOpacity="0.15" />
               <stop offset="100%" stopColor="#92400e" stopOpacity="0" />
             </radialGradient>
-
-            <radialGradient id="stcoefSunCorona" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.3" />
-              <stop offset="50%" stopColor="#fde047" stopOpacity="0.1" />
-              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
-            </radialGradient>
-
-            {/* === SOLAR PANEL GRADIENTS === */}
-            <linearGradient id="stcoefPanelFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id="stcPanelFrame" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#64748b" />
-              <stop offset="20%" stopColor="#475569" />
               <stop offset="50%" stopColor="#334155" />
-              <stop offset="80%" stopColor="#475569" />
               <stop offset="100%" stopColor="#1e293b" />
             </linearGradient>
-
-            <linearGradient id="stcoefPanelCellCool" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id="stcPanelCool" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#1e40af" />
-              <stop offset="25%" stopColor="#1e3a8a" />
               <stop offset="50%" stopColor="#1d4ed8" />
-              <stop offset="75%" stopColor="#2563eb" />
               <stop offset="100%" stopColor="#1e40af" />
             </linearGradient>
-
-            <linearGradient id="stcoefPanelCellHot" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id="stcPanelHot" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#7f1d1d" />
-              <stop offset="25%" stopColor="#991b1b" />
               <stop offset="50%" stopColor="#b91c1c" />
-              <stop offset="75%" stopColor="#dc2626" />
               <stop offset="100%" stopColor="#7f1d1d" />
             </linearGradient>
-
-            <linearGradient id="stcoefPanelReflection" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.15" />
-              <stop offset="30%" stopColor="#ffffff" stopOpacity="0.05" />
-              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-            </linearGradient>
-
-            {/* === THERMOMETER GRADIENTS === */}
-            <linearGradient id="stcoefThermometerBg" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#1e293b" />
-              <stop offset="30%" stopColor="#334155" />
-              <stop offset="70%" stopColor="#334155" />
-              <stop offset="100%" stopColor="#1e293b" />
-            </linearGradient>
-
-            <linearGradient id="stcoefThermometerGlass" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#475569" stopOpacity="0.5" />
-              <stop offset="20%" stopColor="#64748b" stopOpacity="0.3" />
-              <stop offset="50%" stopColor="#94a3b8" stopOpacity="0.2" />
-              <stop offset="80%" stopColor="#64748b" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#475569" stopOpacity="0.5" />
-            </linearGradient>
-
-            <linearGradient id="stcoefMercuryCold" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#0891b2" />
-              <stop offset="30%" stopColor="#06b6d4" />
-              <stop offset="60%" stopColor="#22d3ee" />
-              <stop offset="100%" stopColor="#67e8f9" />
-            </linearGradient>
-
-            <linearGradient id="stcoefMercuryWarm" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#d97706" />
-              <stop offset="30%" stopColor="#f59e0b" />
-              <stop offset="60%" stopColor="#fbbf24" />
-              <stop offset="100%" stopColor="#fde047" />
-            </linearGradient>
-
-            <linearGradient id="stcoefMercuryHot" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#991b1b" />
-              <stop offset="30%" stopColor="#dc2626" />
-              <stop offset="60%" stopColor="#ef4444" />
-              <stop offset="100%" stopColor="#f87171" />
-            </linearGradient>
-
-            {/* === GRAPH GRADIENTS === */}
-            <linearGradient id="stcoefGraphBg" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#0f172a" />
-              <stop offset="50%" stopColor="#1e293b" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#0f172a" />
-            </linearGradient>
-
-            <linearGradient id="stcoefPowerLine" x1="0%" y1="0%" x2="100%" y2="0%">
+            <linearGradient id="stcPowerLine" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#22c55e" />
-              <stop offset="25%" stopColor="#84cc16" />
-              <stop offset="50%" stopColor="#eab308" />
-              <stop offset="75%" stopColor="#f97316" />
+              <stop offset="40%" stopColor="#eab308" />
               <stop offset="100%" stopColor="#ef4444" />
             </linearGradient>
-
-            <linearGradient id="stcoefEfficiencyLine" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#06b6d4" />
-              <stop offset="50%" stopColor="#8b5cf6" />
-              <stop offset="100%" stopColor="#ec4899" />
+            <linearGradient id="stcGraphBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#1e293b" stopOpacity="0.9" />
             </linearGradient>
-
-            <linearGradient id="stcoefGraphGridLine" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#334155" stopOpacity="0" />
-              <stop offset="10%" stopColor="#334155" stopOpacity="0.5" />
-              <stop offset="90%" stopColor="#334155" stopOpacity="0.5" />
-              <stop offset="100%" stopColor="#334155" stopOpacity="0" />
-            </linearGradient>
-
-            {/* === RADIAL TEMPERATURE EFFECT === */}
-            <radialGradient id="stcoefHeatRadiation" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
-              <stop offset="40%" stopColor="#f97316" stopOpacity="0.15" />
-              <stop offset="70%" stopColor="#fbbf24" stopOpacity="0.05" />
-              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
-            </radialGradient>
-
-            <radialGradient id="stcoefColdAura" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.2" />
-              <stop offset="50%" stopColor="#0891b2" stopOpacity="0.1" />
-              <stop offset="100%" stopColor="#0e7490" stopOpacity="0" />
-            </radialGradient>
-
-            {/* === GLOW FILTERS === */}
-            <filter id="stcoefSunGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="8" result="blur1" />
-              <feGaussianBlur stdDeviation="4" result="blur2" />
-              <feMerge>
-                <feMergeNode in="blur1" />
-                <feMergeNode in="blur2" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            <filter id="stcoefPanelGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
+            <filter id="stcSunGlowF" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-
-            <filter id="stcoefThermometerGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            <filter id="stcoefDataPointGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <filter id="stcPointGlow" x="-100%" y="-100%" width="300%" height="300%">
               <feGaussianBlur stdDeviation="4" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-
-            <filter id="stcoefTextGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="1" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            <filter id="stcoefSoftShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <filter id="stcSoftShadow" x="-20%" y="-20%" width="140%" height="140%">
               <feDropShadow dx="2" dy="2" stdDeviation="3" floodColor="#000000" floodOpacity="0.4" />
             </filter>
-
-            {/* === SUN RAY PATTERN === */}
-            <pattern id="stcoefSunRays" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-              <line x1="10" y1="0" x2="10" y2="20" stroke="#fbbf24" strokeWidth="1" strokeOpacity="0.3" />
-            </pattern>
           </defs>
 
-          {/* === BACKGROUND === */}
-          <rect width={width} height={height} fill="url(#stcoefSkyGradient)" />
+          {/* Background */}
+          <rect width={svgWidth} height={svgHeight} fill="url(#stcSkyGrad)" />
 
-          {/* Subtle grid pattern */}
-          <pattern id="stcoefBgGrid" width="30" height="30" patternUnits="userSpaceOnUse">
-            <rect width="30" height="30" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
-          </pattern>
-          <rect width={width} height={height} fill="url(#stcoefBgGrid)" />
-
-          {/* === PREMIUM SUN === */}
-          <g transform="translate(70, 65)">
-            {/* Sun corona (outer glow) */}
-            <circle cx="0" cy="0" r={sunSize + 45} fill="url(#stcoefSunCorona)" opacity={sunOpacity * 0.8} />
-
-            {/* Sun glow (middle layer) */}
-            <circle cx="0" cy="0" r={sunSize + 25} fill="url(#stcoefSunGlow)" opacity={sunOpacity} />
-
-            {/* Sun core with glow filter */}
-            <circle cx="0" cy="0" r={sunSize} fill="url(#stcoefSunCore)" filter="url(#stcoefSunGlowFilter)" />
-
-            {/* Sun highlight */}
-            <ellipse cx={-sunSize * 0.25} cy={-sunSize * 0.25} rx={sunSize * 0.3} ry={sunSize * 0.2} fill="#ffffff" opacity="0.3" />
-
-            {/* Irradiance label */}
-            <text x="0" y={sunSize + 40} fill={colors.textPrimary} fontSize="12" fontWeight="bold" textAnchor="middle" filter="url(#stcoefTextGlow)">
-              {irradiance} W/m²
-            </text>
-            <text x="0" y={sunSize + 54} fill={colors.textMuted} fontSize="10" textAnchor="middle">
-              Solar Irradiance
-            </text>
-          </g>
-
-          {/* === SUN RAYS HITTING PANEL === */}
-          <g opacity={sunOpacity * 0.6}>
-            {[0, 1, 2, 3, 4, 5, 6].map(i => (
+          {/* Sun */}
+          <g transform="translate(65, 70)">
+            <circle cx="0" cy="0" r="55" fill="url(#stcSunGlow)" opacity="0.8" />
+            <circle cx="0" cy="0" r="28" fill="url(#stcSunCore)" filter="url(#stcSunGlowF)" />
+            <circle cx="-7" cy="-7" r="8" fill="#ffffff" opacity="0.25" />
+            {/* Sun rays */}
+            {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
               <line
                 key={`ray-${i}`}
-                x1={85 + i * 8}
-                y1={75 + i * 5}
-                x2={175 + i * 22}
-                y2={95}
-                stroke="url(#stcoefPowerLine)"
-                strokeWidth="2"
-                strokeDasharray="8,4"
+                x1={Math.cos(angle * Math.PI / 180) * 32}
+                y1={Math.sin(angle * Math.PI / 180) * 32}
+                x2={Math.cos(angle * Math.PI / 180) * 44}
+                y2={Math.sin(angle * Math.PI / 180) * 44}
+                stroke="#fde047"
+                strokeWidth="2.5"
                 strokeLinecap="round"
-              >
-                <animate attributeName="stroke-dashoffset" from="0" to="12" dur="1s" repeatCount="indefinite" />
-              </line>
+                opacity="0.7"
+              />
+            ))}
+            {/* Irradiance label — positioned well below sun */}
+            <text x="0" y="68" fill={colors.textPrimary} fontSize="11" fontWeight="bold" textAnchor="middle">
+              {irradiance} W/m²
+            </text>
+          </g>
+
+          {/* Solar rays hitting panel */}
+          <g opacity="0.5">
+            {[0, 1, 2, 3, 4].map(i => (
+              <line
+                key={`sray-${i}`}
+                x1={90 + i * 8}
+                y1={80 + i * 4}
+                x2={175 + i * 20}
+                y2={100}
+                stroke="url(#stcPowerLine)"
+                strokeWidth="1.5"
+                strokeDasharray="6,4"
+                strokeLinecap="round"
+              />
             ))}
           </g>
 
-          {/* === PREMIUM SOLAR PANEL === */}
-          <g transform="translate(160, 55)" filter="url(#stcoefSoftShadow)">
-            {/* Panel mounting bracket */}
-            <rect x="60" y="95" width="50" height="15" fill="url(#stcoefPanelFrame)" rx="2" />
-            <rect x="75" y="108" width="20" height="30" fill="url(#stcoefPanelFrame)" rx="2" />
-
+          {/* Solar Panel */}
+          <g transform="translate(155, 60)" filter="url(#stcSoftShadow)">
+            {/* Mounting bracket */}
+            <rect x="60" y="96" width="44" height="10" fill="url(#stcPanelFrame)" rx="2" />
+            <rect x="78" y="104" width="14" height="20" fill="url(#stcPanelFrame)" rx="2" />
             {/* Panel frame */}
-            <rect x="-5" y="-5" width="180" height="105" fill="url(#stcoefPanelFrame)" rx="6" />
-
-            {/* Panel glass/cell area */}
-            <rect x="0" y="0" width="170" height="95" rx="3" fill={tempBlend > 0.5 ? 'url(#stcoefPanelCellHot)' : 'url(#stcoefPanelCellCool)'} opacity={1 - tempBlend * 0.3} />
-
-            {/* Temperature overlay based on panel temp */}
-            {tempBlend > 0.4 && (
-              <rect x="0" y="0" width="170" height="95" rx="3" fill="url(#stcoefHeatRadiation)" opacity={tempBlend * 0.8} />
-            )}
-            {tempBlend < 0.3 && (
-              <rect x="0" y="0" width="170" height="95" rx="3" fill="url(#stcoefColdAura)" opacity={(0.3 - tempBlend) * 2} />
-            )}
-
-            {/* Cell grid lines - horizontal */}
-            {[1, 2, 3, 4, 5].map(i => (
-              <line key={`h-${i}`} x1="0" y1={i * 15.8} x2="170" y2={i * 15.8} stroke="#0f172a" strokeWidth="1.5" strokeOpacity="0.6" />
+            <rect x="-5" y="-5" width="175" height="105" fill="url(#stcPanelFrame)" rx="6" />
+            {/* Panel cells */}
+            <rect x="0" y="0" width="165" height="95" rx="3"
+              fill={tempBlend > 0.5 ? 'url(#stcPanelHot)' : 'url(#stcPanelCool)'}
+              opacity={1 - tempBlend * 0.25}
+            />
+            {/* Cell grid */}
+            {[1,2,3,4,5].map(i => (
+              <line key={`hg-${i}`} x1="0" y1={i * 15.5} x2="165" y2={i * 15.5} stroke="#0f172a" strokeWidth="1" strokeOpacity="0.5" />
             ))}
-            {/* Cell grid lines - vertical */}
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => (
-              <line key={`v-${i}`} x1={i * 17} y1="0" x2={i * 17} y2="95" stroke="#0f172a" strokeWidth="1.5" strokeOpacity="0.6" />
+            {[1,2,3,4,5,6,7,8].map(i => (
+              <line key={`vg-${i}`} x1={i * 18.3} y1="0" x2={i * 18.3} y2="95" stroke="#0f172a" strokeWidth="1" strokeOpacity="0.5" />
             ))}
-
             {/* Glass reflection */}
-            <rect x="0" y="0" width="170" height="95" rx="3" fill="url(#stcoefPanelReflection)" />
-
-            {/* Temperature indicator badge */}
-            <g transform="translate(55, 32)">
-              <rect x="0" y="0" width="60" height="30" rx="6" fill="rgba(0,0,0,0.85)" stroke={getTempColor()} strokeWidth="2" />
-              <text x="30" y="21" fill={getTempColor()} fontSize="16" fontWeight="bold" textAnchor="middle" filter="url(#stcoefTextGlow)">
+            <rect x="0" y="0" width="165" height="95" rx="3" fill="rgba(255,255,255,0.08)" />
+            {/* Temperature badge */}
+            <g transform="translate(52, 30)">
+              <rect x="0" y="0" width="62" height="28" rx="6" fill="rgba(0,0,0,0.85)" stroke={getTempColor()} strokeWidth="2" />
+              <text x="31" y="20" fill={getTempColor()} fontSize="15" fontWeight="bold" textAnchor="middle">
                 {panelTemperature}°C
               </text>
             </g>
-
-            {/* Panel label */}
-            <text x="85" y="115" fill={colors.textSecondary} fontSize="10" textAnchor="middle">350W Solar Panel</text>
+            {/* Panel label — moved below frame */}
+            <text x="82" y="118" fill={colors.textSecondary} fontSize="11" textAnchor="middle">350W Solar Panel</text>
           </g>
 
-          {/* === PREMIUM THERMOMETER === */}
-          <g transform="translate(410, 40)">
-            {/* Thermometer body background */}
-            <rect x="0" y="0" width="45" height="130" rx="22" fill="url(#stcoefThermometerBg)" stroke="#475569" strokeWidth="2" />
-
-            {/* Glass effect overlay */}
-            <rect x="2" y="2" width="41" height="126" rx="20" fill="url(#stcoefThermometerGlass)" />
-
-            {/* Temperature scale marks */}
-            {[-10, 0, 10, 25, 40, 55, 70].map((temp, i) => {
-              const yPos = 10 + (1 - (temp + 10) / 80) * 95;
+          {/* Thermometer */}
+          <g transform="translate(400, 50)">
+            {/* Thermometer body */}
+            <rect x="10" y="0" width="26" height="120" rx="13" fill="#1e293b" stroke="#475569" strokeWidth="1.5" />
+            {/* Mercury */}
+            {(() => {
+              const mercH = Math.max(5, 100 * ((panelTemperature + 10) / 80));
+              const mercY = 10 + 100 - mercH;
+              const mercGrad = panelTemperature < 15 ? colors.cold : panelTemperature < 40 ? colors.warning : colors.temperature;
+              return <rect x="17" y={mercY} width="12" height={mercH} rx="5" fill={mercGrad} />;
+            })()}
+            {/* Bulb */}
+            <circle cx="23" cy="128" r="11" fill={getTempColor()} />
+            <circle cx="20" cy="125" r="4" fill="#ffffff" opacity="0.25" />
+            {/* Scale marks */}
+            {[-10, 10, 25, 40, 70].map(temp => {
+              const yp = 10 + (1 - (temp + 10) / 80) * 100;
               return (
-                <g key={`mark-${temp}`}>
-                  <line x1="8" y1={yPos} x2="15" y2={yPos} stroke={colors.textMuted} strokeWidth="1" />
-                  <text x="50" y={yPos + 3} fill={temp === 25 ? colors.accent : colors.textMuted} fontSize="8" fontWeight={temp === 25 ? 'bold' : 'normal'}>
+                <g key={`tm-${temp}`}>
+                  <line x1="8" y1={yp} x2="14" y2={yp} stroke={colors.textMuted} strokeWidth="1" />
+                  <text x="42" y={yp + 4} fill={temp === 25 ? colors.accent : colors.textMuted} fontSize="11" fontWeight={temp === 25 ? 'bold' : 'normal'}>
                     {temp}°
                   </text>
                 </g>
               );
             })}
-
-            {/* Mercury column */}
-            {(() => {
-              const mercuryHeight = Math.max(5, 95 * ((panelTemperature + 10) / 80));
-              const mercuryY = 10 + 95 - mercuryHeight;
-              const mercuryGradient = panelTemperature < 15 ? 'url(#stcoefMercuryCold)' : panelTemperature < 40 ? 'url(#stcoefMercuryWarm)' : 'url(#stcoefMercuryHot)';
-              return (
-                <rect
-                  x="15"
-                  y={mercuryY}
-                  width="15"
-                  height={mercuryHeight}
-                  rx="7"
-                  fill={mercuryGradient}
-                  filter="url(#stcoefThermometerGlow)"
-                />
-              );
-            })()}
-
-            {/* Bulb at bottom */}
-            <circle cx="22.5" cy="115" r="12" fill={getTempColor()} filter="url(#stcoefThermometerGlow)" />
-            <circle cx="20" cy="112" r="4" fill="#ffffff" opacity="0.3" />
-
-            {/* Label */}
-            <text x="22" y="148" fill={colors.textSecondary} fontSize="10" textAnchor="middle" fontWeight="bold">Panel</text>
-            <text x="22" y="160" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Temp</text>
+            {/* Label — positioned to not overlap scale */}
+            <text x="23" y="148" fill={colors.textSecondary} fontSize="11" textAnchor="middle" fontWeight="bold">Temp</text>
           </g>
 
-          {/* === OUTPUT VALUES PANEL === */}
-          <g transform="translate(20, 180)">
-            <rect x="0" y="0" width="460" height="95" rx="10" fill="rgba(15, 23, 42, 0.9)" stroke={colors.accent} strokeWidth="1.5" />
-
-            {/* Header */}
-            <rect x="0" y="0" width="460" height="24" rx="10" fill="rgba(245, 158, 11, 0.15)" />
-            <text x="230" y="17" fill={colors.accent} fontSize="12" fontWeight="bold" textAnchor="middle">
+          {/* Output display row */}
+          <g transform="translate(20, 165)">
+            <rect x="0" y="0" width="460" height="40" rx="8" fill="rgba(15,23,42,0.9)" stroke={colors.accent} strokeWidth="1" />
+            {/* Title */}
+            <text x="230" y="14" fill={colors.accent} fontSize="11" fontWeight="bold" textAnchor="middle">
               Panel Output vs STC (25°C, 1000 W/m²)
             </text>
-
             {/* Voltage */}
-            <g transform="translate(25, 35)">
-              <circle cx="6" cy="8" r="6" fill={colors.voltage} opacity="0.3" />
-              <circle cx="6" cy="8" r="3" fill={colors.voltage} />
-              <text x="20" y="12" fill={colors.voltage} fontSize="11" fontWeight="bold">Voltage (Voc)</text>
-              <text x="115" y="12" fill={colors.textPrimary} fontSize="13" fontWeight="bold">{values.Voc.toFixed(1)}V</text>
-              <text x="160" y="12" fill={values.deltaT > 0 ? colors.error : colors.success} fontSize="10">
-                ({values.deltaT > 0 ? '' : '+'}{(-values.deltaT * TEMP_COEFF_VOC * 100).toFixed(1)}%)
-              </text>
-            </g>
-
+            <text x="30" y="32" fill={colors.voltage} fontSize="11" fontWeight="bold">Voc:</text>
+            <text x="65" y="32" fill={colors.textPrimary} fontSize="11" fontWeight="bold">{values.Voc.toFixed(1)}V</text>
             {/* Current */}
-            <g transform="translate(245, 35)">
-              <circle cx="6" cy="8" r="6" fill={colors.current} opacity="0.3" />
-              <circle cx="6" cy="8" r="3" fill={colors.current} />
-              <text x="20" y="12" fill={colors.current} fontSize="11" fontWeight="bold">Current (Isc)</text>
-              <text x="115" y="12" fill={colors.textPrimary} fontSize="13" fontWeight="bold">{values.Isc.toFixed(2)}A</text>
-            </g>
-
+            <text x="135" y="32" fill={colors.current} fontSize="11" fontWeight="bold">Isc:</text>
+            <text x="165" y="32" fill={colors.textPrimary} fontSize="11" fontWeight="bold">{values.Isc.toFixed(2)}A</text>
             {/* Power */}
-            <g transform="translate(25, 60)">
-              <circle cx="6" cy="8" r="8" fill={colors.power} opacity="0.3" />
-              <circle cx="6" cy="8" r="4" fill={colors.power} />
-              <text x="20" y="12" fill={colors.power} fontSize="13" fontWeight="bold">Power (Pmax)</text>
-              <text x="130" y="12" fill={colors.textPrimary} fontSize="16" fontWeight="bold">{values.Pmax.toFixed(0)}W</text>
-              <text x="185" y="12" fill={values.deltaT > 0 ? colors.error : colors.success} fontSize="11" fontWeight="bold">
-                ({values.powerLoss > 0 ? '-' : '+'}{Math.abs(values.powerLoss).toFixed(0)}W)
-              </text>
-            </g>
-
+            <text x="245" y="32" fill={colors.power} fontSize="12" fontWeight="bold">Pmax:</text>
+            <text x="290" y="32" fill={colors.textPrimary} fontSize="12" fontWeight="bold">{values.Pmax.toFixed(0)}W</text>
             {/* Efficiency */}
-            <g transform="translate(245, 60)">
-              <circle cx="6" cy="8" r="6" fill={colors.accent} opacity="0.3" />
-              <circle cx="6" cy="8" r="3" fill={colors.accent} />
-              <text x="20" y="12" fill={colors.accent} fontSize="11" fontWeight="bold">Efficiency</text>
-              <text x="95" y="12" fill={colors.textPrimary} fontSize="13" fontWeight="bold">{values.efficiency.toFixed(1)}%</text>
-            </g>
+            <text x="360" y="32" fill={colors.accent} fontSize="11" fontWeight="bold">η:</text>
+            <text x="378" y="32" fill={colors.textPrimary} fontSize="11" fontWeight="bold">{values.efficiency.toFixed(1)}%</text>
           </g>
 
-          {/* === TEMPERATURE VS EFFICIENCY GRAPH === */}
-          <g transform="translate(20, 290)">
-            <rect x="0" y="0" width="460" height="130" rx="10" fill="url(#stcoefGraphBg)" stroke="#334155" strokeWidth="1" />
-
-            {/* Graph title */}
-            <text x="230" y="18" fill={colors.textPrimary} fontSize="11" fontWeight="bold" textAnchor="middle">
-              Power Output vs Panel Temperature (at {irradiance} W/m²)
-            </text>
+          {/* Temperature vs Power Graph */}
+          <g transform="translate(0, 0)">
+            {/* Graph background */}
+            <rect x={graphX} y={graphY} width={graphW} height={graphH} rx="6" fill="url(#stcGraphBg)" stroke="#334155" strokeWidth="1" />
 
             {/* Grid lines */}
             {[0, 1, 2, 3, 4].map(i => (
-              <line key={`grid-h-${i}`} x1="55" y1={35 + i * 20} x2="440" y2={35 + i * 20} stroke="#334155" strokeWidth="0.5" strokeOpacity="0.5" />
+              <line
+                key={`gh-${i}`}
+                x1={graphX}
+                y1={graphY + (i / 4) * graphH}
+                x2={graphX + graphW}
+                y2={graphY + (i / 4) * graphH}
+                stroke="#334155"
+                strokeWidth="0.5"
+                strokeDasharray="4 4"
+                opacity="0.3"
+              />
             ))}
             {[0, 1, 2, 3, 4, 5].map(i => (
-              <line key={`grid-v-${i}`} x1={55 + i * 77} y1="35" x2={55 + i * 77} y2="115" stroke="#334155" strokeWidth="0.5" strokeOpacity="0.5" />
+              <line
+                key={`gv-${i}`}
+                x1={graphX + (i / 5) * graphW}
+                y1={graphY}
+                x2={graphX + (i / 5) * graphW}
+                y2={graphY + graphH}
+                stroke="#334155"
+                strokeWidth="0.5"
+                strokeDasharray="4 4"
+                opacity="0.3"
+              />
             ))}
 
             {/* Y-axis */}
-            <line x1="55" y1="35" x2="55" y2="115" stroke={colors.textMuted} strokeWidth="1.5" />
-            <text x="30" y="80" fill={colors.textMuted} fontSize="9" textAnchor="middle" transform="rotate(-90, 30, 80)">Power (W)</text>
-
-            {/* Y-axis labels */}
-            <text x="50" y="38" fill={colors.textMuted} fontSize="8" textAnchor="end">400</text>
-            <text x="50" y="58" fill={colors.textMuted} fontSize="8" textAnchor="end">350</text>
-            <text x="50" y="78" fill={colors.textMuted} fontSize="8" textAnchor="end">300</text>
-            <text x="50" y="98" fill={colors.textMuted} fontSize="8" textAnchor="end">250</text>
-            <text x="50" y="118" fill={colors.textMuted} fontSize="8" textAnchor="end">200</text>
-
+            <line x1={graphX} y1={graphY} x2={graphX} y2={graphY + graphH} stroke={colors.textMuted} strokeWidth="1.5" />
             {/* X-axis */}
-            <line x1="55" y1="115" x2="440" y2="115" stroke={colors.textMuted} strokeWidth="1.5" />
+            <line x1={graphX} y1={graphY + graphH} x2={graphX + graphW} y2={graphY + graphH} stroke={colors.textMuted} strokeWidth="1.5" />
+
+            {/* Y-axis label (rotated) */}
+            <text
+              x={graphX - 30}
+              y={graphY + graphH / 2}
+              fill={colors.textMuted}
+              fontSize="11"
+              textAnchor="middle"
+              transform={`rotate(-90, ${graphX - 30}, ${graphY + graphH / 2})`}
+            >
+              Power (W)
+            </text>
+
+            {/* Y-axis ticks */}
+            {[PWR_MAX, (PWR_MAX + PWR_MIN) / 2, PWR_MIN].map((val, i) => {
+              const y = graphY + (i / 2) * graphH;
+              return (
+                <text key={`yt-${i}`} x={graphX - 5} y={y + 4} fill={colors.textMuted} fontSize="11" textAnchor="end">
+                  {val}
+                </text>
+              );
+            })}
 
             {/* X-axis labels */}
-            <text x="55" y="125" fill={colors.textMuted} fontSize="8" textAnchor="middle">-10°C</text>
-            <text x="132" y="125" fill={colors.textMuted} fontSize="8" textAnchor="middle">10°C</text>
-            <text x="209" y="125" fill={colors.accent} fontSize="8" textAnchor="middle" fontWeight="bold">25°C</text>
-            <text x="286" y="125" fill={colors.textMuted} fontSize="8" textAnchor="middle">40°C</text>
-            <text x="363" y="125" fill={colors.textMuted} fontSize="8" textAnchor="middle">55°C</text>
-            <text x="440" y="125" fill={colors.textMuted} fontSize="8" textAnchor="middle">70°C</text>
+            <text x={graphX} y={graphY + graphH + 16} fill={colors.textMuted} fontSize="11" textAnchor="middle">-10°C</text>
+            <text x={graphX + graphW * 0.25} y={graphY + graphH + 16} fill={colors.textMuted} fontSize="11" textAnchor="middle">10°C</text>
+            <text x={graphX + graphW * 0.4375} y={graphY + graphH + 16} fill={colors.accent} fontSize="11" textAnchor="middle" fontWeight="bold">25°C</text>
+            <text x={graphX + graphW * 0.625} y={graphY + graphH + 16} fill={colors.textMuted} fontSize="11" textAnchor="middle">40°C</text>
+            <text x={graphX + graphW} y={graphY + graphH + 16} fill={colors.textMuted} fontSize="11" textAnchor="middle">70°C</text>
+
+            {/* Graph title */}
+            <text x={graphX + graphW / 2} y={graphY - 8} fill={colors.textPrimary} fontSize="11" fontWeight="bold" textAnchor="middle">
+              Power Output vs Panel Temperature ({irradiance} W/m²)
+            </text>
 
             {/* STC reference line */}
-            <line x1="209" y1="35" x2="209" y2="115" stroke={colors.accent} strokeWidth="1.5" strokeDasharray="4,4" strokeOpacity="0.7" />
-            <text x="209" y="32" fill={colors.accent} fontSize="7" textAnchor="middle">STC</text>
+            <line
+              x1={graphX + ((25 + 10) / 80) * graphW}
+              y1={graphY}
+              x2={graphX + ((25 + 10) / 80) * graphW}
+              y2={graphY + graphH}
+              stroke={colors.accent}
+              strokeWidth="1.5"
+              strokeDasharray="4 4"
+              opacity="0.7"
+            />
+            <text
+              x={graphX + ((25 + 10) / 80) * graphW}
+              y={graphY - 8 + 4}
+              fill={colors.accent}
+              fontSize="11"
+              textAnchor="middle"
+            >
+              STC
+            </text>
 
-            {/* Power curve (decreasing with temperature) */}
+            {/* Power curve */}
             <path
-              d={(() => {
-                const points = [];
-                for (let t = -10; t <= 70; t += 5) {
-                  const power = STC_PMAX * (1 + TEMP_COEFF_PMAX * (t - STC_TEMP)) * (irradiance / STC_IRRADIANCE);
-                  const x = 55 + ((t + 10) / 80) * 385;
-                  const y = 115 - ((power - 200) / 200) * 80;
-                  points.push(`${points.length === 0 ? 'M' : 'L'}${x},${Math.max(35, Math.min(115, y))}`);
-                }
-                return points.join(' ');
-              })()}
+              d={powerCurvePath}
               fill="none"
-              stroke="url(#stcoefPowerLine)"
+              stroke="url(#stcPowerLine)"
               strokeWidth="3"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
 
-            {/* Current operating point */}
-            {(() => {
-              const x = 55 + ((panelTemperature + 10) / 80) * 385;
-              const y = 115 - ((values.Pmax - 200) / 200) * 80;
-              return (
-                <g>
-                  {/* Vertical reference line to x-axis */}
-                  <line x1={x} y1={Math.max(35, Math.min(115, y))} x2={x} y2="115" stroke={colors.accent} strokeWidth="1" strokeDasharray="2,2" strokeOpacity="0.5" />
-
-                  {/* Data point with glow */}
-                  <circle cx={x} cy={Math.max(35, Math.min(115, y))} r="10" fill={colors.accent} opacity="0.3" filter="url(#stcoefDataPointGlow)" />
-                  <circle cx={x} cy={Math.max(35, Math.min(115, y))} r="6" fill={colors.accent} stroke="#ffffff" strokeWidth="2" />
-
-                  {/* Value label */}
-                  <rect x={x - 25} y={Math.max(35, Math.min(115, y)) - 25} width="50" height="16" rx="4" fill="rgba(0,0,0,0.8)" />
-                  <text x={x} y={Math.max(35, Math.min(115, y)) - 12} fill={colors.textPrimary} fontSize="9" fontWeight="bold" textAnchor="middle">
-                    {values.Pmax.toFixed(0)}W
-                  </text>
-                </g>
-              );
-            })()}
+            {/* Interactive operating point */}
+            <line
+              x1={iX}
+              y1={clampedIY}
+              x2={iX}
+              y2={graphY + graphH}
+              stroke={colors.accent}
+              strokeWidth="1"
+              strokeDasharray="2,2"
+              opacity="0.5"
+            />
+            <circle cx={iX} cy={clampedIY} r="10" fill={colors.accent} opacity="0.25" filter="url(#stcPointGlow)" />
+            <circle cx={iX} cy={clampedIY} r="7" fill={colors.accent} stroke="#ffffff" strokeWidth="2" filter="url(#stcPointGlow)" />
           </g>
-
-          {/* === SEASON COMPARISON (when active) === */}
-          {showSeason && (
-            <g transform="translate(20, 430)">
-              <rect
-                x="0"
-                y="0"
-                width="460"
-                height="55"
-                rx="10"
-                fill={showSeason === 'summer' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(6, 182, 212, 0.15)'}
-                stroke={showSeason === 'summer' ? colors.temperature : colors.cold}
-                strokeWidth="1.5"
-              />
-              <text x="230" y="20" fill={showSeason === 'summer' ? colors.temperature : colors.cold} fontSize="13" fontWeight="bold" textAnchor="middle">
-                {showSeason === 'summer' ? 'Hot Summer Day: 55°C panel, 1000 W/m²' : 'Cold Winter Day: 5°C panel, 800 W/m²'}
-              </text>
-              <text x="230" y="42" fill={colors.textPrimary} fontSize="14" fontWeight="bold" textAnchor="middle">
-                Power Output: {values.Pmax.toFixed(0)}W
-                <tspan fill={showSeason === 'summer' ? colors.error : colors.success} fontSize="12">
-                  {showSeason === 'summer'
-                    ? ` (${((values.powerLoss / STC_PMAX) * 100).toFixed(0)}% temp loss)`
-                    : ` (+${((-values.powerLoss / STC_PMAX) * 100).toFixed(0)}% cold bonus)`}
-                </tspan>
-              </text>
-            </g>
-          )}
         </svg>
 
         {interactive && (
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
-            <button
-              onClick={() => setIsAnimating(!isAnimating)}
-              style={{
-                padding: '12px 24px',
-                borderRadius: '10px',
-                border: 'none',
-                background: isAnimating
-                  ? `linear-gradient(135deg, ${colors.error} 0%, #dc2626 100%)`
-                  : `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`,
-                color: 'white',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                fontSize: '14px',
-                boxShadow: isAnimating ? '0 4px 15px rgba(239, 68, 68, 0.4)' : '0 4px 15px rgba(16, 185, 129, 0.4)',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              {isAnimating ? 'Stop Sweep' : 'Sweep Temperature'}
-            </button>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', padding: '4px' }}>
             <button
               onClick={() => setScenario('summer')}
               style={{
-                padding: '12px 24px',
-                borderRadius: '10px',
-                border: 'none',
+                padding: '10px 20px', borderRadius: '10px', border: 'none',
                 background: `linear-gradient(135deg, ${colors.temperature} 0%, #dc2626 100%)`,
-                color: 'white',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                fontSize: '14px',
-                boxShadow: '0 4px 15px rgba(239, 68, 68, 0.4)',
-                WebkitTapHighlightColor: 'transparent',
+                color: 'white', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px',
+                transition: 'all 0.2s ease',
               }}
             >
-              Hot Summer
+              ☀️ Hot Summer
             </button>
             <button
               onClick={() => setScenario('winter')}
               style={{
-                padding: '12px 24px',
-                borderRadius: '10px',
-                border: 'none',
+                padding: '10px 20px', borderRadius: '10px', border: 'none',
                 background: `linear-gradient(135deg, ${colors.cold} 0%, #0891b2 100%)`,
-                color: 'white',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                fontSize: '14px',
-                boxShadow: '0 4px 15px rgba(6, 182, 212, 0.4)',
-                WebkitTapHighlightColor: 'transparent',
+                color: 'white', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px',
+                transition: 'all 0.2s ease',
               }}
             >
-              Cold Winter
+              ❄️ Cold Winter
             </button>
             <button
               onClick={() => { setPanelTemperature(25); setIrradiance(1000); setShowSeason(null); }}
               style={{
-                padding: '12px 24px',
-                borderRadius: '10px',
+                padding: '10px 20px', borderRadius: '10px',
                 border: `2px solid ${colors.accent}`,
-                background: 'rgba(245, 158, 11, 0.1)',
-                color: colors.accent,
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                fontSize: '14px',
-                WebkitTapHighlightColor: 'transparent',
+                background: 'rgba(245,158,11,0.1)',
+                color: colors.accent, fontWeight: 'bold', cursor: 'pointer', fontSize: '13px',
+                transition: 'all 0.2s ease',
               }}
             >
-              Reset to STC
+              Reset STC
             </button>
           </div>
         )}
@@ -1187,11 +748,13 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
     );
   };
 
+  // ─── Slider Controls ────────────────────────────────────────────────────────
   const renderControls = () => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
         <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontSize: '14px' }}>
-          Panel Temperature: {panelTemperature}°C {panelTemperature === 25 && '(STC)'}
+          Panel Temperature: <strong style={{ color: colors.textPrimary }}>{panelTemperature}°C</strong>
+          {panelTemperature === 25 && <span style={{ color: colors.accent }}> (STC reference)</span>}
         </label>
         <input
           type="range"
@@ -1201,9 +764,16 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
           value={panelTemperature}
           onInput={(e) => { setPanelTemperature(parseInt((e.target as HTMLInputElement).value)); setShowSeason(null); }}
           onChange={(e) => { setPanelTemperature(parseInt(e.target.value)); setShowSeason(null); }}
-          style={{ width: '100%', height: '32px', cursor: 'pointer' }}
+          style={{
+            width: '100%',
+            height: '20px',
+            cursor: 'pointer',
+            accentColor: '#3b82f6',
+            WebkitAppearance: 'none',
+            touchAction: 'pan-y',
+          }}
         />
-        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '12px', marginTop: '4px' }}>
           <span>Cold (-10°C)</span>
           <span style={{ color: colors.accent }}>STC (25°C)</span>
           <span>Hot Roof (70°C)</span>
@@ -1212,7 +782,8 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
 
       <div>
         <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontSize: '14px' }}>
-          Solar Irradiance: {irradiance} W/m² {irradiance === 1000 && '(STC)'}
+          Solar Irradiance: <strong style={{ color: colors.textPrimary }}>{irradiance} W/m²</strong>
+          {irradiance === 1000 && <span style={{ color: colors.accent }}> (STC reference)</span>}
         </label>
         <input
           type="range"
@@ -1222,9 +793,16 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
           value={irradiance}
           onInput={(e) => { setIrradiance(parseInt((e.target as HTMLInputElement).value)); setShowSeason(null); }}
           onChange={(e) => { setIrradiance(parseInt(e.target.value)); setShowSeason(null); }}
-          style={{ width: '100%', height: '32px', cursor: 'pointer' }}
+          style={{
+            width: '100%',
+            height: '20px',
+            cursor: 'pointer',
+            accentColor: '#3b82f6',
+            WebkitAppearance: 'none',
+            touchAction: 'pan-y',
+          }}
         />
-        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '12px', marginTop: '4px' }}>
           <span>Cloudy (200)</span>
           <span style={{ color: colors.accent }}>STC (1000)</span>
           <span>Peak Sun (1200)</span>
@@ -1232,149 +810,224 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
       </div>
 
       <div style={{
-        background: 'rgba(168, 85, 247, 0.15)',
+        background: 'rgba(168,85,247,0.12)',
         padding: '12px',
         borderRadius: '8px',
         borderLeft: `3px solid ${colors.power}`,
       }}>
         <div style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>
-          Temperature Coefficient
+          Temperature Coefficient — defined as
         </div>
-        <div style={{ color: colors.textSecondary, fontSize: '12px', lineHeight: 1.5 }}>
-          Silicon solar cells lose about 0.3-0.5% power for every degree Celsius above 25°C.
-          A panel at 55°C loses ~12% of its rated power just from heat!
+        <div style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.5 }}>
+          Power coefficient = <strong style={{ color: colors.power }}>-0.4%/°C</strong> above 25°C.
+          This formula calculated: P(T) = P_STC × [1 + (T − 25) × (−0.004)].
+          Because voltage decreases with heat, panels lose ~12% power at 55°C. That is why installers derate systems for hot climates.
         </div>
       </div>
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
+  // ─── Progress Bar ───────────────────────────────────────────────────────────
+  const renderProgressBar = () => (
+    <header style={{
       position: 'fixed',
-      bottom: 0,
+      top: 0,
       left: 0,
       right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: '1px solid rgba(255,255,255,0.1)',
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
+      height: '4px',
+      background: colors.border,
+      zIndex: 200,
     }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        {buttonText}
-      </button>
-    </div>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.solar})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </header>
   );
 
-  // HOOK PHASE
+  // ─── Bottom Nav ─────────────────────────────────────────────────────────────
+  const renderBottomNav = (canProceed: boolean = true) => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirst = currentIndex === 0;
+    const isLast = currentIndex === phaseOrder.length - 1;
+
+    return (
+      <nav style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgDark,
+        borderTop: `1px solid ${colors.border}`,
+        boxShadow: '0 -4px 20px rgba(0,0,0,0.35)',
+        padding: '10px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        zIndex: 100,
+        minHeight: '60px',
+      }}>
+        {/* Back button */}
+        <button
+          onClick={prevPhase}
+          disabled={isFirst}
+          style={{
+            minHeight: '44px',
+            padding: '10px 18px',
+            borderRadius: '10px',
+            border: `1px solid ${colors.border}`,
+            background: 'transparent',
+            color: isFirst ? colors.textMuted : colors.textSecondary,
+            cursor: isFirst ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
+            fontSize: '14px',
+            opacity: isFirst ? 0.4 : 1,
+            transition: 'all 0.2s ease',
+          }}
+        >
+          ← Back
+        </button>
+
+        {/* Navigation dots */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '4px', flex: 1, paddingLeft: '8px', paddingRight: '8px' }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => goToPhase(p)}
+              aria-label={PHASE_LABELS[p]}
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '16px',
+                border: 'none',
+                background: 'transparent',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 0,
+                flexShrink: 0,
+              }}
+            >
+              <span style={{
+                width: phase === p ? '18px' : '8px',
+                height: '8px',
+                borderRadius: '4px',
+                background: phaseOrder.indexOf(phase) >= i ? colors.accent : 'rgba(148,163,184,0.7)',
+                transition: 'all 0.3s ease',
+                display: 'block',
+              }} />
+            </button>
+          ))}
+        </div>
+
+        {/* Next button */}
+        <button
+          onClick={nextPhase}
+          disabled={isLast || !canProceed}
+          style={{
+            minHeight: '44px',
+            padding: '10px 18px',
+            borderRadius: '10px',
+            border: 'none',
+            background: isLast || !canProceed
+              ? 'rgba(255,255,255,0.1)'
+              : `linear-gradient(135deg, ${colors.accent}, ${colors.solar})`,
+            color: isLast || !canProceed ? colors.textMuted : 'white',
+            cursor: isLast || !canProceed ? 'not-allowed' : 'pointer',
+            fontWeight: 700,
+            fontSize: '14px',
+            opacity: isLast || !canProceed ? 0.4 : 1,
+            transition: 'all 0.2s ease',
+          }}
+        >
+          Next →
+        </button>
+      </nav>
+    );
+  };
+
+  // ─── Phase layouts ──────────────────────────────────────────────────────────
+  const pageStyle: React.CSSProperties = {
+    minHeight: '100vh',
+    paddingTop: '48px',
+    paddingBottom: '100px',
+    background: colors.bgPrimary,
+    overflowX: 'hidden',
+  };
+
+  // ── HOOK ────────────────────────────────────────────────────────────────────
   if (phase === 'hook') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-      }}>
-        <div style={{
-          flex: 1,
-          overflowY: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          paddingTop: '48px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
-          paddingBottom: '24px',
-          textAlign: 'center',
-        }}>
-          {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+            <h1 style={{ color: colors.accent, fontSize: isMobile ? '24px' : '32px', marginBottom: '8px', fontWeight: 800 }}>
               Solar Panel Temperature Coefficient
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '17px', marginBottom: '20px' }}>
               Why do solar panels produce LESS power on hot summer days?
             </p>
           </div>
 
           {renderVisualization(true)}
 
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{
-              background: colors.bgCard,
-              padding: '20px',
-              borderRadius: '12px',
-              marginBottom: '16px',
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
-                It seems counterintuitive: sunny hot days should be best for solar power, right?
-                But silicon solar cells have a dirty secret - <strong style={{ color: colors.temperature }}>they hate heat</strong>.
-                Every degree above 25°C costs you power output.
+          <div style={{ padding: '20px' }}>
+            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px', borderLeft: `4px solid ${colors.temperature}` }}>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.7 }}>
+                It seems counterintuitive: sunny hot days should produce the most solar power, right?
+                But silicon solar cells have an important physical limitation — <strong style={{ color: colors.temperature }}>they lose efficiency when hot</strong>.
+                Every degree above 25°C costs measurable power output because the silicon bandgap decreases with temperature.
               </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
-                This is why solar panels are rated at 25°C (Standard Test Conditions), and why
-                cold sunny days can actually outperform scorching summer afternoons!
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px', lineHeight: 1.6 }}>
+                This is why solar panels are rated at 25°C (Standard Test Conditions, or STC). Engineers must understand
+                and plan for temperature-related derating when designing real solar systems.
               </p>
             </div>
 
-            <div style={{
-              background: 'rgba(245, 158, 11, 0.2)',
-              padding: '16px',
-              borderRadius: '8px',
-              borderLeft: `3px solid ${colors.accent}`,
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                Try the "Hot Summer" and "Cold Winter" buttons to see the surprising comparison!
+            <div style={{ background: 'rgba(245,158,11,0.15)', padding: '16px', borderRadius: '8px', borderLeft: `3px solid ${colors.accent}` }}>
+              <p style={{ color: colors.textPrimary, fontSize: '14px', lineHeight: 1.6 }}>
+                Try the "Hot Summer" and "Cold Winter" buttons above to discover the surprising comparison!
+                Notice how the operating point moves along the power curve as temperature changes.
               </p>
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomNav(true)}
       </div>
     );
   }
 
-  // PREDICT PHASE
+  // ── PREDICT ─────────────────────────────────────────────────────────────────
   if (phase === 'predict') {
+    const predictions = [
+      { id: 'more_power_hot', label: 'More sunlight = more heat = more power output' },
+      { id: 'less_power_hot', label: 'Hot panels produce LESS power despite more sunlight' },
+      { id: 'same_power', label: 'Temperature does not affect solar panel output' },
+      { id: 'only_current', label: 'Only current changes with temperature, not power' },
+    ];
+
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           {renderVisualization(false)}
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>What You Are Looking At:</h3>
+          <div style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px' }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontSize: '15px' }}>What You Are Looking At:</h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              The graph shows how power output changes with panel temperature. The panel is rated at
-              350W under Standard Test Conditions (25°C, 1000 W/m²). Watch how power changes as temperature varies.
+              The graph shows the relationship between temperature and power output. The panel is rated at
+              350W under Standard Test Conditions (STC: 25°C, 1000 W/m²). The dot shows the current operating point.
+              Watch how the dot position changes — that represents how much this concept matters.
             </p>
           </div>
 
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              What happens to solar panel power output when it gets hotter?
+          <div style={{ padding: '0 16px 16px' }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '12px', fontSize: '16px' }}>
+              What do you predict happens to power output when the panel gets hotter?
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {predictions.map((p) => (
@@ -1382,153 +1035,163 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
                   key={p.id}
                   onClick={() => setPrediction(p.id)}
                   style={{
-                    padding: '16px',
+                    padding: '14px 16px',
                     borderRadius: '8px',
-                    border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                    border: prediction === p.id ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
+                    background: prediction === p.id ? 'rgba(245,158,11,0.15)' : 'transparent',
                     color: colors.textPrimary,
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
+                    transition: 'all 0.2s ease',
                   }}
                 >
-                  {p.label}
+                  {prediction === p.id ? '● ' : '○ '}{p.label}
                 </button>
               ))}
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
+        {renderBottomNav(!!prediction)}
       </div>
     );
   }
 
-  // PLAY PHASE
+  // ── PLAY ─────────────────────────────────────────────────────────────────────
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Temperature Effects</h2>
+            <h2 style={{ color: colors.textPrimary, marginBottom: '6px', fontSize: isMobile ? '18px' : '22px' }}>
+              Explore Temperature Effects
+            </h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              See how temperature and irradiance affect power output
+              Adjust the sliders below. Notice how the power output changes — that is the temperature coefficient in action.
             </p>
           </div>
 
           {renderVisualization(true)}
           {renderControls()}
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
+          <div style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px' }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontSize: '14px' }}>Experiments to Try:</h4>
             <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Set temperature to 70°C (hot roof) and see power drop</li>
-              <li>Set temperature to -10°C (cold day) and see voltage rise</li>
-              <li>Compare "Hot Summer" vs "Cold Winter" scenarios</li>
-              <li>Notice: voltage changes much more than current with temperature</li>
+              <li>Set temperature to 70°C — observe the power drop below 280W</li>
+              <li>Set temperature to -10°C — observe higher voltage and efficiency</li>
+              <li>Compare "Hot Summer" (55°C) vs "Cold Winter" (5°C) — which wins?</li>
+              <li>Notice: voltage changes much more than current with temperature changes</li>
             </ul>
           </div>
+
+          <div style={{ background: 'rgba(59,130,246,0.1)', margin: '16px', padding: '14px', borderRadius: '8px', borderLeft: `3px solid ${colors.voltage}` }}>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6 }}>
+              <strong style={{ color: colors.textPrimary }}>Why this matters in engineering:</strong> Solar installers must derate system
+              capacity for hot climates. A 100kW system in Arizona may only produce 85kW on a hot summer afternoon.
+              Understanding temperature coefficients is essential for accurate energy yield predictions and financial models.
+            </p>
+          </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
+        {renderBottomNav(true)}
       </div>
     );
   }
 
-  // REVIEW PHASE
+  // ── REVIEW ──────────────────────────────────────────────────────────────────
   if (phase === 'review') {
     const wasCorrect = prediction === 'less_power_hot';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+            background: wasCorrect ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
             margin: '16px',
             padding: '20px',
             borderRadius: '12px',
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
+            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px', fontSize: '18px' }}>
+              {wasCorrect ? '✓ Correct!' : '✗ Not Quite!'}
             </h3>
-            <p style={{ color: colors.textPrimary }}>
-              Hot panels produce <strong>LESS power</strong> despite receiving more sunlight!
-              The voltage drop from heat outweighs any small current increase.
+            <p style={{ color: colors.textPrimary, fontSize: '15px', lineHeight: 1.6 }}>
+              As you saw in the experiment, hot panels produce <strong>LESS power</strong> despite receiving more sunlight.
+              Your observation confirms this: the voltage drop from heat outweighs any small current increase.
+              The correct answer was: "Hot panels produce LESS power despite more sunlight."
             </p>
           </div>
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics: Silicon Bandgap</h3>
+          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
+            <h3 style={{ color: colors.accent, marginBottom: '12px', fontSize: '16px' }}>The Physics: Silicon Bandgap</h3>
             <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Why Voltage Drops:</strong> In silicon, the
                 bandgap energy (the energy needed to free an electron) decreases with temperature.
-                Lower bandgap = lower voltage. This is fundamental physics, not a design flaw!
+                Lower bandgap = lower open-circuit voltage. This is fundamental semiconductor physics, not a design flaw.
               </p>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>The Numbers:</strong>
-                <br/>- Voltage coefficient: -0.3% to -0.5% per °C
-                <br/>- Current coefficient: +0.04% to +0.06% per °C
-                <br/>- Net power coefficient: -0.3% to -0.5% per °C
+                <strong style={{ color: colors.textPrimary }}>The Numbers — temperature coefficient formula:</strong>
+                <br />• Voltage (Voc): −0.3% to −0.5% per °C above 25°C
+                <br />• Current (Isc): +0.04% to +0.06% per °C (slight increase)
+                <br />• Net power (Pmax): −0.3% to −0.5% per °C
               </p>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Example:</strong> A 350W panel at 55°C
-                (30° above STC) loses about 0.4% × 30 = 12% of its power. That is 42W lost to heat!
+                <strong style={{ color: colors.textPrimary }}>Example calculation:</strong> A 350W panel at 55°C
+                (30°C above STC) loses: 0.4% × 30 = 12% of its power. That is 42W lost to heat — enough to power
+                a laptop or LED lighting!
               </p>
               <p>
-                <strong style={{ color: colors.textPrimary }}>This is why:</strong> Panel datasheets
-                always specify temperature coefficients, and installers derate systems for hot climates.
+                <strong style={{ color: colors.textPrimary }}>This is why</strong> panel datasheets always specify temperature coefficients,
+                and why installers derate systems for hot climates. The relationship is: P(T) = P_STC × [1 + γ × (T − 25)], where
+                γ is typically −0.004 (−0.4%/°C) for standard silicon panels.
               </p>
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
+        {renderBottomNav(true)}
       </div>
     );
   }
 
-  // TWIST PREDICT PHASE
+  // ── TWIST PREDICT ────────────────────────────────────────────────────────────
   if (phase === 'twist_predict') {
+    const twistPredictions = [
+      { id: 'summer_wins', label: 'Hot summer days always produce more energy (more sun = more power)' },
+      { id: 'winter_wins', label: 'Cold sunny winter days can match or beat hot summer days' },
+      { id: 'spring_fall', label: 'Only spring and fall produce good power (moderate temperature)' },
+      { id: 'temperature_irrelevant', label: 'Seasonal temperature differences are too small to matter' },
+    ];
+
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
-            <p style={{ color: colors.textSecondary }}>
-              Summer vs Winter: Which season wins?
+            <h2 style={{ color: colors.warning, marginBottom: '8px', fontSize: isMobile ? '20px' : '24px' }}>
+              ⚡ The Twist: Summer vs Winter
+            </h2>
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              Now that you know temperature reduces power — which season produces more energy?
             </p>
           </div>
 
           {renderVisualization(false)}
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Setup:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              Compare two days:
-              <br/>- <strong style={{ color: colors.temperature }}>Hot Summer:</strong> 1000 W/m² irradiance, 55°C panel temperature
-              <br/>- <strong style={{ color: colors.cold }}>Cold Winter:</strong> 800 W/m² irradiance, 5°C panel temperature
-              <br/><br/>
+          <div style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px' }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontSize: '15px' }}>The Setup — compare these two days:</h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+              • <strong style={{ color: colors.temperature }}>Hot Summer:</strong> 1000 W/m² irradiance, 55°C panel temperature
+              <br />• <strong style={{ color: colors.cold }}>Cold Winter:</strong> 800 W/m² irradiance, 5°C panel temperature
+              <br /><br />
               The summer day has 25% more sunlight. But the winter panel is 50°C cooler.
+              Which effect is stronger — what do you think will happen?
             </p>
           </div>
 
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+          <div style={{ padding: '0 16px 16px' }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '12px', fontSize: '16px' }}>
               Which day produces more power?
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1537,143 +1200,136 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
                   key={p.id}
                   onClick={() => setTwistPrediction(p.id)}
                   style={{
-                    padding: '16px',
+                    padding: '14px 16px',
                     borderRadius: '8px',
-                    border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
-                    background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                    border: twistPrediction === p.id ? `2px solid ${colors.warning}` : `1px solid ${colors.border}`,
+                    background: twistPrediction === p.id ? 'rgba(245,158,11,0.15)' : 'transparent',
                     color: colors.textPrimary,
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
+                    transition: 'all 0.2s ease',
                   }}
                 >
-                  {p.label}
+                  {twistPrediction === p.id ? '● ' : '○ '}{p.label}
                 </button>
               ))}
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
+        {renderBottomNav(!!twistPrediction)}
       </div>
     );
   }
 
-  // TWIST PLAY PHASE
+  // ── TWIST PLAY ───────────────────────────────────────────────────────────────
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Season Comparison</h2>
+            <h2 style={{ color: colors.warning, marginBottom: '8px', fontSize: isMobile ? '20px' : '24px' }}>
+              Season Comparison
+            </h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Click the season buttons to compare actual power output
+              Click the season buttons to compare actual power output — see how temperature and irradiance interact.
             </p>
           </div>
 
           {renderVisualization(true)}
           {renderControls()}
 
-          <div style={{
-            background: 'rgba(245, 158, 11, 0.2)',
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-            borderLeft: `3px solid ${colors.warning}`,
-          }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Click "Hot Summer" then "Cold Winter" and compare the power outputs.
-              The cold day produces competitive power despite 20% less sunlight because
-              the temperature bonus is substantial!
+          <div style={{ background: 'rgba(245,158,11,0.15)', margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `3px solid ${colors.warning}` }}>
+            <h4 style={{ color: colors.warning, marginBottom: '8px', fontSize: '14px' }}>Key Observation:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+              Click "Hot Summer" then "Cold Winter" and observe the power outputs in the graph.
+              The cold day with 20% less sunlight often produces competitive power because the
+              temperature coefficient creates a substantial voltage advantage. Notice how the operating dot
+              moves along the curve.
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
+        {renderBottomNav(true)}
       </div>
     );
   }
 
-  // TWIST REVIEW PHASE
+  // ── TWIST REVIEW ─────────────────────────────────────────────────────────────
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'winter_wins';
-
-    // Calculate actual values for both scenarios
     const summerPower = STC_PMAX * (1 + TEMP_COEFF_PMAX * (55 - STC_TEMP)) * (1000 / STC_IRRADIANCE);
     const winterPower = STC_PMAX * (1 + TEMP_COEFF_PMAX * (5 - STC_TEMP)) * (800 / STC_IRRADIANCE);
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+            background: wasCorrect ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
             margin: '16px',
             padding: '20px',
             borderRadius: '12px',
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Surprising, Right?'}
+            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px', fontSize: '18px' }}>
+              {wasCorrect ? '✓ Correct!' : '⚡ Surprising, Right?'}
             </h3>
-            <p style={{ color: colors.textPrimary }}>
+            <p style={{ color: colors.textPrimary, fontSize: '15px', lineHeight: 1.6 }}>
               <strong>Cold sunny winter days can match or beat hot summer days!</strong>
-              <br/>- Summer (55°C, 1000 W/m²): {summerPower.toFixed(0)}W
-              <br/>- Winter (5°C, 800 W/m²): {winterPower.toFixed(0)}W
-              <br/><br/>
-              The 20% higher irradiance in summer is almost completely negated by the
-              temperature losses!
+              <br />• Summer (55°C, 1000 W/m²): <strong style={{ color: colors.temperature }}>{summerPower.toFixed(0)}W</strong>
+              <br />• Winter (5°C, 800 W/m²): <strong style={{ color: colors.cold }}>{winterPower.toFixed(0)}W</strong>
+              <br /><br />
+              The 25% higher irradiance in summer is largely negated by temperature losses.
+              The experiment demonstrates this relationship directly.
             </p>
           </div>
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Real-World Implications</h3>
+          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
+            <h3 style={{ color: colors.warning, marginBottom: '12px', fontSize: '16px' }}>Real-World Implications</h3>
             <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Peak Power Days:</strong> The best solar
-                production days are often cool, clear spring or fall days - not the hottest summer days.
-                Early morning hours also outperform midday on hot days.
+                production days are often cool, clear spring or fall days — not the hottest summer days.
+                Early morning hours also outperform midday on hot days because panels are cooler.
               </p>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Annual Energy:</strong> While daily peaks
-                vary, summer still produces more total energy due to longer days and more sun hours.
-                But the efficiency per peak watt is higher in winter!
+                vary, summer still produces more total annual energy due to longer days and more sun hours.
+                But efficiency per watt is higher in cooler conditions.
               </p>
               <p>
                 <strong style={{ color: colors.textPrimary }}>Design Impact:</strong> This is why
-                high-altitude and northern installations can be surprisingly productive. The Atacama
-                Desert in Chile (high, cold, clear) has some of the world's best solar resources.
+                high-altitude installations can be surprisingly productive. The Atacama Desert in Chile
+                (high altitude, cold nights, intense UV) has some of the world's best solar resources.
               </p>
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
+        {renderBottomNav(true)}
       </div>
     );
   }
 
-  // TRANSFER PHASE
+  // ── TRANSFER ──────────────────────────────────────────────────────────────────
   if (phase === 'transfer') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            <h2 style={{ color: colors.textPrimary, marginBottom: '6px', textAlign: 'center', fontSize: isMobile ? '20px' : '24px' }}>
               Real-World Applications
             </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-              Temperature coefficients affect every solar installation
+            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '8px', fontSize: '14px' }}>
+              Temperature coefficients affect every solar installation worldwide
             </p>
             <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
+              Complete all 4 applications to unlock the test ({transferCompleted.size}/4)
             </p>
           </div>
 
-          {transferApplications.map((app, index) => (
+          {realWorldApps.map((app, index) => (
             <div
               key={index}
               style={{
@@ -1681,153 +1337,367 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
                 margin: '16px',
                 padding: '16px',
                 borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : `1px solid ${colors.border}`,
+                transition: 'all 0.2s ease',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                <div>
+                  <span style={{ fontSize: '22px', marginRight: '8px' }}>{app.icon}</span>
+                  <h3 style={{ color: colors.textPrimary, fontSize: '15px', display: 'inline' }}>{app.title}</h3>
+                </div>
+                {transferCompleted.has(index) && (
+                  <span style={{ color: colors.success, fontWeight: 'bold', fontSize: '14px' }}>✓ Done</span>
+                )}
               </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
+
+              <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '10px', lineHeight: 1.5 }}>
+                {app.description}
+              </p>
+
+              {/* Stats row */}
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', flexWrap: 'wrap' }}>
+                {app.stats.map((stat, si) => (
+                  <div key={si} style={{ background: 'rgba(245,158,11,0.12)', padding: '6px 12px', borderRadius: '6px', border: `1px solid ${colors.accent}33` }}>
+                    <div style={{ color: colors.accent, fontSize: '14px', fontWeight: 'bold' }}>{stat.value}</div>
+                    <div style={{ color: colors.textMuted, fontSize: '11px' }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ background: 'rgba(245,158,11,0.08)', padding: '10px', borderRadius: '8px', marginBottom: '10px' }}>
                 <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
               </div>
+
               {!transferCompleted.has(index) ? (
                 <button
                   onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px', WebkitTapHighlightColor: 'transparent' }}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    border: `1px solid ${colors.accent}`,
+                    background: 'rgba(245,158,11,0.1)',
+                    color: colors.accent,
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    transition: 'all 0.2s ease',
+                  }}
                 >
                   Reveal Answer
                 </button>
               ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                <div style={{ background: 'rgba(16,185,129,0.08)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
+                  <p style={{ color: colors.textPrimary, fontSize: '13px', lineHeight: 1.6 }}>{app.answer}</p>
+                  <div style={{ marginTop: '8px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    {app.companies.map((c, ci) => (
+                      <span key={ci} style={{ background: 'rgba(59,130,246,0.1)', padding: '2px 8px', borderRadius: '4px', color: colors.voltage, fontSize: '11px' }}>{c}</span>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
           ))}
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
+        {renderBottomNav(transferCompleted.size >= 4)}
       </div>
     );
   }
 
-  // TEST PHASE
+  // ── TEST ─────────────────────────────────────────────────────────────────────
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+          {renderProgressBar()}
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
             <div style={{
-              background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              background: testScore >= 8 ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
               margin: '16px',
               padding: '24px',
               borderRadius: '12px',
               textAlign: 'center',
+              border: `2px solid ${testScore >= 8 ? colors.success : colors.error}`,
             }}>
-              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
-                {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
+              <div style={{ fontSize: '48px', marginBottom: '8px' }}>{testScore >= 8 ? '🏆' : '📚'}</div>
+              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px', fontSize: '22px' }}>
+                {testScore >= 8 ? 'Excellent Work!' : 'Keep Studying!'}
               </h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
-              <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
-                {testScore >= 8 ? 'You understand solar temperature coefficients!' : 'Review the material and try again.'}
+              <p style={{ color: colors.textPrimary, fontSize: '28px', fontWeight: 'bold' }}>{testScore} / 10</p>
+              <p style={{ color: colors.textSecondary, marginTop: '8px', fontSize: '15px' }}>
+                {testScore >= 8 ? 'You understand solar panel temperature coefficients!' : 'Review the material and try again.'}
               </p>
             </div>
+
+            {/* Answer review */}
             {testQuestions.map((q, qIndex) => {
               const userAnswer = testAnswers[qIndex];
               const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
               return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
+                <div key={qIndex} style={{
+                  background: colors.bgCard,
+                  margin: '12px 16px',
+                  padding: '16px',
+                  borderRadius: '12px',
+                  borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
+                }}>
+                  <p style={{ color: colors.textMuted, fontSize: '11px', marginBottom: '4px' }}>Question {qIndex + 1}</p>
+                  <p style={{ color: colors.textPrimary, marginBottom: '10px', fontWeight: 'bold', fontSize: '14px' }}>{q.question}</p>
                   {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
+                    <div key={oIndex} style={{
+                      padding: '6px 10px',
+                      marginBottom: '4px',
+                      borderRadius: '6px',
+                      background: opt.correct
+                        ? 'rgba(16,185,129,0.15)'
+                        : userAnswer === oIndex ? 'rgba(239,68,68,0.15)' : 'transparent',
+                      color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textMuted,
+                      fontSize: '13px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}>
+                      {opt.correct && <span>✓</span>}
+                      {!opt.correct && userAnswer === oIndex && <span>✗</span>}
+                      {opt.text}
                     </div>
                   ))}
+                  {userAnswer !== null && (
+                    <div style={{ background: 'rgba(59,130,246,0.1)', padding: '8px 10px', borderRadius: '6px', marginTop: '8px' }}>
+                      <p style={{ color: colors.voltage, fontSize: '12px', lineHeight: 1.5 }}><strong>Explanation:</strong> {q.explanation}</p>
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
+          {renderBottomNav(testScore >= 8)}
         </div>
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h2 style={{ color: colors.textPrimary, fontSize: isMobile ? '16px' : '18px' }}>Knowledge Test</h2>
+              <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                Question {currentTestQuestion + 1} of {testQuestions.length}
+              </span>
             </div>
-            <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
+            {/* Progress dots */}
+            <div style={{ display: 'flex', gap: '4px', marginBottom: '20px' }}>
               {testQuestions.map((_, i) => (
-                <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                <div
+                  key={i}
+                  onClick={() => setCurrentTestQuestion(i)}
+                  style={{
+                    flex: 1,
+                    height: '6px',
+                    borderRadius: '3px',
+                    background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                  }}
+                />
               ))}
             </div>
-            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
+
+            {/* Scenario context */}
+            <div style={{ background: 'rgba(59,130,246,0.08)', padding: '14px 16px', borderRadius: '10px', marginBottom: '14px', borderLeft: `3px solid ${colors.voltage}` }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>{currentQ.scenario}</p>
             </div>
+
+            {/* Question */}
+            <div style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px', marginBottom: '14px' }}>
+              <p style={{ color: colors.textPrimary, fontSize: '15px', lineHeight: 1.5, fontWeight: 600 }}>{currentQ.question}</p>
+            </div>
+
+            {/* Answer options */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {currentQ.options.map((opt, oIndex) => (
-                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px', WebkitTapHighlightColor: 'transparent' }}>
+                <button
+                  key={oIndex}
+                  onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
+                  style={{
+                    padding: '14px 16px',
+                    borderRadius: '8px',
+                    border: testAnswers[currentTestQuestion] === oIndex
+                      ? `2px solid ${colors.accent}`
+                      : `1px solid ${colors.border}`,
+                    background: testAnswers[currentTestQuestion] === oIndex
+                      ? 'rgba(245,158,11,0.15)'
+                      : 'transparent',
+                    color: colors.textPrimary,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    fontSize: '14px',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
                   {opt.text}
                 </button>
               ))}
             </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer', WebkitTapHighlightColor: 'transparent' }}>Previous</button>
+
+          {/* Navigation within test */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 16px 16px' }}>
+            <button
+              onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
+              disabled={currentTestQuestion === 0}
+              style={{
+                padding: '10px 20px',
+                borderRadius: '8px',
+                border: `1px solid ${colors.border}`,
+                background: 'transparent',
+                color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
+                cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
+                fontSize: '14px',
+                opacity: currentTestQuestion === 0 ? 0.4 : 1,
+              }}
+            >
+              Previous
+            </button>
             {currentTestQuestion < testQuestions.length - 1 ? (
-              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>Next</button>
+              <button
+                onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: `linear-gradient(135deg, ${colors.accent}, ${colors.solar})`,
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                }}
+              >
+                Next
+              </button>
             ) : (
-              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer', WebkitTapHighlightColor: 'transparent' }}>Submit Test</button>
+              <button
+                onClick={submitTest}
+                disabled={testAnswers.includes(null)}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: testAnswers.includes(null)
+                    ? 'rgba(255,255,255,0.1)'
+                    : `linear-gradient(135deg, ${colors.success}, #059669)`,
+                  color: testAnswers.includes(null) ? colors.textMuted : 'white',
+                  cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
             )}
           </div>
         </div>
+        {/* Bottom nav is disabled during active quiz */}
+        <nav style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: colors.bgDark,
+          borderTop: `1px solid ${colors.border}`,
+          boxShadow: '0 -4px 20px rgba(0,0,0,0.35)',
+          padding: '10px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          zIndex: 100,
+          minHeight: '60px',
+        }}>
+          <button disabled style={{ minHeight: '44px', padding: '10px 18px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: 'transparent', color: colors.textMuted, cursor: 'not-allowed', fontWeight: 600, fontSize: '14px', opacity: 0.4 }}>
+            ← Back
+          </button>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '4px', flex: 1, paddingLeft: '8px', paddingRight: '8px' }}>
+            {phaseOrder.map((p, i) => (
+              <button key={p} onClick={() => goToPhase(p)} aria-label={PHASE_LABELS[p]} style={{ width: '32px', height: '32px', borderRadius: '16px', border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, flexShrink: 0 }}>
+                <span style={{ width: phase === p ? '18px' : '8px', height: '8px', borderRadius: '4px', background: phaseOrder.indexOf(phase) >= i ? colors.accent : 'rgba(148,163,184,0.7)', transition: 'all 0.3s ease', display: 'block' }} />
+              </button>
+            ))}
+          </div>
+          <button disabled style={{ minHeight: '44px', padding: '10px 18px', borderRadius: '10px', border: 'none', background: 'rgba(255,255,255,0.1)', color: colors.textMuted, cursor: 'not-allowed', fontWeight: 700, fontSize: '14px', opacity: 0.4 }}>
+            Next →
+          </button>
+        </nav>
       </div>
     );
   }
 
-  // MASTERY PHASE
+  // ── MASTERY ───────────────────────────────────────────────────────────────────
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You have mastered solar panel temperature coefficients</p>
-          </div>
-          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Silicon bandgap decreases with temperature, reducing voltage</li>
-              <li>Power coefficient is typically -0.3% to -0.5% per °C</li>
-              <li>Standard Test Conditions: 25°C, 1000 W/m²</li>
-              <li>Hot panels lose significant power output</li>
-              <li>Cold sunny days can outperform hot summer days</li>
-              <li>Installation design affects panel cooling and efficiency</li>
-            </ul>
-          </div>
-          <div style={{ background: 'rgba(245, 158, 11, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
-              Some advanced solar technologies have better temperature coefficients: HJT (heterojunction)
-              cells lose only ~0.25%/°C, and perovskite-silicon tandems show promise for even lower
-              temperature sensitivity. As solar moves to hotter climates, these improvements become
-              increasingly valuable.
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
+            <h1 style={{ color: colors.success, marginBottom: '8px', fontSize: '28px' }}>Mastery Achieved!</h1>
+            <p style={{ color: colors.textSecondary, marginBottom: '24px', fontSize: '16px' }}>
+              You have mastered solar panel temperature coefficients
             </p>
           </div>
+
+          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
+            <h3 style={{ color: colors.accent, marginBottom: '12px', fontSize: '16px' }}>Key Concepts Mastered:</h3>
+            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0, fontSize: '14px' }}>
+              <li>Silicon bandgap decreases with temperature, reducing open-circuit voltage</li>
+              <li>Power coefficient is typically −0.3% to −0.5% per °C above STC (25°C)</li>
+              <li>Standard Test Conditions: 25°C, 1000 W/m² irradiance</li>
+              <li>Hot panels lose significant power — a 350W panel loses ~42W at 55°C</li>
+              <li>Cold sunny days can outperform hot summer days in per-watt output</li>
+              <li>Installation design (ventilation, elevation) affects panel cooling</li>
+              <li>Engineers derate solar systems by 10–20% for hot climate installations</li>
+            </ul>
+          </div>
+
+          <div style={{ background: 'rgba(245,158,11,0.15)', margin: '16px', padding: '20px', borderRadius: '12px', border: `1px solid ${colors.accent}44` }}>
+            <h3 style={{ color: colors.accent, marginBottom: '12px', fontSize: '16px' }}>Beyond the Basics:</h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+              Advanced solar technologies have better temperature coefficients: HJT (heterojunction)
+              cells lose only ~0.25%/°C, and perovskite-silicon tandems show promise for even lower
+              temperature sensitivity. As solar expands to hotter climates, these improvements become
+              increasingly valuable. Companies like Meyer Burger, LONGi, and First Solar compete on this metric.
+            </p>
+          </div>
+
+          <div style={{ margin: '16px', display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => goToPhase('hook')}
+              style={{
+                padding: '14px 28px',
+                borderRadius: '10px',
+                border: `1px solid ${colors.border}`,
+                background: 'transparent',
+                color: colors.textSecondary,
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: 600,
+                transition: 'all 0.2s ease',
+              }}
+            >
+              Play Again
+            </button>
+          </div>
+
           {renderVisualization(true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
+        {renderBottomNav(true)}
       </div>
     );
   }
 
+  // Fallback to hook
   return null;
 };
 

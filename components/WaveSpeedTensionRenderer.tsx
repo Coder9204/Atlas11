@@ -236,10 +236,9 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     }
   }, [emitEvent, phase, playSound, onPhaseComplete]);
 
-  // Wave speed physics
-  const calculateWaveSpeed = useCallback((t: number, mu: number) => Math.sqrt(t / mu), []);
-  const waveSpeed = calculateWaveSpeed(tension, linearDensity);
-  const twistWaveSpeed = calculateWaveSpeed(tension, twistLinearDensity);
+  // Wave speed physics - memoized for performance
+  const waveSpeed = useMemo(() => Math.sqrt(tension / linearDensity), [tension, linearDensity]);
+  const twistWaveSpeed = useMemo(() => Math.sqrt(tension / twistLinearDensity), [tension, twistLinearDensity]);
 
   // Pulse animation
   useEffect(() => {
@@ -417,14 +416,108 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     }
   ], []);
 
+  // Static rope SVG for predict/review phases (no pulse animation, no sliders)
+  const renderStaticRopeVisualization = () => {
+    return (
+      <svg viewBox="0 0 700 300" style={{ width: '100%', height: '100%', maxHeight: '280px' }}>
+        <defs>
+          <linearGradient id="wstBgStatic" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#05060a" />
+            <stop offset="100%" stopColor="#0a0f1a" />
+          </linearGradient>
+          <linearGradient id="ropeGradStatic" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#c4a574" />
+            <stop offset="30%" stopColor="#8b6914" />
+            <stop offset="70%" stopColor="#5c4a1f" />
+            <stop offset="100%" stopColor="#3d2e16" />
+          </linearGradient>
+          <linearGradient id="weightGradStatic" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#d97706" />
+          </linearGradient>
+          <radialGradient id="anchorGradStatic" cx="50%" cy="30%" r="60%">
+            <stop offset="0%" stopColor="#6b7280" />
+            <stop offset="100%" stopColor="#374151" />
+          </radialGradient>
+        </defs>
+
+        <rect width="700" height="300" fill="url(#wstBgStatic)" rx="12" />
+
+        {/* Grid lines */}
+        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17].map(i => (
+          <line key={`vg${i}`} x1={i * 42} y1="0" x2={i * 42} y2="300"
+            stroke="#252a38" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
+        ))}
+        {[0, 1, 2, 3, 4, 5, 6, 7].map(i => (
+          <line key={`hg${i}`} x1="0" y1={i * 43} x2="700" y2={i * 43}
+            stroke="#252a38" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
+        ))}
+
+        {/* Distance markers along bottom */}
+        {[0, 1, 2, 3, 4, 5].map(m => (
+          <g key={m} transform={`translate(${80 + m * 96}, 230)`}>
+            <line x1="0" y1="-8" x2="0" y2="0" stroke="#4b5563" strokeWidth="2" />
+            <text x="0" y="18" textAnchor="middle" fill="#6b7488" fontSize="12" fontWeight="600">{m}m</text>
+          </g>
+        ))}
+
+        {/* Left anchor (wall) */}
+        <g transform="translate(30, 0)">
+          <rect x="0" y="110" width="28" height="90" rx="4" fill="url(#anchorGradStatic)" stroke="#4b5563" strokeWidth="2" />
+          <rect x="4" y="115" width="20" height="80" rx="2" fill="#4b5563" />
+          <circle cx="14" cy="128" r="4" fill="#1f2937" />
+          <circle cx="14" cy="184" r="4" fill="#1f2937" />
+        </g>
+
+        {/* Right anchor (pulley system) */}
+        <g transform="translate(590, 0)">
+          <circle cx="25" cy="155" r="22" fill="url(#anchorGradStatic)" stroke="#4b5563" strokeWidth="2" />
+          <circle cx="25" cy="155" r="14" fill="#4b5563" />
+          <circle cx="25" cy="155" r="5" fill="#374151" />
+          <line x1="25" y1="177" x2="25" y2="215" stroke="url(#ropeGradStatic)" strokeWidth="5" strokeLinecap="round" />
+          <rect x="5" y="215" width="40" height="45" rx="6" fill="url(#weightGradStatic)" stroke="#b45309" strokeWidth="2" />
+          <text x="25" y="244" textAnchor="middle" fill="#1c1917" fontSize="14" fontWeight="900">T</text>
+        </g>
+
+        {/* Main rope */}
+        <line x1="58" y1="158" x2="590" y2="158" stroke="rgba(0,0,0,0.3)" strokeWidth="8" strokeLinecap="round" />
+        <line x1="58" y1="155" x2="590" y2="155" stroke="url(#ropeGradStatic)" strokeWidth="7" strokeLinecap="round" />
+
+        {/* Rope wave indication (static sine curve) */}
+        <path d="M200,155 Q230,115 260,155 Q290,195 320,155 Q350,115 380,155 Q410,195 440,155"
+          fill="none" stroke="#fbbf24" strokeWidth="3" opacity="0.6" strokeDasharray="8 4" />
+
+        {/* Reference baseline marker */}
+        <line x1="80" y1="90" x2="80" y2="240" stroke="#3b82f6" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.5" />
+        <text x="80" y="82" textAnchor="middle" fill="#3b82f6" fontSize="10" fontWeight="600">START</text>
+
+        {/* Labels - positioned to avoid overlap */}
+        <g transform="translate(130, 50)">
+          <rect x="-30" y="-14" width="80" height="26" rx="8" fill="rgba(245, 158, 11, 0.2)" stroke="#f59e0b" strokeWidth="1.5" />
+          <text x="10" y="6" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="800">Tension T</text>
+        </g>
+
+        <g transform="translate(400, 50)">
+          <rect x="-55" y="-14" width="110" height="26" rx="6" fill="rgba(234, 179, 8, 0.15)" stroke="#eab308" strokeWidth="1" />
+          <text x="0" y="6" textAnchor="middle" fill="#eab308" fontSize="11" fontWeight="700">mass density μ</text>
+        </g>
+
+        <g transform="translate(580, 50)">
+          <rect x="-50" y="-14" width="100" height="26" rx="8" fill="rgba(34, 197, 94, 0.15)" stroke="#22c55e" strokeWidth="1.5" />
+          <text x="0" y="6" textAnchor="middle" fill="#22c55e" fontSize="11" fontWeight="800">v = √(T/μ)</text>
+        </g>
+      </svg>
+    );
+  };
+
   // SVG rope visualizer
   const renderRopeVisualization = (currentDensity: number) => {
-    const currentSpeed = calculateWaveSpeed(tension, currentDensity);
+    const currentSpeed = Math.sqrt(tension / currentDensity);
     const ropeThickness = Math.min(14, 3 + currentDensity * 500);
     const pulseX = 80 + pulsePosition * 480;
 
     return (
-      <svg viewBox="0 0 700 320" className="w-full h-full max-h-80">
+      <svg viewBox="0 0 700 300" style={{ width: '100%', height: '100%', maxHeight: '280px' }}>
         <defs>
           <linearGradient id="wstBg" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#05060a" />
@@ -455,84 +548,92 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
           </filter>
         </defs>
 
-        <rect width="700" height="320" fill="url(#wstBg)" rx="12" />
+        <rect width="700" height="300" fill="url(#wstBg)" rx="12" />
 
-        {/* Grid */}
-        <pattern id="wstGrid" width="40" height="40" patternUnits="userSpaceOnUse">
-          <rect width="40" height="40" fill="none" stroke="#252a38" strokeWidth="0.5" strokeOpacity="0.3" />
-        </pattern>
-        <rect width="700" height="320" fill="url(#wstGrid)" />
+        {/* Grid lines */}
+        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17].map(i => (
+          <line key={`vg${i}`} x1={i * 42} y1="0" x2={i * 42} y2="300"
+            stroke="#252a38" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
+        ))}
+        {[0, 1, 2, 3, 4, 5, 6, 7].map(i => (
+          <line key={`hg${i}`} x1="0" y1={i * 43} x2="700" y2={i * 43}
+            stroke="#252a38" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
+        ))}
 
         {/* Distance markers */}
         {[0, 1, 2, 3, 4, 5].map(m => (
-          <g key={m} transform={`translate(${80 + m * 96}, 205)`}>
-            <line x1="0" y1="-10" x2="0" y2="0" stroke="#4b5563" strokeWidth="2" />
-            <text x="0" y="18" textAnchor="middle" fill="#6b7488" fontSize="11" fontWeight="600">{m}m</text>
+          <g key={m} transform={`translate(${80 + m * 96}, 230)`}>
+            <line x1="0" y1="-8" x2="0" y2="0" stroke="#4b5563" strokeWidth="2" />
+            <text x="0" y="18" textAnchor="middle" fill="#6b7488" fontSize="12" fontWeight="600">{m}m</text>
           </g>
         ))}
 
+        {/* Reference baseline marker */}
+        <line x1="80" y1="80" x2="80" y2="240" stroke="#3b82f6" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.5" />
+        <text x="80" y="72" textAnchor="middle" fill="#3b82f6" fontSize="10" fontWeight="600">REF</text>
+
         {/* Left anchor (wall) */}
-        <g transform="translate(55, 0)">
-          <rect x="0" y="115" width="28" height="90" rx="4" fill="url(#anchorGrad)" stroke="#4b5563" strokeWidth="2" />
-          <rect x="4" y="120" width="20" height="80" rx="2" fill="#4b5563" />
-          <circle cx="14" cy="132" r="4" fill="#1f2937" />
-          <circle cx="14" cy="188" r="4" fill="#1f2937" />
+        <g transform="translate(30, 0)">
+          <rect x="0" y="110" width="28" height="90" rx="4" fill="url(#anchorGrad)" stroke="#4b5563" strokeWidth="2" />
+          <rect x="4" y="115" width="20" height="80" rx="2" fill="#4b5563" />
+          <circle cx="14" cy="128" r="4" fill="#1f2937" />
+          <circle cx="14" cy="184" r="4" fill="#1f2937" />
         </g>
 
         {/* Right anchor (pulley system) */}
-        <g transform="translate(560, 0)">
-          <circle cx="25" cy="160" r="22" fill="url(#anchorGrad)" stroke="#4b5563" strokeWidth="2" />
-          <circle cx="25" cy="160" r="14" fill="#4b5563" />
-          <circle cx="25" cy="160" r="5" fill="#374151" />
-          <line x1="25" y1="182" x2="25" y2="230" stroke="url(#ropeGrad)" strokeWidth={ropeThickness * 0.7} strokeLinecap="round" />
-          <rect x="5" y="230" width="40" height="45" rx="6" fill="url(#weightGrad)" stroke="#b45309" strokeWidth="2" />
-          <text x="25" y="260" textAnchor="middle" fill="#1c1917" fontSize="16" fontWeight="900">T</text>
+        <g transform="translate(590, 0)">
+          <circle cx="25" cy="155" r="22" fill="url(#anchorGrad)" stroke="#4b5563" strokeWidth="2" />
+          <circle cx="25" cy="155" r="14" fill="#4b5563" />
+          <circle cx="25" cy="155" r="5" fill="#374151" />
+          <line x1="25" y1="177" x2="25" y2="215" stroke="url(#ropeGrad)" strokeWidth={ropeThickness * 0.7} strokeLinecap="round" />
+          <rect x="5" y="215" width="40" height="45" rx="6" fill="url(#weightGrad)" stroke="#b45309" strokeWidth="2" />
+          <text x="25" y="244" textAnchor="middle" fill="#1c1917" fontSize="14" fontWeight="900">T</text>
         </g>
 
         {/* Main rope */}
-        <line x1="83" y1="163" x2="560" y2="163" stroke="rgba(0,0,0,0.3)" strokeWidth={ropeThickness + 2} strokeLinecap="round" />
-        <line x1="83" y1="160" x2="560" y2="160" stroke="url(#ropeGrad)" strokeWidth={ropeThickness} strokeLinecap="round" />
+        <line x1="58" y1="158" x2="590" y2="158" stroke="rgba(0,0,0,0.3)" strokeWidth={ropeThickness + 2} strokeLinecap="round" />
+        <line x1="58" y1="155" x2="590" y2="155" stroke="url(#ropeGrad)" strokeWidth={ropeThickness} strokeLinecap="round" />
 
         {/* Pulse visualization */}
         {(isPulseSent || (pulseComplete && pulsePosition > 0)) && (
-          <g transform={`translate(${pulseX}, 160)`}>
-            <ellipse cx="0" cy="-20" rx="35" ry="30" fill="#f59e0b" opacity="0.25" filter="url(#pulseGlow)">
+          <g transform={`translate(${pulseX}, 155)`} filter="url(#pulseGlow)">
+            <ellipse cx="0" cy="-20" rx="35" ry="30" fill="#f59e0b" opacity="0.25">
               {isPulseSent && <animate attributeName="opacity" values="0.2;0.4;0.2" dur="0.25s" repeatCount="indefinite" />}
             </ellipse>
-            <path d={`M-25,0 Q-12,-${35 + tension/8} 0,-${35 + tension/8} Q12,-${35 + tension/8} 25,0`} fill="none" stroke="#fbbf24" strokeWidth="5" filter="url(#pulseGlow)" />
+            <path d={`M-25,0 Q-12,-${35 + tension/8} 0,-${35 + tension/8} Q12,-${35 + tension/8} 25,0`} fill="none" stroke="#fbbf24" strokeWidth="5" />
             <path d={`M-20,0 Q-10,-${30 + tension/10} 0,-${30 + tension/10} Q10,-${30 + tension/10} 20,0`} fill="none" stroke="#f59e0b" strokeWidth="3" />
-            <circle cx="0" cy={-25 - tension/12} r="6" fill="#fbbf24" opacity="0.9">
-              {isPulseSent && <animate attributeName="r" values="4;8;4" dur="0.3s" repeatCount="indefinite" />}
+            <circle cx="0" cy={-25 - tension/12} r="8" fill="#fbbf24" opacity="0.9">
+              {isPulseSent && <animate attributeName="r" values="6;10;6" dur="0.3s" repeatCount="indefinite" />}
             </circle>
           </g>
         )}
 
-        {/* Info panels */}
-        <g transform="translate(80, 45)">
-          <rect x="-30" y="-14" width="80" height="28" rx="8" fill="rgba(245, 158, 11, 0.2)" stroke="#f59e0b" strokeWidth="1.5" />
-          <text x="10" y="6" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="800">T={tension}N</text>
+        {/* Info panels - positioned well apart to avoid overlap */}
+        <g transform="translate(130, 40)">
+          <rect x="-42" y="-14" width="84" height="26" rx="8" fill="rgba(245, 158, 11, 0.2)" stroke="#f59e0b" strokeWidth="1.5" />
+          <text x="0" y="6" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="800">T={tension}N</text>
         </g>
 
-        <g transform="translate(350, 45)">
-          <rect x="-65" y="-12" width="130" height="24" rx="6" fill="rgba(234, 179, 8, 0.15)" stroke="#eab308" strokeWidth="1" />
-          <text x="0" y="5" textAnchor="middle" fill="#eab308" fontSize="11" fontWeight="700">u = {(currentDensity * 1000).toFixed(1)} g/m</text>
+        <g transform="translate(400, 40)">
+          <rect x="-60" y="-14" width="120" height="26" rx="6" fill="rgba(234, 179, 8, 0.15)" stroke="#eab308" strokeWidth="1" />
+          <text x="0" y="6" textAnchor="middle" fill="#eab308" fontSize="11" fontWeight="700">μ = {(currentDensity * 1000).toFixed(1)} g/m</text>
         </g>
 
-        <g transform="translate(580, 45)">
-          <rect x="-55" y="-14" width="110" height="28" rx="8" fill="rgba(34, 197, 94, 0.15)" stroke="#22c55e" strokeWidth="1.5" />
-          <text x="0" y="6" textAnchor="middle" fill="#22c55e" fontSize="12" fontWeight="800">v = {currentSpeed.toFixed(1)} m/s</text>
+        <g transform="translate(600, 40)">
+          <rect x="-52" y="-14" width="104" height="26" rx="8" fill="rgba(34, 197, 94, 0.15)" stroke="#22c55e" strokeWidth="1.5" />
+          <text x="0" y="6" textAnchor="middle" fill="#22c55e" fontSize="11" fontWeight="800">v={currentSpeed.toFixed(1)} m/s</text>
         </g>
 
-        {/* Stopwatch display */}
-        <g transform="translate(350, 275)">
-          <rect x="-70" y="-18" width="140" height="36" rx="10" fill="#161a24" stroke={pulseComplete ? "#22c55e" : "#252a38"} strokeWidth="2" />
-          <text x="-40" y="6" fill="#6b7488" fontSize="11" fontWeight="600">TIME:</text>
-          <text x="35" y="7" textAnchor="middle" fill={pulseComplete ? "#22c55e" : "#fbbf24"} fontSize="18" fontWeight="900">{stopwatchTime.toFixed(3)}s</text>
+        {/* Stopwatch display - positioned at bottom center */}
+        <g transform="translate(350, 265)">
+          <rect x="-80" y="-16" width="100" height="28" rx="10" fill="#161a24" stroke={pulseComplete ? "#22c55e" : "#252a38"} strokeWidth="2" />
+          <text x="-36" y="6" fill="#6b7488" fontSize="11" fontWeight="600">TIME:</text>
+          <text x="16" y="6" textAnchor="middle" fill={pulseComplete ? "#22c55e" : "#fbbf24"} fontSize="15" fontWeight="900">{stopwatchTime.toFixed(3)}s</text>
         </g>
 
         {/* Completion indicator */}
         {pulseComplete && (
-          <g transform="translate(540, 105)">
+          <g transform="translate(570, 90)">
             <circle cx="0" cy="0" r="20" fill="rgba(34, 197, 94, 0.2)" />
             <text x="0" y="7" textAnchor="middle" fill="#22c55e" fontSize="20">✓</text>
           </g>
@@ -641,7 +742,8 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     // HOOK
     if (phase === 'hook') {
       return (
-        <div className="flex flex-col items-center justify-center min-h-[80vh] px-6 text-center">
+        <div className="flex flex-col items-center justify-center min-h-[80vh] px-6 text-center"
+          style={{ minHeight: '100vh', paddingTop: '48px', paddingBottom: '100px' }}>
           <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl animate-pulse" />
           <div className="absolute bottom-1/4 right-1/4 w-56 h-56 bg-orange-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
 
@@ -676,8 +778,8 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
 
           <button
             onClick={() => goToPhase('predict')}
-            className="px-10 py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-lg shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all"
-            style={{ zIndex: 10, minHeight: '44px' }}
+            className="px-10 py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-lg shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all duration-300"
+            style={{ zIndex: 10, minHeight: '44px', background: 'linear-gradient(to right, #f59e0b, #ea580c)' }}
           >
             Start Experiment
           </button>
@@ -693,11 +795,11 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     // INTRO
     if (phase === 'intro') {
       return (
-        <div className="flex flex-col flex-1" style={{ overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', flex: 1 }}>
+        <div className="flex flex-col flex-1" style={{ overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', flex: 1 }}>
           <div className="flex flex-col items-center justify-center px-6 py-8" style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 className="text-3xl font-black text-white mb-6 text-center">Understanding Wave Speed</h2>
             <div className="space-y-6 w-full">
-              <div className="p-6 rounded-xl bg-slate-800/50 border border-slate-700/50">
+              <div className="p-6 rounded-xl" style={{ background: 'rgba(30,41,59,0.5)', border: '1px solid rgba(71,85,105,0.5)', borderRadius: '12px', marginBottom: '16px' }}>
                 <h3 className="text-xl font-bold text-amber-400 mb-3">The Physics</h3>
                 <p className="text-slate-300 leading-relaxed mb-4">
                   When you send a pulse down a rope, how fast does it travel? The answer depends on two key factors: how tightly the rope is stretched (tension) and how heavy the rope is per unit length (linear density).
@@ -707,7 +809,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                 </p>
               </div>
 
-              <div className="p-6 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center">
+              <div className="p-6 rounded-xl text-center" style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: '12px', marginBottom: '16px' }}>
                 <p className="text-sm font-bold text-amber-400 mb-3">THE FORMULA</p>
                 <p className="text-3xl font-serif text-white mb-3">
                   v = sqrt(T / u)
@@ -717,7 +819,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                 </p>
               </div>
 
-              <div className="p-6 rounded-xl bg-slate-800/50 border border-slate-700/50">
+              <div className="p-6 rounded-xl" style={{ background: 'rgba(30,41,59,0.5)', border: '1px solid rgba(71,85,105,0.5)', borderRadius: '12px', marginBottom: '16px' }}>
                 <h3 className="text-xl font-bold text-emerald-400 mb-3">Real-World Impact</h3>
                 <p className="text-slate-300 leading-relaxed">
                   This principle governs guitar strings producing perfect pitch, suspension bridge cables resisting oscillation, and seismic waves revealing Earth's interior structure.
@@ -727,8 +829,8 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
 
             <button
               onClick={() => goToPhase('predict')}
-              className="mt-8 px-10 py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-lg shadow-lg shadow-amber-500/30"
-              style={{ zIndex: 10, minHeight: '44px', cursor: 'pointer' }}
+              className="mt-8 px-10 py-4 rounded-xl text-white font-bold text-lg shadow-lg shadow-amber-500/30 transition-all duration-300"
+              style={{ zIndex: 10, minHeight: '44px', cursor: 'pointer', background: 'linear-gradient(to right, #f59e0b, #ea580c)' }}
             >
               Make Your Prediction
             </button>
@@ -747,7 +849,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
       ];
 
       return (
-        <div className="flex flex-col flex-1" style={{ overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', flex: 1 }}>
+        <div className="flex flex-col flex-1" style={{ overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', flex: 1 }}>
           <div className="flex flex-col px-6 py-8">
             <div className="max-w-xl mx-auto w-full">
               <p className="text-xs font-bold text-amber-400 mb-2 uppercase tracking-widest">Predict</p>
@@ -757,6 +859,11 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
               <p className="text-slate-400 mb-6">
                 You snap a pulse into a rope tied between two posts. What happens when you increase the rope's tension?
               </p>
+
+              {/* Static SVG visualization for predict phase */}
+              <div className="w-full mb-6 rounded-xl overflow-hidden" style={{ border: '1px solid rgba(71,85,105,0.5)' }}>
+                {renderStaticRopeVisualization()}
+              </div>
 
               <div className="flex flex-col gap-3 mb-8">
                 {options.map((opt) => (
@@ -795,10 +902,10 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                   disabled={!prediction}
                   className={`px-8 py-3 rounded-xl font-bold transition-all duration-300 ${
                     prediction
-                      ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/30'
+                      ? 'text-white shadow-lg shadow-amber-500/30'
                       : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                   }`}
-                  style={{ zIndex: 10, minHeight: '44px' }}
+                  style={{ zIndex: 10, minHeight: '44px', ...(prediction ? { background: 'linear-gradient(to right, #f59e0b, #ea580c)' } : {}) }}
                 >
                   Test It
                 </button>
@@ -812,26 +919,30 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     // LAB (play)
     if (phase === 'play') {
       return (
-        <div className="flex flex-col flex-1" style={{ overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', flex: 1 }}>
-          <div className="flex-1 flex flex-col items-center justify-center p-4 min-h-64">
-            <div className="w-full max-w-3xl mb-6">
+        <div className="flex flex-col flex-1" style={{ overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', flex: 1 }}>
+          <div className="flex-1 flex flex-col items-center p-4">
+
+            {/* SVG visualization */}
+            <div className="w-full max-w-3xl mb-6" style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(71,85,105,0.5)' }}>
               {renderRopeVisualization(linearDensity)}
             </div>
 
-            <div className="w-full max-w-2xl p-6 rounded-xl bg-slate-800/30 border border-slate-700/50 mb-6">
+            <div className="w-full max-w-2xl mb-6"
+              style={{ padding: '20px', borderRadius: '12px', background: 'rgba(30,41,59,0.3)', border: '1px solid rgba(71,85,105,0.5)' }}>
               <p className="text-xs font-bold text-amber-400 mb-2">👀 OBSERVE</p>
               <p className="text-sm text-slate-300 leading-relaxed">
-                Watch how changing tension affects the wave pulse travel time. Higher tension makes the rope "snap back" faster, increasing wave speed.
+                Watch how changing tension force affects the wave pulse travel time. Higher tension makes the rope "snap back" faster, increasing wave speed. This is why guitar strings produce different pitches when tightened.
               </p>
             </div>
 
+            {/* Data readout cards */}
             <div className="w-full max-w-2xl grid grid-cols-2 gap-4 mb-6">
-              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 transition-all duration-300">
-                <p className="text-xs font-bold text-amber-400 mb-1">CURRENT</p>
+              <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', transition: 'all 0.3s ease' }}>
+                <p className="text-xs font-bold text-amber-400 mb-1">CURRENT SPEED</p>
                 <p className="text-2xl font-black text-white">{waveSpeed.toFixed(1)} m/s</p>
-                <p className="text-xs text-slate-400">Wave Speed</p>
+                <p className="text-xs text-slate-400">Wave velocity</p>
               </div>
-              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 transition-all duration-300">
+              <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', transition: 'all 0.3s ease' }}>
                 <p className="text-xs font-bold text-emerald-400 mb-1">TRAVEL TIME</p>
                 <p className="text-2xl font-black text-white">{(ropeLength / waveSpeed).toFixed(2)}s</p>
                 <p className="text-xs text-slate-400">For {ropeLength}m rope</p>
@@ -850,20 +961,23 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                     emitEvent('simulation_started', { action: 'send_pulse', tension, linearDensity, expectedSpeed: waveSpeed });
                   }}
                   disabled={isPulseSent}
-                  className={`px-8 py-3 rounded-xl font-bold transition-all ${
+                  className={`px-8 py-3 rounded-xl font-bold transition-all duration-300 ${
                     isPulseSent
                       ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/30'
+                      : 'text-white shadow-lg shadow-amber-500/30'
                   }`}
-                  style={{ zIndex: 10, minHeight: '44px' }}
+                  style={{ zIndex: 10, minHeight: '44px', ...(isPulseSent ? {} : { background: 'linear-gradient(to right, #f59e0b, #ea580c)' }) }}
                 >
                   {isPulseSent ? 'Traveling...' : 'Send Pulse'}
                 </button>
               </div>
 
-              <div className="mb-4 w-full">
+              {/* Tension slider */}
+              <div className="mb-6 w-full" style={{ padding: '16px', borderRadius: '12px', background: 'rgba(30,41,59,0.3)', border: '1px solid rgba(71,85,105,0.5)' }}>
                 <div className="flex justify-between mb-2">
-                  <label className="text-sm text-slate-400 font-semibold">Rope Tension (T) - How tightly the rope is stretched</label>
+                  <label className="text-sm text-slate-300 font-semibold">
+                    Tension Force (T) — controls how tightly the rope is stretched
+                  </label>
                   <span className="text-sm text-amber-400 font-bold">{tension} N</span>
                 </div>
                 <input
@@ -877,11 +991,18 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                     setIsPulseSent(false);
                     setPulseComplete(false);
                     setStopwatchTime(0);
+                    emitEvent('parameter_changed', { param: 'tension', value: parseInt(e.target.value) });
                   }}
-                  className="w-full accent-amber-500"
-                  style={{ width: '100%' }}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    accentColor: '#3b82f6',
+                    WebkitAppearance: 'none',
+                    touchAction: 'pan-y',
+                    cursor: 'pointer'
+                  }}
                 />
-                <div className="flex justify-between text-xs text-slate-600">
+                <div className="flex justify-between text-xs text-slate-500 mt-1">
                   <span>10 N (loose)</span>
                   <span>200 N (tight)</span>
                 </div>
@@ -891,12 +1012,12 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                 <button
                   onClick={() => { if (pulseComplete) goToPhase('review'); }}
                   disabled={!pulseComplete}
-                  className={`px-6 py-2 rounded-xl font-bold transition-all ${
+                  className={`px-6 py-2 rounded-xl font-bold transition-all duration-300 ${
                     pulseComplete
-                      ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white'
+                      ? 'text-white'
                       : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                   }`}
-                  style={{ zIndex: 10, minHeight: '44px' }}
+                  style={{ zIndex: 10, minHeight: '44px', ...(pulseComplete ? { background: 'linear-gradient(to right, #f59e0b, #ea580c)' } : {}) }}
                 >
                   Understand Why
                 </button>
@@ -910,7 +1031,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     // REVIEW
     if (phase === 'review') {
       return (
-        <div className="flex flex-col flex-1 overflow-y-auto" style={{ paddingTop: '44px', paddingBottom: '80px' }}>
+        <div className="flex flex-col flex-1 overflow-y-auto" style={{ paddingTop: '48px', paddingBottom: '100px' }}>
           <div className="flex flex-col px-6 py-8">
             <div className="max-w-2xl mx-auto w-full">
               <p className="text-xs font-bold text-emerald-400 mb-2 uppercase tracking-widest">Understanding</p>
@@ -923,15 +1044,20 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                   : "Higher tension actually increases wave speed. Here's why:"}
               </p>
 
+              {/* Static SVG diagram for review */}
+              <div className="w-full mb-6 rounded-xl overflow-hidden" style={{ border: '1px solid rgba(71,85,105,0.5)' }}>
+                {renderStaticRopeVisualization()}
+              </div>
+
               <div className="grid grid-cols-2 gap-4 mb-8">
-                <div className="p-5 rounded-xl bg-amber-500/10 border border-amber-500/30 transition-all duration-300">
+                <div style={{ padding: '20px', borderRadius: '12px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', transition: 'all 0.3s ease' }}>
                   <div className="text-2xl mb-2">🎯</div>
                   <h4 className="text-sm font-bold text-amber-400 mb-1">Restoring Force</h4>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     Higher tension means stronger restoring force. The rope "snaps back" faster when disturbed!
                   </p>
                 </div>
-                <div className="p-5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 transition-all duration-300">
+                <div style={{ padding: '20px', borderRadius: '12px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', transition: 'all 0.3s ease' }}>
                   <div className="text-2xl mb-2">⚡</div>
                   <h4 className="text-sm font-bold text-emerald-400 mb-1">Faster Propagation</h4>
                   <p className="text-xs text-slate-400 leading-relaxed">
@@ -940,7 +1066,8 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                 </div>
               </div>
 
-              <div className="p-8 rounded-2xl bg-gradient-to-br from-amber-500/10 to-slate-800 border border-amber-500/20 text-center mb-8">
+              <div className="p-8 rounded-2xl text-center mb-8"
+                style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.1), rgba(30,41,59,1))', border: '1px solid rgba(245,158,11,0.2)' }}>
                 <p className="text-xs font-bold text-amber-400 mb-4 uppercase tracking-widest">The Wave Speed Formula</p>
                 <p className="text-3xl font-serif text-white mb-4">
                   v = sqrt(<span className="text-amber-400">T</span> / <span className="text-yellow-400">u</span>)
@@ -953,8 +1080,8 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
               <div className="flex justify-end">
                 <button
                   onClick={() => goToPhase('twist_predict')}
-                  className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold shadow-lg shadow-amber-500/30"
-                  style={{ zIndex: 10, minHeight: '44px' }}
+                  className="px-8 py-3 rounded-xl text-white font-bold shadow-lg shadow-amber-500/30 transition-all duration-300"
+                  style={{ zIndex: 10, minHeight: '44px', background: 'linear-gradient(to right, #f59e0b, #ea580c)' }}
                 >
                   Explore Mass Effect
                 </button>
@@ -974,7 +1101,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
       ];
 
       return (
-        <div className="flex flex-col flex-1 overflow-y-auto" style={{ paddingTop: '44px', paddingBottom: '80px' }}>
+        <div className="flex flex-col flex-1 overflow-y-auto" style={{ paddingTop: '48px', paddingBottom: '100px' }}>
           <div className="flex flex-col px-6 py-8">
             <div className="max-w-xl mx-auto w-full">
               <p className="text-xs font-bold text-violet-400 mb-2 uppercase tracking-widest">New Variable</p>
@@ -984,6 +1111,11 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
               <p className="text-slate-400 mb-6">
                 Now keep tension the same, but use a HEAVIER rope (more mass per meter). How does this affect wave speed?
               </p>
+
+              {/* Static SVG visualization for twist_predict phase */}
+              <div className="w-full mb-6 rounded-xl overflow-hidden" style={{ border: '1px solid rgba(71,85,105,0.5)' }}>
+                {renderStaticRopeVisualization()}
+              </div>
 
               <div className="flex flex-col gap-3 mb-8">
                 {options.map((opt) => (
@@ -1022,10 +1154,10 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                   disabled={!twistPrediction}
                   className={`px-8 py-3 rounded-xl font-bold transition-all duration-300 ${
                     twistPrediction
-                      ? 'bg-gradient-to-r from-violet-500 to-violet-600 text-white shadow-lg shadow-violet-500/30'
+                      ? 'text-white shadow-lg shadow-violet-500/30'
                       : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                   }`}
-                  style={{ zIndex: 10, minHeight: '44px' }}
+                  style={{ zIndex: 10, minHeight: '44px', ...(twistPrediction ? { background: 'linear-gradient(to right, #7c3aed, #6d28d9)' } : {}) }}
                 >
                   Test Your Prediction
                 </button>
@@ -1039,13 +1171,14 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     // TWIST LAB (twist_play)
     if (phase === 'twist_play') {
       return (
-        <div className="flex flex-col flex-1 overflow-auto" style={{ paddingTop: '44px', paddingBottom: '80px' }}>
-          <div className="flex-1 flex flex-col items-center justify-center p-4 min-h-64">
-            <div className="w-full max-w-3xl mb-6">
+        <div className="flex flex-col flex-1 overflow-auto" style={{ paddingTop: '48px', paddingBottom: '100px' }}>
+          <div className="flex-1 flex flex-col items-center p-4">
+            <div className="w-full max-w-3xl mb-6" style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(71,85,105,0.5)' }}>
               {renderRopeVisualization(twistLinearDensity)}
             </div>
 
-            <div className="w-full max-w-2xl p-6 rounded-xl bg-slate-800/30 border border-slate-700/50 mb-6">
+            <div className="w-full max-w-2xl mb-6"
+              style={{ padding: '20px', borderRadius: '12px', background: 'rgba(30,41,59,0.3)', border: '1px solid rgba(71,85,105,0.5)' }}>
               <p className="text-xs font-bold text-violet-400 mb-2">👀 OBSERVE</p>
               <p className="text-sm text-slate-300 leading-relaxed">
                 Notice how heavier ropes (higher mass density) carry waves more slowly. More inertia means the rope responds slower to disturbances.
@@ -1053,12 +1186,12 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
             </div>
 
             <div className="w-full max-w-2xl grid grid-cols-2 gap-4 mb-6">
-              <div className="p-4 rounded-xl bg-violet-500/10 border border-violet-500/30 transition-all duration-300">
-                <p className="text-xs font-bold text-violet-400 mb-1">CURRENT</p>
+              <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.3)', transition: 'all 0.3s ease' }}>
+                <p className="text-xs font-bold text-violet-400 mb-1">CURRENT SPEED</p>
                 <p className="text-2xl font-black text-white">{twistWaveSpeed.toFixed(1)} m/s</p>
-                <p className="text-xs text-slate-400">Wave Speed</p>
+                <p className="text-xs text-slate-400">Wave velocity</p>
               </div>
-              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 transition-all duration-300">
+              <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', transition: 'all 0.3s ease' }}>
                 <p className="text-xs font-bold text-emerald-400 mb-1">COMPARISON</p>
                 <p className="text-2xl font-black text-white">{((waveSpeed - twistWaveSpeed) / waveSpeed * 100).toFixed(0)}%</p>
                 <p className="text-xs text-slate-400">vs. lighter rope</p>
@@ -1077,20 +1210,23 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                     emitEvent('simulation_started', { action: 'send_pulse', tension, linearDensity: twistLinearDensity, expectedSpeed: twistWaveSpeed });
                   }}
                   disabled={isPulseSent}
-                  className={`px-8 py-3 rounded-xl font-bold transition-all ${
+                  className={`px-8 py-3 rounded-xl font-bold transition-all duration-300 ${
                     isPulseSent
                       ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/30'
+                      : 'text-white shadow-lg shadow-amber-500/30'
                   }`}
-                  style={{ zIndex: 10, minHeight: '44px' }}
+                  style={{ zIndex: 10, minHeight: '44px', ...(isPulseSent ? {} : { background: 'linear-gradient(to right, #f59e0b, #ea580c)' }) }}
                 >
                   {isPulseSent ? 'Traveling...' : 'Send Pulse'}
                 </button>
               </div>
 
-              <div className="mb-4 w-full">
+              {/* Linear density slider */}
+              <div className="mb-6 w-full" style={{ padding: '16px', borderRadius: '12px', background: 'rgba(30,41,59,0.3)', border: '1px solid rgba(71,85,105,0.5)' }}>
                 <div className="flex justify-between mb-2">
-                  <label className="text-sm text-slate-400 font-semibold">Linear Mass Density (μ) - Mass per unit length of rope</label>
+                  <label className="text-sm text-slate-300 font-semibold">
+                    Linear Mass Density (μ) — mass per unit length of rope
+                  </label>
                   <span className="text-sm text-yellow-400 font-bold">{(twistLinearDensity * 1000).toFixed(1)} g/m</span>
                 </div>
                 <input
@@ -1104,11 +1240,18 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                     setIsPulseSent(false);
                     setPulseComplete(false);
                     setStopwatchTime(0);
+                    emitEvent('parameter_changed', { param: 'linearDensity', value: parseInt(e.target.value) / 1000 });
                   }}
-                  className="w-full accent-yellow-500"
-                  style={{ width: '100%' }}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    accentColor: '#3b82f6',
+                    WebkitAppearance: 'none',
+                    touchAction: 'pan-y',
+                    cursor: 'pointer'
+                  }}
                 />
-                <div className="flex justify-between text-xs text-slate-600">
+                <div className="flex justify-between text-xs text-slate-500 mt-1">
                   <span>5 g/m (light)</span>
                   <span>100 g/m (heavy)</span>
                 </div>
@@ -1118,12 +1261,12 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                 <button
                   onClick={() => { if (pulseComplete) goToPhase('twist_review'); }}
                   disabled={!pulseComplete}
-                  className={`px-6 py-2 rounded-xl font-bold transition-all ${
+                  className={`px-6 py-2 rounded-xl font-bold transition-all duration-300 ${
                     pulseComplete
-                      ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white'
+                      ? 'text-white'
                       : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                   }`}
-                  style={{ zIndex: 10, minHeight: '44px' }}
+                  style={{ zIndex: 10, minHeight: '44px', ...(pulseComplete ? { background: 'linear-gradient(to right, #f59e0b, #ea580c)' } : {}) }}
                 >
                   See the Full Picture
                 </button>
@@ -1137,7 +1280,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     // TWIST REVIEW
     if (phase === 'twist_review') {
       return (
-        <div className="flex flex-col flex-1 overflow-y-auto" style={{ paddingTop: '44px', paddingBottom: '80px' }}>
+        <div className="flex flex-col flex-1 overflow-y-auto" style={{ paddingTop: '48px', paddingBottom: '100px' }}>
           <div className="flex flex-col px-6 py-8">
             <div className="max-w-xl mx-auto w-full">
               <p className="text-xs font-bold text-emerald-400 mb-2 uppercase tracking-widest">Deep Insight</p>
@@ -1150,7 +1293,13 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                   : 'More mass per length actually DECREASES wave speed!'}
               </p>
 
-              <div className="p-8 rounded-2xl bg-gradient-to-br from-amber-500/10 to-slate-800 border border-amber-500/20 text-center mb-8 transition-all duration-300">
+              {/* Static SVG diagram for twist_review */}
+              <div className="w-full mb-6 rounded-xl overflow-hidden" style={{ border: '1px solid rgba(71,85,105,0.5)' }}>
+                {renderStaticRopeVisualization()}
+              </div>
+
+              <div className="p-8 rounded-2xl text-center mb-8 transition-all duration-300"
+                style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.1), rgba(30,41,59,1))', border: '1px solid rgba(245,158,11,0.2)' }}>
                 <p className="text-xs font-bold text-amber-400 mb-4 uppercase tracking-widest">Wave Speed on a String</p>
                 <p className="text-3xl font-serif text-white mb-4">
                   v = sqrt(<span className="text-amber-400">T</span> / <span className="text-yellow-400">u</span>)
@@ -1177,8 +1326,8 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
               <div className="flex justify-end">
                 <button
                   onClick={() => goToPhase('transfer')}
-                  className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold shadow-lg shadow-amber-500/30"
-                  style={{ zIndex: 10, minHeight: '44px' }}
+                  className="px-8 py-3 rounded-xl text-white font-bold shadow-lg shadow-amber-500/30 transition-all duration-300"
+                  style={{ zIndex: 10, minHeight: '44px', background: 'linear-gradient(to right, #f59e0b, #ea580c)' }}
                 >
                   Real-World Applications
                 </button>
@@ -1191,17 +1340,17 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
 
     // TRANSFER
     if (phase === 'transfer') {
-      const app = applications[activeApp];
-      const allAppsCompleted = completedApps.size === applications.length;
+      const app = realWorldApps[activeApp];
+      const allAppsCompleted = completedApps.size === realWorldApps.length;
 
       return (
-        <div className="flex flex-col flex-1">
+        <div className="flex flex-col flex-1" style={{ paddingTop: '48px', paddingBottom: '100px' }}>
           <div className="flex items-center justify-center gap-3 py-4 bg-slate-900/80 border-b border-slate-800">
             <span className="text-sm text-slate-400">
-              Application {activeApp + 1} of {applications.length}
+              Application {activeApp + 1} of {realWorldApps.length}
             </span>
             <div className="flex gap-1.5">
-              {applications.map((_, idx) => (
+              {realWorldApps.map((_, idx) => (
                 <div
                   key={idx}
                   className={`w-2 h-2 rounded-full transition-all ${
@@ -1211,17 +1360,18 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
               ))}
             </div>
             <span className="text-xs text-slate-500">
-              ({completedApps.size}/{applications.length} read)
+              ({completedApps.size}/{realWorldApps.length} read)
             </span>
           </div>
 
-          <div className="flex gap-2 px-4 py-3 bg-slate-900/80 border-b border-slate-800 overflow-x-auto">
-            {applications.map((a, idx) => {
+          {/* Scrollable app tab buttons */}
+          <div style={{ display: 'flex', gap: '8px', padding: '12px 16px', background: 'rgba(15,23,42,0.8)', borderBottom: '1px solid rgba(30,41,59,1)', overflowX: 'auto', overflowY: 'hidden' }}>
+            {realWorldApps.map((a, idx) => {
               const isCompleted = completedApps.has(idx);
               const isCurrent = idx === activeApp;
               return (
                 <button
-                  key={a.id}
+                  key={a.title}
                   onClick={() => {
                     const now = Date.now();
                     if (now - lastClickRef.current < 200) return;
@@ -1229,7 +1379,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                     setActiveApp(idx);
                     emitEvent('app_explored', { appIndex: idx });
                   }}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all ${
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all duration-300 ${
                     isCurrent
                       ? 'bg-slate-800 text-white'
                       : isCompleted
@@ -1244,33 +1394,88 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
             })}
           </div>
 
-          <div className="flex-1 overflow-y-auto" style={{ paddingTop: '44px', paddingBottom: '80px' }}>
-            <div className="p-6">
-              <div className="max-w-2xl mx-auto">
-                <div className="mb-6 rounded-xl overflow-hidden border border-slate-800">
+          {/* Scrollable content area wrapping all app cards */}
+          <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+            <div style={{ padding: '24px' }}>
+              <div style={{ maxWidth: '640px', margin: '0 auto' }}>
+
+                {/* App graphic */}
+                <div style={{ marginBottom: '24px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(30,41,59,1)' }}>
                   {renderAppGraphic(app.id)}
                 </div>
 
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-14 h-14 rounded-xl bg-amber-500/20 flex items-center justify-center text-2xl">
+                {/* App header */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                  <div style={{ width: '56px', height: '56px', borderRadius: '12px', background: 'rgba(245,158,11,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>
                     {app.icon}
                   </div>
                   <div>
-                    <h3 className="text-xl font-black text-white">{app.title}</h3>
-                    <p className="text-sm text-slate-400">{app.description}</p>
+                    <h3 style={{ fontSize: '20px', fontWeight: 900, color: '#fff', margin: 0 }}>{app.title}</h3>
+                    <p style={{ fontSize: '14px', color: '#94a3b8', margin: 0 }}>{app.description}</p>
                   </div>
                 </div>
 
-                <div className="p-5 rounded-xl bg-slate-800/50 border border-slate-700/50 mb-6">
-                  <p className="text-xs font-bold text-amber-400 mb-2">🔬 THE PHYSICS</p>
-                  <p className="text-sm text-slate-300 leading-relaxed">{app.physics}</p>
+                {/* Tagline */}
+                <div style={{ padding: '12px 16px', borderRadius: '10px', background: `${app.color}15`, border: `1px solid ${app.color}40`, marginBottom: '16px' }}>
+                  <p style={{ fontSize: '14px', fontWeight: 700, color: app.color, margin: 0 }}>{app.tagline}</p>
                 </div>
 
-                <div className="p-5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center mb-6">
-                  <p className="text-xs font-bold text-amber-400 mb-2">KEY FORMULA</p>
-                  <p className="text-lg font-mono text-white">{app.formula}</p>
+                {/* Description */}
+                <div style={{ padding: '20px', borderRadius: '12px', background: 'rgba(30,41,59,0.5)', border: '1px solid rgba(71,85,105,0.5)', marginBottom: '16px' }}>
+                  <p style={{ fontSize: '13px', fontWeight: 700, color: '#f59e0b', marginBottom: '8px' }}>📖 OVERVIEW</p>
+                  <p style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: 1.6, margin: 0 }}>{app.description}</p>
                 </div>
 
+                {/* Connection */}
+                <div style={{ padding: '20px', borderRadius: '12px', background: 'rgba(30,41,59,0.5)', border: '1px solid rgba(71,85,105,0.5)', marginBottom: '16px' }}>
+                  <p style={{ fontSize: '13px', fontWeight: 700, color: '#f59e0b', marginBottom: '8px' }}>🔬 THE PHYSICS CONNECTION</p>
+                  <p style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: 1.6, margin: 0 }}>{app.connection}</p>
+                </div>
+
+                {/* How it works */}
+                <div style={{ padding: '20px', borderRadius: '12px', background: 'rgba(30,41,59,0.5)', border: '1px solid rgba(71,85,105,0.5)', marginBottom: '16px' }}>
+                  <p style={{ fontSize: '13px', fontWeight: 700, color: '#22c55e', marginBottom: '8px' }}>⚙️ HOW IT WORKS</p>
+                  <p style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: 1.6, margin: 0 }}>{app.howItWorks}</p>
+                </div>
+
+                {/* Stats */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px', marginBottom: '16px' }}>
+                  {app.stats.map((stat, i) => (
+                    <div key={i} style={{ padding: '12px', borderRadius: '10px', background: 'rgba(30,41,59,0.7)', border: '1px solid rgba(71,85,105,0.5)', textAlign: 'center' }}>
+                      <div style={{ fontSize: '18px', marginBottom: '4px' }}>{stat.icon}</div>
+                      <div style={{ fontSize: '16px', fontWeight: 900, color: app.color }}>{stat.value}</div>
+                      <div style={{ fontSize: '11px', color: '#64748b' }}>{stat.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Examples */}
+                <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(30,41,59,0.5)', border: '1px solid rgba(71,85,105,0.5)', marginBottom: '16px' }}>
+                  <p style={{ fontSize: '13px', fontWeight: 700, color: '#a78bfa', marginBottom: '8px' }}>📋 EXAMPLES</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {app.examples.map((ex, i) => (
+                      <span key={i} style={{ padding: '4px 10px', borderRadius: '20px', background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)', fontSize: '12px', color: '#c4b5fd' }}>{ex}</span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Companies */}
+                <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(30,41,59,0.5)', border: '1px solid rgba(71,85,105,0.5)', marginBottom: '16px' }}>
+                  <p style={{ fontSize: '13px', fontWeight: 700, color: '#60a5fa', marginBottom: '8px' }}>🏢 KEY COMPANIES</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {app.companies.map((co, i) => (
+                      <span key={i} style={{ padding: '4px 10px', borderRadius: '20px', background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', fontSize: '12px', color: '#93c5fd' }}>{co}</span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Future impact */}
+                <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', marginBottom: '24px' }}>
+                  <p style={{ fontSize: '13px', fontWeight: 700, color: '#34d399', marginBottom: '8px' }}>🚀 FUTURE IMPACT</p>
+                  <p style={{ fontSize: '13px', color: '#a7f3d0', lineHeight: 1.6, margin: 0 }}>{app.futureImpact}</p>
+                </div>
+
+                {/* Action button */}
                 {!completedApps.has(activeApp) ? (
                   <button
                     onClick={() => {
@@ -1282,13 +1487,25 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                       setCompletedApps(newCompleted);
                       emitEvent('app_explored', { app: app.title });
                     }}
-                    className="w-full py-4 rounded-xl bg-emerald-500/10 border-2 border-emerald-500 text-emerald-400 font-semibold text-lg transition-all duration-300"
-                    style={{ zIndex: 10, minHeight: '44px' }}
+                    style={{
+                      width: '100%',
+                      padding: '16px',
+                      borderRadius: '12px',
+                      background: 'rgba(16,185,129,0.1)',
+                      border: '2px solid #10b981',
+                      color: '#34d399',
+                      fontWeight: 600,
+                      fontSize: '18px',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      zIndex: 10,
+                      minHeight: '44px'
+                    }}
                   >
-                    Got It
+                    Got It — Continue →
                   </button>
                 ) : (
-                  activeApp < applications.length - 1 ? (
+                  activeApp < realWorldApps.length - 1 ? (
                     <button
                       onClick={() => {
                         const now = Date.now();
@@ -1296,41 +1513,76 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                         lastClickRef.current = now;
                         setActiveApp(activeApp + 1);
                       }}
-                      className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold text-lg transition-all duration-300"
-                      style={{ zIndex: 10, minHeight: '44px' }}
+                      style={{
+                        width: '100%',
+                        padding: '16px',
+                        borderRadius: '12px',
+                        background: 'linear-gradient(to right, #f59e0b, #ea580c)',
+                        border: 'none',
+                        color: '#fff',
+                        fontWeight: 600,
+                        fontSize: '18px',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        zIndex: 10,
+                        minHeight: '44px'
+                      }}
                     >
-                      Next Application
+                      Next Application →
                     </button>
                   ) : (
-                    <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center transition-all duration-300">
-                      <span className="text-emerald-400 font-semibold">Completed</span>
-                    </div>
+                    allAppsCompleted ? (
+                      <button
+                        onClick={() => goToPhase('test')}
+                        style={{
+                          width: '100%',
+                          padding: '16px',
+                          borderRadius: '12px',
+                          background: 'linear-gradient(to right, #10b981, #059669)',
+                          border: 'none',
+                          color: '#fff',
+                          fontWeight: 700,
+                          fontSize: '18px',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          zIndex: 10,
+                          minHeight: '44px'
+                        }}
+                      >
+                        Take the Test →
+                      </button>
+                    ) : (
+                      <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', textAlign: 'center' }}>
+                        <span style={{ color: '#34d399', fontWeight: 600 }}>Completed</span>
+                      </div>
+                    )
                   )
                 )}
-              </div>
-            </div>
-          </div>
 
-          <div className="p-4 bg-slate-900/80 border-t border-slate-800" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100 }}>
-            <div className="max-w-2xl mx-auto">
-              {allAppsCompleted ? (
-                <div className="text-center">
-                  <div className="mb-3 text-emerald-400 font-semibold">
-                    All {applications.length} applications read!
-                  </div>
+                {/* Take the test button when all apps completed */}
+                {allAppsCompleted && activeApp < realWorldApps.length - 1 && (
                   <button
                     onClick={() => goToPhase('test')}
-                    className="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold shadow-lg shadow-emerald-500/30"
-                    style={{ zIndex: 10, minHeight: '44px' }}
+                    style={{
+                      width: '100%',
+                      padding: '16px',
+                      borderRadius: '12px',
+                      background: 'linear-gradient(to right, #10b981, #059669)',
+                      border: 'none',
+                      color: '#fff',
+                      fontWeight: 700,
+                      fontSize: '16px',
+                      cursor: 'pointer',
+                      marginTop: '12px',
+                      transition: 'all 0.3s ease',
+                      zIndex: 10,
+                      minHeight: '44px'
+                    }}
                   >
-                    Take the Test
+                    All Apps Done — Take the Test →
                   </button>
-                </div>
-              ) : (
-                <div style={{ color: '#e2e8f0' }} className="text-center py-3 px-4 rounded-xl bg-slate-800">
-                  Read all {applications.length} applications to unlock the test ({completedApps.size}/{applications.length} completed)
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -1345,8 +1597,9 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
         const passed = percentage >= 70;
 
         return (
-          <div className="flex flex-col flex-1 overflow-y-auto items-center justify-center px-6 text-center" style={{ paddingTop: '44px', paddingBottom: '80px' }}>
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-500 to-emerald-500 flex items-center justify-center mb-6 shadow-2xl shadow-amber-500/30">
+          <div className="flex flex-col flex-1 overflow-y-auto items-center justify-center px-6 text-center" style={{ paddingTop: '48px', paddingBottom: '100px' }}>
+            <div className="w-24 h-24 rounded-full flex items-center justify-center mb-6 shadow-2xl shadow-amber-500/30"
+              style={{ background: 'linear-gradient(135deg, #f59e0b, #10b981)' }}>
               <span className="text-5xl">{passed ? '🏆' : '📚'}</span>
             </div>
 
@@ -1374,8 +1627,8 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                   setTestAnswers(Array(testQuestions.length).fill(null));
                 }
               }}
-              className="px-10 py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-lg shadow-lg shadow-amber-500/30"
-              style={{ zIndex: 10, minHeight: '44px' }}
+              className="px-10 py-4 rounded-xl text-white font-bold text-lg shadow-lg shadow-amber-500/30 transition-all duration-300"
+              style={{ zIndex: 10, minHeight: '44px', background: 'linear-gradient(to right, #f59e0b, #ea580c)' }}
             >
               {passed ? 'Complete Lesson' : 'Try Again'}
             </button>
@@ -1387,7 +1640,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
       const selected = testAnswers[testIndex];
 
       return (
-        <div className="flex flex-col flex-1 overflow-y-auto" style={{ paddingTop: '44px', paddingBottom: '80px' }}>
+        <div className="flex flex-col flex-1 overflow-y-auto" style={{ paddingTop: '48px', paddingBottom: '100px' }}>
           <div className="flex flex-col px-6 py-8 flex-1">
             <div className="max-w-xl mx-auto w-full flex-1">
               <div className="flex justify-between items-center mb-6">
@@ -1406,9 +1659,10 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                 </div>
               </div>
 
-              <div className="p-5 rounded-xl bg-slate-800/50 border border-slate-700/50 mb-6">
-                <p className="text-xs font-bold text-amber-400 mb-2">📋 SCENARIO</p>
-                <p className="text-sm text-slate-300">{q.scenario}</p>
+              {/* Scenario context */}
+              <div style={{ padding: '20px', borderRadius: '12px', background: 'rgba(30,41,59,0.5)', border: '1px solid rgba(71,85,105,0.5)', marginBottom: '24px' }}>
+                <p style={{ fontSize: '12px', fontWeight: 700, color: '#f59e0b', marginBottom: '8px' }}>📋 SCENARIO</p>
+                <p style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: 1.6, margin: 0 }}>{q.scenario}</p>
               </div>
 
               <h3 className="text-xl font-bold text-white mb-6">
@@ -1423,6 +1677,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                       const newAnswers = [...testAnswers];
                       newAnswers[testIndex] = i;
                       setTestAnswers(newAnswers);
+                      emitEvent('test_answered', { question: testIndex, answer: i });
                     }}
                     className={`p-5 rounded-xl border-2 text-left transition-all duration-300 ${
                       selected === i
@@ -1435,13 +1690,23 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                   </button>
                 ))}
               </div>
+
+              {/* Explanation after answer */}
+              {selected !== null && (
+                <div style={{ padding: '16px', borderRadius: '12px', background: q.options[selected]?.correct ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${q.options[selected]?.correct ? '#22c55e' : '#ef4444'}`, marginBottom: '16px' }}>
+                  <p style={{ fontSize: '12px', fontWeight: 700, color: q.options[selected]?.correct ? '#22c55e' : '#ef4444', marginBottom: '6px' }}>
+                    {q.options[selected]?.correct ? '✓ Correct!' : '✗ Not quite'}
+                  </p>
+                  <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: 1.5, margin: 0 }}>{q.explanation}</p>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-between gap-4 pt-4 border-t border-slate-800">
               <button
                 onClick={() => { if (testIndex > 0) setTestIndex(testIndex - 1); }}
                 disabled={testIndex === 0}
-                className={`px-6 py-3 rounded-xl font-bold transition-all ${
+                className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 ${
                   testIndex === 0 ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                 }`}
                 style={{ zIndex: 10, minHeight: '44px' }}
@@ -1453,12 +1718,12 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                 <button
                   onClick={() => { if (selected !== null) setTestIndex(testIndex + 1); }}
                   disabled={selected === null}
-                  className={`px-6 py-3 rounded-xl font-bold transition-all ${
+                  className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 ${
                     selected !== null
-                      ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white'
+                      ? 'text-white'
                       : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                   }`}
-                  style={{ zIndex: 10 }}
+                  style={{ zIndex: 10, ...(selected !== null ? { background: 'linear-gradient(to right, #f59e0b, #ea580c)' } : {}) }}
                 >
                   Next →
                 </button>
@@ -1474,12 +1739,12 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                     }
                   }}
                   disabled={!testAnswers.every(a => a !== null)}
-                  className={`px-6 py-3 rounded-xl font-bold transition-all ${
+                  className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 ${
                     testAnswers.every(a => a !== null)
-                      ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white'
+                      ? 'text-white'
                       : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                   }`}
-                  style={{ zIndex: 10 }}
+                  style={{ zIndex: 10, ...(testAnswers.every(a => a !== null) ? { background: 'linear-gradient(to right, #10b981, #059669)' } : {}) }}
                 >
                   Submit Test
                 </button>
@@ -1493,7 +1758,8 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     // MASTERY
     if (phase === 'mastery') {
       return (
-        <div className="relative flex flex-col items-center justify-center min-h-[80vh] px-6 text-center overflow-hidden">
+        <div className="relative flex flex-col items-center justify-center min-h-[80vh] px-6 text-center overflow-hidden"
+          style={{ minHeight: '100vh', paddingTop: '48px', paddingBottom: '100px' }}>
           {/* Confetti */}
           {[...Array(50)].map((_, i) => (
             <div
@@ -1509,7 +1775,8 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
             />
           ))}
 
-          <div className="w-28 h-28 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center mb-6 shadow-2xl shadow-amber-500/30 z-10" style={{ animation: 'float 3s ease-in-out infinite' }}>
+          <div className="w-28 h-28 rounded-full flex items-center justify-center mb-6 shadow-2xl shadow-amber-500/30 z-10"
+            style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)', animation: 'float 3s ease-in-out infinite' }}>
             <span className="text-5xl">🏆</span>
           </div>
 
@@ -1533,8 +1800,8 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
               emitEvent('mastery_achieved', { game: 'wave_speed_tension' });
               if (onComplete) onComplete();
             }}
-            className="px-10 py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-lg shadow-lg shadow-amber-500/30 z-10"
-            style={{ zIndex: 10 }}
+            className="px-10 py-4 rounded-xl text-white font-bold text-lg shadow-lg shadow-amber-500/30 z-10 transition-all duration-300"
+            style={{ zIndex: 10, background: 'linear-gradient(to right, #f59e0b, #ea580c)' }}
           >
             Complete Lesson 🎉
           </button>
@@ -1556,6 +1823,11 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     return null;
   };
 
+  // Navigation bar helpers
+  const currentPhaseIndex = phaseOrder.indexOf(phase);
+  const canGoBack = currentPhaseIndex > 0;
+  const canGoNext = currentPhaseIndex < phaseOrder.length - 1;
+
   return (
     <div className="flex flex-col bg-[#0a0f1a] text-white relative overflow-hidden" style={{ minHeight: '100dvh' }}>
       {/* Premium background gradient */}
@@ -1564,33 +1836,98 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-500/3 rounded-full blur-3xl" />
 
-      {/* Header */}
-      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }} className="bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+      {/* Header nav */}
+      <nav aria-label="phase navigation" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }} className="bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span style={{ color: '#e2e8f0' }} className="text-sm font-semibold tracking-wide">Wave Speed & Tension</span>
+          <span style={{ color: '#e2e8f0' }} className="text-sm font-semibold tracking-wide">Wave Speed &amp; Tension</span>
           <div className="flex items-center gap-1.5">
-            {phaseOrder.map((p) => (
+            {phaseOrder.map((p, idx) => (
               <button
                 key={p}
                 onClick={() => goToPhase(p)}
+                aria-label={`${phaseLabels[p]} phase - ${p === phase ? 'current' : phaseOrder.indexOf(phase) > idx ? 'completed' : 'upcoming'}`}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-amber-400 w-6 shadow-lg shadow-amber-400/30'
                     : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
                       ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                      : 'w-2 hover:bg-slate-600'
                 }`}
                 title={phaseLabels[p]}
-                style={{ zIndex: 10, minHeight: '44px', minWidth: '44px', cursor: 'pointer' }}
+                style={{
+                  zIndex: 10,
+                  minHeight: '44px',
+                  minWidth: '44px',
+                  cursor: 'pointer',
+                  backgroundColor: phase === p ? '#fbbf24' : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p) ? '#10b981' : 'rgba(148,163,184,0.7)'
+                }}
               />
             ))}
           </div>
           <span style={{ color: '#e2e8f0' }} className="text-sm font-medium">{phaseLabels[phase]}</span>
         </div>
+        {/* Progress bar */}
+        <div style={{ height: '3px', background: 'rgba(71,85,105,0.3)' }}>
+          <div style={{
+            height: '100%',
+            width: `${((currentPhaseIndex + 1) / phaseOrder.length) * 100}%`,
+            background: 'linear-gradient(to right, #f59e0b, #10b981)',
+            transition: 'width 0.4s ease'
+          }} />
+        </div>
       </nav>
 
       {/* Main content */}
       <div className="relative flex-1 flex flex-col" style={{ paddingTop: '64px', paddingBottom: '80px' }}>{renderPhase()}</div>
+
+      {/* Bottom navigation bar */}
+      <nav aria-label="game navigation" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, background: 'rgba(15,23,42,0.95)', backdropFilter: 'blur(12px)', borderTop: '1px solid rgba(30,41,59,1)', padding: '12px 24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '768px', margin: '0 auto' }}>
+          <button
+            onClick={() => { if (canGoBack) goToPhase(phaseOrder[currentPhaseIndex - 1]); }}
+            disabled={!canGoBack}
+            aria-label="Back"
+            style={{
+              padding: '10px 24px',
+              borderRadius: '10px',
+              fontWeight: 700,
+              fontSize: '14px',
+              cursor: canGoBack ? 'pointer' : 'not-allowed',
+              transition: 'all 0.2s ease',
+              background: canGoBack ? 'rgba(30,41,59,0.8)' : 'rgba(15,23,42,0.5)',
+              color: canGoBack ? '#e2e8f0' : '#475569',
+              border: '1px solid rgba(71,85,105,0.5)',
+              minHeight: '44px'
+            }}
+          >
+            ← Back
+          </button>
+
+          <span style={{ fontSize: '12px', color: 'rgba(148,163,184,0.7)', fontWeight: 600 }}>
+            {currentPhaseIndex + 1} / {phaseOrder.length}
+          </span>
+
+          <button
+            onClick={() => { if (canGoNext) goToPhase(phaseOrder[currentPhaseIndex + 1]); }}
+            disabled={!canGoNext}
+            aria-label="Next"
+            style={{
+              padding: '10px 24px',
+              borderRadius: '10px',
+              fontWeight: 700,
+              fontSize: '14px',
+              cursor: canGoNext ? 'pointer' : 'not-allowed',
+              transition: 'all 0.2s ease',
+              background: canGoNext ? 'linear-gradient(to right, #f59e0b, #ea580c)' : 'rgba(15,23,42,0.5)',
+              color: canGoNext ? '#fff' : '#475569',
+              border: 'none',
+              minHeight: '44px'
+            }}
+          >
+            Next →
+          </button>
+        </div>
+      </nav>
     </div>
   );
 };

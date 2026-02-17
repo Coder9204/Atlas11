@@ -462,9 +462,19 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
           opacity="0.15"
           strokeDasharray="6,3"
         />
-        {/* Interactive data point indicators */}
-        <circle cx={width / 2 - 20} cy={height - 290} r="8" fill={colors.accent} opacity="0.5" filter="url(#warpGlow)" />
-        <circle cx={width - 80} cy={height - 150} r="8" fill={colors.registerColor} opacity="0.4" filter="url(#warpGlow)" />
+        {/* Interactive data point - moves with register/occupancy values */}
+        <circle
+          cx={25 + ((registersPerThread - 16) / 112) * (width - 50)}
+          cy={(height - 70) - (occupancyData.occupancy / 100) * (height - 120)}
+          r="8"
+          fill={colors.accent}
+          opacity="0.8"
+          filter="url(#warpGlow)"
+          stroke="#ffffff"
+          strokeWidth="1.5"
+        />
+        {/* Reference baseline point */}
+        <circle cx={width - 80} cy={height - 150} r="6" fill={colors.registerColor} opacity="0.4" filter="url(#warpGlow)" />
 
         {/* Title */}
         <text x={width / 2} y={25} fill={colors.textPrimary} fontSize="14" fontWeight="600" textAnchor="middle">
@@ -614,9 +624,9 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
       twist_predict: 'experiment',
       twist_play: 'experiment',
       twist_review: 'experiment',
-      transfer: 'apply',
-      test: 'quiz',
-      mastery: 'transfer'
+      transfer: 'transfer',
+      test: 'knowledge test',
+      mastery: 'mastery'
     };
 
     return (
@@ -633,15 +643,28 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
             data-navigation-dot="true"
             style={{
               width: phase === p ? '24px' : '8px',
-              height: '8px',
+              minHeight: '44px',
+              padding: '0',
               borderRadius: '4px',
               border: 'none',
-              background: phaseOrder.indexOf(phase) >= i ? colors.accent : 'rgba(148,163,184,0.7)',
+              background: 'transparent',
               cursor: 'pointer',
               transition: 'all 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
             aria-label={dotLabels[p]}
-          />
+          >
+            <span style={{
+              display: 'block',
+              width: phase === p ? '24px' : '8px',
+              height: '8px',
+              borderRadius: '4px',
+              background: phaseOrder.indexOf(phase) >= i ? colors.accent : 'rgba(148,163,184,0.7)',
+              transition: 'all 0.3s ease',
+            }} />
+          </button>
         ))}
       </div>
     );
@@ -1122,7 +1145,7 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
               </div>
 
               {/* Resource bars */}
-              <ResourceBars />
+              {ResourceBars}
 
               {/* Stats display */}
               <div style={{
@@ -1575,7 +1598,7 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
                 />
               </div>
 
-              <ResourceBars />
+              {ResourceBars}
 
               {/* Stats */}
               <div style={{

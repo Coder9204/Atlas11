@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
 const realWorldApps = [
   {
@@ -76,16 +76,20 @@ const realWorldApps = [
 ];
 
 interface WagonWheelAliasingRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  gamePhase?: string;
+  phase?: string;
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
 
+const phaseOrder = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'] as const;
+type Phase = typeof phaseOrder[number];
+
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#e2e8f0', // Changed from #94a3b8 for better contrast
+  textMuted: '#94a3b8',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -99,14 +103,51 @@ const colors = {
   sample: '#ef4444',
 };
 
-const phaseOrder = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'] as const;
-
 const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
-  phase,
+  gamePhase,
+  phase: phaseProp,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Self-managing phase state
+  const resolveInitialPhase = (): Phase => {
+    const raw = gamePhase || phaseProp || 'hook';
+    return (phaseOrder as readonly string[]).includes(raw) ? (raw as Phase) : 'hook';
+  };
+
+  const [currentPhase, setCurrentPhase] = useState<Phase>(resolveInitialPhase);
+
+  // Sync with external prop changes
+  useEffect(() => {
+    const raw = gamePhase || phaseProp;
+    if (raw && (phaseOrder as readonly string[]).includes(raw)) {
+      setCurrentPhase(raw as Phase);
+    }
+  }, [gamePhase, phaseProp]);
+
+  const phase = currentPhase;
+
+  // Navigation
+  const navigateToPhase = useCallback((p: Phase) => {
+    setCurrentPhase(p);
+  }, []);
+
+  const goNext = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx < phaseOrder.length - 1) {
+      setCurrentPhase(phaseOrder[idx + 1]);
+    }
+    if (onPhaseComplete) onPhaseComplete();
+  }, [phase, onPhaseComplete]);
+
+  const goBack = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx > 0) {
+      setCurrentPhase(phaseOrder[idx - 1]);
+    }
+  }, [phase]);
+
   // Simulation state
   const [trueAngle, setTrueAngle] = useState(0);
   const [sampledAngles, setSampledAngles] = useState<number[]>([]);
@@ -127,42 +168,32 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
 
-  // Calculate apparent motion
-  const getApparentSpeed = useCallback(() => {
-    // Degrees per frame at true speed
+  // Calculate apparent motion - memoized for performance
+  const getApparentSpeed = useMemo(() => {
     const degreesPerFrame = (rotationSpeed * 360) / frameRate;
-    // Spoke spacing in degrees
     const spokeSpacing = 360 / numSpokes;
-    // Aliased movement per frame (modulo spoke spacing)
     let apparentPerFrame = degreesPerFrame % spokeSpacing;
-    // If more than half spoke spacing, it appears to go backward
     if (apparentPerFrame > spokeSpacing / 2) {
       apparentPerFrame = apparentPerFrame - spokeSpacing;
     }
-    // Convert back to apparent rotations per second
     return (apparentPerFrame * frameRate) / 360;
   }, [rotationSpeed, frameRate, numSpokes]);
 
   // Animation loop
   useEffect(() => {
     if (!isPlaying) return;
-
     const interval = setInterval(() => {
       setTime(prev => prev + 1 / 60);
       setTrueAngle(prev => (prev + rotationSpeed * 360 / 60) % 360);
-
-      // Sample at frame rate
       const frameInterval = 1 / frameRate;
       const currentFrame = Math.floor(time / frameInterval);
       const sampledAngle = (currentFrame * rotationSpeed * 360 / frameRate) % 360;
-
       setSampledAngles(prev => {
         const newAngles = [...prev, sampledAngle];
         if (newAngles.length > 20) newAngles.shift();
         return newAngles;
       });
     }, 1000 / 60);
-
     return () => clearInterval(interval);
   }, [isPlaying, rotationSpeed, frameRate, time]);
 
@@ -173,29 +204,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
     setIsPlaying(false);
   };
 
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
+  const currentPhaseIndex = phaseOrder.indexOf(phase);
 
   const predictions = [
     { id: 'forward', label: 'The wheel always appears to spin forward' },
@@ -240,270 +249,230 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
 
   const testQuestions = [
     {
-      question: 'What causes the wagon-wheel effect in video?',
+      question: 'A) A car wheel with 8 spokes spins at 5 rotations/second filmed at 24fps. Temporal aliasing causes:',
+      scenario: 'You are filming a car driving past at highway speed. The wheel has 8 evenly-spaced spokes.',
       options: [
-        { text: 'The wheel actually reverses direction', correct: false },
-        { text: 'Temporal aliasing from discrete frame sampling', correct: true },
-        { text: 'An optical illusion in the human eye', correct: false },
-        { text: 'Motion blur averaging', correct: false },
+        { text: 'A) The wheel actually reverses direction', correct: false },
+        { text: 'B) Temporal aliasing from discrete frame sampling', correct: true },
+        { text: 'C) An optical illusion in the human eye', correct: false },
+        { text: 'D) Motion blur averaging the spokes', correct: false },
       ],
     },
     {
-      question: 'A wheel with 8 spokes spinning at 8 rotations/second filmed at 8 fps will appear:',
+      question: 'B) A wheel with 8 spokes spinning at 8 rotations/second filmed at 8 fps will appear:',
+      scenario: 'You set up a camera at exactly 8 frames per second. A wagon wheel with 8 spokes spins at exactly 8 rotations per second.',
       options: [
-        { text: 'Spinning very fast forward', correct: false },
-        { text: 'Spinning backward', correct: false },
-        { text: 'Stationary (frozen)', correct: true },
-        { text: 'Blurred', correct: false },
+        { text: 'A) Spinning very fast forward', correct: false },
+        { text: 'B) Spinning backward rapidly', correct: false },
+        { text: 'C) Stationary or frozen', correct: true },
+        { text: 'D) Blurred beyond recognition', correct: false },
       ],
     },
     {
-      question: 'If a wheel appears to spin backward on video, the true rotation is:',
+      question: 'C) If a wheel appears to spin backward on video, the true rotation is:',
+      scenario: 'Watching a car commercial, you notice the wheels appear to spin backward while the car moves forward.',
       options: [
-        { text: 'Actually backward', correct: false },
-        { text: 'Forward, but slightly less than a spoke spacing per frame', correct: false },
-        { text: 'Forward, but slightly more than a spoke spacing per frame', correct: true },
-        { text: 'Zero - the wheel is stopped', correct: false },
+        { text: 'A) Actually backward', correct: false },
+        { text: 'B) Forward, but slightly less than a spoke spacing per frame', correct: false },
+        { text: 'C) Forward, but slightly more than a spoke spacing per frame', correct: true },
+        { text: 'D) Zero — the wheel is stopped', correct: false },
       ],
     },
     {
-      question: 'The Nyquist theorem states that to avoid aliasing, you must sample at:',
+      question: 'D) The Nyquist theorem states that to avoid aliasing, sampling rate must be:',
+      scenario: 'A signal processing engineer is designing a camera system to capture wheel motion without aliasing artifacts.',
       options: [
-        { text: 'The same frequency as the signal', correct: false },
-        { text: 'At least twice the signal frequency', correct: true },
-        { text: 'Half the signal frequency', correct: false },
-        { text: 'Any frequency works', correct: false },
+        { text: 'A) The same frequency as the signal', correct: false },
+        { text: 'B) At least twice the signal frequency', correct: true },
+        { text: 'C) Half the signal frequency', correct: false },
+        { text: 'D) Any frequency works equally well', correct: false },
       ],
     },
     {
-      question: 'Increasing frame rate while wheel speed stays constant will:',
+      question: 'E) Increasing frame rate while wheel speed stays constant will:',
+      scenario: 'A cinematographer switches from 24fps to 60fps while filming the same spinning wheel.',
       options: [
-        { text: 'Always make the wheel appear faster', correct: false },
-        { text: 'Change the apparent motion, possibly reducing aliasing', correct: true },
-        { text: 'Have no effect on apparent motion', correct: false },
-        { text: 'Always reverse the apparent direction', correct: false },
+        { text: 'A) Always make the wheel appear faster', correct: false },
+        { text: 'B) Change the apparent motion, possibly reducing aliasing', correct: true },
+        { text: 'C) Have no effect on apparent motion', correct: false },
+        { text: 'D) Always reverse the apparent direction', correct: false },
       ],
     },
     {
-      question: 'The wagon wheel effect can also occur in real life under:',
+      question: 'F) The wagon wheel effect can also occur in real life under:',
+      scenario: 'You notice a fan blade appearing to spin slowly under certain lighting conditions in an office.',
       options: [
-        { text: 'Any lighting conditions', correct: false },
-        { text: 'Flickering light sources (strobes, some LEDs)', correct: true },
-        { text: 'Only in complete darkness', correct: false },
-        { text: 'Only in bright sunlight', correct: false },
+        { text: 'A) Any lighting conditions whatsoever', correct: false },
+        { text: 'B) Flickering light sources like strobes or some LEDs', correct: true },
+        { text: 'C) Only in complete darkness', correct: false },
+        { text: 'D) Only in bright direct sunlight', correct: false },
       ],
     },
     {
-      question: 'When filming a car wheel at highway speed, why might it appear nearly stationary?',
+      question: 'G) When filming a car wheel at highway speed, why might it appear nearly stationary?',
+      scenario: 'You film a sports car driving at 120 km/h. Its 18-inch wheel appears nearly frozen in your 24fps video.',
       options: [
-        { text: 'The car is going slow', correct: false },
-        { text: 'Motion blur averages everything out', correct: false },
-        { text: 'Frame rate nearly matches spoke passage rate', correct: true },
-        { text: 'The camera is broken', correct: false },
+        { text: 'A) The car is actually going slow', correct: false },
+        { text: 'B) Motion blur averages everything out', correct: false },
+        { text: 'C) Frame rate nearly matches spoke passage rate', correct: true },
+        { text: 'D) The camera is broken', correct: false },
       ],
     },
     {
-      question: 'Aliasing in the wagon wheel effect is similar to:',
+      question: 'H) Aliasing in the wagon wheel effect is most similar to:',
+      scenario: 'A physicist is explaining wagon wheel aliasing to students using an analogy from acoustics.',
       options: [
-        { text: 'Color mixing in painting', correct: false },
-        { text: 'Beat frequencies in audio', correct: true },
-        { text: 'Lens distortion', correct: false },
-        { text: 'Depth of field effects', correct: false },
+        { text: 'A) Color mixing in painting', correct: false },
+        { text: 'B) Beat frequencies in audio signals', correct: true },
+        { text: 'C) Lens distortion effects', correct: false },
+        { text: 'D) Depth of field blur', correct: false },
       ],
     },
     {
-      question: 'To show true wheel motion without aliasing at 30 fps, the wheel should spin at most:',
+      question: 'I) To show true wheel motion without aliasing at 30fps, the wheel should spin at most:',
+      scenario: 'A safety engineer needs to configure a 30fps industrial camera to reliably detect if a wheel is spinning.',
       options: [
-        { text: '30 rotations per second', correct: false },
-        { text: '15 rotations per second (Nyquist limit)', correct: true },
-        { text: '60 rotations per second', correct: false },
-        { text: 'Speed doesn\'t matter', correct: false },
+        { text: 'A) 30 rotations per second', correct: false },
+        { text: 'B) 15 rotations per second (Nyquist limit)', correct: true },
+        { text: 'C) 60 rotations per second', correct: false },
+        { text: 'D) Speed doesn\'t matter for detection', correct: false },
       ],
     },
     {
-      question: 'In old Western movies, stagecoach wheels often appeared to spin backward because:',
+      question: 'J) In old Western movies, stagecoach wheels often appeared to spin backward because:',
+      scenario: 'A film historian is studying why stagecoach wheels in 1950s Western movies often appear to spin the wrong direction.',
       options: [
-        { text: 'They filmed in reverse', correct: false },
-        { text: 'The horses were trained that way', correct: false },
-        { text: 'Low frame rates caused aliasing with wheel rotation', correct: true },
-        { text: 'It was a special effect', correct: false },
+        { text: 'A) They filmed scenes in reverse', correct: false },
+        { text: 'B) The horses were trained for backward wheel spin', correct: false },
+        { text: 'C) Low frame rates caused aliasing with wheel rotation', correct: true },
+        { text: 'D) It was an intentional special effect', correct: false },
       ],
     },
   ];
 
-  const handleTestAnswer = (questionIndex: number, optionIndex: number) => {
+  const handleTestAnswer = useCallback((questionIndex: number, optionIndex: number) => {
     const newAnswers = [...testAnswers];
     newAnswers[questionIndex] = optionIndex;
     setTestAnswers(newAnswers);
-  };
+  }, [testAnswers]);
 
-  const submitTest = () => {
+  const submitTest = useCallback(() => {
     let score = 0;
     testQuestions.forEach((q, i) => {
-      if (testAnswers[i] !== null && q.options[testAnswers[i]].correct) {
+      if (testAnswers[i] !== null && q.options[testAnswers[i]!].correct) {
         score++;
       }
     });
     setTestScore(score);
     setTestSubmitted(true);
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
-  };
+    else if (score < 8 && onIncorrectAnswer) onIncorrectAnswer();
+  }, [testAnswers, onCorrectAnswer, onIncorrectAnswer]);
+
+  // Derived values (memoized)
+  const apparentSpeed = getApparentSpeed;
+  const apparentAngle = useMemo(() => {
+    return sampledAngles.length > 0 ? sampledAngles[sampledAngles.length - 1] : 0;
+  }, [sampledAngles]);
+
+  const motionDirection = useMemo(() => {
+    return apparentSpeed > 0.1 ? 'forward' : apparentSpeed < -0.1 ? 'backward' : 'stopped';
+  }, [apparentSpeed]);
+
+  // Interactive point Y position for speed comparison chart
+  const interactivePointY = useMemo(() => {
+    const chartHeight = 110;
+    if (apparentSpeed >= 0) {
+      return chartHeight - (Math.abs(apparentSpeed) / 15) * chartHeight;
+    }
+    return chartHeight;
+  }, [apparentSpeed]);
 
   const renderVisualization = (interactive: boolean) => {
     const width = 700;
-    const height = 580;
-    const wheelRadius = 70;
-    const apparentSpeed = getApparentSpeed();
-
-    // Calculate apparent angle based on sampled frames
-    const apparentAngle = sampledAngles.length > 0 ? sampledAngles[sampledAngles.length - 1] : 0;
-
-    // Determine motion direction for coloring
-    const motionDirection = apparentSpeed > 0.1 ? 'forward' : apparentSpeed < -0.1 ? 'backward' : 'stopped';
+    const height = 480;
+    const wheelRadius = 65;
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', maxWidth: '700px', margin: '0 auto' }}>
         <svg
           width="100%"
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: colors.bgDark, borderRadius: '12px', maxWidth: '700px' }}
+          style={{ background: colors.bgDark, borderRadius: '12px', maxWidth: '700px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}
         >
           <defs>
-            {/* Premium wheel rim gradient - metallic finish */}
             <linearGradient id="wwaWheelRim" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#64748b" />
-              <stop offset="25%" stopColor="#94a3b8" />
               <stop offset="50%" stopColor="#cbd5e1" />
-              <stop offset="75%" stopColor="#94a3b8" />
               <stop offset="100%" stopColor="#475569" />
             </linearGradient>
-
-            {/* Inner wheel hub gradient */}
             <radialGradient id="wwaWheelHub" cx="30%" cy="30%" r="70%">
               <stop offset="0%" stopColor="#cbd5e1" />
-              <stop offset="40%" stopColor="#64748b" />
-              <stop offset="70%" stopColor="#475569" />
+              <stop offset="60%" stopColor="#475569" />
               <stop offset="100%" stopColor="#1e293b" />
             </radialGradient>
-
-            {/* Sampled wheel rim - red tinted */}
             <linearGradient id="wwaSampledRim" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#991b1b" />
-              <stop offset="25%" stopColor="#dc2626" />
               <stop offset="50%" stopColor="#f87171" />
-              <stop offset="75%" stopColor="#dc2626" />
               <stop offset="100%" stopColor="#7f1d1d" />
             </linearGradient>
-
-            {/* Sampled wheel hub */}
             <radialGradient id="wwaSampledHub" cx="30%" cy="30%" r="70%">
               <stop offset="0%" stopColor="#fca5a5" />
-              <stop offset="40%" stopColor="#ef4444" />
-              <stop offset="70%" stopColor="#b91c1c" />
+              <stop offset="60%" stopColor="#b91c1c" />
               <stop offset="100%" stopColor="#450a0a" />
             </radialGradient>
-
-            {/* Spoke gradient - silver steel */}
             <linearGradient id="wwaSpokeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#334155" />
-              <stop offset="30%" stopColor="#64748b" />
               <stop offset="50%" stopColor="#94a3b8" />
-              <stop offset="70%" stopColor="#64748b" />
               <stop offset="100%" stopColor="#334155" />
             </linearGradient>
-
-            {/* Camera body gradient */}
             <linearGradient id="wwaCameraBody" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#374151" />
-              <stop offset="20%" stopColor="#1f2937" />
               <stop offset="50%" stopColor="#111827" />
-              <stop offset="80%" stopColor="#1f2937" />
               <stop offset="100%" stopColor="#374151" />
             </linearGradient>
-
-            {/* Camera lens gradient */}
             <radialGradient id="wwaCameraLens" cx="30%" cy="30%" r="70%">
               <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.9" />
-              <stop offset="30%" stopColor="#3b82f6" stopOpacity="0.7" />
               <stop offset="60%" stopColor="#1e40af" stopOpacity="0.8" />
               <stop offset="100%" stopColor="#1e3a8a" stopOpacity="1" />
             </radialGradient>
-
-            {/* Frame capture flash */}
-            <radialGradient id="wwaFrameFlash" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#fef08a" stopOpacity="1" />
-              <stop offset="40%" stopColor="#facc15" stopOpacity="0.6" />
-              <stop offset="70%" stopColor="#eab308" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#ca8a04" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Direction arrow gradient - forward (green) */}
             <linearGradient id="wwaArrowForward" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#059669" />
-              <stop offset="50%" stopColor="#10b981" />
               <stop offset="100%" stopColor="#34d399" />
             </linearGradient>
-
-            {/* Direction arrow gradient - backward (red) */}
             <linearGradient id="wwaArrowBackward" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#dc2626" />
-              <stop offset="50%" stopColor="#ef4444" />
               <stop offset="100%" stopColor="#f87171" />
             </linearGradient>
-
-            {/* Stopped indicator gradient */}
             <linearGradient id="wwaStoppedGradient" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#d97706" />
-              <stop offset="50%" stopColor="#f59e0b" />
               <stop offset="100%" stopColor="#fbbf24" />
             </linearGradient>
-
-            {/* Background gradient */}
             <linearGradient id="wwaLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#030712" />
-              <stop offset="50%" stopColor="#0a0f1a" />
-              <stop offset="100%" stopColor="#030712" />
+              <stop offset="100%" stopColor="#0a0f1a" />
             </linearGradient>
-
-            {/* Tire rubber gradient */}
             <linearGradient id="wwaTireRubber" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#1c1917" />
-              <stop offset="30%" stopColor="#292524" />
-              <stop offset="50%" stopColor="#1c1917" />
-              <stop offset="70%" stopColor="#292524" />
+              <stop offset="50%" stopColor="#292524" />
               <stop offset="100%" stopColor="#0c0a09" />
             </linearGradient>
-
-            {/* Wheel glow filter - true motion */}
             <filter id="wwaWheelGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Sampled wheel glow filter */}
-            <filter id="wwaSampledGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="3" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-
-            {/* Camera flash glow */}
-            <filter id="wwaFlashGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="6" result="blur" />
+            <filter id="wwaSampledGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-
-            {/* Text glow filter */}
             <filter id="wwaTextGlow" x="-20%" y="-20%" width="140%" height="140%">
               <feGaussianBlur stdDeviation="2" result="blur" />
               <feMerge>
@@ -511,8 +480,6 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-
-            {/* Arrow glow filter */}
             <filter id="wwaArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="2" result="blur" />
               <feMerge>
@@ -520,14 +487,6 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-
-            {/* Sampling line pattern */}
-            <pattern id="wwaSamplingPattern" width="8" height="8" patternUnits="userSpaceOnUse">
-              <rect width="8" height="8" fill="none" />
-              <line x1="0" y1="8" x2="8" y2="0" stroke="#fbbf24" strokeWidth="1" strokeOpacity="0.5" />
-            </pattern>
-
-            {/* Grid pattern for background */}
             <pattern id="wwaGridPattern" width="30" height="30" patternUnits="userSpaceOnUse">
               <rect width="30" height="30" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.4" />
             </pattern>
@@ -537,296 +496,220 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
           <rect width={width} height={height} fill="url(#wwaLabBg)" />
           <rect width={width} height={height} fill="url(#wwaGridPattern)" />
 
-          {/* Title area */}
-          <text x={width / 2} y={22} textAnchor="middle" fill={colors.accent} fontSize={15} fontWeight="bold" filter="url(#wwaTextGlow)">
-            Wagon Wheel Aliasing
+          {/* Title */}
+          <text x={width / 2} y={22} textAnchor="middle" fill={colors.accent} fontSize={14} fontWeight="bold" filter="url(#wwaTextGlow)">
+            Wagon Wheel Aliasing — Temporal Sampling Visualization
           </text>
 
           {/* Formula display */}
-          <g transform={`translate(${width / 2}, 40)`}>
-            <rect x={-210} y={0} width={420} height={24} rx={6} fill="rgba(30, 41, 59, 0.9)" stroke="#475569" strokeWidth={1} />
-            <text x={0} y={15} textAnchor="middle" fill={colors.textPrimary} fontSize={9} fontFamily="monospace">
-              apparent = (true_speed / frame_rate) mod spoke_spacing
+          <g transform={`translate(${width / 2}, 38)`}>
+            <rect x={-195} y={0} width={390} height={22} rx={5} fill="rgba(30, 41, 59, 0.9)" stroke="#475569" strokeWidth={1} />
+            <text x={0} y={15} textAnchor="middle" fill={colors.textPrimary} fontSize={11} fontFamily="monospace">
+              apparent_speed = (true_speed × 360 / fps) mod spoke_spacing
             </text>
           </g>
 
           {/* === TRUE WHEEL SECTION (Left) === */}
-          <g transform={`translate(150, 155)`}>
-            {/* Section label */}
-            <text x={0} y={-wheelRadius - 20} textAnchor="middle" fill={colors.textPrimary} fontSize={11} fontWeight="bold">
+          <g transform="translate(148, 175)">
+            <text x={0} y={-wheelRadius - 16} textAnchor="middle" fill={colors.textPrimary} fontSize={12} fontWeight="bold">
               TRUE WHEEL
             </text>
+            <text x={0} y={-wheelRadius - 2} textAnchor="middle" fill={colors.textMuted} fontSize={11}>
+              Actual rotation
+            </text>
 
-            {/* Outer tire */}
-            <circle cx={0} cy={0} r={wheelRadius + 12} fill="url(#wwaTireRubber)" filter="url(#wwaWheelGlow)" />
+            <circle cx={0} cy={0} r={wheelRadius + 10} fill="url(#wwaTireRubber)" filter="url(#wwaWheelGlow)" />
+            <circle cx={0} cy={0} r={wheelRadius} fill="none" stroke="url(#wwaWheelRim)" strokeWidth={7} />
+            <circle cx={0} cy={0} r={wheelRadius - 10} fill="none" stroke="#475569" strokeWidth={1.5} />
+            <circle cx={0} cy={0} r={18} fill="url(#wwaWheelHub)" />
+            <circle cx={0} cy={0} r={7} fill="#1e293b" />
+            <circle cx={0} cy={0} r={3} fill="#64748b" />
 
-            {/* Wheel rim */}
-            <circle cx={0} cy={0} r={wheelRadius} fill="none" stroke="url(#wwaWheelRim)" strokeWidth={8} />
-
-            {/* Inner rim detail */}
-            <circle cx={0} cy={0} r={wheelRadius - 12} fill="none" stroke="#475569" strokeWidth={2} />
-
-            {/* Hub */}
-            <circle cx={0} cy={0} r={20} fill="url(#wwaWheelHub)" />
-            <circle cx={0} cy={0} r={8} fill="#1e293b" />
-            <circle cx={0} cy={0} r={4} fill="#64748b" />
-
-            {/* Spokes with gradient */}
             {Array.from({ length: numSpokes }).map((_, i) => {
               const angle = (trueAngle + i * 360 / numSpokes) * Math.PI / 180;
-              const x2 = (wheelRadius - 14) * Math.cos(angle);
-              const y2 = (wheelRadius - 14) * Math.sin(angle);
-              const x1 = 18 * Math.cos(angle);
-              const y1 = 18 * Math.sin(angle);
+              const x2 = (wheelRadius - 12) * Math.cos(angle);
+              const y2 = (wheelRadius - 12) * Math.sin(angle);
+              const x1 = 16 * Math.cos(angle);
+              const y1 = 16 * Math.sin(angle);
               return (
-                <line
-                  key={i}
-                  x1={x1}
-                  y1={y1}
-                  x2={x2}
-                  y2={y2}
-                  stroke="url(#wwaSpokeGradient)"
-                  strokeWidth={5}
-                  strokeLinecap="round"
-                />
+                <line key={i} x1={x1} y1={y1} x2={x2} y2={y2}
+                  stroke="url(#wwaSpokeGradient)" strokeWidth={4} strokeLinecap="round" />
               );
             })}
 
-            {/* Rotation indicator arrow (curved) */}
             <g transform={`rotate(${trueAngle})`}>
-              <path
-                d={`M ${wheelRadius + 25} -10 A ${wheelRadius + 25} ${wheelRadius + 25} 0 0 1 ${wheelRadius + 25} 10`}
-                fill="none"
-                stroke="url(#wwaArrowForward)"
-                strokeWidth={3}
-                strokeLinecap="round"
-                filter="url(#wwaArrowGlow)"
-              />
-              <polygon
-                points={`${wheelRadius + 25},15 ${wheelRadius + 20},5 ${wheelRadius + 30},5`}
-                fill="url(#wwaArrowForward)"
-              />
+              <path d={`M ${wheelRadius + 20} -8 A ${wheelRadius + 20} ${wheelRadius + 20} 0 0 1 ${wheelRadius + 20} 8`}
+                fill="none" stroke="url(#wwaArrowForward)" strokeWidth={2.5} strokeLinecap="round" filter="url(#wwaArrowGlow)" />
+              <polygon points={`${wheelRadius + 20},12 ${wheelRadius + 16},4 ${wheelRadius + 24},4`} fill="url(#wwaArrowForward)" />
             </g>
 
-            {/* Speed display */}
-            <rect x={-45} y={wheelRadius + 25} width={90} height={22} rx={6} fill="rgba(16, 185, 129, 0.2)" stroke={colors.success} strokeWidth={1} />
-            <text x={0} y={wheelRadius + 40} textAnchor="middle" fill={colors.success} fontSize={11} fontWeight="bold">
+            <rect x={-40} y={wheelRadius + 18} width={80} height={20} rx={5} fill="rgba(16, 185, 129, 0.2)" stroke={colors.success} strokeWidth={1} />
+            <text x={0} y={wheelRadius + 31} textAnchor="middle" fill={colors.success} fontSize={12} fontWeight="bold">
               {rotationSpeed.toFixed(1)} r/s
             </text>
 
-            {/* Interactive marker - reference spoke */}
+            {/* Interactive marker - reference spoke end */}
             <circle
-              cx={(wheelRadius - 14) * Math.cos(0)}
-              cy={(wheelRadius - 14) * Math.sin(0)}
+              cx={(wheelRadius - 12) * Math.cos(trueAngle * Math.PI / 180)}
+              cy={(wheelRadius - 12) * Math.sin(trueAngle * Math.PI / 180)}
               r={8}
               fill={colors.success}
-              opacity={0.6}
+              stroke="white"
+              strokeWidth={2}
+              opacity={0.85}
               filter="url(#wwaWheelGlow)"
             />
           </g>
 
           {/* === CAMERA / SAMPLING VISUALIZATION (Center) === */}
           <g transform={`translate(${width / 2}, 155)`}>
-            {/* Camera body */}
-            <rect x={-25} y={-60} width={50} height={35} rx={6} fill="url(#wwaCameraBody)" stroke="#4b5563" strokeWidth={1.5} />
-            <rect x={-20} y={-55} width={40} height={25} rx={4} fill="#0f172a" />
+            <rect x={-22} y={-52} width={44} height={32} rx={5} fill="url(#wwaCameraBody)" stroke="#4b5563" strokeWidth={1.5} />
+            <rect x={-17} y={-47} width={34} height={22} rx={3} fill="#0f172a" />
+            <circle cx={0} cy={-35} r={10} fill="url(#wwaCameraLens)" stroke="#1e40af" strokeWidth={1.5} />
+            <circle cx={-3} cy={-38} r={2.5} fill="rgba(255,255,255,0.3)" />
 
-            {/* Camera lens */}
-            <circle cx={0} cy={-42} r={12} fill="url(#wwaCameraLens)" stroke="#1e40af" strokeWidth={2} />
-            <circle cx={-4} cy={-46} r={3} fill="rgba(255,255,255,0.3)" />
-
-            {/* Recording indicator */}
-            <circle cx={18} cy={-55} r={4} fill={isPlaying ? "#ef4444" : "#6b7280"}>
-              {isPlaying && (
-                <animate attributeName="opacity" values="1;0.3;1" dur="1s" repeatCount="indefinite" />
-              )}
+            <circle cx={15} cy={-48} r={3.5} fill={isPlaying ? "#ef4444" : "#6b7280"}>
+              {isPlaying && <animate attributeName="opacity" values="1;0.3;1" dur="1s" repeatCount="indefinite" />}
             </circle>
 
-            {/* Frame rate display panel */}
-            <rect x={-48} y={30} width={96} height={36} rx={6} fill="rgba(30, 41, 59, 0.9)" stroke="#475569" strokeWidth={1} />
-            <text x={0} y={46} textAnchor="middle" fill={colors.accent} fontSize={9} fontWeight="bold">
-              FRAME
+            <text x={0} y={5} textAnchor="middle" fill={colors.accent} fontSize={11} fontWeight="bold">CAMERA</text>
+
+            <rect x={-42} y={14} width={84} height={32} rx={5} fill="rgba(30, 41, 59, 0.9)" stroke="#475569" strokeWidth={1} />
+            <text x={0} y={28} textAnchor="middle" fill={colors.accent} fontSize={11} fontWeight="bold">
+              FRAME RATE
             </text>
-            <text x={0} y={60} textAnchor="middle" fill={colors.textPrimary} fontSize={14} fontWeight="bold">
+            <text x={0} y={42} textAnchor="middle" fill={colors.textPrimary} fontSize={13} fontWeight="bold">
               {frameRate} fps
             </text>
 
-            {/* Sampling timeline visualization */}
-            <g transform="translate(0, 100)">
-              <rect x={-58} y={0} width={116} height={32} rx={4} fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth={1} />
-              <text x={0} y={11} textAnchor="middle" fill={colors.textMuted} fontSize={8}>
-                SAMPLES
+            <g transform="translate(0, 60)">
+              <rect x={-50} y={0} width={100} height={28} rx={4} fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth={1} />
+              <text x={0} y={12} textAnchor="middle" fill={colors.textMuted} fontSize={11}>
+                SAMPLING RATE
               </text>
-              {/* Sampling ticks */}
-              {Array.from({ length: Math.min(frameRate / 4, 12) }).map((_, i) => (
-                <rect
-                  key={i}
-                  x={-54 + i * (108 / Math.min(frameRate / 4, 12))}
-                  y={16}
-                  width={3}
-                  height={10}
-                  fill={colors.accent}
-                  opacity={0.7 + (i % 2) * 0.3}
-                />
-              ))}
+              <text x={0} y={23} textAnchor="middle" fill={colors.textSecondary} fontSize={11}>
+                {frameRate} samples/sec
+              </text>
             </g>
-
-            {/* Camera flash effect when playing */}
-            {isPlaying && (
-              <circle cx={0} cy={-42} r={20} fill="url(#wwaFrameFlash)" filter="url(#wwaFlashGlow)" opacity={0.6}>
-                <animate attributeName="opacity" values="0.6;0.1;0.6" dur={`${1000 / frameRate}ms`} repeatCount="indefinite" />
-              </circle>
-            )}
           </g>
 
           {/* === SAMPLED/APPARENT WHEEL (Right) === */}
-          <g transform={`translate(550, 155)`}>
-            {/* Section label */}
-            <text x={0} y={-wheelRadius - 20} textAnchor="middle" fill={colors.textPrimary} fontSize={11} fontWeight="bold">
+          <g transform="translate(552, 175)">
+            <text x={0} y={-wheelRadius - 16} textAnchor="middle" fill={colors.textPrimary} fontSize={12} fontWeight="bold">
               SAMPLED WHEEL
             </text>
+            <text x={0} y={-wheelRadius - 2} textAnchor="middle" fill={colors.textMuted} fontSize={11}>
+              Camera perception
+            </text>
 
-            {/* Outer tire - red tinted */}
-            <circle cx={0} cy={0} r={wheelRadius + 12} fill="url(#wwaTireRubber)" filter="url(#wwaSampledGlow)" />
+            <circle cx={0} cy={0} r={wheelRadius + 10} fill="url(#wwaTireRubber)" filter="url(#wwaSampledGlow)" />
+            <circle cx={0} cy={0} r={wheelRadius} fill="none" stroke="url(#wwaSampledRim)" strokeWidth={7} />
+            <circle cx={0} cy={0} r={wheelRadius - 10} fill="none" stroke="#991b1b" strokeWidth={1.5} />
+            <circle cx={0} cy={0} r={18} fill="url(#wwaSampledHub)" />
+            <circle cx={0} cy={0} r={7} fill="#450a0a" />
+            <circle cx={0} cy={0} r={3} fill="#ef4444" />
 
-            {/* Wheel rim - sampled version */}
-            <circle cx={0} cy={0} r={wheelRadius} fill="none" stroke="url(#wwaSampledRim)" strokeWidth={8} />
-
-            {/* Inner rim detail */}
-            <circle cx={0} cy={0} r={wheelRadius - 12} fill="none" stroke="#991b1b" strokeWidth={2} />
-
-            {/* Hub - sampled */}
-            <circle cx={0} cy={0} r={20} fill="url(#wwaSampledHub)" />
-            <circle cx={0} cy={0} r={8} fill="#450a0a" />
-            <circle cx={0} cy={0} r={4} fill="#ef4444" />
-
-            {/* Spokes with gradient */}
             {Array.from({ length: numSpokes }).map((_, i) => {
               const angle = (apparentAngle + i * 360 / numSpokes) * Math.PI / 180;
-              const x2 = (wheelRadius - 14) * Math.cos(angle);
-              const y2 = (wheelRadius - 14) * Math.sin(angle);
-              const x1 = 18 * Math.cos(angle);
-              const y1 = 18 * Math.sin(angle);
+              const x2 = (wheelRadius - 12) * Math.cos(angle);
+              const y2 = (wheelRadius - 12) * Math.sin(angle);
+              const x1 = 16 * Math.cos(angle);
+              const y1 = 16 * Math.sin(angle);
               return (
-                <line
-                  key={i}
-                  x1={x1}
-                  y1={y1}
-                  x2={x2}
-                  y2={y2}
-                  stroke="url(#wwaSpokeGradient)"
-                  strokeWidth={5}
-                  strokeLinecap="round"
-                />
+                <line key={i} x1={x1} y1={y1} x2={x2} y2={y2}
+                  stroke="url(#wwaSpokeGradient)" strokeWidth={4} strokeLinecap="round" />
               );
             })}
 
-            {/* Apparent rotation indicator - changes based on direction */}
             {motionDirection === 'forward' && (
               <g transform={`rotate(${apparentAngle})`} filter="url(#wwaArrowGlow)">
-                <path
-                  d={`M ${wheelRadius + 25} -10 A ${wheelRadius + 25} ${wheelRadius + 25} 0 0 1 ${wheelRadius + 25} 10`}
-                  fill="none"
-                  stroke="url(#wwaArrowForward)"
-                  strokeWidth={3}
-                  strokeLinecap="round"
-                />
-                <polygon
-                  points={`${wheelRadius + 25},15 ${wheelRadius + 20},5 ${wheelRadius + 30},5`}
-                  fill="url(#wwaArrowForward)"
-                />
+                <path d={`M ${wheelRadius + 20} -8 A ${wheelRadius + 20} ${wheelRadius + 20} 0 0 1 ${wheelRadius + 20} 8`}
+                  fill="none" stroke="url(#wwaArrowForward)" strokeWidth={2.5} strokeLinecap="round" />
+                <polygon points={`${wheelRadius + 20},12 ${wheelRadius + 16},4 ${wheelRadius + 24},4`} fill="url(#wwaArrowForward)" />
               </g>
             )}
             {motionDirection === 'backward' && (
               <g transform={`rotate(${apparentAngle})`} filter="url(#wwaArrowGlow)">
-                <path
-                  d={`M ${wheelRadius + 25} 10 A ${wheelRadius + 25} ${wheelRadius + 25} 0 0 0 ${wheelRadius + 25} -10`}
-                  fill="none"
-                  stroke="url(#wwaArrowBackward)"
-                  strokeWidth={3}
-                  strokeLinecap="round"
-                />
-                <polygon
-                  points={`${wheelRadius + 25},-15 ${wheelRadius + 20},-5 ${wheelRadius + 30},-5`}
-                  fill="url(#wwaArrowBackward)"
-                />
+                <path d={`M ${wheelRadius + 20} 8 A ${wheelRadius + 20} ${wheelRadius + 20} 0 0 0 ${wheelRadius + 20} -8`}
+                  fill="none" stroke="url(#wwaArrowBackward)" strokeWidth={2.5} strokeLinecap="round" />
+                <polygon points={`${wheelRadius + 20},-12 ${wheelRadius + 16},-4 ${wheelRadius + 24},-4`} fill="url(#wwaArrowBackward)" />
               </g>
             )}
             {motionDirection === 'stopped' && (
               <g>
-                <rect x={wheelRadius + 15} y={-12} width={20} height={24} rx={4} fill="url(#wwaStoppedGradient)" filter="url(#wwaArrowGlow)" />
-                <rect x={wheelRadius + 20} y={-6} width={4} height={12} fill="#0f172a" />
-                <rect x={wheelRadius + 26} y={-6} width={4} height={12} fill="#0f172a" />
+                <rect x={wheelRadius + 12} y={-10} width={18} height={20} rx={3} fill="url(#wwaStoppedGradient)" filter="url(#wwaArrowGlow)" />
+                <rect x={wheelRadius + 15} y={-5} width={3.5} height={10} fill="#0f172a" />
+                <rect x={wheelRadius + 21} y={-5} width={3.5} height={10} fill="#0f172a" />
               </g>
             )}
 
-            {/* Apparent speed display */}
-            <rect
-              x={-50}
-              y={wheelRadius + 25}
-              width={100}
-              height={22}
-              rx={6}
+            <rect x={-44} y={wheelRadius + 18} width={88} height={20} rx={5}
               fill={motionDirection === 'forward' ? 'rgba(16, 185, 129, 0.2)' : motionDirection === 'backward' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)'}
               stroke={motionDirection === 'forward' ? colors.success : motionDirection === 'backward' ? colors.error : colors.warning}
-              strokeWidth={1}
-            />
-            <text
-              x={0}
-              y={wheelRadius + 40}
-              textAnchor="middle"
+              strokeWidth={1} />
+            <text x={0} y={wheelRadius + 31} textAnchor="middle"
               fill={motionDirection === 'forward' ? colors.success : motionDirection === 'backward' ? colors.error : colors.warning}
-              fontSize={11}
-              fontWeight="bold"
-            >
-              {motionDirection === 'stopped' ? 'STOP' : `${Math.abs(apparentSpeed).toFixed(1)} r/s${motionDirection === 'backward' ? '←' : ''}`}
+              fontSize={12} fontWeight="bold">
+              {motionDirection === 'stopped' ? 'STOPPED' : `${Math.abs(apparentSpeed).toFixed(1)} r/s${motionDirection === 'backward' ? ' ←' : ''}`}
             </text>
 
-            {/* Interactive marker - sampled spoke */}
+            {/* Interactive marker that moves with slider changes */}
             <circle
-              cx={(wheelRadius - 14) * Math.cos((apparentAngle * Math.PI) / 180)}
-              cy={(wheelRadius - 14) * Math.sin((apparentAngle * Math.PI) / 180)}
-              r={8}
+              cx={(wheelRadius - 12) * Math.cos((apparentAngle * Math.PI) / 180)}
+              cy={(wheelRadius - 12) * Math.sin((apparentAngle * Math.PI) / 180)}
+              r={9}
               fill={colors.error}
-              opacity={0.8}
+              stroke="white"
+              strokeWidth={2}
+              opacity={0.9}
               filter="url(#wwaSampledGlow)"
             />
           </g>
 
           {/* === SPEED COMPARISON CHART === */}
-          <g transform={`translate(80, 360)`}>
-            <text x={120} y={-12} textAnchor="middle" fill={colors.textMuted} fontSize={10} fontWeight="bold">Speed Comparison</text>
+          <g transform="translate(88, 350)">
+            <text x={120} y={-14} textAnchor="middle" fill={colors.textSecondary} fontSize={12} fontWeight="bold">
+              Speed Comparison Chart
+            </text>
+
+            {/* Grid lines with strokeDasharray */}
+            <line x1={0} y1={0} x2={240} y2={0} stroke={colors.textMuted} strokeWidth={0.5} strokeDasharray="4 4" opacity="0.3" />
+            <line x1={0} y1={55} x2={240} y2={55} stroke={colors.textMuted} strokeWidth={0.5} strokeDasharray="4 4" opacity="0.3" />
+            <line x1={0} y1={110} x2={240} y2={110} stroke={colors.textMuted} strokeWidth={0.5} strokeDasharray="4 4" opacity="0.3" />
 
             {/* Y-axis */}
             <line x1={0} y1={0} x2={0} y2={110} stroke={colors.textMuted} strokeWidth={1} />
-            <text x={-10} y={5} textAnchor="end" fill={colors.textMuted} fontSize={8}>15</text>
-            <text x={-10} y={60} textAnchor="end" fill={colors.textMuted} fontSize={8}>7.5</text>
-            <text x={-10} y={115} textAnchor="end" fill={colors.textMuted} fontSize={8}>0</text>
-            <text x={-30} y={60} textAnchor="middle" fill={colors.textMuted} fontSize={8} transform={`rotate(-90, -30, 60)`}>r/s</text>
+            <text x={-8} y={4} textAnchor="end" fill={colors.textMuted} fontSize={11}>15</text>
+            <text x={-8} y={58} textAnchor="end" fill={colors.textMuted} fontSize={11}>7.5</text>
+            <text x={-8} y={113} textAnchor="end" fill={colors.textMuted} fontSize={11}>0</text>
+            <text x={-22} y={60} textAnchor="middle" fill={colors.textMuted} fontSize={11} transform="rotate(-90, -22, 60)">r/s</text>
 
             {/* X-axis */}
             <line x1={0} y1={110} x2={240} y2={110} stroke={colors.textMuted} strokeWidth={1} />
 
             {/* True speed bar */}
-            <rect x={30} y={110 - (rotationSpeed / 15) * 110} width={70} height={(rotationSpeed / 15) * 110} fill={colors.success} opacity={0.7} />
-            <text x={65} y={125} textAnchor="middle" fill={colors.textPrimary} fontSize={9}>True</text>
+            <rect x={30} y={110 - (rotationSpeed / 15) * 110} width={70} height={(rotationSpeed / 15) * 110}
+              fill={colors.success} opacity={0.75} />
+            <text x={65} y={128} textAnchor="middle" fill={colors.textPrimary} fontSize={11}>True</text>
 
-            {/* Apparent speed bar (can be negative) */}
+            {/* Apparent speed bar */}
             {apparentSpeed >= 0 ? (
-              <rect x={140} y={110 - (Math.abs(apparentSpeed) / 15) * 110} width={70} height={(Math.abs(apparentSpeed) / 15) * 110} fill={colors.error} opacity={0.7} />
+              <rect x={140} y={110 - (Math.abs(apparentSpeed) / 15) * 110} width={70}
+                height={(Math.abs(apparentSpeed) / 15) * 110} fill={colors.error} opacity={0.75} />
             ) : (
               <>
-                <rect x={140} y={110} width={70} height={Math.min((Math.abs(apparentSpeed) / 15) * 110, 110)} fill={colors.warning} opacity={0.7} />
-                <text x={175} y={133} textAnchor="middle" fill={colors.warning} fontSize={7.5}>backward</text>
+                <rect x={140} y={110} width={70} height={Math.min((Math.abs(apparentSpeed) / 15) * 110, 110)}
+                  fill={colors.warning} opacity={0.75} />
+                <text x={175} y={128} textAnchor="middle" fill={colors.warning} fontSize={11}>backward</text>
               </>
             )}
-            <text x={175} y={125} textAnchor="middle" fill={colors.textPrimary} fontSize={9}>Sampled</text>
+            <text x={175} y={128} textAnchor="middle" fill={colors.textPrimary} fontSize={11}>Sampled</text>
 
-            {/* Interactive marker on apparent speed bar */}
+            {/* Interactive marker on apparent speed bar - moves visibly with slider */}
             <circle
               cx={175}
-              cy={apparentSpeed >= 0 ? 110 - (Math.abs(apparentSpeed) / 15) * 110 : 110}
-              r={6}
+              cy={interactivePointY}
+              r={7}
               fill={colors.accent}
               stroke="white"
               strokeWidth={2}
@@ -835,55 +718,53 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
           </g>
 
           {/* === BOTTOM INFO PANEL === */}
-          <g transform={`translate(480, 500)`}>
-            <rect x={-180} y={0} width={360} height={65} rx={8} fill="rgba(30, 41, 59, 0.95)" stroke="#475569" strokeWidth={1} />
+          <g transform="translate(475, 380)">
+            <rect x={-150} y={0} width={310} height={80} rx={8} fill="rgba(30, 41, 59, 0.95)" stroke="#475569" strokeWidth={1} />
 
-            {/* Left info: Spoke spacing */}
-            <g transform="translate(-110, 15)">
-              <text x={0} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={8.5}>SPOKE</text>
-              <text x={0} y={11} textAnchor="middle" fill={colors.textMuted} fontSize={8.5}>SPACING</text>
-              <text x={0} y={30} textAnchor="middle" fill={colors.textSecondary} fontSize={12} fontWeight="bold">{(360 / numSpokes).toFixed(0)}°</text>
+            {/* Spoke spacing */}
+            <g transform="translate(-90, 12)">
+              <text x={0} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontWeight="bold">SPOKE</text>
+              <text x={0} y={14} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontWeight="bold">SPACING</text>
+              <text x={0} y={35} textAnchor="middle" fill={colors.textSecondary} fontSize={14} fontWeight="bold">{(360 / numSpokes).toFixed(0)}°</text>
             </g>
 
-            {/* Center info: Movement per frame */}
-            <g transform="translate(0, 15)">
-              <text x={0} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={8.5}>MOVE</text>
-              <text x={0} y={11} textAnchor="middle" fill={colors.textMuted} fontSize={8.5}>/FRAME</text>
-              <text x={0} y={30} textAnchor="middle" fill={colors.accent} fontSize={12} fontWeight="bold">{((rotationSpeed * 360) / frameRate).toFixed(1)}°</text>
+            {/* Degrees per frame */}
+            <g transform="translate(10, 12)">
+              <text x={0} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontWeight="bold">DEG/FRAME</text>
+              <text x={0} y={14} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontWeight="bold">SHIFT</text>
+              <text x={0} y={35} textAnchor="middle" fill={colors.accent} fontSize={14} fontWeight="bold">{((rotationSpeed * 360) / frameRate).toFixed(1)}°</text>
             </g>
 
-            {/* Right info: Aliased movement */}
-            <g transform="translate(110, 15)">
-              <text x={0} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={8.5}>ALIAS</text>
-              <text x={0} y={11} textAnchor="middle" fill={colors.textMuted} fontSize={8.5}>SHIFT</text>
-              <text
-                x={0}
-                y={30}
-                textAnchor="middle"
+            {/* Alias shift */}
+            <g transform="translate(115, 12)">
+              <text x={0} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontWeight="bold">ALIAS</text>
+              <text x={0} y={14} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontWeight="bold">RESULT</text>
+              <text x={0} y={35} textAnchor="middle"
                 fill={motionDirection === 'forward' ? colors.success : motionDirection === 'backward' ? colors.error : colors.warning}
-                fontSize={12}
-                fontWeight="bold"
-              >
+                fontSize={14} fontWeight="bold">
                 {(() => {
                   const degreesPerFrame = (rotationSpeed * 360) / frameRate;
                   const spokeSpacing = 360 / numSpokes;
                   let apparentPerFrame = degreesPerFrame % spokeSpacing;
-                  if (apparentPerFrame > spokeSpacing / 2) {
-                    apparentPerFrame = apparentPerFrame - spokeSpacing;
-                  }
+                  if (apparentPerFrame > spokeSpacing / 2) apparentPerFrame = apparentPerFrame - spokeSpacing;
                   return `${apparentPerFrame >= 0 ? '+' : ''}${apparentPerFrame.toFixed(1)}°`;
                 })()}
               </text>
             </g>
+
+            {/* Direction label at bottom of panel */}
+            <text x={10} y={70} textAnchor="middle" fill={motionDirection === 'stopped' ? colors.warning : motionDirection === 'backward' ? colors.error : colors.success} fontSize={11} fontWeight="bold">
+              {motionDirection === 'stopped' ? '⏸ Appears frozen' : motionDirection === 'backward' ? '← Backward (aliased!)' : '→ Forward'}
+            </text>
           </g>
         </svg>
 
         {interactive && (
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
             <button
               onClick={() => setIsPlaying(!isPlaying)}
               style={{
-                padding: '14px 28px',
+                padding: '12px 24px',
                 borderRadius: '10px',
                 border: 'none',
                 background: isPlaying
@@ -892,30 +773,30 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '15px',
-                boxShadow: isPlaying
-                  ? '0 4px 20px rgba(239, 68, 68, 0.4)'
-                  : '0 4px 20px rgba(16, 185, 129, 0.4)',
+                fontSize: '14px',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                boxShadow: isPlaying ? '0 4px 16px rgba(239, 68, 68, 0.4)' : '0 4px 16px rgba(16, 185, 129, 0.4)',
                 transition: 'all 0.2s ease',
               }}
             >
-              {isPlaying ? 'Pause' : 'Play'}
+              {isPlaying ? '⏸ Pause Animation' : '▶ Play Animation'}
             </button>
             <button
               onClick={resetSimulation}
               style={{
-                padding: '14px 28px',
+                padding: '12px 24px',
                 borderRadius: '10px',
                 border: `2px solid ${colors.accent}`,
                 background: 'rgba(245, 158, 11, 0.1)',
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '15px',
+                fontSize: '14px',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
                 transition: 'all 0.2s ease',
               }}
             >
-              Reset
+              ↺ Reset
             </button>
           </div>
         )}
@@ -924,10 +805,10 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
   };
 
   const renderControls = () => (
-    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '700px', margin: '0 auto' }}>
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          True Rotation Speed: {rotationSpeed.toFixed(1)} rotations/sec
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+          True Rotation Speed: <span style={{ color: colors.accent }}>{rotationSpeed.toFixed(1)}</span> rotations/sec
         </label>
         <input
           type="range"
@@ -936,13 +817,16 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
           step="0.5"
           value={rotationSpeed}
           onChange={(e) => setRotationSpeed(parseFloat(e.target.value))}
-          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6', cursor: 'pointer' }}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px', marginTop: '2px' }}>
+          <span>1 r/s</span><span>8 r/s (spoke rate)</span><span>15 r/s</span>
+        </div>
       </div>
 
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Camera Frame Rate: {frameRate} fps
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+          Camera Frame Rate: <span style={{ color: colors.accent }}>{frameRate}</span> fps
         </label>
         <input
           type="range"
@@ -951,8 +835,11 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
           step="1"
           value={frameRate}
           onChange={(e) => setFrameRate(parseInt(e.target.value))}
-          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6', cursor: 'pointer' }}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px', marginTop: '2px' }}>
+          <span>10 fps</span><span>24 fps (cinema)</span><span>60 fps</span>
+        </div>
       </div>
 
       <div style={{
@@ -961,17 +848,15 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
         borderRadius: '8px',
         borderLeft: `3px solid ${colors.accent}`,
       }}>
-        <div style={{ color: colors.textPrimary, fontSize: '13px', marginBottom: '4px' }}>
-          Apparent speed: {getApparentSpeed().toFixed(2)} rot/s
+        <div style={{ color: colors.textPrimary, fontSize: '14px', marginBottom: '4px', fontWeight: '600', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+          Apparent speed: <span style={{ color: colors.accent }}>{apparentSpeed.toFixed(2)}</span> rot/s
         </div>
-        <div style={{ color: colors.textSecondary, fontSize: '12px' }}>
-          {getApparentSpeed() > 0 ? '→ Forward motion' : getApparentSpeed() < 0 ? '← Backward motion (aliased!)' : '⏸ Appears frozen'}
+        <div style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.5' }}>
+          {apparentSpeed > 0 ? '→ Forward motion (aliased to slower forward)' : apparentSpeed < 0 ? '← Backward motion (aliased backwards!)' : '⏸ Appears frozen (perfect aliasing!)'}
         </div>
       </div>
     </div>
   );
-
-  const currentPhaseIndex = phaseOrder.indexOf(phase as typeof phaseOrder[number]);
 
   const renderNavBar = () => (
     <nav
@@ -981,59 +866,56 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
         top: 0,
         left: 0,
         right: 0,
-        padding: '12px 24px',
+        padding: '10px 20px',
         background: colors.bgDark,
         borderBottom: `1px solid rgba(255,255,255,0.1)`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         zIndex: 1001,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
       }}
     >
       <button
-        onClick={() => {
-          if (currentPhaseIndex > 0) {
-            // Navigate back - this would need parent handling
-          }
-        }}
+        onClick={goBack}
         aria-label="Back"
+        disabled={currentPhaseIndex === 0}
         style={{
           padding: '8px 16px',
-          minHeight: '44px',
+          minHeight: '36px',
           borderRadius: '8px',
           border: `1px solid ${colors.textMuted}`,
           background: 'transparent',
-          color: currentPhaseIndex === 0 ? 'rgba(255,255,255,0.3)' : colors.textPrimary,
+          color: currentPhaseIndex === 0 ? 'rgba(148,163,184,0.4)' : colors.textPrimary,
           cursor: currentPhaseIndex === 0 ? 'not-allowed' : 'pointer',
           fontSize: '14px',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          transition: 'all 0.2s ease',
         }}
-        disabled={currentPhaseIndex === 0}
       >
-        Back
+        ← Back
       </button>
 
-      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
         {phaseOrder.map((p, i) => {
-          const getPhaseLabel = (phase: string) => {
-            if (phase === 'hook') return 'explore';
-            if (phase === 'predict') return 'predict';
-            if (phase === 'play') return 'experiment';
-            if (phase === 'review') return 'review';
-            if (phase === 'twist_predict') return 'predict';
-            if (phase === 'twist_play') return 'experiment';
-            if (phase === 'twist_review') return 'review';
-            if (phase === 'transfer') return 'apply';
-            if (phase === 'test') return 'quiz';
-            if (phase === 'mastery') return 'mastery';
-            return phase;
+          const getPhaseLabel = (ph: string) => {
+            if (ph === 'hook') return 'explore';
+            if (ph === 'predict') return 'predict';
+            if (ph === 'play') return 'experiment';
+            if (ph === 'review') return 'review';
+            if (ph === 'twist_predict') return 'predict twist';
+            if (ph === 'twist_play') return 'experiment twist';
+            if (ph === 'twist_review') return 'review twist';
+            if (ph === 'transfer') return 'apply';
+            if (ph === 'test') return 'quiz';
+            if (ph === 'mastery') return 'transfer mastery';
+            return ph;
           };
           return (
             <button
               key={p}
               aria-label={getPhaseLabel(p)}
-              onClick={() => {
-                // Navigation dot click - would need parent handling
-              }}
+              onClick={() => navigateToPhase(p)}
               style={{
                 width: '10px',
                 height: '10px',
@@ -1043,6 +925,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
                 background: i === currentPhaseIndex ? colors.accent : i < currentPhaseIndex ? colors.success : 'rgba(148,163,184,0.7)',
                 cursor: 'pointer',
                 padding: 0,
+                transition: 'all 0.2s ease',
               }}
             />
           );
@@ -1050,21 +933,24 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
       </div>
 
       <button
-        onClick={onPhaseComplete}
+        onClick={goNext}
         aria-label="Next"
         style={{
           padding: '8px 16px',
-          minHeight: '44px',
+          minHeight: '36px',
           borderRadius: '8px',
           border: 'none',
-          background: colors.accent,
+          background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
           color: 'white',
           cursor: 'pointer',
           fontSize: '14px',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
           fontWeight: 'bold',
+          transition: 'all 0.2s ease',
+          boxShadow: '0 2px 8px rgba(245,158,11,0.4)',
         }}
       >
-        Next
+        Next →
       </button>
     </nav>
   );
@@ -1078,10 +964,10 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
       aria-label={`Progress: phase ${currentPhaseIndex + 1} of ${phaseOrder.length}`}
       style={{
         position: 'fixed',
-        top: '68px',
+        top: '52px',
         left: 0,
         right: 0,
-        height: '4px',
+        height: '3px',
         background: 'rgba(255,255,255,0.1)',
         zIndex: 1000,
       }}
@@ -1090,87 +976,139 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
         style={{
           width: `${((currentPhaseIndex + 1) / phaseOrder.length) * 100}%`,
           height: '100%',
-          background: colors.accent,
+          background: 'linear-gradient(90deg, #f59e0b, #10b981)',
           transition: 'width 0.3s ease',
         }}
       />
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: `1px solid rgba(255,255,255,0.1)`,
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1001,
-    }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          minHeight: '44px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-        }}
-      >
-        {buttonText}
-      </button>
-    </div>
-  );
+  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => {
+    // In test phase, the bottom bar Next should be disabled
+    const isTestPhase = phase === 'test' && !testSubmitted;
+    const effectiveDisabled = isTestPhase ? true : (disabled && !canProceed);
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: '14px 24px',
+        background: colors.bgDark,
+        borderTop: `1px solid rgba(255,255,255,0.1)`,
+        display: 'flex',
+        justifyContent: 'flex-end',
+        zIndex: 1001,
+        boxShadow: '0 -2px 8px rgba(0,0,0,0.3)',
+      }}>
+        <button
+          onClick={effectiveDisabled ? undefined : goNext}
+          disabled={effectiveDisabled}
+          style={{
+            padding: '12px 32px',
+            minHeight: '44px',
+            borderRadius: '8px',
+            border: 'none',
+            background: canProceed && !effectiveDisabled
+              ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+              : 'rgba(255,255,255,0.1)',
+            color: canProceed && !effectiveDisabled ? 'white' : 'rgba(148,163,184,0.7)',
+            fontWeight: 'bold',
+            cursor: effectiveDisabled ? 'not-allowed' : 'pointer',
+            fontSize: '16px',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            opacity: effectiveDisabled ? 0.5 : 1,
+            transition: 'all 0.2s ease',
+            boxShadow: canProceed && !effectiveDisabled ? '0 4px 16px rgba(245,158,11,0.3)' : 'none',
+          }}
+        >
+          {buttonText}
+        </button>
+      </div>
+    );
+  };
+
+  // Common page wrapper
+  const pageStyle: React.CSSProperties = {
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+    background: colors.bgPrimary,
+    paddingTop: '56px',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+  };
+
+  const scrollStyle: React.CSSProperties = {
+    flex: 1,
+    overflowY: 'auto',
+    paddingBottom: '100px',
+  };
+
+  const maxWidthStyle: React.CSSProperties = {
+    maxWidth: '800px',
+    margin: '0 auto',
+    width: '100%',
+    padding: '0 16px',
+  };
 
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, paddingTop: '48px' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+      <div style={pageStyle}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={scrollStyle}>
+          <div style={{ ...maxWidthStyle, padding: '24px 16px', textAlign: 'center' }}>
+            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px', fontWeight: '800', lineHeight: '1.3', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
               🎬 The Backward Wheel
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '16px', lineHeight: '1.6', fontWeight: '400' }}>
               Can motion look reversed even if it isn't?
+            </p>
+            <p style={{ color: colors.textMuted, fontSize: '14px', marginBottom: '24px', lineHeight: '1.6' }}>
+              Explore how cameras sample time and why the wagon-wheel effect demonstrates temporal aliasing — a fundamental concept in signal processing, film, and engineering.
             </p>
           </div>
 
           {renderVisualization(true)}
 
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{
-              background: colors.bgCard,
-              padding: '20px',
-              borderRadius: '12px',
-              marginBottom: '16px',
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+          <div style={{ ...maxWidthStyle, padding: '16px' }}>
+            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: '1.7', margin: 0, fontWeight: '400' }}>
                 Watch any car commercial or Western movie: sometimes the wheels seem to spin
                 backward, slow down, or even freeze while the car moves forward!
               </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
-                This is the wagon-wheel effect - a consequence of how cameras sample time.
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px', lineHeight: '1.6', margin: '12px 0 0 0' }}>
+                This is the <strong style={{ color: colors.accent }}>wagon-wheel effect</strong> — a consequence of how cameras sample continuous motion in discrete frames.
               </p>
             </div>
 
-            <div style={{
-              background: 'rgba(245, 158, 11, 0.2)',
-              padding: '16px',
-              borderRadius: '8px',
-              borderLeft: `3px solid ${colors.accent}`,
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                💡 Adjust the rotation speed and watch what the "camera" sees!
+            <div style={{ background: 'rgba(245, 158, 11, 0.15)', padding: '16px', borderRadius: '8px', borderLeft: `3px solid ${colors.accent}` }}>
+              <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0, lineHeight: '1.6' }}>
+                💡 <strong>How to explore:</strong> Adjust the rotation speed and frame rate sliders above to see how the camera perceives motion differently from reality!
               </p>
+            </div>
+
+            <div style={{ marginTop: '24px', textAlign: 'center' }}>
+              <button
+                onClick={goNext}
+                style={{
+                  padding: '16px 40px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '18px',
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                  boxShadow: '0 4px 20px rgba(245, 158, 11, 0.4)',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Start Discovery →
+              </button>
             </div>
           </div>
         </div>
@@ -1182,26 +1120,21 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, paddingTop: '48px' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={pageStyle}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={scrollStyle}>
           {renderVisualization(false)}
+          <div style={{ ...maxWidthStyle, padding: '16px' }}>
+            <div style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px', marginBottom: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontSize: '16px', fontWeight: '700', lineHeight: '1.4' }}>📋 What You're Looking At:</h3>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6', margin: 0 }}>
+                Left: the <strong style={{ color: colors.success }}>true wheel motion</strong> (continuous). Right: what a <strong style={{ color: colors.error }}>camera captures</strong> by taking discrete snapshots at a fixed frame rate. The wheel has 8 spokes.
+              </p>
+            </div>
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>📋 What You're Looking At:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              Left: the true wheel motion (continuous). Right: what a camera captures
-              by taking snapshots at a fixed frame rate. The wheel has 8 spokes.
-            </p>
-          </div>
-
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              🤔 When you film a fast-spinning wheel, what might you see?
+            <h3 style={{ color: colors.textPrimary, marginBottom: '12px', fontSize: '16px', fontWeight: '700', lineHeight: '1.4' }}>
+              🤔 Predict what you'll observe when filming a fast-spinning wheel:
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {predictions.map((p) => (
@@ -1211,12 +1144,16 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
                   style={{
                     padding: '16px',
                     borderRadius: '8px',
-                    border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                    border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.15)',
+                    background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'rgba(30,41,59,0.5)',
                     color: colors.textPrimary,
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                    lineHeight: '1.5',
+                    transition: 'all 0.15s ease',
+                    boxShadow: prediction === p.id ? '0 2px 8px rgba(245,158,11,0.2)' : 'none',
                   }}
                 >
                   {p.label}
@@ -1233,52 +1170,55 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, paddingTop: '48px' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Temporal Aliasing</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Adjust speed and frame rate to see backward, frozen, and forward motion
+      <div style={pageStyle}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={scrollStyle}>
+          <div style={{ ...maxWidthStyle, padding: '16px', textAlign: 'center' }}>
+            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontSize: '22px', fontWeight: '700', lineHeight: '1.4', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+              Explore Temporal Aliasing
+            </h2>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6', margin: 0 }}>
+              This visualization shows how discrete sampling causes apparent motion to differ from true motion.
+              Adjust the speed and frame rate to observe backward, frozen, and forward aliasing effects.
             </p>
           </div>
 
           {renderVisualization(true)}
           {renderControls()}
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>🔬 Try These Experiments:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Set speed to exactly match spoke rate ÷ fps → frozen!</li>
-              <li>Slightly faster → slow backward motion</li>
-              <li>Slightly slower → slow forward motion</li>
-              <li>Change frame rate - aliasing changes!</li>
-            </ul>
-          </div>
+          <div style={{ ...maxWidthStyle, padding: '16px' }}>
+            <div style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px', marginBottom: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <h4 style={{ color: colors.accent, marginBottom: '8px', fontSize: '15px', fontWeight: '700', lineHeight: '1.4' }}>🔬 Try These Experiments:</h4>
+              <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.8', paddingLeft: '20px', margin: 0 }}>
+                <li>Set speed to <strong style={{ color: colors.accent }}>exactly match spoke rate ÷ fps</strong> → appears frozen!</li>
+                <li><strong>Slightly faster</strong> → slow backward motion (aliased!)</li>
+                <li><strong>Slightly slower</strong> → slow forward motion</li>
+                <li>Change frame rate — aliasing changes completely!</li>
+              </ul>
+            </div>
 
-          {/* Before/After Comparison */}
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h4 style={{ color: colors.accent, marginBottom: '12px' }}>📊 Before vs After Comparison</h4>
+            <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '16px', borderRadius: '12px', marginBottom: '16px', border: `1px solid rgba(59,130,246,0.3)` }}>
+              <h4 style={{ color: '#3b82f6', marginBottom: '8px', fontSize: '15px', fontWeight: '700', lineHeight: '1.4' }}>📐 The Formula:</h4>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6', margin: 0 }}>
+                <strong style={{ color: colors.textPrimary, fontFamily: 'monospace' }}>apparent_speed = (true_speed × 360° / fps) mod spoke_spacing</strong>
+              </p>
+              <p style={{ color: colors.textMuted, fontSize: '13px', lineHeight: '1.6', margin: '8px 0 0 0' }}>
+                This equation calculates how much each spoke appears to move per frame, modulo the angular spacing between spokes. When this value exceeds half a spoke spacing, motion appears reversed. This is important in film production, industrial safety, and signal processing engineering.
+              </p>
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', border: `2px solid ${colors.success}` }}>
-                <div style={{ color: colors.success, fontWeight: 'bold', marginBottom: '6px' }}>✓ True Motion</div>
-                <div style={{ color: colors.textSecondary, fontSize: '13px' }}>
+                <div style={{ color: colors.success, fontWeight: 'bold', marginBottom: '6px', fontSize: '14px' }}>✓ True Motion</div>
+                <div style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.5' }}>
                   Continuous rotation at {rotationSpeed.toFixed(1)} r/s
                 </div>
               </div>
               <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '12px', borderRadius: '8px', border: `2px solid ${colors.error}` }}>
-                <div style={{ color: colors.error, fontWeight: 'bold', marginBottom: '6px' }}>✗ Sampled Motion</div>
-                <div style={{ color: colors.textSecondary, fontSize: '13px' }}>
-                  Appears as {Math.abs(getApparentSpeed()).toFixed(1)} r/s {getApparentSpeed() < 0 ? 'backward' : getApparentSpeed() > 0.1 ? 'forward' : 'frozen'}
+                <div style={{ color: colors.error, fontWeight: 'bold', marginBottom: '6px', fontSize: '14px' }}>✗ Sampled Motion</div>
+                <div style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.5' }}>
+                  Appears as {Math.abs(apparentSpeed).toFixed(1)} r/s {apparentSpeed < 0 ? 'backward' : apparentSpeed > 0.1 ? 'forward' : 'frozen'}
                 </div>
               </div>
             </div>
@@ -1294,82 +1234,85 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
     const wasCorrect = prediction === 'backward';
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, paddingTop: '48px' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? '✓ Correct!' : '✗ Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              The wheel can appear to spin backward, stop, or spin forward at the wrong speed!
-            </p>
-          </div>
-
-          {/* Visual diagram showing aliasing concept */}
-          <div style={{ display: 'flex', justifyContent: 'center', margin: '16px' }}>
-            <svg width="100%" height="300" viewBox="0 0 600 300" preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgDark, borderRadius: '12px', maxWidth: '600px' }}>
-              <defs>
-                <marker id="arrowhead-review" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-                  <polygon points="0 0, 10 3, 0 6" fill={colors.accent} />
-                </marker>
-              </defs>
-              <text x={300} y={25} textAnchor="middle" fill={colors.accent} fontSize={14} fontWeight="bold">Aliasing Visualization</text>
-
-              {/* Time axis */}
-              <line x1={50} y1={150} x2={550} y2={150} stroke={colors.textMuted} strokeWidth={2} markerEnd="url(#arrowhead-review)" />
-              <text x={560} y={155} fill={colors.textMuted} fontSize={12}>time</text>
-
-              {/* Continuous motion wave */}
-              <path d="M 50 150 Q 90 100, 130 150 T 210 150 T 290 150 T 370 150 T 450 150 T 530 150"
-                    fill="none" stroke={colors.success} strokeWidth={2} strokeDasharray="none" />
-              <text x={50} y={90} fill={colors.success} fontSize={11}>True continuous motion</text>
-
-              {/* Sample points */}
-              {[130, 210, 290, 370, 450].map((x, i) => (
-                <circle key={i} cx={x} cy={150} r={5} fill={colors.error} stroke={colors.error} strokeWidth={2} />
-              ))}
-              <text x={300} y={180} textAnchor="middle" fill={colors.error} fontSize={11}>Camera samples (discrete)</text>
-
-              {/* Apparent backward motion */}
-              <path d="M 130 150 L 210 145 L 290 140 L 370 135 L 450 130"
-                    fill="none" stroke={colors.warning} strokeWidth={2} strokeDasharray="5,5" />
-              <text x={300} y={210} textAnchor="middle" fill={colors.warning} fontSize={11}>Apparent motion (aliased)</text>
-
-              {/* Frame markers */}
-              {[130, 210, 290, 370, 450].map((x, i) => (
-                <line key={i} x1={x} y1={155} x2={x} y2={165} stroke={colors.textMuted} strokeWidth={1} />
-              ))}
-            </svg>
-          </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>🎓 The Physics of Aliasing</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Discrete Sampling:</strong> Cameras don't
-                see continuous motion - they take snapshots at fixed intervals. If a spoke moves almost
-                exactly one spoke-spacing between frames, it looks like a tiny motion (possibly backward).
+      <div style={pageStyle}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={scrollStyle}>
+          <div style={{ ...maxWidthStyle, padding: '16px' }}>
+            <div style={{
+              background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              padding: '20px',
+              borderRadius: '12px',
+              borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+              marginBottom: '16px',
+            }}>
+              <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px', fontSize: '18px', fontWeight: '700', lineHeight: '1.4' }}>
+                {wasCorrect ? '✓ Correct! You observed the aliasing effect.' : '✗ Not Quite — Here\'s What You Observed!'}
+              </h3>
+              <p style={{ color: colors.textPrimary, margin: 0, lineHeight: '1.6', fontSize: '14px' }}>
+                As you saw in the experiment, the wheel can appear to spin backward, stop, or spin forward at the wrong speed — all due to temporal aliasing.
               </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Nyquist Limit:</strong> To accurately
-                capture motion, you need to sample at least twice as fast as the fastest frequency.
-                Violating this creates aliasing - false apparent frequencies.
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>Spoke Ambiguity:</strong> Because spokes
-                are identical, the camera can't tell if a spoke moved forward 340° or backward 20°!
-              </p>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+              <svg width="100%" height="280" viewBox="0 0 600 280" preserveAspectRatio="xMidYMid meet"
+                style={{ background: colors.bgDark, borderRadius: '12px', maxWidth: '600px', boxShadow: '0 4px 16px rgba(0,0,0,0.3)' }}>
+                <defs>
+                  <marker id="arrowhead-review" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <polygon points="0 0, 10 3, 0 6" fill={colors.accent} />
+                  </marker>
+                  <linearGradient id="reviewBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#030712" />
+                    <stop offset="100%" stopColor="#0a0f1a" />
+                  </linearGradient>
+                </defs>
+                <rect width="600" height="280" fill="url(#reviewBg)" />
+
+                <text x={300} y={25} textAnchor="middle" fill={colors.accent} fontSize={14} fontWeight="bold">Aliasing Visualization — Time vs. Apparent Position</text>
+
+                <line x1={50} y1={150} x2={540} y2={150} stroke={colors.textMuted} strokeWidth={1.5} markerEnd="url(#arrowhead-review)" />
+                <text x={555} y={154} fill={colors.textMuted} fontSize={11}>time</text>
+
+                <path d="M 50 150 Q 90 105, 130 150 T 210 150 T 290 150 T 370 150 T 450 150 T 530 150"
+                  fill="none" stroke={colors.success} strokeWidth={2} />
+                <text x={52} y={92} fill={colors.success} fontSize={12} fontWeight="bold">True continuous motion</text>
+
+                {[130, 210, 290, 370, 450].map((x, i) => (
+                  <circle key={i} cx={x} cy={150} r={5} fill={colors.error} />
+                ))}
+                <text x={295} y={172} textAnchor="middle" fill={colors.error} fontSize={11}>Camera samples (discrete frames)</text>
+
+                <path d="M 130 150 L 210 145 L 290 140 L 370 135 L 450 130"
+                  fill="none" stroke={colors.warning} strokeWidth={2} strokeDasharray="5,5" />
+                <text x={295} y={215} textAnchor="middle" fill={colors.warning} fontSize={12} fontWeight="bold">Apparent motion (aliased — appears backward!)</text>
+
+                <text x={300} y={255} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontStyle="italic">
+                  Same rotation → Different perceived motion due to discrete sampling
+                </text>
+              </svg>
+            </div>
+
+            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <h3 style={{ color: colors.accent, marginBottom: '12px', fontSize: '17px', fontWeight: '700', lineHeight: '1.4' }}>🎓 The Physics: Why Aliasing Happens</h3>
+              <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7' }}>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Discrete Sampling:</strong> Cameras don't
+                  see continuous motion — they take snapshots at fixed intervals. As you observed in the experiment, if a spoke moves almost
+                  exactly one spoke-spacing between frames, it looks like a tiny motion (possibly backward).
+                </p>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>The Formula:</strong> apparent_speed = (speed × 360°/fps) <strong>mod</strong> (360°/spokes). When the result exceeds half a spoke spacing, the direction is perceived as reversed. This relationship × = aliasing_shift demonstrates why certain speed/fps combinations create specific illusions.
+                </p>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Nyquist Limit:</strong> To accurately
+                  capture motion, you need to sample at least <em>twice</em> as fast as the fastest periodic element.
+                  Violating this theorem creates aliasing — false apparent frequencies that result in perceived backward motion.
+                </p>
+                <p style={{ margin: 0 }}>
+                  <strong style={{ color: colors.textPrimary }}>Spoke Ambiguity:</strong> Because spokes
+                  are identical, the camera can't distinguish if a spoke moved forward 340° or backward 20° — the observation matches both possibilities.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -1381,32 +1324,29 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, paddingTop: '48px' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>🔄 The Twist</h2>
-            <p style={{ color: colors.textSecondary }}>
-              What if you change the frame rate while keeping wheel speed constant?
+      <div style={pageStyle}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={scrollStyle}>
+          <div style={{ ...maxWidthStyle, padding: '16px', textAlign: 'center' }}>
+            <h2 style={{ color: colors.warning, marginBottom: '8px', fontSize: '22px', fontWeight: '700', lineHeight: '1.4' }}>🔄 The Twist</h2>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6', margin: 0 }}>
+              What if you change the frame rate while keeping wheel speed constant? Watch and think about what will happen.
             </p>
           </div>
 
           {renderVisualization(false)}
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>📋 The Setup:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              The wheel spins at a constant rate. You switch from filming at 24 fps to 30 fps.
-              The true motion is unchanged.
-            </p>
-          </div>
+          <div style={{ ...maxWidthStyle, padding: '16px' }}>
+            <div style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px', marginBottom: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontSize: '16px', fontWeight: '700', lineHeight: '1.4' }}>📋 The Setup:</h3>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6', margin: 0 }}>
+                The wheel spins at a constant rate. You switch from filming at 24 fps to 30 fps.
+                The true motion is unchanged. Observe the different variable: only the frame rate changes.
+              </p>
+            </div>
 
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '12px', fontSize: '16px', fontWeight: '700', lineHeight: '1.4' }}>
               🤔 With a different frame rate, what happens to the apparent motion?
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1417,12 +1357,15 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
                   style={{
                     padding: '16px',
                     borderRadius: '8px',
-                    border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
-                    background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                    border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.15)',
+                    background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'rgba(30,41,59,0.5)',
                     color: colors.textPrimary,
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                    lineHeight: '1.5',
+                    transition: 'all 0.15s ease',
                   }}
                 >
                   {p.label}
@@ -1439,30 +1382,28 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, paddingTop: '48px' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Frame Rate Effects</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Keep wheel speed fixed and change only the frame rate
+      <div style={pageStyle}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={scrollStyle}>
+          <div style={{ ...maxWidthStyle, padding: '16px', textAlign: 'center' }}>
+            <h2 style={{ color: colors.warning, marginBottom: '8px', fontSize: '22px', fontWeight: '700', lineHeight: '1.4' }}>Test Frame Rate Effects</h2>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6', margin: 0 }}>
+              Keep wheel speed fixed and change only the frame rate to observe how sampling frequency affects apparent motion
             </p>
           </div>
 
           {renderVisualization(true)}
           {renderControls()}
 
-          <div style={{
-            background: 'rgba(245, 158, 11, 0.2)',
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-            borderLeft: `3px solid ${colors.warning}`,
-          }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>💡 Key Observation:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Changing frame rate completely changes the apparent motion - it might reverse,
-              speed up, slow down, or freeze at specific rates!
-            </p>
+          <div style={{ ...maxWidthStyle, padding: '16px' }}>
+            <div style={{ background: 'rgba(245, 158, 11, 0.15)', padding: '16px', borderRadius: '12px', borderLeft: `3px solid ${colors.warning}` }}>
+              <h4 style={{ color: colors.warning, marginBottom: '8px', fontSize: '15px', fontWeight: '700', lineHeight: '1.4' }}>💡 Key Observation:</h4>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6', margin: 0 }}>
+                Changing frame rate completely changes the apparent motion — it might reverse direction,
+                speed up, slow down, or freeze at specific rates! The frequency relationship = fps determines which alias we observe.
+              </p>
+            </div>
           </div>
         </div>
         {renderBottomBar(false, true, 'See the Explanation →')}
@@ -1475,85 +1416,86 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
     const wasCorrect = twistPrediction === 'different';
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, paddingTop: '48px' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? '✓ Correct!' : '✗ Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              Changing frame rate completely changes the apparent motion!
-            </p>
-          </div>
+      <div style={pageStyle}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={scrollStyle}>
+          <div style={{ ...maxWidthStyle, padding: '16px' }}>
+            <div style={{
+              background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              padding: '20px',
+              borderRadius: '12px',
+              borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+              marginBottom: '16px',
+            }}>
+              <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px', fontSize: '18px', fontWeight: '700', lineHeight: '1.4' }}>
+                {wasCorrect ? '✓ Correct!' : '✗ Not Quite!'}
+              </h3>
+              <p style={{ color: colors.textPrimary, margin: 0, lineHeight: '1.6', fontSize: '14px' }}>
+                Changing frame rate completely changes the apparent motion!
+              </p>
+            </div>
 
-          {/* Visual diagram showing frame rate effect */}
-          <div style={{ display: 'flex', justifyContent: 'center', margin: '16px' }}>
-            <svg width="100%" height="280" viewBox="0 0 600 280" preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgDark, borderRadius: '12px', maxWidth: '600px' }}>
-              <defs>
-                <marker id="arrowhead-twist" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-                  <polygon points="0 0, 10 3, 0 6" fill={colors.warning} />
-                </marker>
-              </defs>
-              <text x={300} y={25} textAnchor="middle" fill={colors.warning} fontSize={14} fontWeight="bold">Frame Rate Impact</text>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+              <svg width="100%" height="270" viewBox="0 0 600 270" preserveAspectRatio="xMidYMid meet"
+                style={{ background: colors.bgDark, borderRadius: '12px', maxWidth: '600px' }}>
+                <defs>
+                  <linearGradient id="twistBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#030712" />
+                    <stop offset="100%" stopColor="#0a0f1a" />
+                  </linearGradient>
+                </defs>
+                <rect width="600" height="270" fill="url(#twistBg)" />
+                <text x={300} y={24} textAnchor="middle" fill={colors.warning} fontSize={14} fontWeight="bold">Frame Rate Impact on Perceived Motion</text>
 
-              {/* Same wheel speed, different sample rates */}
-              <g transform="translate(50, 70)">
-                <text x={0} y={-10} fill={colors.textPrimary} fontSize={12}>24 fps sampling:</text>
-                <circle cx={50} cy={30} r={3} fill={colors.accent} />
-                <circle cx={125} cy={30} r={3} fill={colors.accent} />
-                <circle cx={200} cy={30} r={3} fill={colors.accent} />
-                <circle cx={275} cy={30} r={3} fill={colors.accent} />
-                <path d="M 50 30 L 125 35 L 200 40 L 275 45" stroke={colors.error} strokeWidth={2} fill="none" strokeDasharray="3,3" />
-                <text x={350} y={35} fill={colors.error} fontSize={11}>Appears backward</text>
-              </g>
+                <g transform="translate(40, 55)">
+                  <text x={0} y={0} fill={colors.textPrimary} fontSize={12} fontWeight="bold">24 fps sampling:</text>
+                  <circle cx={50} cy={28} r={3.5} fill={colors.accent} />
+                  <circle cx={120} cy={28} r={3.5} fill={colors.accent} />
+                  <circle cx={190} cy={28} r={3.5} fill={colors.accent} />
+                  <circle cx={260} cy={28} r={3.5} fill={colors.accent} />
+                  <path d="M 50 28 L 120 33 L 190 38 L 260 43" stroke={colors.error} strokeWidth={2} fill="none" strokeDasharray="4,3" />
+                  <text x={310} y={33} fill={colors.error} fontSize={11} fontWeight="bold">Appears backward</text>
+                </g>
 
-              <g transform="translate(50, 150)">
-                <text x={0} y={-10} fill={colors.textPrimary} fontSize={12}>30 fps sampling:</text>
-                <circle cx={40} cy={30} r={3} fill={colors.accent} />
-                <circle cx={90} cy={30} r={3} fill={colors.accent} />
-                <circle cx={140} cy={30} r={3} fill={colors.accent} />
-                <circle cx={190} cy={30} r={3} fill={colors.accent} />
-                <circle cx={240} cy={30} r={3} fill={colors.accent} />
-                <path d="M 40 30 L 90 25 L 140 20 L 190 25 L 240 30" stroke={colors.success} strokeWidth={2} fill="none" strokeDasharray="3,3" />
-                <text x={350} y={35} fill={colors.success} fontSize={11}>Appears forward</text>
-              </g>
+                <g transform="translate(40, 140)">
+                  <text x={0} y={0} fill={colors.textPrimary} fontSize={12} fontWeight="bold">30 fps sampling:</text>
+                  <circle cx={40} cy={28} r={3.5} fill={colors.accent} />
+                  <circle cx={88} cy={28} r={3.5} fill={colors.accent} />
+                  <circle cx={136} cy={28} r={3.5} fill={colors.accent} />
+                  <circle cx={184} cy={28} r={3.5} fill={colors.accent} />
+                  <circle cx={232} cy={28} r={3.5} fill={colors.accent} />
+                  <path d="M 40 28 L 88 23 L 136 18 L 184 23 L 232 28" stroke={colors.success} strokeWidth={2} fill="none" strokeDasharray="4,3" />
+                  <text x={280} y={33} fill={colors.success} fontSize={11} fontWeight="bold">Appears forward</text>
+                </g>
 
-              <g transform="translate(50, 230)">
-                <text x={180} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontStyle="italic">
-                  Same true rotation → Different perceived motion
+                <text x={300} y={235} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontStyle="italic">
+                  Same true rotation speed → Different perceived motion at each frame rate
                 </text>
-              </g>
-            </svg>
-          </div>
+                <text x={300} y={252} textAnchor="middle" fill={colors.textMuted} fontSize={11}>
+                  relationship: apparent = f(true_speed, frame_rate, spoke_count)
+                </text>
+              </svg>
+            </div>
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>🔬 Sampling Determines Perception</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Different Frame Rates, Different Results:</strong> The
-                same true motion can appear as forward, backward, or frozen depending entirely on
-                how often you sample it.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>LED Lighting Effect:</strong> This is
-                why filming under LED or fluorescent lights (which flicker at 50/60 Hz) can create
-                additional aliasing effects - you're effectively getting strobed sampling!
-              </p>
-              <p>
-                Filmmakers sometimes adjust shutter speed or use ND filters to control motion blur
-                and minimize these aliasing artifacts.
-              </p>
+            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <h3 style={{ color: colors.warning, marginBottom: '12px', fontSize: '17px', fontWeight: '700', lineHeight: '1.4' }}>🔬 Sampling Determines Perception</h3>
+              <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.7' }}>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Different Frame Rates, Different Results:</strong> The
+                  same true motion can appear as forward, backward, or frozen depending entirely on
+                  how often you sample it.
+                </p>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>LED Lighting Effect:</strong> This is
+                  why filming under LED or fluorescent lights (which flicker at 50/60 Hz) can create
+                  additional aliasing effects — you're effectively getting strobed sampling!
+                </p>
+                <p style={{ margin: 0 }}>
+                  Filmmakers sometimes adjust shutter speed or use ND filters to control motion blur
+                  and minimize these aliasing artifacts.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -1565,36 +1507,77 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
   // TRANSFER PHASE
   if (phase === 'transfer') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, paddingTop: '48px' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+      <div style={pageStyle}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={scrollStyle}>
+          <div style={{ ...maxWidthStyle, padding: '16px' }}>
+            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center', fontSize: '22px', fontWeight: '700', lineHeight: '1.4' }}>
               🌍 Real-World Applications
             </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-              Temporal aliasing affects video, measurement, and perception
+            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px', fontSize: '14px', lineHeight: '1.6' }}>
+              Temporal aliasing affects video production, precision measurement, and industrial safety. Explore these 4 industry examples with real statistics from companies like ARRI, Honeywell, and NVIDIA.
             </p>
-          </div>
 
-          {transferApplications.map((app, index) => (
-            <div key={index} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>✓</span>}
-              </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>💭 {app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))} style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}>Reveal Answer</button>
-              ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+            {transferApplications.map((app, index) => (
+              <div key={index} style={{
+                background: colors.bgCard,
+                marginBottom: '16px',
+                padding: '16px',
+                borderRadius: '12px',
+                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+                boxShadow: transferCompleted.has(index) ? `0 0 12px rgba(16,185,129,0.2)` : 'none',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <h3 style={{ color: colors.textPrimary, fontSize: '16px', margin: 0, fontWeight: '700', lineHeight: '1.4' }}>{app.title}</h3>
+                  {transferCompleted.has(index) && <span style={{ color: colors.success, fontSize: '18px' }}>✓</span>}
                 </div>
-              )}
+                <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px', lineHeight: '1.6' }}>{app.description}</p>
+                <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
+                  <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold', margin: 0, lineHeight: '1.5' }}>💭 {app.question}</p>
+                </div>
+                {!transferCompleted.has(index) ? (
+                  <button
+                    onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      border: `1px solid ${colors.accent}`,
+                      background: 'transparent',
+                      color: colors.accent,
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    Reveal Answer
+                  </button>
+                ) : (
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px', margin: 0, lineHeight: '1.6' }}>{app.answer}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {/* Industry statistics section */}
+            <div style={{ background: 'rgba(59,130,246,0.1)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(59,130,246,0.3)', marginBottom: '16px' }}>
+              <h3 style={{ color: '#3b82f6', marginBottom: '12px', fontSize: '16px', fontWeight: '700', lineHeight: '1.4' }}>📊 Industry Statistics</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                {realWorldApps[0].stats.map((stat, i) => (
+                  <div key={i} style={{ textAlign: 'center', background: 'rgba(30,41,59,0.8)', padding: '12px', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                    <div style={{ color: colors.accent, fontWeight: 'bold', fontSize: '16px', lineHeight: '1.3' }}>{stat.value}</div>
+                    <div style={{ color: colors.textMuted, fontSize: '11px', lineHeight: '1.4', marginTop: '2px' }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: '12px', color: colors.textMuted, fontSize: '12px', lineHeight: '1.5' }}>
+                Sources: ARRI, RED Digital Cinema, Monarch Instruments (500K+ industrial stroboscopes at ±0.02% accuracy), Honeywell ($170B annual injury costs), NVIDIA (144Hz gaming, $180B market).
+              </div>
             </div>
-          ))}
+          </div>
         </div>
         {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test →')}
       </div>
@@ -1605,112 +1588,229 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, paddingTop: '48px' }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{ background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)', margin: '16px', padding: '24px', borderRadius: '12px', textAlign: 'center' }}>
-              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>{testScore >= 8 ? '🎉 Excellent!' : '📚 Keep Learning!'}</h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
-            </div>
-
-            {/* Answer review indicators */}
-            <div style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px' }}>
-              <h3 style={{ color: colors.textPrimary, marginBottom: '12px', fontSize: '16px' }}>📊 Answer Review</h3>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
-                {testQuestions.map((q, qIndex) => {
-                  const userAnswer = testAnswers[qIndex];
-                  const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-                  return (
-                    <div
-                      key={qIndex}
-                      style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '8px',
-                        background: isCorrect ? colors.success : colors.error,
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '14px',
-                        fontWeight: 'bold',
-                        border: `2px solid ${isCorrect ? colors.success : colors.error}`,
-                      }}
-                    >
-                      {isCorrect ? '✓' : '✗'}
-                    </div>
-                  );
-                })}
+        <div style={pageStyle}>
+          {renderNavBar()}
+          {renderProgressBar()}
+          <div style={scrollStyle}>
+            <div style={{ ...maxWidthStyle, padding: '16px' }}>
+              <div style={{
+                background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                padding: '24px',
+                borderRadius: '12px',
+                textAlign: 'center',
+                marginBottom: '16px',
+                border: `2px solid ${testScore >= 8 ? colors.success : colors.error}`,
+              }}>
+                <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px', fontSize: '22px', fontWeight: '700', lineHeight: '1.4' }}>
+                  {testScore >= 8 ? '🎉 Excellent!' : '📚 Keep Learning!'}
+                </h2>
+                <p style={{ color: colors.textPrimary, fontSize: '28px', fontWeight: 'bold', margin: '8px 0' }}>{testScore} / 10</p>
+                <p style={{ color: colors.textSecondary, margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
+                  {testScore >= 8 ? 'Outstanding mastery of temporal aliasing!' : 'Review the material and try again to improve your score.'}
+                </p>
               </div>
-              <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginTop: '12px' }}>
-                Question-by-question breakdown
-              </p>
-            </div>
 
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                    <div style={{
-                      width: '24px',
-                      height: '24px',
-                      borderRadius: '50%',
-                      background: isCorrect ? colors.success : colors.error,
-                      color: 'white',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '14px',
-                      fontWeight: 'bold',
-                    }}>
-                      {isCorrect ? '✓' : '✗'}
-                    </div>
-                    <p style={{ color: colors.textPrimary, fontWeight: 'bold', margin: 0 }}>{qIndex + 1}. {q.question}</p>
-                  </div>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}
-                    </div>
-                  ))}
+              <div style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px', marginBottom: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <h3 style={{ color: colors.textPrimary, marginBottom: '12px', fontSize: '16px', fontWeight: '700', lineHeight: '1.4' }}>📊 Answer Review</h3>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
+                  {testQuestions.map((q, qIndex) => {
+                    const userAnswer = testAnswers[qIndex];
+                    const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+                    return (
+                      <div key={qIndex} style={{
+                        width: '40px', height: '40px', borderRadius: '8px',
+                        background: isCorrect ? colors.success : colors.error,
+                        color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '16px', fontWeight: 'bold',
+                      }}>
+                        {isCorrect ? '✓' : '✗'}
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
+              </div>
+
+              {testQuestions.map((q, qIndex) => {
+                const userAnswer = testAnswers[qIndex];
+                const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+                return (
+                  <div key={qIndex} style={{
+                    background: colors.bgCard, marginBottom: '12px', padding: '16px', borderRadius: '12px',
+                    borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
+                    border: `1px solid rgba(255,255,255,0.1)`,
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '10px' }}>
+                      <div style={{
+                        width: '22px', height: '22px', borderRadius: '50%', flexShrink: 0,
+                        background: isCorrect ? colors.success : colors.error,
+                        color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '12px', fontWeight: 'bold',
+                      }}>
+                        {isCorrect ? '✓' : '✗'}
+                      </div>
+                      <p style={{ color: colors.textPrimary, fontWeight: 'bold', margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
+                        Question {qIndex + 1}: {q.question}
+                      </p>
+                    </div>
+                    {q.options.map((opt, oIndex) => (
+                      <div key={oIndex} style={{
+                        padding: '6px 10px', marginBottom: '3px', borderRadius: '5px', fontSize: '13px', lineHeight: '1.5',
+                        background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
+                        color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary,
+                      }}>
+                        {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery →' : 'Review & Retry')}
+          <div style={{
+            position: 'fixed', bottom: 0, left: 0, right: 0, padding: '14px 24px',
+            background: colors.bgDark, borderTop: `1px solid rgba(255,255,255,0.1)`,
+            display: 'flex', justifyContent: 'space-between', zIndex: 1001,
+          }}>
+            <button
+              onClick={() => { setTestSubmitted(false); setTestAnswers(new Array(10).fill(null)); setCurrentTestQuestion(0); setTestScore(0); }}
+              style={{
+                padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.accent}`,
+                background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '14px',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                fontWeight: 'bold', transition: 'all 0.2s ease',
+              }}
+            >
+              ↺ Try Again
+            </button>
+            <button
+              onClick={goNext}
+              style={{
+                padding: '12px 24px', borderRadius: '8px', border: 'none',
+                background: testScore >= 8 ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' : 'rgba(255,255,255,0.1)',
+                color: testScore >= 8 ? 'white' : colors.textMuted,
+                cursor: testScore >= 8 ? 'pointer' : 'not-allowed',
+                fontSize: '14px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                fontWeight: 'bold', transition: 'all 0.2s ease',
+              }}
+            >
+              {testScore >= 8 ? 'Complete Mastery →' : 'Review Material'}
+            </button>
+          </div>
         </div>
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, paddingTop: '48px' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+      <div style={pageStyle}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={scrollStyle}>
+          <div style={{ ...maxWidthStyle, padding: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h2 style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: '700', margin: 0, lineHeight: '1.4' }}>Knowledge Test</h2>
+              <span style={{ color: colors.textSecondary, fontSize: '15px', fontWeight: '600' }}>
+                {currentTestQuestion + 1} / {testQuestions.length}
+              </span>
             </div>
-            <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
-              {testQuestions.map((_, i) => (<div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />))}
+            <div style={{ display: 'flex', gap: '3px', marginBottom: '20px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{
+                  flex: 1, height: '4px', borderRadius: '2px', cursor: 'pointer',
+                  background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)',
+                }} />
+              ))}
             </div>
-            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
+            {currentQ.scenario && (
+              <div style={{ background: 'rgba(59,130,246,0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px', border: '1px solid rgba(59,130,246,0.3)' }}>
+                <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0, lineHeight: '1.6', fontStyle: 'italic' }}>
+                  📍 Scenario: {currentQ.scenario}
+                </p>
+              </div>
+            )}
+            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: '1.6', margin: 0, fontWeight: '500' }}>
+                {currentQ.question}
+              </p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {currentQ.options.map((opt, oIndex) => (
-                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>{opt.text}</button>
+                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
+                  style={{
+                    padding: '14px 16px', borderRadius: '8px', textAlign: 'left', cursor: 'pointer',
+                    border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.15)',
+                    background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'rgba(30,41,59,0.5)',
+                    color: colors.textPrimary, fontSize: '14px', lineHeight: '1.5',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                    transition: 'all 0.15s ease',
+                    boxShadow: testAnswers[currentTestQuestion] === oIndex ? '0 2px 8px rgba(245,158,11,0.2)' : 'none',
+                  }}>
+                  {opt.text}
+                </button>
               ))}
             </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>← Previous</button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px', maxWidth: '800px', margin: '0 auto' }}>
+            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
+              disabled={currentTestQuestion === 0}
+              style={{
+                padding: '10px 20px', borderRadius: '8px',
+                border: `1px solid ${colors.textMuted}`, background: 'transparent',
+                color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
+                cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
+                fontSize: '14px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                fontWeight: '600', transition: 'all 0.2s ease',
+              }}>
+              ← Previous
+            </button>
             {currentTestQuestion < testQuestions.length - 1 ? (
-              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next →</button>
+              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
+                style={{
+                  padding: '10px 20px', borderRadius: '8px', border: 'none',
+                  background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                  color: 'white', cursor: 'pointer', fontSize: '14px',
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                  fontWeight: 'bold', transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 8px rgba(245,158,11,0.3)',
+                }}>
+                Next Question →
+              </button>
             ) : (
-              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
+              <button onClick={submitTest}
+                disabled={testAnswers.includes(null)}
+                style={{
+                  padding: '10px 20px', borderRadius: '8px', border: 'none',
+                  background: testAnswers.includes(null)
+                    ? 'rgba(255,255,255,0.1)'
+                    : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                  fontSize: '14px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                  fontWeight: 'bold', transition: 'all 0.2s ease',
+                  opacity: testAnswers.includes(null) ? 0.5 : 1,
+                }}>
+                Submit Test ✓
+              </button>
             )}
           </div>
+        </div>
+        {/* Bottom bar is present but disabled during active test */}
+        <div style={{
+          position: 'fixed', bottom: 0, left: 0, right: 0, padding: '14px 24px',
+          background: colors.bgDark, borderTop: `1px solid rgba(255,255,255,0.1)`,
+          display: 'flex', justifyContent: 'flex-end', zIndex: 1001,
+        }}>
+          <button
+            disabled={true}
+            style={{
+              padding: '12px 32px', minHeight: '44px', borderRadius: '8px', border: 'none',
+              background: 'rgba(255,255,255,0.1)', color: 'rgba(148,163,184,0.7)',
+              fontWeight: 'bold', cursor: 'not-allowed', fontSize: '16px',
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              opacity: 0.4,
+            }}
+          >
+            Next →
+          </button>
         </div>
       </div>
     );
@@ -1719,30 +1819,50 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, paddingTop: '48px' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
+      <div style={pageStyle}>
+        {renderNavBar()}
+        {renderProgressBar()}
+        <div style={scrollStyle}>
+          <div style={{ ...maxWidthStyle, padding: '24px 16px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered temporal aliasing and the wagon-wheel effect</p>
+            <h1 style={{ color: colors.success, marginBottom: '8px', fontSize: '28px', fontWeight: '800', lineHeight: '1.3', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+              Mastery Achieved!
+            </h1>
+            <p style={{ color: colors.textSecondary, marginBottom: '24px', fontSize: '16px', lineHeight: '1.6', fontWeight: '400' }}>
+              You've mastered temporal aliasing and the wagon-wheel effect — a concept used in film, engineering, and signal processing worldwide.
+            </p>
           </div>
-          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>🎓 Key Concepts Mastered:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Discrete sampling creates aliasing artifacts</li>
-              <li>Nyquist limit for accurate motion capture</li>
-              <li>Frame rate determines apparent motion</li>
-              <li>LED flicker and stroboscopic effects</li>
-            </ul>
+          <div style={{ ...maxWidthStyle, padding: '0 16px 16px 16px' }}>
+            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
+              <h3 style={{ color: colors.accent, marginBottom: '12px', fontSize: '17px', fontWeight: '700', lineHeight: '1.4' }}>🎓 Key Concepts Mastered:</h3>
+              <ul style={{ color: colors.textSecondary, lineHeight: '1.8', paddingLeft: '20px', margin: 0, fontSize: '14px' }}>
+                <li>Discrete sampling creates temporal aliasing artifacts</li>
+                <li>Nyquist limit: sample at ≥ 2× the highest frequency to avoid aliasing</li>
+                <li>Frame rate determines apparent motion — not just clarity</li>
+                <li>LED flicker (50/60 Hz) and stroboscopic effects follow the same mathematics</li>
+                <li>Formula: apparent = (speed × 360°/fps) mod spoke_spacing</li>
+              </ul>
+            </div>
+            {renderVisualization(true)}
           </div>
-          {renderVisualization(true)}
         </div>
         {renderBottomBar(false, true, 'Complete Game →')}
       </div>
     );
   }
 
-  return null;
+  // Fallback (should not reach here)
+  return (
+    <div style={pageStyle}>
+      {renderNavBar()}
+      {renderProgressBar()}
+      <div style={scrollStyle}>
+        <div style={{ ...maxWidthStyle, padding: '24px 16px', textAlign: 'center' }}>
+          <p style={{ color: colors.textSecondary, fontSize: '16px', lineHeight: '1.6' }}>Loading...</p>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default WagonWheelAliasingRenderer;

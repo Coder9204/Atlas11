@@ -1,16 +1,22 @@
-import React, { useState, useEffect, useCallback } from 'react';
+'use client';
+
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface ViscoelasticityRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  phase?: Phase;
+  gamePhase?: string;
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: Record<string, unknown>) => void;
 }
 
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: 'rgba(148,163,184,0.7)',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -21,7 +27,39 @@ const colors = {
   error: '#ef4444',
   elastic: '#3b82f6',
   viscous: '#ef4444',
-  material: '#a855f7',
+  border: '#334155',
+};
+
+const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'Explore Twist',
+  twist_play: 'Twist Experiment',
+  twist_review: 'Deep Insight',
+  transfer: 'Apply & Transfer',
+  test: 'Quiz & Test',
+  mastery: 'Mastery',
+};
+
+const playSound = (type: string) => {
+  if (typeof window === 'undefined') return;
+  try {
+    const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    const freqs: Record<string, number> = { click: 600, success: 800, failure: 300, transition: 500 };
+    osc.frequency.value = freqs[type] || 500;
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.15);
+  } catch { /* ignore */ }
 };
 
 const realWorldApps = [
@@ -30,957 +68,294 @@ const realWorldApps = [
     title: 'Athletic Shoe Technology',
     short: 'Cushioning that adapts to your stride',
     tagline: 'Energy return meets protection',
-    description: 'Running shoe midsoles use viscoelastic foams that absorb impact energy on landing (viscous response) but return energy during push-off (elastic response). The Deborah number changes with footstrike speed.',
+    description: 'Running shoe midsoles use viscoelastic foams (EVA and TPU) that absorb impact energy on landing — the viscous response — but return energy during push-off — the elastic response. Nike ZoomX foam achieves 85% energy return. The Deborah number changes with footstrike speed: fast heel strike (De > 1) triggers solid-like behavior for protection; slower push-off (De < 1) allows elastic energy return for efficiency.',
     connection: 'Fast impacts from heel strike trigger solid-like behavior for protection. Slower push-off allows elastic energy return for efficiency.',
-    howItWorks: 'EVA and TPU foams have tuned relaxation times. Fast compression causes high stress (cushioning). Energy stored elastically releases during toe-off, improving running economy.',
+    howItWorks: 'EVA and TPU foams have tuned relaxation times. Fast compression (impact ~10ms) causes high stress (cushioning). Energy stored elastically releases during toe-off, improving running economy by up to 4%.',
     stats: [
       { value: '85%', label: 'Energy return (top foams)', icon: '⚡' },
       { value: '10ms', label: 'Impact duration', icon: '⏱️' },
-      { value: '40mm', label: 'Max stack height', icon: '📏' }
+      { value: '40mm', label: 'Max stack height allowed', icon: '📏' },
     ],
     examples: ['Nike ZoomX', 'Adidas Boost', 'ASICS Gel', 'Hoka Profly'],
     companies: ['Nike', 'Adidas', 'ASICS', 'Brooks'],
-    futureImpact: 'Smart foams with adjustable stiffness will adapt to running speed and terrain.',
-    color: '#3B82F6'
+    futureImpact: 'Smart foams with adjustable stiffness will adapt to running speed and terrain in real time.',
+    color: '#3B82F6',
   },
   {
     icon: '🚗',
     title: 'Automotive Suspension',
     short: 'Balancing comfort and control',
     tagline: 'The ride quality equation',
-    description: 'Car suspension uses viscoelastic bushings and dampers that feel stiff during quick maneuvers (solid-like) but soft over gradual bumps (fluid-like). This dual behavior optimizes both handling and comfort.',
+    description: 'Car suspension uses viscoelastic bushings and hydraulic dampers that feel stiff during quick cornering maneuvers (De > 1, solid-like) but soft over gradual road undulations (De < 1, fluid-like). Continental and Bilstein adaptive dampers control this transition in real time, reducing NVH (noise, vibration, harshness) by up to 40%. The body resonance frequency is ~10 Hz and wheel hop is ~2 Hz.',
     connection: 'High Deborah number during cornering provides precise control. Low Deborah number over slow undulations delivers smooth ride quality.',
-    howItWorks: 'Rubber bushings isolate vibration. Hydraulic dampers control oscillation. Frequency-dependent stiffness filters high-frequency harshness while maintaining body control.',
+    howItWorks: 'Rubber bushings isolate vibration. Hydraulic dampers control oscillation. Frequency-dependent stiffness filters high-frequency harshness while maintaining body control at low frequencies.',
     stats: [
-      { value: '10Hz', label: 'Body resonance', icon: '📊' },
+      { value: '10Hz', label: 'Body resonance frequency', icon: '📊' },
       { value: '2Hz', label: 'Wheel hop frequency', icon: '🔄' },
-      { value: '40%', label: 'NVH reduction', icon: '📉' }
+      { value: '40%', label: 'NVH reduction achieved', icon: '📉' },
     ],
     examples: ['Luxury sedan suspension', 'Adaptive dampers', 'Engine mounts', 'Subframe bushings'],
     companies: ['Bilstein', 'KYB', 'ZF', 'Continental'],
-    futureImpact: 'Magnetorheological dampers with real-time control will eliminate the comfort/handling tradeoff.',
-    color: '#10B981'
-  },
-  {
-    icon: '🎾',
-    title: 'Sports Equipment Design',
-    short: 'Power transfer through flexible materials',
-    tagline: 'Timing is everything',
-    description: 'Tennis rackets, golf clubs, and baseball bats use viscoelastic polymers to optimize energy transfer. The material must be stiff enough during the quick impact to transfer power, but damped enough to reduce vibration.',
-    connection: 'Impact duration determines effective stiffness. Shorter impact = higher De = stiffer feel. Post-impact, lower De allows vibration damping.',
-    howItWorks: 'Composite layups and polymer grips tune frequency response. High-frequency vibrations are damped; low-frequency bending transmits power. Sweet spot optimization maximizes effective hitting area.',
-    stats: [
-      { value: '5ms', label: 'Ball contact time', icon: '⏱️' },
-      { value: '150mph', label: 'Golf ball speed', icon: '⛳' },
-      { value: '30%', label: 'Vibration reduction', icon: '📉' }
-    ],
-    examples: ['Tennis rackets', 'Golf clubs', 'Baseball bats', 'Hockey sticks'],
-    companies: ['Wilson', 'Callaway', 'Titleist', 'Bauer'],
-    futureImpact: 'Personalized equipment tuned to individual swing characteristics and preferences.',
-    color: '#F59E0B'
+    futureImpact: 'Magnetorheological dampers with real-time electromagnetic control will eliminate the comfort/handling tradeoff entirely.',
+    color: '#10B981',
   },
   {
     icon: '🏭',
-    title: 'Polymer Processing',
+    title: 'Polymer Processing & Manufacturing',
     short: 'Shaping materials through controlled flow',
-    tagline: 'Timing the transition',
-    description: 'Manufacturing plastics requires understanding viscoelastic flow. Injection molding, extrusion, and blow molding all depend on managing the solid-to-liquid transition through temperature and strain rate control.',
+    tagline: 'Timing the solid-to-liquid transition',
+    description: 'Manufacturing plastics requires understanding viscoelastic flow. Injection molding, extrusion, and blow molding all depend on managing the solid-to-liquid transition through temperature and strain rate control. BASF and DuPont process polymers at 200–300°C with fill times of 0.1–10 seconds. The Deborah number must stay in the moldable regime (De ~ 0.1–1) to achieve defect-free parts with injection pressures exceeding 1,000 psi.',
     connection: 'The Deborah number determines whether polymer acts moldable (low De) or resists flow (high De). Process parameters control this transition.',
-    howItWorks: 'Heating reduces relaxation time, making polymers flow. Rapid cooling freezes the shape. Strain rate during filling must stay in the moldable regime.',
+    howItWorks: 'Heating reduces relaxation time, making polymers flow. Rapid cooling freezes the shape. Strain rate during mold filling must stay in the regime where De allows smooth flow without elastic instabilities or weld-line defects.',
     stats: [
-      { value: '200-300C', label: 'Processing temp', icon: '🌡️' },
-      { value: '0.1-10s', label: 'Fill time range', icon: '⏱️' },
-      { value: '1000+ psi', label: 'Injection pressure', icon: '📈' }
+      { value: '200–300°C', label: 'Polymer processing temp', icon: '🌡️' },
+      { value: '0.1–10s', label: 'Mold fill time range', icon: '⏱️' },
+      { value: '>1000 psi', label: 'Injection pressure', icon: '📈' },
     ],
-    examples: ['Injection molding', 'Blow molding', 'Extrusion', '3D printing'],
+    examples: ['Injection molding', 'Blow molding', 'Extrusion', '3D printing with FDM'],
     companies: ['BASF', 'DuPont', 'Arburg', 'Engel'],
-    futureImpact: 'AI-controlled processing will optimize cycle times while eliminating defects.',
-    color: '#8B5CF6'
-  }
+    futureImpact: 'AI-controlled processing will optimize cycle times while eliminating defects through real-time De monitoring.',
+    color: '#8B5CF6',
+  },
+  {
+    icon: '🧬',
+    title: 'Biological Tissues & Biomechanics',
+    short: 'Nature's built-in viscoelastic protection',
+    tagline: 'Your body already knows this physics',
+    description: 'Tendons, muscles, cartilage, and organs are all viscoelastic materials optimized by evolution. Achilles tendon can store ~35% of energy during running — functioning as an elastic spring at fast gait frequencies (De > 1). Yet under slow sustained load (De < 1), it creeps and relaxes, preventing overload injury. Knee cartilage at 2–5 mm thick supports loads of 4–8× body weight by distributing stress through viscoelastic flow over milliseconds to seconds.',
+    connection: 'Tendons absorb sudden loads (solid-like at high De) preventing tears, while allowing slow stretching during movement. This dual behavior is why slow stretching is safe but sudden jerks cause injury.',
+    howItWorks: 'Collagen fibers provide elastic stiffness. Proteoglycan fluid provides viscous damping. Together they give a relaxation time of ~1–100 seconds, perfectly matched to physiological loading rates.',
+    stats: [
+      { value: '35%', label: 'Energy stored by Achilles tendon', icon: '⚡' },
+      { value: '4–8×', label: 'Body weight on knee cartilage', icon: '⚖️' },
+      { value: '1–100s', label: 'Tissue relaxation time range', icon: '⏱️' },
+    ],
+    examples: ['Achilles tendon spring', 'Knee cartilage damping', 'Arterial wall compliance', 'Brain tissue mechanics'],
+    companies: ['Stryker', 'Zimmer Biomet', 'Össur', 'DJO Global'],
+    futureImpact: 'Viscoelastic hydrogel implants that mimic tissue mechanics will replace damaged cartilage and tendons with no rejection risk.',
+    color: '#F59E0B',
+  },
+];
+
+const testQuestions = [
+  {
+    scenario: 'You throw a ball of silly putty at a wall at high speed. The impact lasts about 5 milliseconds.',
+    question: 'The putty bounces back. What does this tell you about the Deborah number during impact?',
+    options: [
+      { text: 'De >> 1: relaxation time >> observation time → solid-like elastic response', correct: true },
+      { text: 'De << 1: relaxation time << observation time → fluid-like viscous response', correct: false },
+      { text: 'De = 0: the material has no relaxation time', correct: false },
+      { text: 'De is irrelevant; putty always bounces', correct: false },
+    ],
+  },
+  {
+    scenario: 'The same ball of silly putty is left on a flat table at room temperature. After 10 minutes, it has spread into a flat disk.',
+    question: 'This flowing behavior corresponds to:',
+    options: [
+      { text: 'De >> 1 — the material acts elastic because the observation time is short', correct: false },
+      { text: 'De << 1 — the relaxation time is much shorter than the observation time (minutes)', correct: true },
+      { text: 'De = 1 — transitional behavior exactly balanced', correct: false },
+      { text: 'High temperature melted the putty completely', correct: false },
+    ],
+  },
+  {
+    scenario: 'An engineer is designing running shoe foam. She needs the foam to absorb impact during heel strike (~10ms) but return energy during push-off (~100ms).',
+    question: 'What relaxation time should she target for the foam?',
+    options: [
+      { text: 'About 10–50ms, so De > 1 during impact and De ~ 1 during push-off', correct: true },
+      { text: 'About 1 second, so De << 1 always → pure viscous', correct: false },
+      { text: 'About 0.001ms, so De >> 1 always → pure elastic', correct: false },
+      { text: 'Relaxation time does not affect shoe performance', correct: false },
+    ],
+  },
+  {
+    scenario: 'A polymer is processed by injection molding. The engineer slows the injection speed down too much. The polymer starts to hesitate at the mold entrance.',
+    question: 'Which rheological effect is most likely causing this problem?',
+    options: [
+      { text: 'The slow rate increases De, so the polymer acts solid-like and resists flow', correct: false },
+      { text: 'The slow rate decreases De, but the polymer cools and solidifies before filling', correct: true },
+      { text: 'The polymer\'s Deborah number is not affected by injection speed', correct: false },
+      { text: 'Higher viscosity at slow rates makes the fluid too thin to fill the mold', correct: false },
+    ],
+  },
+  {
+    scenario: 'You cool a piece of silly putty in a freezer to -10°C. Now you try to stretch it quickly.',
+    question: 'What happens and why?',
+    options: [
+      { text: 'It stretches more easily — cold reduces viscosity', correct: false },
+      { text: 'It shatters — cold extends relaxation time so De is very high, giving brittle elastic behavior', correct: true },
+      { text: 'It flows faster — cold increases thermal energy', correct: false },
+      { text: 'It behaves identically — temperature has no effect on viscoelasticity', correct: false },
+    ],
+  },
+  {
+    scenario: 'The Maxwell model represents a viscoelastic material. Under a sudden constant strain, you observe that the stress decreases over time.',
+    question: 'This "stress relaxation" occurs because:',
+    options: [
+      { text: 'The spring stores energy that slowly leaks into the dashpot, reducing elastic stress', correct: true },
+      { text: 'The dashpot generates additional stress that opposes the spring', correct: false },
+      { text: 'The material gains mass from the environment over time', correct: false },
+      { text: 'The spring constant increases as deformation continues', correct: false },
+    ],
+  },
+  {
+    scenario: 'A biomedical engineer is designing a hydrogel cartilage replacement. Normal knee cartilage has a relaxation time of about 10 seconds and handles loads up to 8× body weight.',
+    question: 'The hydrogel should be designed with:',
+    options: [
+      { text: 'Very short relaxation time (0.001s) for purely elastic behavior', correct: false },
+      { text: 'Very long relaxation time (1000s) for purely viscous behavior', correct: false },
+      { text: 'Relaxation time ~10s to match cartilage for both elastic energy storage and viscous dissipation', correct: true },
+      { text: 'Relaxation time matched to temperature, not to loading rate', correct: false },
+    ],
+  },
+  {
+    scenario: 'A car suspension engineer notices that passengers feel both sharp jolts over potholes AND a bouncy, oscillating ride on highway expansion joints.',
+    question: 'Which viscoelastic property would best fix BOTH problems simultaneously?',
+    options: [
+      { text: 'Pure elastic spring — stores energy from both fast and slow inputs equally', correct: false },
+      { text: 'Pure dashpot damper — absorbs all energy regardless of frequency', correct: false },
+      { text: 'Viscoelastic damper with tuned relaxation time — high De (stiff) for fast jolts, low De (compliant) for slow oscillations', correct: true },
+      { text: 'Increasing the car mass — more inertia reduces felt acceleration', correct: false },
+    ],
+  },
+  {
+    scenario: 'The Deborah number is named after a biblical prophetess who said "the mountains flowed before the Lord."',
+    question: 'The point of this metaphor in materials science is:',
+    options: [
+      { text: 'Mountains are made of liquid rock at their core', correct: false },
+      { text: 'Given a long enough observation time, even "solid" mountains flow — De depends on timescale', correct: true },
+      { text: 'Biblical materials behave differently from modern materials', correct: false },
+      { text: 'The Deborah number only applies to geological materials', correct: false },
+    ],
+  },
+  {
+    scenario: 'A quality control test measures how long it takes for a polymer component to recover its original shape after being compressed by 50% and then released.',
+    question: 'This "creep recovery" test primarily measures:',
+    options: [
+      { text: 'The elastic modulus only — how stiff the material is', correct: false },
+      { text: 'The viscosity only — how fast it flows under load', correct: false },
+      { text: 'Both the elastic energy storage and viscous energy dissipation — the full viscoelastic character', correct: true },
+      { text: 'The glass transition temperature of the polymer', correct: false },
+    ],
+  },
 ];
 
 const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
   phase: propPhase,
+  gamePhase: propGamePhase,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
-  // Default to hook if phase is invalid or undefined
-  const phase = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'].includes(propPhase) ? propPhase : 'hook';
-  // Simulation state
-  const [strainRate, setStrainRate] = useState(50); // 0 = very slow, 100 = very fast
-  const [temperature, setTemperature] = useState(50); // 0 = cold, 100 = hot
-  const [time, setTime] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [stretchAmount, setStretchAmount] = useState(0);
-  const [stressHistory, setStressHistory] = useState<{ strain: number; stress: number }[]>([]);
+  const initialPhase = (): Phase => {
+    const p = propPhase || propGamePhase;
+    return (validPhases.includes(p as Phase) ? p : 'hook') as Phase;
+  };
 
-  // Phase-specific state
+  const [phase, setPhase] = useState<Phase>(initialPhase);
+  const [strainRate, setStrainRate] = useState(50);
+  const [temperature, setTemperature] = useState(50);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+  const [transferIndex, setTransferIndex] = useState(0);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
-  const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
+  const [currentTestQ, setCurrentTestQ] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
+  const isNavigating = useRef(false);
 
-  // Calculate material properties based on strain rate and temperature
-  const relaxationTime = useCallback(() => {
-    // Higher temperature = shorter relaxation time (flows easier)
-    // Base relaxation time modified by temperature
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    playSound('transition');
+    setPhase(p);
+    if (onGameEvent) onGameEvent({ eventType: 'phase_changed', details: { phase: p }, timestamp: Date.now() });
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [onGameEvent]);
+
+  const nextPhase = useCallback(() => {
+    const idx = validPhases.indexOf(phase);
+    if (idx < validPhases.length - 1) {
+      goToPhase(validPhases[idx + 1]);
+    }
+    if (onPhaseComplete) onPhaseComplete();
+  }, [phase, goToPhase, onPhaseComplete]);
+
+  const phaseIndex = validPhases.indexOf(phase);
+
+  // Physics calculations
+  const relaxationTime = () => {
     const baseRelax = 2.0;
     const tempFactor = Math.exp(-temperature / 30);
     return baseRelax * tempFactor;
-  }, [temperature]);
+  };
 
-  const deborahNumber = useCallback(() => {
-    // De = relaxation time / observation time
-    // observation time inversely proportional to strain rate
+  const deborahNumber = () => {
     const observationTime = 10 / (strainRate + 1);
     return relaxationTime() / observationTime;
-  }, [strainRate, relaxationTime]);
-
-  // Animation
-  useEffect(() => {
-    if (!isAnimating) return;
-    const interval = setInterval(() => {
-      setTime(prev => prev + 0.05);
-
-      // Calculate stretch based on time and strain rate
-      const rate = (strainRate / 50) * 2;
-      const newStretch = Math.sin(time * rate) * 50;
-      setStretchAmount(newStretch);
-
-      // Calculate stress (Maxwell model: spring + dashpot in series)
-      const De = deborahNumber();
-      const strain = newStretch / 50;
-      // For viscoelastic: stress depends on strain rate more than strain itself
-      const elasticStress = strain * (De > 1 ? 1 : De);
-      const viscousStress = rate * (1 - (De > 1 ? 1 : De));
-      const totalStress = elasticStress + viscousStress * 0.3;
-
-      setStressHistory(prev => {
-        const newHistory = [...prev, { strain: strain * 100, stress: totalStress * 100 }];
-        return newHistory.slice(-100);
-      });
-    }, 50);
-    return () => clearInterval(interval);
-  }, [isAnimating, time, strainRate, deborahNumber]);
-
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
   };
 
-  const predictions = [
-    { id: 'always_solid', label: 'It always acts like a solid - bounces and holds shape' },
-    { id: 'always_liquid', label: 'It always acts like a liquid - flows and drips' },
-    { id: 'rate_depends', label: 'Fast = solid-like (bounces); Slow = liquid-like (flows)' },
-    { id: 'random', label: 'It behaves randomly depending on how you touch it' },
-  ];
-
-  const twistPredictions = [
-    { id: 'no_change', label: 'Temperature has no effect on the behavior' },
-    { id: 'cold_flows', label: 'Cold makes it flow more; warm makes it stiffer' },
-    { id: 'cold_brittle', label: 'Cold makes it more brittle/solid; warm makes it flow more' },
-    { id: 'melts', label: 'It melts completely when warm' },
-  ];
-
-  const transferApplications = [
-    {
-      title: 'Shock Absorbers',
-      description: 'Car suspension systems use viscoelastic materials that resist fast impacts but allow slow movements for comfort.',
-      question: 'Why do shock absorbers need viscoelastic behavior?',
-      answer: 'They must absorb sudden bumps quickly (high De - solid-like response) while allowing the car to settle slowly over rough terrain (low De - fluid-like response). Pure springs would bounce; pure dampers would be too stiff.',
-    },
-    {
-      title: 'Running Shoes',
-      description: 'Shoe foam cushioning is viscoelastic - it absorbs impact energy on landing but returns energy during push-off.',
-      question: 'How does viscoelasticity improve athletic performance?',
-      answer: 'During fast impact (landing), the foam acts solid-like, spreading force over time. During slower push-off, some stored elastic energy returns. The material "knows" when to absorb vs return energy based on the timescale of deformation.',
-    },
-    {
-      title: 'Polymer Processing',
-      description: 'Manufacturing plastics requires understanding how melted polymers flow at different rates and temperatures.',
-      question: 'Why must engineers control strain rate when molding plastics?',
-      answer: 'Too fast and the polymer acts solid, cracking or not filling molds. Too slow and production is inefficient. The Deborah number guides process design - keeping De in the optimal range for smooth flow without defects.',
-    },
-    {
-      title: 'Biological Tissues',
-      description: 'Your muscles, tendons, and organs are viscoelastic - they respond differently to slow stretches vs sudden impacts.',
-      question: 'How does viscoelasticity protect your body?',
-      answer: 'Tendons absorb sudden loads (solid-like at high De) preventing tears, while allowing slow stretching during movement. Organs distribute impact forces over time. This dual behavior is why slow stretching is safe but sudden jerks cause injury.',
-    },
-  ];
-
-  const testQuestions = [
-    {
-      question: 'What makes a material viscoelastic?',
-      options: [
-        { text: 'It has both viscous (flow) and elastic (spring) properties', correct: true },
-        { text: 'It changes color under stress', correct: false },
-        { text: 'It is always liquid at room temperature', correct: false },
-        { text: 'It conducts electricity well', correct: false },
-      ],
-    },
-    {
-      question: 'The Deborah number (De) compares:',
-      options: [
-        { text: 'Temperature to pressure', correct: false },
-        { text: 'Mass to volume', correct: false },
-        { text: 'Relaxation time to observation time', correct: true },
-        { text: 'Length to width', correct: false },
-      ],
-    },
-    {
-      question: 'When De >> 1 (much greater than 1), the material behaves more like a:',
-      options: [
-        { text: 'Liquid - it flows easily', correct: false },
-        { text: 'Solid - it responds elastically', correct: true },
-        { text: 'Gas - it expands', correct: false },
-        { text: 'Neither - it disappears', correct: false },
-      ],
-    },
-    {
-      question: 'Silly putty bounces when thrown because:',
-      options: [
-        { text: 'It is chemically different from normal putty', correct: false },
-        { text: 'Fast deformation gives high De, so it acts elastic', correct: true },
-        { text: 'Gravity affects it differently', correct: false },
-        { text: 'It is magnetic', correct: false },
-      ],
-    },
-    {
-      question: 'Silly putty flows slowly when left on a table because:',
-      options: [
-        { text: 'It is attracted to the table surface', correct: false },
-        { text: 'Slow deformation gives low De, so it acts viscous', correct: true },
-        { text: 'Air pressure pushes it down', correct: false },
-        { text: 'It is evaporating', correct: false },
-      ],
-    },
-    {
-      question: 'Increasing temperature typically causes a viscoelastic material to:',
-      options: [
-        { text: 'Become more solid-like', correct: false },
-        { text: 'Become more fluid-like (shorter relaxation time)', correct: true },
-        { text: 'Stay exactly the same', correct: false },
-        { text: 'Become invisible', correct: false },
-      ],
-    },
-    {
-      question: 'The Maxwell model represents viscoelasticity as:',
-      options: [
-        { text: 'Two springs in parallel', correct: false },
-        { text: 'A spring and dashpot in series', correct: true },
-        { text: 'Three dashpots in series', correct: false },
-        { text: 'A single rigid rod', correct: false },
-      ],
-    },
-    {
-      question: 'Polymer chains in viscoelastic materials:',
-      options: [
-        { text: 'Are completely rigid and never move', correct: false },
-        { text: 'Can stretch quickly but take time to flow past each other', correct: true },
-        { text: 'Are always in liquid form', correct: false },
-        { text: 'Do not affect material behavior', correct: false },
-      ],
-    },
-    {
-      question: 'In a stress-strain curve for a viscoelastic material, strain rate affects:',
-      options: [
-        { text: 'Only the color of the curve', correct: false },
-        { text: 'The slope and shape of the curve significantly', correct: true },
-        { text: 'Nothing - the curve is always the same', correct: false },
-        { text: 'Only the units of measurement', correct: false },
-      ],
-    },
-    {
-      question: 'Which real-world application relies on viscoelastic behavior?',
-      options: [
-        { text: 'Light bulbs', correct: false },
-        { text: 'Shock absorbers and running shoe foam', correct: true },
-        { text: 'Window glass', correct: false },
-        { text: 'Copper wiring', correct: false },
-      ],
-    },
-  ];
-
-  const handleTestAnswer = (questionIndex: number, optionIndex: number) => {
-    const newAnswers = [...testAnswers];
-    newAnswers[questionIndex] = optionIndex;
-    setTestAnswers(newAnswers);
-  };
-
-  const submitTest = () => {
-    let score = 0;
-    testQuestions.forEach((q, i) => {
-      if (testAnswers[i] !== null && q.options[testAnswers[i]].correct) {
-        score++;
-      }
-    });
-    setTestScore(score);
-    setTestSubmitted(true);
-    if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
-  };
-
-  const renderMaterialBlob = (interactive: boolean, showGraph: boolean = false) => {
-    const width = 700;
-    const height = 450;
-    const centerX = width / 2;
-    const centerY = 200;
-
-    // Material blob deformation based on stretch
-    const De = deborahNumber();
-    const blobWidth = 90 + stretchAmount * (De > 1 ? 0.5 : 1.5);
-    const blobHeight = 65 - stretchAmount * 0.3 * (De > 1 ? 0.5 : 1.5);
-
-    // Behavior ratio for visual effects
-    const behaviorRatio = Math.min(De / 2, 1);
-
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-        <svg
-          width="100%"
-          height={height}
-          viewBox={`0 0 ${width} ${height}`}
-          preserveAspectRatio="xMidYMid meet"
-          style={{ maxWidth: '750px' }}
-        >
-          {/* ============ PREMIUM DEFS SECTION ============ */}
-          <defs>
-            {/* Premium dark laboratory background gradient */}
-            <linearGradient id="viscLabBackground" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#030712" />
-              <stop offset="25%" stopColor="#0f172a" />
-              <stop offset="50%" stopColor="#0a0f1a" />
-              <stop offset="75%" stopColor="#0f172a" />
-              <stop offset="100%" stopColor="#030712" />
-            </linearGradient>
-
-            {/* Viscoelastic material gradient - elastic (blue-purple) to viscous (red-orange) */}
-            <linearGradient id="viscMaterialElastic" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#818cf8" />
-              <stop offset="25%" stopColor="#6366f1" />
-              <stop offset="50%" stopColor="#4f46e5" />
-              <stop offset="75%" stopColor="#4338ca" />
-              <stop offset="100%" stopColor="#3730a3" />
-            </linearGradient>
-
-            <linearGradient id="viscMaterialViscous" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#fb923c" />
-              <stop offset="25%" stopColor="#f97316" />
-              <stop offset="50%" stopColor="#ea580c" />
-              <stop offset="75%" stopColor="#c2410c" />
-              <stop offset="100%" stopColor="#9a3412" />
-            </linearGradient>
-
-            {/* Radial glow for material center */}
-            <radialGradient id="viscMaterialGlow" cx="40%" cy="40%" r="60%">
-              <stop offset="0%" stopColor={behaviorRatio > 0.5 ? "#a5b4fc" : "#fed7aa"} stopOpacity="0.8" />
-              <stop offset="40%" stopColor={behaviorRatio > 0.5 ? "#6366f1" : "#f97316"} stopOpacity="0.5" />
-              <stop offset="70%" stopColor={behaviorRatio > 0.5 ? "#4338ca" : "#c2410c"} stopOpacity="0.3" />
-              <stop offset="100%" stopColor={behaviorRatio > 0.5 ? "#1e1b4b" : "#431407"} stopOpacity="0" />
-            </radialGradient>
-
-            {/* Polymer chain highlight gradient */}
-            <linearGradient id="viscPolymerChain" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#ffffff" stopOpacity="0" />
-              <stop offset="20%" stopColor="#ffffff" stopOpacity="0.3" />
-              <stop offset="50%" stopColor="#ffffff" stopOpacity="0.6" />
-              <stop offset="80%" stopColor="#ffffff" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-            </linearGradient>
-
-            {/* Spring metal gradient for Maxwell model */}
-            <linearGradient id="viscSpringMetal" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#94a3b8" />
-              <stop offset="20%" stopColor="#64748b" />
-              <stop offset="40%" stopColor="#cbd5e1" />
-              <stop offset="60%" stopColor="#64748b" />
-              <stop offset="80%" stopColor="#94a3b8" />
-              <stop offset="100%" stopColor="#475569" />
-            </linearGradient>
-
-            {/* Dashpot cylinder gradient */}
-            <linearGradient id="viscDashpotCylinder" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#1e293b" />
-              <stop offset="15%" stopColor="#334155" />
-              <stop offset="30%" stopColor="#475569" />
-              <stop offset="50%" stopColor="#64748b" />
-              <stop offset="70%" stopColor="#475569" />
-              <stop offset="85%" stopColor="#334155" />
-              <stop offset="100%" stopColor="#1e293b" />
-            </linearGradient>
-
-            {/* Dashpot fluid gradient */}
-            <linearGradient id="viscDashpotFluid" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#f97316" stopOpacity="0.8" />
-              <stop offset="30%" stopColor="#ea580c" stopOpacity="0.9" />
-              <stop offset="50%" stopColor="#c2410c" />
-              <stop offset="70%" stopColor="#ea580c" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#f97316" stopOpacity="0.8" />
-            </linearGradient>
-
-            {/* Temperature bar gradient - cold to hot */}
-            <linearGradient id="viscTempGradient" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#3b82f6" />
-              <stop offset="25%" stopColor="#06b6d4" />
-              <stop offset="50%" stopColor="#22c55e" />
-              <stop offset="75%" stopColor="#f59e0b" />
-              <stop offset="100%" stopColor="#ef4444" />
-            </linearGradient>
-
-            {/* Stress indicator gradient */}
-            <linearGradient id="viscStressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#22c55e" />
-              <stop offset="33%" stopColor="#eab308" />
-              <stop offset="66%" stopColor="#f97316" />
-              <stop offset="100%" stopColor="#ef4444" />
-            </linearGradient>
-
-            {/* Graph background gradient */}
-            <linearGradient id="viscGraphBg" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1e293b" />
-              <stop offset="50%" stopColor="#0f172a" />
-              <stop offset="100%" stopColor="#020617" />
-            </linearGradient>
-
-            {/* Force arrow gradient */}
-            <linearGradient id="viscForceArrow" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.3" />
-              <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.7" />
-              <stop offset="50%" stopColor="#67e8f9" />
-              <stop offset="70%" stopColor="#22d3ee" stopOpacity="0.7" />
-              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.3" />
-            </linearGradient>
-
-            {/* Premium glow filters */}
-            <filter id="viscMaterialGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="8" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            <filter id="viscSoftGlow" x="-30%" y="-30%" width="160%" height="160%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            <filter id="viscInnerGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
-
-            <filter id="viscTextGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Arrow markers */}
-            <marker id="viscArrowRight" markerWidth={12} markerHeight={12} refX={0} refY={6} orient="auto">
-              <path d="M0,0 L0,12 L12,6 z" fill="url(#viscForceArrow)" />
-            </marker>
-            <marker id="viscArrowLeft" markerWidth={12} markerHeight={12} refX={12} refY={6} orient="auto">
-              <path d="M12,0 L12,12 L0,6 z" fill="url(#viscForceArrow)" />
-            </marker>
-
-            {/* Lab grid pattern */}
-            <pattern id="viscLabGrid" width="30" height="30" patternUnits="userSpaceOnUse">
-              <rect width="30" height="30" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.4" />
-            </pattern>
-          </defs>
-
-          {/* ============ BACKGROUND ============ */}
-          <rect width={width} height={height} fill="url(#viscLabBackground)" />
-          <rect width={width} height={height} fill="url(#viscLabGrid)" />
-
-          {/* ============ HEADER PANEL ============ */}
-          <g transform="translate(20, 15)">
-            {/* Deborah Number display */}
-            <rect x="0" y="0" width="180" height="55" rx="8" fill="#0f172a" stroke="#334155" strokeWidth="1" />
-            <rect x="0" y="0" width="180" height="55" rx="8" fill="url(#viscGraphBg)" opacity="0.5" />
-            <text x="90" y="18" fill="#94a3b8" fontSize="10" textAnchor="middle" fontWeight="bold">DEBORAH NUMBER</text>
-            <text x="90" y="42" fill={De > 1 ? "#818cf8" : "#fb923c"} fontSize="22" textAnchor="middle" fontWeight="bold" filter="url(#viscTextGlow)">
-              De = {De.toFixed(2)}
-            </text>
-          </g>
-
-          {/* Behavior indicator */}
-          <g transform={`translate(${width - 200}, 15)`}>
-            <rect x="0" y="0" width="180" height="55" rx="8" fill={De > 1.5 ? "rgba(99, 102, 241, 0.2)" : De < 0.5 ? "rgba(249, 115, 22, 0.2)" : "rgba(234, 179, 8, 0.2)"} stroke={De > 1.5 ? "#6366f1" : De < 0.5 ? "#f97316" : "#eab308"} strokeWidth="1.5" />
-            <text x="90" y="18" fill="#e2e8f0" fontSize="10" textAnchor="middle" fontWeight="bold">MATERIAL BEHAVIOR</text>
-            <text x="90" y="42" fill={De > 1.5 ? "#a5b4fc" : De < 0.5 ? "#fed7aa" : "#fef08a"} fontSize="16" textAnchor="middle" fontWeight="bold">
-              {De > 1.5 ? 'SOLID-LIKE (Elastic)' : De < 0.5 ? 'FLUID-LIKE (Viscous)' : 'TRANSITIONAL'}
-            </text>
-          </g>
-
-          {/* Strain rate indicator */}
-          <g transform={`translate(${width / 2 - 100}, 15)`}>
-            <rect x="0" y="0" width="200" height="55" rx="8" fill="#0f172a" stroke="#334155" strokeWidth="1" />
-            <text x="100" y="18" fill="#94a3b8" fontSize="10" textAnchor="middle" fontWeight="bold">STRAIN RATE</text>
-            <rect x="15" y="28" width="170" height="10" rx="5" fill="#1e293b" />
-            <rect x="15" y="28" width={strainRate * 1.7} height="10" rx="5" fill="url(#viscStressGradient)" />
-            <text x="100" y="50" fill="#e2e8f0" fontSize="11" textAnchor="middle">
-              {strainRate < 30 ? 'SLOW (flows)' : strainRate > 70 ? 'FAST (bounces)' : 'MEDIUM'}
-            </text>
-          </g>
-
-          {/* ============ MAIN VISUALIZATION AREA ============ */}
-
-          {/* Left force arrow */}
-          <g>
-            <path
-              d={`M ${centerX - blobWidth - 80} ${centerY} L ${centerX - blobWidth - 20} ${centerY}`}
-              stroke="url(#viscForceArrow)"
-              strokeWidth={4}
-              markerEnd="url(#viscArrowRight)"
-              filter="url(#viscSoftGlow)"
-            />
-            <rect x={centerX - blobWidth - 130} y={centerY - 20} width="50" height="40" rx="6" fill="#0f172a" stroke="#334155" strokeWidth="1" />
-            <text x={centerX - blobWidth - 105} y={centerY - 5} fill="#94a3b8" fontSize="9" textAnchor="middle">FORCE</text>
-            <text x={centerX - blobWidth - 105} y={centerY + 10} fill="#22d3ee" fontSize="12" textAnchor="middle" fontWeight="bold">PULL</text>
-          </g>
-
-          {/* Right force arrow */}
-          <g>
-            <path
-              d={`M ${centerX + blobWidth + 80} ${centerY} L ${centerX + blobWidth + 20} ${centerY}`}
-              stroke="url(#viscForceArrow)"
-              strokeWidth={4}
-              markerEnd="url(#viscArrowLeft)"
-              filter="url(#viscSoftGlow)"
-            />
-            <rect x={centerX + blobWidth + 80} y={centerY - 20} width="50" height="40" rx="6" fill="#0f172a" stroke="#334155" strokeWidth="1" />
-            <text x={centerX + blobWidth + 105} y={centerY - 5} fill="#94a3b8" fontSize="9" textAnchor="middle">FORCE</text>
-            <text x={centerX + blobWidth + 105} y={centerY + 10} fill="#22d3ee" fontSize="12" textAnchor="middle" fontWeight="bold">PULL</text>
-          </g>
-
-          {/* ============ VISCOELASTIC MATERIAL BLOB ============ */}
-          <g filter="url(#viscMaterialGlowFilter)">
-            {/* Outer glow */}
-            <ellipse
-              cx={centerX}
-              cy={centerY}
-              rx={Math.max(35, blobWidth) + 15}
-              ry={Math.max(25, blobHeight) + 12}
-              fill={behaviorRatio > 0.5 ? "rgba(99, 102, 241, 0.15)" : "rgba(249, 115, 22, 0.15)"}
-            />
-
-            {/* Main material blob */}
-            <ellipse
-              cx={centerX}
-              cy={centerY}
-              rx={Math.max(35, blobWidth)}
-              ry={Math.max(25, blobHeight)}
-              fill={behaviorRatio > 0.5 ? "url(#viscMaterialElastic)" : "url(#viscMaterialViscous)"}
-              stroke={behaviorRatio > 0.5 ? "#818cf8" : "#fb923c"}
-              strokeWidth={2}
-              data-de={De.toFixed(2)}
-            />
-
-            {/* Inner highlight */}
-            <ellipse
-              cx={centerX - blobWidth * 0.2}
-              cy={centerY - blobHeight * 0.3}
-              rx={Math.max(15, blobWidth * 0.4)}
-              ry={Math.max(10, blobHeight * 0.3)}
-              fill="url(#viscMaterialGlow)"
-              opacity="0.6"
-            />
-          </g>
-
-          {/* Polymer chains inside material */}
-          {[...Array(7)].map((_, i) => {
-            const yBase = centerY - 40 + i * 13;
-            const waveAmplitude = De > 1 ? 2 : 10;
-            const waveFreq = De > 1 ? 0.08 : 0.04;
-            const chainOpacity = 0.3 + (i % 2) * 0.2;
-            return (
-              <path
-                key={i}
-                d={`M ${centerX - blobWidth + 25} ${yBase} ${[...Array(12)].map((_, j) => {
-                  const x = centerX - blobWidth + 25 + j * (blobWidth * 2 - 50) / 12;
-                  const yOffset = Math.sin((x + time * 40 + i * 20) * waveFreq) * waveAmplitude;
-                  return `L ${x} ${yBase + yOffset}`;
-                }).join(' ')}`}
-                stroke="url(#viscPolymerChain)"
-                strokeWidth={2}
-                strokeLinecap="round"
-                fill="none"
-                opacity={chainOpacity}
-              />
-            );
-          })}
-
-          {/* Material behavior label */}
-          <g transform={`translate(${centerX}, ${centerY + blobHeight + 35})`}>
-            <rect
-              x="-60"
-              y="-12"
-              width="120"
-              height="28"
-              rx="14"
-              fill={De > 1 ? "rgba(99, 102, 241, 0.3)" : "rgba(249, 115, 22, 0.3)"}
-              stroke={De > 1 ? "#6366f1" : "#f97316"}
-              strokeWidth="1.5"
-            />
-            <text
-              y="5"
-              fill={De > 1 ? "#c7d2fe" : "#fed7aa"}
-              fontSize="13"
-              textAnchor="middle"
-              fontWeight="bold"
-            >
-              {De > 1 ? 'ELASTIC RESPONSE' : 'VISCOUS FLOW'}
-            </text>
-          </g>
-
-          {/* ============ MAXWELL MODEL VISUALIZATION ============ */}
-          <g transform="translate(50, 300)">
-            <rect x="-10" y="-10" width="280" height="80" rx="8" fill="#0f172a" stroke="#334155" strokeWidth="1" />
-            <text x="130" y="8" fill="#94a3b8" fontSize="10" textAnchor="middle" fontWeight="bold">MAXWELL MODEL (Series)</text>
-
-            {/* Fixed anchor */}
-            <rect x="10" y="25" width="15" height="30" fill="#475569" rx="2" />
-            <line x1="10" y1="28" x2="10" y2="52" stroke="#64748b" strokeWidth="2" />
-
-            {/* Spring element */}
-            <g transform="translate(25, 40)">
-              {/* Spring coils */}
-              <path
-                d={`M 0 0 ${[...Array(6)].map((_, i) => {
-                  const x = 10 + i * 15 + (isAnimating ? stretchAmount * 0.2 : 0);
-                  const y = i % 2 === 0 ? -10 : 10;
-                  return `L ${x} ${y}`;
-                }).join(' ')} L ${100 + (isAnimating ? stretchAmount * 0.2 : 0)} 0`}
-                stroke="url(#viscSpringMetal)"
-                strokeWidth="4"
-                fill="none"
-                strokeLinecap="round"
-              />
-            </g>
-            <text x="75" y="65" fill="#818cf8" fontSize="9" textAnchor="middle">Spring (E)</text>
-
-            {/* Dashpot element */}
-            <g transform={`translate(${130 + (isAnimating ? stretchAmount * 0.1 : 0)}, 25)`}>
-              {/* Cylinder */}
-              <rect x="0" y="0" width="60" height="30" rx="3" fill="url(#viscDashpotCylinder)" stroke="#64748b" strokeWidth="1" />
-              {/* Piston */}
-              <rect x={-15 + (isAnimating ? stretchAmount * 0.15 : 0)} y="8" width="45" height="14" rx="2" fill="#94a3b8" stroke="#cbd5e1" strokeWidth="1" />
-              {/* Fluid */}
-              <rect x="5" y="5" width="50" height="20" rx="2" fill="url(#viscDashpotFluid)" opacity="0.6" />
-            </g>
-            <text x={160 + (isAnimating ? stretchAmount * 0.1 : 0)} y="65" fill="#fb923c" fontSize="9" textAnchor="middle">Dashpot (eta)</text>
-
-            {/* Moving anchor */}
-            <g transform={`translate(${195 + (isAnimating ? stretchAmount * 0.25 : 0)}, 25)`}>
-              <rect x="0" y="0" width="15" height="30" fill="#475569" rx="2" />
-              <path d="M 18 5 L 28 15 L 18 25" stroke="#22d3ee" strokeWidth="2" fill="none" />
-            </g>
-          </g>
-
-          {/* ============ KELVIN-VOIGT MODEL VISUALIZATION ============ */}
-          <g transform="translate(370, 300)">
-            <rect x="-10" y="-10" width="280" height="80" rx="8" fill="#0f172a" stroke="#334155" strokeWidth="1" />
-            <text x="130" y="8" fill="#94a3b8" fontSize="10" textAnchor="middle" fontWeight="bold">KELVIN-VOIGT MODEL (Parallel)</text>
-
-            {/* Fixed anchor */}
-            <rect x="10" y="20" width="15" height="40" fill="#475569" rx="2" />
-
-            {/* Parallel arrangement */}
-            {/* Top: Spring */}
-            <g transform="translate(30, 28)">
-              <path
-                d={`M 0 0 ${[...Array(5)].map((_, i) => {
-                  const x = 8 + i * 12 + (isAnimating ? stretchAmount * 0.15 : 0);
-                  const y = i % 2 === 0 ? -6 : 6;
-                  return `L ${x} ${y}`;
-                }).join(' ')} L ${70 + (isAnimating ? stretchAmount * 0.15 : 0)} 0`}
-                stroke="url(#viscSpringMetal)"
-                strokeWidth="3"
-                fill="none"
-              />
-            </g>
-            <text x="65" y="22" fill="#818cf8" fontSize="8" textAnchor="middle">E</text>
-
-            {/* Bottom: Dashpot */}
-            <g transform={`translate(30, 42)`}>
-              <rect x="0" y="0" width="45" height="18" rx="2" fill="url(#viscDashpotCylinder)" stroke="#64748b" strokeWidth="0.5" />
-              <rect x={-8 + (isAnimating ? stretchAmount * 0.1 : 0)} y="4" width="30" height="10" rx="1" fill="#94a3b8" />
-              <rect x="5" y="2" width="35" height="14" rx="1" fill="url(#viscDashpotFluid)" opacity="0.5" />
-              <line x1={45} y1="9" x2={70 + (isAnimating ? stretchAmount * 0.15 : 0)} y2="9" stroke="#64748b" strokeWidth="2" />
-            </g>
-            <text x="55" y="68" fill="#fb923c" fontSize="8" textAnchor="middle">eta</text>
-
-            {/* Connecting bars */}
-            <line x1="25" y1="28" x2="25" y2="51" stroke="#64748b" strokeWidth="2" />
-            <line x1={100 + (isAnimating ? stretchAmount * 0.15 : 0)} y1="28" x2={100 + (isAnimating ? stretchAmount * 0.15 : 0)} y2="51" stroke="#64748b" strokeWidth="2" />
-
-            {/* Moving anchor */}
-            <g transform={`translate(${105 + (isAnimating ? stretchAmount * 0.15 : 0)}, 20)`}>
-              <rect x="0" y="0" width="15" height="40" fill="#475569" rx="2" />
-              <path d="M 18 10 L 28 20 L 18 30" stroke="#22d3ee" strokeWidth="2" fill="none" />
-            </g>
-
-            {/* Behavior note */}
-            <text x="200" y="35" fill="#94a3b8" fontSize="8" textAnchor="middle">Creep &</text>
-            <text x="200" y="47" fill="#94a3b8" fontSize="8" textAnchor="middle">Recovery</text>
-          </g>
-
-          {/* ============ TEMPERATURE INDICATOR ============ */}
-          <g transform={`translate(${width - 50}, 90)`}>
-            <rect x="-20" y="-10" width="40" height="170" rx="6" fill="#0f172a" stroke="#334155" strokeWidth="1" />
-            <text x="0" y="8" fill="#94a3b8" fontSize="9" textAnchor="middle" fontWeight="bold">TEMP</text>
-
-            {/* Temperature bar background */}
-            <rect x="-8" y="20" width="16" height="120" rx="8" fill="#1e293b" />
-
-            {/* Temperature bar fill */}
-            <rect
-              x="-8"
-              y={20 + (100 - temperature) * 1.2}
-              width="16"
-              height={temperature * 1.2}
-              rx="8"
-              fill="url(#viscTempGradient)"
-              filter="url(#viscSoftGlow)"
-            />
-
-            {/* Temperature markers */}
-            <text x="0" y="148" fill="#3b82f6" fontSize="8" textAnchor="middle">COLD</text>
-            <text x="0" y="30" fill="#ef4444" fontSize="8" textAnchor="middle">HOT</text>
-
-            {/* Current value */}
-            <text x="0" y="162" fill="#e2e8f0" fontSize="10" textAnchor="middle" fontWeight="bold">{temperature}%</text>
-          </g>
-        </svg>
-
-        {/* ============ STRESS-STRAIN GRAPH ============ */}
-        {showGraph && (
-          <div style={{ width: '100%', maxWidth: '700px', marginTop: '16px' }}>
-            <svg width="100%" height={180} viewBox="0 0 700 180">
-              <defs>
-                <linearGradient id="viscCurveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#8b5cf6" />
-                  <stop offset="50%" stopColor="#a855f7" />
-                  <stop offset="100%" stopColor="#d946ef" />
-                </linearGradient>
-                <linearGradient id="viscAxisGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#475569" />
-                  <stop offset="100%" stopColor="#64748b" />
-                </linearGradient>
-              </defs>
-
-              {/* Graph background */}
-              <rect width="700" height="180" fill="#0f172a" rx="12" />
-              <rect x="60" y="20" width="600" height="130" fill="#020617" rx="4" />
-
-              {/* Grid lines */}
-              {[...Array(6)].map((_, i) => (
-                <line key={`h${i}`} x1="60" y1={20 + i * 26} x2="660" y2={20 + i * 26} stroke="#1e293b" strokeWidth="1" opacity="0.4" />
-              ))}
-              {[...Array(7)].map((_, i) => (
-                <line key={`v${i}`} x1={60 + i * 100} y1="20" x2={60 + i * 100} y2="150" stroke="#1e293b" strokeWidth="1" opacity="0.4" />
-              ))}
-
-              {/* Axes */}
-              <line x1="60" y1="150" x2="660" y2="150" stroke="url(#viscAxisGradient)" strokeWidth="2" />
-              <line x1="60" y1="20" x2="60" y2="150" stroke="url(#viscAxisGradient)" strokeWidth="2" />
-
-              {/* Axis labels */}
-              <text x="360" y="172" fill="#94a3b8" fontSize="12" textAnchor="middle" fontWeight="bold">STRAIN (%)</text>
-              <text x="25" y="90" fill="#94a3b8" fontSize="12" textAnchor="middle" fontWeight="bold" transform="rotate(-90, 25, 90)">STRESS</text>
-
-              {/* Title */}
-              <text x="360" y="15" fill="#e2e8f0" fontSize="11" textAnchor="middle" fontWeight="bold">STRESS-STRAIN CURVE (Rate-Dependent)</text>
-
-              {/* Reference elastic line */}
-              <line x1="60" y1="150" x2="660" y2="30" stroke="#6366f1" strokeWidth="1.5" strokeDasharray="8,4" opacity="0.4" />
-              <text x="620" y="45" fill="#6366f1" fontSize="9">Pure Elastic</text>
-
-              {/* Reference viscous line */}
-              <line x1="60" y1="150" x2="660" y2="120" stroke="#f97316" strokeWidth="1.5" strokeDasharray="8,4" opacity="0.4" />
-              <text x="620" y="115" fill="#f97316" fontSize="9">Pure Viscous</text>
-
-              {/* Actual stress-strain curve */}
-              {stressHistory.length > 1 && (
-                <path
-                  d={`M ${60 + (stressHistory[0].strain + 50) * 5.5} ${150 - (stressHistory[0].stress + 50) * 1.2} ${stressHistory.slice(1).map(p =>
-                    `L ${60 + Math.max(0, Math.min(100, p.strain + 50)) * 5.5} ${150 - Math.max(0, Math.min(100, p.stress + 50)) * 1.2}`
-                  ).join(' ')}`}
-                  stroke="url(#viscCurveGradient)"
-                  strokeWidth="3"
-                  fill="none"
-                  filter="url(#viscSoftGlow)"
-                />
-              )}
-
-              {/* Legend */}
-              <rect x="80" y="25" width="120" height="50" rx="4" fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth="1" />
-              <line x1="90" y1="40" x2="110" y2="40" stroke="#a855f7" strokeWidth="2" />
-              <text x="115" y="44" fill="#e2e8f0" fontSize="9">Viscoelastic</text>
-              <line x1="90" y1="55" x2="110" y2="55" stroke="#6366f1" strokeWidth="1.5" strokeDasharray="4,2" />
-              <text x="115" y="59" fill="#94a3b8" fontSize="9">Elastic ref.</text>
-              <line x1="90" y1="70" x2="110" y2="70" stroke="#f97316" strokeWidth="1.5" strokeDasharray="4,2" />
-              <text x="115" y="74" fill="#94a3b8" fontSize="9">Viscous ref.</text>
-            </svg>
-          </div>
-        )}
-
-        {/* ============ INTERACTIVE CONTROLS ============ */}
-        {interactive && (
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '12px' }}>
-            <button
-              onClick={() => {
-                setIsAnimating(!isAnimating);
-                if (!isAnimating) {
-                  setStressHistory([]);
-                }
-              }}
-              style={{
-                padding: '14px 28px',
-                borderRadius: '12px',
-                border: 'none',
-                background: isAnimating
-                  ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
-                  : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                color: 'white',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                fontSize: '14px',
-                boxShadow: isAnimating
-                  ? '0 4px 20px rgba(239, 68, 68, 0.4)'
-                  : '0 4px 20px rgba(16, 185, 129, 0.4)',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              {isAnimating ? 'Stop Deformation' : 'Start Stretch/Compress'}
-            </button>
-            <button
-              onClick={() => {
-                setStrainRate(50);
-                setTemperature(50);
-                setStretchAmount(0);
-                setTime(0);
-                setStressHistory([]);
-              }}
-              style={{
-                padding: '14px 28px',
-                borderRadius: '12px',
-                border: `2px solid ${colors.accent}`,
-                background: 'rgba(139, 92, 246, 0.1)',
-                color: colors.accent,
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                fontSize: '14px',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              Reset Simulation
-            </button>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderControls = () => (
-    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Strain Rate: {strainRate < 30 ? 'SLOW (like leaving putty on table)' : strainRate > 70 ? 'FAST (like throwing putty)' : 'MEDIUM'}
-        </label>
-        <input
-          type="range"
-          min="5"
-          max="100"
-          step="5"
-          value={strainRate}
-          onChange={(e) => setStrainRate(parseInt(e.target.value))}
-          style={{ width: '100%', touchAction: 'pan-y' } as React.CSSProperties}
+  const De = deborahNumber();
+
+  // Slider style
+  const sliderStyle = (value: number, min: number, max: number): React.CSSProperties => ({
+    width: '100%',
+    height: '20px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    touchAction: 'pan-y' as const,
+    WebkitAppearance: 'none' as const,
+    accentColor: '#3b82f6',
+  });
+
+  // Nav dots
+  const renderNavDots = () => (
+    <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', padding: '12px 0' }}>
+      {validPhases.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          data-navigation-dot="true"
+          aria-label={phaseLabels[p]}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseIndex >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            padding: 0,
+          }}
         />
-        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
-          <span>Slow (flows)</span>
-          <span>Fast (bounces)</span>
-        </div>
-      </div>
-
-      <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Temperature: {temperature < 30 ? 'COLD' : temperature > 70 ? 'WARM' : 'ROOM TEMP'}
-        </label>
-        <input
-          type="range"
-          min="0"
-          max="100"
-          step="5"
-          value={temperature}
-          onChange={(e) => setTemperature(parseInt(e.target.value))}
-          style={{ width: '100%', touchAction: 'pan-y' } as React.CSSProperties}
-        />
-        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
-          <span>Cold (brittle)</span>
-          <span>Warm (flows more)</span>
-        </div>
-      </div>
-
-      <div style={{
-        background: 'rgba(139, 92, 246, 0.2)',
-        padding: '12px',
-        borderRadius: '8px',
-        borderLeft: `3px solid ${colors.accent}`,
-      }}>
-        <div style={{ color: colors.textSecondary, fontSize: '12px' }}>
-          Deborah Number (De) = {deborahNumber().toFixed(2)}
-        </div>
-        <div style={{ color: colors.textMuted, fontSize: '11px', marginTop: '4px' }}>
-          De {'>'} 1: Solid-like | De {'<'} 1: Fluid-like
-        </div>
-      </div>
+      ))}
     </div>
   );
 
-  const phases = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-  const currentPhaseIndex = phases.indexOf(phase);
-  const progressPercent = ((currentPhaseIndex + 1) / phases.length) * 100;
+  // Progress bar
+  const renderProgressBar = () => (
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '4px', background: 'rgba(255,255,255,0.1)', zIndex: 1002 }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseIndex + 1) / validPhases.length) * 100}%`,
+        background: colors.accent,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
 
-  const renderNavBar = (showBack: boolean, canProceed: boolean, buttonText: string) => (
+  // Nav bar
+  const renderNavBar = (canProceed: boolean, buttonText = 'Next') => (
     <nav
       aria-label="Game navigation"
       style={{
         position: 'fixed',
-        top: 0,
+        top: 4,
         left: 0,
         right: 0,
-        padding: '12px 24px',
+        padding: '10px 24px',
         background: colors.bgDark,
         borderBottom: `1px solid rgba(255,255,255,0.1)`,
         display: 'flex',
@@ -990,64 +365,33 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
       }}
     >
       <button
-        onClick={() => {
-          // Go back by triggering a custom event or calling a back handler
-          if (currentPhaseIndex > 0 && onPhaseComplete) {
-            // Signal backward navigation through a custom event
-            window.dispatchEvent(new CustomEvent('gameNavigateBack'));
-          }
-        }}
-        disabled={!showBack || currentPhaseIndex === 0}
+        onClick={() => { if (phaseIndex > 0) goToPhase(validPhases[phaseIndex - 1]); }}
+        disabled={phaseIndex === 0}
         aria-label="Back"
         style={{
-          padding: '12px 24px',
+          padding: '10px 22px',
           minHeight: '44px',
           borderRadius: '8px',
           border: `1px solid ${colors.textMuted}`,
           background: 'transparent',
-          color: showBack && currentPhaseIndex > 0 ? colors.textPrimary : colors.textMuted,
+          color: phaseIndex > 0 ? colors.textPrimary : colors.textMuted,
           fontWeight: 'bold',
-          cursor: showBack && currentPhaseIndex > 0 ? 'pointer' : 'not-allowed',
+          cursor: phaseIndex > 0 ? 'pointer' : 'not-allowed',
           fontSize: '14px',
-          opacity: showBack && currentPhaseIndex > 0 ? 1 : 0.5,
+          opacity: phaseIndex > 0 ? 1 : 0.4,
         }}
       >
         Back
       </button>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <div
-          role="progressbar"
-          aria-valuenow={currentPhaseIndex + 1}
-          aria-valuemin={1}
-          aria-valuemax={phases.length}
-          aria-label={`Progress: phase ${currentPhaseIndex + 1} of ${phases.length}`}
-          style={{
-            width: '120px',
-            height: '8px',
-            background: 'rgba(255,255,255,0.1)',
-            borderRadius: '4px',
-            overflow: 'hidden',
-          }}
-        >
-          <div
-            style={{
-              width: `${progressPercent}%`,
-              height: '100%',
-              background: colors.accent,
-              transition: 'width 0.3s ease',
-            }}
-          />
-        </div>
-        <span style={{ color: colors.textSecondary, fontSize: '12px' }}>
-          {currentPhaseIndex + 1}/{phases.length}
-        </span>
-      </div>
+      <span style={{ color: colors.textSecondary, fontSize: '13px', fontWeight: 600 }}>
+        {phaseIndex + 1}/{validPhases.length}
+      </span>
       <button
-        onClick={onPhaseComplete}
+        onClick={nextPhase}
         disabled={!canProceed}
         aria-label="Next"
         style={{
-          padding: '12px 24px',
+          padding: '10px 22px',
           minHeight: '44px',
           borderRadius: '8px',
           border: 'none',
@@ -1063,150 +407,424 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
     </nav>
   );
 
-  // HOOK PHASE
+  // Bottom bar
+  const renderBottomBar = (showBack: boolean, canProceed: boolean, buttonText: string) => (
+    <nav
+      aria-label="Game navigation"
+      style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: '12px 24px',
+        background: colors.bgDark,
+        borderTop: `1px solid rgba(255,255,255,0.1)`,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 1001,
+      }}
+    >
+      {showBack ? (
+        <button
+          onClick={() => { if (phaseIndex > 0) goToPhase(validPhases[phaseIndex - 1]); }}
+          aria-label="Back"
+          style={{
+            padding: '10px 22px', minHeight: '44px', borderRadius: '8px',
+            border: `1px solid ${colors.textMuted}`, background: 'transparent',
+            color: colors.textPrimary, fontWeight: 'bold', cursor: 'pointer', fontSize: '14px',
+          }}
+        >Back</button>
+      ) : <div />}
+      <button
+        onClick={nextPhase}
+        disabled={!canProceed}
+        aria-label="Next"
+        style={{
+          padding: '10px 22px', minHeight: '44px', borderRadius: '8px',
+          border: 'none',
+          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
+          color: canProceed ? 'white' : colors.textMuted,
+          fontWeight: 'bold', cursor: canProceed ? 'pointer' : 'not-allowed', fontSize: '14px',
+        }}
+      >
+        {buttonText}
+      </button>
+    </nav>
+  );
+
+  // ======= SVG VISUALIZATION =======
+  const renderVisualization = () => {
+    const W = 700;
+    const H = 400;
+    // Normalize De for visualization
+    const deNorm = Math.min(De / 5, 1); // 0=fluid, 1=solid
+    const blobColor = deNorm > 0.5 ? '#6366f1' : '#f97316';
+    const blobRx = 80 + (deNorm > 0.5 ? 20 : -20) + (strainRate - 50) * 0.4;
+    const blobRy = 50 - (deNorm > 0.5 ? 5 : -5) - Math.abs(strainRate - 50) * 0.2;
+
+    // Stress-strain curve: use large vertical range
+    // Y-axis: 280 (bottom) to 60 (top), X-axis: 60 to 620
+    const graphLeft = 60, graphRight = 620, graphTop = 60, graphBottom = 280;
+    const graphW = graphRight - graphLeft;
+    const graphH = graphBottom - graphTop;
+
+    // Draw stress-strain curve with good vertical utilization
+    // For viscoelastic material: slope depends on De
+    const slope = 0.3 + deNorm * 0.7; // 0.3 (viscous) to 1.0 (elastic)
+    const curvePoints: string[] = [];
+    for (let i = 0; i <= 20; i++) {
+      const strain = i / 20; // 0 to 1
+      // Viscoelastic stress: nonlinear combination
+      const stress = slope * strain + (1 - slope) * strain * strain * 0.5 + Math.sin(strain * Math.PI * 2) * 0.05 * (1 - deNorm);
+      const clampedStress = Math.max(0, Math.min(1, stress));
+      const x = graphLeft + strain * graphW;
+      const y = graphBottom - clampedStress * graphH;
+      curvePoints.push(`${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`);
+    }
+
+    // Reference: pure elastic (linear, max utilization)
+    const elasticPoints = [
+      `M ${graphLeft} ${graphBottom}`,
+      `L ${graphRight} ${graphTop}`
+    ].join(' ');
+    // Reference: pure viscous (lower slope)
+    const viscousEndY = graphBottom - 0.3 * graphH;
+    const viscousPoints = [
+      `M ${graphLeft} ${graphBottom}`,
+      `L ${graphRight} ${viscousEndY.toFixed(1)}`
+    ].join(' ');
+
+    // Grid lines
+    const gridHLines = [0.25, 0.5, 0.75, 1.0].map(f => ({
+      y: graphBottom - f * graphH,
+      label: (f * 100).toFixed(0),
+    }));
+    const gridVLines = [0.25, 0.5, 0.75, 1.0].map(f => ({
+      x: graphLeft + f * graphW,
+      label: (f * 100).toFixed(0),
+    }));
+
+    // Interactive point on curve (moves with sliders)
+    const interactStrain = 0.6;
+    const interactStress = slope * interactStrain + (1 - slope) * interactStrain * interactStrain * 0.5;
+    const interactX = graphLeft + interactStrain * graphW;
+    const interactY = graphBottom - Math.min(1, interactStress) * graphH;
+
+    // Reference/baseline: elastic point at same strain
+    const baselineY = graphBottom - interactStrain * graphH;
+
+    return (
+      <svg
+        width="100%"
+        height={H}
+        viewBox={`0 0 ${W} ${H}`}
+        preserveAspectRatio="xMidYMid meet"
+        style={{ maxWidth: '720px', display: 'block' }}
+      >
+        <defs>
+          <linearGradient id="viscBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#1e293b" />
+          </linearGradient>
+          <linearGradient id="viscCurve" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={blobColor} />
+            <stop offset="100%" stopColor={deNorm > 0.5 ? '#a855f7' : '#fb923c'} />
+          </linearGradient>
+          <filter id="viscGlow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
+
+        {/* Background */}
+        <rect width={W} height={H} fill="url(#viscBg)" />
+
+        {/* Graph background */}
+        <rect x={graphLeft} y={graphTop} width={graphW} height={graphH} fill="rgba(0,0,0,0.3)" rx="4" />
+
+        {/* Grid lines */}
+        {gridHLines.map((g, i) => (
+          <g key={`h${i}`}>
+            <line x1={graphLeft} y1={g.y} x2={graphRight} y2={g.y}
+              stroke="rgba(148,163,184,0.3)" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+            <text x={graphLeft - 8} y={g.y + 4} fill="rgba(148,163,184,0.7)" fontSize="11"
+              textAnchor="end">{g.label}</text>
+          </g>
+        ))}
+        {gridVLines.map((g, i) => (
+          <g key={`v${i}`}>
+            <line x1={g.x} y1={graphTop} x2={g.x} y2={graphBottom}
+              stroke="rgba(148,163,184,0.3)" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+            <text x={g.x} y={graphBottom + 16} fill="rgba(148,163,184,0.7)" fontSize="11"
+              textAnchor="middle">{g.label}</text>
+          </g>
+        ))}
+
+        {/* Axes */}
+        <line x1={graphLeft} y1={graphBottom} x2={graphRight} y2={graphBottom} stroke="#94a3b8" strokeWidth="2" />
+        <line x1={graphLeft} y1={graphTop} x2={graphLeft} y2={graphBottom} stroke="#94a3b8" strokeWidth="2" />
+
+        {/* Axis labels */}
+        <text x={graphLeft + graphW / 2} y={H - 8} fill="#94a3b8" fontSize="13" textAnchor="middle" fontWeight="bold">
+          STRAIN (%)
+        </text>
+        <text x={18} y={graphTop + graphH / 2} fill="#94a3b8" fontSize="13" textAnchor="middle" fontWeight="bold"
+          transform={`rotate(-90, 18, ${graphTop + graphH / 2})`}>
+          STRESS
+        </text>
+
+        {/* Graph title */}
+        <text x={graphLeft + graphW / 2} y={graphTop - 10} fill="#e2e8f0" fontSize="13" textAnchor="middle" fontWeight="bold">
+          STRESS-STRAIN CURVE
+        </text>
+
+        {/* Reference: pure elastic */}
+        <path d={elasticPoints} stroke="#6366f1" strokeWidth="2" fill="none" strokeDasharray="8 4" opacity="0.5" />
+
+        {/* Reference: pure viscous */}
+        <path d={viscousPoints} stroke="#f97316" strokeWidth="2" fill="none" strokeDasharray="8 4" opacity="0.5" />
+
+        {/* Actual viscoelastic curve */}
+        <path d={curvePoints.join(' ')} stroke="url(#viscCurve)" strokeWidth="3" fill="none" filter="url(#viscGlow)" />
+
+        {/* Reference baseline marker (elastic at same strain) */}
+        <circle cx={interactX} cy={baselineY} r="6" fill="#6366f1" opacity="0.6" />
+
+        {/* Interactive point */}
+        <circle cx={interactX} cy={interactY} r="10" fill={blobColor} stroke="white" strokeWidth="2"
+          filter="url(#viscGlow)" />
+
+        {/* Legend — spaced to avoid overlaps */}
+        <rect x={graphLeft + 10} y={graphTop + 5} width="145" height="60" rx="4"
+          fill="rgba(15,23,42,0.85)" stroke="#334155" strokeWidth="1" />
+        <line x1={graphLeft + 20} y1={graphTop + 20} x2={graphLeft + 40} y2={graphTop + 20}
+          stroke={blobColor} strokeWidth="3" />
+        <text x={graphLeft + 48} y={graphTop + 24} fill="#e2e8f0" fontSize="11">Viscoelastic</text>
+
+        <line x1={graphLeft + 20} y1={graphTop + 37} x2={graphLeft + 40} y2={graphTop + 37}
+          stroke="#6366f1" strokeWidth="2" strokeDasharray="4 2" />
+        <text x={graphLeft + 48} y={graphTop + 41} fill="rgba(148,163,184,0.7)" fontSize="11">Pure Elastic</text>
+
+        <line x1={graphLeft + 20} y1={graphTop + 54} x2={graphLeft + 40} y2={graphTop + 54}
+          stroke="#f97316" strokeWidth="2" strokeDasharray="4 2" />
+        <text x={graphLeft + 48} y={graphTop + 58} fill="rgba(148,163,184,0.7)" fontSize="11">Pure Viscous</text>
+
+        {/* De value panel — bottom right, separate from legend */}
+        <rect x={graphRight - 160} y={graphTop + 5} width="155" height="50" rx="6"
+          fill="rgba(15,23,42,0.85)" stroke="#334155" strokeWidth="1" />
+        <text x={graphRight - 83} y={graphTop + 22} fill="rgba(148,163,184,0.7)" fontSize="12"
+          textAnchor="middle" fontWeight="bold">DEBORAH NUMBER</text>
+        <text x={graphRight - 83} y={graphTop + 45} fill={De > 1 ? '#818cf8' : '#fb923c'}
+          fontSize="17" textAnchor="middle" fontWeight="bold">
+          De = {De.toFixed(2)}
+        </text>
+
+        {/* Behavior label — centered below graph */}
+        <rect x={graphLeft + graphW / 2 - 90} y={graphBottom + 25} width="180" height="32" rx="14"
+          fill={De > 1.5 ? 'rgba(99,102,241,0.3)' : De < 0.5 ? 'rgba(249,115,22,0.3)' : 'rgba(234,179,8,0.2)'}
+          stroke={De > 1.5 ? '#6366f1' : De < 0.5 ? '#f97316' : '#eab308'} strokeWidth="1.5" />
+        <text x={graphLeft + graphW / 2} y={graphBottom + 46} fill={De > 1.5 ? '#a5b4fc' : De < 0.5 ? '#fed7aa' : '#fef08a'}
+          fontSize="13" textAnchor="middle" fontWeight="bold">
+          {De > 1.5 ? 'SOLID-LIKE (Elastic)' : De < 0.5 ? 'FLUID-LIKE (Viscous)' : 'TRANSITIONAL'}
+        </text>
+
+        {/* Material blob — right side */}
+        <g transform={`translate(${W - 130}, 190)`}>
+          <text x="0" y="-20" fill="rgba(148,163,184,0.7)" fontSize="12" textAnchor="middle">MATERIAL</text>
+          <ellipse cx="0" cy="0" rx={Math.max(30, Math.min(80, 50 + (De - 1) * 15))} ry={Math.max(20, Math.min(55, 35 - (De - 1) * 5))}
+            fill={blobColor} opacity="0.8" filter="url(#viscGlow)" />
+          {/* Polymer chains */}
+          {[-10, 0, 10].map((dy, k) => (
+            <path key={k} d={`M -35 ${dy} Q 0 ${dy + (De > 1 ? 4 : 12)} 35 ${dy}`}
+              stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" fill="none" />
+          ))}
+        </g>
+
+        {/* Temperature bar — top right */}
+        <g transform={`translate(${W - 40}, ${graphTop})`}>
+          <text x="0" y="-5" fill="rgba(148,163,184,0.7)" fontSize="11" textAnchor="middle">TEMP</text>
+          <rect x="-8" y="0" width="16" height="100" rx="8" fill="#1e293b" />
+          <rect x="-8" y={100 - temperature} width="16" height={temperature} rx="8" fill="#ef4444" opacity="0.8" />
+          <text x="0" y="118" fill="rgba(148,163,184,0.7)" fontSize="11" textAnchor="middle">{temperature}%</text>
+        </g>
+      </svg>
+    );
+  };
+
+  // ======= CONTROLS =======
+  const renderControls = () => (
+    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div>
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '6px', fontWeight: 600 }}>
+          Strain Rate: <strong style={{ color: colors.textPrimary }}>
+            {strainRate < 30 ? 'SLOW — polymer chains flow' : strainRate > 70 ? 'FAST — chains stretch elastically' : 'MEDIUM'} ({strainRate}%)
+          </strong>
+        </label>
+        <input
+          type="range" min="5" max="100" step="5" value={strainRate}
+          onChange={e => setStrainRate(parseInt(e.target.value))}
+          style={sliderStyle(strainRate, 5, 100)}
+        />
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '12px', marginTop: '4px' }}>
+          <span>Slow (5 — flows)</span>
+          <span>Fast (100 — bounces)</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderTwistControls = () => (
+    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div>
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '6px', fontWeight: 600 }}>
+          Strain Rate: <strong style={{ color: colors.textPrimary }}>{strainRate}%</strong>
+        </label>
+        <input
+          type="range" min="5" max="100" step="5" value={strainRate}
+          onChange={e => setStrainRate(parseInt(e.target.value))}
+          style={sliderStyle(strainRate, 5, 100)}
+        />
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '12px', marginTop: '4px' }}>
+          <span>Slow</span><span>Fast</span>
+        </div>
+      </div>
+      <div>
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '6px', fontWeight: 600 }}>
+          Temperature: <strong style={{ color: colors.textPrimary }}>
+            {temperature < 30 ? 'COLD — longer relaxation time' : temperature > 70 ? 'WARM — shorter relaxation time' : 'ROOM TEMP'} ({temperature}%)
+          </strong>
+        </label>
+        <input
+          type="range" min="0" max="100" step="5" value={temperature}
+          onChange={e => setTemperature(parseInt(e.target.value))}
+          style={sliderStyle(temperature, 0, 100)}
+        />
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '12px', marginTop: '4px' }}>
+          <span>Cold 0°C (brittle)</span>
+          <span>Hot 100°C (flows)</span>
+        </div>
+      </div>
+      <div style={{ background: 'rgba(139,92,246,0.2)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.accent}` }}>
+        <div style={{ color: colors.textSecondary, fontSize: '13px' }}>
+          De = {De.toFixed(2)} | Relaxation time: {relaxationTime().toFixed(2)}s
+        </div>
+        <div style={{ color: colors.textMuted, fontSize: '12px', marginTop: '4px' }}>
+          De &gt; 1: Solid-like (elastic) | De &lt; 1: Fluid-like (viscous)
+        </div>
+      </div>
+    </div>
+  );
+
+  // ======= PHASES =======
+
+  // HOOK
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        {renderNavBar(false, true, 'Next')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '20px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, paddingTop: '48px', paddingBottom: '100px', overflowY: 'auto' }}>
+        {renderProgressBar()}
+        {renderNavBar(true)}
+        <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px' }}>
+          {renderNavDots()}
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <h1 style={{ color: colors.accent, fontSize: '32px', fontWeight: 800, marginBottom: '8px' }}>
               Silly Putty Science
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '18px' }}>
               Can one material act like a solid AND a liquid?
             </p>
           </div>
-
-          {renderMaterialBlob(true)}
-
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{
-              background: colors.bgCard,
-              padding: '20px',
-              borderRadius: '12px',
-              marginBottom: '16px',
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
-                Throw silly putty at the wall - it bounces like a rubber ball.
-                Leave it on a table - it slowly flows into a puddle.
-                Same material, opposite behaviors!
-              </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
-                This is viscoelasticity - materials that remember they're both solid and liquid.
-              </p>
-            </div>
-
-            <div style={{
-              background: 'rgba(139, 92, 246, 0.2)',
-              padding: '16px',
-              borderRadius: '8px',
-              borderLeft: `3px solid ${colors.accent}`,
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                Click "Stretch/Compress" to see how the material responds to deformation!
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // PREDICT PHASE
-  if (phase === 'predict') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        {renderNavBar(true, !!prediction, 'Next')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '20px' }}>
-          {renderMaterialBlob(false)}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>What You're Looking At:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              A blob of viscoelastic material (like silly putty or polymer slime) being
-              stretched at different rates. The internal wavy lines represent tangled
-              polymer chains. The Deborah number (De) tells us if the material will
-              act more like a solid or liquid.
+          {renderVisualization()}
+          <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginTop: '16px' }}>
+            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.7, marginBottom: '12px' }}>
+              🪀 <strong>Throw</strong> silly putty at the wall — it <strong>bounces</strong> like a rubber ball.
+              Leave it on a table for 10 minutes — it slowly <strong>flows</strong> into a puddle.
+              Same material. Completely opposite behaviors. How?
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+              ⚗️ This is <strong>viscoelasticity</strong>: the material "remembers" it is both solid and liquid.
+              Adjust the strain rate slider above to see how fast deformation shifts the behavior from fluid-like to solid-like.
             </p>
           </div>
+        </div>
+      </div>
+    );
+  }
 
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              What determines whether silly putty bounces or flows?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {predictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    minHeight: '44px',
-                    borderRadius: '8px',
-                    border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: prediction === p.id ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+  // PREDICT
+  if (phase === 'predict') {
+    const predictions = [
+      { id: 'always_solid', label: '🪨 It always acts like a solid — bounces and holds shape, regardless of speed' },
+      { id: 'always_liquid', label: '💧 It always acts like a liquid — flows and drips at any speed' },
+      { id: 'rate_depends', label: '⚡ Fast deformation → solid-like (bounces); Slow deformation → liquid-like (flows)' },
+      { id: 'random', label: '🎲 It behaves randomly — you cannot predict which behavior you will see' },
+    ];
+    return (
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, paddingTop: '48px', paddingBottom: '100px', overflowY: 'auto' }}>
+        {renderProgressBar()}
+        {renderNavBar(!!prediction)}
+        <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px' }}>
+          {renderNavDots()}
+          {renderVisualization()}
+          <div style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px', margin: '16px 0' }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>What You're Seeing:</h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+              A blob of viscoelastic polymer being deformed. The curve shows stress vs strain.
+              The wavy lines represent tangled polymer chains. Use the slider to change the deformation rate.
+            </p>
+          </div>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 700 }}>
+            What determines whether silly putty bounces or flows?
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {predictions.map(p => (
+              <button key={p.id} onClick={() => setPrediction(p.id)} style={{
+                padding: '14px 16px', minHeight: '44px', borderRadius: '8px',
+                border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
+                background: prediction === p.id ? 'rgba(139,92,246,0.2)' : 'transparent',
+                color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px',
+              }}>{p.label}</button>
+            ))}
           </div>
         </div>
       </div>
     );
   }
 
-  // PLAY PHASE
+  // PLAY
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        {renderNavBar(true, true, 'Next')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '20px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Viscoelasticity</h2>
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, paddingTop: '48px', paddingBottom: '100px', overflowY: 'auto' }}>
+        {renderProgressBar()}
+        {renderNavBar(true)}
+        <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px' }}>
+          {renderNavDots()}
+          <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+            <h2 style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>
+              Explore Viscoelasticity
+            </h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Adjust strain rate to see solid-like vs liquid-like behavior
+              Adjust strain rate to shift between solid-like and liquid-like behavior
             </p>
           </div>
-
-          <div style={{
-            background: 'rgba(139, 92, 246, 0.15)',
-            margin: '0 16px 16px 16px',
-            padding: '12px 16px',
-            borderRadius: '8px',
-            borderLeft: `3px solid ${colors.accent}`,
-          }}>
+          <div style={{ background: 'rgba(139,92,246,0.15)', padding: '12px 16px', borderRadius: '8px', borderLeft: `3px solid ${colors.accent}`, marginBottom: '16px' }}>
             <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
-              <strong style={{ color: colors.textPrimary }}>Observe:</strong> Watch how the material blob and stress-strain curve change as you adjust the strain rate slider. Notice the color shift between elastic (blue) and viscous (orange) behavior.
+              <strong style={{ color: colors.textPrimary }}>Why this matters:</strong> Understanding viscoelasticity
+              drives a $50B+ industry — from Nike shoe foam (85% energy return) to car suspension (40% NVH reduction),
+              to medical implants, to polymer manufacturing. Every rubber, foam, gel, and biopolymer you encounter
+              obeys these principles. Engineers who understand the Deborah number can design materials that are
+              simultaneously protective at high rates and compliant at low rates.
             </p>
           </div>
-
-          {renderMaterialBlob(true, true)}
+          {renderVisualization()}
           {renderControls()}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Fast rate (high De) - material bounces back elastically</li>
-              <li>Slow rate (low De) - material flows like thick honey</li>
-              <li>Watch the stress-strain curve change shape!</li>
-              <li>Notice how polymer chains respond differently</li>
+          <div style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px', marginTop: '16px' }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 700 }}>Try These Experiments:</h4>
+            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.9, paddingLeft: '20px', margin: 0 }}>
+              <li>⬆️ Push strain rate to 100% — De rises above 1 → solid-like response</li>
+              <li>⬇️ Pull strain rate to 5% — De drops below 1 → fluid-like viscous flow</li>
+              <li>📈 Watch the stress-strain curve change slope and shape</li>
+              <li>🔵 See the interactive dot move relative to the elastic reference baseline</li>
             </ul>
           </div>
         </div>
@@ -1214,55 +832,48 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
     );
   }
 
-  // REVIEW PHASE
+  // REVIEW
   if (phase === 'review') {
     const wasCorrect = prediction === 'rate_depends';
-
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        {renderNavBar(true, true, 'Next')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '20px' }}>
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, paddingTop: '48px', paddingBottom: '100px', overflowY: 'auto' }}>
+        {renderProgressBar()}
+        {renderNavBar(true)}
+        <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px' }}>
+          {renderNavDots()}
           <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+            background: wasCorrect ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)',
+            padding: '20px', borderRadius: '12px',
+            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`, marginBottom: '16px',
           }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
+              {wasCorrect ? '✅ Correct!' : '❌ Not Quite!'}
             </h3>
-            <p style={{ color: colors.textPrimary }}>
-              The deformation rate determines behavior: fast = solid-like, slow = fluid-like!
+            <p style={{ color: colors.textPrimary, fontSize: '15px' }}>
+              <strong>Deformation rate</strong> determines behavior: fast = solid-like (elastic), slow = fluid-like (viscous).
+              This is because the <em>Deborah number</em> De = relaxation time / observation time changes when the rate changes.
             </p>
           </div>
-
-          {renderMaterialBlob(false)}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Viscoelasticity</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Deborah Number:</strong> De = relaxation time / observation time.
-                Named after the biblical prophetess who said "the mountains flowed before the Lord" -
-                given enough time, even mountains flow!
+          {renderVisualization()}
+          <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginTop: '16px' }}>
+            <h3 style={{ color: colors.accent, marginBottom: '12px', fontWeight: 700 }}>Why Viscoelasticity Behaves This Way</h3>
+            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8 }}>
+              <p style={{ marginBottom: '10px' }}>
+                🔢 <strong style={{ color: colors.textPrimary }}>Deborah Number:</strong> De = relaxation time / observation time.
+                Named after the biblical prophetess who said "the mountains flowed before the Lord" —
+                given enough time (long observation), even mountains flow!
               </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>High De (fast deformation):</strong> The material
-                doesn't have time to rearrange its polymer chains. It stores energy elastically and bounces back.
+              <p style={{ marginBottom: '10px' }}>
+                ⚡ <strong style={{ color: colors.textPrimary }}>High De (fast deformation):</strong> Polymer chains
+                cannot rearrange. Energy stores elastically → the material bounces back.
               </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Low De (slow deformation):</strong> Polymer chains
-                have time to slide past each other. Energy dissipates as heat, and the material flows.
+              <p style={{ marginBottom: '10px' }}>
+                💧 <strong style={{ color: colors.textPrimary }}>Low De (slow deformation):</strong> Chains have time
+                to slide past each other. Energy dissipates as heat → the material flows.
               </p>
               <p>
-                <strong style={{ color: colors.textPrimary }}>Maxwell Model:</strong> Spring (elastic) + dashpot
-                (viscous) in series. The spring stores energy; the dashpot dissipates it over time.
+                🔧 <strong style={{ color: colors.textPrimary }}>Maxwell Model:</strong> Spring (elastic E) + dashpot
+                (viscous η) in series. Spring stores energy instantly; dashpot dissipates it over time τ = η/E.
               </p>
             </div>
           </div>
@@ -1271,160 +882,119 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
     );
   }
 
-  // TWIST PREDICT PHASE
+  // TWIST PREDICT
   if (phase === 'twist_predict') {
+    const twistPredictions = [
+      { id: 'no_change', label: '🤷 Temperature has no effect on viscoelastic behavior' },
+      { id: 'cold_flows', label: '🌊 Cold makes it flow more; warm makes it stiffer' },
+      { id: 'cold_brittle', label: '❄️ Cold makes it more solid/brittle; warm makes it flow more easily' },
+      { id: 'melts', label: '🔥 It melts completely when warm and stays solid when cold' },
+    ];
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        {renderNavBar(true, !!twistPrediction, 'Next')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '20px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
-            <p style={{ color: colors.textSecondary }}>
-              What if we change the temperature?
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, paddingTop: '48px', paddingBottom: '100px', overflowY: 'auto' }}>
+        {renderProgressBar()}
+        {renderNavBar(!!twistPrediction)}
+        <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px' }}>
+          {renderNavDots()}
+          <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+            <h2 style={{ color: colors.warning, fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>🌡️ The Twist</h2>
+            <p style={{ color: colors.textSecondary }}>What if we change the temperature?</p>
+          </div>
+          {renderVisualization()}
+          <div style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px', margin: '16px 0' }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>The Setup:</h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+              Two identical pieces of silly putty. One is cooled to <strong>−10°C</strong> in the freezer.
+              The other is warmed to <strong>40°C</strong> in your hand. Now you stretch both at the <em>exact same strain rate</em>.
+              What do you predict will happen to each one?
             </p>
           </div>
-
-          {renderMaterialBlob(false)}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Setup:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              You have two pieces of the same silly putty. You put one in the freezer and
-              warm the other in your hands. Now you try to stretch both at the same rate.
-              How does temperature affect the viscoelastic behavior?
-            </p>
-          </div>
-
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              How does temperature change the material's behavior?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {twistPredictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setTwistPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    minHeight: '44px',
-                    borderRadius: '8px',
-                    border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
-                    background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 700 }}>
+            How does temperature change the material's behavior?
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {twistPredictions.map(p => (
+              <button key={p.id} onClick={() => setTwistPrediction(p.id)} style={{
+                padding: '14px 16px', minHeight: '44px', borderRadius: '8px',
+                border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
+                background: twistPrediction === p.id ? 'rgba(245,158,11,0.2)' : 'transparent',
+                color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px',
+              }}>{p.label}</button>
+            ))}
           </div>
         </div>
       </div>
     );
   }
 
-  // TWIST PLAY PHASE
+  // TWIST PLAY
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        {renderNavBar(true, true, 'Next')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '20px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Temperature Effects</h2>
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, paddingTop: '48px', paddingBottom: '100px', overflowY: 'auto' }}>
+        {renderProgressBar()}
+        {renderNavBar(true)}
+        <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px' }}>
+          {renderNavDots()}
+          <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+            <h2 style={{ color: colors.warning, fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>
+              🌡️ Test Temperature Effects
+            </h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Change temperature and observe how the same strain rate produces different behavior
+              Adjust both strain rate AND temperature — observe how De changes
             </p>
           </div>
-
-          <div style={{
-            background: 'rgba(245, 158, 11, 0.15)',
-            margin: '0 16px 16px 16px',
-            padding: '12px 16px',
-            borderRadius: '8px',
-            borderLeft: `3px solid ${colors.warning}`,
-          }}>
+          <div style={{ background: 'rgba(245,158,11,0.15)', padding: '12px 16px', borderRadius: '8px', borderLeft: `3px solid ${colors.warning}`, marginBottom: '16px' }}>
             <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
-              <strong style={{ color: colors.textPrimary }}>Observe:</strong> Adjust the temperature slider and watch how the Deborah number changes even at the same strain rate. Notice the temperature indicator on the right side of the visualization.
+              <strong style={{ color: colors.textPrimary }}>Key insight:</strong> Adjust the temperature slider
+              independently and watch the De value change — even at the same strain rate. Cold → longer relaxation
+              time → higher De → more solid-like behavior. Warm → shorter relaxation time → lower De → more fluid.
             </p>
           </div>
-
-          {renderMaterialBlob(true, true)}
-          {renderControls()}
-
-          <div style={{
-            background: 'rgba(245, 158, 11, 0.2)',
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-            borderLeft: `3px solid ${colors.warning}`,
-          }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Cold materials have longer relaxation times (higher De at same rate) - more brittle and solid-like.
-              Warm materials have shorter relaxation times (lower De) - more fluid and flowing.
-              This is why cold silly putty can shatter, but warm putty stretches endlessly!
-            </p>
-          </div>
+          {renderVisualization()}
+          {renderTwistControls()}
         </div>
       </div>
     );
   }
 
-  // TWIST REVIEW PHASE
+  // TWIST REVIEW
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'cold_brittle';
-
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        {renderNavBar(true, true, 'Next')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '20px' }}>
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, paddingTop: '48px', paddingBottom: '100px', overflowY: 'auto' }}>
+        {renderProgressBar()}
+        {renderNavBar(true)}
+        <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px' }}>
+          {renderNavDots()}
           <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+            background: wasCorrect ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)',
+            padding: '20px', borderRadius: '12px',
+            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`, marginBottom: '16px',
           }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
+              {wasCorrect ? '✅ Correct!' : '❌ Not Quite!'}
             </h3>
-            <p style={{ color: colors.textPrimary }}>
-              Chill it and it becomes more brittle; warm it and it flows more!
+            <p style={{ color: colors.textPrimary, fontSize: '15px' }}>
+              Cold ❄️ extends relaxation time → higher De → <strong>stiffer and more brittle</strong>.
+              Warm 🔥 shrinks relaxation time → lower De → <strong>flows more easily</strong>.
             </p>
           </div>
-
-          {renderMaterialBlob(false)}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Temperature and Relaxation Time</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Cold Materials:</strong> Polymer chains move
-                sluggishly. Relaxation time increases dramatically. Even moderate strain rates give high De,
-                making the material act glassy and brittle - it can shatter!
+          <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px' }}>
+            <h3 style={{ color: colors.warning, marginBottom: '12px', fontWeight: 700 }}>Temperature–Relaxation Connection</h3>
+            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8 }}>
+              <p style={{ marginBottom: '10px' }}>
+                ❄️ <strong style={{ color: colors.textPrimary }}>Cold Materials:</strong> Polymer chains move sluggishly.
+                Relaxation time τ increases exponentially (Arrhenius: τ ∝ exp(Ea/RT)).
+                Even moderate strain rates give high De → glassy, brittle behavior. Cold silly putty shatters.
               </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Warm Materials:</strong> Polymer chains wiggle
-                energetically and slide past each other easily. Relaxation time decreases. Even fast
-                deformation may give low De, so the material flows smoothly.
+              <p style={{ marginBottom: '10px' }}>
+                🔥 <strong style={{ color: colors.textPrimary }}>Warm Materials:</strong> Chains have thermal energy to
+                slide past each other quickly. τ decreases → De falls → smooth viscous flow at same strain rate.
               </p>
               <p>
-                <strong style={{ color: colors.textPrimary }}>Glass Transition:</strong> Below a critical
-                temperature, many polymers "freeze" into a glassy state where they behave almost purely
-                elastic (and brittle). This is why rubber bands snap when frozen!
+                🌡️ <strong style={{ color: colors.textPrimary }}>Glass Transition (Tg):</strong> Below Tg, many polymers
+                freeze into a glassy state — nearly pure elastic and brittle. This is why rubber bands snap when frozen.
+                Tg for common polymers ranges from −100°C (silicone) to +100°C (polycarbonate).
               </p>
             </div>
           </div>
@@ -1433,216 +1003,251 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
     );
   }
 
-  // TRANSFER PHASE
+  // TRANSFER
   if (phase === 'transfer') {
-    const [currentAppIndex, setCurrentAppIndex] = useState(0);
-    const currentApp = transferApplications[currentAppIndex];
-    const isCurrentCompleted = transferCompleted.has(currentAppIndex);
-    const allCompleted = transferCompleted.size >= transferApplications.length;
+    const currentApp = realWorldApps[transferIndex];
+    const isCompleted = transferCompleted.has(transferIndex);
+    const allCompleted = transferCompleted.size >= realWorldApps.length;
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        {renderNavBar(true, allCompleted, 'Next')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '20px' }}>
-          <div style={{ padding: '16px' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, paddingTop: '48px', paddingBottom: '100px', overflowY: 'auto' }}>
+        {renderProgressBar()}
+        {renderNavBar(allCompleted)}
+        <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px' }}>
+          {renderNavDots()}
+          <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+            <h2 style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 700, marginBottom: '4px' }}>
               Real-World Applications
             </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
-              Viscoelasticity is everywhere in engineering and biology
-            </p>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', textAlign: 'center', marginBottom: '16px' }}>
-              Application {currentAppIndex + 1} of {transferApplications.length} - Complete all to continue
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              Viscoelasticity is a $50B+ engineering challenge — Application {transferIndex + 1} of {realWorldApps.length}
             </p>
           </div>
 
-          {/* Progress dots */}
+          {/* Progress dots for transfer */}
           <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
-            {transferApplications.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentAppIndex(index)}
-                style={{
-                  width: '12px',
-                  height: '12px',
-                  borderRadius: '50%',
-                  border: 'none',
-                  background: transferCompleted.has(index)
-                    ? colors.success
-                    : index === currentAppIndex
-                    ? colors.accent
-                    : 'rgba(255,255,255,0.2)',
-                  cursor: 'pointer',
-                }}
-                aria-label={`Application ${index + 1}`}
-              />
+            {realWorldApps.map((_, i) => (
+              <button key={i} onClick={() => setTransferIndex(i)} aria-label={`Application ${i + 1}`} style={{
+                width: '12px', height: '12px', borderRadius: '50%', border: 'none',
+                background: transferCompleted.has(i) ? colors.success : i === transferIndex ? colors.accent : 'rgba(255,255,255,0.2)',
+                cursor: 'pointer',
+              }} />
             ))}
           </div>
 
-          <div
-            style={{
-              background: colors.bgCard,
-              margin: '16px',
-              padding: '20px',
-              borderRadius: '12px',
-              border: isCurrentCompleted ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <h3 style={{ color: colors.textPrimary, fontSize: '18px' }}>{currentApp.title}</h3>
-              {isCurrentCompleted && <span style={{ color: colors.success, fontWeight: 'bold' }}>Completed</span>}
-            </div>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '16px', lineHeight: 1.6 }}>{currentApp.description}</p>
-
-            <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '16px', borderRadius: '8px', marginBottom: '16px' }}>
-              <p style={{ color: colors.accent, fontSize: '14px', fontWeight: 'bold', margin: 0 }}>{currentApp.question}</p>
+          <div style={{
+            background: colors.bgCard, padding: '20px', borderRadius: '12px',
+            border: isCompleted ? `2px solid ${colors.success}` : `1px solid rgba(255,255,255,0.1)`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+              <span style={{ fontSize: '32px' }}>{currentApp.icon}</span>
+              <div>
+                <h3 style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: 700 }}>{currentApp.title}</h3>
+                <p style={{ color: currentApp.color, fontSize: '13px', fontWeight: 600 }}>{currentApp.tagline}</p>
+              </div>
+              {isCompleted && <span style={{ marginLeft: 'auto', color: colors.success, fontWeight: 'bold' }}>✅ Done</span>}
             </div>
 
-            {!isCurrentCompleted ? (
-              <button
-                onClick={() => setTransferCompleted(new Set([...transferCompleted, currentAppIndex]))}
-                style={{
-                  padding: '12px 24px',
-                  minHeight: '44px',
-                  borderRadius: '8px',
-                  border: `1px solid ${colors.accent}`,
-                  background: 'transparent',
-                  color: colors.accent,
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                }}
-              >
-                Reveal Answer
-              </button>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, marginBottom: '16px' }}>
+              {currentApp.description}
+            </p>
+
+            {/* Stats */}
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
+              {currentApp.stats.map((s, i) => (
+                <div key={i} style={{ background: 'rgba(255,255,255,0.05)', padding: '10px 14px', borderRadius: '8px', textAlign: 'center', flex: 1 }}>
+                  <div style={{ color: currentApp.color, fontSize: '18px', fontWeight: 800 }}>{s.icon} {s.value}</div>
+                  <div style={{ color: colors.textMuted, fontSize: '11px' }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Companies */}
+            <div style={{ marginBottom: '16px' }}>
+              <span style={{ color: colors.textMuted, fontSize: '12px' }}>Companies: </span>
+              {currentApp.companies.map((c, i) => (
+                <span key={i} style={{ color: colors.textSecondary, fontSize: '12px', fontWeight: 600, marginRight: '8px' }}>{c}</span>
+              ))}
+            </div>
+
+            <div style={{ background: 'rgba(139,92,246,0.1)', padding: '14px', borderRadius: '8px', marginBottom: '16px' }}>
+              <p style={{ color: colors.accent, fontSize: '14px', fontWeight: 700, marginBottom: '4px' }}>{currentApp.connection}</p>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0 }}>{currentApp.howItWorks}</p>
+            </div>
+
+            {!isCompleted ? (
+              <button onClick={() => setTransferCompleted(new Set([...transferCompleted, transferIndex]))} style={{
+                padding: '12px 24px', minHeight: '44px', borderRadius: '8px',
+                border: `1px solid ${colors.accent}`, background: 'transparent',
+                color: colors.accent, cursor: 'pointer', fontSize: '14px', fontWeight: 700,
+              }}>Got It — Mark Complete</button>
             ) : (
               <>
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '16px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '16px' }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>{currentApp.answer}</p>
+                <div style={{ background: 'rgba(16,185,129,0.1)', padding: '14px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
+                  <p style={{ color: colors.textPrimary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                    🚀 <strong>Future:</strong> {currentApp.futureImpact}
+                  </p>
                 </div>
-                {currentAppIndex < transferApplications.length - 1 ? (
-                  <button
-                    onClick={() => setCurrentAppIndex(currentAppIndex + 1)}
-                    style={{
-                      padding: '12px 24px',
-                      minHeight: '44px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      background: colors.accent,
-                      color: 'white',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    Next Application
-                  </button>
+                {transferIndex < realWorldApps.length - 1 ? (
+                  <button onClick={() => setTransferIndex(transferIndex + 1)} style={{
+                    padding: '12px 24px', minHeight: '44px', borderRadius: '8px',
+                    border: 'none', background: colors.accent, color: 'white',
+                    cursor: 'pointer', fontSize: '14px', fontWeight: 700,
+                  }}>Next Application →</button>
                 ) : (
-                  <button
-                    onClick={() => {}}
-                    style={{
-                      padding: '12px 24px',
-                      minHeight: '44px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      background: colors.success,
-                      color: 'white',
-                      cursor: 'default',
-                      fontSize: '14px',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    Got It - All Complete!
-                  </button>
+                  <button onClick={nextPhase} style={{
+                    padding: '12px 24px', minHeight: '44px', borderRadius: '8px',
+                    border: 'none', background: colors.success, color: 'white',
+                    cursor: 'pointer', fontSize: '14px', fontWeight: 700,
+                  }}>Take the Test →</button>
                 )}
               </>
             )}
           </div>
 
-          {/* Summary of completed apps */}
-          <div style={{ padding: '0 16px' }}>
-            <p style={{ color: colors.textSecondary, fontSize: '13px', textAlign: 'center' }}>
-              {transferCompleted.size} of {transferApplications.length} applications completed
-            </p>
-          </div>
+          <p style={{ color: colors.textMuted, fontSize: '13px', textAlign: 'center', marginTop: '12px' }}>
+            {transferCompleted.size} of {realWorldApps.length} applications completed
+          </p>
         </div>
       </div>
     );
   }
 
-  // TEST PHASE
+  // TEST
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ minHeight: '100vh', background: colors.bgPrimary, paddingTop: '48px', paddingBottom: '100px', overflowY: 'auto' }}>
+          {renderProgressBar()}
+          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery →' : 'Review & Retry')}
+          <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px' }}>
+            {renderNavDots()}
             <div style={{
-              background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              margin: '16px',
-              padding: '24px',
-              borderRadius: '12px',
-              textAlign: 'center',
+              background: testScore >= 8 ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)',
+              padding: '24px', borderRadius: '12px', textAlign: 'center', marginBottom: '16px',
             }}>
-              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
-                {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
+              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px', fontSize: '24px' }}>
+                {testScore >= 8 ? '🎉 Excellent Work!' : '📚 Keep Learning!'}
               </h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
-              <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
-                {testScore >= 8 ? 'You\'ve mastered viscoelasticity!' : 'Review the material and try again.'}
+              <p style={{ color: colors.textPrimary, fontSize: '28px', fontWeight: 800 }}>{testScore} / 10</p>
+              <p style={{ color: colors.textSecondary, marginTop: '8px', fontSize: '15px' }}>
+                {testScore >= 8 ? "You've mastered viscoelastic material behavior!" : 'Review the material and try again.'}
               </p>
             </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '20px', flexWrap: 'wrap' }}>
+              <button onClick={() => { setTestAnswers(new Array(10).fill(null)); setTestSubmitted(false); setCurrentTestQ(0); setTestScore(0); }} style={{
+                padding: '12px 24px', minHeight: '44px', borderRadius: '8px',
+                border: `1px solid ${colors.accent}`, background: 'transparent',
+                color: colors.accent, cursor: 'pointer', fontSize: '14px', fontWeight: 700,
+              }}>🔄 Retry Quiz</button>
+              <button onClick={() => goToPhase('hook')} style={{
+                padding: '12px 24px', minHeight: '44px', borderRadius: '8px',
+                border: `1px solid ${colors.textMuted}`, background: 'transparent',
+                color: colors.textSecondary, cursor: 'pointer', fontSize: '14px', fontWeight: 700,
+              }}>🏠 Back to Start</button>
+            </div>
+            {testQuestions.map((q, qi) => {
+              const ua = testAnswers[qi];
+              const isCorrect = ua !== null && q.options[ua].correct;
               return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
+                <div key={qi} style={{
+                  background: colors.bgCard, margin: '0 0 12px 0', padding: '16px', borderRadius: '12px',
+                  borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
+                }}>
+                  <p style={{ color: colors.textMuted, fontSize: '12px', marginBottom: '4px' }}>
+                    🧪 {q.scenario}
+                  </p>
+                  <p style={{ color: colors.textPrimary, fontWeight: 700, marginBottom: '10px', fontSize: '14px' }}>
+                    {qi + 1}. {q.question}
+                  </p>
+                  {q.options.map((opt, oi) => (
+                    <div key={oi} style={{
+                      padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', fontSize: '13px',
+                      background: opt.correct ? 'rgba(16,185,129,0.2)' : ua === oi ? 'rgba(239,68,68,0.2)' : 'transparent',
+                      color: opt.correct ? colors.success : ua === oi ? colors.error : colors.textMuted,
+                    }}>
+                      {opt.correct ? '✅ Correct: ' : ua === oi ? '❌ Your answer: ' : ''}{opt.text}
                     </div>
                   ))}
                 </div>
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
         </div>
       );
     }
 
-    const currentQ = testQuestions[currentTestQuestion];
+    const currentQ = testQuestions[currentTestQ];
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        {renderNavBar(true, false, 'Submit')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '20px' }}>
-          <div style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary, fontWeight: 'bold' }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
-            </div>
-            <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
-              {testQuestions.map((_, i) => (
-                <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
-              ))}
-            </div>
-            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {currentQ.options.map((opt, oIndex) => (
-                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', minHeight: '44px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(139, 92, 246, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>
-                  {opt.text}
-                </button>
-              ))}
-            </div>
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, paddingTop: '48px', paddingBottom: '100px', overflowY: 'auto' }}>
+        {renderProgressBar()}
+        {renderNavBar(false, 'Submit')}
+        <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px' }}>
+          {renderNavDots()}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h2 style={{ color: colors.textPrimary, fontWeight: 700 }}>Knowledge Test</h2>
+            <span style={{ color: colors.textSecondary, fontWeight: 700 }}>
+              Question {currentTestQ + 1} of {testQuestions.length}
+            </span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', minHeight: '44px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
-            {currentTestQuestion < testQuestions.length - 1 ? (
-              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', minHeight: '44px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button>
+          <div style={{ display: 'flex', gap: '4px', marginBottom: '20px' }}>
+            {testQuestions.map((_, i) => (
+              <div key={i} onClick={() => setCurrentTestQ(i)} style={{
+                flex: 1, height: '4px', borderRadius: '2px', cursor: 'pointer',
+                background: testAnswers[i] !== null ? colors.accent : i === currentTestQ ? colors.textMuted : 'rgba(255,255,255,0.1)',
+              }} />
+            ))}
+          </div>
+
+          {/* Scenario context */}
+          <div style={{ background: 'rgba(139,92,246,0.1)', padding: '14px', borderRadius: '8px', marginBottom: '12px', borderLeft: `3px solid ${colors.accent}` }}>
+            <p style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 700, marginBottom: '4px' }}>📋 SCENARIO</p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>{currentQ.scenario}</p>
+          </div>
+
+          <div style={{ background: colors.bgCard, padding: '18px', borderRadius: '12px', marginBottom: '14px' }}>
+            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5, fontWeight: 600 }}>{currentQ.question}</p>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {currentQ.options.map((opt, oi) => (
+              <button key={oi} onClick={() => {
+                const a = [...testAnswers]; a[currentTestQ] = oi; setTestAnswers(a);
+              }} style={{
+                padding: '14px 16px', minHeight: '44px', borderRadius: '8px',
+                border: testAnswers[currentTestQ] === oi ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
+                background: testAnswers[currentTestQ] === oi ? 'rgba(139,92,246,0.2)' : 'transparent',
+                color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px',
+              }}>{opt.text}</button>
+            ))}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px' }}>
+            <button onClick={() => setCurrentTestQ(Math.max(0, currentTestQ - 1))} disabled={currentTestQ === 0} style={{
+              padding: '12px 24px', minHeight: '44px', borderRadius: '8px',
+              border: `1px solid ${colors.textMuted}`, background: 'transparent',
+              color: currentTestQ === 0 ? colors.textMuted : colors.textPrimary,
+              cursor: currentTestQ === 0 ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: 600,
+            }}>← Previous</button>
+            {currentTestQ < testQuestions.length - 1 ? (
+              <button onClick={() => setCurrentTestQ(currentTestQ + 1)} style={{
+                padding: '12px 24px', minHeight: '44px', borderRadius: '8px',
+                border: 'none', background: colors.accent, color: 'white',
+                cursor: 'pointer', fontSize: '14px', fontWeight: 600,
+              }}>Next →</button>
             ) : (
-              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', minHeight: '44px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
+              <button onClick={() => {
+                let score = 0;
+                testQuestions.forEach((q, i) => { if (testAnswers[i] !== null && q.options[testAnswers[i]!].correct) score++; });
+                setTestScore(score);
+                setTestSubmitted(true);
+                if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
+                else if (score < 8 && onIncorrectAnswer) onIncorrectAnswer();
+              }} disabled={testAnswers.includes(null)} style={{
+                padding: '12px 24px', minHeight: '44px', borderRadius: '8px',
+                border: 'none',
+                background: testAnswers.includes(null) ? 'rgba(255,255,255,0.1)' : colors.success,
+                color: testAnswers.includes(null) ? colors.textMuted : 'white',
+                cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: 600,
+              }}>Submit Test ✓</button>
             )}
           </div>
         </div>
@@ -1650,38 +1255,53 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
     );
   }
 
-  // MASTERY PHASE
+  // MASTERY
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>🎉 Mastery Achieved! 🎉</h1>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered viscoelasticity and time-dependent material behavior</p>
-          </div>
-          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Deborah number: De = relaxation time / observation time</li>
-              <li>High De = solid-like elastic response</li>
-              <li>Low De = liquid-like viscous flow</li>
-              <li>Temperature affects relaxation time</li>
-              <li>Maxwell model: spring + dashpot in series</li>
-            </ul>
-          </div>
-          <div style={{ background: 'rgba(139, 92, 246, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
-              Real materials often require more complex models like the Kelvin-Voigt (parallel spring-dashpot)
-              or Standard Linear Solid. Rheology, the study of flow, uses these models to predict everything
-              from paint dripping to blood flow to earthquake response. The time-temperature superposition
-              principle lets engineers predict long-term behavior from short tests!
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, paddingTop: '48px', paddingBottom: '100px', overflowY: 'auto' }}>
+        {renderProgressBar()}
+        {renderBottomBar(false, true, 'Complete Game 🎉')}
+        <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px' }}>
+          {renderNavDots()}
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <div style={{ fontSize: '64px', marginBottom: '12px' }}>🏆</div>
+            <h1 style={{ color: colors.success, fontSize: '32px', fontWeight: 800, marginBottom: '8px' }}>
+              🎉 Mastery Achieved! 🎉
+            </h1>
+            <p style={{ color: colors.textSecondary, fontSize: '16px' }}>
+              You've mastered viscoelasticity and time-dependent material behavior!
             </p>
           </div>
-          {renderMaterialBlob(true)}
+          {renderVisualization()}
+          <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginTop: '16px' }}>
+            <h3 style={{ color: colors.accent, marginBottom: '12px', fontWeight: 700 }}>⭐ Key Concepts Mastered:</h3>
+            <ul style={{ color: colors.textSecondary, lineHeight: 2.0, paddingLeft: '20px', margin: 0, fontSize: '15px' }}>
+              <li>🔢 <strong>Deborah Number:</strong> De = relaxation time / observation time</li>
+              <li>⚡ <strong>High De (fast):</strong> solid-like elastic response → bounces</li>
+              <li>💧 <strong>Low De (slow):</strong> liquid-like viscous flow → drips</li>
+              <li>🌡️ <strong>Temperature:</strong> lowers relaxation time → shifts from solid to fluid</li>
+              <li>🔧 <strong>Maxwell Model:</strong> spring (E) + dashpot (η) in series → stress relaxation</li>
+            </ul>
+          </div>
+          <div style={{ background: 'rgba(139,92,246,0.2)', padding: '20px', borderRadius: '12px', marginTop: '16px' }}>
+            <h3 style={{ color: colors.accent, marginBottom: '12px', fontWeight: 700 }}>🚀 Beyond the Basics:</h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+              Real materials often require the <strong>Kelvin-Voigt model</strong> (parallel spring-dashpot for creep)
+              or the <strong>Standard Linear Solid</strong> (both Maxwell and KV combined) for full accuracy.
+              <strong>Rheology</strong>, the science of flow, uses these models to predict paint dripping,
+              blood flow, earthquake wave attenuation, and 3D printing quality. The
+              <strong>Time-Temperature Superposition principle</strong> lets engineers predict 100 years of creep
+              behavior from just a few hours of accelerated testing — saving enormous amounts of time and money.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '20px', flexWrap: 'wrap' }}>
+            <button onClick={() => goToPhase('hook')} style={{
+              padding: '14px 28px', minHeight: '44px', borderRadius: '8px',
+              border: `1px solid ${colors.accent}`, background: 'transparent',
+              color: colors.accent, cursor: 'pointer', fontSize: '14px', fontWeight: 700,
+            }}>🔄 Play Again</button>
+          </div>
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
       </div>
     );
   }

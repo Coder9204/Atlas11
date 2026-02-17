@@ -264,6 +264,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
 
   // Play phase state
   const [loadType, setLoadType] = useState<'resistive' | 'motor'>('resistive');
+  const [phaseSlider, setPhaseSlider] = useState(0); // 0 = resistive, 37 = motor
   const [animationTime, setAnimationTime] = useState(0);
   const [hasExperimented, setHasExperimented] = useState(false);
 
@@ -325,7 +326,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
     textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textMuted: '#94a3b8',
     border: '#2a2a3a',
     voltage: '#3B82F6',
     current: '#F59E0B',
@@ -726,7 +727,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
 
   // PLAY PHASE - Interactive Waveform Visualization
   if (phase === 'play') {
-    const currentPhaseAngle = loadType === 'resistive' ? 0 : 37;
+    const currentPhaseAngle = phaseSlider;
     const currentPF = Math.cos((currentPhaseAngle * Math.PI) / 180);
 
     return (
@@ -772,74 +773,113 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
             </div>
 
             {/* Waveform Visualization */}
-            <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto', marginBottom: '16px' }}>
+            <svg viewBox="0 0 400 220" style={{ width: '100%', height: 'auto', marginBottom: '16px' }}>
               <defs>
                 <linearGradient id="waveBg" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#020617" />
                   <stop offset="100%" stopColor="#0f172a" />
                 </linearGradient>
+                <linearGradient id="voltageGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor={colors.voltage} stopOpacity="0.8" />
+                  <stop offset="100%" stopColor={colors.voltage} />
+                </linearGradient>
                 <filter id="pointGlow">
-                  <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                  <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
                   <feMerge>
                     <feMergeNode in="coloredBlur"/>
                     <feMergeNode in="SourceGraphic"/>
                   </feMerge>
                 </filter>
               </defs>
-              <rect width="400" height="200" fill="url(#waveBg)" rx="8" />
+              <g id="background">
+                <rect width="400" height="220" fill="url(#waveBg)" rx="8" />
+              </g>
+              <g id="grid">
+                {/* Grid lines */}
+                <line x1="50" y1="55" x2="350" y2="55" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+                <line x1="50" y1="110" x2="350" y2="110" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+                <line x1="50" y1="165" x2="350" y2="165" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+                <line x1="50" y1="55" x2="50" y2="165" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+                <line x1="200" y1="55" x2="200" y2="165" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+                <line x1="350" y1="55" x2="350" y2="165" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              </g>
+              <g id="waveforms">
+                {/* Voltage waveform (blue) */}
+                <path
+                  d={`M 50 110 ${Array.from({ length: 60 }, (_, i) => {
+                    const x = 50 + i * 5;
+                    const y = 110 - Math.sin((i / 60) * 4 * Math.PI + animationTime) * 50;
+                    return `L ${x} ${y}`;
+                  }).join(' ')}`}
+                  fill="none"
+                  stroke={colors.voltage}
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                />
 
-              {/* Grid lines */}
-              <line x1="50" y1="50" x2="350" y2="50" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
-              <line x1="50" y1="100" x2="350" y2="100" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
-              <line x1="50" y1="150" x2="350" y2="150" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+                {/* Current waveform */}
+                <path
+                  d={`M 50 110 ${Array.from({ length: 60 }, (_, i) => {
+                    const x = 50 + i * 5;
+                    const phaseShift = (currentPhaseAngle * Math.PI) / 180;
+                    const y = 110 - Math.sin((i / 60) * 4 * Math.PI + animationTime - phaseShift) * 50;
+                    return `L ${x} ${y}`;
+                  }).join(' ')}`}
+                  fill="none"
+                  stroke={currentPhaseAngle === 0 ? colors.success : colors.current}
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                />
 
-              {/* Voltage waveform (blue) */}
-              <path
-                d={`M 50 100 ${Array.from({ length: 60 }, (_, i) => {
-                  const x = 50 + i * 5;
-                  const y = 100 - Math.sin((i / 60) * 4 * Math.PI + animationTime) * 50;
-                  return `L ${x} ${y}`;
-                }).join(' ')}`}
-                fill="none"
-                stroke={colors.voltage}
-                strokeWidth="3"
-                strokeLinecap="round"
-              />
-
-              {/* Current waveform */}
-              <path
-                d={`M 50 100 ${Array.from({ length: 60 }, (_, i) => {
-                  const x = 50 + i * 5;
-                  const phaseShift = (currentPhaseAngle * Math.PI) / 180;
-                  const y = 100 - Math.sin((i / 60) * 4 * Math.PI + animationTime - phaseShift) * 50;
-                  return `L ${x} ${y}`;
-                }).join(' ')}`}
-                fill="none"
-                stroke={loadType === 'resistive' ? colors.success : colors.current}
-                strokeWidth="3"
-                strokeLinecap="round"
-              />
-
-              {/* Interactive points at peaks */}
-              <circle
-                cx={50 + 15 * 5}
-                cy={100 - Math.sin((15 / 60) * 4 * Math.PI + animationTime) * 50}
-                r="8"
-                fill={colors.voltage}
-                filter="url(#pointGlow)"
-              />
-              <circle
-                cx={50 + 15 * 5}
-                cy={100 - Math.sin((15 / 60) * 4 * Math.PI + animationTime - (currentPhaseAngle * Math.PI) / 180) * 50}
-                r="8"
-                fill={loadType === 'resistive' ? colors.success : colors.current}
-                filter="url(#pointGlow)"
-              />
-
-              {/* Labels */}
-              <text x="360" y="50" fill={colors.voltage} fontSize="11" fontWeight="600">Voltage</text>
-              <text x="360" y="85" fill={loadType === 'resistive' ? colors.success : colors.current} fontSize="11" fontWeight="600">Current</text>
-              <text x="200" y="20" textAnchor="middle" fill={colors.textMuted} fontSize="11" fontWeight="600">Phase Relationship</text>
+                {/* Phase lag indicator (vertical line) */}
+                {currentPhaseAngle > 0 && (
+                  <line
+                    x1={50 + 15 * 5}
+                    y1="55"
+                    x2={50 + 15 * 5}
+                    y2="165"
+                    stroke={colors.warning}
+                    strokeWidth="1"
+                    strokeDasharray="4 4"
+                    opacity="0.5"
+                  />
+                )}
+              </g>
+              <g id="markers">
+                {/* Reference baseline marker */}
+                <circle
+                  cx={50}
+                  cy={110}
+                  r="5"
+                  fill={colors.textMuted}
+                  opacity="0.7"
+                />
+                {/* Interactive points at peaks */}
+                <circle
+                  cx={50 + 15 * 5}
+                  cy={110 - Math.sin((15 / 60) * 4 * Math.PI + animationTime) * 50}
+                  r="8"
+                  fill={colors.voltage}
+                  filter="url(#pointGlow)"
+                />
+                <circle
+                  cx={50 + 15 * 5}
+                  cy={110 - Math.sin((15 / 60) * 4 * Math.PI + animationTime - (currentPhaseAngle * Math.PI) / 180) * 50}
+                  r="8"
+                  fill={currentPhaseAngle === 0 ? colors.success : colors.current}
+                  filter="url(#pointGlow)"
+                />
+              </g>
+              <g id="labels">
+                {/* Labels */}
+                <text x="355" y="95" fill={colors.voltage} fontSize="11" fontWeight="600">V</text>
+                <text x="355" y="130" fill={currentPhaseAngle === 0 ? colors.success : colors.current} fontSize="11" fontWeight="600">I</text>
+                <text x="200" y="22" textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="600">Phase Relationship</text>
+                <text x="50" y="185" textAnchor="middle" fill={colors.textMuted} fontSize="11">0°</text>
+                <text x="200" y="185" textAnchor="middle" fill={colors.textMuted} fontSize="11">180°</text>
+                <text x="350" y="185" textAnchor="middle" fill={colors.textMuted} fontSize="11">360°</text>
+                <text x="200" y="210" textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="600">PF = cos({currentPhaseAngle}°) = {currentPF.toFixed(2)}</text>
+              </g>
             </svg>
 
             {/* Legend */}
@@ -854,10 +894,44 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
               </div>
             </div>
 
+            {/* Phase Angle Slider */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Phase Angle (Inductive Lag)</span>
+                <span style={{ ...typo.small, color: getPFColor(currentPF), fontWeight: 600 }}>{phaseSlider}° → PF = {currentPF.toFixed(2)}</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="60"
+                value={phaseSlider}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  setPhaseSlider(val);
+                  setLoadType(val > 0 ? 'motor' : 'resistive');
+                  setHasExperimented(true);
+                  playSound('click');
+                }}
+                style={{
+                  width: '100%',
+                  height: '20px',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  accentColor: '#3b82f6',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                } as React.CSSProperties}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>0° (Heater PF=1.0)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>60° (Motor PF=0.5)</span>
+              </div>
+            </div>
+
             {/* Load Type Selector */}
             <div style={{ display: 'flex', gap: '12px' }}>
               <button
-                onClick={() => { setLoadType('resistive'); setHasExperimented(true); playSound('click'); }}
+                onClick={() => { setLoadType('resistive'); setPhaseSlider(0); setHasExperimented(true); playSound('click'); }}
                 style={{
                   flex: 1,
                   padding: '16px',
@@ -873,7 +947,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
                 <div style={{ ...typo.small, color: colors.textMuted }}>Resistive Load</div>
               </button>
               <button
-                onClick={() => { setLoadType('motor'); setHasExperimented(true); playSound('click'); }}
+                onClick={() => { setLoadType('motor'); setPhaseSlider(37); setHasExperimented(true); playSound('click'); }}
                 style={{
                   flex: 1,
                   padding: '16px',

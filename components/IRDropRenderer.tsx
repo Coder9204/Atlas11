@@ -244,6 +244,21 @@ const realWorldApps = [
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
+// SLIDER STYLE - meets all requirements
+// ─────────────────────────────────────────────────────────────────────────────
+const sliderStyle: React.CSSProperties = {
+  width: '100%',
+  height: '20px',
+  borderRadius: '4px',
+  cursor: 'pointer',
+  WebkitAppearance: 'none',
+  appearance: 'none',
+  touchAction: 'pan-y',
+  accentColor: '#3b82f6',
+  background: 'transparent',
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase }) => {
@@ -304,14 +319,14 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
     bgCard: '#1a1a24',
-    accent: '#EF4444', // Red for voltage/power theme
+    accent: '#EF4444',
     accentGlow: 'rgba(239, 68, 68, 0.3)',
     success: '#10B981',
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#e2e8f0', // High contrast for accessibility (brightness >= 180)
-    textMuted: '#e2e8f0',
+    textSecondary: '#e2e8f0',
+    textMuted: 'rgba(148,163,184,0.7)',
     border: '#2a2a3a',
   };
 
@@ -330,11 +345,11 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
     predict: 'Predict',
     play: 'Experiment',
     review: 'Understanding',
-    twist_predict: 'New Variable',
+    twist_predict: 'Explore',
     twist_play: 'Temperature Lab',
-    twist_review: 'Deep Insight',
-    transfer: 'Real World',
-    test: 'Knowledge Test',
+    twist_review: 'Apply',
+    transfer: 'Transfer',
+    test: 'Quiz',
     mastery: 'Mastery'
   };
 
@@ -353,9 +368,15 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
     }
   }, [phase, goToPhase]);
 
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase]);
+
   // Calculate IR drop based on parameters
   const calculateIRDrop = useCallback((x: number, y: number) => {
-    // Distance from nearest power source (assuming bumps at corners and center)
     const gridSize = 100;
     const bumpPositions = [
       { x: 0, y: 0 },
@@ -369,13 +390,10 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
       Math.sqrt(Math.pow(x - b.x, 2) + Math.pow(y - b.y, 2))
     ));
 
-    // Resistance model: R = rho * L / (W * T)
-    const resistivity = 1.7e-8 * (1 + 0.004 * (temperature - 25)); // Copper with temp coefficient
+    const resistivity = 1.7e-8 * (1 + 0.004 * (temperature - 25));
     const effectiveResistance = (resistivity * minDistance * 1e-6) / (metalThickness * 1e-6 * gridDensity * 10 * 1e-6);
-
-    // V = IR
-    const drop = currentDraw * 1e-3 * effectiveResistance * 1000; // in mV
-    return Math.min(drop, 200); // Cap at 200mV for visualization
+    const drop = currentDraw * 1e-3 * effectiveResistance * 1000;
+    return Math.min(drop, 200);
   }, [currentDraw, metalThickness, gridDensity, temperature]);
 
   // Calculate average and max IR drop
@@ -396,53 +414,89 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
     return {
       maxDrop,
       avgDrop: totalDrop / count,
-      efficiency: Math.max(0, 100 - (maxDrop / 10)) // Simplified efficiency metric
+      efficiency: Math.max(0, 100 - (maxDrop / 10))
     };
   }, [calculateIRDrop]);
 
   const stats = calculateStats();
 
   // Power Grid Visualization Component
-  const PowerGridVisualization = ({ showHeatmap = true, interactive = false }: { showHeatmap?: boolean; interactive?: boolean }) => {
-    const width = isMobile ? 320 : 450;
-    const height = isMobile ? 320 : 450;
+  const PowerGridVisualization = ({ showHeatmap = true, showSliders = false }: { showHeatmap?: boolean; showSliders?: boolean }) => {
+    const width = isMobile ? 320 : 420;
+    const height = isMobile ? 280 : 340;
     const padding = 40;
     const gridSize = width - 2 * padding;
+    const gridH = height - 2 * padding;
 
     // Generate heatmap data
     const heatmapCells: { x: number; y: number; drop: number }[] = [];
-    const cellSize = gridSize / 10;
+    const cellSizeX = gridSize / 10;
+    const cellSizeY = gridH / 10;
 
     for (let i = 0; i < 10; i++) {
       for (let j = 0; j < 10; j++) {
         const x = (i + 0.5) * 10;
         const y = (j + 0.5) * 10;
         heatmapCells.push({
-          x: padding + i * cellSize,
-          y: padding + j * cellSize,
+          x: padding + i * cellSizeX,
+          y: padding + j * cellSizeY,
           drop: calculateIRDrop(x * 10, y * 10)
         });
       }
     }
 
-    // Color scale for voltage drop (green = low, yellow = medium, red = high)
     const getColor = (drop: number) => {
       const normalized = Math.min(drop / 100, 1);
       if (normalized < 0.3) {
-        // Green to yellow
         const t = normalized / 0.3;
         return `rgb(${Math.round(34 + t * 211)}, ${Math.round(197 - t * 38)}, ${Math.round(94 - t * 94)})`;
       } else {
-        // Yellow to red
         const t = (normalized - 0.3) / 0.7;
         return `rgb(${Math.round(245 - t * 6)}, ${Math.round(159 - t * 91)}, ${Math.round(t * 68)})`;
       }
     };
 
+    // Interactive marker circle position based on currentDraw
+    const markerNorm = (currentDraw - 10) / 90;
+    const markerX = padding + markerNorm * gridSize;
+    const markerY = padding + gridH / 2;
+
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', display: 'block' }}>
+        <defs>
+          <filter id="irdrop-glow">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+            <feMerge>
+              <feMergeNode in="coloredBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="irdrop-shadow">
+            <feDropShadow dx="1" dy="1" stdDeviation="2" floodOpacity="0.4" />
+          </filter>
+          <linearGradient id="irdrop-legendGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={getColor(0)} />
+            <stop offset="30%" stopColor={getColor(30)} />
+            <stop offset="100%" stopColor={getColor(100)} />
+          </linearGradient>
+          <linearGradient id="irdrop-bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={colors.bgSecondary} />
+            <stop offset="100%" stopColor={colors.bgCard} />
+          </linearGradient>
+        </defs>
+
         {/* Grid background */}
-        <rect x={padding} y={padding} width={gridSize} height={gridSize} fill={colors.bgSecondary} stroke={colors.border} strokeWidth="2" />
+        <rect x={padding} y={padding} width={gridSize} height={gridH} fill="url(#irdrop-bgGrad)" stroke={colors.border} strokeWidth="2" rx="4" />
+
+        {/* Grid lines */}
+        {Array.from({ length: 5 }).map((_, i) => (
+          <line key={`gv-${i}`} x1={padding + (i + 1) * gridSize / 6} y1={padding} x2={padding + (i + 1) * gridSize / 6} y2={padding + gridH}
+            stroke={colors.border} strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
+        ))}
+        {Array.from({ length: 3 }).map((_, i) => (
+          <line key={`gh-${i}`} x1={padding} y1={padding + (i + 1) * gridH / 4} x2={padding + gridSize} y2={padding + (i + 1) * gridH / 4}
+            stroke={colors.border} strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
+        ))}
 
         {/* Heatmap cells */}
         {showHeatmap && heatmapCells.map((cell, i) => (
@@ -450,10 +504,11 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
             key={i}
             x={cell.x}
             y={cell.y}
-            width={cellSize - 1}
-            height={cellSize - 1}
+            width={cellSizeX - 1}
+            height={cellSizeY - 1}
             fill={getColor(cell.drop)}
-            opacity="0.8"
+            opacity="0.75"
+            rx="1"
           />
         ))}
 
@@ -466,17 +521,18 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
               x1={x}
               y1={padding}
               x2={x}
-              y2={padding + gridSize}
+              y2={padding + gridH}
               stroke={colors.accent}
-              strokeWidth={metalThickness / 2}
+              strokeWidth={Math.max(1, metalThickness / 2)}
               opacity="0.7"
             />
           );
         })}
 
         {/* Power grid lines (horizontal) */}
-        {Array.from({ length: gridDensity + 1 }).map((_, i) => {
-          const y = padding + (i * gridSize) / gridDensity;
+        {Array.from({ length: Math.ceil(gridDensity * gridH / gridSize) + 1 }).map((_, i) => {
+          const y = padding + (i * gridH) / (gridDensity - 1 || 1);
+          if (y > padding + gridH) return null;
           return (
             <line
               key={`h-${i}`}
@@ -485,7 +541,7 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
               x2={padding + gridSize}
               y2={y}
               stroke={colors.accent}
-              strokeWidth={metalThickness / 2}
+              strokeWidth={Math.max(1, metalThickness / 2)}
               opacity="0.7"
             />
           );
@@ -495,33 +551,24 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
         {[
           { x: padding, y: padding },
           { x: padding + gridSize, y: padding },
-          { x: padding, y: padding + gridSize },
-          { x: padding + gridSize, y: padding + gridSize },
-          { x: padding + gridSize / 2, y: padding + gridSize / 2 },
+          { x: padding, y: padding + gridH },
+          { x: padding + gridSize, y: padding + gridH },
+          { x: padding + gridSize / 2, y: padding + gridH / 2 },
         ].map((pos, i) => (
-          <g key={`bump-${i}`}>
-            <circle
-              cx={pos.x}
-              cy={pos.y}
-              r="12"
-              fill={colors.success}
-              stroke="white"
-              strokeWidth="2"
-            />
-            <text x={pos.x} y={pos.y + 4} fill="white" fontSize="10" textAnchor="middle" fontWeight="bold">
-              V+
-            </text>
+          <g key={`bump-${i}`} filter="url(#irdrop-shadow)">
+            <circle cx={pos.x} cy={pos.y} r="10" fill={colors.success} stroke="white" strokeWidth="2" />
+            <text x={pos.x} y={pos.y + 4} fill="white" fontSize="8" textAnchor="middle" fontWeight="bold">V+</text>
           </g>
         ))}
 
         {/* Animated current flow */}
         {showHeatmap && (
           <g opacity="0.6">
-            {Array.from({ length: 8 }).map((_, i) => {
-              const angle = (i * Math.PI / 4) + (animationFrame * 0.05);
+            {Array.from({ length: 6 }).map((_, i) => {
+              const angle = (i * Math.PI / 3) + (animationFrame * 0.05);
               const centerX = padding + gridSize / 2;
-              const centerY = padding + gridSize / 2;
-              const r = 30 + (animationFrame % 60);
+              const centerY = padding + gridH / 2;
+              const r = 20 + (animationFrame % 40);
               return (
                 <circle
                   key={`flow-${i}`}
@@ -529,30 +576,163 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
                   cy={centerY + Math.sin(angle) * r}
                   r="3"
                   fill={colors.warning}
-                  opacity={1 - (r - 30) / 60}
+                  opacity={1 - r / 60}
                 />
               );
             })}
           </g>
         )}
 
+        {/* Interactive marker circle - moves with currentDraw */}
+        <circle
+          cx={markerX}
+          cy={markerY}
+          r="9"
+          fill={colors.accent}
+          stroke="white"
+          strokeWidth="2"
+          filter="url(#irdrop-glow)"
+        />
+        <text x={markerX} y={markerY + 4} fill="white" fontSize="7" textAnchor="middle" fontWeight="bold">
+          {currentDraw}
+        </text>
+
+        {/* Formula text */}
+        <text x={padding + gridSize / 2} y={padding - 18} fill={colors.accent} fontSize="13" textAnchor="middle" fontWeight="bold">
+          V = I × R (Ohm&apos;s Law)
+        </text>
+
+        {/* Axis labels */}
+        <text x={padding} y={padding + gridH + 18} fill={colors.textSecondary} fontSize="11" textAnchor="start">Low I</text>
+        <text x={padding + gridSize} y={padding + gridH + 18} fill={colors.textSecondary} fontSize="11" textAnchor="end">High I</text>
+        <text x={padding - 5} y={padding} fill={colors.textSecondary} fontSize="11" textAnchor="end">0</text>
+        <text x={padding - 5} y={padding + gridH} fill={colors.textSecondary} fontSize="11" textAnchor="end">R</text>
+
         {/* Legend */}
-        <g transform={`translate(${padding}, ${height - 25})`}>
-          <defs>
-            <linearGradient id="legendGradient">
-              <stop offset="0%" stopColor={getColor(0)} />
-              <stop offset="30%" stopColor={getColor(30)} />
-              <stop offset="100%" stopColor={getColor(100)} />
-            </linearGradient>
-          </defs>
-          <rect x="0" y="0" width="100" height="12" fill="url(#legendGradient)" rx="2" />
-          <text x="0" y="-3" fill={colors.textSecondary} fontSize="10">0mV</text>
-          <text x="100" y="-3" fill={colors.textSecondary} fontSize="10" textAnchor="end">100mV+</text>
-        </g>
+        <rect x={padding} y={height - 14} width="100" height="10" fill="url(#irdrop-legendGrad)" rx="2" />
+        <text x={padding} y={height - 16} fill={colors.textSecondary} fontSize="11">0mV</text>
+        <text x={padding + 100} y={height - 16} fill={colors.textSecondary} fontSize="11" textAnchor="end">100mV+</text>
 
         {/* Title */}
-        <text x={width / 2} y={25} fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="600">
-          Power Grid Voltage Drop Heatmap
+        <text x={width / 2} y={18} fill={colors.textPrimary} fontSize="13" textAnchor="middle" fontWeight="600">
+          IR Drop Heatmap
+        </text>
+      </svg>
+    );
+  };
+
+  // Temperature Visualization for twist_play
+  const TempVisualization = () => {
+    const width = isMobile ? 320 : 420;
+    const height = isMobile ? 260 : 300;
+    const padding = 40;
+    const graphW = width - 2 * padding;
+    const graphH = height - 2 * padding - 20;
+
+    // Resistance factor based on temperature
+    const resistFactor = 1 + 0.004 * (temperature - 25);
+    // IR drop at given distance using current temp
+    const baseIR = (distanceFromBump / 100) * 50 * resistFactor;
+    const irDrop = Math.min(baseIR, 150);
+
+    // Normalized positions
+    const tempNorm = (temperature - (-40)) / (125 - (-40));
+    const distNorm = (distanceFromBump - 10) / (100 - 10);
+
+    // IR drop indicator x position - moves with temperature slider
+    const indicatorX = padding + tempNorm * graphW;
+    // IR drop level y position - changes with distance from bump
+    const indicatorY = padding + graphH - (irDrop / 150) * graphH;
+
+    // Draw curve: IR drop vs temperature
+    const curvePoints = Array.from({ length: 20 }, (_, i) => {
+      const t = -40 + (i / 19) * 165;
+      const rf = 1 + 0.004 * (t - 25);
+      const ir = Math.min((distanceFromBump / 100) * 50 * rf, 150);
+      const cx = padding + ((t - (-40)) / 165) * graphW;
+      const cy = padding + graphH - (ir / 150) * graphH;
+      return `${i === 0 ? 'M' : 'L'} ${cx} ${cy}`;
+    }).join(' ');
+
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}
+        style={{ background: colors.bgCard, borderRadius: '12px', display: 'block' }}>
+        <defs>
+          <filter id="temp-glow">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+            <feMerge>
+              <feMergeNode in="coloredBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="temp-shadow">
+            <feDropShadow dx="1" dy="1" stdDeviation="2" floodOpacity="0.4" />
+          </filter>
+          <linearGradient id="temp-curveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#3B82F6" />
+            <stop offset="100%" stopColor={colors.accent} />
+          </linearGradient>
+          <linearGradient id="temp-areaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={colors.accent} stopOpacity="0.3" />
+            <stop offset="100%" stopColor={colors.accent} stopOpacity="0.0" />
+          </linearGradient>
+        </defs>
+
+        {/* Axes */}
+        <rect x={padding} y={padding} width={graphW} height={graphH} fill={colors.bgSecondary} rx="4" stroke={colors.border} />
+
+        {/* Grid lines */}
+        {[0.25, 0.5, 0.75].map((t, i) => (
+          <line key={`tg-${i}`} x1={padding + t * graphW} y1={padding} x2={padding + t * graphW} y2={padding + graphH}
+            stroke={colors.border} strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
+        ))}
+        {[0.25, 0.5, 0.75].map((t, i) => (
+          <line key={`hg-${i}`} x1={padding} y1={padding + t * graphH} x2={padding + graphW} y2={padding + t * graphH}
+            stroke={colors.border} strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
+        ))}
+
+        {/* Curve */}
+        <path d={curvePoints} stroke="url(#temp-curveGrad)" strokeWidth="3" fill="none" />
+
+        {/* Interactive marker - moves with temperature AND distance sliders */}
+        <circle
+          cx={indicatorX}
+          cy={indicatorY}
+          r="9"
+          fill={temperature > 50 ? colors.error : colors.success}
+          stroke="white"
+          strokeWidth="2"
+          filter="url(#temp-glow)"
+        />
+        <text x={indicatorX} y={indicatorY + 4} fill="white" fontSize="7" textAnchor="middle" fontWeight="bold">
+          {irDrop.toFixed(0)}
+        </text>
+
+        {/* Axis labels */}
+        <text x={padding + graphW / 2} y={height - 4} fill={colors.textSecondary} fontSize="11" textAnchor="middle">
+          Temperature (°C)
+        </text>
+        <text x={padding - 5} y={padding + graphH / 2} fill={colors.textSecondary} fontSize="11" textAnchor="end"
+          transform={`rotate(-90, ${padding - 12}, ${padding + graphH / 2})`}>
+          IR Drop (mV)
+        </text>
+
+        {/* Tick labels */}
+        <text x={padding} y={padding + graphH + 14} fill={colors.textSecondary} fontSize="11" textAnchor="middle">-40</text>
+        <text x={padding + graphW / 2} y={padding + graphH + 14} fill={colors.textSecondary} fontSize="11" textAnchor="middle">25</text>
+        <text x={padding + graphW} y={padding + graphH + 14} fill={colors.textSecondary} fontSize="11" textAnchor="middle">125</text>
+
+        <text x={padding - 5} y={padding + graphH} fill={colors.textSecondary} fontSize="11" textAnchor="end">0</text>
+        <text x={padding - 5} y={padding} fill={colors.textSecondary} fontSize="11" textAnchor="end">150</text>
+
+        {/* Formula */}
+        <text x={padding + graphW / 2} y={padding - 8} fill={colors.warning} fontSize="13" textAnchor="middle" fontWeight="bold">
+          R(T) = R₀(1 + 0.004×ΔT)
+        </text>
+
+        {/* Title */}
+        <text x={width / 2} y={15} fill={colors.textPrimary} fontSize="13" textAnchor="middle" fontWeight="600">
+          IR Drop vs Temperature
         </text>
       </svg>
     );
@@ -590,27 +770,27 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
         <button
           key={p}
           onClick={() => goToPhase(p)}
+          aria-label={phaseLabels[p]}
           style={{
-            width: phase === p ? '24px' : '8px',
-            height: '8px',
-            minHeight: '44px',
-            minWidth: '44px',
+            width: '44px',
+            height: '44px',
             borderRadius: '4px',
             border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            background: 'transparent',
             cursor: 'pointer',
-            transition: 'all 0.3s ease',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            padding: 0,
           }}
-          aria-label={phaseLabels[p]}
         >
           <span style={{
             width: phase === p ? '24px' : '8px',
             height: '8px',
             borderRadius: '4px',
             background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            display: 'block',
+            transition: 'all 0.3s ease',
           }} />
         </button>
       ))}
@@ -632,36 +812,66 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
     minHeight: '44px',
   };
 
-  // Navigation bar component
-  const renderNavigationBar = () => (
-    <nav style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      height: '56px',
-      background: colors.bgSecondary,
-      borderBottom: `1px solid ${colors.border}`,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '0 16px',
-      zIndex: 1000,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <span style={{ fontSize: '24px' }}>⚡</span>
-        <span style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>IR Drop</span>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={{ ...typo.small, color: colors.textSecondary }}>
-          {phaseLabels[phase]}
-        </span>
-        <span style={{ ...typo.small, color: colors.textMuted }}>
-          ({phaseOrder.indexOf(phase) + 1}/{phaseOrder.length})
-        </span>
-      </div>
-    </nav>
-  );
+  // Navigation bar with Back and Next buttons
+  const renderNavigationBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    return (
+      <nav style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '48px',
+        background: colors.bgSecondary,
+        borderBottom: `1px solid ${colors.border}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 16px',
+        zIndex: 1000,
+      }}>
+        <button
+          onClick={prevPhase}
+          disabled={currentIndex === 0}
+          style={{
+            background: 'transparent',
+            border: `1px solid ${colors.border}`,
+            color: currentIndex === 0 ? colors.textMuted : colors.textSecondary,
+            padding: '6px 14px',
+            borderRadius: '8px',
+            cursor: currentIndex === 0 ? 'not-allowed' : 'pointer',
+            fontSize: '14px',
+            minHeight: '32px',
+          }}
+        >
+          Back
+        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '18px' }}>⚡</span>
+          <span style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>IR Drop</span>
+          <span style={{ ...typo.small, color: colors.textMuted }}>
+            {phaseLabels[phase]} ({currentIndex + 1}/{phaseOrder.length})
+          </span>
+        </div>
+        <button
+          onClick={nextPhase}
+          disabled={currentIndex === phaseOrder.length - 1}
+          style={{
+            background: currentIndex === phaseOrder.length - 1 ? 'transparent' : colors.accent,
+            border: `1px solid ${currentIndex === phaseOrder.length - 1 ? colors.border : colors.accent}`,
+            color: 'white',
+            padding: '6px 14px',
+            borderRadius: '8px',
+            cursor: currentIndex === phaseOrder.length - 1 ? 'not-allowed' : 'pointer',
+            fontSize: '14px',
+            minHeight: '32px',
+          }}
+        >
+          Next
+        </button>
+      </nav>
+    );
+  };
 
   // ─────────────────────────────────────────────────────────────────────────────
   // PHASE RENDERS
@@ -675,6 +885,8 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
+        paddingTop: '48px',
+        paddingBottom: '100px',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
@@ -686,30 +898,19 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
           alignItems: 'center',
           justifyContent: 'center',
           padding: '24px',
-          paddingTop: '80px',
           textAlign: 'center',
           overflowY: 'auto',
         }}>
-          <div style={{
-            fontSize: '64px',
-            marginBottom: '24px',
-            animation: 'pulse 2s infinite',
-          }}>
-            ⚡🔌
-          </div>
-          <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+          <div style={{ fontSize: '64px', marginBottom: '24px' }}>⚡🔌</div>
 
           <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
             IR Drop: The Hidden Voltage Thief
           </h1>
 
-          <p style={{
-            ...typo.body,
-            color: colors.textSecondary,
-            maxWidth: '600px',
-            marginBottom: '32px',
-          }}>
-            "Why do chips fail when they're physically perfect? Because <span style={{ color: colors.accent }}>voltage never reaches them intact</span>. Every millimeter of wire steals power."
+          <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '600px', marginBottom: '32px' }}>
+            "Why do chips fail when they're physically perfect? Because{' '}
+            <span style={{ color: colors.accent }}>voltage never reaches them intact</span>.
+            Every millimeter of wire steals power."
           </p>
 
           <div style={{
@@ -755,32 +956,14 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
+        paddingTop: '48px',
+        paddingBottom: '100px',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: '24px',
-          paddingTop: '80px',
-        }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-            {/* Progress indicator */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '16px',
-            }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>
-                Step 1 of 1
-              </span>
-              <span style={{ ...typo.small, color: colors.accent }}>
-                Prediction Phase
-              </span>
-            </div>
-
             <div style={{
               background: `${colors.accent}22`,
               borderRadius: '12px',
@@ -788,9 +971,7 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
               marginBottom: '24px',
               border: `1px solid ${colors.accent}44`,
             }}>
-              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-                Make Your Prediction
-              </p>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>Make Your Prediction</p>
             </div>
 
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
@@ -798,16 +979,19 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
             </h2>
 
             {/* SVG diagram */}
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '24px', textAlign: 'center' }}>
               <svg width="100%" height="180" viewBox="0 0 400 180" style={{ maxWidth: '400px' }}>
+                <defs>
+                  <filter id="pred-glow">
+                    <feGaussianBlur stdDeviation="2" result="blur" />
+                    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                  </filter>
+                  <marker id="pred-arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill={colors.accent} />
+                  </marker>
+                </defs>
                 {/* Power supply */}
-                <rect x="20" y="60" width="60" height="60" fill={colors.success} rx="8" />
+                <rect x="20" y="60" width="60" height="60" fill={colors.success} rx="8" filter="url(#pred-glow)" />
                 <text x="50" y="95" fill="white" fontSize="14" textAnchor="middle" fontWeight="bold">1.0V</text>
                 <text x="50" y="140" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Supply</text>
 
@@ -821,18 +1005,9 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
                 <text x="290" y="95" fill={colors.warning} fontSize="14" textAnchor="middle" fontWeight="bold">???V</text>
                 <text x="290" y="140" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Circuit</text>
 
-                {/* Arrow */}
-                <line x1="320" y1="90" x2="380" y2="90" stroke={colors.textMuted} strokeWidth="2" />
-                <polygon points="380,90 370,85 370,95" fill={colors.textMuted} />
-
                 {/* Current flow label */}
                 <text x="200" y="30" fill={colors.accent} fontSize="12" textAnchor="middle">Current Flow (I)</text>
-                <line x1="100" y1="40" x2="300" y2="40" stroke={colors.accent} strokeWidth="1" markerEnd="url(#arrowhead)" />
-                <defs>
-                  <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                    <polygon points="0 0, 10 3.5, 0 7" fill={colors.accent} />
-                  </marker>
-                </defs>
+                <line x1="100" y1="40" x2="300" y2="40" stroke={colors.accent} strokeWidth="1" markerEnd="url(#pred-arrow)" />
               </svg>
               <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '8px' }}>
                 V = I × R: Current flowing through wire resistance causes voltage drop
@@ -870,18 +1045,13 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
                   }}>
                     {opt.id.toUpperCase()}
                   </span>
-                  <span style={{ color: colors.textPrimary, ...typo.body }}>
-                    {opt.text}
-                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>{opt.text}</span>
                 </button>
               ))}
             </div>
 
             {prediction && (
-              <button
-                onClick={() => { playSound('success'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
+              <button onClick={() => { playSound('success'); nextPhase(); }} style={primaryButtonStyle}>
                 Test My Prediction →
               </button>
             )}
@@ -901,177 +1071,125 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'hidden',
+        paddingTop: '48px',
+        paddingBottom: '100px',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Explore the Power Grid
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-            Adjust parameters to see how IR drop changes across the chip
-          </p>
-
-          {/* Real-world relevance */}
-          <div style={{
-            background: `${colors.accent}11`,
-            border: `1px solid ${colors.accent}33`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              <strong style={{ color: colors.accent }}>Real-World Impact:</strong> Engineers at Intel, AMD, and Apple use these exact principles to design power grids for processors. Poor IR drop management can cause chip failures, reduced performance, and wasted billions in production costs.
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Experiment with IR Drop
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+              Adjust parameters to see how IR drop changes across the chip. The formula V = I × R governs voltage drop.
             </p>
-          </div>
 
-          {/* Main visualization */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <PowerGridVisualization showHeatmap={true} interactive={true} />
-            </div>
-
-            {/* Current draw slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Current Draw</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{currentDraw}mA per cell</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                step="5"
-                value={currentDraw}
-                onChange={(e) => setCurrentDraw(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.accent} ${(currentDraw - 10) / 90 * 100}%, ${colors.border} ${(currentDraw - 10) / 90 * 100}%)`,
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Metal thickness slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Metal Thickness</span>
-                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{metalThickness}um</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="5"
-                step="0.5"
-                value={metalThickness}
-                onChange={(e) => setMetalThickness(parseFloat(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Grid density slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Grid Density</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{gridDensity} stripes</span>
-              </div>
-              <input
-                type="range"
-                min="2"
-                max="10"
-                step="1"
-                value={gridDensity}
-                onChange={(e) => setGridDensity(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Stats display */}
+            {/* Key physics terms */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: stats.maxDrop > 50 ? colors.error : stats.maxDrop > 30 ? colors.warning : colors.success }}>
-                  {stats.maxDrop.toFixed(1)}mV
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Max IR Drop</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{stats.avgDrop.toFixed(1)}mV</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Average Drop</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{
-                  ...typo.h3,
-                  color: stats.efficiency > 95 ? colors.success : stats.efficiency > 90 ? colors.warning : colors.error
-                }}>
-                  {stats.efficiency.toFixed(0)}%
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Grid Efficiency</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Discovery prompt */}
-          {stats.maxDrop < 30 && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
+              background: colors.bgCard,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
+              marginBottom: '16px',
+              border: `1px solid ${colors.border}`,
             }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                Excellent! You've minimized IR drop. Notice how thicker metal and denser grids help!
-              </p>
+              <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>Key Physics Terms:</p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <div><span style={{ color: colors.accent, fontWeight: 600 }}>IR Drop:</span> <span style={{ color: colors.textSecondary, fontSize: '13px' }}>Voltage lost due to resistance in power grid wires</span></div>
+                <div><span style={{ color: colors.accent, fontWeight: 600 }}>Resistance (R):</span> <span style={{ color: colors.textSecondary, fontSize: '13px' }}>Opposition to current flow in conductor material</span></div>
+                <div><span style={{ color: colors.accent, fontWeight: 600 }}>Current (I):</span> <span style={{ color: colors.textSecondary, fontSize: '13px' }}>Flow of electric charge through the power grid</span></div>
+                <div><span style={{ color: colors.accent, fontWeight: 600 }}>Power Bump:</span> <span style={{ color: colors.textSecondary, fontSize: '13px' }}>Physical connection point between chip and package</span></div>
+              </div>
             </div>
-          )}
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Physics →
-          </button>
+            {/* Main visualization */}
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <PowerGridVisualization showHeatmap={true} />
+              </div>
+
+              {/* Current draw slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Current Draw</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{currentDraw}mA per cell</span>
+                </div>
+                <input
+                  type="range"
+                  min="10"
+                  max="100"
+                  step="5"
+                  value={currentDraw}
+                  onChange={(e) => setCurrentDraw(parseInt(e.target.value))}
+                  onInput={(e) => setCurrentDraw(parseInt((e.target as HTMLInputElement).value))}
+                  style={sliderStyle}
+                />
+              </div>
+
+              {/* Metal thickness slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Metal Thickness</span>
+                  <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{metalThickness}um</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="5"
+                  step="0.5"
+                  value={metalThickness}
+                  onChange={(e) => setMetalThickness(parseFloat(e.target.value))}
+                  onInput={(e) => setMetalThickness(parseFloat((e.target as HTMLInputElement).value))}
+                  style={sliderStyle}
+                />
+              </div>
+
+              {/* Grid density slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Grid Density</span>
+                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{gridDensity} stripes</span>
+                </div>
+                <input
+                  type="range"
+                  min="2"
+                  max="10"
+                  step="1"
+                  value={gridDensity}
+                  onChange={(e) => setGridDensity(parseInt(e.target.value))}
+                  onInput={(e) => setGridDensity(parseInt((e.target as HTMLInputElement).value))}
+                  style={sliderStyle}
+                />
+              </div>
+
+              {/* Stats display */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                  <div style={{ ...typo.h3, color: stats.maxDrop > 50 ? colors.error : stats.maxDrop > 30 ? colors.warning : colors.success }}>
+                    {stats.maxDrop.toFixed(1)}mV
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Max IR Drop</div>
+                </div>
+                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                  <div style={{ ...typo.h3, color: colors.accent }}>{stats.avgDrop.toFixed(1)}mV</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Average Drop</div>
+                </div>
+                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                  <div style={{ ...typo.h3, color: stats.efficiency > 95 ? colors.success : stats.efficiency > 90 ? colors.warning : colors.error }}>
+                    {stats.efficiency.toFixed(0)}%
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Grid Efficiency</div>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand the Physics →
+            </button>
           </div>
         </div>
 
@@ -1089,86 +1207,67 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'hidden',
+        paddingTop: '48px',
+        paddingBottom: '100px',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            The Physics of IR Drop
-          </h2>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              The Physics of IR Drop
+            </h2>
 
-          {/* Reference user's prediction */}
-          <div style={{
-            background: predictionCorrect ? `${colors.success}22` : `${colors.warning}22`,
-            border: `1px solid ${predictionCorrect ? colors.success : colors.warning}`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-          }}>
-            <p style={{ ...typo.body, color: predictionCorrect ? colors.success : colors.warning, margin: 0 }}>
-              {predictionCorrect
-                ? 'Your prediction was correct! Voltage does drop proportionally to distance and current (V = IR).'
-                : `You predicted that ${prediction === 'a' ? 'voltage is the same everywhere' : 'only supply voltage matters'}. Let's see why voltage actually drops along the power grid.`}
-            </p>
-          </div>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
             <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '20px',
-              marginBottom: '20px',
-              textAlign: 'center',
+              background: predictionCorrect ? `${colors.success}22` : `${colors.warning}22`,
+              border: `1px solid ${predictionCorrect ? colors.success : colors.warning}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
             }}>
-              <p style={{ ...typo.h2, color: colors.accent, margin: 0 }}>V = I × R</p>
-              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>Ohm's Law - The foundation of IR drop</p>
-            </div>
-
-            <div style={{ ...typo.body, color: colors.textSecondary }}>
-              <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Every wire has resistance (R)</strong> — even the best copper conductors. When current (I) flows through this resistance, voltage drops.
-              </p>
-              <p style={{ marginBottom: '16px' }}>
-                <span style={{ color: colors.accent }}>More current</span> = More voltage drop
-              </p>
-              <p style={{ marginBottom: '16px' }}>
-                <span style={{ color: colors.accent }}>Longer distance</span> = Higher resistance = More drop
-              </p>
-              <p>
-                <span style={{ color: colors.success }}>Thicker/wider metal</span> = Lower resistance = Less drop
+              <p style={{ ...typo.body, color: predictionCorrect ? colors.success : colors.warning, margin: 0 }}>
+                {predictionCorrect
+                  ? 'Your prediction was correct! Voltage drops proportionally to distance and current (V = IR).'
+                  : `You predicted option ${prediction?.toUpperCase()}. Let's see why voltage actually drops along the power grid.`}
               </p>
             </div>
-          </div>
 
-          <div style={{
-            background: `${colors.accent}11`,
-            border: `1px solid ${colors.accent}33`,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              Key Insight
-            </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              In a chip, circuits far from power sources see less voltage. If the drop is too large, transistors switch slowly or fail entirely. That's why power grid design is critical for chip performance.
-            </p>
-          </div>
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '20px', marginBottom: '20px', textAlign: 'center' }}>
+                <p style={{ ...typo.h2, color: colors.accent, margin: 0 }}>V = I × R</p>
+                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>Ohm's Law — The foundation of IR drop</p>
+              </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Explore Temperature Effects →
-          </button>
+              <div style={{ ...typo.body, color: colors.textSecondary }}>
+                <p style={{ marginBottom: '16px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Every wire has resistance (R)</strong> — even the best copper conductors. When current (I) flows through this resistance, voltage drops proportionally.
+                </p>
+                <p style={{ marginBottom: '16px' }}>
+                  <span style={{ color: colors.accent }}>More current</span> = More voltage drop (V = IR scales with I)
+                </p>
+                <p style={{ marginBottom: '16px' }}>
+                  <span style={{ color: colors.accent }}>Longer distance</span> = Higher resistance R = More drop
+                </p>
+                <p>
+                  <span style={{ color: colors.success }}>Thicker/wider metal</span> = Lower R = Less drop (R = ρL/A)
+                </p>
+              </div>
+            </div>
+
+            <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '20px', marginBottom: '24px' }}>
+              <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>Key Insight</h3>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                In a chip, circuits far from power sources see less voltage. If the drop is too large, transistors switch slowly or fail entirely. That's why power grid design is critical for chip performance.
+              </p>
+            </div>
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Explore Temperature Effects →
+            </button>
           </div>
         </div>
 
@@ -1189,71 +1288,113 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        paddingTop: '48px',
+        paddingBottom: '100px',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.warning}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.warning}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              New Variable: Temperature
-            </p>
-          </div>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <div style={{
+              background: `${colors.warning}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.warning}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>Explore: New Variable — Temperature</p>
+            </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            A chip heats up from 25C to 85C during heavy computation. What happens to IR drop?
-          </h2>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              A chip heats up from 25°C to 85°C during heavy computation. What happens to IR drop?
+            </h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
-                style={{
-                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
-                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  minHeight: '44px',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
-                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
+            {/* Static preview graphic */}
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '24px', textAlign: 'center' }}>
+              <svg width="320" height="160" viewBox="0 0 320 160">
+                <defs>
+                  <filter id="tp-glow">
+                    <feGaussianBlur stdDeviation="2" result="blur" />
+                    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                  </filter>
+                  <linearGradient id="tp-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#3B82F6" />
+                    <stop offset="100%" stopColor={colors.accent} />
+                  </linearGradient>
+                </defs>
+                <rect x="40" y="20" width="240" height="100" fill={colors.bgSecondary} rx="4" stroke={colors.border} />
+                {/* Grid lines */}
+                {[0.33, 0.66].map((t, i) => (
+                  <line key={i} x1={40 + t * 240} y1="20" x2={40 + t * 240} y2="120"
+                    stroke={colors.border} strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
+                ))}
+                {[0.5].map((t, i) => (
+                  <line key={i} x1="40" y1={20 + t * 100} x2="280" y2={20 + t * 100}
+                    stroke={colors.border} strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
+                ))}
+                {/* Curve: rising IR drop with temperature */}
+                <path d="M40,110 L80,100 L120,85 L160,68 L200,50 L240,33 L280,18"
+                  stroke="url(#tp-grad)" strokeWidth="3" fill="none" />
+                {/* Marker at 25C */}
+                <circle cx={120} cy={85} r="8" fill={colors.success} stroke="white" strokeWidth="2" filter="url(#tp-glow)" />
+                {/* Marker at 85C */}
+                <circle cx={220} cy={42} r="8" fill={colors.error} stroke="white" strokeWidth="2" filter="url(#tp-glow)" />
+                <text x="100" y="145" fill={colors.textSecondary} fontSize="11" textAnchor="middle">25°C</text>
+                <text x="220" y="145" fill={colors.textSecondary} fontSize="11" textAnchor="middle">85°C</text>
+                <text x="160" y="15" fill={colors.textMuted} fontSize="11" textAnchor="middle">Temperature →</text>
+                <text x="35" y="75" fill={colors.textMuted} fontSize="11" textAnchor="end"
+                  transform="rotate(-90, 22, 75)">IR Drop</text>
+                {/* Formula */}
+                <text x="160" y="155" fill={colors.accent} fontSize="11" textAnchor="middle" fontWeight="bold">R(T) = R₀(1 + αΔT)</text>
+              </svg>
+              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
+                Preview: How does IR drop change with temperature?
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                  style={{
+                    background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                    border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                    color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>{opt.text}</span>
+                </button>
+              ))}
+            </div>
+
+            {twistPrediction && (
+              <button onClick={() => { playSound('success'); nextPhase(); }} style={primaryButtonStyle}>
+                See the Temperature Effect →
               </button>
-            ))}
+            )}
           </div>
-
-          {twistPrediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              See the Temperature Effect →
-            </button>
-          )}
         </div>
 
         {renderNavDots()}
@@ -1267,108 +1408,94 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        paddingTop: '48px',
+        paddingBottom: '100px',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Temperature & IR Drop
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            See how temperature affects power distribution
-          </p>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Temperature Lab
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              See how temperature and distance from power bump affect IR drop
+            </p>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <PowerGridVisualization showHeatmap={true} />
-            </div>
-
-            {/* Temperature slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Chip Temperature</span>
-                <span style={{
-                  ...typo.small,
-                  color: temperature > 70 ? colors.error : temperature > 50 ? colors.warning : colors.success,
-                  fontWeight: 600
-                }}>
-                  {temperature}°C
-                </span>
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <TempVisualization />
               </div>
-              <input
-                type="range"
-                min="-40"
-                max="125"
-                value={temperature}
-                onChange={(e) => setTemperature(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Cold (-40C)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Hot (125C)</span>
+
+              {/* Temperature slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Chip Temperature</span>
+                  <span style={{
+                    ...typo.small,
+                    color: temperature > 70 ? colors.error : temperature > 50 ? colors.warning : colors.success,
+                    fontWeight: 600
+                  }}>
+                    {temperature}°C
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="-40"
+                  max="125"
+                  value={temperature}
+                  onChange={(e) => setTemperature(parseInt(e.target.value))}
+                  onInput={(e) => setTemperature(parseInt((e.target as HTMLInputElement).value))}
+                  style={sliderStyle}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Cold (-40°C)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Hot (125°C)</span>
+                </div>
+              </div>
+
+              {/* Distance from bump slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Distance from Power Bump</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{distanceFromBump}um</span>
+                </div>
+                <input
+                  type="range"
+                  min="10"
+                  max="100"
+                  step="5"
+                  value={distanceFromBump}
+                  onChange={(e) => setDistanceFromBump(parseInt(e.target.value))}
+                  onInput={(e) => setDistanceFromBump(parseInt((e.target as HTMLInputElement).value))}
+                  style={sliderStyle}
+                />
+              </div>
+
+              {/* Resistance change indicator */}
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '16px', textAlign: 'center' }}>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  Resistance change from 25°C:{' '}
+                  <span style={{ color: temperature > 25 ? colors.error : colors.success, fontWeight: 600 }}>
+                    {temperature > 25 ? '+' : ''}{((temperature - 25) * 0.4).toFixed(0)}%
+                  </span>
+                </p>
+                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
+                  Copper: ~0.4%/°C temperature coefficient
+                </p>
               </div>
             </div>
 
-            {/* Distance from bump slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Distance from Power Bump</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{distanceFromBump}um</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                step="5"
-                value={distanceFromBump}
-                onChange={(e) => setDistanceFromBump(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Resistance change indicator */}
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                Resistance change from 25C: <span style={{
-                  color: temperature > 25 ? colors.error : colors.success,
-                  fontWeight: 600
-                }}>
-                  {temperature > 25 ? '+' : ''}{((temperature - 25) * 0.4).toFixed(0)}%
-                </span>
-              </p>
-              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
-                Copper: ~0.4%/C temperature coefficient
-              </p>
-            </div>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand Static vs Dynamic IR Drop →
+            </button>
           </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand Static vs Dynamic IR Drop →
-          </button>
         </div>
 
         {renderNavDots()}
@@ -1382,69 +1509,64 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        paddingTop: '48px',
+        paddingBottom: '100px',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Static vs Dynamic IR Drop
-          </h2>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              Apply: Static vs Dynamic IR Drop
+            </h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>📊</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Static IR Drop</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+              <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', border: `1px solid ${colors.border}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px' }}>📊</span>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Static IR Drop</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  Steady-state voltage drop from average current draw. Predictable and easier to model. Depends on{' '}
+                  <span style={{ color: colors.accent }}>grid resistance</span> and{' '}
+                  <span style={{ color: colors.accent }}>average current</span>.
+                </p>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Steady-state voltage drop from average current draw. Predictable and easier to model. Depends on <span style={{ color: colors.accent }}>grid resistance</span> and <span style={{ color: colors.accent }}>average current</span>.
-              </p>
+
+              <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', border: `1px solid ${colors.border}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px' }}>⚡</span>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Dynamic IR Drop</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  Transient voltage droops from{' '}
+                  <span style={{ color: colors.warning }}>sudden current surges</span>. Can be 3-5x worse than static drop. Includes{' '}
+                  <span style={{ color: colors.warning }}>inductive effects (V = L × dI/dt)</span>. Hardest to design for.
+                </p>
+              </div>
+
+              <div style={{ background: `${colors.success}11`, borderRadius: '12px', padding: '20px', border: `1px solid ${colors.success}33` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px' }}>💡</span>
+                  <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Design Solutions</h3>
+                </div>
+                <div style={{ ...typo.body, color: colors.textSecondary }}>
+                  <p style={{ marginBottom: '8px' }}><strong>For Static Drop:</strong> More power bumps, wider metal, denser grids</p>
+                  <p style={{ margin: 0 }}><strong>For Dynamic Drop:</strong> Decoupling capacitors, staggered switching, power gating</p>
+                </div>
+              </div>
             </div>
 
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>⚡</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Dynamic IR Drop</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Transient voltage droops from <span style={{ color: colors.warning }}>sudden current surges</span>. Can be 3-5x worse than static drop. Includes <span style={{ color: colors.warning }}>inductive effects (V = L * dI/dt)</span>. Hardest to design for.
-              </p>
-            </div>
-
-            <div style={{
-              background: `${colors.success}11`,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.success}33`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>💡</span>
-                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Design Solutions</h3>
-              </div>
-              <div style={{ ...typo.body, color: colors.textSecondary }}>
-                <p style={{ marginBottom: '8px' }}><strong>For Static Drop:</strong> More power bumps, wider metal, denser grids</p>
-                <p style={{ margin: 0 }}><strong>For Dynamic Drop:</strong> Decoupling capacitors, staggered switching, power gating</p>
-              </div>
-            </div>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              See Real-World Applications →
+            </button>
           </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            See Real-World Applications →
-          </button>
         </div>
 
         {renderNavDots()}
@@ -1464,168 +1586,135 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'hidden',
+        paddingTop: '48px',
+        paddingBottom: '100px',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
+              Real-World Applications of IR Drop
+            </h2>
 
-          {/* Progress indicator */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '8px',
-            padding: '12px 16px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <span style={{ ...typo.body, color: colors.textSecondary }}>
-              Application {selectedApp + 1} of {realWorldApps.length}
-            </span>
-            <span style={{ ...typo.small, color: colors.textMuted, marginLeft: '12px' }}>
-              ({completedCount} explored)
-            </span>
-          </div>
+            <div style={{ background: colors.bgCard, borderRadius: '8px', padding: '12px 16px', marginBottom: '24px', textAlign: 'center' }}>
+              <span style={{ ...typo.body, color: colors.textSecondary }}>
+                Application {selectedApp + 1} of {realWorldApps.length}
+              </span>
+              <span style={{ ...typo.small, color: colors.textMuted, marginLeft: '12px' }}>
+                ({completedCount} explored)
+              </span>
+            </div>
 
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
-            {realWorldApps.map((a, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  playSound('click');
-                  setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
-                }}
-                style={{
-                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
-                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 8px',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  position: 'relative',
-                  minHeight: '44px',
-                }}
-              >
-                {completedApps[i] && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-6px',
-                    right: '-6px',
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: colors.success,
-                    color: 'white',
-                    fontSize: '12px',
-                    lineHeight: '18px',
-                  }}>
-                    checkmark
+            {/* App selector */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}>
+              {realWorldApps.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    playSound('click');
+                    setSelectedApp(i);
+                    const newCompleted = [...completedApps];
+                    newCompleted[i] = true;
+                    setCompletedApps(newCompleted);
+                  }}
+                  style={{
+                    background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                    border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 8px',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    position: 'relative',
+                    minHeight: '44px',
+                  }}
+                >
+                  {completedApps[i] && (
+                    <div style={{
+                      position: 'absolute', top: '-6px', right: '-6px',
+                      width: '18px', height: '18px', borderRadius: '50%',
+                      background: colors.success, color: 'white', fontSize: '10px', lineHeight: '18px', textAlign: 'center',
+                    }}>✓</div>
+                  )}
+                  <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                  <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                    {a.title.split(' ').slice(0, 2).join(' ')}
                   </div>
-                )}
-                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
-                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
-                  {a.title.split(' ').slice(0, 2).join(' ')}
-                </div>
-              </button>
-            ))}
-          </div>
+                </button>
+              ))}
+            </div>
 
-          {/* Selected app details */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            borderLeft: `4px solid ${app.color}`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-              <span style={{ fontSize: '48px' }}>{app.icon}</span>
-              <div>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
-                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+            {/* Selected app details */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              borderLeft: `4px solid ${app.color}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '48px' }}>{app.icon}</span>
+                <div>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                  <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+                </div>
+              </div>
+
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+                {app.description}
+              </p>
+
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '16px', marginBottom: '16px' }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                  How IR Drop Matters:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.connection}
+                </p>
+              </div>
+
+              <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '12px' }}>{app.howItWorks}</p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                {app.stats.map((stat, i) => (
+                  <div key={i} style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                    <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
-              {app.description}
-            </p>
-
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '16px',
-            }}>
-              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                How IR Drop Matters:
-              </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                {app.connection}
-              </p>
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}>
-              {app.stats.map((stat, i) => (
-                <div key={i} style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
-                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Got It button for current app */}
-          <button
-            onClick={() => {
-              playSound('click');
-              const newCompleted = [...completedApps];
-              newCompleted[selectedApp] = true;
-              setCompletedApps(newCompleted);
-              if (selectedApp < realWorldApps.length - 1) {
-                setSelectedApp(selectedApp + 1);
-              }
-            }}
-            style={{
-              ...primaryButtonStyle,
-              width: '100%',
-              marginBottom: '16px',
-              background: completedApps[selectedApp] ? colors.success : `linear-gradient(135deg, ${colors.accent}, #DC2626)`,
-            }}
-          >
-            {completedApps[selectedApp] ? 'Got It! Next Application' : 'Got It!'}
-          </button>
-
-          {allAppsCompleted && (
             <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                if (selectedApp < realWorldApps.length - 1) {
+                  setSelectedApp(selectedApp + 1);
+                }
+              }}
+              style={{
+                ...primaryButtonStyle,
+                width: '100%',
+                marginBottom: '16px',
+                background: completedApps[selectedApp] ? colors.success : `linear-gradient(135deg, ${colors.accent}, #DC2626)`,
+              }}
             >
-              Take the Knowledge Test →
+              {completedApps[selectedApp] ? 'Got It! Next Application' : 'Got It!'}
             </button>
-          )}
+
+            {allAppsCompleted && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Take the Knowledge Quiz →
+              </button>
+            )}
           </div>
         </div>
 
@@ -1642,50 +1731,86 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          paddingTop: '48px',
+          paddingBottom: '100px',
         }}>
+          {renderNavigationBar()}
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
-            <div style={{
-              fontSize: '80px',
-              marginBottom: '24px',
-            }}>
-              {passed ? '🏆' : '📚'}
-            </div>
-            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
-              {passed ? 'Excellent!' : 'Keep Learning!'}
-            </h2>
-            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
-              {testScore} / 10
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
-              {passed
-                ? 'You\'ve mastered IR Drop concepts!'
-                : 'Review the concepts and try again.'}
-            </p>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+            <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+              <div style={{ fontSize: '80px', marginBottom: '24px' }}>
+                {passed ? '🏆' : '📚'}
+              </div>
+              <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+                {passed ? 'Excellent!' : 'Keep Learning!'}
+              </h2>
+              <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+                {testScore} / 10
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '24px' }}>
+                {passed ? "You've mastered IR Drop concepts!" : 'Review the concepts and try again.'}
+              </p>
 
-            {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
-                Complete Lesson →
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
-                }}
-                style={primaryButtonStyle}
-              >
-                Review & Try Again
-              </button>
-            )}
+              {/* Answer review */}
+              <div style={{ textAlign: 'left', marginBottom: '24px' }}>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>Answer Review:</h3>
+                {testQuestions.map((q, i) => {
+                  const correct = q.options.find(o => o.correct)?.id;
+                  const userAnswer = testAnswers[i];
+                  const isCorrect = userAnswer === correct;
+                  return (
+                    <div key={i} style={{
+                      display: 'flex', alignItems: 'center', gap: '10px',
+                      padding: '8px 12px', marginBottom: '6px',
+                      background: isCorrect ? `${colors.success}11` : `${colors.error}11`,
+                      borderRadius: '8px',
+                      border: `1px solid ${isCorrect ? colors.success : colors.error}33`,
+                    }}>
+                      <span style={{ color: isCorrect ? colors.success : colors.error, fontSize: '16px' }}>
+                        {isCorrect ? '✓' : '✗'}
+                      </span>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>
+                        Q{i + 1}: {isCorrect ? 'Correct' : `Incorrect (answer: ${correct?.toUpperCase()})`}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                <button
+                  onClick={() => {
+                    setTestSubmitted(false);
+                    setTestAnswers(Array(10).fill(null));
+                    setCurrentQuestion(0);
+                    setTestScore(0);
+                    goToPhase('hook');
+                  }}
+                  style={{
+                    padding: '14px 28px',
+                    borderRadius: '10px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: colors.textSecondary,
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  Play Again
+                </button>
+                {passed && (
+                  <button
+                    onClick={() => { playSound('complete'); nextPhase(); }}
+                    style={primaryButtonStyle}
+                  >
+                    Complete Lesson →
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
           {renderNavDots()}
         </div>
@@ -1698,162 +1823,123 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        paddingTop: '48px',
+        paddingBottom: '100px',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          {/* Progress */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '24px',
-          }}>
-            <span style={{ ...typo.small, color: colors.textSecondary }}>
-              Question {currentQuestion + 1} of 10
-            </span>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {testQuestions.map((_, i) => (
-                <div key={i} style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: i === currentQuestion
-                    ? colors.accent
-                    : testAnswers[i]
-                      ? colors.success
-                      : colors.border,
-                }} />
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>
+                Question {currentQuestion + 1} of 10
+              </span>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {testQuestions.map((_, i) => (
+                  <div key={i} style={{
+                    width: '8px', height: '8px', borderRadius: '50%',
+                    background: i === currentQuestion ? colors.accent : testAnswers[i] ? colors.success : colors.border,
+                  }} />
+                ))}
+              </div>
+            </div>
+
+            <div style={{
+              background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '16px',
+              borderLeft: `3px solid ${colors.accent}`,
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{question.scenario}</p>
+            </div>
+
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+              {question.question}
+            </h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+              {question.options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    playSound('click');
+                    const newAnswers = [...testAnswers];
+                    newAnswers[currentQuestion] = opt.id;
+                    setTestAnswers(newAnswers);
+                  }}
+                  style={{
+                    background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '10px',
+                    padding: '14px 16px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block', width: '24px', height: '24px', borderRadius: '50%',
+                    background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                    color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center', lineHeight: '24px', marginRight: '10px', fontSize: '12px', fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.small }}>{opt.label}</span>
+                </button>
               ))}
             </div>
-          </div>
 
-          {/* Scenario */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '16px',
-            borderLeft: `3px solid ${colors.accent}`,
-          }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              {question.scenario}
-            </p>
-          </div>
-
-          {/* Question */}
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
-            {question.question}
-          </h3>
-
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-            {question.options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => {
-                  playSound('click');
-                  const newAnswers = [...testAnswers];
-                  newAnswers[currentQuestion] = opt.id;
-                  setTestAnswers(newAnswers);
-                }}
-                style={{
-                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '10px',
-                  padding: '14px 16px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  minHeight: '44px',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
-                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '24px',
-                  marginRight: '10px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.small }}>
-                  {opt.label}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {/* Navigation */}
-          <div style={{ display: 'flex', gap: '12px' }}>
-            {currentQuestion > 0 && (
-              <button
-                onClick={() => setCurrentQuestion(currentQuestion - 1)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                  minHeight: '44px',
-                }}
-              >
-                Previous
-              </button>
-            )}
-            {currentQuestion < 9 ? (
-              <button
-                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
-                disabled={!testAnswers[currentQuestion]}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
-                  color: 'white',
-                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                  minHeight: '44px',
-                }}
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  const score = testAnswers.reduce((acc, ans, i) => {
-                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
-                    return acc + (ans === correct ? 1 : 0);
-                  }, 0);
-                  setTestScore(score);
-                  setTestSubmitted(true);
-                  playSound(score >= 7 ? 'complete' : 'failure');
-                }}
-                disabled={testAnswers.some(a => a === null)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
-                  color: 'white',
-                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                  minHeight: '44px',
-                }}
-              >
-                Submit Test
-              </button>
-            )}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {currentQuestion > 0 && (
+                <button
+                  onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                  style={{
+                    flex: 1, padding: '14px', borderRadius: '10px',
+                    border: `1px solid ${colors.border}`, background: 'transparent',
+                    color: colors.textSecondary, cursor: 'pointer', minHeight: '44px',
+                  }}
+                >
+                  Previous
+                </button>
+              )}
+              {currentQuestion < 9 ? (
+                <button
+                  onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                  disabled={!testAnswers[currentQuestion]}
+                  style={{
+                    flex: 1, padding: '14px', borderRadius: '10px', border: 'none',
+                    background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                    color: 'white', cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                    fontWeight: 600, minHeight: '44px',
+                  }}
+                >
+                  Next
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    const score = testAnswers.reduce((acc, ans, i) => {
+                      const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                      return acc + (ans === correct ? 1 : 0);
+                    }, 0);
+                    setTestScore(score);
+                    setTestSubmitted(true);
+                    playSound(score >= 7 ? 'complete' : 'failure');
+                  }}
+                  disabled={testAnswers.some(a => a === null)}
+                  style={{
+                    flex: 1, padding: '14px', borderRadius: '10px', border: 'none',
+                    background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                    color: 'white', cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                    fontWeight: 600, minHeight: '44px',
+                  }}
+                >
+                  Submit Quiz
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -1872,19 +1958,13 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
+        paddingTop: '48px',
+        paddingBottom: '100px',
         padding: '24px',
         textAlign: 'center',
       }}>
+        {renderNavigationBar()}
         {renderProgressBar()}
-
-        <div style={{
-          fontSize: '100px',
-          marginBottom: '24px',
-          animation: 'bounce 1s infinite',
-        }}>
-          🏆
-        </div>
-        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
         <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
           IR Drop Master!
@@ -1894,26 +1974,18 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
           You now understand how voltage drops in power distribution networks and why it matters for chip design.
         </p>
 
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '400px',
-        }}>
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
-            You Learned:
-          </h3>
+        <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '32px', maxWidth: '400px' }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>You Learned:</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
             {[
-              'V = IR and Ohm\'s Law in chip design',
+              "V = IR and Ohm's Law in chip design",
               'How distance affects voltage drop',
               'Temperature effects on metal resistance',
               'Static vs dynamic IR drop',
               'Power grid design strategies',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: colors.success }}>Checkmark</span>
+                <span style={{ color: colors.success }}>✓</span>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
               </div>
             ))}
@@ -1924,24 +1996,16 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
           <button
             onClick={() => goToPhase('hook')}
             style={{
-              padding: '14px 28px',
-              borderRadius: '10px',
-              border: `1px solid ${colors.border}`,
-              background: 'transparent',
-              color: colors.textSecondary,
-              cursor: 'pointer',
-              minHeight: '44px',
+              padding: '14px 28px', borderRadius: '10px',
+              border: `1px solid ${colors.border}`, background: 'transparent',
+              color: colors.textSecondary, cursor: 'pointer', minHeight: '44px',
             }}
           >
             Play Again
           </button>
           <a
             href="/"
-            style={{
-              ...primaryButtonStyle,
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}
+            style={{ ...primaryButtonStyle, textDecoration: 'none', display: 'inline-block' }}
           >
             Return to Dashboard
           </a>

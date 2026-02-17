@@ -26,16 +26,16 @@ type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_p
 const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
 const phaseLabels: Record<Phase, string> = {
-  hook: 'Hook',
+  hook: 'Explore',
   predict: 'Predict',
-  play: 'Lab',
+  play: 'Experiment',
   review: 'Review',
-  twist_predict: 'Twist Predict',
-  twist_play: 'Twist Lab',
-  twist_review: 'Twist Review',
-  transfer: 'Transfer',
-  test: 'Test',
-  mastery: 'Mastery'
+  twist_predict: 'Predict Again',
+  twist_play: 'Experiment Again',
+  twist_review: 'Review Again',
+  transfer: 'Apply',
+  test: 'Quiz',
+  mastery: 'Transfer'
 };
 
 interface FloatingPaperclipRendererProps {
@@ -1148,8 +1148,7 @@ export default function FloatingPaperclipRenderer({
               step="0.001"
               value={surfaceTension}
               onChange={(e) => setSurfaceTension(parseFloat(e.target.value))}
-              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-              style={{ touchAction: 'pan-y' }}
+              style={{ touchAction: 'pan-y', height: '20px', width: '100%', WebkitAppearance: 'none', accentColor: '#3b82f6', cursor: 'pointer' }}
             />
             <div className="flex justify-between mt-1">
               <span style={{ fontSize: typo.label }} className="text-slate-500">Alcohol (0.02)</span>
@@ -1170,8 +1169,7 @@ export default function FloatingPaperclipRenderer({
               step="0.1"
               value={clipWeight}
               onChange={(e) => setClipWeight(parseFloat(e.target.value))}
-              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-              style={{ touchAction: 'pan-y' }}
+              style={{ touchAction: 'pan-y', height: '20px', width: '100%', WebkitAppearance: 'none', accentColor: '#3b82f6', cursor: 'pointer' }}
             />
           </div>
 
@@ -1188,8 +1186,7 @@ export default function FloatingPaperclipRenderer({
               step="1"
               value={waterTemperature}
               onChange={(e) => setWaterTemperature(parseInt(e.target.value))}
-              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
-              style={{ touchAction: 'pan-y' }}
+              style={{ touchAction: 'pan-y', height: '20px', width: '100%', WebkitAppearance: 'none', accentColor: '#3b82f6', cursor: 'pointer' }}
             />
           </div>
 
@@ -1495,8 +1492,7 @@ export default function FloatingPaperclipRenderer({
                   }, 40);
                 }
               }}
-              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
-              style={{ touchAction: 'pan-y' }}
+              style={{ touchAction: 'pan-y', height: '20px', width: '100%', WebkitAppearance: 'none', accentColor: '#3b82f6', cursor: 'pointer' }}
             />
             <p style={{ fontSize: typo.label }} className="text-purple-400 mt-1">
               Effective gamma: {twistEffectiveGamma.toFixed(3)} N/m ({((1 - twistEffectiveGamma / liquidProperties[selectedLiquid].gamma) * 100).toFixed(0)}% reduction)
@@ -1541,8 +1537,7 @@ export default function FloatingPaperclipRenderer({
               step="5"
               value={contactAngle}
               onChange={(e) => setContactAngle(parseInt(e.target.value))}
-              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
-              style={{ touchAction: 'pan-y' }}
+              style={{ touchAction: 'pan-y', height: '20px', width: '100%', WebkitAppearance: 'none', accentColor: '#3b82f6', cursor: 'pointer' }}
             />
           </div>
 
@@ -2088,8 +2083,8 @@ export default function FloatingPaperclipRenderer({
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        paddingTop: '64px',
-        paddingBottom: '0px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
         position: 'relative'
       }}>
         {renderPhase()}
