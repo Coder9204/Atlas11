@@ -120,7 +120,7 @@ const realWorldApps = [
   {
     icon: '🧬',
     title: 'Biological Tissues & Biomechanics',
-    short: 'Nature's built-in viscoelastic protection',
+    short: "Nature's built-in viscoelastic protection",
     tagline: 'Your body already knows this physics',
     description: 'Tendons, muscles, cartilage, and organs are all viscoelastic materials optimized by evolution. Achilles tendon can store ~35% of energy during running — functioning as an elastic spring at fast gait frequencies (De > 1). Yet under slow sustained load (De < 1), it creeps and relaxes, preventing overload injury. Knee cartilage at 2–5 mm thick supports loads of 4–8× body weight by distributing stress through viscoelastic flow over milliseconds to seconds.',
     connection: 'Tendons absorb sudden loads (solid-like at high De) preventing tears, while allowing slow stretching during movement. This dual behavior is why slow stretching is safe but sudden jerks cause injury.',
