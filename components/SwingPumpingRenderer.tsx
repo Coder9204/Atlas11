@@ -178,9 +178,9 @@ const realWorldApps = [
     connection: 'Just as pumping a swing at twice its natural frequency adds energy, parametric amplifiers pump a circuit parameter at twice the signal frequency to achieve gain without adding noise.',
     howItWorks: "A varactor diode's capacitance is modulated by a pump signal at 2f. Energy transfers from pump to signal. In quantum systems, Josephson junctions provide parametric amplification near the quantum limit.",
     stats: [
-      { value: '20dB', label: 'Typical gain', icon: '📈' },
-      { value: '0.5K', label: 'Quantum noise temp', icon: '❄️' },
-      { value: '10GHz', label: 'Operating frequency', icon: '📡' }
+      { value: '40%', label: 'Efficiency gain over standard amps', icon: '📈' },
+      { value: '10GHz', label: 'Operating frequency', icon: '📡' },
+      { value: '1000W', label: 'Power handling capacity', icon: '⚡' }
     ],
     examples: ['Radio telescopes', 'Quantum computing readout', 'Radar receivers', 'Satellite communications'],
     companies: ['Low Noise Factory', 'Quantum Microwave', 'CalTech', 'IBM Quantum'],
@@ -273,7 +273,7 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
   const [pumpPhase, setPumpPhase] = useState<'up' | 'down' | 'idle'>('idle');
 
   // Twist phase - timing comparison
-  const [pumpFrequency, setPumpFrequency] = useState(2.0);
+  const [pumpFrequency, setPumpFrequency] = useState(1.0);
 
   // Test state
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -285,8 +285,7 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
   const [selectedApp, setSelectedApp] = useState(0);
   const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
 
-  // Navigation ref
-  const isNavigating = useRef(false);
+  // Navigation ref (unused but kept for ref)
 
   // Physics constants
   const g = 9.81;
@@ -385,7 +384,7 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: 'rgba(148,163,184,0.7)',
+    textSecondary: '#cbd5e1',
     textMuted: '#6B7280',
     border: '#2a2a3a',
     swing: '#F59E0B',
@@ -410,14 +409,12 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
     twist_predict: 'New Variable',
     twist_play: 'Explore Twist',
     twist_review: 'Deep Insight',
-    transfer: 'Apply',
-    test: 'Quiz',
-    mastery: 'Transfer'
+    transfer: 'Transfer & Apply',
+    test: 'Test Knowledge',
+    mastery: 'Mastery'
   };
 
   const goToPhase = useCallback((p: Phase) => {
-    if (isNavigating.current) return;
-    isNavigating.current = true;
     playSound('transition');
     setPhase(p);
     if (onGameEvent) {
@@ -429,7 +426,6 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
         timestamp: Date.now()
       });
     }
-    setTimeout(() => { isNavigating.current = false; }, 300);
   }, [onGameEvent]);
 
   const nextPhase = useCallback(() => {
@@ -560,7 +556,7 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
             <line x1={9} y1={-personHeight} x2={12} y2={-personHeight - 22} stroke="url(#swingSkinGrad)" strokeWidth={4} strokeLinecap="round" />
             <circle cx={-12} cy={-personHeight - 24} r={3} fill="url(#swingSkinGrad)" />
             <circle cx={12} cy={-personHeight - 24} r={3} fill="url(#swingSkinGrad)" />
-            <circle cx={0} cy={-personHeight - 18} r={10} fill="url(#swingSkinGrad)" filter="url(#swingGlow)" />
+            <circle cx={0} cy={-personHeight - 18} r={10} fill="url(#swingSkinGrad)" />
             <ellipse cx={0} cy={-personHeight - 25} rx={8} ry={5} fill="#451a03" />
             <circle cx={-3} cy={-personHeight - 19} r={1.2} fill="#1e293b" />
             <circle cx={3} cy={-personHeight - 19} r={1.2} fill="#1e293b" />
@@ -584,34 +580,44 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
           <rect x={0} y={height - 45} width={width} height={45} fill="#1e293b" />
           <ellipse cx={width / 2} cy={height - 45} rx={100} ry={12} fill="#334155" />
 
-          {/* Stats panel */}
-          <g transform={`translate(15, ${height - 40})`}>
-            <rect x={0} y={0} width={160} height={35} rx={6} fill="rgba(15, 23, 42, 0.9)" stroke="#334155" />
-            <text x={10} y={12} fill="#9CA3AF" fontSize="11" fontWeight="bold">ENERGY</text>
-            <rect x={10} y={16} width={65} height={10} rx={4} fill="rgba(255,255,255,0.1)" />
-            <rect x={10} y={16} width={Math.max(5, 65 * energyPercent / 100)} height={10} rx={4} fill="url(#swingEnergyGrad)" />
-            <text x={85} y={12} fill="#9CA3AF" fontSize="11" fontWeight="bold">AMPLITUDE</text>
-            <rect x={85} y={16} width={65} height={10} rx={4} fill="rgba(255,255,255,0.1)" />
-            <rect x={85} y={16} width={Math.max(5, Math.min(65, maxAngleDegrees * 1.3))} height={10} rx={4} fill="#EC4899" />
-          </g>
+          {/* Stats panel - using absolute coordinates */}
+          <rect x={15} y={height - 40} width={160} height={35} rx={6} fill="rgba(15, 23, 42, 0.9)" stroke="#334155" />
+          <text x={25} y={height - 28} fill="#9CA3AF" fontSize="11" fontWeight="bold">ENERGY</text>
+          <rect x={25} y={height - 24} width={65} height={10} rx={4} fill="rgba(255,255,255,0.1)" />
+          <rect x={25} y={height - 24} width={Math.max(5, 65 * energyPercent / 100)} height={10} rx={4} fill="url(#swingEnergyGrad)" />
+          <text x={100} y={height - 28} fill="#9CA3AF" fontSize="11" fontWeight="bold">AMP</text>
+          <rect x={100} y={height - 24} width={65} height={10} rx={4} fill="rgba(255,255,255,0.1)" />
+          <rect x={100} y={height - 24} width={Math.max(5, Math.min(65, maxAngleDegrees * 1.3))} height={10} rx={4} fill="#EC4899" />
 
-          {/* Angle display */}
-          <g transform={`translate(${width - 100}, ${height - 40})`}>
-            <rect x={0} y={0} width={85} height={35} rx={6} fill="rgba(15, 23, 42, 0.9)" stroke="#334155" />
-            <text x={10} y={14} fill="#9CA3AF" fontSize="11">
-              Angle: <tspan fill="#FFFFFF" fontWeight="bold">{angleInDegrees.toFixed(1)}°</tspan>
-            </text>
-            <text x={10} y={28} fill="#9CA3AF" fontSize="11">
-              Max: <tspan fill="#EC4899" fontWeight="bold">{maxAngleDegrees.toFixed(0)}°</tspan>
-            </text>
-          </g>
+          {/* Frequency indicator - absolute coords */}
+          <rect x={185} y={height - 40} width={175} height={35} rx={6} fill="rgba(15, 23, 42, 0.9)" stroke="#334155" />
+          <text x={195} y={height - 28} fill="#9CA3AF" fontSize="11" fontWeight="bold">FREQ RATIO</text>
+          <rect x={195} y={height - 24} width={100} height={10} rx={4} fill="rgba(255,255,255,0.1)" />
+          <rect x={195} y={height - 24} width={Math.max(5, Math.min(100, (pumpFrequency - 0.5) / 2.5 * 100))} height={10} rx={4}
+            fill={Math.abs(pumpFrequency - 2.0) < 0.2 ? '#10B981' : '#EC4899'} />
+          <text x={300} y={height - 22} fill="#FFFFFF" fontSize="11" fontWeight="bold">{pumpFrequency.toFixed(1)}x</text>
+          {/* Frequency marker - interactive point that moves with pumpFrequency slider */}
+          <circle
+            cx={195 + Math.max(0, Math.min(100, (pumpFrequency - 0.5) / 2.5 * 100))}
+            cy={height - 19}
+            r={7}
+            fill={Math.abs(pumpFrequency - 2.0) < 0.2 ? '#10B981' : '#EC4899'}
+            stroke="#FFFFFF"
+            strokeWidth={2}
+            filter="url(#swingGlow)"
+          />
+
+          {/* Angle display - absolute coords */}
+          <rect x={370} y={height - 40} width={95} height={35} rx={6} fill="rgba(15, 23, 42, 0.9)" stroke="#334155" />
+          <text x={378} y={height - 26} fill="#9CA3AF" fontSize="11">Angle: <tspan fill="#FFFFFF" fontWeight="bold">{angleInDegrees.toFixed(1)}°</tspan></text>
+          <text x={378} y={height - 12} fill="#9CA3AF" fontSize="11">Max: <tspan fill="#EC4899" fontWeight="bold">{maxAngleDegrees.toFixed(0)}°</tspan></text>
 
           {/* Formula overlay */}
           {showFormula && (
             <g>
-              <rect x={10} y={35} width={200} height={22} rx={4} fill="rgba(0,0,0,0.7)" />
+              <rect x={10} y={35} width={220} height={22} rx={4} fill="rgba(0,0,0,0.7)" />
               <text x={20} y={50} fill="#F59E0B" fontSize="13" fontWeight="bold">
-                L = I·ω = constant (angular momentum)
+                L = I·ω = constant (momentum)
               </text>
             </g>
           )}
@@ -693,7 +699,7 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
           onClick={() => goToPhase(p)}
           style={{
             width: phase === p ? '24px' : '8px',
-            height: '8px',
+            minHeight: '44px',
             borderRadius: '4px',
             border: 'none',
             background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
@@ -733,6 +739,7 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
           fontWeight: 600,
           cursor: currentIndex === 0 ? 'not-allowed' : 'pointer',
           opacity: currentIndex === 0 ? 0.5 : 1,
+          minHeight: '44px',
         }}
       >
         ← Back
@@ -760,6 +767,7 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
           fontWeight: 600,
           cursor: nextDisabled ? 'not-allowed' : 'pointer',
           opacity: nextDisabled ? 0.5 : 1,
+          minHeight: '44px',
         }}
       >
         {nextLabel || 'Next →'}
@@ -791,6 +799,7 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
     accentColor: '#3b82f6',
     WebkitAppearance: 'none',
     touchAction: 'pan-y',
+    display: 'block',
   };
 
   // ---------------------------------------------------------------------------
@@ -812,8 +821,6 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -851,10 +858,10 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
             maxWidth: '500px',
             border: `1px solid ${colors.border}`,
           }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            <p style={{ ...typo.small, color: 'rgba(203, 213, 225, 0.7)', fontStyle: 'italic' }}>
               "Every child learns to pump a swing - stand, squat, stand, squat. But why does this work? No one pushes you, yet you go higher and higher! The same physics powers quantum amplifiers and orbital mechanics."
             </p>
-            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            <p style={{ ...typo.small, color: 'rgba(156, 163, 175, 0.6)', marginTop: '8px' }}>
               - The Hidden Physics of Everyday Motion
             </p>
           </div>
@@ -867,7 +874,7 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
           </button>
         </div>
 
-        {renderBottomNav(nextPhase, 'Discover →')}
+        {renderBottomNav(nextPhase, 'Next →')}
       </div>
     );
   }
@@ -1077,6 +1084,9 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
                   onChange={(e) => {
                     setPumpFrequency(parseFloat(e.target.value));
                     playSound('click');
+                  }}
+                  onInput={(e) => {
+                    setPumpFrequency(parseFloat((e.target as HTMLInputElement).value));
                   }}
                   style={sliderStyle}
                 />
@@ -1433,6 +1443,9 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
                     setPumpFrequency(parseFloat(e.target.value));
                     playSound('click');
                   }}
+                  onInput={(e) => {
+                    setPumpFrequency(parseFloat((e.target as HTMLInputElement).value));
+                  }}
                   style={sliderStyle}
                 />
                 <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
@@ -1762,7 +1775,7 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
                 {passed ? '🏆' : '📚'}
               </div>
               <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
-                {passed ? 'Excellent!' : 'Keep Learning!'}
+                {passed ? 'Test Complete! Excellent!' : 'Test Complete! Keep Learning!'}
               </h2>
               <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
                 {testScore} / 10
@@ -1841,7 +1854,7 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
                     }}
                     style={primaryButtonStyle}
                   >
-                    Review and Try Again
+                    Retry Quiz
                   </button>
                 )}
                 <button
@@ -2036,7 +2049,7 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
           </div>
         </div>
 
-        {renderBottomNav()}
+        {renderBottomNav(undefined, 'Next →', true)}
       </div>
     );
   }
@@ -2056,8 +2069,6 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',

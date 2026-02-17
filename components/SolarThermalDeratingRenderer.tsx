@@ -326,9 +326,9 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
     twist_predict: 'twist_predict',
     twist_play: 'twist_experiment',
     twist_review: 'twist_review',
-    transfer: 'apply',
-    test: 'quiz',
-    mastery: 'transfer',
+    transfer: 'transfer',
+    test: 'test',
+    mastery: 'mastery',
   };
 
   const goToPhase = useCallback((p: Phase) => {
@@ -476,15 +476,16 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
         </span>
         <button
           onClick={nextPhase}
-          disabled={currentIndex === phaseOrder.length - 1}
+          disabled={currentIndex === phaseOrder.length - 1 || (phase === 'test' && !testSubmitted)}
           aria-label="Next"
           style={{
             padding: '10px 20px',
             borderRadius: '8px',
             border: 'none',
-            background: currentIndex === phaseOrder.length - 1 ? colors.border : colors.accent,
+            background: (currentIndex === phaseOrder.length - 1 || (phase === 'test' && !testSubmitted)) ? colors.border : colors.accent,
             color: 'white',
-            cursor: currentIndex === phaseOrder.length - 1 ? 'not-allowed' : 'pointer',
+            cursor: (currentIndex === phaseOrder.length - 1 || (phase === 'test' && !testSubmitted)) ? 'not-allowed' : 'pointer',
+            opacity: (phase === 'test' && !testSubmitted) ? 0.4 : 1,
             fontSize: '14px',
             fontWeight: 600,
           }}
@@ -619,7 +620,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
 
         {/* Axis labels */}
         <text x={padding.left + plotWidth / 2} y={height - 12} fill={colors.textSecondary} fontSize="13" textAnchor="middle">Voltage (V)</text>
-        <text x={16} y={padding.top + plotHeight / 2} fill={colors.textSecondary} fontSize="13" textAnchor="middle" transform={`rotate(-90, 16, ${padding.top + plotHeight / 2})`}>Current (A)</text>
+        <text x={6} y={padding.top + plotHeight / 2} fill={colors.textSecondary} fontSize="13" textAnchor="middle" transform={`rotate(-90, 6, ${padding.top + plotHeight / 2})`}>Current (A)</text>
 
         {/* STC comparison curve */}
         {showComparison && stcCurve.length > 0 && (
@@ -648,8 +649,8 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
         {/* STC legend if showing comparison */}
         {showComparison && (
           <g>
-            <rect x={padding.left + plotWidth - 80} y={padding.top + 8} width="10" height="3" fill={colors.cold} opacity="0.6" />
-            <text x={padding.left + plotWidth - 66} y={padding.top + 14} fill={colors.textMuted} fontSize="11">25°C STC</text>
+            <rect x={padding.left + plotWidth - 80} y={padding.top + 52} width="10" height="3" fill={colors.cold} opacity="0.6" />
+            <text x={padding.left + plotWidth - 66} y={padding.top + 56} fill={colors.textMuted} fontSize="11">25°C STC</text>
           </g>
         )}
       </svg>
@@ -983,8 +984,6 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        paddingTop: '48px',
-        paddingBottom: '100px',
         display: 'flex',
         flexDirection: 'column',
       }}>
@@ -994,14 +993,17 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '24px',
+          paddingTop: '48px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+          paddingBottom: '100px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Heat Up the Panel
             </h2>
             <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-              Drag the temperature slider and watch power output change on the I-V curve
+              Drag the temperature slider and observe how power output changes on the I-V curve
             </p>
 
             {/* Key physics terms */}
@@ -1259,10 +1261,10 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
               marginBottom: '24px',
             }}>
               <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-                Key Insight
+                Main Takeaway
               </h3>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Power = Voltage × Current. Since voltage drops much more than current rises, net power always decreases with temperature. This is why cool, bright days produce the most solar energy!
+                Power = Voltage × Current. Since voltage drops much more than current rises, net power always decreases with temperature. Cool, bright days produce the most solar energy!
               </p>
             </div>
 

@@ -88,7 +88,7 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
     twist_predict: 'New Variable',
     twist_play: 'Explore',
     twist_review: 'Deep Insight',
-    transfer: 'Apply',
+    transfer: 'Transfer',
     test: 'Knowledge Test',
     mastery: 'Mastery'
   };
@@ -633,7 +633,7 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
 
           {/* Graph title */}
           <text x="200" y="42" textAnchor="middle" fill="#f8fafc" fontSize="13" fontWeight="bold">
-            Diff Size vs Regression Risk
+            Diff Size vs Regression Rate (Risk)
           </text>
 
           {/* Risk zone background */}
@@ -668,8 +668,8 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
           <line x1={graphLeft} y1={graphTop} x2={graphLeft} y2={graphBottom} stroke="#475569" strokeWidth="2" />
 
           {/* Y-axis label */}
-          <text x={14} y={graphTop + graphH / 2} fill="#94a3b8" fontSize="12" textAnchor="middle"
-            transform={`rotate(-90, 14, ${graphTop + graphH / 2})`}>
+          <text x={12} y={graphTop + graphH / 2} fill="#94a3b8" fontSize="12" textAnchor="middle"
+            transform={`rotate(-90, 12, ${graphTop + graphH / 2})`}>
             Risk %
           </text>
 
@@ -1009,7 +1009,7 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
               </p>
             </div>
           </div>
-          {renderBottomBar(false, true, 'Make a Prediction →')}
+          {renderBottomBar(false, true, 'Next →')}
         </div>
       );
     }
@@ -1062,7 +1062,7 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
               </div>
             </div>
           </div>
-          {renderBottomBar(true, !!prediction, 'Test My Prediction →')}
+          {renderBottomBar(true, true, 'Next →')}
         </div>
       );
     }
@@ -1070,7 +1070,8 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
     // PLAY PHASE
     if (phase === 'play') {
       return (
-        <div style={{ overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', minHeight: '100vh' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>🔬 Explore Patch Size Effects</h2>
@@ -1103,6 +1104,7 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
             </div>
           </div>
           {renderBottomBar(true, true, 'Continue to Review →')}
+        </div>
         </div>
       );
     }
@@ -1381,7 +1383,7 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
               </div>
             ))}
           </div>
-          {renderBottomBar(true, transferCompleted.size >= 4, 'Take the Knowledge Test →')}
+          {renderBottomBar(true, true, 'Next →')}
         </div>
       );
     }
@@ -1468,9 +1470,9 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px' }}>
               <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer', transition: 'all 0.15s ease' }}>← Previous</button>
               {currentTestQuestion < testQuestions.length - 1 ? (
-                <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', fontWeight: 700, transition: 'all 0.15s ease' }}>Next Question →</button>
+                <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', fontWeight: 700, transition: 'all 0.15s ease' }}>Check Answer →</button>
               ) : (
-                <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer', fontWeight: 700, transition: 'all 0.15s ease' }}>Submit Test ✓</button>
+                <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer', fontWeight: 700, transition: 'all 0.15s ease' }}>Check Answers ✓</button>
               )}
             </div>
           </div>

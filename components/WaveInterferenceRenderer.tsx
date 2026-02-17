@@ -349,8 +349,8 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#CBD5E1',
+    textMuted: '#94a3b8',
     border: '#2a2a3a',
     wave1: '#14b8a6',
     wave2: '#2dd4bf',
@@ -526,7 +526,7 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
           const d1p = Math.sqrt(Math.pow(xp - s1.x, 2) + Math.pow(canvasHeight - 80 - s1.y, 2));
           const d2p = Math.sqrt(Math.pow(xp - s2.x, 2) + Math.pow(canvasHeight - 80 - s2.y, 2));
           const amp = Math.cos(Math.PI * Math.abs(d1p - d2p) / wavelength);
-          return `L ${xp} ${canvasHeight - 10 - Math.abs(amp) * 8}`;
+          return `L ${xp} ${canvasHeight - 10 - Math.abs(amp) * 95}`;
         }).join(' ')}`} fill="none" stroke={colors.wave1} strokeWidth="1.5" opacity="0.4" />
 
         {/* Info panel - Path Difference (top-left) */}

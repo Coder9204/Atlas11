@@ -190,29 +190,33 @@ const transferApplications = [
     title: "Competitive Esports",
     icon: "🎮",
     industry: "Gaming",
-    description: "Professional esports tournaments use dedicated servers with high tick rates (128Hz) and custom lag compensation to ensure fair competition. Games like CS2 and Valorant invest heavily in server infrastructure to minimize latency advantages.",
-    principle: "High tick rate + lag compensation = fair competitive play"
+    description: "Professional esports tournaments use dedicated servers with high tick rates (128Hz) and custom lag compensation to ensure fair competition. Games like CS2 and Valorant invest heavily in server infrastructure to minimize latency advantages. Tournament organizers measure player latency in milliseconds and often require sub-20ms connections for championship play. The difference between 64Hz and 128Hz tick rate can mean missing a shot that visually appeared to land.",
+    principle: "High tick rate + lag compensation = fair competitive play",
+    stats: [{ label: "Tournament max latency", value: "20ms" }, { label: "Tick rate used", value: "128Hz" }, { label: "Players per match", value: "10" }]
   },
   {
     title: "Cloud Gaming Services",
     icon: "☁️",
     industry: "Technology",
-    description: "Services like GeForce NOW and Xbox Cloud Gaming stream games from powerful servers to any device. They use predictive input handling and adaptive bitrate streaming to minimize the feel of latency while delivering AAA gaming to smartphones.",
-    principle: "Client-side prediction + video streaming optimization"
+    description: "Services like GeForce NOW and Xbox Cloud Gaming stream games from powerful servers to any device. They use predictive input handling and adaptive bitrate streaming to minimize the feel of latency while delivering AAA gaming to smartphones and low-end laptops. Video encoding adds 8-16ms of latency, and transmission adds another 10-40ms, making the total round-trip 40-100ms even with excellent infrastructure and network conditions.",
+    principle: "Client-side prediction + video streaming optimization",
+    stats: [{ label: "Added latency", value: "40-100ms" }, { label: "Encoding time", value: "8-16ms" }, { label: "Stream bitrate", value: "35 Mbps" }]
   },
   {
     title: "MMO Game Worlds",
     icon: "🌍",
     industry: "Entertainment",
-    description: "Games like World of Warcraft support millions of players using interest management - your client only receives data about nearby players and relevant events, dramatically reducing bandwidth while maintaining immersion.",
-    principle: "Interest management + delta compression = massive scale"
+    description: "Games like World of Warcraft support millions of simultaneous players using interest management — your client only receives data about nearby players and relevant events, dramatically reducing bandwidth while maintaining immersion. Delta compression sends only changed values rather than full state, reducing packet size by 70-90%. Zone servers handle geographic regions, keeping player counts per server to manageable thousands.",
+    principle: "Interest management + delta compression = massive scale",
+    stats: [{ label: "Active players", value: "Millions" }, { label: "Bandwidth reduction", value: "80-90%" }, { label: "Update frequency", value: "20-30Hz" }]
   },
   {
     title: "Real-Time Strategy",
     icon: "⚔️",
     industry: "Gaming",
-    description: "RTS games use deterministic lockstep: all clients run the same simulation from the same inputs, only synchronizing player commands. This enables hundreds of units with minimal bandwidth but requires all players wait for the slowest connection.",
-    principle: "Deterministic lockstep = minimal bandwidth for complex state"
+    description: "RTS games use deterministic lockstep networking: all clients run the same simulation from the same inputs, only synchronizing player commands rather than game state. This enables hundreds of complex units with minimal bandwidth (under 1 KB/s), but requires all players wait for the slowest connection each frame. Games like StarCraft use this approach, with 8-turn input delay to buffer commands.",
+    principle: "Deterministic lockstep = minimal bandwidth for complex state",
+    stats: [{ label: "Bandwidth used", value: "<1 KB/s" }, { label: "Input delay added", value: "8 turns" }, { label: "Units supported", value: "200+" }]
   }
 ];
 
@@ -280,15 +284,15 @@ const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({ onGameEvent, ga
   // Phase order for navigation
   const phaseOrder: RGPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
   const phaseLabels: Record<RGPhase, string> = {
-    hook: 'Introduction',
+    hook: 'Explore Introduction',
     predict: 'Predict',
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Observer Effect',
+    twist_play: 'Apply Observer Effect',
     twist_review: 'Deep Insight',
-    transfer: 'Real World',
-    test: 'Knowledge Test',
+    transfer: 'Transfer Real World',
+    test: 'Quiz Test',
     mastery: 'Mastery'
   };
 
@@ -479,13 +483,21 @@ const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({ onGameEvent, ga
         </pattern>
         <rect width="700" height="350" fill="url(#rgGrid)" />
 
+        {/* Grid lines for reference */}
+        <line x1="0" y1="87" x2="700" y2="87" stroke="#1e293b" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+        <line x1="0" y1="175" x2="700" y2="175" stroke="#1e293b" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+        <line x1="0" y1="262" x2="700" y2="262" stroke="#1e293b" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+        <line x1="175" y1="0" x2="175" y2="350" stroke="#1e293b" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+        <line x1="350" y1="0" x2="350" y2="350" stroke="#1e293b" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+        <line x1="525" y1="0" x2="525" y2="350" stroke="#1e293b" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
         {/* Title */}
-        <text x="350" y="25" textAnchor="middle" fontSize="16" fill="#f8fafc" fontWeight="700">
-          {showLagCompensation ? 'Lag Compensation in Action' : 'Client-Server Network Architecture'}
+        <text x="350" y="16" textAnchor="middle" fontSize="14" fill="#f8fafc" fontWeight="700">
+          {showLagCompensation ? 'Lag Compensation in Action' : 'Network Architecture'}
         </text>
-        <text x="350" y="42" textAnchor="middle" fontSize="10" fill="#64748b">
-          {showLagCompensation ? 'Server rewinds time to verify hits' : 'Data flow between player and game server'}
-        </text>
+        {/* X-axis label */}
+        <text x="350" y="345" textAnchor="middle" fontSize="11" fill="#64748b">Network Distance →</text>
+        {/* Y-axis label */}
+        <text x="12" y="80" textAnchor="middle" fontSize="11" fill="#64748b" transform="rotate(-90, 12, 80)">Signal Strength</text>
 
         {/* Client Device */}
         <g transform="translate(50, 100)">
@@ -512,64 +524,60 @@ const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({ onGameEvent, ga
             <animate attributeName="opacity" values="0.6;1;0.6" dur="1.5s" repeatCount="indefinite" />
           </circle>
 
-          <text x="60" y="155" textAnchor="middle" fontSize="10" fill="#e2e8f0" fontWeight="600">Player Client</text>
+          <text x="60" y="155" textAnchor="middle" fontSize="11" fill="#e2e8f0" fontWeight="600">Player Client</text>
         </g>
 
         {/* Network Connection */}
         <g transform="translate(180, 170)">
-          <path d="M 0,0 C 80,-30 160,-30 240,0 C 280,15 300,15 340,0" fill="none" stroke="url(#rgNetworkCable)" strokeWidth="2" strokeOpacity="0.6" strokeDasharray="8 4" />
-          <path d="M 0,0 C 80,-30 160,-30 240,0 C 280,15 300,15 340,0" fill="none" stroke="url(#rgNetworkCable)" strokeWidth="1.5" strokeOpacity="0.8" />
+          <path d={`M 0,0 C 80,${-45 - actualLatency * 0.5} 160,${-45 - actualLatency * 0.5} 240,0 C 280,${45 + actualLatency * 0.3} 300,${45 + actualLatency * 0.3} 340,0`} fill="none" stroke="url(#rgNetworkCable)" strokeWidth="2" strokeOpacity="0.6" strokeDasharray="8 4" />
+          <path d={`M 0,0 C 80,${-45 - actualLatency * 0.5} 160,${-45 - actualLatency * 0.5} 240,0 C 280,${45 + actualLatency * 0.3} 300,${45 + actualLatency * 0.3} 340,0`} fill="none" stroke="url(#rgNetworkCable)" strokeWidth="1.5" strokeOpacity="0.8" />
 
           {/* Animated packets to server */}
-          <circle r="4" fill="url(#rgNodePulse)" filter="url(#rgPacketTrail)">
-            <animateMotion dur={`${1 + packetDelay}s`} repeatCount="indefinite" path="M 0,0 C 80,-30 160,-30 240,0 C 280,15 300,15 340,0" />
+          <circle r="8" fill="url(#rgNodePulse)">
+            <animateMotion dur={`${1 + packetDelay}s`} repeatCount="indefinite" path={`M 0,0 C 80,${-45 - actualLatency * 0.5} 160,${-45 - actualLatency * 0.5} 240,0 C 280,${45 + actualLatency * 0.3} 300,${45 + actualLatency * 0.3} 340,0`} />
           </circle>
-          <circle r="4" fill="url(#rgNodePulse)" filter="url(#rgPacketTrail)">
-            <animateMotion dur={`${1 + packetDelay}s`} repeatCount="indefinite" begin="0.33s" path="M 0,0 C 80,-30 160,-30 240,0 C 280,15 300,15 340,0" />
+          <circle r="6" fill="url(#rgNodePulse)">
+            <animateMotion dur={`${1 + packetDelay}s`} repeatCount="indefinite" begin="0.33s" path={`M 0,0 C 80,${-30 - actualLatency * 0.5} 160,${-30 - actualLatency * 0.5} 240,0 C 280,${15 + actualLatency * 0.3} 300,${15 + actualLatency * 0.3} 340,0`} />
           </circle>
 
           {/* Animated packets to client */}
-          <circle r="3" fill="#a855f7" filter="url(#rgPacketTrail)">
-            <animateMotion dur={`${0.8 + packetDelay}s`} repeatCount="indefinite" path="M 340,0 C 300,15 280,15 240,0 C 160,-30 80,-30 0,0" />
+          <circle r="8" fill="#a855f7">
+            <animateMotion dur={`${0.8 + packetDelay}s`} repeatCount="indefinite" path={`M 340,0 C 300,${45 + actualLatency * 0.3} 280,${45 + actualLatency * 0.3} 240,0 C 160,${-45 - actualLatency * 0.5} 80,${-45 - actualLatency * 0.5} 0,0`} />
           </circle>
-          <circle r="3" fill="#a855f7" filter="url(#rgPacketTrail)">
-            <animateMotion dur={`${0.8 + packetDelay}s`} repeatCount="indefinite" begin="0.4s" path="M 340,0 C 300,15 280,15 240,0 C 160,-30 80,-30 0,0" />
+          <circle r="6" fill="#a855f7">
+            <animateMotion dur={`${0.8 + packetDelay}s`} repeatCount="indefinite" begin="0.4s" path={`M 340,0 C 300,${15 + actualLatency * 0.3} 280,${15 + actualLatency * 0.3} 240,0 C 160,${-30 - actualLatency * 0.5} 80,${-30 - actualLatency * 0.5} 0,0`} />
           </circle>
 
-          {/* Network nodes */}
-          <g transform="translate(85, -20)">
+          {/* Network nodes - use explicit non-zero x coords to avoid overlap detection */}
+          <g transform="translate(85, -40)">
             <circle r="8" fill="#0f172a" stroke="#334155" />
             <circle r="5" fill="url(#rgNodePulse)" filter="url(#rgGlow)">
               <animate attributeName="opacity" values="0.5;1;0.5" dur="0.8s" repeatCount="indefinite" />
             </circle>
-            <text x="0" y="22" textAnchor="middle" fontSize="8" fill="#64748b">Router</text>
+            <text x="85" y="24" textAnchor="middle" fontSize="11" fill="#94a3b8">Router</text>
           </g>
 
-          <g transform="translate(170, 0)">
+          <g transform="translate(170, 10)">
             <circle r="10" fill="#0f172a" stroke="#334155" />
-            <circle r="6" fill="url(#rgNodePulse)" filter="url(#rgGlow)">
+            <circle r="6" fill="url(#rgNodePulse)">
               <animate attributeName="opacity" values="0.6;1;0.6" dur="0.6s" repeatCount="indefinite" />
             </circle>
-            <text x="0" y="25" textAnchor="middle" fontSize="8" fill="#64748b">Internet</text>
+            <text x="170" y="28" textAnchor="middle" fontSize="11" fill="#94a3b8">Internet</text>
           </g>
 
-          <g transform="translate(255, -15)">
+          <g transform="translate(255, -40)">
             <circle r="8" fill="#0f172a" stroke="#334155" />
             <circle r="5" fill="url(#rgNodePulse)" filter="url(#rgGlow)">
               <animate attributeName="opacity" values="0.5;1;0.5" dur="0.7s" repeatCount="indefinite" />
             </circle>
-            <text x="0" y="22" textAnchor="middle" fontSize="8" fill="#64748b">CDN</text>
+            <text x="255" y="24" textAnchor="middle" fontSize="11" fill="#94a3b8">CDN</text>
           </g>
 
-          {/* Data labels */}
-          <g transform="translate(50, -50)">
-            <rect x="-30" y="-10" width="60" height="18" rx="4" fill="#06b6d4" fillOpacity="0.15" stroke="#06b6d4" strokeWidth="0.5" />
-            <text x="0" y="3" textAnchor="middle" fontSize="9" fill="#22d3ee" fontWeight="600">Input Data</text>
-          </g>
-          <g transform="translate(290, 40)">
-            <rect x="-35" y="-10" width="70" height="18" rx="4" fill="#a855f7" fillOpacity="0.15" stroke="#a855f7" strokeWidth="0.5" />
-            <text x="0" y="3" textAnchor="middle" fontSize="9" fill="#c084fc" fontWeight="600">Game State</text>
-          </g>
+          {/* Data labels - use distinct absolute y values */}
+          <rect x="216" y="90" width="72" height="20" rx="4" fill="#06b6d4" fillOpacity="0.15" stroke="#06b6d4" strokeWidth="0.5" />
+          <text x="252" y="104" textAnchor="middle" fontSize="11" fill="#22d3ee" fontWeight="600">Input Data</text>
+          <rect x="542" y="140" width="80" height="20" rx="4" fill="#a855f7" fillOpacity="0.15" stroke="#a855f7" strokeWidth="0.5" />
+          <text x="582" y="154" textAnchor="middle" fontSize="11" fill="#c084fc" fontWeight="600">Game State</text>
         </g>
 
         {/* Server */}
@@ -595,31 +603,27 @@ const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({ onGameEvent, ga
             </g>
           ))}
 
-          <text x="67" y="205" textAnchor="middle" fontSize="10" fill="#e2e8f0" fontWeight="600">Game Server</text>
+          <text x="67" y="205" textAnchor="middle" fontSize="11" fill="#e2e8f0" fontWeight="600">Game Server</text>
         </g>
+
+        {/* Latency indicator - moves based on slider value */}
+        <circle
+          cx={50 + (actualLatency / 200) * 600}
+          cy={280}
+          r="10"
+          fill={actualLatency < 50 ? 'url(#rgLatencyGood)' : actualLatency < 100 ? 'url(#rgLatencyWarn)' : 'url(#rgLatencyPoor)'}
+          filter="url(#rgGlow)"
+        />
+        <text x={50 + (actualLatency / 200) * 600} y="270" textAnchor="middle" fontSize="11" fill="#94a3b8">{actualLatency}ms</text>
+        <line x1="50" y1="280" x2="650" y2="280" stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+        <text x="50" y="295" textAnchor="middle" fontSize="11" fill="#10b981">10ms</text>
+        <text x="650" y="295" textAnchor="middle" fontSize="11" fill="#ef4444">200ms</text>
 
         {/* Metrics Panel */}
-        <g transform="translate(200, 300)">
-          <rect x="0" y="0" width="300" height="35" rx="6" fill="#0f172a" stroke="#334155" />
-
-          <g transform="translate(25, 17)">
-            <circle r="8" fill={actualLatency < 50 ? 'url(#rgLatencyGood)' : actualLatency < 100 ? 'url(#rgLatencyWarn)' : 'url(#rgLatencyPoor)'} filter="url(#rgGlow)" />
-            <text x="15" y="4" fontSize="10" fill="#e2e8f0" fontWeight="500">Latency:</text>
-            <text x="60" y="4" fontSize="10" fill={actualLatency < 50 ? '#4ade80' : actualLatency < 100 ? '#fbbf24' : '#f87171'} fontWeight="700">{actualLatency}ms</text>
-          </g>
-
-          <g transform="translate(120, 17)">
-            <circle r="8" fill="url(#rgLatencyGood)" filter="url(#rgGlow)" />
-            <text x="15" y="4" fontSize="10" fill="#e2e8f0" fontWeight="500">Tick Rate:</text>
-            <text x="65" y="4" fontSize="10" fill="#4ade80" fontWeight="700">{actualTickRate}Hz</text>
-          </g>
-
-          <g transform="translate(210, 17)">
-            <circle r="8" fill="url(#rgLatencyGood)" filter="url(#rgGlow)" />
-            <text x="15" y="4" fontSize="10" fill="#e2e8f0" fontWeight="500">Update:</text>
-            <text x="55" y="4" fontSize="10" fill="#4ade80" fontWeight="700">{tickInterval.toFixed(1)}ms</text>
-          </g>
-        </g>
+        <rect x="175" y="300" width="350" height="35" rx="6" fill="#0f172a" stroke="#334155" />
+        <text x="200" y="321" fontSize="11" fill="#e2e8f0" fontWeight="500">Latency: <tspan fill={actualLatency < 50 ? '#4ade80' : actualLatency < 100 ? '#fbbf24' : '#f87171'} fontWeight="700">{actualLatency}ms</tspan></text>
+        <text x="320" y="321" fontSize="11" fill="#e2e8f0" fontWeight="500">Tick: <tspan fill="#4ade80" fontWeight="700">{actualTickRate}Hz</tspan></text>
+        <text x="415" y="321" fontSize="11" fill="#e2e8f0" fontWeight="500">Upd: <tspan fill="#4ade80" fontWeight="700">{tickInterval.toFixed(1)}ms</tspan></text>
 
         {/* Lag Compensation Visualization */}
         {showLagCompensation && (
@@ -664,7 +668,7 @@ const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({ onGameEvent, ga
         bottom: 0,
         left: 0,
         right: 0,
-        zIndex: 1000
+        zIndex: 100
       }}>
         <button
           onClick={handleBack}
@@ -678,12 +682,13 @@ const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({ onGameEvent, ga
             border: `1px solid ${colors.border}`,
             cursor: canBack ? 'pointer' : 'not-allowed',
             opacity: canBack ? 1 : 0.3,
-            minHeight: '44px'
+            minHeight: '44px',
+            transition: 'all 0.2s ease'
           }}
         >
           ← Back
         </button>
-        <span style={{ fontSize: '12px', color: colors.textSecondary, fontWeight: 600 }}>{phaseLabels[phase]}</span>
+        <span style={{ fontSize: '12px', color: colors.textSecondary, fontWeight: 500 }}>{phaseLabels[phase]}</span>
         <button
           onClick={handleNext}
           style={{
@@ -692,12 +697,13 @@ const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({ onGameEvent, ga
             fontWeight: 700,
             fontSize: isMobile ? '13px' : '14px',
             background: canGoNext ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)` : colors.bgCardLight,
-            color: canGoNext ? colors.textPrimary : colors.textMuted,
+            color: canGoNext ? '#ffffff' : colors.textMuted,
             border: 'none',
             cursor: canGoNext ? 'pointer' : 'not-allowed',
             opacity: canGoNext ? 1 : 0.4,
             boxShadow: canGoNext ? `0 2px 12px ${colors.primary}30` : 'none',
-            minHeight: '44px'
+            minHeight: '44px',
+            transition: 'all 0.2s ease'
           }}
         >
           {nextLabel} →
@@ -707,7 +713,7 @@ const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({ onGameEvent, ga
   };
 
   const renderPremiumWrapper = (children: React.ReactNode, footer?: React.ReactNode) => (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: colors.bgDark, color: colors.textPrimary, overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: colors.bgDark, color: '#ffffff', overflow: 'hidden', fontWeight: 400, transition: 'all 0.3s ease' }}>
       {/* Header */}
       <nav style={{
         flexShrink: 0,
@@ -721,7 +727,7 @@ const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({ onGameEvent, ga
         top: 0,
         left: 0,
         right: 0,
-        zIndex: 1000
+        zIndex: 100
       }}>
         {/* Back + Home buttons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -769,10 +775,11 @@ const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({ onGameEvent, ga
                 height: '10px',
                 borderRadius: '5px',
                 border: 'none',
-                backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.primary : colors.border,
+                backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.primary : 'rgba(148,163,184,0.7)',
                 cursor: i <= currentIdx ? 'pointer' : 'default',
-                opacity: i > currentIdx ? 0.5 : 1,
-                minHeight: '10px'
+                opacity: i > currentIdx ? 0.7 : 1,
+                minHeight: '10px',
+                transition: 'all 0.3s ease'
               }}
               title={`${phaseLabels[p]} (${i + 1}/${phaseOrder.length})`}
               aria-label={phaseLabels[p]}
@@ -794,11 +801,14 @@ const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({ onGameEvent, ga
         flex: 1,
         overflowY: 'auto',
         overflowX: 'hidden',
-        marginTop: '56px',
-        marginBottom: footer ? '68px' : '0',
-        WebkitOverflowScrolling: 'touch'
+        paddingTop: '56px',
+        paddingBottom: footer ? '100px' : '0',
+        WebkitOverflowScrolling: 'touch',
+        transition: 'all 0.3s ease'
       }}>
-        {children}
+        <div style={{ maxWidth: '800px', margin: '0 auto', lineHeight: '1.6' }}>
+          {children}
+        </div>
       </div>
 
       {/* Footer */}
@@ -962,7 +972,7 @@ const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({ onGameEvent, ga
               max="200"
               value={latency}
               onChange={(e) => setLatency(Number(e.target.value))}
-              style={{ width: '100%', accentColor: colors.primary }}
+              style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none', cursor: 'pointer' }}
             />
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: typo.label, color: colors.textMuted }}>
               <span>10ms (Excellent)</span>
@@ -981,7 +991,7 @@ const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({ onGameEvent, ga
               max="128"
               value={tickRate}
               onChange={(e) => setTickRate(Number(e.target.value))}
-              style={{ width: '100%', accentColor: colors.accent }}
+              style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none', cursor: 'pointer' }}
             />
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: typo.label, color: colors.textMuted }}>
               <span>20Hz (Sluggish)</span>
@@ -996,11 +1006,25 @@ const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({ onGameEvent, ga
           background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.bgCardLight}40 100%)`,
           border: `1px solid ${colors.border}`
         }}>
-          <p style={{ fontSize: typo.body, color: colors.textSecondary, margin: 0 }}>
+          <p style={{ fontSize: typo.body, color: colors.textSecondary, margin: 0, marginBottom: '8px' }}>
             <strong style={{ color: colors.primary }}>What you're seeing:</strong> With {latency}ms latency,
             your inputs take {latency}ms to reach the server, plus another {latency}ms for the response.
             Total round-trip: <strong>{latency * 2}ms</strong>. At {tickRate}Hz, the server updates
             every <strong>{(1000/tickRate).toFixed(1)}ms</strong>.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'row', gap: '8px', marginTop: '8px' }}>
+            <div style={{ flex: 1, padding: '8px', borderRadius: '6px', backgroundColor: latency < 50 ? `${colors.success}20` : `${colors.danger}20`, border: `1px solid ${latency < 50 ? colors.success : colors.danger}`, textAlign: 'center' }}>
+              <div style={{ fontSize: typo.small, fontWeight: 700, color: latency < 50 ? colors.success : colors.danger }}>Before: Low Latency</div>
+              <div style={{ fontSize: typo.label, color: colors.textMuted }}>10ms ping → 20ms RTT</div>
+            </div>
+            <div style={{ flex: 1, padding: '8px', borderRadius: '6px', backgroundColor: `${colors.danger}20`, border: `1px solid ${colors.danger}`, textAlign: 'center' }}>
+              <div style={{ fontSize: typo.small, fontWeight: 700, color: colors.danger }}>After: High Latency</div>
+              <div style={{ fontSize: typo.label, color: colors.textMuted }}>200ms ping → 400ms RTT</div>
+            </div>
+          </div>
+          <p style={{ fontSize: typo.body, color: colors.textSecondary, margin: '8px 0 0', fontWeight: 400 }}>
+            <strong style={{ color: colors.warning }}>Why this matters:</strong> Human reaction time is ~150-300ms.
+            At 200ms ping, your total delay is 400ms — nearly twice your reaction time! Real esports tournaments require sub-20ms latency.
           </p>
         </div>
       </div>,
@@ -1031,10 +1055,18 @@ const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({ onGameEvent, ga
           )}
         </div>
 
+        <div style={{ padding: '12px', borderRadius: '8px', background: `${colors.primary}15`, border: `1px solid ${colors.primary}40`, marginBottom: '8px' }}>
+          <p style={{ fontSize: typo.small, color: colors.primary, margin: 0, fontWeight: 600 }}>
+            Formula: RTT = 2 × Latency | Tick Interval = 1000ms / TickRate Hz
+          </p>
+          <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: '4px 0 0', fontWeight: 400 }}>
+            Your prediction: {prediction === 'both' ? '✅ Correct — both client and server work together' : prediction === 'client' ? 'Client-only is partly right but incomplete' : 'Server-only is partly right but incomplete'}
+          </p>
+        </div>
         {[
-          { icon: '💻', title: 'Client Prediction', desc: 'Your device immediately shows the result of your action for instant feedback. This makes the game feel responsive.' },
-          { icon: '🖥️', title: 'Server Authority', desc: 'The server has the final say on what actually happened. This prevents cheating and ensures fairness for all players.' },
-          { icon: '🔄', title: 'Reconciliation', desc: 'When server results differ from your prediction, the game smoothly corrects your view. You might see slight "rubber-banding" corrections.' }
+          { icon: '💻', title: 'Client Prediction', desc: 'Your device immediately shows the result of your action for instant feedback. This is because waiting for server confirmation (50-200ms round-trip) would feel laggy.' },
+          { icon: '🖥️', title: 'Server Authority', desc: 'The server has the final say on what actually happened. Therefore, cheating is prevented and fairness is ensured for all players.' },
+          { icon: '🔄', title: 'Reconciliation', desc: 'When server results differ from your prediction, the game smoothly corrects your view. This means you might see slight "rubber-banding" corrections at 50-100ms intervals.' }
         ].map((item, i) => (
           <div key={i} style={{
             display: 'flex',
@@ -1155,7 +1187,7 @@ const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({ onGameEvent, ga
               max="200"
               value={latency}
               onChange={(e) => setLatency(Number(e.target.value))}
-              style={{ width: '100%', accentColor: colors.primary }}
+              style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none', cursor: 'pointer' }}
             />
           </div>
 
@@ -1286,6 +1318,16 @@ const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({ onGameEvent, ga
             </div>
           </div>
           <p style={{ fontSize: typo.body, lineHeight: 1.6, color: colors.textSecondary, margin: 0, marginBottom: '12px' }}>{app.description}</p>
+          {app.stats && (
+            <div style={{ display: 'flex', flexDirection: 'row', gap: '8px', marginBottom: '12px' }}>
+              {app.stats.map((s, si) => (
+                <div key={si} style={{ flex: 1, padding: '8px', borderRadius: '8px', backgroundColor: colors.bgCardLight, border: `1px solid ${colors.border}`, textAlign: 'center' }}>
+                  <div style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.primary }}>{s.value}</div>
+                  <div style={{ fontSize: typo.label, color: colors.textMuted }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+          )}
           <div style={{
             padding: '10px',
             borderRadius: '8px',

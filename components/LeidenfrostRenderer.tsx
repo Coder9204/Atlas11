@@ -901,6 +901,17 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
             <text x="-35" y="3" fontSize="11" fill="#f59e0b" fontWeight="bold">L.P.</text>
           </g>
 
+          {/* Current temperature marker - interactive indicator dot */}
+          <circle
+            cx="0"
+            cy={115 - (surfaceTemp / 400) * 105}
+            r="6"
+            fill={getSurfaceColor(surfaceTemp)}
+            stroke="#ffffff"
+            strokeWidth="1.5"
+            filter="url(#leidDropletGlow)"
+          />
+
           {/* Temperature display */}
           <rect x="-20" y="125" width="40" height="20" rx="4" fill="#0f172a" stroke="#334155" />
           <text x="0" y="139" textAnchor="middle" fontSize="11" fill="#f8fafc" fontWeight="bold">
@@ -1355,7 +1366,8 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
           fontWeight: 'bold',
           cursor: canProceed ? 'pointer' : 'not-allowed',
           fontSize: '16px',
-          minHeight: '44px'
+          minHeight: '44px',
+          transition: 'all 0.3s ease'
         }}
       >
         {buttonText}
@@ -1586,7 +1598,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
                 max="350"
                 value={surfaceTemp}
                 onChange={(e) => { setSurfaceTemp(parseInt(e.target.value)); resetExperiment(); }}
-                style={{ width: '100%', accentColor: getSurfaceColor(surfaceTemp) }}
+                style={{ width: '100%', accentColor: getSurfaceColor(surfaceTemp), touchAction: 'pan-y' }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b' }}>
                 <span>80C</span>
@@ -1607,7 +1619,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
                 step="1"
                 value={dropletSize}
                 onChange={(e) => { setDropletSize(parseInt(e.target.value)); resetExperiment(); }}
-                style={{ width: '100%', accentColor: '#3b82f6' }}
+                style={{ width: '100%', accentColor: '#3b82f6', touchAction: 'pan-y' }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b' }}>
                 <span>2mm (Small)</span>
@@ -1721,6 +1733,9 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
               <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
                 The vapor layer isn't just insulation - it's like an air hockey table! With almost no friction, droplets glide freely, bouncing off edges and even climbing inclines. The vapor continuously replenishes from the evaporating bottom.
               </p>
+              <p style={{ color: '#a7f3d0', fontSize: '14px', marginTop: '8px', fontFamily: 'monospace' }}>
+                Heat flux q = h × (T_surface − T_vapor), where h is the film boiling heat transfer coefficient. Above the Leidenfrost point, h drops dramatically because vapor insulates — this relationship explains why hotter surfaces cause slower evaporation.
+              </p>
             </div>
           </div>
         </div>
@@ -1829,7 +1844,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
                 max="300"
                 value={twistTemp}
                 onChange={(e) => { setTwistTemp(parseInt(e.target.value)); setIsEvaporating(false); setTwistDropletRadius(15); setEvaporationTime(0); }}
-                style={{ width: '100%', accentColor: getSurfaceColor(twistTemp) }}
+                style={{ width: '100%', accentColor: getSurfaceColor(twistTemp), touchAction: 'pan-y' }}
               />
             </div>
 

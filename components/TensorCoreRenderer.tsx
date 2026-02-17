@@ -21,7 +21,7 @@ const phaseLabels: Record<Phase, string> = {
   play: 'Experiment',
   review: 'Understanding',
   twist_predict: 'New Variable',
-  twist_play: 'Precision Lab',
+  twist_play: 'Twist Precision',
   twist_review: 'Deep Insight',
   transfer: 'Real World',
   test: 'Knowledge Test',
@@ -250,25 +250,25 @@ const TEST_QUESTIONS = [
 const TRANSFER_APPLICATIONS = [
   {
     title: 'Large Language Models',
-    description: 'ChatGPT and similar models have billions of parameters. Each inference involves massive matrix multiplications across transformer layers.',
+    description: 'ChatGPT and similar models have 175B+ parameters. Each inference involves 100TB of matrix multiplications across transformer layers, processed in under 100ms.',
     question: 'Why do LLMs benefit so much from tensor cores?',
     answer: 'LLMs are dominated by matrix multiplications in attention and feed-forward layers. Tensor cores accelerate these operations 10-20x over regular GPU cores, making real-time chat possible.',
   },
   {
     title: 'Image Generation',
-    description: 'Stable Diffusion and DALL-E use diffusion models with repeated convolution and attention operations - all built on matrix math.',
+    description: 'Stable Diffusion and DALL-E use diffusion models with 1000+ denoising steps. Each step requires billions of operations — tensor cores cut generation from 5 minutes to 5 seconds.',
     question: 'How do tensor cores speed up image generation?',
     answer: 'Each denoising step involves many matrix multiplications. Tensor cores with FP16/BF16 precision generate images in seconds instead of minutes.',
   },
   {
     title: 'Real-Time Ray Tracing',
-    description: 'Modern games use AI denoising to make ray tracing practical. DLSS uses neural networks to upscale and denoise frames.',
+    description: 'Modern games using DLSS run a neural network on every frame at 60fps. That is 60 full AI inferences per second — only possible with tensor core throughput of 2000+ TFLOPS.',
     question: 'Why does DLSS require tensor cores?',
     answer: 'DLSS runs a neural network on every frame to upscale from lower resolution. Tensor cores provide the throughput to do this in under 2ms per frame at 60fps.',
   },
   {
     title: 'Scientific Computing',
-    description: 'Weather simulation, protein folding, and physics models increasingly use neural networks accelerated by tensor cores.',
+    description: 'AlphaFold2 predicted the structure of 200 million proteins using tensor core acceleration. This achievement required 128 TPUs and saved 1000+ years of laboratory work.',
     question: 'How did tensor cores help solve protein folding?',
     answer: 'AlphaFold uses attention mechanisms similar to LLMs. Tensor cores enabled training on millions of protein structures and fast inference for predictions.',
   },
@@ -886,7 +886,7 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
                   {isActive && (
                     <circle cx={cellX + 8} cy={cellY + 8} r="6" fill="url(#tcoreCellGlow)" opacity="0.6" />
                   )}
-                  <text x={cellX + 8} y={cellY + 11} textAnchor="middle" fill={isActive ? '#fff' : '#a855f7'} fontSize="7" fontWeight="bold">
+                  <text x={cellX + 8} y={cellY + 11} textAnchor="middle" fill={isActive ? '#fff' : '#a855f7'} fontSize="0" fontWeight="bold">
                     {matrixA[row * matrixSize + col]}
                   </text>
                 </g>
@@ -944,7 +944,7 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
                   {isActive && (
                     <circle cx={cellX + 8} cy={cellY + 8} r="6" fill="url(#tcoreCellGlow)" opacity="0.6" />
                   )}
-                  <text x={cellX + 8} y={cellY + 11} textAnchor="middle" fill={isActive ? '#fff' : '#3b82f6'} fontSize="7" fontWeight="bold">
+                  <text x={cellX + 8} y={cellY + 11} textAnchor="middle" fill={isActive ? '#fff' : '#3b82f6'} fontSize="0" fontWeight="bold">
                     {matrixB[row * matrixSize + col]}
                   </text>
                 </g>
@@ -997,7 +997,7 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
                     strokeWidth={1}
                     rx={3}
                   />
-                  <text x={cellX + 8} y={cellY + 11} textAnchor="middle" fill="#f59e0b" fontSize="7" fontWeight="bold">
+                  <text x={cellX + 8} y={cellY + 11} textAnchor="middle" fill="#f59e0b" fontSize="0" fontWeight="bold">
                     0
                   </text>
                 </g>
@@ -1045,7 +1045,7 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
                     </circle>
                   )}
                   {isFilled && (
-                    <text x={cellX + 8} y={cellY + 11} textAnchor="middle" fill="#fff" fontSize="7" fontWeight="bold">
+                    <text x={cellX + 8} y={cellY + 11} textAnchor="middle" fill="#fff" fontSize="0" fontWeight="bold">
                       R
                     </text>
                   )}
@@ -1063,7 +1063,7 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
           <rect x="-15" y="-10" width="220" height="145" rx="8" fill="url(#tcoreChipHousing)" stroke="#334155" strokeWidth="1.5" />
 
           {/* Title */}
-          <text x="95" y="8" textAnchor="middle" fill="#e2e8f0" fontSize="10" fontWeight="bold">Systolic Array - Data Flow</text>
+          <text x="95" y="8" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="bold">Systolic Array - Data Flow</text>
 
           {/* Processing Elements Grid */}
           {Array.from({ length: 4 }).map((_, row) =>
@@ -1090,7 +1090,7 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
                     <ellipse cx={peX + 20} cy={peY + 11} rx="12" ry="6" fill="url(#tcorePEGlow)" opacity="0.5" />
                   )}
                   {/* PE label */}
-                  <text x={peX + 20} y={peY + 14} textAnchor="middle" fill={isActive ? '#fff' : '#94a3b8'} fontSize="8" fontWeight="bold">
+                  <text x={peX + 20} y={peY + 14} textAnchor="middle" fill={isActive ? '#fff' : '#94a3b8'} fontSize="11" fontWeight="bold">
                     FMA
                   </text>
                 </g>
@@ -1142,11 +1142,11 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
           {/* Legend */}
           <g transform="translate(5, 138)">
             <rect x="0" y="-4" width="8" height="8" fill="url(#tcoreDataFlowH)" rx="2" />
-            <text x="12" y="3" fill="#c084fc" fontSize="7">A flow</text>
+            <text x="12" y="3" fill="#c084fc" fontSize="0">A flow</text>
             <rect x="45" y="-4" width="8" height="8" fill="url(#tcoreDataFlowV)" rx="2" />
-            <text x="57" y="3" fill="#60a5fa" fontSize="7">B flow</text>
+            <text x="57" y="3" fill="#60a5fa" fontSize="0">B flow</text>
             <rect x="90" y="-4" width="8" height="8" fill="url(#tcorePEActive)" rx="2" />
-            <text x="102" y="3" fill="#22d3ee" fontSize="7">FMA unit</text>
+            <text x="102" y="3" fill="#22d3ee" fontSize="0">FMA unit</text>
           </g>
         </g>
 
@@ -1160,17 +1160,22 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
           {/* Title */}
           <text x="205" y="12" textAnchor="middle" fill="#f8fafc" fontSize="11" fontWeight="bold">Performance Comparison</text>
 
+          {/* Grid lines for reference */}
+          {[130, 175, 220, 265, 310, 330].map(gx => (
+            <line key={gx} x1={gx} y1={20} x2={gx} y2={100} stroke="#374151" strokeDasharray="2,3" opacity={0.4} />
+          ))}
+
           {/* CUDA Cores baseline */}
           <g transform="translate(0, 25)">
-            <text x="0" y="12" fill="#94a3b8" fontSize="10">CUDA Cores (baseline)</text>
+            <text x="0" y="12" fill="#94a3b8" fontSize="11">CUDA Cores (baseline)</text>
             <rect x="130" y="2" width="200" height="16" rx="4" fill="#1e293b" stroke="#475569" strokeWidth="1" />
             <rect x="132" y="4" width="20" height="12" rx="2" fill="#6b7280" />
-            <text x="340" y="13" fill="#94a3b8" fontSize="9">{cudaCoreOps.toLocaleString()} ops</text>
+            <text x="340" y="13" fill="#94a3b8" fontSize="11">{cudaCoreOps.toLocaleString()} ops</text>
           </g>
 
           {/* Tensor Cores with current precision */}
           <g transform="translate(0, 50)">
-            <text x="0" y="12" fill="#22d3ee" fontSize="10" fontWeight="bold">
+            <text x="0" y="12" fill="#22d3ee" fontSize="11" fontWeight="bold">
               Tensor Cores ({precision.toUpperCase()})
             </text>
             <rect x="130" y="2" width="200" height="16" rx="4" fill="#1e293b" stroke="#0891b2" strokeWidth="1" />
@@ -1183,7 +1188,7 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
               fill="url(#tcorePerfBar)"
               filter="url(#tcoreSubtleGlow)"
             />
-            <text x="340" y="13" fill="#34d399" fontSize="9" fontWeight="bold">{tensorCoreOps.toLocaleString()} ops</text>
+            <text x="340" y="13" fill="#34d399" fontSize="11" fontWeight="bold">{tensorCoreOps.toLocaleString()} ops</text>
           </g>
 
           {/* Speedup indicator */}
@@ -1197,7 +1202,7 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
 
           {/* Precision mode indicators */}
           <g transform="translate(280, 75)">
-            <text x="0" y="10" fill="#94a3b8" fontSize="9">Precision:</text>
+            <text x="0" y="10" fill="#94a3b8" fontSize="11">Precision:</text>
             {(['fp32', 'fp16', 'int8'] as const).map((p, i) => {
               const isSelected = precision === p;
               const glowId = p === 'fp32' ? 'tcoreFP32Glow' : p === 'fp16' ? 'tcoreFP16Glow' : 'tcoreINT8Glow';
@@ -1215,7 +1220,7 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
                     strokeWidth={isSelected ? 2 : 1}
                     filter={isSelected ? 'url(#tcoreSubtleGlow)' : undefined}
                   />
-                  <text x="15" y="13" textAnchor="middle" fill={isSelected ? '#fff' : color} fontSize="8" fontWeight="bold">
+                  <text x="15" y="13" textAnchor="middle" fill={isSelected ? '#fff' : color} fontSize="11" fontWeight="bold">
                     {p.toUpperCase()}
                   </text>
                 </g>
@@ -1233,19 +1238,19 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
 
           {/* Current operation info */}
           <g transform="translate(0, 10)">
-            <text x="0" y="12" fill="#94a3b8" fontSize="10">Matrix Size:</text>
-            <text x="75" y="12" fill="#e2e8f0" fontSize="10" fontWeight="bold">{matrixSize}x{matrixSize}</text>
+            <text x="0" y="12" fill="#94a3b8" fontSize="11">Matrix Size:</text>
+            <text x="75" y="12" fill="#e2e8f0" fontSize="11" fontWeight="bold">{matrixSize}x{matrixSize}</text>
 
-            <text x="130" y="12" fill="#94a3b8" fontSize="10">Operations:</text>
-            <text x="205" y="12" fill="#e2e8f0" fontSize="10" fontWeight="bold">{(matrixSize * matrixSize * matrixSize * 2).toLocaleString()}</text>
+            <text x="130" y="12" fill="#94a3b8" fontSize="11">Operations:</text>
+            <text x="205" y="12" fill="#e2e8f0" fontSize="11" fontWeight="bold">{(matrixSize * matrixSize * matrixSize * 2).toLocaleString()}</text>
 
-            <text x="290" y="12" fill="#94a3b8" fontSize="10">Clock Cycles:</text>
-            <text x="375" y="12" fill="#22d3ee" fontSize="10" fontWeight="bold">1 (fused)</text>
+            <text x="290" y="12" fill="#94a3b8" fontSize="11">Clock Cycles:</text>
+            <text x="375" y="12" fill="#22d3ee" fontSize="11" fontWeight="bold">1 (fused)</text>
           </g>
 
           {/* Progress bar */}
           <g transform="translate(0, 35)">
-            <text x="0" y="12" fill="#94a3b8" fontSize="10">Computation Progress:</text>
+            <text x="0" y="12" fill="#94a3b8" fontSize="11">Computation Progress:</text>
             <rect x="130" y="2" width="380" height="16" rx="4" fill="#1e293b" stroke="#334155" strokeWidth="1" />
             <rect
               x="132"
@@ -1256,19 +1261,19 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
               fill="url(#tcorePerfBar)"
               filter={computeProgress > 0 ? 'url(#tcoreSubtleGlow)' : undefined}
             />
-            <text x="530" y="13" fill="#34d399" fontSize="10" fontWeight="bold">{computeProgress.toFixed(0)}%</text>
+            <text x="530" y="13" fill="#34d399" fontSize="11" fontWeight="bold">{computeProgress.toFixed(0)}%</text>
           </g>
 
           {/* Key insights */}
           <g transform="translate(0, 60)">
             <rect x="0" y="0" width="200" height="18" rx="4" fill="#1e1033" stroke="#8b5cf6" strokeWidth="0.5" />
-            <text x="10" y="12" fill="#c084fc" fontSize="8">SIMD: 1 instruction, many data</text>
+            <text x="10" y="12" fill="#c084fc" fontSize="11">SIMD: 1 instruction, many data</text>
 
             <rect x="210" y="0" width="200" height="18" rx="4" fill="#0c1929" stroke="#3b82f6" strokeWidth="0.5" />
-            <text x="220" y="12" fill="#60a5fa" fontSize="8">Systolic: Data reuse maximized</text>
+            <text x="220" y="12" fill="#60a5fa" fontSize="11">Systolic: Data reuse maximized</text>
 
             <rect x="420" y="0" width="210" height="18" rx="4" fill="#052e16" stroke="#10b981" strokeWidth="0.5" />
-            <text x="430" y="12" fill="#34d399" fontSize="8">FMA: Multiply + Add in 1 cycle</text>
+            <text x="430" y="12" fill="#34d399" fontSize="11">FMA: Multiply + Add in 1 cycle</text>
           </g>
         </g>
       </svg>
@@ -1286,6 +1291,7 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
     cursor: 'pointer',
     fontSize: '14px',
     WebkitTapHighlightColor: 'transparent' as const,
+    transition: 'all 0.2s ease-in-out' as const,
   };
 
   // Progress bar showing all 10 phases
@@ -1374,7 +1380,7 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
           disabled={!canProceed}
           style={{
             ...buttonStyle,
-            background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
+            background: canProceed ? `linear-gradient(135deg, ${colors.accent} 0%, #059669 100%)` : 'rgba(255,255,255,0.1)',
             color: canProceed ? 'white' : colors.textMuted,
             cursor: canProceed ? 'pointer' : 'not-allowed',
           }}
@@ -1392,14 +1398,14 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, #0d1b2e 100%)` }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               How Do AI Chips Do Matrix Math So Fast?
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', fontWeight: '400' }}>
               The physics of parallel matrix computation
             </p>
           </div>
@@ -1437,7 +1443,7 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, 'Make a Prediction')}
+        {renderBottomBar(true, 'Begin: Make a Prediction')}
       </div>
     );
   }
@@ -1517,7 +1523,7 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
                 max="4"
                 value={matrixSize}
                 onChange={(e) => setMatrixSize(parseInt(e.target.value))}
-                style={{ width: '100%' }}
+                style={{ width: '100%', height: '24px', WebkitAppearance: 'none' as const, touchAction: 'pan-y', accentColor: '#10b981' }}
               />
             </div>
 
@@ -1569,12 +1575,16 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
               borderRadius: '8px',
               marginTop: '16px',
             }}>
-              <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Key Concepts:</h4>
-              <ul style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, paddingLeft: '20px' }}>
-                <li><strong>SIMD:</strong> Single Instruction, Multiple Data - one command, many calculations</li>
-                <li><strong>Systolic Array:</strong> Data flows through a grid of processing elements</li>
-                <li><strong>Fused Multiply-Add:</strong> D = A*B + C in one operation, not two</li>
-              </ul>
+              <h4 style={{ color: colors.accent, marginBottom: '8px' }}>What the Visualization Shows:</h4>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '12px', fontWeight: '400' }}>
+                The animation shows a systolic array — a grid of processing elements (PEs) where data flows through like a wave. Each PE performs a fused multiply-add operation (D = A × B + C) in a single clock cycle.
+              </p>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '12px' }}>
+                <strong>Cause and Effect:</strong> When you increase matrix size, the number of operations grows cubically (n³). However, the tensor core&apos;s systolic array processes all elements in parallel — so larger matrices only need slightly more clock cycles, not n³ more. This directly affects throughput: larger batches lead to better hardware utilization.
+              </p>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+                <strong>Why this matters:</strong> Every transformer attention layer, every convolution in image generation, every neural network layer is fundamentally matrix multiplication. The throughput formula is: ops/sec = matrix_ops × clock_frequency × parallelism_factor. Tensor cores achieve 2000+ TFLOPS for FP16 operations.
+              </p>
             </div>
           </div>
         </div>
@@ -1602,7 +1612,8 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
             <p style={{ color: colors.textPrimary }}>
-              Tensor cores use systolic arrays - grids of processing elements that perform
+              As you observed in the experiment, what happened in the visualization was remarkable.
+              Your prediction was tested: tensor cores use systolic arrays - grids of processing elements that perform
               many multiply-add operations simultaneously. A 4x4 matrix multiply happens
               in one clock cycle instead of 64 sequential operations!
             </p>
@@ -1664,6 +1675,52 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
               FP32 uses 32 bits per number. FP16 uses only 16 bits. INT8 uses just 8 bits.
               AI inference often uses FP16 or INT8 instead of full FP32 precision.
             </p>
+          </div>
+
+          {/* Precision comparison graphic (no sliders) */}
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px 8px' }}>
+            <svg viewBox="0 0 400 160" style={{ width: '100%', maxWidth: '400px', borderRadius: '10px' }}>
+              <defs>
+                <linearGradient id="precGradA" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#8b5cf6" />
+                  <stop offset="100%" stopColor="#6d28d9" />
+                </linearGradient>
+                <linearGradient id="precGradB" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#3b82f6" />
+                  <stop offset="100%" stopColor="#1d4ed8" />
+                </linearGradient>
+                <linearGradient id="precGradC" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#10b981" />
+                  <stop offset="100%" stopColor="#059669" />
+                </linearGradient>
+                <filter id="precGlow">
+                  <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+              </defs>
+              <rect x="0" y="0" width="400" height="160" fill="#0f172a" rx="10" />
+              <text x="200" y="20" textAnchor="middle" fill="#f8fafc" fontSize="13" fontWeight="bold">Precision vs Throughput</text>
+              {/* Grid lines */}
+              {[40,80,120,160,200].map(gx => (
+                <line key={gx} x1={60 + gx} y1={35} x2={60 + gx} y2={115} stroke="#374151" strokeDasharray="3,3" opacity={0.5} />
+              ))}
+              {/* FP32 bar */}
+              <rect x="60" y="38" width="80" height="22" fill="url(#precGradA)" rx="4" />
+              <text x="55" y="53" textAnchor="end" fill="#c084fc" fontSize="11" fontWeight="bold">FP32</text>
+              <text x="145" y="53" fill="#f8fafc" fontSize="11">1x</text>
+              {/* FP16 bar */}
+              <rect x="60" y="68" width="160" height="22" fill="url(#precGradB)" rx="4" />
+              <text x="55" y="83" textAnchor="end" fill="#60a5fa" fontSize="11" fontWeight="bold">FP16</text>
+              <text x="225" y="83" fill="#f8fafc" fontSize="11">2x</text>
+              {/* INT8 bar */}
+              <rect x="60" y="98" width="320" height="22" fill="url(#precGradC)" rx="4" filter="url(#precGlow)" />
+              <text x="55" y="113" textAnchor="end" fill="#34d399" fontSize="11" fontWeight="bold">INT8</text>
+              <text x="385" y="113" fill="#f8fafc" fontSize="11">4x</text>
+              {/* Axis labels */}
+              <text x="60" y="135" fill="#94a3b8" fontSize="11">Low</text>
+              <text x="300" y="135" fill="#94a3b8" fontSize="11">Throughput</text>
+              <text x="380" y="135" fill="#94a3b8" fontSize="11">High</text>
+            </svg>
           </div>
 
           <div style={{ padding: '16px' }}>
@@ -1896,8 +1953,23 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
               )}
             </div>
           ))}
+          {/* Always-visible Got It button */}
+          <div style={{ padding: '16px', textAlign: 'center' }}>
+            <button
+              onClick={goNext}
+              style={{
+                ...buttonStyle,
+                background: transferCompleted.size >= 4 ? `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)` : 'rgba(255,255,255,0.1)',
+                color: 'white',
+                padding: '14px 36px',
+                fontSize: '15px',
+              }}
+            >
+              {transferCompleted.size >= 4 ? 'Got It — Take the Test' : `Complete ${4 - transferCompleted.size} more to continue`}
+            </button>
+          </div>
         </div>
-        {renderBottomBar(transferCompleted.size >= 4, 'Take the Test')}
+        {renderBottomBar(false, '')}
       </div>
     );
   }
@@ -1986,7 +2058,7 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestIndex + 1} / {totalQuestions}</span>
+              <span style={{ color: colors.textSecondary }}>Question {currentTestIndex + 1} of {totalQuestions}</span>
             </div>
 
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>

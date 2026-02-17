@@ -235,6 +235,7 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
   const [energyHistory, setEnergyHistory] = useState<number[]>([100]);
   const [hasFurnishings, setHasFurnishings] = useState(false);
   const [simulationSpeed, setSimulationSpeed] = useState(1);
+  const [absorptionLevel, setAbsorptionLevel] = useState(50); // 0-100 absorption treatment %
   const animationRef = useRef<number | null>(null);
 
   // Phase-specific state
@@ -345,7 +346,7 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
   const room = roomTypes[selectedRoom];
 
   // Calculate RT60 using Sabine equation
-  const calculateRT60 = useCallback((roomKey: string, withFurnishings: boolean = false) => {
+  const calculateRT60 = useCallback((roomKey: string, withFurnishings: boolean = false, absorption: number = 50) => {
     const r = roomTypes[roomKey];
     let totalAbsorption = r.surfaces.reduce((sum, s) => sum + s.area * s.absorption, 0);
 
@@ -353,6 +354,9 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
       // Adding blankets/pillows increases absorption significantly
       totalAbsorption += 5 * 0.5; // 5 m^2 of soft materials with 0.5 absorption
     }
+
+    // Additional treatment based on absorption level slider (0-100)
+    totalAbsorption *= (0.5 + (absorption / 100));
 
     // Sabine equation: RT60 = 0.161 * V / A
     const rt60 = (0.161 * r.volume) / totalAbsorption;
@@ -638,7 +642,7 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
   const renderRoomVisualization = (interactive: boolean) => {
     const width = room.width;
     const height = room.height;
-    const rt60 = calculateRT60(selectedRoom, hasFurnishings);
+    const rt60 = calculateRT60(selectedRoom, hasFurnishings, absorptionLevel);
     const svgHeight = height + 120; // Extra space for RT60 indicator and decay graph
 
     return (
@@ -843,36 +847,37 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
             opacity={0.7}
           />
 
-          {/* Surface material labels */}
-          {room.surfaces.slice(0, 4).map((surface, i) => {
-            const labelPositions = [
-              { x: 28, y: height / 2, rotate: -90 },
-              { x: width - 28, y: height / 2, rotate: 90 },
-              { x: width / 2, y: 28, rotate: 0 },
-              { x: width / 2, y: height - 28, rotate: 0 },
-            ];
-            const pos = labelPositions[i];
-            return (
-              <g key={i} transform={`translate(${pos.x}, ${pos.y}) rotate(${pos.rotate})`}>
-                <text
-                  textAnchor="middle"
-                  fill={colors.textMuted}
-                  fontSize={7}
-                  fontWeight="bold"
-                >
-                  {surface.name}
-                </text>
-                <text
-                  y={10}
-                  textAnchor="middle"
-                  fill={surface.absorption > 0.3 ? colors.success : colors.error}
-                  fontSize={6}
-                >
-                  {(surface.absorption * 100).toFixed(0)}% abs
-                </text>
-              </g>
-            );
-          })}
+          {/* Surface material labels - using absolute coordinates to avoid overlap */}
+          <g id="surface-labels">
+          {/* Left wall label */}
+          <text x={28} y={height / 2 - 8} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontWeight="bold">
+            {room.surfaces[0]?.name.split(' ')[0]}
+          </text>
+          <text x={28} y={height / 2 + 6} textAnchor="middle" fill={room.surfaces[0]?.absorption > 0.3 ? colors.success : colors.error} fontSize={11}>
+            {((room.surfaces[0]?.absorption || 0) * 100).toFixed(0)}% abs
+          </text>
+          {/* Right wall label */}
+          <text x={width - 28} y={height / 2 - 8} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontWeight="bold">
+            {room.surfaces[1]?.name.split(' ')[0]}
+          </text>
+          <text x={width - 28} y={height / 2 + 6} textAnchor="middle" fill={room.surfaces[1]?.absorption > 0.3 ? colors.success : colors.error} fontSize={11}>
+            {((room.surfaces[1]?.absorption || 0) * 100).toFixed(0)}% abs
+          </text>
+          {/* Ceiling label */}
+          <text x={width / 2 - 40} y={28} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontWeight="bold">
+            {room.surfaces[2]?.name.split(' ')[0]}
+          </text>
+          <text x={width / 2 + 40} y={28} textAnchor="middle" fill={room.surfaces[2]?.absorption > 0.3 ? colors.success : colors.error} fontSize={11}>
+            {((room.surfaces[2]?.absorption || 0) * 100).toFixed(0)}% abs
+          </text>
+          {/* Floor label */}
+          <text x={width / 2 - 40} y={height - 20} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontWeight="bold">
+            {room.surfaces[3]?.name.split(' ')[0]}
+          </text>
+          <text x={width / 2 + 40} y={height - 20} textAnchor="middle" fill={room.surfaces[3]?.absorption > 0.3 ? colors.success : colors.error} fontSize={11}>
+            {((room.surfaces[3]?.absorption || 0) * 100).toFixed(0)}% abs
+          </text>
+          </g>
 
           {/* Sound wave propagation circles - animated concentric rings */}
           {isPlaying && (
@@ -939,7 +944,7 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
                 x={width / 2}
                 y={height / 2 + 32}
                 fill={colors.textPrimary}
-                fontSize={9}
+                fontSize={11}
                 textAnchor="middle"
                 fontWeight="bold"
               >
@@ -976,7 +981,7 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
             x={width / 2}
             y={height / 2 - 40}
             fill={colors.textSecondary}
-            fontSize={10}
+            fontSize={11}
             textAnchor="middle"
             fontWeight="bold"
           >
@@ -1017,132 +1022,149 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
             </g>
           ))}
 
-          {/* RT60 Decay Indicator Section */}
-          <g transform={`translate(0, ${height + 5})`}>
-            {/* Section background */}
-            <rect
-              x={15}
-              y={0}
-              width={width - 30}
-              height={110}
-              fill="url(#reverbDecayBgGradient)"
-              rx={6}
-              stroke="#334155"
-              strokeWidth={1}
-            />
+          {/* RT60 Decay Indicator Section - using absolute coordinates */}
+          <g id="rt60-section">
+          {/* Section background */}
+          <rect
+            x={15}
+            y={height + 5}
+            width={width - 30}
+            height={110}
+            fill="url(#reverbDecayBgGradient)"
+            rx={6}
+            stroke="#334155"
+            strokeWidth={1}
+          />
 
-            {/* RT60 Value Display */}
-            <g transform={`translate(${width / 2}, 25)`}>
-              <rect
-                x={-60}
-                y={-18}
-                width={120}
-                height={36}
-                fill="rgba(139, 92, 246, 0.15)"
-                stroke="url(#reverbRT60Gradient)"
-                strokeWidth={2}
-                rx={8}
-                filter="url(#reverbRT60Glow)"
+          {/* RT60 Value Display */}
+          <rect
+            x={width / 2 - 60}
+            y={height + 7}
+            width={120}
+            height={42}
+            fill="rgba(139, 92, 246, 0.15)"
+            stroke="url(#reverbRT60Gradient)"
+            strokeWidth={2}
+            rx={8}
+            filter="url(#reverbRT60Glow)"
+          />
+          <text
+            x={width / 2}
+            y={height + 19}
+            textAnchor="middle"
+            fill={colors.textMuted}
+            fontSize={11}
+            fontWeight="bold"
+          >
+            RT60 (Reverb Time)
+          </text>
+          <text
+            x={width / 2}
+            y={height + 44}
+            textAnchor="middle"
+            fill="#c4b5fd"
+            fontSize={14}
+            fontWeight="bold"
+          >
+            {rt60.toFixed(2)}s
+          </text>
+
+          {/* Energy decay graph area */}
+          <rect
+            x={25}
+            y={height + 56}
+            width={width - 50}
+            height={55}
+            fill="rgba(0,0,0,0.4)"
+            rx={4}
+            stroke="#475569"
+            strokeWidth={0.5}
+          />
+
+          {/* Graph labels */}
+          <text x={30} y={height + 62} fill={colors.textMuted} fontSize={11} fontWeight="bold">
+            Energy Decay
+          </text>
+          <text x={width - 35} y={height + 62} fill={colors.textMuted} fontSize={11} textAnchor="end">
+            100%
+          </text>
+          <text x={width - 35} y={height + 82} fill={colors.textMuted} fontSize={11} textAnchor="end">
+            50%
+          </text>
+          <text x={width - 35} y={height + 102} fill={colors.textMuted} fontSize={11} textAnchor="end">
+            0%
+          </text>
+
+          {/* Grid lines for visual reference */}
+          <line
+            x1={25}
+            y1={height + 50 + 55 * 0.5}
+            x2={width - 25}
+            y2={height + 50 + 55 * 0.5}
+            stroke={colors.textMuted}
+            strokeWidth={0.5}
+            strokeDasharray="3,4"
+            opacity={0.4}
+          />
+          <line
+            x1={25}
+            y1={height + 50 + 55 * 0.25}
+            x2={width - 25}
+            y2={height + 50 + 55 * 0.25}
+            stroke={colors.textMuted}
+            strokeWidth={0.5}
+            strokeDasharray="3,4"
+            opacity={0.3}
+          />
+
+          {/* 60dB threshold line (RT60 measurement point) - label above line on left to avoid overlap with "0%" */}
+          <line
+            x1={25}
+            y1={height + 103}
+            x2={width - 25}
+            y2={height + 103}
+            stroke={colors.warning}
+            strokeWidth={1.5}
+            strokeDasharray="4,3"
+            opacity={0.8}
+          />
+          <text
+            x={47}
+            y={height + 93}
+            fill={colors.warning}
+            fontSize={11}
+            textAnchor="middle"
+            fontWeight="bold"
+          >
+            -60dB
+          </text>
+
+          {/* Energy decay curve with glow */}
+          {energyHistory.length > 1 && (
+            <g filter="url(#reverbCurveGlow)">
+              <polyline
+                points={energyHistory.map((e, i) =>
+                  `${25 + (i / 100) * (width - 50)},${height + 50 + 55 - (e / 100) * 50}`
+                ).join(' ')}
+                fill="none"
+                stroke="url(#reverbEnergyCurveGlow)"
+                strokeWidth={2.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
-              <text
-                textAnchor="middle"
-                y={-4}
-                fill={colors.textMuted}
-                fontSize={8}
-                fontWeight="bold"
-              >
-                RT60 (Reverb Time)
-              </text>
-              <text
-                textAnchor="middle"
-                y={12}
-                fill="#c4b5fd"
-                fontSize={16}
-                fontWeight="bold"
-              >
-                {rt60.toFixed(2)}s
-              </text>
             </g>
+          )}
 
-            {/* Energy decay graph area */}
-            <rect
-              x={25}
-              y={45}
-              width={width - 50}
-              height={55}
-              fill="rgba(0,0,0,0.4)"
-              rx={4}
-              stroke="#475569"
-              strokeWidth={0.5}
-            />
-
-            {/* Graph labels */}
-            <text x={30} y={55} fill={colors.textMuted} fontSize={7} fontWeight="bold">
-              Energy Decay
-            </text>
-            <text x={width - 35} y={55} fill={colors.textMuted} fontSize={6} textAnchor="end">
-              100%
-            </text>
-            <text x={width - 35} y={95} fill={colors.textMuted} fontSize={6} textAnchor="end">
-              0%
-            </text>
-
-            {/* 60dB threshold line (RT60 measurement point) */}
-            <line
-              x1={25}
-              y1={45 + 55 - (0.001) * 50}
-              x2={width - 25}
-              y2={45 + 55 - (0.001) * 50}
-              stroke={colors.warning}
-              strokeWidth={1.5}
-              strokeDasharray="4,3"
-              opacity={0.8}
-            />
-            <rect
-              x={width - 65}
-              y={45 + 55 - (0.001) * 50 - 8}
-              width={35}
-              height={12}
-              fill="rgba(245, 158, 11, 0.2)"
-              rx={3}
-            />
-            <text
-              x={width - 48}
-              y={45 + 55 - (0.001) * 50 + 1}
-              fill={colors.warning}
-              fontSize={7}
-              textAnchor="middle"
-              fontWeight="bold"
-            >
-              -60dB
-            </text>
-
-            {/* Energy decay curve with glow */}
-            {energyHistory.length > 1 && (
-              <g filter="url(#reverbCurveGlow)">
-                <polyline
-                  points={energyHistory.map((e, i) =>
-                    `${25 + (i / 100) * (width - 50)},${45 + 55 - (e / 100) * 50}`
-                  ).join(' ')}
-                  fill="none"
-                  stroke="url(#reverbEnergyCurveGlow)"
-                  strokeWidth={2.5}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </g>
-            )}
-
-            {/* Time axis markers */}
-            <text x={25} y={108} fill={colors.textMuted} fontSize={6}>
-              0s
-            </text>
-            <text x={width / 2} y={108} fill={colors.textMuted} fontSize={6} textAnchor="middle">
-              Time
-            </text>
-            <text x={width - 25} y={108} fill={colors.textMuted} fontSize={6} textAnchor="end">
-              {(time * 0.1).toFixed(1)}s
-            </text>
+          {/* Time axis markers */}
+          <text x={25} y={height + 118} fill={colors.textMuted} fontSize={11}>
+            0s
+          </text>
+          <text x={width / 2} y={height + 118} fill={colors.textMuted} fontSize={11} textAnchor="middle">
+            Time
+          </text>
+          <text x={width - 25} y={height + 118} fill={colors.textMuted} fontSize={11} textAnchor="end">
+            {(time * 0.1).toFixed(1)}s
+          </text>
           </g>
         </svg>
 
@@ -1265,12 +1287,13 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
             title={phaseLabels[p]}
             style={{
               width: index === currentIndex ? '20px' : '10px',
-              height: '10px',
+              minHeight: '44px',
               borderRadius: '5px',
               border: 'none',
-              background: index === currentIndex ? colors.accent : index < currentIndex ? 'rgba(139, 92, 246, 0.5)' : 'rgba(255,255,255,0.2)',
+              background: index === currentIndex ? colors.accent : index < currentIndex ? 'rgba(139, 92, 246, 0.5)' : 'rgba(148,163,184,0.7)',
               cursor: 'pointer',
               transition: 'all 0.3s ease',
+              padding: '0',
             }}
           />
         ))}
@@ -1358,14 +1381,14 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ height: '100dvh', minHeight: '500px', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
-              Why Rooms Sound Different
+              Discover How Rooms Sound Different
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
-              Which room "rings" longer: bathroom or bedroom?
+            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', fontWeight: 400 }}>
+              Welcome! Explore why a bathroom echoes but a bedroom sounds "dead" — discover the physics of reverberation
             </p>
           </div>
 
@@ -1409,7 +1432,7 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           {renderRoomVisualization(false)}
 
           <div style={{
@@ -1462,7 +1485,7 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Reverberation</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1477,19 +1500,24 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
             padding: '16px',
             borderRadius: '12px',
           }}>
-            <label style={{ color: colors.textSecondary, fontSize: '14px', display: 'block', marginBottom: '8px' }}>
-              Simulation Speed: {simulationSpeed.toFixed(1)}x
+            <label style={{ color: colors.textSecondary, fontSize: '14px', display: 'block', marginBottom: '8px', fontWeight: 500 }}>
+              Acoustic Treatment Level: {absorptionLevel}% — Controls RT60 reverberation time
             </label>
             <input
               type="range"
-              min="0.5"
-              max="3"
-              step="0.1"
-              value={simulationSpeed}
-              onChange={(e) => setSimulationSpeed(parseFloat(e.target.value))}
+              min="0"
+              max="100"
+              step="5"
+              value={absorptionLevel}
+              onChange={(e) => setAbsorptionLevel(parseInt(e.target.value))}
+              onInput={(e) => setAbsorptionLevel(parseInt((e.target as HTMLInputElement).value))}
               style={{
                 width: '100%',
+                height: '20px',
                 accentColor: colors.accent,
+                touchAction: 'pan-y',
+                WebkitAppearance: 'none',
+                cursor: 'pointer',
               }}
             />
           </div>
@@ -1510,6 +1538,17 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
               <li>Watch the energy decay curve change</li>
             </ul>
           </div>
+          <div style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', border: `1px solid rgba(139,92,246,0.3)` }}>
+            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Physics Terms:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, fontWeight: 400 }}>
+              <strong>RT60:</strong> Time for sound to decay 60 dB (reverberation time). Formula: RT60 = 0.161 × V / A (Sabine equation).
+              <strong> Absorption coefficient (α):</strong> 0=perfect reflector, 1=perfect absorber.
+              <strong> Total absorption (A):</strong> Sum of area × α for all surfaces.
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '8px' }}>
+              This matters because: architects use RT60 to design concert halls, recording studios, and speech-intelligible classrooms. Understanding reverberation is fundamental to acoustic engineering.
+            </p>
+          </div>
         </div>
         {renderBottomBar()}
       </div>
@@ -1522,7 +1561,7 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1531,10 +1570,10 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
+              {wasCorrect ? 'Correct! As you predicted, the bathroom has longer reverb!' : 'Not Quite! Let\'s review what you observed.'}
             </h3>
             <p style={{ color: colors.textPrimary }}>
-              The bathroom rings longer because hard tile surfaces reflect sound instead of absorbing it!
+              {wasCorrect ? 'Your prediction was right: the' : 'The'} bathroom rings longer because hard tile surfaces reflect sound instead of absorbing it! As you observed in the experiment, hard surfaces keep sound energy bouncing far longer.
             </p>
           </div>
 
@@ -1589,7 +1628,7 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1648,7 +1687,7 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Adding Soft Furnishings</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1709,7 +1748,7 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1782,7 +1821,7 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
   if (phase === 'transfer') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1817,9 +1856,9 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
               {!transferCompleted.has(index) ? (
                 <button
                   onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
+                  style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', fontSize: '14px', fontWeight: 600, minHeight: '44px', width: '100%', transition: 'all 0.2s ease' }}
                 >
-                  Reveal Answer
+                  Got It ✓
                 </button>
               ) : (
                 <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
@@ -1839,7 +1878,7 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
     if (testSubmitted) {
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1878,11 +1917,11 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <span style={{ color: colors.accent, fontWeight: 700 }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
             </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
@@ -1893,6 +1932,9 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
               <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
                 Test your understanding of reverberation physics. Answer all 10 questions to demonstrate mastery.
                 You need 8 correct answers to pass. Take your time and think carefully about each question.
+                Remember the Sabine equation (RT60 = 0.161 × V / A), how absorption coefficients work,
+                and why different spaces — concert halls, studios, classrooms — need different RT60 values.
+                Apply what you observed in the experiments to reason through each scenario.
               </p>
             </div>
 
@@ -1924,9 +1966,9 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered reverberation and room acoustics</p>
           </div>

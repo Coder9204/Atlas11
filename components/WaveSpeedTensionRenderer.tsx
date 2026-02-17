@@ -16,9 +16,9 @@ const realWorldApps = [
     connection: 'Wave speed v = sqrt(T/μ) directly determines the fundamental frequency of a vibrating string. Instrument makers manipulate tension (tuning pegs) and linear density (string gauge) to achieve desired pitches.',
     howItWorks: 'Thicker strings (higher μ) vibrate slower, producing lower notes. Tightening a string (higher T) increases wave speed and pitch. String length determines the wavelength, and together these set the frequency: f = v/(2L).',
     stats: [
-      { value: '440Hz', label: 'Concert A standard', icon: '🎵' },
+      { value: '5 km/s', label: 'Wave speed in steel', icon: '🎵' },
       { value: '$7B', label: 'String instrument market', icon: '📈' },
-      { value: '200MPa', label: 'Piano wire tension', icon: '⚡' }
+      { value: '200 kg', label: 'Piano wire tension', icon: '⚡' }
     ],
     examples: ['Guitar string gauges', 'Piano bass strings', 'Violin gut vs steel', 'Harp string design'],
     companies: ['Steinway', 'Martin Guitar', 'D\'Addario', 'Ernie Ball'],
@@ -157,6 +157,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
   const [testIndex, setTestIndex] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
+  const [answerChecked, setAnswerChecked] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   // Physics constants
@@ -269,114 +270,114 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
   // Test questions
   const testQuestions = useMemo(() => [
     {
-      scenario: "A rope has tension T = 100 N and linear density u = 0.01 kg/m.",
+      scenario: "You have a rope with tension T = 100 N and linear density u = 0.01 kg/m. Using the wave speed formula v = sqrt(T/u), calculate the speed of a pulse traveling down this rope. This is the same formula used in guitar string design.",
       question: "What is the wave speed?",
       options: [
-        { text: "10 m/s", correct: false },
-        { text: "50 m/s", correct: false },
-        { text: "100 m/s", correct: true },
-        { text: "1000 m/s", correct: false }
+        { text: "A) 10 m/s — tension too low", correct: false },
+        { text: "B) 50 m/s — partial calculation", correct: false },
+        { text: "C) 100 m/s — correct calculation", correct: true },
+        { text: "D) 1000 m/s — calculation error", correct: false }
       ],
-      explanation: "v = sqrt(T/u) = sqrt(100/0.01) = sqrt(10000) = 100 m/s."
+      explanation: "v = sqrt(T/u) = sqrt(100/0.01) = sqrt(10000) = 100 m/s. The square root is key!"
     },
     {
-      scenario: "The formula for wave speed on a string is v = sqrt(T/u).",
+      scenario: "A string is vibrating with the formula v = sqrt(T/u). An engineer doubles the tension from 50 N to 100 N while keeping the linear density constant at 0.01 kg/m. She wants to know the new wave speed compared to the original. This matters for bridge cable resonance control.",
       question: "What happens to wave speed if tension doubles?",
       options: [
-        { text: "Speed doubles", correct: false },
-        { text: "Speed increases by sqrt(2)", correct: true },
-        { text: "Speed halves", correct: false },
-        { text: "Speed stays the same", correct: false }
+        { text: "A) Speed doubles — linear increase", correct: false },
+        { text: "B) Speed increases by sqrt(2) — square root relationship", correct: true },
+        { text: "C) Speed halves — inverse relationship", correct: false },
+        { text: "D) Speed stays the same — independent", correct: false }
       ],
       explanation: "Because of the square root, v is proportional to sqrt(T). Doubling T multiplies v by sqrt(2) = 1.414."
     },
     {
-      scenario: "A guitar string is replaced with a thicker string (more mass per length).",
-      question: "How does the wave speed change?",
+      scenario: "A guitarist replaces a light string (u = 0.005 kg/m) with a heavier string (u = 0.02 kg/m) while keeping the same tension. This is equivalent to switching from a thin treble string to a thick bass string on an acoustic guitar. How does wave speed change?",
+      question: "How does the wave speed change with a heavier string?",
       options: [
-        { text: "Increases", correct: false },
-        { text: "Decreases", correct: true },
-        { text: "Stays the same", correct: false },
-        { text: "Depends on tension only", correct: false }
+        { text: "A) Increases — more mass = more momentum", correct: false },
+        { text: "B) Decreases — more inertia slows waves", correct: true },
+        { text: "C) Stays the same — tension unchanged", correct: false },
+        { text: "D) Depends on string length only", correct: false }
       ],
-      explanation: "v = sqrt(T/u). Higher u (mass density) in the denominator means lower wave speed."
+      explanation: "v = sqrt(T/u). Higher u (mass density) in the denominator means lower wave speed. Heavier strings vibrate slower."
     },
     {
-      scenario: "A wave travels 10 meters in 0.2 seconds on a rope.",
+      scenario: "During a lab experiment, a student sends a pulse down a 10 meter rope and times how long it takes to reach the other end. The stopwatch shows the pulse arrived in 0.2 seconds. The student needs to report the wave speed of this rope to their lab partner.",
       question: "What is the wave speed?",
       options: [
-        { text: "2 m/s", correct: false },
-        { text: "20 m/s", correct: false },
-        { text: "50 m/s", correct: true },
-        { text: "200 m/s", correct: false }
+        { text: "A) 2 m/s — divided wrong way", correct: false },
+        { text: "B) 20 m/s — forgot rope length", correct: false },
+        { text: "C) 50 m/s — distance divided by time", correct: true },
+        { text: "D) 200 m/s — units error", correct: false }
       ],
-      explanation: "v = distance/time = 10m / 0.2s = 50 m/s."
+      explanation: "v = distance/time = 10 m / 0.2 s = 50 m/s. The fundamental kinematics equation applies."
     },
     {
-      scenario: "Two strings have the same tension. String A has u = 0.01 kg/m, String B has u = 0.04 kg/m.",
+      scenario: "Two guitar strings have the same tension T = 80 N. String A has linear density u = 0.01 kg/m and String B has linear density u = 0.04 kg/m. The musician wants to know which string carries waves faster and by how much, to understand why they produce different pitches.",
       question: "How do their wave speeds compare?",
       options: [
-        { text: "Same speed", correct: false },
-        { text: "A is twice as fast", correct: true },
-        { text: "A is four times as fast", correct: false },
-        { text: "B is twice as fast", correct: false }
+        { text: "A) Same speed — tension is equal", correct: false },
+        { text: "B) String A is twice as fast — less mass", correct: true },
+        { text: "C) String A is four times as fast — density ratio", correct: false },
+        { text: "D) String B is twice as fast — more mass", correct: false }
       ],
       explanation: "vA/vB = sqrt(uB/uA) = sqrt(0.04/0.01) = sqrt(4) = 2. String A (lighter) is 2x faster."
     },
     {
-      scenario: "A piano's bass strings are wrapped with wire (higher mass density).",
-      question: "Why is this done?",
+      scenario: "A piano manufacturer wants to produce very low bass notes (low frequency) using strings that fit inside the piano cabinet. They wrap thin wire around their bass strings to increase the mass per unit length (linear density). The tension must stay within safe limits for the piano frame.",
+      question: "Why do piano bass strings use wrapped wire?",
       options: [
-        { text: "To increase wave speed", correct: false },
-        { text: "To produce lower pitch notes", correct: true },
-        { text: "To make them louder", correct: false },
-        { text: "Only for durability", correct: false }
+        { text: "A) To increase wave speed for higher pitch", correct: false },
+        { text: "B) To increase mass density, slowing waves for lower pitch", correct: true },
+        { text: "C) To make the strings louder and project more", correct: false },
+        { text: "D) Only for improved durability and longevity", correct: false }
       ],
-      explanation: "Higher mass = lower wave speed = lower frequency = lower pitch."
+      explanation: "Higher mass = lower wave speed = lower frequency = lower pitch. The wrapping is purely for acoustic tuning."
     },
     {
-      scenario: "A tightrope walker increases the rope tension.",
-      question: "What happens to wave speed if you pluck the rope?",
+      scenario: "A tightrope walker at a circus has a slack rope. The rigging crew tightens the rope significantly, increasing the tension. When the performer plucks the rope to test it, they can hear and feel a higher-pitched vibration. A physicist watching wants to explain what happened to the wave speed.",
+      question: "What happens to wave speed if you pluck the tighter rope?",
       options: [
-        { text: "Decreases", correct: false },
-        { text: "Increases", correct: true },
-        { text: "Stays the same", correct: false },
-        { text: "Becomes zero", correct: false }
+        { text: "A) Decreases — tighter means stiffer, not faster", correct: false },
+        { text: "B) Increases — higher tension speeds up propagation", correct: true },
+        { text: "C) Stays the same — rope material unchanged", correct: false },
+        { text: "D) Becomes zero — rope is fully stretched", correct: false }
       ],
-      explanation: "v = sqrt(T/u). Higher tension = higher wave speed."
+      explanation: "v = sqrt(T/u). Higher tension = higher restoring force = higher wave speed. The pitch rises as expected."
     },
     {
-      scenario: "Sound travels through air at ~343 m/s and through steel at ~5000 m/s.",
-      question: "Why is steel so much faster?",
+      scenario: "Sound travels through air at approximately 343 m/s at room temperature, but through steel rails it travels at approximately 5,000 m/s — almost 15 times faster. A train engineer uses this to detect approaching trains. The wave speed formula v = sqrt(K/rho) applies, where K is stiffness and rho is density.",
+      question: "Why does sound travel so much faster through steel than air?",
       options: [
-        { text: "Steel is hotter", correct: false },
-        { text: "Steel is much stiffer (higher tension equivalent)", correct: true },
-        { text: "Steel is less dense", correct: false },
-        { text: "Steel has fewer molecules", correct: false }
+        { text: "A) Steel is hotter inside the rail", correct: false },
+        { text: "B) Steel's extreme stiffness dominates its higher density", correct: true },
+        { text: "C) Steel is actually less dense than air molecules", correct: false },
+        { text: "D) Steel has fewer molecules to transmit vibration", correct: false }
       ],
-      explanation: "Steel's extreme stiffness dominates its higher density, resulting in much faster wave propagation."
+      explanation: "Steel's elastic modulus (stiffness) is ~200 GPa vs air's ~0.14 MPa. This enormous stiffness wins over density."
     },
     {
-      scenario: "A pulse takes 0.5 s to travel a 10m rope with T = 80 N.",
+      scenario: "In a lab, a physics student measures that a pulse takes exactly 0.5 seconds to travel the full length of a 10-meter rope. A scale attached to the rope shows the tension is 80 N. The student needs to calculate the rope's linear density to complete their experiment report.",
       question: "What is the rope's linear density?",
       options: [
-        { text: "0.01 kg/m", correct: false },
-        { text: "0.02 kg/m", correct: false },
-        { text: "0.05 kg/m", correct: false },
-        { text: "0.2 kg/m", correct: true }
+        { text: "A) 0.01 kg/m — too light for this timing", correct: false },
+        { text: "B) 0.02 kg/m — close but incorrect", correct: false },
+        { text: "C) 0.05 kg/m — calculation error", correct: false },
+        { text: "D) 0.2 kg/m — correct from v = 20 m/s", correct: true }
       ],
-      explanation: "v = 10m/0.5s = 20 m/s. From v^2 = T/u, u = T/v^2 = 80/(20)^2 = 80/400 = 0.2 kg/m."
+      explanation: "v = 10m/0.5s = 20 m/s. From v² = T/u, u = T/v² = 80/(20)² = 80/400 = 0.2 kg/m."
     },
     {
-      scenario: "Seismic waves travel faster in denser rock layers deep in Earth.",
-      question: "How is this possible given v = sqrt(T/u)?",
+      scenario: "Seismologists studying Earth's interior notice that earthquake P-waves travel FASTER through the dense, high-pressure rock layers deep in the mantle than through lighter surface rock. This seems to contradict v = sqrt(T/u), where higher density should slow waves. However, the data is reliable and well-verified.",
+      question: "How is this surprising observation explained?",
       options: [
-        { text: "The formula doesn't apply", correct: false },
-        { text: "Extreme pressure increases stiffness more than density", correct: true },
-        { text: "Deeper rock is less dense", correct: false },
-        { text: "Temperature makes them faster", correct: false }
+        { text: "A) The formula v = sqrt(T/u) doesn't apply underground", correct: false },
+        { text: "B) Extreme pressure increases stiffness more than it increases density", correct: true },
+        { text: "C) Deeper rock layers are actually less dense than surface rock", correct: false },
+        { text: "D) Temperature increases wave speed faster than density slows it", correct: false }
       ],
-      explanation: "At great depths, extreme pressure increases the rock's elastic modulus faster than density."
+      explanation: "At great depths, extreme pressure dramatically increases the rock's elastic modulus (stiffness), more than compensating for the density increase."
     }
   ], []);
 
@@ -455,9 +456,9 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
 
         {/* Distance markers along bottom */}
         {[0, 1, 2, 3, 4, 5].map(m => (
-          <g key={m} transform={`translate(${80 + m * 96}, 230)`}>
-            <line x1="0" y1="-8" x2="0" y2="0" stroke="#4b5563" strokeWidth="2" />
-            <text x="0" y="18" textAnchor="middle" fill="#6b7488" fontSize="12" fontWeight="600">{m}m</text>
+          <g key={m}>
+            <line x1={80 + m * 96} y1="222" x2={80 + m * 96} y2="230" stroke="#4b5563" strokeWidth="2" />
+            <text x={80 + m * 96} y="248" textAnchor="middle" fill="#6b7488" fontSize="12" fontWeight="600">{m}m</text>
           </g>
         ))}
 
@@ -489,23 +490,17 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
 
         {/* Reference baseline marker */}
         <line x1="80" y1="90" x2="80" y2="240" stroke="#3b82f6" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.5" />
-        <text x="80" y="82" textAnchor="middle" fill="#3b82f6" fontSize="10" fontWeight="600">START</text>
+        <text x="80" y="82" textAnchor="middle" fill="#3b82f6" fontSize="11" fontWeight="600">START</text>
 
         {/* Labels - positioned to avoid overlap */}
-        <g transform="translate(130, 50)">
-          <rect x="-30" y="-14" width="80" height="26" rx="8" fill="rgba(245, 158, 11, 0.2)" stroke="#f59e0b" strokeWidth="1.5" />
-          <text x="10" y="6" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="800">Tension T</text>
-        </g>
+        <rect x="100" y="36" width="80" height="26" rx="8" fill="rgba(245, 158, 11, 0.2)" stroke="#f59e0b" strokeWidth="1.5" />
+        <text x="140" y="54" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="800">Tension T</text>
 
-        <g transform="translate(400, 50)">
-          <rect x="-55" y="-14" width="110" height="26" rx="6" fill="rgba(234, 179, 8, 0.15)" stroke="#eab308" strokeWidth="1" />
-          <text x="0" y="6" textAnchor="middle" fill="#eab308" fontSize="11" fontWeight="700">mass density μ</text>
-        </g>
+        <rect x="345" y="36" width="110" height="26" rx="6" fill="rgba(234, 179, 8, 0.15)" stroke="#eab308" strokeWidth="1" />
+        <text x="400" y="54" textAnchor="middle" fill="#eab308" fontSize="11" fontWeight="700">mass density μ</text>
 
-        <g transform="translate(580, 50)">
-          <rect x="-50" y="-14" width="100" height="26" rx="8" fill="rgba(34, 197, 94, 0.15)" stroke="#22c55e" strokeWidth="1.5" />
-          <text x="0" y="6" textAnchor="middle" fill="#22c55e" fontSize="11" fontWeight="800">v = √(T/μ)</text>
-        </g>
+        <rect x="530" y="36" width="100" height="26" rx="8" fill="rgba(34, 197, 94, 0.15)" stroke="#22c55e" strokeWidth="1.5" />
+        <text x="580" y="54" textAnchor="middle" fill="#22c55e" fontSize="11" fontWeight="800">v = √(T/μ)</text>
       </svg>
     );
   };
@@ -562,15 +557,15 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
 
         {/* Distance markers */}
         {[0, 1, 2, 3, 4, 5].map(m => (
-          <g key={m} transform={`translate(${80 + m * 96}, 230)`}>
-            <line x1="0" y1="-8" x2="0" y2="0" stroke="#4b5563" strokeWidth="2" />
-            <text x="0" y="18" textAnchor="middle" fill="#6b7488" fontSize="12" fontWeight="600">{m}m</text>
+          <g key={m}>
+            <line x1={80 + m * 96} y1="222" x2={80 + m * 96} y2="230" stroke="#4b5563" strokeWidth="2" />
+            <text x={80 + m * 96} y="248" textAnchor="middle" fill="#6b7488" fontSize="12" fontWeight="600">{m}m</text>
           </g>
         ))}
 
         {/* Reference baseline marker */}
         <line x1="80" y1="80" x2="80" y2="240" stroke="#3b82f6" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.5" />
-        <text x="80" y="72" textAnchor="middle" fill="#3b82f6" fontSize="10" fontWeight="600">REF</text>
+        <text x="80" y="72" textAnchor="middle" fill="#3b82f6" fontSize="11" fontWeight="600">REF</text>
 
         {/* Left anchor (wall) */}
         <g transform="translate(30, 0)">
@@ -609,34 +604,26 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
         )}
 
         {/* Info panels - positioned well apart to avoid overlap */}
-        <g transform="translate(130, 40)">
-          <rect x="-42" y="-14" width="84" height="26" rx="8" fill="rgba(245, 158, 11, 0.2)" stroke="#f59e0b" strokeWidth="1.5" />
-          <text x="0" y="6" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="800">T={tension}N</text>
-        </g>
+        <rect x="88" y="26" width="84" height="26" rx="8" fill="rgba(245, 158, 11, 0.2)" stroke="#f59e0b" strokeWidth="1.5" />
+        <text x="130" y="44" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="800">T={tension}N</text>
 
-        <g transform="translate(400, 40)">
-          <rect x="-60" y="-14" width="120" height="26" rx="6" fill="rgba(234, 179, 8, 0.15)" stroke="#eab308" strokeWidth="1" />
-          <text x="0" y="6" textAnchor="middle" fill="#eab308" fontSize="11" fontWeight="700">μ = {(currentDensity * 1000).toFixed(1)} g/m</text>
-        </g>
+        <rect x="340" y="26" width="120" height="26" rx="6" fill="rgba(234, 179, 8, 0.15)" stroke="#eab308" strokeWidth="1" />
+        <text x="400" y="44" textAnchor="middle" fill="#eab308" fontSize="11" fontWeight="700">μ = {(currentDensity * 1000).toFixed(1)} g/m</text>
 
-        <g transform="translate(600, 40)">
-          <rect x="-52" y="-14" width="104" height="26" rx="8" fill="rgba(34, 197, 94, 0.15)" stroke="#22c55e" strokeWidth="1.5" />
-          <text x="0" y="6" textAnchor="middle" fill="#22c55e" fontSize="11" fontWeight="800">v={currentSpeed.toFixed(1)} m/s</text>
-        </g>
+        <rect x="548" y="26" width="104" height="26" rx="8" fill="rgba(34, 197, 94, 0.15)" stroke="#22c55e" strokeWidth="1.5" />
+        <text x="600" y="44" textAnchor="middle" fill="#22c55e" fontSize="11" fontWeight="800">v={currentSpeed.toFixed(1)} m/s</text>
 
         {/* Stopwatch display - positioned at bottom center */}
-        <g transform="translate(350, 265)">
-          <rect x="-80" y="-16" width="100" height="28" rx="10" fill="#161a24" stroke={pulseComplete ? "#22c55e" : "#252a38"} strokeWidth="2" />
-          <text x="-36" y="6" fill="#6b7488" fontSize="11" fontWeight="600">TIME:</text>
-          <text x="16" y="6" textAnchor="middle" fill={pulseComplete ? "#22c55e" : "#fbbf24"} fontSize="15" fontWeight="900">{stopwatchTime.toFixed(3)}s</text>
-        </g>
+        <rect x="250" y="249" width="130" height="28" rx="10" fill="#161a24" stroke={pulseComplete ? "#22c55e" : "#252a38"} strokeWidth="2" />
+        <text x="268" y="268" fill="#6b7488" fontSize="11" fontWeight="600">TIME:</text>
+        <text x="358" y="268" textAnchor="middle" fill={pulseComplete ? "#22c55e" : "#fbbf24"} fontSize="13" fontWeight="900">{stopwatchTime.toFixed(3)}s</text>
 
         {/* Completion indicator */}
         {pulseComplete && (
-          <g transform="translate(570, 90)">
-            <circle cx="0" cy="0" r="20" fill="rgba(34, 197, 94, 0.2)" />
-            <text x="0" y="7" textAnchor="middle" fill="#22c55e" fontSize="20">✓</text>
-          </g>
+          <>
+            <circle cx="570" cy="90" r="20" fill="rgba(34, 197, 94, 0.2)" />
+            <text x="570" y="97" textAnchor="middle" fill="#22c55e" fontSize="20">✓</text>
+          </>
         )}
       </svg>
     );
@@ -743,11 +730,11 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     if (phase === 'hook') {
       return (
         <div className="flex flex-col items-center justify-center min-h-[80vh] px-6 text-center"
-          style={{ minHeight: '100vh', paddingTop: '48px', paddingBottom: '100px' }}>
+          style={{ minHeight: '100vh', paddingTop: '48px', paddingBottom: '100px', overflowY: 'auto' }}>
           <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl animate-pulse" />
           <div className="absolute bottom-1/4 right-1/4 w-56 h-56 bg-orange-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
 
-          <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-amber-600/20 to-slate-800 border-2 border-amber-500/30 flex items-center justify-center mb-6 shadow-lg shadow-amber-500/20 animate-bounce" style={{ animationDuration: '3s' }}>
+          <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-amber-600/20 to-slate-800 border-2 border-amber-500/30 flex items-center justify-center mb-6 shadow-lg shadow-amber-500/20 animate-bounce" style={{ animationDuration: '3s', boxShadow: '0 0 32px rgba(245,158,11,0.3)' }}>
             <span className="text-5xl">🪢</span>
           </div>
 
@@ -755,11 +742,11 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
             Wave Speed on Strings
           </h1>
 
-          <p className="text-lg text-slate-300 mb-2 max-w-lg">
+          <p className="text-lg text-slate-300 mb-2 max-w-lg" style={{ fontWeight: 400, lineHeight: 1.6 }}>
             Why do <span className="text-amber-400 font-semibold">tight ropes</span> carry pulses faster than loose ones?
           </p>
 
-          <p className="text-sm text-slate-500 mb-8 max-w-md">
+          <p className="text-sm text-slate-500 mb-8 max-w-md" style={{ fontWeight: 400, lineHeight: 1.5 }}>
             Discover the v = sqrt(T/u) formula through hands-on experimentation
           </p>
 
@@ -1040,8 +1027,10 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
               </h2>
               <p className="text-slate-400 mb-6">
                 {prediction === 'faster'
-                  ? '✅ You predicted correctly! Higher tension means faster wave speed.'
-                  : "Higher tension actually increases wave speed. Here's why:"}
+                  ? '✅ You predicted correctly! Your prediction matched the experiment — higher tension means faster wave speed.'
+                  : prediction === null
+                    ? 'As you observed in the experiment, higher tension increases wave speed. Your observation confirms the formula.'
+                    : "Your prediction didn't match — but now you've observed it! Higher tension actually increases wave speed."}
               </p>
 
               {/* Static SVG diagram for review */}
@@ -1640,12 +1629,15 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
       const selected = testAnswers[testIndex];
 
       return (
-        <div className="flex flex-col flex-1 overflow-y-auto" style={{ paddingTop: '48px', paddingBottom: '100px' }}>
+        <div className="flex flex-col flex-1 overflow-y-auto" style={{ paddingTop: '48px', paddingBottom: '100px', overflowY: 'auto' }}>
           <div className="flex flex-col px-6 py-8 flex-1">
             <div className="max-w-xl mx-auto w-full flex-1">
               <div className="flex justify-between items-center mb-6">
                 <span className="text-sm text-slate-500 font-semibold">
                   Question {testIndex + 1} of {testQuestions.length}
+                </span>
+                <span className="text-xs text-slate-600">
+                  {testAnswers.filter(a => a !== null).length}/{testQuestions.length} answered
                 </span>
                 <div className="flex gap-1.5">
                   {testQuestions.map((_, i) => (
@@ -1677,34 +1669,66 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                       const newAnswers = [...testAnswers];
                       newAnswers[testIndex] = i;
                       setTestAnswers(newAnswers);
+                      setAnswerChecked(false);
                       emitEvent('test_answered', { question: testIndex, answer: i });
                     }}
-                    className={`p-5 rounded-xl border-2 text-left transition-all duration-300 ${
-                      selected === i
-                        ? 'border-amber-500 bg-amber-500/10 text-white'
-                        : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600'
-                    }`}
-                    style={{ zIndex: 10, minHeight: '44px' }}
+                    style={{
+                      zIndex: 10,
+                      minHeight: '44px',
+                      padding: '16px 20px',
+                      borderRadius: '12px',
+                      border: selected === i ? '2px solid #f59e0b' : '2px solid rgba(71,85,105,0.5)',
+                      background: selected === i
+                        ? (answerChecked ? (opt.correct ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)') : 'rgba(245,158,11,0.1)')
+                        : 'rgba(30,41,59,0.5)',
+                      color: selected === i ? '#fff' : '#cbd5e1',
+                      textAlign: 'left',
+                      cursor: answerChecked ? 'default' : 'pointer',
+                      transition: 'all 0.2s ease',
+                      boxShadow: selected === i ? '0 0 0 2px rgba(245,158,11,0.3)' : 'none'
+                    }}
                   >
                     {opt.text}
                   </button>
                 ))}
               </div>
 
-              {/* Explanation after answer */}
+              {/* Check Answer button - shown before checking */}
+              {selected !== null && !answerChecked && (
+                <button
+                  onClick={() => setAnswerChecked(true)}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    borderRadius: '10px',
+                    background: 'linear-gradient(to right, #f59e0b, #ea580c)',
+                    border: 'none',
+                    color: '#fff',
+                    fontWeight: 700,
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    marginBottom: '12px',
+                    minHeight: '44px'
+                  }}
+                >
+                  Check Answer
+                </button>
+              )}
+
+              {/* Explanation - shown after checking OR after selecting (immediate feedback) */}
               {selected !== null && (
-                <div style={{ padding: '16px', borderRadius: '12px', background: q.options[selected]?.correct ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${q.options[selected]?.correct ? '#22c55e' : '#ef4444'}`, marginBottom: '16px' }}>
+                <div style={{ padding: '16px', borderRadius: '12px', background: q.options[selected]?.correct ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${q.options[selected]?.correct ? '#22c55e' : '#ef4444'}`, marginBottom: '16px', opacity: answerChecked ? 1 : 0.6 }}>
                   <p style={{ fontSize: '12px', fontWeight: 700, color: q.options[selected]?.correct ? '#22c55e' : '#ef4444', marginBottom: '6px' }}>
-                    {q.options[selected]?.correct ? '✓ Correct!' : '✗ Not quite'}
+                    {answerChecked ? (q.options[selected]?.correct ? '✓ Correct!' : '✗ Not quite') : '💡 Tap Check Answer to confirm'}
                   </p>
-                  <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: 1.5, margin: 0 }}>{q.explanation}</p>
+                  <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: 1.5, margin: 0 }}>{answerChecked ? q.explanation : 'Select Check Answer to see the explanation.'}</p>
                 </div>
               )}
             </div>
 
             <div className="flex justify-between gap-4 pt-4 border-t border-slate-800">
               <button
-                onClick={() => { if (testIndex > 0) setTestIndex(testIndex - 1); }}
+                onClick={() => { if (testIndex > 0) { setTestIndex(testIndex - 1); setAnswerChecked(!!testAnswers[testIndex - 1]); } }}
                 disabled={testIndex === 0}
                 className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 ${
                   testIndex === 0 ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
@@ -1716,7 +1740,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
 
               {testIndex < testQuestions.length - 1 ? (
                 <button
-                  onClick={() => { if (selected !== null) setTestIndex(testIndex + 1); }}
+                  onClick={() => { if (selected !== null) { setTestIndex(testIndex + 1); setAnswerChecked(false); } }}
                   disabled={selected === null}
                   className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 ${
                     selected !== null
@@ -1725,7 +1749,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                   }`}
                   style={{ zIndex: 10, ...(selected !== null ? { background: 'linear-gradient(to right, #f59e0b, #ea580c)' } : {}) }}
                 >
-                  Next →
+                  Next Question
                 </button>
               ) : (
                 <button
@@ -1826,7 +1850,8 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
   // Navigation bar helpers
   const currentPhaseIndex = phaseOrder.indexOf(phase);
   const canGoBack = currentPhaseIndex > 0;
-  const canGoNext = currentPhaseIndex < phaseOrder.length - 1;
+  const isActiveTest = phase === 'test' && !testSubmitted;
+  const canGoNext = currentPhaseIndex < phaseOrder.length - 1 && !isActiveTest;
 
   return (
     <div className="flex flex-col bg-[#0a0f1a] text-white relative overflow-hidden" style={{ minHeight: '100dvh' }}>

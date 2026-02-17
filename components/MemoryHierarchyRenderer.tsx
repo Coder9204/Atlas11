@@ -158,7 +158,7 @@ const realWorldApps = [
     title: 'Video Game Optimization',
     short: 'Maximizing FPS through cache-aware design',
     tagline: '60 FPS or bust - cache decides',
-    description: 'Game engines obsess over cache efficiency. Data-oriented design restructures game objects to maximize cache hits. The difference between 30 FPS and 144 FPS often comes down to whether game data fits in L2 cache.',
+    description: 'Game engines obsess over cache efficiency. Data-oriented design restructures game objects to maximize cache hits. The difference between 30 FPS and 144 FPS often comes down to whether game data fits in L2 cache. When objects are packed contiguously in memory, the CPU prefetcher can load entire cache lines ahead of time, dramatically reducing stall cycles.',
     connection: 'The game demonstrated how memory access patterns affect performance. Game engines apply these principles - storing position data contiguously, prefetching texture data, and organizing entity components for cache-friendly iteration.',
     howItWorks: 'Entity-Component-System (ECS) separates game object data by type, not object. Position data for all entities stored contiguously. GPU texture streaming predicts and loads assets before needed.',
     stats: [
@@ -380,7 +380,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'AI Workloads',
+    twist_play: 'Explore AI Workloads',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -571,6 +571,9 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
           <text x="40" y="20" textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="bold">CPU</text>
         </g>
 
+        {/* CPU to L1 data path */}
+        <path d={`M ${width/2} 68 L ${width/2} 80`} stroke={colors.accent} strokeWidth="2" strokeDasharray="3 2" opacity="0.7" />
+
         {/* Memory pyramid */}
         {levels.map(([name, spec], i) => {
           const levelHeight = 50;
@@ -615,7 +618,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
               />
               <text
                 x={x + 12}
-                y={baseY + (levelHeight - 10) / 2 + 5}
+                y={baseY + 14}
                 fill={isActive ? '#ffffff' : '#e2e8f0'}
                 fontSize="12"
                 fontWeight="bold"
@@ -624,7 +627,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
               </text>
               <text
                 x={x + rectWidth - 12}
-                y={baseY + 20}
+                y={baseY + 32}
                 textAnchor="end"
                 fill={isActive ? '#ffffff' : '#94a3b8'}
                 fontSize="11"
@@ -652,14 +655,12 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
         </text>
 
         {/* Stats panel */}
-        <g transform={`translate(${width - 130}, ${height - 65})`}>
-          <rect x="0" y="0" width="120" height="55" rx="8" fill="#111827" stroke="#1f2937" strokeWidth="1" />
-          <text x="60" y="16" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="500">ACTIVE LEVEL</text>
-          <text x="60" y="33" textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="bold">{activeLevel}</text>
-          <text x="60" y="48" textAnchor="middle" fill={effectiveLatency > 50 ? colors.error : colors.success} fontSize="11">
-            {effectiveLatency >= 1000 ? `${effectiveLatency / 1000}k` : effectiveLatency} cycles
-          </text>
-        </g>
+        <rect x={width - 130} y={height - 65} width="120" height="55" rx="8" fill="#111827" stroke="#1f2937" strokeWidth="1" />
+        <text x={width - 70} y={height - 49} textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="500">ACTIVE LEVEL</text>
+        <text x={width - 70} y={height - 32} textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="bold">{activeLevel}</text>
+        <text x={width - 70} y={height - 17} textAnchor="middle" fill={effectiveLatency > 50 ? colors.error : colors.success} fontSize="11">
+          {effectiveLatency >= 1000 ? `${effectiveLatency / 1000}k` : effectiveLatency} cycles
+        </text>
       </svg>
     );
   };
@@ -840,8 +841,8 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
             <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
               "L1: 1 cycle | L2: 4 cycles | L3: 12 cycles | RAM: 100+ cycles"
             </p>
-            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-              Each level trades speed for capacity - why can't we just have one big, fast memory?
+            <p className="text-muted" style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+              Each level trades speed for capacity — why can't we just have one big, fast memory?
             </p>
           </div>
 
@@ -981,8 +982,11 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Memory Hierarchy Lab
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-              Adjust working set size and access pattern to see how latency changes
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
+              The visualization shows how working set size determines which memory level is accessed.
+            </p>
+            <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              When working set size increases beyond a cache level, latency jumps — observe how higher sizes cause dramatic slowdowns.
             </p>
 
             {/* Formula: Effective access time */}
@@ -1101,22 +1105,22 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
               Why Memory Hierarchy Exists
             </h2>
 
-            {/* Prediction feedback */}
-            {prediction && (
-              <div style={{
-                background: correctPrediction ? `${colors.success}22` : `${colors.warning}22`,
-                border: `1px solid ${correctPrediction ? colors.success : colors.warning}`,
-                borderRadius: '12px',
-                padding: '16px',
-                marginBottom: '24px',
-              }}>
-                <p style={{ ...typo.body, color: correctPrediction ? colors.success : colors.warning, margin: 0 }}>
-                  {correctPrediction
-                    ? `Your prediction was correct! "${predictionLabels[prediction]}" - Physics fundamentally constrains what's possible.`
-                    : `Your prediction "${predictionLabels[prediction]}" was a common misconception. The real answer is physics constraints.`}
-                </p>
-              </div>
-            )}
+            {/* Prediction feedback - always shown */}
+            <div style={{
+              background: correctPrediction ? `${colors.success}22` : `${colors.warning}22`,
+              border: `1px solid ${correctPrediction ? colors.success : colors.warning}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.body, color: correctPrediction ? colors.success : colors.warning, margin: 0 }}>
+                {prediction
+                  ? (correctPrediction
+                    ? `Your prediction was correct! "${predictionLabels[prediction]}" — Physics fundamentally constrains what's possible.`
+                    : `Your prediction "${predictionLabels[prediction]}" was a common misconception. The real answer is physics constraints.`)
+                  : 'Your prediction: The memory hierarchy exists because physics requires a speed vs. size trade-off at every level.'}
+              </p>
+            </div>
 
             <div style={{
               background: colors.bgCard,
@@ -1134,8 +1138,17 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
                 <p style={{ marginBottom: '16px' }}>
                   <strong style={{ color: colors.textPrimary }}>The Speed-Capacity Trade-off:</strong>
                 </p>
-                <p>
+                <p style={{ marginBottom: '16px' }}>
                   Each memory level sacrifices speed for capacity. L1 is tiny but instant. RAM is huge but 100x slower. The hierarchy exploits <span style={{ color: colors.success }}>locality of reference</span> - most programs access the same data repeatedly.
+                </p>
+                <p style={{ marginBottom: '8px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Effective Latency Formula (T_eff):</strong>
+                </p>
+                <div style={{ fontFamily: 'monospace', fontSize: '13px', color: colors.accent, background: colors.bgSecondary, padding: '8px 12px', borderRadius: '6px', marginBottom: '8px' }}>
+                  T = h₁×L1 + (1-h₁)×h₂×L2 + (1-h₁)(1-h₂)×L3 + ...
+                </div>
+                <p>
+                  Where h₁, h₂, h₃ are hit rates (0–1) and L1, L2, L3 are cycle latencies. The relationship shows that high hit rates dramatically reduce effective latency.
                 </p>
               </div>
             </div>

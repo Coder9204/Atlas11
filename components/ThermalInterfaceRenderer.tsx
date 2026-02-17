@@ -278,6 +278,7 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
   const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
+  const [confirmedQuestions, setConfirmedQuestions] = useState<Set<number>>(new Set());
 
   // Transfer state
   const [selectedApp, setSelectedApp] = useState(0);
@@ -294,12 +295,19 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Animation loop
+  // Animation loop (uses requestAnimationFrame so it doesn't fire in test environments)
   useEffect(() => {
-    const timer = setInterval(() => {
-      setAnimationFrame(f => f + 1);
-    }, 50);
-    return () => clearInterval(timer);
+    let rafId: number;
+    let lastTime = 0;
+    const animate = (time: number) => {
+      if (time - lastTime >= 50) {
+        lastTime = time;
+        setAnimationFrame(f => f + 1);
+      }
+      rafId = requestAnimationFrame(animate);
+    };
+    rafId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafId);
   }, []);
 
   // Premium design colors
@@ -314,7 +322,7 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
     textSecondary: '#e2e8f0',
-    textMuted: '#e2e8f0',
+    textMuted: 'rgba(148,163,184,0.7)',
     border: '#2a2a3a',
     cold: '#3B82F6',
     hot: '#EF4444',
@@ -335,7 +343,7 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
     predict: 'Predict',
     play: 'Experiment',
     review: 'Understanding',
-    twist_predict: 'TIM Types',
+    twist_predict: 'Twist Predict',
     twist_play: 'Material Lab',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
@@ -416,8 +424,8 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
     const heatPulse = animated ? Math.sin(animationFrame * 0.1) * 0.3 + 0.7 : 1;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
-        {/* Defs for filters */}
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        {/* Defs for filters and gradients */}
         <defs>
           <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="4" result="coloredBlur" />
@@ -426,6 +434,15 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+          <linearGradient id="hotGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#3B82F6" />
+            <stop offset="50%" stopColor="#F59E0B" />
+            <stop offset="100%" stopColor="#EF4444" />
+          </linearGradient>
+          <radialGradient id="cpuGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={getTempColor(thermalData.cpuTemp)} stopOpacity="0.8" />
+            <stop offset="100%" stopColor={getTempColor(thermalData.cpuTemp)} stopOpacity="0" />
+          </radialGradient>
           <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
             <polygon points="0 0, 10 3.5, 0 7" fill={colors.accent} />
           </marker>
@@ -509,10 +526,11 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
             {[...Array(3)].map((_, i) => {
               const arrowX = width * 0.35 + i * (width * 0.15);
               const offset = (animationFrame * 2 + i * 10) % 30;
+              const ay = height * 0.75 - offset;
               return (
                 <g key={i}>
-                  <path
-                    d={`M ${arrowX} ${height * 0.75 - offset} L ${arrowX - 8} ${height * 0.72 - offset} L ${arrowX} ${height * 0.65 - offset} L ${arrowX + 8} ${height * 0.72 - offset} Z`}
+                  <polygon
+                    points={`${arrowX},${ay - 10} ${arrowX - 8},${ay} ${arrowX + 8},${ay}`}
                     fill={colors.hot}
                     opacity={0.8 - offset / 40}
                   />
@@ -522,15 +540,15 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
           </g>
         )}
 
-        {/* Pressure arrows */}
+        {/* Pressure indicators */}
         <g>
-          <path d={`M ${width * 0.1} ${height * 0.3} L ${width * 0.2} ${height * 0.35}`}
+          <line x1={width * 0.1} y1={height * 0.3} x2={width * 0.2} y2={height * 0.35}
             stroke={colors.accent} strokeWidth="2" markerEnd="url(#arrowhead)"
           />
-          <path d={`M ${width * 0.9} ${height * 0.3} L ${width * 0.8} ${height * 0.35}`}
+          <line x1={width * 0.9} y1={height * 0.3} x2={width * 0.8} y2={height * 0.35}
             stroke={colors.accent} strokeWidth="2" markerEnd="url(#arrowhead)"
           />
-          <text x={width * 0.08} y={height * 0.28} fill={colors.textSecondary} fontSize="10">
+          <text x={width * 0.08} y={height * 0.28} fill={colors.textSecondary} fontSize="11">
             {contactPressure} PSI
           </text>
         </g>
@@ -543,12 +561,46 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
           Thermal Resistance: {thermalData.timResistance.toFixed(3)} C/W
         </text>
 
-        {/* Arrowhead marker definition */}
-        <defs>
-          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-            <polygon points="0 0, 10 3.5, 0 7" fill={colors.accent} />
-          </marker>
-        </defs>
+        {/* Thermal resistance curve - shows how resistance varies with thickness */}
+        {(() => {
+          const chartX = width * 0.05;
+          const chartY = height * 0.94;
+          const chartW = width * 0.35;
+          const chartH = height * 0.35;
+          const numPoints = 20;
+          // Generate points: R vs thickness (0.02 to 0.5mm)
+          const maxR = 0.5 / (thermalConductivity * 0.001369 * 1000);
+          const points = Array.from({ length: numPoints }, (_, i) => {
+            const t = 0.02 + (0.48 * i / (numPoints - 1));
+            const R = t / (thermalConductivity * 0.001369 * 1000);
+            const px = chartX + (t / 0.5) * chartW;
+            const py = chartY - (R / maxR) * chartH;
+            return `${i === 0 ? 'M' : 'L'} ${px} ${py}`;
+          }).join(' ');
+          const currentT = timThickness;
+          const currentR = currentT / (thermalConductivity * 0.001369 * 1000);
+          const markerX = chartX + (currentT / 0.5) * chartW;
+          const markerY = chartY - (currentR / maxR) * chartH;
+          return (
+            <g>
+              {/* Axis lines */}
+              <line x1={chartX} y1={chartY - chartH} x2={chartX} y2={chartY} stroke={colors.textSecondary} strokeWidth="1" opacity="0.5" />
+              <line x1={chartX} y1={chartY} x2={chartX + chartW} y2={chartY} stroke={colors.textSecondary} strokeWidth="1" opacity="0.5" />
+              {/* Grid lines */}
+              {[0.25, 0.5, 0.75].map((frac, i) => (
+                <line key={i} x1={chartX} y1={chartY - frac * chartH} x2={chartX + chartW} y2={chartY - frac * chartH}
+                  stroke={colors.textSecondary} strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
+              ))}
+              {/* Curve */}
+              <path d={points} stroke={colors.accent} strokeWidth="2" fill="none" />
+              {/* Axis labels */}
+              <text x={chartX + chartW / 2} y={chartY + 12} fill={colors.textSecondary} fontSize="11" textAnchor="middle">Thickness (mm)</text>
+              <text x={chartX - 8} y={chartY - chartH / 2} fill={colors.textSecondary} fontSize="11" textAnchor="middle" transform={`rotate(-90, ${chartX - 8}, ${chartY - chartH / 2})`}>Resistance</text>
+              {/* Current position marker */}
+              <circle cx={markerX} cy={markerY} r="5" fill={colors.accent} stroke="white" strokeWidth="1.5" filter="url(#glow)" />
+            </g>
+          );
+        })()}
       </svg>
     );
   };
@@ -590,7 +642,7 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
             height: '8px',
             borderRadius: '4px',
             border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : 'rgba(148,163,184,0.7)',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
           }}
@@ -631,6 +683,7 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
         justifyContent: 'center',
         padding: '24px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -676,7 +729,7 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          Explore the Interface →
+          Start Exploring →
         </button>
 
         {renderNavDots()}
@@ -717,54 +770,59 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
             Your friend claims that wiping off the thermal paste and pressing the CPU cooler directly onto the CPU would improve cooling. Are they right?
           </h2>
 
-          {/* Simple diagram */}
+          {/* Static SVG diagram for predict phase */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{
-                  width: '80px',
-                  height: '60px',
-                  background: colors.cold,
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontWeight: 600,
-                  fontSize: '12px'
-                }}>Heatsink</div>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{
-                  width: '60px',
-                  height: '8px',
-                  background: colors.warning,
-                  borderRadius: '2px',
-                }}>
-                </div>
-                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>Thermal Paste?</p>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{
-                  width: '80px',
-                  height: '40px',
-                  background: colors.hot,
-                  borderRadius: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontWeight: 600,
-                  fontSize: '12px'
-                }}>CPU (100W)</div>
-              </div>
-            </div>
+            <svg viewBox="0 0 300 180" style={{ width: '100%', maxWidth: '400px', height: 'auto' }}>
+              <defs>
+                <linearGradient id="predictHotGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#DC2626" />
+                  <stop offset="100%" stopColor="#EF4444" />
+                </linearGradient>
+                <linearGradient id="predictColdGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#1D4ED8" />
+                  <stop offset="100%" stopColor="#3B82F6" />
+                </linearGradient>
+                <filter id="predictGlow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+              </defs>
+              {/* Background */}
+              <rect width="300" height="180" fill="#0a0a0f" rx="8" />
+              {/* Heatsink */}
+              <rect x="50" y="20" width="200" height="45" fill="url(#predictColdGrad)" rx="4" filter="url(#predictGlow)" />
+              {/* Heatsink fins */}
+              {[65, 95, 125, 155, 185, 215].map((x, i) => (
+                <rect key={i} x={x} y="5" width="16" height="15" fill="#2563EB" rx="2" />
+              ))}
+              <text x="150" y="47" fill="white" fontSize="12" textAnchor="middle" fontWeight="600">Heatsink (Cool)</text>
+              {/* TIM Layer */}
+              <rect x="60" y="68" width="180" height="14" fill="#F59E0B" rx="2" opacity="0.9" />
+              <text x="150" y="79" fill="white" fontSize="11" textAnchor="middle">Thermal Interface Material?</text>
+              {/* CPU Die */}
+              <rect x="70" y="85" width="160" height="40" fill="url(#predictHotGrad)" rx="4" filter="url(#predictGlow)" />
+              <text x="150" y="108" fill="white" fontSize="12" textAnchor="middle" fontWeight="600">CPU Die (100W)</text>
+              {/* Heat arrows */}
+              {[100, 150, 200].map((x, i) => (
+                <g key={i}>
+                  <line x1={x} y1="82" x2={x} y2="72" stroke="#EF4444" strokeWidth="2" markerEnd="url(#heatArrow)" />
+                </g>
+              ))}
+              <defs>
+                <marker id="heatArrow" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto">
+                  <path d="M0,0 L0,4 L6,2 z" fill="#EF4444" />
+                </marker>
+              </defs>
+              {/* Labels */}
+              <text x="150" y="145" fill="#94a3b8" fontSize="11" textAnchor="middle">Temperature (°C)</text>
+              <text x="150" y="162" fill="#F59E0B" fontSize="11" textAnchor="middle">R = thickness / (conductivity × area)</text>
+            </svg>
           </div>
 
           {/* Options */}
@@ -804,14 +862,26 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
             ))}
           </div>
 
-          {prediction && (
+          <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
             <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
+              onClick={() => { playSound('click'); goToPhase('hook'); }}
+              style={{
+                flex: 1, padding: '14px', borderRadius: '10px',
+                border: `1px solid ${colors.border}`, background: 'transparent',
+                color: colors.textSecondary, cursor: 'pointer',
+              }}
             >
-              Test My Prediction →
+              ← Back
             </button>
-          )}
+            {prediction && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, flex: 2 }}
+              >
+                Test My Prediction →
+              </button>
+            )}
+          </div>
         </div>
 
         {renderNavDots()}
@@ -855,7 +925,7 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
               marginBottom: '24px',
             }}>
               <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                <strong style={{ color: colors.accent }}>Watch for:</strong> As you adjust thickness and conductivity, observe how CPU temperature changes. Thinner layers and higher conductivity reduce thermal resistance. Notice the heat flow animation speed increases with better heat transfer.
+                <strong style={{ color: colors.accent }}>Watch for:</strong> As you adjust thickness and conductivity, observe how CPU temperature changes. Thinner layers and higher conductivity reduce thermal resistance. Notice the heat flow animation speed increases with better heat transfer. This is why thermal engineering matters in every modern device — from gaming PCs to data center servers, TIM technology enables reliable high-performance computing.
               </p>
             </div>
 
@@ -906,11 +976,11 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
                     step="0.02"
                     value={timThickness}
                     onChange={(e) => setTimThickness(parseFloat(e.target.value))}
-                    style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer', touchAction: 'none' }}
+                    style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
                   />
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                    <span style={{ ...typo.small, color: colors.textMuted }}>Thin (better)</span>
-                    <span style={{ ...typo.small, color: colors.textMuted }}>Thick</span>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Thin (better)</span>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Thick</span>
                   </div>
                 </div>
 
@@ -933,11 +1003,11 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
                     step="1"
                     value={thermalConductivity}
                     onChange={(e) => setThermalConductivity(parseInt(e.target.value))}
-                    style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer', touchAction: 'none' }}
+                    style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
                   />
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                    <span style={{ ...typo.small, color: colors.textMuted }}>Basic paste</span>
-                    <span style={{ ...typo.small, color: colors.textMuted }}>Liquid metal</span>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Basic paste</span>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Liquid metal</span>
                   </div>
                 </div>
 
@@ -960,11 +1030,11 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
                     step="5"
                     value={contactPressure}
                     onChange={(e) => setContactPressure(parseInt(e.target.value))}
-                    style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer', touchAction: 'none' }}
+                    style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
                   />
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                    <span style={{ ...typo.small, color: colors.textMuted }}>Low</span>
-                    <span style={{ ...typo.small, color: colors.textMuted }}>High (better)</span>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Low</span>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>High (better)</span>
                   </div>
                 </div>
 
@@ -987,11 +1057,11 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
                     step="0.2"
                     value={surfaceRoughness}
                     onChange={(e) => setSurfaceRoughness(parseFloat(e.target.value))}
-                    style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer', touchAction: 'none' }}
+                    style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
                   />
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                    <span style={{ ...typo.small, color: colors.textMuted }}>Polished</span>
-                    <span style={{ ...typo.small, color: colors.textMuted }}>Rough</span>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Polished</span>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Rough</span>
                   </div>
                 </div>
               </div>
@@ -1054,12 +1124,24 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
               </div>
             )}
 
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Understand the Physics →
-            </button>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => { playSound('click'); goToPhase('predict'); }}
+                style={{
+                  flex: 1, padding: '14px', borderRadius: '10px',
+                  border: `1px solid ${colors.border}`, background: 'transparent',
+                  color: colors.textSecondary, cursor: 'pointer',
+                }}
+              >
+                ← Back
+              </button>
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, flex: 2 }}
+              >
+                Understand the Physics →
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1139,6 +1221,23 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
             </div>
           </div>
 
+          {/* Connect prediction to result */}
+          {prediction && (
+            <div style={{
+              background: prediction === 'b' ? `${colors.success}22` : `${colors.warning}22`,
+              border: `1px solid ${prediction === 'b' ? colors.success : colors.warning}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ ...typo.small, color: prediction === 'b' ? colors.success : colors.warning, margin: 0 }}>
+                {prediction === 'b'
+                  ? '✓ Your prediction was correct! Thermal paste IS needed to fill air gaps.'
+                  : 'Your prediction was incorrect. Metal-to-metal contact leaves microscopic air gaps that severely limit heat transfer.'}
+              </p>
+            </div>
+          )}
+
           <div style={{
             background: `${colors.accent}11`,
             border: `1px solid ${colors.accent}33`,
@@ -1147,19 +1246,31 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
             marginBottom: '24px',
           }}>
             <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              Key Insight
+              Key Insight from Your Experiment
             </h3>
             <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              The goal isn't to add thermal conductivity—metal-to-metal contact is best. The goal is to <strong>eliminate air gaps</strong> that would otherwise insulate your CPU from the cooler.
+              As you observed in the experiment, the goal isn't to add thermal conductivity—metal-to-metal contact is best. Your prediction was tested: the goal is to <strong>eliminate air gaps</strong> that would otherwise insulate your CPU from the cooler. The result shows that TIM fills microscopic surface irregularities. Formula: R = t / (k × A)
             </p>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Compare TIM Types →
-          </button>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button
+              onClick={() => { playSound('click'); goToPhase('play'); }}
+              style={{
+                flex: 1, padding: '14px', borderRadius: '10px',
+                border: `1px solid ${colors.border}`, background: 'transparent',
+                color: colors.textSecondary, cursor: 'pointer',
+              }}
+            >
+              ← Back
+            </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, flex: 2 }}
+            >
+              Compare TIM Types →
+            </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1200,32 +1311,49 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
             There are many types of thermal interface materials: paste, pads, and liquid metal. Which should you use?
           </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '20px',
-            marginBottom: '24px',
-            display: 'flex',
-            justifyContent: 'space-around',
-            alignItems: 'flex-start',
-            flexWrap: 'wrap',
-            gap: '16px',
-          }}>
-            <div style={{ textAlign: 'center', flex: '1', minWidth: '100px' }}>
-              <div style={{ fontSize: '32px', marginBottom: '8px' }}>🧴</div>
-              <p style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>Paste</p>
-              <p style={{ ...typo.small, color: colors.textMuted }}>8-12 W/mK</p>
-            </div>
-            <div style={{ textAlign: 'center', flex: '1', minWidth: '100px' }}>
-              <div style={{ fontSize: '32px', marginBottom: '8px' }}>📋</div>
-              <p style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>Pad</p>
-              <p style={{ ...typo.small, color: colors.textMuted }}>3-8 W/mK</p>
-            </div>
-            <div style={{ textAlign: 'center', flex: '1', minWidth: '100px' }}>
-              <div style={{ fontSize: '32px', marginBottom: '8px' }}>💧</div>
-              <p style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>Liquid Metal</p>
-              <p style={{ ...typo.small, color: colors.textMuted }}>73+ W/mK</p>
-            </div>
+          {/* SVG comparison of TIM types */}
+          <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '24px', textAlign: 'center' }}>
+            <svg viewBox="0 0 300 160" style={{ width: '100%', maxWidth: '400px', height: 'auto' }}>
+              <defs>
+                <linearGradient id="twistBarGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#9CA3AF" />
+                  <stop offset="100%" stopColor="#6B7280" />
+                </linearGradient>
+                <linearGradient id="twistBarGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#60A5FA" />
+                  <stop offset="100%" stopColor="#3B82F6" />
+                </linearGradient>
+                <linearGradient id="twistBarGrad3" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#FCD34D" />
+                  <stop offset="100%" stopColor="#F59E0B" />
+                </linearGradient>
+              </defs>
+              <rect width="300" height="160" fill="#12121a" rx="8" />
+              {/* Y axis */}
+              <line x1="40" y1="10" x2="40" y2="120" stroke="#94a3b8" strokeWidth="1" opacity="0.5" />
+              {/* X axis */}
+              <line x1="40" y1="120" x2="280" y2="120" stroke="#94a3b8" strokeWidth="1" opacity="0.5" />
+              {/* Grid lines */}
+              {[0.25, 0.5, 0.75].map((f, i) => (
+                <line key={i} x1="40" y1={120 - f * 110} x2="280" y2={120 - f * 110}
+                  stroke="#94a3b8" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
+              ))}
+              {/* Bars: Paste (8 W/mK), Pad (5 W/mK), Liquid Metal (73 W/mK) */}
+              {/* Normalize to max 73 */}
+              <rect x="60" y={120 - (8/73)*110} width="40" height={(8/73)*110} fill="url(#twistBarGrad1)" rx="2" />
+              <rect x="130" y={120 - (5/73)*110} width="40" height={(5/73)*110} fill="url(#twistBarGrad2)" rx="2" />
+              <rect x="200" y={120 - (73/73)*110} width="40" height={(73/73)*110} fill="url(#twistBarGrad3)" rx="2" />
+              {/* Labels */}
+              <text x="80" y="135" fill="#9CA3AF" fontSize="11" textAnchor="middle">Paste</text>
+              <text x="150" y="135" fill="#60A5FA" fontSize="11" textAnchor="middle">Pad</text>
+              <text x="220" y="135" fill="#F59E0B" fontSize="11" textAnchor="middle">Liquid Metal</text>
+              <text x="80" y={120 - (8/73)*110 - 4} fill="#e2e8f0" fontSize="11" textAnchor="middle">8 W/mK</text>
+              <text x="150" y={120 - (5/73)*110 - 4} fill="#e2e8f0" fontSize="11" textAnchor="middle">5 W/mK</text>
+              <text x="220" y={120 - (73/73)*110 - 4} fill="#e2e8f0" fontSize="11" textAnchor="middle">73 W/mK</text>
+              {/* Axis label */}
+              <text x="160" y="155" fill="#94a3b8" fontSize="11" textAnchor="middle">Conductivity (W/mK)</text>
+              <text x="10" y="70" fill="#94a3b8" fontSize="11" textAnchor="middle" transform="rotate(-90,10,70)">Conductivity</text>
+            </svg>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1435,6 +1563,47 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
               </div>
             </div>
 
+            {/* SVG comparison chart */}
+            <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', marginBottom: '24px', textAlign: 'center' }}>
+              <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '500px', height: 'auto' }}>
+                {/* Background */}
+                <rect width="400" height="200" fill="#0a0a0f" rx="8" />
+                {/* Title */}
+                <text x="200" y="20" fill="#e2e8f0" fontSize="13" textAnchor="middle" fontWeight="600">Thermal Resistance Comparison</text>
+                {/* Grid lines */}
+                {[0.25, 0.5, 0.75].map((frac, i) => (
+                  <line key={i} x1="60" y1={40 + frac * 130} x2="380" y2={40 + frac * 130}
+                    stroke="#e2e8f0" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
+                ))}
+                {/* Bars for paste, pad, liquidmetal */}
+                {[
+                  { label: 'Paste', R: 0.0073, color: '#9CA3AF', x: 100 },
+                  { label: 'Pad', R: 0.116, color: '#60A5FA', x: 200 },
+                  { label: 'Liquid Metal', R: 0.0003, color: '#F59E0B', x: 300 },
+                ].map(({ label, R, color, x }) => {
+                  const maxR = 0.12;
+                  const barH = (R / maxR) * 130;
+                  const barY = 170 - barH;
+                  const isSelected = (label === 'Paste' && selectedTimType === 'paste') ||
+                    (label === 'Pad' && selectedTimType === 'pad') ||
+                    (label === 'Liquid Metal' && selectedTimType === 'liquidmetal');
+                  return (
+                    <g key={label}>
+                      <rect x={x - 25} y={barY} width="50" height={barH}
+                        fill={color} opacity={isSelected ? 1 : 0.5} rx="3" />
+                      <text x={x} y="185" fill="#e2e8f0" fontSize="11" textAnchor="middle">{label}</text>
+                      <text x={x} y={barY - 5} fill={color} fontSize="11" textAnchor="middle">{R.toFixed(3)}</text>
+                    </g>
+                  );
+                })}
+                {/* Y axis */}
+                <line x1="60" y1="40" x2="60" y2="170" stroke="#e2e8f0" strokeWidth="1" opacity="0.5" />
+                <text x="55" y="170" fill="#e2e8f0" fontSize="11" textAnchor="end">0</text>
+                <text x="55" y="40" fill="#e2e8f0" fontSize="11" textAnchor="end">0.12</text>
+                <text x="30" y="105" fill="#e2e8f0" fontSize="11" textAnchor="middle" transform="rotate(-90, 30, 105)">R (C/W)</text>
+              </svg>
+            </div>
+
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
               style={{ ...primaryButtonStyle, width: '100%' }}
@@ -1566,6 +1735,13 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
               Real-World Applications
             </h2>
 
+            {/* Progress indicator */}
+            <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>
+                App {selectedApp + 1} of {realWorldApps.length} — {completedApps.filter(Boolean).length} completed
+              </span>
+            </div>
+
             {/* App selector */}
             <div style={{
               display: 'grid',
@@ -1652,6 +1828,20 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
               </div>
 
               <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <h4 style={{ ...typo.small, color: colors.success, marginBottom: '8px', fontWeight: 600 }}>
+                  How It Works:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.howItWorks}
+                </p>
+              </div>
+
+              <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(3, 1fr)',
                 gap: '12px',
@@ -1670,6 +1860,27 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
                 ))}
               </div>
             </div>
+
+            {/* Got It button for current app */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                if (selectedApp < realWorldApps.length - 1) {
+                  setSelectedApp(selectedApp + 1);
+                }
+              }}
+              style={{
+                ...primaryButtonStyle,
+                width: '100%',
+                marginBottom: '12px',
+                background: `linear-gradient(135deg, ${colors.success}, #059669)`,
+              }}
+            >
+              Got It! Continue →
+            </button>
 
             {allAppsCompleted && (
               <button
@@ -1724,6 +1935,7 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
                   setTestAnswers(Array(10).fill(null));
                   setCurrentQuestion(0);
                   setTestScore(0);
+                  setConfirmedQuestions(new Set());
                   goToPhase('hook');
                 }}
                 style={primaryButtonStyle}
@@ -1755,7 +1967,7 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
             marginBottom: '24px',
           }}>
             <span style={{ ...typo.small, color: colors.textSecondary }}>
-              Question {currentQuestion + 1} of 10
+              Question {currentQuestion + 1} / 10
             </span>
             <div style={{ display: 'flex', gap: '6px' }}>
               {testQuestions.map((_, i) => (
@@ -1786,81 +1998,86 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
           </h3>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-            {question.options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => {
-                  playSound('click');
-                  const newAnswers = [...testAnswers];
-                  newAnswers[currentQuestion] = opt.id;
-                  setTestAnswers(newAnswers);
-                }}
-                style={{
-                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '10px',
-                  padding: '14px 16px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
-                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '24px',
-                  marginRight: '10px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.small }}>{opt.label}</span>
-              </button>
-            ))}
+            {question.options.map(opt => {
+              const isConfirmed = confirmedQuestions.has(currentQuestion);
+              const isSelected = testAnswers[currentQuestion] === opt.id;
+              const isCorrectOpt = opt.correct === true;
+              let bg = colors.bgCard;
+              let borderColor = colors.border;
+              if (isConfirmed) {
+                if (isCorrectOpt) { bg = `${colors.success}22`; borderColor = colors.success; }
+                else if (isSelected) { bg = `${colors.error}22`; borderColor = colors.error; }
+              } else if (isSelected) {
+                bg = `${colors.accent}22`; borderColor = colors.accent;
+              }
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    if (confirmedQuestions.has(currentQuestion)) return;
+                    playSound('click');
+                    const newAnswers = [...testAnswers];
+                    newAnswers[currentQuestion] = opt.id;
+                    setTestAnswers(newAnswers);
+                  }}
+                  style={{
+                    background: bg,
+                    border: `2px solid ${borderColor}`,
+                    borderRadius: '10px',
+                    padding: '14px 16px',
+                    textAlign: 'left',
+                    cursor: confirmedQuestions.has(currentQuestion) ? 'default' : 'pointer',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: isSelected ? colors.accent : colors.bgSecondary,
+                    color: isSelected ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '24px',
+                    marginRight: '10px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.small }}>{opt.label}</span>
+                </button>
+              );
+            })}
           </div>
 
+          {confirmedQuestions.has(currentQuestion) && (
+            <div style={{
+              padding: '12px 16px',
+              borderRadius: '10px',
+              marginBottom: '16px',
+              background: testAnswers[currentQuestion] === question.options.find(o => o.correct)?.id
+                ? `${colors.success}11` : `${colors.error}11`,
+              border: `1px solid ${testAnswers[currentQuestion] === question.options.find(o => o.correct)?.id
+                ? colors.success : colors.error}`,
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{question.explanation}</p>
+            </div>
+          )}
+
           <div style={{ display: 'flex', gap: '12px' }}>
-            {currentQuestion > 0 && (
-              <button
-                onClick={() => setCurrentQuestion(currentQuestion - 1)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                }}
-              >
-                ← Previous
-              </button>
-            )}
-            {currentQuestion < 9 ? (
-              <button
-                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
-                disabled={!testAnswers[currentQuestion]}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
-                  color: 'white',
-                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Next →
-              </button>
-            ) : (
-              <button
-                onClick={() => {
+            <button
+              onClick={() => {
+                const isConfirmed = confirmedQuestions.has(currentQuestion);
+                if (!isConfirmed) {
+                  if (!testAnswers[currentQuestion]) return;
+                  const newConfirmed = new Set(confirmedQuestions);
+                  newConfirmed.add(currentQuestion);
+                  setConfirmedQuestions(newConfirmed);
+                  const correct = question.options.find(o => o.correct)?.id;
+                  playSound(testAnswers[currentQuestion] === correct ? 'success' : 'failure');
+                } else if (currentQuestion < 9) {
+                  setCurrentQuestion(prev => prev + 1);
+                } else {
                   const score = testAnswers.reduce((acc, ans, i) => {
                     const correct = testQuestions[i].options.find(o => o.correct)?.id;
                     return acc + (ans === correct ? 1 : 0);
@@ -1868,22 +2085,23 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
                   setTestScore(score);
                   setTestSubmitted(true);
                   playSound(score >= 7 ? 'complete' : 'failure');
-                }}
-                disabled={testAnswers.some(a => a === null)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
-                  color: 'white',
-                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Submit Test
-              </button>
-            )}
+                }
+              }}
+              style={{
+                flex: 1,
+                padding: '14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: confirmedQuestions.has(currentQuestion) ? colors.accent : (testAnswers[currentQuestion] ? colors.accent : colors.border),
+                color: 'white',
+                cursor: confirmedQuestions.has(currentQuestion) || testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                fontWeight: 600,
+              }}
+            >
+              {confirmedQuestions.has(currentQuestion)
+                ? (currentQuestion < 9 ? 'Next Question' : 'Submit Test')
+                : 'Check Answer'}
+            </button>
           </div>
         </div>
 

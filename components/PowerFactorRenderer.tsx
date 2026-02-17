@@ -325,8 +325,8 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#94a3b8',
+    textSecondary: '#e2e8f0',
+    textMuted: '#cbd5e1',
     border: '#2a2a3a',
     voltage: '#3B82F6',
     current: '#F59E0B',
@@ -350,9 +350,9 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
     twist_predict: 'predict',
     twist_play: 'experiment',
     twist_review: 'review',
-    transfer: 'apply',
-    test: 'quiz',
-    mastery: 'transfer'
+    transfer: 'real-world',
+    test: 'test-knowledge',
+    mastery: 'mastery'
   };
 
   const goToPhase = useCallback((p: Phase) => {
@@ -465,7 +465,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        zIndex: 50,
+        zIndex: 100,
       }}>
         <button
           onClick={() => canGoBack && goToPhase(phaseOrder[currentIndex - 1])}
@@ -1703,31 +1703,30 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
                 <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
                   {a.title.split(' ').slice(0, 2).join(' ')}
                 </div>
-
-            {!allAppsCompleted && (
-              <button
-                onClick={() => {
-                  playSound('click');
-                  if (selectedApp < realWorldApps.length - 1) {
-                    setSelectedApp(selectedApp + 1);
-                    const newCompleted = [...completedApps];
-                    newCompleted[selectedApp + 1] = true;
-                    setCompletedApps(newCompleted);
-                  }
-                }}
-                style={{
-                  ...primaryButtonStyle,
-                  width: '100%',
-                  marginTop: '24px',
-                }}
-              >
-                Got It - Next Application →
-              </button>
-            )}
-
               </button>
             ))}
           </div>
+
+          {!allAppsCompleted && (
+            <button
+              onClick={() => {
+                playSound('click');
+                if (selectedApp < realWorldApps.length - 1) {
+                  setSelectedApp(selectedApp + 1);
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp + 1] = true;
+                  setCompletedApps(newCompleted);
+                }
+              }}
+              style={{
+                ...primaryButtonStyle,
+                width: '100%',
+                marginBottom: '24px',
+              }}
+            >
+              Got It - Next Application →
+            </button>
+          )}
 
           {/* Selected app details */}
           <div style={{

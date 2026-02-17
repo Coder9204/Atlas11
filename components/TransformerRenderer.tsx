@@ -422,7 +422,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
 
         {/* Background spanning path - always visible, uses full height */}
         <path
-          d={`M ${width * 0.42} ${height * 0.08} L ${width * 0.44} ${height * 0.92} L ${width * 0.46} ${height * 0.08} L ${width * 0.48} ${height * 0.92} L ${width * 0.50} ${height * 0.08} L ${width * 0.52} ${height * 0.92} L ${width * 0.54} ${height * 0.08} L ${width * 0.56} ${height * 0.5}`}
+          d={`M ${width * 0.42} ${height * 0.08} L ${width * 0.44} ${height * 0.92} L ${width * 0.46} ${height * 0.08} L ${width * 0.48} ${height * 0.92} L ${width * 0.50} ${height * 0.08} L ${width * 0.52} ${height * 0.92} L ${width * 0.54} ${height * 0.08} L ${width * 0.56} ${height * 0.92} L ${width * 0.58} ${height * 0.08} L ${width * 0.60} ${height * 0.5}`}
           fill="none"
           stroke={ac ? "#3b82f6" : "#374151"}
           strokeWidth="1"
@@ -457,38 +457,42 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
         )}
 
         {/* Primary Coil */}
-        {[...Array(Math.min(Math.floor(pTurns / 15), 8))].map((_, i) => (
-          <ellipse
-            key={i}
-            cx={width/2 - 55}
-            cy={70 + i * 11}
-            rx="18"
-            ry="6"
-            fill="none"
-            stroke="url(#copperPrimary)"
-            strokeWidth="4"
-            style={{ opacity: ac ? 0.7 + currentIntensity * 0.3 : 0.4 }}
-          />
-        ))}
-        <text x={width/2 - 55} y={170} textAnchor="middle" fill="#f87171" fontSize="11" fontWeight="600">Primary</text>
-        <text x={width/2 - 55} y={184} textAnchor="middle" fill={colors.textSecondary} fontSize="11">{pTurns} turns</text>
+        <g className="primary-coil">
+          {[...Array(Math.min(Math.floor(pTurns / 15), 8))].map((_, i) => (
+            <ellipse
+              key={i}
+              cx={width/2 - 55}
+              cy={70 + i * 11}
+              rx="18"
+              ry="6"
+              fill="none"
+              stroke="url(#copperPrimary)"
+              strokeWidth="4"
+              style={{ opacity: ac ? 0.7 + currentIntensity * 0.3 : 0.4 }}
+            />
+          ))}
+          <text x={width/2 - 55} y={170} textAnchor="middle" fill="#f87171" fontSize="11" fontWeight="600">Primary</text>
+          <text x={width/2 - 55} y={184} textAnchor="middle" fill={colors.textSecondary} fontSize="11">{pTurns} turns</text>
+        </g>
 
         {/* Secondary Coil */}
-        {[...Array(Math.min(Math.floor(sTurns / 15), 10))].map((_, i) => (
-          <ellipse
-            key={i}
-            cx={width/2 + 55}
-            cy={70 + i * 9}
-            rx="18"
-            ry="5"
-            fill="none"
-            stroke="url(#copperSecondary)"
-            strokeWidth="3"
-            style={{ opacity: ac && vOut > 0 ? 0.7 + currentIntensity * 0.3 : 0.4 }}
-          />
-        ))}
-        <text x={width/2 + 55} y={170} textAnchor="middle" fill="#4ade80" fontSize="11" fontWeight="600">Secondary</text>
-        <text x={width/2 + 55} y={184} textAnchor="middle" fill={colors.textSecondary} fontSize="11">{sTurns} turns</text>
+        <g className="secondary-coil">
+          {[...Array(Math.min(Math.floor(sTurns / 15), 10))].map((_, i) => (
+            <ellipse
+              key={i}
+              cx={width/2 + 55}
+              cy={70 + i * 9}
+              rx="18"
+              ry="5"
+              fill="none"
+              stroke="url(#copperSecondary)"
+              strokeWidth="3"
+              style={{ opacity: ac && vOut > 0 ? 0.7 + currentIntensity * 0.3 : 0.4 }}
+            />
+          ))}
+          <text x={width/2 + 55} y={170} textAnchor="middle" fill="#4ade80" fontSize="11" fontWeight="600">Secondary</text>
+          <text x={width/2 + 55} y={184} textAnchor="middle" fill={colors.textSecondary} fontSize="11">{sTurns} turns</text>
+        </g>
 
         {/* Input Panel */}
         <rect x="15" y="60" width="75" height="80" rx="6" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
@@ -518,8 +522,8 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
         <rect x="15" y={height - 65} width="75" height="40" rx="4" fill={colors.bgPrimary} stroke={colors.border} strokeWidth="1" />
         <text x="52" y={height - 65 + 12} textAnchor="middle" fill={colors.textSecondary} fontSize="11">Input Wave</text>
         {ac ? (
-          <path
-            d={`M 23 ${height - 40} ${[...Array(10)].map((_, i) => `L ${23 + i * 6} ${height - 40 + Math.sin(animP + i * 0.8) * 8}`).join(' ')}`}
+          <polyline
+            points={[...Array(10)].map((_, i) => `${23 + i * 6},${height - 40 + Math.sin(animP + i * 0.8) * 8}`).join(' ')}
             fill="none"
             stroke="#f87171"
             strokeWidth="2"
@@ -531,8 +535,8 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
         <rect x={width - 90} y={height - 65} width="75" height="40" rx="4" fill={colors.bgPrimary} stroke={colors.border} strokeWidth="1" />
         <text x={width - 52} y={height - 65 + 12} textAnchor="middle" fill={colors.textSecondary} fontSize="11">Output Wave</text>
         {ac && vOut > 0 ? (
-          <path
-            d={`M ${width - 82} ${height - 40} ${[...Array(10)].map((_, i) => `L ${width - 82 + i * 6} ${height - 40 + Math.sin(animP + i * 0.8) * 8 * Math.min(ratio, 1.5)}`).join(' ')}`}
+          <polyline
+            points={[...Array(10)].map((_, i) => `${width - 82 + i * 6},${height - 40 + Math.sin(animP + i * 0.8) * 8 * Math.min(ratio, 1.5)}`).join(' ')}
             fill="none"
             stroke="#4ade80"
             strokeWidth="2"
@@ -542,9 +546,9 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
         )}
 
         {/* Transformer Type Badge */}
-        <rect x={width/2 - 50} y={height - 55} width="100" height="30" rx="6" fill={colors.bgSecondary} stroke={ratio > 1 ? '#22c55e' : ratio < 1 ? '#f97316' : '#3b82f6'} strokeWidth="2" />
-        <text x={width/2} y={height - 41} textAnchor="middle" fill={colors.textSecondary} fontSize="11">Type</text>
-        <text x={width/2} y={height - 29} textAnchor="middle" fill={ratio > 1 ? '#4ade80' : ratio < 1 ? '#fb923c' : '#60a5fa'} fontSize="11" fontWeight="700">
+        <rect x={width/2 - 50} y={height - 60} width="100" height="42" rx="6" fill={colors.bgSecondary} stroke={ratio > 1 ? '#22c55e' : ratio < 1 ? '#f97316' : '#3b82f6'} strokeWidth="2" />
+        <text x={width/2} y={height - 46} textAnchor="middle" fill={colors.textSecondary} fontSize="11">Type</text>
+        <text x={width/2} y={height - 24} textAnchor="middle" fill={ratio > 1 ? '#4ade80' : ratio < 1 ? '#fb923c' : '#60a5fa'} fontSize="11" fontWeight="700">
           {ratio > 1 ? 'STEP-UP' : ratio < 1 ? 'STEP-DOWN' : 'ISOLATION'}
         </text>
 
@@ -1159,7 +1163,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
             padding: '16px',
             marginBottom: '24px',
           }}>
-            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '8px' }}>
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '8px' }}>
               💡 Why This Matters
             </h3>
             <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
@@ -1374,11 +1378,26 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <p style={{ ...typo.body, color: colors.textSecondary }}>
-              DC = Direct Current (constant, like a battery)
-              <br />
-              AC = Alternating Current (oscillating, like wall outlet)
-            </p>
+            <svg width="320" height="160" viewBox="0 0 320 160" style={{ borderRadius: '8px', background: colors.bgPrimary }}>
+              {/* Background spanning path for AC vs DC comparison */}
+              <path
+                d={`M 20 ${160 * 0.1} L 40 ${160 * 0.9} L 60 ${160 * 0.1} L 80 ${160 * 0.9} L 100 ${160 * 0.1} L 120 ${160 * 0.9} L 140 ${160 * 0.1} L 160 ${160 * 0.9} L 180 ${160 * 0.1} L 200 ${160 * 0.5}`}
+                fill="none" stroke="#3b82f6" strokeWidth="1" opacity="0.15"
+              />
+              {/* AC waveform label */}
+              <text x="160" y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">AC vs DC Input</text>
+              {/* AC wave */}
+              <text x="30" y="50" textAnchor="middle" fill="#f87171" fontSize="11">AC</text>
+              <path
+                d={`M 60 ${80} L 80 ${40} L 100 ${80} L 120 ${120} L 140 ${80} L 160 ${40} L 180 ${80}`}
+                fill="none" stroke="#f87171" strokeWidth="2"
+              />
+              <text x="200" y="84" fill="#f87171" fontSize="11">~oscillates</text>
+              {/* DC line */}
+              <text x="30" y="130" textAnchor="middle" fill="#60a5fa" fontSize="11">DC</text>
+              <line x1="60" y1="130" x2="180" y2="130" stroke="#60a5fa" strokeWidth="2" />
+              <text x="200" y="134" fill="#60a5fa" fontSize="11">=constant</text>
+            </svg>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>

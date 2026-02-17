@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MPPT (Maximum Power Point Tracking) - Complete 10-Phase Game
@@ -310,7 +310,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
+    textSecondary: '#C4CDD6',
     textMuted: '#6B7280',
     border: '#2a2a3a',
   };
@@ -331,7 +331,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Temperature Lab',
+    twist_play: 'Twist Experiment',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -384,7 +384,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
     return { voltage: mppVoltage, power: maxPower, current: calculateIV(mppVoltage) };
   }, [calculateIV]);
 
-  const mpp = findMPP();
+  const mpp = useMemo(() => findMPP(), [findMPP]);
 
   // Current operating point
   const currentCurrent = calculateIV(operatingVoltage);
@@ -446,7 +446,24 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
     const mppY = padding.top + plotHeight - (mpp.current / 10) * plotHeight;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="ivCurveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#60A5FA" stopOpacity="0.4" />
+          </linearGradient>
+          <linearGradient id="powerCurveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#FBBF24" stopOpacity="0.3" />
+          </linearGradient>
+          <filter id="mppGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
         {/* Grid lines */}
         {[0, 0.25, 0.5, 0.75, 1].map(frac => (
           <g key={`grid-${frac}`}>
@@ -486,7 +503,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
         {/* MPP marker */}
         {showMPP && (
           <g>
-            <circle cx={mppX} cy={mppY} r="8" fill={colors.success} stroke="white" strokeWidth="2" />
+            <circle cx={mppX} cy={mppY} r="8" fill={colors.success} stroke="white" strokeWidth="2" filter="url(#mppGlow)" />
             <text x={mppX + 12} y={mppY - 8} fill={colors.success} fontSize="11" fontWeight="600">
               MPP: {mpp.power.toFixed(0)}W
             </text>
@@ -513,18 +530,23 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
         {/* Legend */}
         <g transform={`translate(${padding.left + 10}, ${padding.top + 10})`}>
           <rect x="0" y="0" width="12" height="3" fill="#3B82F6" />
-          <text x="18" y="4" fill={colors.textSecondary} fontSize="10">I-V Curve</text>
-          <rect x="0" y="12" width="12" height="3" fill="#F59E0B" opacity="0.6" />
-          <text x="18" y="16" fill={colors.textSecondary} fontSize="10">Power</text>
+          <text x="18" y="4" fill={colors.textSecondary} fontSize="11">I-V Curve</text>
+          <rect x="0" y="18" width="12" height="3" fill="#F59E0B" opacity="0.6" />
+          <text x="18" y="22" fill={colors.textSecondary} fontSize="11">Power</text>
         </g>
 
         {/* Formula (if enabled) */}
         {showFormula && (
-          <g transform={`translate(${width - padding.right - 85}, ${padding.top + 10})`}>
-            <text fill={colors.textSecondary} fontSize="11" fontFamily="monospace">
-              <tspan x="0" y="0">P = V × I</tspan>
-            </text>
-          </g>
+          <text
+            x={padding.left + plotWidth - 10}
+            y={padding.top + plotHeight - 10}
+            fill={colors.textSecondary}
+            fontSize="11"
+            fontFamily="monospace"
+            textAnchor="end"
+          >
+            P = V × I
+          </text>
         )}
       </svg>
     );
@@ -595,7 +617,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        zIndex: 50,
+        zIndex: 100,
       }}>
         <button
           onClick={() => canGoBack && goToPhase(phaseOrder[currentIndex - 1])}
@@ -668,6 +690,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
         justifyContent: 'center',
         padding: '24px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -704,7 +727,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
             "Every solar panel has a sweet spot—a specific voltage where it produces maximum power. Miss it, and you leave watts on the table."
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+          <p style={{ ...typo.small, color: 'rgba(107, 114, 128, 0.7)', marginTop: '8px' }}>
             — Solar Engineering Principle
           </p>
         </div>
@@ -916,7 +939,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
               marginBottom: '16px',
             }}>
               <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-                💡 <strong>Watch for:</strong> The power value peaks at a specific voltage—not at the maximum voltage!
+                💡 <strong>Watch for:</strong> When you increase voltage beyond the optimal point, current drops rapidly—this causes power to decrease. MPPT technology is important in real-world solar applications because it enables panels to always operate at peak efficiency.
               </p>
             </div>
 
@@ -970,7 +993,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
                     opacity: mpptEnabled ? 0.5 : 1,
                     WebkitAppearance: 'none',
                     appearance: 'none',
-                    touchAction: 'none',
+                    touchAction: 'pan-y',
                   }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1124,8 +1147,11 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
               <p style={{ marginBottom: '16px' }}>
                 At <span style={{ color: colors.accent }}>high voltage</span>: Current drops rapidly, so V×I becomes small again.
               </p>
-              <p>
+              <p style={{ marginBottom: '16px' }}>
                 The <span style={{ color: colors.success, fontWeight: 600 }}>Maximum Power Point (MPP)</span> is where the product V×I reaches its peak—typically around 80% of the open circuit voltage.
+              </p>
+              <p style={{ color: colors.accent }}>
+                Your prediction was correct if you identified this sweet spot! As you observed in the experiment, operating away from the MPP wastes significant power.
               </p>
             </div>
           </div>
@@ -1367,7 +1393,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
                     cursor: 'pointer',
                     WebkitAppearance: 'none',
                     appearance: 'none',
-                    touchAction: 'none',
+                    touchAction: 'pan-y',
                   }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1396,7 +1422,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
                     cursor: 'pointer',
                     WebkitAppearance: 'none',
                     appearance: 'none',
-                    touchAction: 'none',
+                    touchAction: 'pan-y',
                   }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1549,9 +1575,12 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
           paddingRight: '24px',
         }}>
           <div style={{ maxWidth: '800px', margin: '16px auto 0' }}>
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
             </h2>
+            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '16px' }}>
+              App {selectedApp + 1} of {realWorldApps.length} — {completedApps.filter(Boolean).length} of {realWorldApps.length} explored
+            </p>
 
             {/* App selector */}
             <div style={{
@@ -1657,6 +1686,22 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
                 ))}
               </div>
             </div>
+
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                const nextApp = (selectedApp + 1) % realWorldApps.length;
+                if (!newCompleted.every(c => c)) {
+                  setSelectedApp(nextApp);
+                }
+              }}
+              style={{ ...primaryButtonStyle, width: '100%', marginBottom: '12px' }}
+            >
+              Got It — Continue →
+            </button>
 
             {allAppsCompleted && (
               <button
@@ -1810,22 +1855,23 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
                 }}
               >
                 <span style={{
-                  display: 'inline-block',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   width: '24px',
                   height: '24px',
                   borderRadius: '50%',
                   background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
                   color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '24px',
                   marginRight: '10px',
                   fontSize: '12px',
                   fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
+                  flexShrink: 0,
+                }} aria-hidden="true">
+                  ●
                 </span>
                 <span style={{ color: colors.textPrimary, ...typo.small }}>
-                  {opt.label}
+                  {opt.id.toUpperCase()}) {opt.label}
                 </span>
               </button>
             ))}

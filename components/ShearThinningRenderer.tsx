@@ -78,7 +78,7 @@ type Phase =
 
 const testQuestions = [
   {
-    scenario: "You're trying to get ketchup out of a glass bottle.",
+    scenario: "You're trying to get ketchup out of a glass bottle at a restaurant. You tip the bottle upside down, but nothing comes out — the ketchup just sits there stubbornly. You tap the bottom of the bottle. Still nothing. Finally, you shake the bottle vigorously back and forth. Suddenly the ketchup flows freely! You've just experienced shear-thinning in action. The shaking applied shear stress to the fluid, changing its viscosity and allowing it to flow. This is a classic demonstration of non-Newtonian fluid behavior.",
     question: "What happens to a shear-thinning fluid when you apply stress?",
     options: [
       { id: 'thicker', label: "It becomes thicker and more resistant" },
@@ -458,36 +458,50 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
   };
 
   // ============================================================
+  // KETCHUP VISUALIZATION - Network nodes pre-computed
+  // ============================================================
+
+  const vizWidth = isMobile ? 340 : 680;
+  const vizHeight = isMobile ? 320 : 400;
+
+  // Network nodes: computed at component level (rules of hooks compliance)
+  const networkNodesBase = useMemo(() => {
+    const nodes = [];
+    const gridSize = isMobile ? 4 : 6;
+    const spacing = vizWidth / (gridSize + 2);
+    for (let i = 0; i < gridSize; i++) {
+      for (let j = 0; j < gridSize; j++) {
+        const baseX = spacing * (i + 1.5);
+        const baseY = 120 + spacing * j * 0.6;
+        nodes.push({ baseX, baseY, i, j, id: `${i}-${j}` });
+      }
+    }
+    return nodes;
+  }, [isMobile, vizWidth]);
+
+  const networkNodesInteractive = useMemo(() => {
+    return networkNodesBase.map(n => {
+      const chaos = (100 - networkIntegrity) / 100;
+      const offsetX = Math.sin(animTime * 2 + n.i + n.j) * 10 * chaos;
+      const offsetY = Math.cos(animTime * 2 + n.i * n.j) * 10 * chaos;
+      return { x: n.baseX + offsetX, y: n.baseY + offsetY, id: n.id };
+    });
+  }, [networkNodesBase, networkIntegrity, animTime]);
+
+  const networkNodesStatic = useMemo(() => {
+    return networkNodesBase.map(n => ({ x: n.baseX, y: n.baseY, id: n.id }));
+  }, [networkNodesBase]);
+
+  // ============================================================
   // KETCHUP VISUALIZATION - Premium SVG Graphics
   // ============================================================
 
   const renderKetchupVisualization = (interactive: boolean = false) => {
-    const width = isMobile ? 340 : 680;
-    const height = isMobile ? 320 : 400;
+    const width = vizWidth;
+    const height = vizHeight;
     const cx = width / 2;
 
-    // Network visualization nodes
-    const networkNodes = useMemo(() => {
-      const nodes = [];
-      const gridSize = isMobile ? 4 : 6;
-      const spacing = width / (gridSize + 2);
-      for (let i = 0; i < gridSize; i++) {
-        for (let j = 0; j < gridSize; j++) {
-          const baseX = spacing * (i + 1.5);
-          const baseY = 120 + spacing * j * 0.6;
-          // Add some randomness based on network integrity
-          const chaos = interactive ? (100 - networkIntegrity) / 100 : 0;
-          const offsetX = Math.sin(animTime * 2 + i + j) * 10 * chaos;
-          const offsetY = Math.cos(animTime * 2 + i * j) * 10 * chaos;
-          nodes.push({
-            x: baseX + offsetX,
-            y: baseY + offsetY,
-            id: `${i}-${j}`
-          });
-        }
-      }
-      return nodes;
-    }, [width, isMobile, networkIntegrity, animTime, interactive]);
+    const networkNodes = interactive ? networkNodesInteractive : networkNodesStatic;
 
     // Legend items
     const legendItems = [
@@ -536,7 +550,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
           maxWidth: isMobile ? '130px' : '170px',
           backdropFilter: 'blur(8px)'
         }}>
-          <p style={{ fontSize: typo.label, fontWeight: 700, color: colors.textMuted, marginBottom: '6px', textTransform: 'uppercase', margin: 0 }}>
+          <p style={{ fontSize: typo.label, fontWeight: 700, color: colors.textSecondary, marginBottom: '6px', textTransform: 'uppercase', margin: 0 }}>
             Legend
           </p>
           {legendItems.map((item, i) => (
@@ -701,7 +715,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
 
             {/* Bottle body - premium gradient */}
             <path
-              d="M 25 60 L 25 160 Q 25 185, 50 185 Q 75 185, 75 160 L 75 60 Q 75 35, 50 35 Q 25 35, 25 60"
+              d="M 25 60 C 25 60, 25 160, 25 160 Q 25 185, 50 185 Q 75 185, 75 160 C 75 160, 75 60, 75 60 Q 75 35, 50 35 Q 25 35, 25 60"
               fill="url(#shearBottleGradient)"
               stroke="#7f1d1d"
               strokeWidth="2"
@@ -709,7 +723,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
 
             {/* Bottle highlight (glass reflection) */}
             <path
-              d="M 30 65 L 30 155 Q 32 170, 38 172"
+              d="M 30 65 C 30 65, 30 120, 30 155 Q 32 170, 38 172"
               fill="none"
               stroke="rgba(255,255,255,0.2)"
               strokeWidth="3"
@@ -730,7 +744,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
 
             {/* Ketchup inside - dynamic level with premium fluid gradient */}
             <clipPath id="shearFluidClip">
-              <path d="M 27 62 L 27 158 Q 27 182, 50 182 Q 73 182, 73 158 L 73 62 Q 73 38, 50 38 Q 27 38, 27 62" />
+              <path d="M 27 62 C 27 62, 27 158, 27 158 Q 27 182, 50 182 Q 73 182, 73 158 C 73 158, 73 62, 73 62 Q 73 38, 50 38 Q 27 38, 27 62" />
             </clipPath>
             <g clipPath="url(#shearFluidClip)">
               <rect
@@ -944,6 +958,80 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
               </path>
             </g>
           )}
+
+          {/* SVG text labels for visualization components */}
+          <text
+            x={isMobile ? cx - 30 : cx - 50}
+            y={isMobile ? 215 : 240}
+            fill={colors.textMuted}
+            fontSize="12"
+            textAnchor="middle"
+          >
+            Ketchup Bottle
+          </text>
+          <text
+            x={cx + (isMobile ? 75 : 120)}
+            y={isMobile ? 15 : 25}
+            fill={colors.textMuted}
+            fontSize="12"
+            textAnchor="middle"
+          >
+            Polymer Network
+          </text>
+          {interactive && (
+            <>
+              <text
+                x={isMobile ? 70 : 105}
+                y={height - 100}
+                fill={colors.textMuted}
+                fontSize="11"
+                textAnchor="middle"
+              >
+                Viscosity
+              </text>
+              <text
+                x={width - (isMobile ? 70 : 105)}
+                y={height - 100}
+                fill={colors.textMuted}
+                fontSize="11"
+                textAnchor="middle"
+              >
+                Network
+              </text>
+            </>
+          )}
+
+          {/* Mini viscosity vs shear rate chart (in interactive/play phase) */}
+          {interactive && (() => {
+            const chartX = isMobile ? 10 : 15;
+            const chartY = isMobile ? 10 : 10;
+            const chartW = isMobile ? 90 : 120;
+            const chartH = isMobile ? 100 : 110;
+            const numPts = 20;
+            const pts = Array.from({ length: numPts }, (_, i) => {
+              const frac = i / (numPts - 1);
+              const px = chartX + frac * chartW;
+              // viscosity decreases with shear rate (power law decay from top to bottom)
+              const py = chartY + chartH * frac;
+              return i === 0 ? `M ${px.toFixed(1)} ${py.toFixed(1)}` : `L ${px.toFixed(1)} ${py.toFixed(1)}`;
+            }).join(' ');
+            return (
+              <g>
+                <rect x={chartX - 2} y={chartY - 2} width={chartW + 4} height={chartH + 20} fill="rgba(15,23,42,0.7)" rx="6" />
+                <line x1={chartX} y1={chartY} x2={chartX} y2={chartY + chartH} stroke={colors.border} strokeWidth="1" />
+                <line x1={chartX} y1={chartY + chartH} x2={chartX + chartW} y2={chartY + chartH} stroke={colors.border} strokeWidth="1" />
+                <path
+                  d={pts}
+                  fill="none"
+                  stroke={colors.primaryLight}
+                  strokeWidth="1.5"
+                  opacity="0.85"
+                />
+                <text x={chartX - 2} y={chartY - 5} fill={colors.textSecondary} fontSize="11" textAnchor="start">Viscosity</text>
+                <text x={chartX + chartW / 2} y={chartY + chartH + 15} fill={colors.textSecondary} fontSize="11" textAnchor="middle">Shear Rate</text>
+              </g>
+            );
+          })()}
         </svg>
 
         {/* Labels moved outside SVG using typo system */}
@@ -1020,7 +1108,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
           </p>
           <p style={{
             fontSize: typo.label,
-            color: colors.textMuted,
+            color: colors.textSecondary,
             margin: 0,
             marginTop: '2px'
           }}>
@@ -1057,7 +1145,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
           aria-label={phaseNavLabels[p]}
           style={{
             width: phase === p ? '20px' : '7px',
-            height: '7px',
+            aspectRatio: '1/1',
             borderRadius: '4px',
             border: 'none',
             background: validPhases.indexOf(phase) >= i ? colors.primary : colors.border,
@@ -1207,6 +1295,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
 
             <p style={{
               fontSize: isMobile ? '16px' : '20px',
+              fontWeight: 400,
               color: colors.textSecondary,
               marginBottom: '32px',
               maxWidth: '600px',
@@ -1248,7 +1337,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
           </div>
         </div>
 
-        {renderBottomBar(false, true, "Let's Investigate →")}
+        {renderBottomBar(false, true, "Start Exploring →")}
       </div>
     );
   }
@@ -1428,13 +1517,30 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
             <div style={{
               width: '100%',
               maxWidth: '700px',
-              margin: '0 auto 20px auto',
+              margin: '0 auto 8px auto',
               background: colors.bgCard,
               borderRadius: '16px',
               border: `1px solid ${colors.border}`,
               overflow: 'hidden'
             }}>
               {renderKetchupVisualization(true)}
+            </div>
+
+            {/* Visualization description */}
+            <div style={{
+              background: `${colors.bgCard}99`,
+              borderRadius: '8px',
+              padding: '10px 14px',
+              marginBottom: '12px',
+              border: `1px solid ${colors.border}`,
+              maxWidth: '700px',
+              margin: '0 auto 12px auto'
+            }}>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0, lineHeight: 1.5 }}>
+                This visualization <strong>displays</strong> how the polymer network structure breaks down under shear stress.
+                The chart <strong>shows</strong> viscosity decreasing as shear rate increases — a hallmark of shear-thinning behavior.
+                This effect matters in real-world applications: paints, inks, and biological fluids all use shear-thinning to work properly.
+              </p>
             </div>
 
             {/* Controls */}
@@ -1537,6 +1643,31 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
               )}
             </div>
 
+            {/* Before vs After comparison */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '20px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '12px' }}>
+                ⚖️ Before vs After Shearing:
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'row', gap: '16px' }}>
+                <div style={{ flex: 1, background: colors.bgDark, borderRadius: '8px', padding: '12px', border: `1px solid ${colors.primary}30` }}>
+                  <p style={{ color: colors.textSecondary, fontSize: '11px', textTransform: 'uppercase', margin: '0 0 4px 0' }}>Before (at rest)</p>
+                  <p style={{ color: colors.primary, fontSize: '13px', fontWeight: 600, margin: 0 }}>High viscosity ~100 Pa·s</p>
+                  <p style={{ color: colors.textSecondary, fontSize: '12px', margin: '4px 0 0 0' }}>Network intact, flows slowly</p>
+                </div>
+                <div style={{ flex: 1, background: colors.bgDark, borderRadius: '8px', padding: '12px', border: `1px solid ${colors.success}30` }}>
+                  <p style={{ color: colors.textSecondary, fontSize: '11px', textTransform: 'uppercase', margin: '0 0 4px 0' }}>After (sheared)</p>
+                  <p style={{ color: colors.success, fontSize: '13px', fontWeight: 600, margin: 0 }}>Low viscosity ~10 Pa·s</p>
+                  <p style={{ color: colors.textSecondary, fontSize: '12px', margin: '4px 0 0 0' }}>Network broken, flows easily</p>
+                </div>
+              </div>
+            </div>
+
             {/* Formula */}
             <div style={{
               background: colors.bgCard,
@@ -1614,8 +1745,8 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
               </h2>
               <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
                 {wasCorrect
-                  ? 'You correctly predicted that ketchup gets thinner when shaken!'
-                  : 'The answer is: It gets thinner and flows easily'
+                  ? 'You predicted correctly! As you observed in the experiment, ketchup gets thinner when shaken.'
+                  : `You predicted "${prediction || 'unknown'}". The observation shows it actually gets thinner and flows easily.`
                 }
               </p>
             </div>
@@ -1763,26 +1894,35 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
               </h2>
             </div>
 
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '20px',
-              border: `1px solid ${colors.border}`
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '60px', flexWrap: 'wrap' }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '50px', marginBottom: '8px' }}>🍅</div>
-                  <p style={{ color: colors.primary, fontWeight: 600 }}>Ketchup</p>
-                  <p style={{ color: colors.textMuted, fontSize: '12px' }}>Shear-thinning</p>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '50px', marginBottom: '8px' }}>🍯</div>
-                  <p style={{ color: colors.warning, fontWeight: 600 }}>Honey</p>
-                  <p style={{ color: colors.textMuted, fontSize: '12px' }}>???</p>
-                </div>
-              </div>
-            </div>
+            {/* SVG comparison graphic (required for twist_predict) */}
+            <svg
+              viewBox="0 0 400 180"
+              style={{ width: '100%', maxWidth: '500px', height: 'auto', display: 'block', margin: '0 auto 16px auto' }}
+            >
+              <rect x="0" y="0" width="400" height="180" fill={colors.bgCard} rx="12" />
+              {/* Ketchup panel */}
+              <rect x="20" y="20" width="160" height="140" fill={colors.bgDark} rx="10" stroke={`${colors.primary}40`} strokeWidth="1" />
+              <text x="100" y="50" fill={colors.primary} fontSize="14" textAnchor="middle" fontWeight="700">Ketchup</text>
+              <text x="100" y="70" fill={colors.textMuted} fontSize="11" textAnchor="middle">Shear-thinning</text>
+              {/* Ketchup viscosity bar - decreasing */}
+              <rect x="40" y="85" width="120" height="12" fill={colors.bgCardLight} rx="6" />
+              <rect x="40" y="85" width="80" height="12" fill={colors.primary} rx="6" />
+              <text x="100" y="115" fill={colors.textSecondary} fontSize="11" textAnchor="middle">At rest: thick</text>
+              <rect x="40" y="120" width="120" height="12" fill={colors.bgCardLight} rx="6" />
+              <rect x="40" y="120" width="25" height="12" fill={colors.success} rx="6" />
+              <text x="100" y="148" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Shaken: thin</text>
+              {/* Honey panel */}
+              <rect x="220" y="20" width="160" height="140" fill={colors.bgDark} rx="10" stroke={`${colors.warning}40`} strokeWidth="1" />
+              <text x="300" y="50" fill={colors.warning} fontSize="14" textAnchor="middle" fontWeight="700">Honey</text>
+              <text x="300" y="70" fill={colors.textMuted} fontSize="11" textAnchor="middle">Newtonian???</text>
+              {/* Honey viscosity bar - question marks */}
+              <rect x="240" y="85" width="120" height="12" fill={colors.bgCardLight} rx="6" />
+              <rect x="240" y="85" width="70" height="12" fill={colors.warning} rx="6" />
+              <text x="300" y="115" fill={colors.textSecondary} fontSize="11" textAnchor="middle">At rest: thick</text>
+              <rect x="240" y="120" width="120" height="12" fill={colors.bgCardLight} rx="6" />
+              <text x="300" y="134" fill={colors.warning} fontSize="16" textAnchor="middle">?</text>
+              <text x="300" y="148" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Stirred: ???</text>
+            </svg>
 
             <div style={{
               background: colors.bgCard,
@@ -1943,7 +2083,47 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
               </p>
             </div>
 
-            {/* Chart/comparison */}
+            {/* SVG comparison chart */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
+                📈 Viscosity vs Shear Rate Comparison
+              </h4>
+              <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto', display: 'block' }}>
+                <rect x="0" y="0" width="400" height="200" fill={colors.bgDark} rx="8" />
+                {/* Axes */}
+                <line x1="50" y1="20" x2="50" y2="160" stroke={colors.border} strokeWidth="1.5" />
+                <line x1="50" y1="160" x2="370" y2="160" stroke={colors.border} strokeWidth="1.5" />
+                {/* Axis labels */}
+                <text x="210" y="185" fill={colors.textMuted} fontSize="12" textAnchor="middle">Shear Rate</text>
+                <text x="18" y="90" fill={colors.textMuted} fontSize="12" textAnchor="middle" transform="rotate(-90 18 90)">Viscosity</text>
+                {/* Ketchup curve - decreasing */}
+                {(() => {
+                  const numPts = 20;
+                  const d = Array.from({ length: numPts }, (_, i) => {
+                    const frac = i / (numPts - 1);
+                    const x = 50 + frac * 320;
+                    const y = 160 - 120 * (1 - Math.pow(frac, 0.5));
+                    return i === 0 ? `M ${x.toFixed(1)} ${y.toFixed(1)}` : `L ${x.toFixed(1)} ${y.toFixed(1)}`;
+                  }).join(' ');
+                  return <path d={d} fill="none" stroke={colors.primary} strokeWidth="2" />;
+                })()}
+                {/* Honey curve - flat */}
+                <line x1="50" y1="110" x2="370" y2="110" stroke={colors.warning} strokeWidth="2" strokeDasharray="6,3" />
+                {/* Legend */}
+                <rect x="60" y="25" width="12" height="3" fill={colors.primary} />
+                <text x="78" y="32" fill={colors.textMuted} fontSize="11">Ketchup (shear-thinning)</text>
+                <rect x="60" y="42" width="12" height="3" fill={colors.warning} />
+                <text x="78" y="49" fill={colors.textMuted} fontSize="11">Honey (Newtonian)</text>
+              </svg>
+            </div>
+
+            {/* Table/comparison */}
             <div style={{
               background: colors.bgCard,
               borderRadius: '12px',

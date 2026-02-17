@@ -768,10 +768,10 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
           <rect width={width} height={height} fill="url(#txlnLabGrid)" />
 
           {/* Title banner */}
-          <text x={width/2} y={22} fill={colors.textPrimary} fontSize={16} fontWeight="bold" textAnchor="middle" letterSpacing="1">
+          <text x={width/2} y={18} fill={colors.textPrimary} fontSize={16} fontWeight="bold" textAnchor="middle" letterSpacing="1">
             TRANSMISSION LINE ANALYSIS
           </text>
-          <text x={width/2} y={42} fill={colors.textMuted} fontSize={12} textAnchor="middle">
+          <text x={width/2} y={38} fill={colors.textMuted} fontSize={12} textAnchor="middle">
             Z0 = {characteristicImpedance} Ohm
           </text>
 
@@ -783,8 +783,8 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
 
             {/* Display panel */}
             <rect x="10" y="8" width="80" height="30" rx="4" fill="#030712" stroke="#334155" />
-            <text x="50" y="22" fill="#06b6d4" fontSize="11" textAnchor="middle" fontWeight="bold">SIGNAL GEN</text>
-            <text x="50" y="50" fill="#22d3ee" fontSize="12" textAnchor="middle" fontFamily="monospace">{signalFrequency} MHz</text>
+            <text x="50" y="26" fill="#06b6d4" fontSize="11" textAnchor="middle" fontWeight="bold">SIGNAL GEN</text>
+            <text x="50" y="62" fill="#22d3ee" fontSize="12" textAnchor="middle" fontFamily="monospace">{signalFrequency} MHz</text>
 
             {/* Power indicator */}
             <circle cx="25" cy="65" r="6" fill="url(#txlnPowerGlow)">
@@ -796,7 +796,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
             <circle cx="85" cy="57" r="5" fill="#fbbf24" stroke="#f59e0b" strokeWidth="1" />
 
             {/* Label */}
-            <text x="50" y="-8" fill={colors.textSecondary} fontSize="12" textAnchor="middle" fontWeight="bold">
+            <text x="50" y="-15" fill={colors.textSecondary} fontSize="12" textAnchor="middle" fontWeight="bold">
               SOURCE
             </text>
           </g>
@@ -876,7 +876,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
             )}
 
             {/* Transmission line label */}
-            <text x="180" y="-8" fill={colors.textSecondary} fontSize="12" textAnchor="middle" fontWeight="bold">
+            <text x="180" y="-15" fill={colors.textSecondary} fontSize="12" textAnchor="middle" fontWeight="bold">
               COAXIAL LINE
             </text>
           </g>
@@ -891,10 +891,10 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
 
             {/* Display panel */}
             <rect x="10" y="8" width="80" height="30" rx="4" fill="#030712" stroke="#334155" />
-            <text x="50" y="22" fill={output.isMatched ? "#10b981" : "#ef4444"} fontSize="11" textAnchor="middle" fontWeight="bold">
+            <text x="88" y="26" fill={output.isMatched ? "#10b981" : "#ef4444"} fontSize="11" textAnchor="start" fontWeight="bold">
               LOAD
             </text>
-            <text x="50" y="50" fill={output.isMatched ? "#34d399" : "#fca5a5"} fontSize="12" textAnchor="middle" fontFamily="monospace">
+            <text x="84" y="62" fill={output.isMatched ? "#34d399" : "#fca5a5"} fontSize="12" textAnchor="start" fontFamily="monospace">
               {loadImpedance > 1000 ? 'OPEN' : loadImpedance < 1 ? 'SHORT' : `${loadImpedance} Ohm`}
             </text>
 
@@ -911,7 +911,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
             </g>
 
             {/* Label */}
-            <text x="50" y="-8" fill={colors.textSecondary} fontSize="12" textAnchor="middle" fontWeight="bold">
+            <text x="84" y="-15" fill={colors.textSecondary} fontSize="12" textAnchor="start" fontWeight="bold">
               {output.isMatched ? 'MATCHED' : 'MISMATCHED'}
             </text>
           </g>
@@ -932,8 +932,8 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
             <line x1="20" y1="90" x2="540" y2="90" stroke="#0d9488" strokeWidth="1" strokeOpacity="0.3" strokeDasharray="4 4" />
 
             {/* Screen labels */}
-            <text x="25" y="32" fill="#0d9488" fontSize="11" fontWeight="bold">VOLTAGE</text>
-            <text x="520" y="32" fill="#0d9488" fontSize="11" textAnchor="end">
+            <text x="25" y="45" fill="#0d9488" fontSize="11" fontWeight="bold">VOLTAGE</text>
+            <text x="520" y="45" fill="#0d9488" fontSize="11" textAnchor="end">
               {output.isMatched ? 'NO REFLECTIONS' : `VSWR ${output.vswr.toFixed(1)}:1`}
             </text>
 
@@ -945,7 +945,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
                   const incident = Math.sin(signalPhase - i * 0.08);
                   const reflected = Math.sin(reflectionPhase + i * 0.08) * output.gamma;
                   const combined = incident + reflected;
-                  const y = 90 - combined * 55;
+                  const y = 90 - combined * 65;
                   return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
                 }).join(' ')}
                 fill="none"
@@ -959,7 +959,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
               d={[...Array(260)].map((_, i) => {
                 const x = 20 + i * 2;
                 const incident = Math.sin(signalPhase - i * 0.08);
-                const y = 90 - incident * 40;
+                const y = 90 - incident * 60;
                 return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
               }).join(' ')}
               fill="none"
@@ -969,58 +969,58 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
               strokeDasharray="6,3"
             />
 
-            {/* Interactive current-value marker point */}
-            <circle cx="280" cy="90" r="10" fill="#f59e0b" filter="url(#txlnInteractiveGlow)" opacity="0.9" />
+            {/* Interactive current-value marker point - position reflects gamma value */}
+            <circle cx={280 + output.gamma * 60} cy={90 - output.gamma * 40} r="10" fill="#f59e0b" filter="url(#txlnInteractiveGlow)" opacity="0.9" />
 
             {/* Control panel */}
             <rect x="560" y="10" width="70" height="160" rx="4" fill="#1e293b" stroke="#334155" />
 
-            {/* Metrics display */}
-            <text x="595" y="30" fill={colors.textSecondary} fontSize="11" textAnchor="middle" fontWeight="bold">METRICS</text>
+            {/* Metrics display - stacked label/value pairs to avoid x-overlap */}
+            <text x="595" y="28" fill={colors.textSecondary} fontSize="11" textAnchor="middle" fontWeight="bold">METRICS</text>
 
-            <text x="567" y="52" fill={colors.textSecondary} fontSize="11">Gamma</text>
-            <text x="625" y="52" fill="#22d3ee" fontSize="12" textAnchor="end" fontFamily="monospace">
+            <text x="571" y="44" fill={colors.textSecondary} fontSize="11">Gamma</text>
+            <text x="571" y="57" fill="#22d3ee" fontSize="11" fontFamily="monospace">
               {output.gamma >= 0 ? '+' : ''}{output.gamma.toFixed(3)}
             </text>
 
-            <text x="567" y="76" fill={colors.textSecondary} fontSize="11">VSWR</text>
-            <text x="625" y="76" fill="#22d3ee" fontSize="12" textAnchor="end" fontFamily="monospace">
+            <text x="571" y="74" fill={colors.textSecondary} fontSize="11">VSWR</text>
+            <text x="571" y="87" fill="#22d3ee" fontSize="11" fontFamily="monospace">
               {output.vswr.toFixed(1)}:1
             </text>
 
-            <text x="567" y="100" fill={colors.textSecondary} fontSize="11">R.Loss</text>
-            <text x="625" y="100" fill="#22d3ee" fontSize="12" textAnchor="end" fontFamily="monospace">
+            <text x="571" y="104" fill={colors.textSecondary} fontSize="11">R.Loss</text>
+            <text x="571" y="117" fill="#22d3ee" fontSize="11" fontFamily="monospace">
               {output.returnLoss.toFixed(1)}dB
             </text>
 
-            <text x="567" y="124" fill={colors.textSecondary} fontSize="11">Power</text>
-            <text x="625" y="124" fill={output.powerReflected > 10 ? "#f87171" : "#22d3ee"} fontSize="12" textAnchor="end" fontFamily="monospace">
+            <text x="571" y="134" fill={colors.textSecondary} fontSize="11">Power</text>
+            <text x="571" y="147" fill={output.powerReflected > 10 ? "#f87171" : "#22d3ee"} fontSize="11" fontFamily="monospace">
               {output.powerReflected.toFixed(1)}%
             </text>
 
             {/* Status indicator */}
-            <rect x="565" y="138" width="60" height="22" rx="3"
+            <rect x="562" y="155" width="68" height="16" rx="3"
               fill={output.isMatched ? "rgba(16, 185, 129, 0.2)" : "rgba(239, 68, 68, 0.2)"}
               stroke={output.isMatched ? "#10b981" : "#ef4444"} />
-            <text x="595" y="153" fill={output.isMatched ? "#10b981" : "#ef4444"} fontSize="11" textAnchor="middle" fontWeight="bold">
+            <text x="596" y="167" fill={output.isMatched ? "#10b981" : "#ef4444"} fontSize="11" textAnchor="middle" fontWeight="bold">
               {output.isMatched ? 'MATCH' : 'MISMATCH'}
             </text>
 
             {/* Legend row at bottom */}
-            <g transform="translate(25, 178)">
-              <line x1="0" y1="0" x2="15" y2="0" stroke="#22d3ee" strokeWidth="2" />
-              <text x="20" y="4" fill={colors.textMuted} fontSize="11">Combined</text>
+            <g transform="translate(25, 115)">
+              <line x1="0" y1="67" x2="15" y2="67" stroke="#22d3ee" strokeWidth="2" />
+              <text x="20" y="78" fill={colors.textMuted} fontSize="11">Combined</text>
 
-              <line x1="110" y1="0" x2="125" y2="0" stroke="#3b82f6" strokeWidth="1" strokeDasharray="4,2" />
-              <text x="130" y="4" fill={colors.textMuted} fontSize="11">Incident</text>
+              <line x1="197" y1="67" x2="212" y2="67" stroke="#3b82f6" strokeWidth="1" strokeDasharray="4,2" />
+              <text x="217" y="78" fill={colors.textMuted} fontSize="11">Incident</text>
 
-              <circle cx="220" cy="0" r="4" fill="url(#txlnSignalGlow)" />
-              <text x="230" y="4" fill={colors.textMuted} fontSize="11">Forward</text>
+              <circle cx="373" cy="67" r="4" fill="url(#txlnSignalGlow)" />
+              <text x="378" y="78" fill={colors.textMuted} fontSize="11">Forward</text>
 
               {!output.isMatched && (
                 <>
-                  <circle cx="320" cy="0" r="4" fill="url(#txlnReflectionGlow)" />
-                  <text x="330" y="4" fill={colors.textMuted} fontSize="11">Reflected</text>
+                  <circle cx="470" cy="67" r="4" fill="url(#txlnReflectionGlow)" />
+                  <text x="475" y="78" fill={colors.textMuted} fontSize="11">Reflected</text>
                 </>
               )}
             </g>
@@ -1282,7 +1282,10 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
           padding: '16px',
           borderRadius: '12px',
         }}>
-          <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
+          <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Cause and Effect:</h4>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, marginBottom: '8px' }}>
+            When you <strong style={{ color: colors.textPrimary }}>increase the load impedance</strong> above Z0, the reflection coefficient increases positively — more signal reflects back. When you decrease it below Z0, reflection goes negative (inverted phase). Higher mismatch causes more reflected power, reducing transmitted signal.
+          </p>
           <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
             <li>Match the load to Z0 - watch reflections disappear</li>
             <li>Try open circuit (infinite Z) - see total reflection</li>

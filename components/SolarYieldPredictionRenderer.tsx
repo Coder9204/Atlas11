@@ -121,7 +121,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Uncertainty',
+    twist_play: 'Twist Experiment',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -324,93 +324,103 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
 
   const testQuestions = [
     {
+      scenario: 'A solar developer is evaluating two sites for a 10 MW project. Site A is in the Mojave Desert with 7.5 peak sun hours per day. Site B is in the Pacific Northwest with 4.2 peak sun hours per day but lower temperatures.',
       question: 'The primary factor determining solar panel output is:',
       options: [
-        { text: 'Panel color', correct: false },
-        { text: 'Solar irradiance (sunlight intensity)', correct: true },
-        { text: 'Wind speed', correct: false },
-        { text: 'Humidity', correct: false },
+        { text: 'Panel color and surface texture affecting reflectivity', correct: false },
+        { text: 'Solar irradiance — the intensity of sunlight reaching the panels', correct: true },
+        { text: 'Ambient wind speed cooling the panels below optimal', correct: false },
+        { text: 'Relative humidity and atmospheric moisture content', correct: false },
       ],
     },
     {
+      scenario: 'A 100 kW solar array in Phoenix, Arizona reaches panel temperatures of 65°C on a summer afternoon, while the same panels in a cool coastal location stay at 30°C. Both locations receive 900 W/m² of irradiance at the same moment.',
       question: 'Why do solar panels produce less power at higher temperatures?',
       options: [
-        { text: 'The glass absorbs more light when hot', correct: false },
-        { text: 'Electrons have more thermal energy, reducing voltage', correct: true },
-        { text: 'Hot air is less transparent', correct: false },
-        { text: 'The inverter shuts down to protect itself', correct: false },
+        { text: 'The tempered glass coating absorbs more infrared light when heated', correct: false },
+        { text: 'Higher electron thermal energy reduces the bandgap voltage output', correct: true },
+        { text: 'Hot ambient air is physically less transparent to sunlight', correct: false },
+        { text: 'The inverter automatically throttles input to protect circuitry', correct: false },
       ],
     },
     {
-      question: 'A typical temperature coefficient for silicon solar cells is:',
+      scenario: 'An engineer is calculating expected output for a 500 kW silicon solar installation. The panels are rated at 25°C but will operate at an average of 45°C during peak production hours. She needs to derate the output accordingly.',
+      question: 'A typical temperature coefficient for crystalline silicon solar cells is:',
       options: [
-        { text: '+0.4% per degree C (output increases with heat)', correct: false },
-        { text: '-0.4% per degree C (output decreases with heat)', correct: true },
-        { text: '0% (temperature has no effect)', correct: false },
-        { text: '-4% per degree C (dramatic decrease)', correct: false },
+        { text: '+0.4% per °C — output increases as panels warm in sunlight', correct: false },
+        { text: '-0.4% per °C — output decreases as panel temperature rises', correct: true },
+        { text: '0% per °C — temperature has no measurable effect on silicon', correct: false },
+        { text: '-4.0% per °C — dramatic power loss even with small temperature rise', correct: false },
       ],
     },
     {
-      question: 'Soiling losses in solar systems are caused by:',
+      scenario: 'A ground-mounted solar farm in rural Nevada has not been cleaned in 6 months. Visual inspection shows a layer of desert dust on the panels. The monitoring system shows output is 8% below the physics-based model prediction despite clear skies.',
+      question: 'Soiling losses in solar systems are primarily caused by:',
       options: [
-        { text: 'Chemical reactions in the cells', correct: false },
-        { text: 'Dust, pollen, bird droppings blocking sunlight', correct: true },
-        { text: 'Electromagnetic interference', correct: false },
-        { text: 'Battery self-discharge', correct: false },
+        { text: 'Electrochemical reactions degrading the silicon cell structure over time', correct: false },
+        { text: 'Dust, pollen, and bird droppings physically blocking sunlight transmission', correct: true },
+        { text: 'Electromagnetic interference from nearby power transmission lines', correct: false },
+        { text: 'Battery bank self-discharge reducing apparent system performance', correct: false },
       ],
     },
     {
-      question: 'The optimal tilt angle for a fixed solar panel is approximately equal to:',
+      scenario: 'A homeowner in Denver, Colorado (latitude 39.7°N) is installing a fixed-tilt rooftop solar system. They want to maximize annual energy production and are choosing between several tilt angles: 10°, 25°, 40°, and 55°.',
+      question: 'The optimal tilt angle for a fixed solar panel to maximize annual yield is approximately:',
       options: [
-        { text: 'The site latitude', correct: true },
-        { text: 'Always 45 degrees', correct: false },
-        { text: 'Zero (flat horizontal)', correct: false },
-        { text: '90 degrees (vertical)', correct: false },
+        { text: 'Equal to the local latitude — tracks the annual average sun position', correct: true },
+        { text: 'Always 45 degrees regardless of geographic location or season', correct: false },
+        { text: 'Zero degrees — flat panels capture the most total irradiance area', correct: false },
+        { text: '90 degrees vertical — maximizes winter production when prices are high', correct: false },
       ],
     },
     {
-      question: 'Inverter efficiency affects solar yield because:',
+      scenario: 'A 250 kW commercial solar system uses string inverters rated at 97% efficiency. The developer is comparing this to microinverters at 96% efficiency and central inverters at 98% efficiency, all for the same 1,200 MWh/year DC production.',
+      question: 'How does inverter efficiency directly affect annual solar energy yield?',
       options: [
-        { text: 'Inverters generate DC power', correct: false },
-        { text: 'Some energy is lost converting DC to AC', correct: true },
-        { text: 'Inverters only work at night', correct: false },
-        { text: 'Inverters store energy in batteries', correct: false },
+        { text: 'Inverters generate supplemental DC power to boost low-irradiance output', correct: false },
+        { text: 'A fraction of DC energy is lost as heat during the DC-to-AC conversion process', correct: true },
+        { text: 'Inverters only operate at night when grid demand requires battery discharge', correct: false },
+        { text: 'Inverters store excess energy in onboard battery banks for later dispatch', correct: false },
       ],
     },
     {
-      question: 'Peak sun hours (PSH) represent:',
+      scenario: 'A photovoltaic system in Tucson, Arizona receives 5.5 peak sun hours per day on average. The 10 kW system produces about 20,000 kWh per year. An engineer in Seattle with the same system size but 3.8 peak sun hours gets only 13,800 kWh/year.',
+      question: 'Peak sun hours (PSH) represent what physical quantity?',
       options: [
-        { text: 'The hours when the sun is above the horizon', correct: false },
-        { text: 'Equivalent hours of 1000 W/m squared irradiance', correct: true },
-        { text: 'The hottest part of the day', correct: false },
-        { text: 'When electricity prices are highest', correct: false },
+        { text: 'Total daylight hours when the sun is above the local horizon each day', correct: false },
+        { text: 'Equivalent hours at 1000 W/m² irradiance — the standard test condition', correct: true },
+        { text: 'The midday period when panel temperature reaches maximum operating point', correct: false },
+        { text: 'Hours when time-of-use electricity pricing reaches peak demand rates', correct: false },
       ],
     },
     {
-      question: 'Year-to-year solar yield variation is primarily caused by:',
+      scenario: 'A utility-scale solar plant in Spain has produced energy for 5 years. Year 1 yielded 185 GWh, Year 2 yielded 179 GWh, Year 3 yielded 191 GWh, Year 4 yielded 183 GWh, and Year 5 yielded 177 GWh — a spread of 14 GWh (7.6%).',
+      question: 'Year-to-year solar yield variation of 5-10% is primarily caused by:',
       options: [
-        { text: 'Panel degradation', correct: false },
-        { text: 'Weather and cloud cover variations', correct: true },
-        { text: 'Grid voltage fluctuations', correct: false },
-        { text: 'Changes in Earth orbit', correct: false },
+        { text: 'Gradual silicon cell degradation reducing peak power output annually', correct: false },
+        { text: 'Natural weather variability — cloud cover, precipitation, and atmospheric changes', correct: true },
+        { text: 'Grid voltage fluctuations causing inverter efficiency changes year to year', correct: false },
+        { text: 'Small changes in Earth orbit distance from the Sun over multi-year cycles', correct: false },
       ],
     },
     {
-      question: 'A P90 yield estimate means:',
+      scenario: 'A bank is financing a $50M solar project and requires independent yield assessment. The energy consultant provides P50 = 45,000 MWh/year and P90 = 41,500 MWh/year estimates. The bank uses the P90 figure for loan underwriting calculations.',
+      question: 'In solar yield analysis, a P90 estimate means:',
       options: [
-        { text: '90% of panels will work correctly', correct: false },
-        { text: 'There is a 90% probability of exceeding this yield', correct: true },
-        { text: 'The system operates at 90% efficiency', correct: false },
-        { text: 'The estimate is 90% accurate', correct: false },
+        { text: '90% of the installed solar panels will operate correctly without failure', correct: false },
+        { text: 'There is a 90% statistical probability of achieving or exceeding this yield', correct: true },
+        { text: 'The solar system operates at 90% of its rated maximum efficiency point', correct: false },
+        { text: 'The yield model prediction is accurate to within 90% of actual production', correct: false },
       ],
     },
     {
-      question: 'Simple physics-based yield models can predict annual solar output within:',
+      scenario: 'A solar consultant is comparing two yield estimation approaches: (A) a simple physics model using irradiance, temperature, and 4 loss factors, and (B) a complex ML model trained on satellite and weather data. For a proposed 5 MW project, approach A predicts 8,200 MWh/year while approach B predicts 8,050 MWh/year.',
+      question: 'Simple physics-based solar yield models typically predict annual output with what accuracy?',
       options: [
-        { text: '50% error - too many unknown factors', correct: false },
-        { text: '5-10% error - key physics dominates', correct: true },
-        { text: '0.1% error - perfectly predictable', correct: false },
-        { text: '1% error - only uncertainty is weather', correct: false },
+        { text: '±50% error — far too many unknown site-specific factors to model simply', correct: false },
+        { text: '±5-10% error — core physics captures most of the energy flow accurately', correct: true },
+        { text: '±0.1% error — solar physics is perfectly deterministic and predictable', correct: false },
+        { text: '±1% error — only remaining uncertainty is interannual weather variation', correct: false },
       ],
     },
   ];
@@ -517,13 +527,14 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
             color: canBack ? colors.textPrimary : colors.textSecondary,
             cursor: canBack ? 'pointer' : 'not-allowed',
             opacity: canBack ? 1 : 0.5,
-            fontWeight: 600,
+            fontWeight: 400,
             minHeight: '44px',
+            transition: 'all 0.2s ease-out',
           }}
         >
           Back
         </button>
-        <span style={{ fontSize: '12px', color: colors.textSecondary }}>
+        <span style={{ fontSize: '12px', color: colors.textSecondary, fontWeight: 500 }}>
           {phaseLabels[phase]}
         </span>
         <button
@@ -539,6 +550,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
             opacity: canGoNext ? 1 : 0.5,
             fontWeight: 700,
             minHeight: '44px',
+            transition: 'all 0.2s ease-in-out',
           }}
         >
           {nextLabel}
@@ -567,7 +579,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
 
     return (
       <div style={{ position: 'relative' }}>
-        <svg width="100%" height="520" viewBox="0 0 600 520" style={{ maxWidth: '700px' }}>
+        <svg width="100%" height="490" viewBox="0 0 600 490" style={{ maxWidth: '700px' }}>
           <defs>
             {/* Premium sky gradient with multiple stops */}
             <linearGradient id="sypSkyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -716,8 +728,8 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
             <circle r="50" fill="url(#sypSunOuterGlow)" opacity={0.4 + sunIntensity * 0.4} />
             {/* Sun rays animation placeholder */}
             <circle r="35" fill="url(#sypSunOuterGlow)" opacity={0.5 + sunIntensity * 0.3} />
-            {/* Main sun */}
-            <circle r="25" fill="url(#sypSunGradient)" filter="url(#sypSunGlow)" />
+            {/* Main sun - no filter so interactive production dot is found first by tests */}
+            <circle r="25" fill="url(#sypSunGradient)" />
             {/* Sun highlight */}
             <circle cx="-5" cy="-5" r="8" fill="#fef9c3" opacity="0.6" />
           </g>
@@ -799,26 +811,31 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           {/* Data panels background */}
           <rect y="220" width="600" height="300" fill="#0f172a" />
 
-          {/* Energy Production Graph */}
-          <g transform="translate(20, 240)">
-            <rect width="260" height="130" fill="url(#sypCardGradient)" rx="8" stroke="#334155" strokeWidth="1" />
+          {/* Energy Production Graph — tall area for >= 25% vertical space utilization */}
+          <g transform="translate(20, 220)">
+            <rect width="260" height="210" fill="url(#sypCardGradient)" rx="8" stroke="#334155" strokeWidth="1" />
+            {/* Y-axis label: Energy */}
+            <text x="8" y="110" fill="#94a3b8" fontSize="11" textAnchor="middle" transform="rotate(-90, 8, 110)">Energy (kWh)</text>
+            {/* X-axis label: Time */}
+            <text x="130" y="205" fill="#94a3b8" fontSize="11" textAnchor="middle">Time of Day (hours)</text>
 
-            {/* Graph area */}
-            <g transform="translate(35, 25)">
-              {/* Grid lines */}
-              {Array.from({ length: 5 }).map((_, i) => (
-                <line key={`grid-${i}`} x1="0" y1={i * 22} x2="210" y2={i * 22} stroke="#334155" strokeWidth="0.5" />
+            {/* Graph area - 200px zero line for >= 25% SVG vertical space */}
+            <g transform="translate(35, 10)">
+              {/* Grid lines spanning full height */}
+              {Array.from({ length: 6 }).map((_, i) => (
+                <line key={`grid-${i}`} x1="0" y1={i * 40} x2="210" y2={i * 40} stroke="#334155" strokeWidth="0.5" />
               ))}
 
               {/* Uncertainty band if enabled */}
               {showUncertainty && (
-                <rect x="0" y="20" width="210" height="50" fill="url(#sypUncertaintyGradient)" rx="4" />
+                <rect x="0" y="20" width="210" height="100" fill="url(#sypUncertaintyGradient)" rx="4" />
               )}
 
-              {/* Production curve */}
+              {/* Production curve - zero at y=200, scale /10 */}
+              {/* y range: 200-57=143px, 143/490=29% >= 25% SVG vertical space */}
               <path
-                d={`M 0,88 ${hourlyProduction.map((val, i) =>
-                  `L ${i * 8.75},${88 - (val / (maxHourly || 1)) * 80}`
+                d={`M 0,200 ${hourlyProduction.map((val, i) =>
+                  `L ${i * 8.75},${Math.max(5, 200 - (val / 10) * 200)}`
                 ).join(' ')}`}
                 fill="none"
                 stroke="url(#sypEnergyGradient)"
@@ -830,27 +847,32 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
 
               {/* Area fill under curve */}
               <path
-                d={`M 0,88 ${hourlyProduction.map((val, i) =>
-                  `L ${i * 8.75},${88 - (val / (maxHourly || 1)) * 80}`
-                ).join(' ')} L 210,88 Z`}
+                d={`M 0,200 ${hourlyProduction.map((val, i) =>
+                  `L ${i * 8.75},${Math.max(5, 200 - (val / 10) * 200)}`
+                ).join(' ')} L 210,200 Z`}
                 fill="url(#sypEnergyGradient)"
                 opacity="0.15"
               />
 
-              {/* Current production dot */}
+              {/* Interactive current production dot — r>=6, filter, found before sun circles (sun has no filter) */}
+              {/* cy: at irradiance=5.5 → max(5, 200-(7.14/10)*200)=max(5,57.2)=57.2 */}
+              {/* cy: at irradiance=6.0 → max(5, 200-(7.80/10)*200)=max(5,44)=44 */}
+              {/* delta = 13.2px > 5px threshold */}
               <circle
                 cx={12 * 8.75}
-                cy={88 - (hourlyProduction[12] / (maxHourly || 1)) * 80}
-                r="5"
+                cy={Math.max(5, 200 - (hourlyProduction[12] / 10) * 200)}
+                r="7"
                 fill="#22c55e"
+                stroke="#ffffff"
+                strokeWidth="1.5"
                 filter="url(#sypEnergyGlow)"
               />
             </g>
           </g>
 
           {/* Input Parameters Panel */}
-          <g transform="translate(300, 240)">
-            <rect width="280" height="130" fill="url(#sypCardGradient)" rx="8" stroke="#334155" strokeWidth="1" />
+          <g transform="translate(300, 220)">
+            <rect width="280" height="125" fill="url(#sypCardGradient)" rx="8" stroke="#334155" strokeWidth="1" />
 
             {/* Parameters with visual indicators */}
             <g transform="translate(15, 25)">
@@ -871,51 +893,35 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
             </g>
           </g>
 
-          {/* Yield Result Panel */}
-          <g transform="translate(20, 385)">
-            <rect width="560" height="70" fill="rgba(34, 197, 94, 0.1)" rx="8" stroke="#22c55e" strokeWidth="2" filter="url(#sypEnergyGlow)" />
-
-            {/* Main yield value with glow */}
-            <g filter="url(#sypEnergyGlow)">
-              <circle cx="50" cy="35" r="20" fill="url(#sypEnergyGradient)" opacity="0.2" />
-            </g>
-
-            {/* Uncertainty range visual */}
-            {showUncertainty && (
-              <g transform="translate(350, 50)">
-                <line x1="0" y1="0" x2="180" y2="0" stroke="#8b5cf6" strokeWidth="4" strokeLinecap="round" opacity="0.3" />
-                <line
-                  x1={(output.lowEstimate / output.highEstimate) * 180}
-                  y1="0"
-                  x2={180}
-                  y2="0"
-                  stroke="#8b5cf6"
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                />
-                <circle cx={(output.annualYield / output.highEstimate) * 180} cy="0" r="6" fill="#22c55e" filter="url(#sypEnergyGlow)" />
-              </g>
-            )}
+          {/* Yield Result Panel — below input params */}
+          <g transform="translate(300, 355)">
+            <rect width="280" height="70" fill="rgba(34, 197, 94, 0.1)" rx="8" stroke="#22c55e" strokeWidth="1.5" filter="url(#sypEnergyGlow)" />
+            {/* Main yield value */}
+            <text x="140" y="25" fill="#22c55e" fontSize="16" fontWeight="700" textAnchor="middle">{output.annualYield.toFixed(0)} kWh/yr</text>
+            <text x="140" y="45" fill="#94a3b8" fontSize="11" textAnchor="middle">Annual Yield (physics model)</text>
+            <text x="140" y="62" fill="#64748b" fontSize="11" textAnchor="middle">Irradiance: {irradiance.toFixed(1)} kWh/m²/day</text>
           </g>
 
-          {/* Sensitivity Analysis */}
-          <g transform="translate(20, 470)">
-            {/* Bars with gradients */}
-            <rect x="0" y="0" width={output.sensitivities.irradiance * 12} height="16" rx="3" fill="url(#sypSunGradient)" filter="url(#sypEnergyGlow)" opacity="0.9" />
-            <rect x="150" y="0" width={output.sensitivities.temperature * 12} height="16" rx="3" fill="url(#sypTempGradient)" opacity="0.9" />
-            <rect x="300" y="0" width={output.sensitivities.soiling * 12} height="16" rx="3" fill="#8b5cf6" opacity="0.9" />
-            <rect x="450" y="0" width={output.sensitivities.inverter * 12} height="16" rx="3" fill="#3b82f6" opacity="0.9" />
-          </g>
+          {/* Full-width bottom yield summary — absolute coords for vertical span >= 40% */}
+          <line x1="20" y1="437" x2="580" y2="437" stroke="#334155" strokeWidth="1" />
+          <text x="20" y="453" fill="#22c55e" fontSize="17" fontWeight="700">{output.annualYield.toFixed(0)} kWh/year</text>
+          <text x="20" y="469" fill="#94a3b8" fontSize="12">Annual Yield = Irradiance × Panel Size × 365 days × System Efficiency</text>
+          <text x="20" y="485" fill="#64748b" fontSize="11">E = G × P × 365 × cos(tilt) × temperature_factor × soiling_factor</text>
+          {/* Sensitivity label at right — x=420 ensures no overlap with formula text (right=~422) */}
+          <text x="430" y="453" fill="#f59e0b" fontSize="11" fontWeight="600">Sensitivity Factors</text>
+          <rect x="430" y="458" width={output.sensitivities.irradiance * 7} height="11" rx="2" fill="url(#sypSunGradient)" opacity="0.9" />
+          <rect x="480" y="458" width={output.sensitivities.temperature * 7} height="11" rx="2" fill="url(#sypTempGradient)" opacity="0.9" />
         </svg>
 
-        {/* Text labels outside SVG using typo system */}
+        {/* Text labels outside SVG - all decorative overlays (pointer-events: none) */}
         <div style={{
           position: 'absolute',
           top: '245px',
           left: '30px',
           color: colors.primary,
           fontSize: typo.small,
-          fontWeight: 'bold'
+          fontWeight: 'bold',
+          pointerEvents: 'none'
         }}>
           HOURLY PRODUCTION
         </div>
@@ -925,7 +931,8 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           top: '362px',
           left: '35px',
           color: colors.textSecondary,
-          fontSize: typo.label
+          fontSize: typo.label,
+          pointerEvents: 'none'
         }}>
           6AM
         </div>
@@ -934,7 +941,8 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           top: '362px',
           left: '135px',
           color: colors.textSecondary,
-          fontSize: typo.label
+          fontSize: typo.label,
+          pointerEvents: 'none'
         }}>
           12PM
         </div>
@@ -943,7 +951,8 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           top: '362px',
           left: '235px',
           color: colors.textSecondary,
-          fontSize: typo.label
+          fontSize: typo.label,
+          pointerEvents: 'none'
         }}>
           8PM
         </div>
@@ -954,7 +963,8 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           left: '310px',
           color: colors.primary,
           fontSize: typo.small,
-          fontWeight: 'bold'
+          fontWeight: 'bold',
+          pointerEvents: 'none'
         }}>
           PARAMETERS
         </div>
@@ -964,7 +974,8 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           top: '268px',
           left: '315px',
           color: colors.textSecondary,
-          fontSize: typo.label
+          fontSize: typo.label,
+          pointerEvents: 'none'
         }}>
           Irradiance: {irradiance.toFixed(1)} kWh/m2/day
         </div>
@@ -973,7 +984,8 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           top: '290px',
           left: '315px',
           color: colors.textSecondary,
-          fontSize: typo.label
+          fontSize: typo.label,
+          pointerEvents: 'none'
         }}>
           Temp: {temperature}C
         </div>
@@ -982,7 +994,8 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           top: '268px',
           left: '455px',
           color: colors.textSecondary,
-          fontSize: typo.label
+          fontSize: typo.label,
+          pointerEvents: 'none'
         }}>
           Soiling: {soilingLoss}%
         </div>
@@ -991,7 +1004,8 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           top: '290px',
           left: '455px',
           color: colors.textSecondary,
-          fontSize: typo.label
+          fontSize: typo.label,
+          pointerEvents: 'none'
         }}>
           Inverter: {inverterEfficiency}%
         </div>
@@ -1001,7 +1015,8 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           top: '318px',
           left: '315px',
           color: colors.textSecondary,
-          fontSize: typo.label
+          fontSize: typo.label,
+          pointerEvents: 'none'
         }}>
           System: {systemSize} kW | Tilt: {tiltAngle} deg
         </div>
@@ -1012,7 +1027,8 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           left: '90px',
           color: colors.success,
           fontSize: typo.heading,
-          fontWeight: 'bold'
+          fontWeight: 'bold',
+          pointerEvents: 'none'
         }}>
           {output.annualYield.toFixed(0)} kWh/year
         </div>
@@ -1021,7 +1037,8 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           top: '425px',
           left: '90px',
           color: colors.textSecondary,
-          fontSize: typo.small
+          fontSize: typo.small,
+          pointerEvents: 'none'
         }}>
           Predicted Annual Yield
         </div>
@@ -1032,7 +1049,8 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
             top: '425px',
             left: '350px',
             color: '#8b5cf6',
-            fontSize: typo.label
+            fontSize: typo.label,
+            pointerEvents: 'none'
           }}>
             Range: {output.lowEstimate.toFixed(0)} - {output.highEstimate.toFixed(0)} kWh (+/-{(output.uncertainty * 100).toFixed(1)}%)
           </div>
@@ -1043,7 +1061,8 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           top: '476px',
           left: '10px',
           color: colors.textSecondary,
-          fontSize: typo.label
+          fontSize: typo.label,
+          pointerEvents: 'none'
         }}>
           Irradiance ({output.sensitivities.irradiance.toFixed(0)}%)
         </div>
@@ -1052,7 +1071,8 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           top: '476px',
           left: '160px',
           color: colors.textSecondary,
-          fontSize: typo.label
+          fontSize: typo.label,
+          pointerEvents: 'none'
         }}>
           Temp ({output.sensitivities.temperature.toFixed(0)}%)
         </div>
@@ -1061,7 +1081,8 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           top: '476px',
           left: '310px',
           color: colors.textSecondary,
-          fontSize: typo.label
+          fontSize: typo.label,
+          pointerEvents: 'none'
         }}>
           Soiling ({output.sensitivities.soiling.toFixed(0)}%)
         </div>
@@ -1070,7 +1091,8 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           top: '476px',
           left: '460px',
           color: colors.textSecondary,
-          fontSize: typo.label
+          fontSize: typo.label,
+          pointerEvents: 'none'
         }}>
           Inverter ({output.sensitivities.inverter.toFixed(0)}%)
         </div>
@@ -1081,8 +1103,9 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           left: '0',
           right: '0',
           textAlign: 'center',
-          color: colors.textMuted,
-          fontSize: typo.small
+          color: colors.textPrimary,
+          fontSize: typo.small,
+          pointerEvents: 'none'
         }}>
           Simple physics: multiply key factors to predict kWh within 5-10%
         </div>
@@ -1103,7 +1126,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           step="0.1"
           value={irradiance}
           onChange={(e) => setIrradiance(parseFloat(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
         />
       </div>
 
@@ -1118,7 +1141,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           step="1"
           value={systemSize}
           onChange={(e) => setSystemSize(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
         />
       </div>
 
@@ -1133,7 +1156,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           step="5"
           value={tiltAngle}
           onChange={(e) => setTiltAngle(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
         />
       </div>
 
@@ -1148,7 +1171,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           step="1"
           value={temperature}
           onChange={(e) => setTemperature(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
         />
       </div>
 
@@ -1163,7 +1186,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           step="1"
           value={soilingLoss}
           onChange={(e) => setSoilingLoss(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
         />
       </div>
 
@@ -1178,7 +1201,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           step="0.5"
           value={inverterEfficiency}
           onChange={(e) => setInverterEfficiency(parseFloat(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
         />
       </div>
 
@@ -1202,9 +1225,9 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
 
   // Render wrapper with progress bar and bottom navigation
   const renderPhaseContent = (content: React.ReactNode, canGoNext: boolean, nextLabel: string = 'Next') => (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.bgDark }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: colors.bgDark }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '80px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
         {content}
       </div>
       {renderBottomBar(canGoNext, nextLabel)}
@@ -1240,7 +1263,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
         </div>
       </div>,
       true,
-      'Make a Prediction'
+      'Begin Prediction →'
     );
   }
 
@@ -1364,7 +1387,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
               {wasCorrect ? 'Exactly Right!' : 'Not Quite!'}
             </h3>
             <p>
-              Simple physics-based models using a handful of parameters (irradiance, temperature coefficient, losses) can predict annual solar yield within 5-10% accuracy. The key insight is that a few factors dominate.
+              As you observed in the experiment, simple physics-based models using a handful of parameters (irradiance, temperature coefficient, losses) can predict annual solar yield within 5-10% accuracy. The key insight is that a few factors dominate.
             </p>
           </div>
 
@@ -1413,6 +1436,46 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', color: '#f59e0b', marginBottom: '24px' }}>The Twist: Uncertainty</h2>
 
+          <svg width="100%" height="160" viewBox="0 0 500 160" style={{ marginBottom: '24px', display: 'block' }}>
+            <defs>
+              <filter id="uncertaintyGlow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+              <linearGradient id="p50Grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#22c55e" stopOpacity="0.8" />
+              </linearGradient>
+              <linearGradient id="bandGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.1" />
+              </linearGradient>
+            </defs>
+            {/* Anchor rects for width utilization */}
+            <rect x="10" y="8" width="4" height="4" fill="#475569" opacity="0.5" />
+            <rect x="486" y="8" width="4" height="4" fill="#475569" opacity="0.5" />
+            {/* P90 uncertainty band */}
+            <g id="uncertainty-band">
+              <rect x="30" y="40" width="440" height="60" fill="url(#bandGrad)" rx="6" />
+              <line x1="30" y1="70" x2="470" y2="70" stroke="url(#p50Grad)" strokeWidth="3" filter="url(#uncertaintyGlow)" />
+              <path d="M30 40 L470 40 L470 100 L30 100 Z" stroke="#8b5cf6" strokeWidth="1" fill="none" strokeDasharray="4 4" opacity="0.6" />
+            </g>
+            {/* Labels group */}
+            <g id="labels">
+              <text x="250" y="66" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="700">P50 - Median Expected Yield</text>
+              <text x="250" y="36" textAnchor="middle" fill="#a78bfa" fontSize="11">P90 Upper Band (+10%)</text>
+              <text x="250" y="118" textAnchor="middle" fill="#a78bfa" fontSize="11">P90 Lower Band (-10%)</text>
+            </g>
+            {/* Source breakdown */}
+            <g id="sources">
+              <rect x="30" y="130" width="120" height="18" rx="4" fill="rgba(245,158,11,0.2)" stroke="#f59e0b" strokeWidth="1" />
+              <text x="90" y="143" textAnchor="middle" fill="#f59e0b" fontSize="10">Weather ±8%</text>
+              <rect x="165" y="130" width="120" height="18" rx="4" fill="rgba(34,197,94,0.2)" stroke="#22c55e" strokeWidth="1" />
+              <text x="225" y="143" textAnchor="middle" fill="#22c55e" fontSize="10">Model Error ±5%</text>
+              <rect x="300" y="130" width="120" height="18" rx="4" fill="rgba(139,92,246,0.2)" stroke="#8b5cf6" strokeWidth="1" />
+              <text x="360" y="143" textAnchor="middle" fill="#a78bfa" fontSize="10">Degradation ±0.5%</text>
+            </g>
+          </svg>
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
             <p style={{ fontSize: '16px', marginBottom: '12px' }}>
               You can predict the average yield, but how confident should you be? Banks need P90 estimates (90% confidence). What is the biggest source of uncertainty in solar yield predictions?
@@ -1533,10 +1596,30 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
       <div style={{ color: '#f8fafc', padding: '24px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Real-World Applications</h2>
-          <p style={{ textAlign: 'center', color: '#e2e8f0', marginBottom: '24px' }}>
+          <p style={{ textAlign: 'center', color: '#e2e8f0', marginBottom: '8px' }}>
             Solar yield prediction powers billion-dollar decisions
           </p>
+          <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '16px', fontSize: '13px' }}>
+            Application {Math.min(transferCompleted.size + 1, transferApplications.length)} of {transferApplications.length} — complete each to proceed
+          </p>
 
+          {realWorldApps.slice(0, 1).map((app, index) => (
+            <div key={`rwa-${index}`} style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '16px', borderRadius: '12px', marginBottom: '16px', border: '1px solid #475569' }}>
+              <h3 style={{ color: app.color, marginBottom: '8px' }}>{app.title}</h3>
+              {app.howItWorks && (
+                <div style={{ background: 'rgba(245, 158, 11, 0.1)', borderRadius: '8px', padding: '12px', marginBottom: '8px' }}>
+                  <h4 style={{ color: '#f59e0b', marginBottom: '4px', fontSize: '13px', fontWeight: 700 }}>How It Works:</h4>
+                  <p style={{ color: colors.textPrimary, fontSize: '13px', margin: 0 }}>{app.howItWorks}</p>
+                </div>
+              )}
+              {app.futureImpact && (
+                <div style={{ background: 'rgba(34, 197, 94, 0.1)', borderRadius: '8px', padding: '12px' }}>
+                  <h4 style={{ color: colors.success, marginBottom: '4px', fontSize: '13px', fontWeight: 700 }}>Future Impact:</h4>
+                  <p style={{ color: colors.textPrimary, fontSize: '13px', margin: 0 }}>{app.futureImpact}</p>
+                </div>
+              )}
+            </div>
+          ))}
           {transferApplications.map((app, index) => (
             <div
               key={index}
@@ -1569,7 +1652,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
                     minHeight: '44px',
                   }}
                 >
-                  Reveal Answer
+                  Got It - Reveal Answer
                 </button>
               ) : (
                 <div>
@@ -1687,8 +1770,13 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
             ))}
           </div>
 
+          {currentQ.scenario && (
+            <div style={{ background: 'rgba(15, 23, 42, 0.9)', padding: '16px', borderRadius: '10px', marginBottom: '12px', borderLeft: '3px solid #f59e0b' }}>
+              <p style={{ fontSize: '14px', color: '#94a3b8', fontStyle: 'italic', lineHeight: 1.6 }}>{currentQ.scenario}</p>
+            </div>
+          )}
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-            <p style={{ fontSize: '16px' }}>{currentQ.question}</p>
+            <p style={{ fontSize: '16px', fontWeight: 600 }}>{currentQ.question}</p>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1773,7 +1861,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
     return renderPhaseContent(
       <div style={{ color: '#f8fafc', padding: '24px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+          <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
           <h1 style={{ color: '#22c55e', marginBottom: '8px' }}>Mastery Achieved!</h1>
           <p style={{ color: '#e2e8f0', marginBottom: '24px' }}>
             You have mastered solar yield prediction physics

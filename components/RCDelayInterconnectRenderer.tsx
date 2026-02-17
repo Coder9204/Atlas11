@@ -112,7 +112,7 @@ const phaseLabels: Record<RCPhase, string> = {
   review: 'Review',
   twist_predict: 'Twist',
   twist_play: 'Explore',
-  twist_review: 'Explain',
+  twist_review: 'Understanding',
   transfer: 'Transfer',
   test: 'Test',
   mastery: 'Mastery',
@@ -201,6 +201,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [selectedApp, setSelectedApp] = useState(0);
   const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
@@ -769,7 +770,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
           step="100"
           value={wireLength}
           onChange={(e) => setWireLength(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
         />
       </div>
 
@@ -784,7 +785,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
           step="10"
           value={wireWidth}
           onChange={(e) => setWireWidth(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
         />
       </div>
 
@@ -799,7 +800,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
           step="1"
           value={technologyNode}
           onChange={(e) => setTechnologyNode(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
         />
       </div>
 
@@ -1313,6 +1314,10 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
+    const currentApp = transferApplications[selectedApp];
+    const isCurrentAppCompleted = transferCompleted.has(selectedApp);
+    const allAppsCompleted = transferCompleted.size >= transferApplications.length;
+
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
@@ -1321,49 +1326,66 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
             </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
               RC delay affects chip design at every level
             </p>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
+            <p style={{ color: colors.textSecondary, fontSize: '14px', textAlign: 'center', marginBottom: '16px', fontWeight: 600 }}>
+              Application {selectedApp + 1} of {transferApplications.length}
             </p>
+            {/* App selector tabs */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
+              {transferApplications.map((app, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSelectedApp(i)}
+                  style={{ ...buttonStyle, padding: '6px 12px', borderRadius: '6px', border: `1px solid ${i === selectedApp ? colors.accent : transferCompleted.has(i) ? colors.success : 'rgba(255,255,255,0.2)'}`, background: i === selectedApp ? `${colors.accent}22` : 'transparent', color: transferCompleted.has(i) ? colors.success : i === selectedApp ? colors.accent : colors.textSecondary, fontSize: '12px', cursor: 'pointer' }}
+                >
+                  {i + 1}. {app.title.split(' ').slice(0, 2).join(' ')} {transferCompleted.has(i) ? '✓' : ''}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
-              style={{
-                background: colors.bgCard,
-                margin: '16px',
-                padding: '16px',
-                borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
-              </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ ...buttonStyle, padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
-              )}
+          <div
+            style={{
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '16px',
+              borderRadius: '12px',
+              border: isCurrentAppCompleted ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{currentApp.title}</h3>
+              {isCurrentAppCompleted && <span style={{ color: colors.success }}>✓ Complete</span>}
             </div>
-          ))}
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{currentApp.description}</p>
+            <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
+              <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold', margin: 0 }}>{currentApp.question}</p>
+            </div>
+            {isCurrentAppCompleted ? (
+              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
+                <p style={{ color: colors.textPrimary, fontSize: '13px', margin: 0 }}>{currentApp.answer}</p>
+              </div>
+            ) : (
+              <button
+                onClick={() => setTransferCompleted(new Set([...transferCompleted, selectedApp]))}
+                style={{ ...buttonStyle, padding: '10px 20px', borderRadius: '8px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px', marginBottom: '12px' }}
+              >
+                Got It - Show Answer
+              </button>
+            )}
+            {isCurrentAppCompleted && selectedApp < transferApplications.length - 1 && (
+              <button
+                onClick={() => setSelectedApp(selectedApp + 1)}
+                style={{ ...buttonStyle, padding: '10px 20px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', fontSize: '13px' }}
+              >
+                Got It - Next Application →
+              </button>
+            )}
+          </div>
         </div>
-        {renderBottomBar(transferCompleted.size >= 4, 'Take the Test')}
+        {renderBottomBar(allAppsCompleted, 'Take the Test')}
       </div>
     );
   }

@@ -149,11 +149,12 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
 }) => {
   // Self-managed phase state
   const [currentPhase, setCurrentPhase] = useState<Phase>('hook');
-  const phase = (gamePhase as Phase) || currentPhase;
+  const rawPhase = (gamePhase as Phase) || currentPhase;
+  const phase: Phase = phaseOrder.includes(rawPhase) ? rawPhase : 'hook';
 
   // Simulation state
-  const [apertureSize, setApertureSize] = useState(40);
-  const [tapStrength, setTapStrength] = useState(5);
+  const [apertureSize, setApertureSize] = useState(30);
+  const [tapStrength, setTapStrength] = useState(3);
   const [airViscosity, setAirViscosity] = useState<'low' | 'high'>('low');
   const [showFog, setShowFog] = useState(false);
   const [rings, setRings] = useState<VortexRing[]>([]);
@@ -164,6 +165,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [currentAppIndex, setCurrentAppIndex] = useState(0);
   const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
@@ -266,25 +268,25 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
   const transferApplications = [
     {
       title: 'Smoke Rings',
-      description: 'Smokers can blow visible smoke rings by forming a circular mouth opening and pushing air with a quick tongue motion.',
+      description: 'Smokers can blow visible smoke rings by forming a circular mouth opening and pushing air with a quick tongue motion. Rings travel at 0.5m/s to 2m/s and maintain shape for 2s to 5s.',
       question: 'Why do smoke rings stay together instead of dispersing?',
-      answer: 'The rotational flow of the vortex ring creates a self-contained structure. Smoke particles are trapped in the rotating air, making the ring visible while the stable vortex maintains its shape as it travels.',
+      answer: 'The rotational flow of the vortex ring creates a self-contained structure. Smoke particles are trapped in the rotating air, making the ring visible while the stable vortex maintains its shape as it travels up to 3m.',
     },
     {
       title: 'Bubble Rings Underwater',
-      description: 'Dolphins and skilled divers create toroidal air bubbles that travel through water, maintaining their ring shape.',
+      description: 'Dolphins and skilled divers create toroidal air bubbles that travel through water, maintaining their ring shape for distances of 5m or more at speeds of 1m/s.',
       question: 'How can air form stable rings in water?',
-      answer: 'The same vortex physics applies in water. The rotating flow creates a stable toroidal structure. In water, the higher density and viscosity actually help stabilize the ring initially, though they also cause faster decay.',
+      answer: 'The same vortex physics applies in water. The rotating flow creates a stable toroidal structure. In water, the higher density (1000 kg/m³ vs 1.2 kg/m³ for air) helps stabilize the ring initially.',
     },
     {
       title: 'Volcanic Eruptions',
-      description: 'Some volcanic vents emit giant smoke rings hundreds of meters across, visible for miles.',
+      description: 'Some volcanic vents emit giant smoke rings 200m across, visible for 1km. Mount Etna produces rings lasting several minutes at heights above 500m.',
       question: 'What creates vortex rings in volcanic eruptions?',
-      answer: 'When a pulse of hot gas exits a volcanic vent, the edges experience friction with surrounding air. This creates the rotational flow needed for a vortex ring, scaled up to enormous size by the massive energy release.',
+      answer: 'When a pulse of hot gas exits a volcanic vent, the edges experience friction with surrounding air. This creates the rotational flow needed for a vortex ring, scaled up to 200m diameter by the massive energy release.',
     },
     {
       title: 'Squid Jet Propulsion',
-      description: 'Squids and jellyfish create vortex rings when they jet water through their siphons for propulsion.',
+      description: 'Squids and jellyfish create vortex rings when they jet water through their siphons for propulsion. Squids achieve burst speeds of 25mph with 50% jet efficiency over 500 million years of evolution.',
       question: 'Why is vortex ring propulsion efficient for sea creatures?',
       answer: 'Vortex rings transfer momentum very efficiently. The rotating structure carries energy with minimal dissipation. Squids optimize their siphon opening to create clean vortex rings, maximizing thrust per unit of expelled water.',
     },
@@ -292,12 +294,12 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
 
   const testQuestions = [
     {
-      question: 'What gives a vortex ring its stability?',
+      question: 'A vortex cannon fires a ring of air across the room. Unlike a random puff of air, the ring maintains its donut shape and travels in a straight line over several meters. What physical mechanism gives a vortex ring its remarkable stability?',
       options: [
-        { text: 'External pressure from surrounding air', correct: false },
-        { text: 'The rotational flow creates a self-sustaining structure', correct: true },
-        { text: 'Surface tension of the air', correct: false },
-        { text: 'Magnetic fields in the atmosphere', correct: false },
+        { text: 'External pressure from surrounding air holds it together', correct: false },
+        { text: 'The rotational flow creates a self-sustaining toroidal structure', correct: true },
+        { text: 'Surface tension of air molecules at the boundary', correct: false },
+        { text: 'Magnetic fields generated by moving air charges', correct: false },
       ],
     },
     {
@@ -419,12 +421,13 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
         const midX = x;
         const endX = x + radius * 2;
 
-        // Streamline bends around the vortex ring
-        const bendAmount = Math.abs(offsetY) < radius * 0.8 ?
+        // Streamline bends around the vortex ring - always at least 2px bend
+        const rawBend = Math.abs(offsetY) < radius * 0.8 ?
           (offsetY > 0 ? -8 : 8) * (1 - Math.abs(offsetY) / (radius * 1.5)) : 0;
+        const minBend = offsetY >= 0 ? -2 : 2;
+        const bendAmount = rawBend !== 0 ? rawBend : minBend;
 
-        const pathD = `M ${startX} ${y + offsetY}
-                       Q ${midX} ${y + offsetY + bendAmount} ${endX} ${y + offsetY}`;
+        const pathD = `M ${startX} ${Math.round(y + offsetY)} Q ${midX} ${Math.round(y + offsetY + bendAmount)} ${endX} ${Math.round(y + offsetY)}`;
 
         streamlines.push(
           <path
@@ -496,7 +499,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
           const spiralAngle = baseAngle + t * Math.PI;
           const spiralR = radius * (0.3 + 0.3 * Math.sin(t * Math.PI));
           const sx = x + Math.cos(spiralAngle) * spiralR * 0.5;
-          const sy = y + (t - 0.5) * radius * 1.2;
+          const sy = y + (t - 0.5) * radius * 3.0;
           points.push(`${t === 0 ? 'M' : 'L'} ${sx} ${sy}`);
         }
         spiralLines.push(
@@ -659,9 +662,9 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
           {/* Velocity magnitude label */}
           <text
             x={x + radius + 8 + ring.velocity * 2.5}
-            y={y - 10}
+            y={y - 12}
             fill={colors.velocity}
-            fontSize={9}
+            fontSize={11}
             textAnchor="middle"
             opacity={opacity * 0.8}
             fontWeight="bold"
@@ -694,8 +697,9 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
         <rect x={50} y={95} width={apertureSize * 0.5} height={8} fill={colors.bgPrimary} stroke="url(#vrtxApertureGlow)" strokeWidth={1.5} />
 
         {/* Membrane (back of bottle) with flex indicator */}
-        <path
-          d={`M 30 225 Q 60 ${225 + (isAnimating ? 3 : 0)} 90 225 L 90 230 Q 60 ${230 + (isAnimating ? 3 : 0)} 30 230 Z`}
+        <rect
+          x={30} y={225} width={60} height={isAnimating ? 8 : 5}
+          rx={2}
           fill="url(#vrtxMembraneGrad)"
           stroke={colors.warning}
           strokeWidth={1}
@@ -704,19 +708,14 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
         {/* Tap indicator with animation */}
         <g opacity={0.9}>
           <circle cx={60} cy={250} r={12} fill="url(#vrtxTapIndicator)" opacity={0.3} />
-          <text x={60} y={254} fill={colors.textSecondary} fontSize={10} textAnchor="middle" fontWeight="600">TAP</text>
-          <path
-            d="M 60 265 L 60 275 M 55 270 L 60 275 L 65 270"
-            stroke={colors.warning}
-            strokeWidth={2}
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+          <text x={60} y={254} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontWeight="600">TAP</text>
+          <line x1={60} y1={265} x2={60} y2={275} stroke={colors.warning} strokeWidth={2} strokeLinecap="round" />
+          <line x1={55} y1={270} x2={60} y2={275} stroke={colors.warning} strokeWidth={2} strokeLinecap="round" />
+          <line x1={60} y1={275} x2={65} y2={270} stroke={colors.warning} strokeWidth={2} strokeLinecap="round" />
         </g>
 
         {/* Air pressure visualization inside bottle */}
-        <text x={60} y={165} fill={colors.textMuted} fontSize={10} textAnchor="middle" fontWeight="500">AIR</text>
+        <text x={60} y={165} fill={colors.textMuted} fontSize={11} textAnchor="middle" fontWeight="500">AIR</text>
         {[0, 1, 2].map(i => (
           <circle
             key={`air-${i}`}
@@ -1013,9 +1012,46 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
               y2={50 + i * 50}
               stroke="#334155"
               strokeWidth={0.5}
-              strokeOpacity={0.15}
+              opacity={0.15}
+              strokeDasharray="4,6"
             />
           ))}
+
+          {/* Static velocity profile reference curve — shows ring speed vs. aperture */}
+          {(() => {
+            const curveX0 = 110;
+            const curveY0 = 30;
+            const curveW = 160;
+            const curveH = 140;
+            // 20 points: bell-curve velocity profile
+            const pts = Array.from({ length: 20 }, (_, k) => {
+              const t = k / 19;
+              const apertureFrac = apertureSize / 60;
+              // Bell curve that peaks at t=0.5; height scales with inverse of aperture
+              const vNorm = (1 - apertureFrac * 0.5) * Math.exp(-Math.pow((t - 0.5) * 3, 2));
+              const px = curveX0 + t * curveW;
+              const py = curveY0 + curveH * (1 - Math.max(0, Math.min(1, vNorm)));
+              return `${k === 0 ? 'M' : 'L'} ${px.toFixed(1)} ${py.toFixed(1)}`;
+            });
+            // Marker at current aperture position on the curve
+            const markerT = (apertureSize - 20) / 40;
+            const markerX = curveX0 + markerT * curveW;
+            const apertureFrac = apertureSize / 60;
+            const markerVNorm = (1 - apertureFrac * 0.5) * Math.exp(-Math.pow((markerT - 0.5) * 3, 2));
+            const markerY = curveY0 + curveH * (1 - Math.max(0, Math.min(1, markerVNorm)));
+            return (
+              <g opacity={0.85}>
+                {/* Axis baseline */}
+                <line x1={curveX0} y1={curveY0 + curveH} x2={curveX0 + curveW} y2={curveY0 + curveH} stroke="#334155" strokeWidth={1} opacity={0.4} />
+                {/* Velocity profile curve */}
+                <path d={pts.join(' ')} fill="none" stroke="url(#vrtxVelocityGrad)" strokeWidth={2.5} strokeLinecap="round" />
+                {/* Interactive aperture position marker */}
+                <circle cx={markerX} cy={markerY} r={8} fill={colors.accent} stroke="#ffffff" strokeWidth={2} filter="url(#vrtxCoreGlowFilter)" />
+                {/* Curve label */}
+                <text x={curveX0 + curveW / 2} y={curveY0 + curveH + 14} textAnchor="middle" fill={colors.textMuted} fontSize={11}>Ring velocity profile</text>
+              </g>
+            );
+          })()}
 
           {/* Background flow indicators */}
           {Array.from({ length: 8 }).map((_, i) => (
@@ -1055,16 +1091,16 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
           )}
 
           {/* Premium info panel background */}
-          <rect x={10} y={10} width={160} height={65} rx={8} fill="#0f172a" fillOpacity={0.8} stroke="#334155" strokeWidth={1} />
+          <rect x={10} y={260} width={165} height={75} rx={8} fill="#0f172a" fillOpacity={0.8} stroke="#334155" strokeWidth={1} />
 
           {/* Labels with improved styling */}
-          <text x={20} y={28} fill={colors.textSecondary} fontSize={11} fontWeight="600">
+          <text x={20} y={278} fill={colors.textSecondary} fontSize={11} fontWeight="600">
             Aperture: <tspan fill={colors.accent}>{apertureSize}mm</tspan>
           </text>
-          <text x={20} y={47} fill={colors.textSecondary} fontSize={11} fontWeight="600">
+          <text x={20} y={297} fill={colors.textSecondary} fontSize={11} fontWeight="600">
             Tap strength: <tspan fill={colors.velocity}>{tapStrength}</tspan>
           </text>
-          <text x={20} y={66} fill={colors.textSecondary} fontSize={11} fontWeight="600">
+          <text x={20} y={316} fill={colors.textSecondary} fontSize={11} fontWeight="600">
             Viscosity: <tspan fill={airViscosity === 'high' ? colors.error : colors.success}>{airViscosity}</tspan>
           </text>
 
@@ -1078,29 +1114,29 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
           )}
 
           {/* Legend with premium styling */}
-          <g transform="translate(250, 295)">
-            <rect x={-10} y={-15} width={150} height={50} rx={8} fill="#0f172a" fillOpacity={0.8} stroke="#334155" strokeWidth={1} />
+          <g transform="translate(200, 260)">
+            <rect x={-10} y={-5} width={190} height={55} rx={8} fill="#0f172a" fillOpacity={0.8} stroke="#334155" strokeWidth={1} />
 
             {/* Vortex core legend */}
-            <circle cx={5} cy={0} r={6} fill="url(#vrtxCoreGrad)" filter="url(#vrtxCoreGlowFilter)" />
-            <text x={18} y={4} fill={colors.textMuted} fontSize={10} fontWeight="500">Vortex Core</text>
+            <circle cx={5} cy={12} r={6} fill="url(#vrtxCoreGrad)" filter="url(#vrtxCoreGlowFilter)" />
+            <text x={18} y={16} fill={colors.textMuted} fontSize={11} fontWeight="500">Vortex Core</text>
 
             {/* Velocity legend */}
-            <line x1={0} y1={20} x2={25} y2={20} stroke="url(#vrtxVelocityGrad)" strokeWidth={3} strokeLinecap="round" />
-            <text x={32} y={24} fill={colors.textMuted} fontSize={10} fontWeight="500">Velocity</text>
+            <line x1={0} y1={35} x2={25} y2={35} stroke="url(#vrtxVelocityGrad)" strokeWidth={3} strokeLinecap="round" />
+            <text x={32} y={39} fill={colors.textMuted} fontSize={11} fontWeight="500">Velocity</text>
 
             {/* Rotation legend */}
-            <circle cx={95} cy={0} r={3} fill="url(#vrtxRotationParticle)" />
-            <text x={102} y={4} fill={colors.textMuted} fontSize={10} fontWeight="500">Spin</text>
+            <circle cx={100} cy={12} r={3} fill="url(#vrtxRotationParticle)" />
+            <text x={108} y={16} fill={colors.textMuted} fontSize={11} fontWeight="500">Spin</text>
 
             {/* Flow legend */}
-            <line x1={90} y1={20} x2={115} y2={20} stroke="url(#vrtxStreamlineGrad)" strokeWidth={2} strokeDasharray="4,2" />
-            <text x={120} y={24} fill={colors.textMuted} fontSize={10} fontWeight="500">Flow</text>
+            <line x1={95} y1={35} x2={120} y2={35} stroke="url(#vrtxStreamlineGrad)" strokeWidth={2} strokeDasharray="4,2" />
+            <text x={127} y={39} fill={colors.textMuted} fontSize={11} fontWeight="500">Flow</text>
           </g>
 
           {/* Cross-section label */}
-          <text x={width / 2} y={height - 10} fill={colors.textMuted} fontSize={10} textAnchor="middle" fontStyle="italic">
-            Cross-sectional view of vortex ring propagation
+          <text x={width / 2} y={height - 5} fill={colors.textMuted} fontSize={11} textAnchor="middle" fontStyle="italic">
+            Cross-sectional view — vortex ring propagation
           </text>
         </svg>
 
@@ -1311,7 +1347,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
           <button
             onClick={advancePhase}
             disabled={!canProceed}
-            aria-label={buttonText}
+            aria-label="Advance to next phase"
             style={{
               padding: '10px 24px',
               minHeight: '44px',
@@ -1332,7 +1368,10 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     );
   };
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
+  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirstPhase = currentIndex === 0;
+    return (
     <div style={{
       position: 'fixed',
       bottom: 0,
@@ -1342,9 +1381,28 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
       background: colors.bgDark,
       borderTop: `1px solid rgba(255,255,255,0.1)`,
       display: 'flex',
-      justifyContent: 'flex-end',
+      justifyContent: 'space-between',
+      alignItems: 'center',
       zIndex: 1001,
     }}>
+      <button
+        onClick={goToPreviousPhase}
+        disabled={isFirstPhase}
+        style={{
+          padding: '12px 24px',
+          minHeight: '44px',
+          borderRadius: '8px',
+          border: `1px solid ${colors.textMuted}`,
+          background: 'transparent',
+          color: isFirstPhase ? 'rgba(255,255,255,0.3)' : colors.textPrimary,
+          fontWeight: 'bold',
+          cursor: isFirstPhase ? 'not-allowed' : 'pointer',
+          fontSize: '14px',
+          opacity: isFirstPhase ? 0.4 : 1,
+        }}
+      >
+        ← Back
+      </button>
       <button
         onClick={advancePhase}
         disabled={disabled && !canProceed}
@@ -1358,13 +1416,15 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
           fontWeight: 'bold',
           cursor: canProceed ? 'pointer' : 'not-allowed',
           fontSize: '16px',
+          transition: 'all 0.2s ease-in-out',
           boxShadow: canProceed ? `0 4px 15px ${colors.accentGlow}` : 'none',
         }}
       >
-        {buttonText}
+        Next →
       </button>
     </div>
-  );
+    );
+  };
 
   // HOOK PHASE
   if (phase === 'hook') {
@@ -1376,8 +1436,11 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Vortex Rings
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
-              Can you throw a "ring of air" you can feel?
+            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '8px' }}>
+              Welcome! Explore how rings of spinning air travel through space.
+            </p>
+            <p style={{ color: colors.textMuted, fontSize: '14px', marginBottom: '16px', fontWeight: 'normal' }}>
+              Discover the physics behind "smoke donuts" and how they work in nature and technology.
             </p>
           </div>
 
@@ -1531,12 +1594,12 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
             padding: '16px',
             borderRadius: '12px',
           }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
+            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Cause &amp; Effect:</h4>
             <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Small aperture + strong tap = fast, compact ring</li>
-              <li>Large aperture + gentle tap = slow, large ring</li>
-              <li>High viscosity = ring slows and fades faster</li>
-              <li>Rapid tapping = multiple rings that may interact!</li>
+              <li><strong>When you increase aperture</strong>, the ring becomes larger in diameter and slower</li>
+              <li><strong>When you increase tap strength</strong>, higher impulse causes faster ring velocity</li>
+              <li><strong>Higher viscosity results in</strong> more drag — the ring slows and fades faster</li>
+              <li><strong>As rings interact</strong>, they affect each other's path and speed</li>
             </ul>
           </div>
 
@@ -1815,8 +1878,6 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
-    const [currentAppIndex, setCurrentAppIndex] = useState(0);
-
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar(true, transferCompleted.size >= 4, 'Take the Test')}
@@ -1858,7 +1919,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
                   onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
                   style={{ padding: '8px 16px', minHeight: '44px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}
                 >
-                  Reveal Answer
+                  Got It - Reveal Answer
                 </button>
               ) : (
                 <div>

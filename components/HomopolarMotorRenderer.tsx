@@ -80,7 +80,7 @@ type Phase =
 // In production, server validates; locally, we use correctIndex
 const testQuestions = [
   {
-    scenario: "A homopolar motor is built with an AA battery, a strong neodymium magnet, and a copper wire loop.",
+    scenario: "A homopolar motor is built with an AA battery (1.5 V), a strong neodymium magnet, and a copper wire loop. When the wire completes the circuit from the positive terminal of the battery through the magnet to the negative terminal, current flows and the wire begins to rotate.",
     question: "What fundamental force causes the wire to spin?",
     options: [
       { id: 'gravity', label: "Gravitational force between the wire and magnet" },
@@ -202,9 +202,9 @@ const realWorldApps = [
     connection: 'In your motor, F=BIL creates rotation. In a rail gun, the same force accelerates a projectile linearly. The current flows through the projectile between two rails, and the magnetic field from the rails provides the force.',
     howItWorks: 'Two parallel conducting rails carry enormous currents (millions of amps). A conductive armature completes the circuit. The Lorentz force accelerates it down the barrel at incredible speeds.',
     stats: [
-      { value: 'Mach 6', label: 'Exit velocity', icon: '⚡' },
-      { value: '100+ mi', label: 'Range achieved', icon: '🎯' },
-      { value: '32 MJ', label: 'Energy per shot', icon: '💥' }
+      { value: '2300 m/s', label: 'Exit velocity (Mach 6)', icon: '⚡' },
+      { value: '160 km', label: 'Range achieved', icon: '🎯' },
+      { value: '32 million J', label: 'Energy per shot', icon: '💥' }
     ],
     examples: [
       'US Navy developed a 32-megajoule prototype capable of Mach 6 projectiles',
@@ -461,8 +461,8 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
     const wireRadius = isMobile ? 55 : 95;
     const angleRad = (wireAngle * Math.PI) / 180;
 
-    // Force visualization
-    const forceStrength = isRunning ? magnetStrength / 100 : 0;
+    // Force visualization - magnetStrength affects visual even when not running
+    const forceStrength = magnetStrength / 100;
     const forceDir = magnetPolarity === 'north' ? 1 : -1;
 
     // LEGEND ITEMS
@@ -527,7 +527,8 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
           borderRadius: '8px',
           padding: isMobile ? '8px 12px' : '10px 14px',
           border: `1px solid ${colors.border}`,
-          zIndex: 10
+          zIndex: 10,
+          pointerEvents: 'none'
         }}>
           <p style={{ fontSize: typo.label, color: colors.textSecondary, fontWeight: 600, margin: 0 }}>
             Lorentz Force
@@ -838,7 +839,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
           <path
             d={`M ${cx + wireRadius * Math.cos(angleRad)} ${cy - 25 + wireRadius * Math.sin(angleRad) * 0.3}
                 Q ${cx} ${cy - (isMobile ? 55 : 85)} ${cx - wireRadius * Math.cos(angleRad)} ${cy - 25 - wireRadius * Math.sin(angleRad) * 0.3}
-                L ${cx - wireRadius * Math.cos(angleRad)} ${cy + wireRadius * Math.sin(angleRad) * 0.3}
+                C ${cx - wireRadius * Math.cos(angleRad)} ${cy - 15 - wireRadius * Math.sin(angleRad) * 0.3} ${cx - wireRadius * Math.cos(angleRad)} ${cy + wireRadius * Math.sin(angleRad) * 0.15} ${cx - wireRadius * Math.cos(angleRad)} ${cy + wireRadius * Math.sin(angleRad) * 0.3}
                 Q ${cx} ${cy + (isMobile ? 18 : 25)} ${cx + wireRadius * Math.cos(angleRad)} ${cy - wireRadius * Math.sin(angleRad) * 0.3}
                 Z`}
             fill="none"
@@ -935,6 +936,53 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
             />
           </g>
         )}
+
+        {/* SVG Text Labels for educational clarity */}
+        <text x={cx} y={isMobile ? 18 : 22} textAnchor="middle" fontSize={isMobile ? 11 : 13} fill={colors.textSecondary} fontWeight="600">Homopolar Motor</text>
+        <text x={cx} y={cy + (isMobile ? 32 : 50)} textAnchor="middle" fontSize={isMobile ? 11 : 12} fill={colors.copper}>Copper Wire (I)</text>
+        <text x={cx} y={cy - (isMobile ? 18 : 28)} textAnchor="middle" fontSize={isMobile ? 11 : 12} fill={magnetPolarity === 'north' ? colors.magnetNorth : colors.magnetSouth}>
+          Magnet ({magnetPolarity === 'north' ? 'N' : 'S'})
+        </text>
+        <text x={isMobile ? 28 : 40} y={cy - (isMobile ? 55 : 90)} textAnchor="middle" fontSize={isMobile ? 11 : 12} fill={colors.textSecondary}>Battery (+)</text>
+        <text x={cx + (isMobile ? 60 : 100)} y={cy + (isMobile ? 55 : 85)} textAnchor="middle" fontSize={isMobile ? 11 : 12} fill={colors.success}>F = BIL</text>
+
+        {/* Mini Force vs Field chart - bottom left corner */}
+        {(() => {
+          const chartX = isMobile ? 10 : 14;
+          const chartY = height - (isMobile ? 105 : 130);
+          const chartW = isMobile ? 90 : 120;
+          const chartH = isMobile ? 80 : 100;
+          const numPts = 20;
+          // Build path with 20 M/L points showing F = B*I*L (linear)
+          const pts = Array.from({ length: numPts }, (_, i) => {
+            const bFrac = i / (numPts - 1);
+            const px = chartX + bFrac * chartW;
+            const py = chartY + chartH - bFrac * chartH; // top = high force
+            return i === 0 ? `M ${px.toFixed(1)} ${py.toFixed(1)}` : `L ${px.toFixed(1)} ${py.toFixed(1)}`;
+          }).join(' ');
+          // Current operating point
+          const bFrac = (magnetStrength - 20) / 80;
+          const dotX = chartX + bFrac * chartW;
+          const dotY = chartY + chartH - bFrac * chartH;
+          return (
+            <g>
+              {/* Chart background */}
+              <rect x={chartX - 4} y={chartY - 16} width={chartW + 22} height={chartH + 28} fill="rgba(15,23,42,0.85)" rx="4" stroke={colors.border} strokeWidth="0.5" />
+              {/* Axis lines */}
+              <line x1={chartX} y1={chartY} x2={chartX} y2={chartY + chartH} stroke={colors.border} strokeWidth="1" />
+              <line x1={chartX} y1={chartY + chartH} x2={chartX + chartW} y2={chartY + chartH} stroke={colors.border} strokeWidth="1" />
+              {/* Data curve */}
+              <path d={pts} fill="none" stroke={colors.success} strokeWidth="1.5" opacity="0.7" />
+              {/* Current value marker */}
+              <circle cx={dotX} cy={dotY} r="5" fill={colors.success} filter="url(#homoForceGlow)" />
+              {/* Axis labels - fontSize >= 11 */}
+              <text x={chartX + chartW / 2} y={chartY + chartH + 14} textAnchor="middle" fontSize="11" fill={colors.textMuted}>Field B</text>
+              <text x={chartX - 10} y={chartY + chartH / 2} textAnchor="middle" fontSize="11" fill={colors.textMuted} transform={`rotate(-90, ${chartX - 10}, ${chartY + chartH / 2})`}>Force</text>
+              {/* Chart title */}
+              <text x={chartX + chartW / 2} y={chartY - 4} textAnchor="middle" fontSize="11" fill={colors.textMuted}>F vs B</text>
+            </g>
+          );
+        })()}
       </svg>
       </div>
     );
@@ -1143,17 +1191,21 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)` }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)` }}>
         {renderTopNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '80px 20px 60px', textAlign: 'center' }}>
           <div style={{ fontSize: '72px', marginBottom: '24px' }}>🔋⚡🔄</div>
           <h1 style={{ fontSize: isMobile ? '28px' : '42px', fontWeight: 800, color: colors.textPrimary, marginBottom: '16px', lineHeight: 1.2 }}>
             The Simplest Motor on Earth
           </h1>
-          <p style={{ fontSize: isMobile ? '16px' : '20px', color: '#e2e8f0', marginBottom: '32px', lineHeight: 1.6, maxWidth: '600px', margin: '0 auto 32px' }}>
+          <p style={{ fontSize: isMobile ? '16px' : '20px', color: '#e2e8f0', marginBottom: '32px', lineHeight: 1.6, maxWidth: '600px', margin: '0 auto 32px', fontWeight: 400 }}>
             Can you build a motor with just a battery, a magnet, and a piece of wire?
             <br /><br />
             No coils. No commutator. No complex parts.
+          </p>
+          <p style={{ fontSize: '14px', color: 'rgba(226, 232, 240, 0.7)', margin: '0 auto 20px', maxWidth: '500px', fontWeight: 400 }}>
+            Discover the Lorentz force — the same principle behind MRI machines, rail guns, and industrial generators.
           </p>
 
           <div style={{
@@ -1174,6 +1226,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
 
           <button
             onPointerDown={() => goToPhase('predict')}
+            onClick={() => goToPhase('predict')}
             style={{
               padding: '18px 48px',
               fontSize: '18px',
@@ -1189,6 +1242,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
           >
             Start Exploring →
           </button>
+        </div>
         </div>
       </div>
     );
@@ -1421,8 +1475,15 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
                 value={magnetStrength}
                 onChange={(e) => setMagnetStrength(Number(e.target.value))}
                 aria-label="Magnetic field strength B"
-                style={{ width: '100%', accentColor: colors.primary }}
+                style={{ width: '100%', accentColor: colors.primary, touchAction: 'pan-y', WebkitAppearance: 'none', height: '20px' }}
               />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: colors.textMuted, marginTop: '4px' }}>
+                <span>Weak (20%)</span>
+                <span>Strong (100%)</span>
+              </div>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', margin: '8px 0 0 0', fontWeight: 400 }}>
+                Higher B causes stronger Lorentz force F = B×I×L, which results in faster wire rotation
+              </p>
             </div>
 
             <button
@@ -2332,6 +2393,13 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
                         playSound(isCorrect ? 'success' : 'failure');
                       }
                     }}
+                    onClick={() => {
+                      if (!isAnswered) {
+                        const newAnswers = [...testAnswers];
+                        newAnswers[testQuestion] = opt.id;
+                        setTestAnswers(newAnswers);
+                      }
+                    }}
                     disabled={isAnswered}
                     style={{
                       padding: '18px 20px',
@@ -2419,6 +2487,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
         }}>
           <button
             onPointerDown={() => testQuestion > 0 && setTestQuestion(testQuestion - 1)}
+            onClick={() => testQuestion > 0 && setTestQuestion(testQuestion - 1)}
             disabled={testQuestion === 0}
             style={{
               padding: '12px 20px',
@@ -2437,6 +2506,13 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
           {testAnswers[testQuestion] !== null && (
             <button
               onPointerDown={() => {
+                if (testQuestion < 9) {
+                  setTestQuestion(testQuestion + 1);
+                } else {
+                  setTestSubmitted(true);
+                }
+              }}
+              onClick={() => {
                 if (testQuestion < 9) {
                   setTestQuestion(testQuestion + 1);
                 } else {

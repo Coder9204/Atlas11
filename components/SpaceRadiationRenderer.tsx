@@ -296,6 +296,26 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
   // Navigation ref
   const isNavigating = useRef(false);
 
+  // Inject CSS keyframes into document head (not body textContent)
+  useEffect(() => {
+    const styleId = 'space-radiation-keyframes';
+    if (!document.getElementById(styleId)) {
+      const styleEl = document.createElement('style');
+      styleEl.id = styleId;
+      styleEl.textContent = `
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes glow { 0%, 100% { box-shadow: 0 0 5px #F59E0B; } 50% { box-shadow: 0 0 20px #F59E0B; } }
+        @keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+      `;
+      document.head.appendChild(styleEl);
+    }
+    return () => {
+      const el = document.getElementById(styleId);
+      if (el) el.remove();
+    };
+  }, []);
+
   // Responsive design
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -431,7 +451,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
     textSecondary: '#D1D5DB', // Brighter secondary text
-    textMuted: '#9CA3AF', // Brighter muted text
+    textMuted: '#B8BDC8', // Muted text - bright enough for dark backgrounds
     border: '#2a2a3a',
     bitZero: '#374151',
     bitOne: '#3B82F6',
@@ -456,7 +476,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Process Node Lab',
+    twist_play: 'Explore Process Node',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -815,25 +835,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
     transition: 'all 0.2s ease',
   };
 
-  // Animation keyframes
-  const keyframes = `
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.1); opacity: 0.8; }
-    }
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
-    }
-    @keyframes glow {
-      0%, 100% { box-shadow: 0 0 5px ${colors.accent}; }
-      50% { box-shadow: 0 0 20px ${colors.accent}; }
-    }
-    @keyframes flash {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-  `;
+  // Animation keyframes are injected via useEffect above
 
   // -----------------------------------------------------------------------------
   // PHASE RENDERS
@@ -850,10 +852,13 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingBottom: '100px',
+        paddingTop: '48px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
-        <style>{keyframes}</style>
+
 
         <div style={{
           fontSize: '64px',
@@ -887,7 +892,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
             "Every hour, cosmic rays flip hundreds of bits in a typical spacecraft's memory. Without protection, the computer would crash within days. With proper design, missions like Voyager have survived for 47 years."
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+          <p className="text-muted" style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
             — NASA Jet Propulsion Laboratory
           </p>
         </div>
@@ -900,6 +905,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
         </button>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -921,7 +927,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
-        <style>{keyframes}</style>
+
 
         <div style={{
           flex: 1,
@@ -1077,7 +1083,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
-        <style>{keyframes}</style>
+
 
         <div style={{
           flex: 1,
@@ -1089,8 +1095,11 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Radiation Fault Injection Lab
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
               Watch how cosmic rays corrupt memory. <strong style={{ color: colors.accent }}>As radiation intensity increases, more bits flip.</strong> ECC and TMR protection schemes automatically detect and correct errors, keeping the mission alive.
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '24px' }}>
+              This is why spacecraft engineers design radiation-hardened electronics — industry-standard protection enables missions like Voyager and Mars rovers to operate for decades in the harsh space environment.
             </p>
 
             {/* SVG Visualization */}
@@ -1489,7 +1498,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
-        <style>{keyframes}</style>
+
 
         <div style={{
           flex: 1,
@@ -1621,7 +1630,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
               }}>
                 <div style={{ fontSize: '24px', marginBottom: '8px' }}>☀️</div>
                 <h4 style={{ ...typo.small, color: colors.radiation, fontWeight: 600 }}>Solar Particle Events</h4>
-                <p style={{ ...typo.small, color: colors.textMuted }}>
+                <p style={{ ...typo.small, color: colors.textSecondary }}>
                   Protons from solar flares can increase radiation levels by 1000x during storms
                 </p>
               </div>
@@ -1632,7 +1641,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
               }}>
                 <div style={{ fontSize: '24px', marginBottom: '8px' }}>✨</div>
                 <h4 style={{ ...typo.small, color: colors.radiation, fontWeight: 600 }}>Galactic Cosmic Rays</h4>
-                <p style={{ ...typo.small, color: colors.textMuted }}>
+                <p style={{ ...typo.small, color: colors.textSecondary }}>
                   High-energy particles from outside our solar system - constant background flux
                 </p>
               </div>
@@ -1643,7 +1652,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
               }}>
                 <div style={{ fontSize: '24px', marginBottom: '8px' }}>🧲</div>
                 <h4 style={{ ...typo.small, color: colors.radiation, fontWeight: 600 }}>Van Allen Belts</h4>
-                <p style={{ ...typo.small, color: colors.textMuted }}>
+                <p style={{ ...typo.small, color: colors.textSecondary }}>
                   Trapped particles around Earth - satellites must pass through carefully
                 </p>
               </div>
@@ -1654,7 +1663,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
               }}>
                 <div style={{ fontSize: '24px', marginBottom: '8px' }}>⚛️</div>
                 <h4 style={{ ...typo.small, color: colors.radiation, fontWeight: 600 }}>Secondary Particles</h4>
-                <p style={{ ...typo.small, color: colors.textMuted }}>
+                <p style={{ ...typo.small, color: colors.textSecondary }}>
                   Shielding can create showers of secondary particles - sometimes worse than no shield!
                 </p>
               </div>
@@ -1693,7 +1702,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
-        <style>{keyframes}</style>
+
 
         <div style={{
           flex: 1,
@@ -1845,7 +1854,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
-        <style>{keyframes}</style>
+
 
         <div style={{
           flex: 1,
@@ -1871,6 +1880,36 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
             {isSimulationRunning && <CosmicRayAnimation />}
 
             <MemoryVisualization />
+
+            {/* Process Node SVG Visualization - directly reflects processNode slider */}
+            <svg viewBox="0 0 400 120" style={{ width: '100%', maxWidth: '400px', height: 'auto', display: 'block', margin: '12px auto 0' }}>
+              <rect x="0" y="0" width="400" height="120" fill={colors.bgSecondary} rx="8" />
+              {/* Transistor size visualization - size scales with processNode */}
+              {[0, 1, 2, 3, 4].map(i => {
+                const cellSize = Math.max(8, Math.min(40, processNode * 0.8));
+                const gap = cellSize + 8;
+                const startX = 200 - (gap * 2.5) + gap * i + cellSize / 2;
+                return (
+                  <g key={i}>
+                    <rect
+                      x={startX - cellSize / 2}
+                      y={60 - cellSize / 2}
+                      width={cellSize}
+                      height={cellSize}
+                      fill={processNode <= 10 ? colors.error : processNode <= 22 ? colors.warning : colors.success}
+                      rx="2"
+                      opacity="0.85"
+                    />
+                  </g>
+                );
+              })}
+              <text x="200" y="108" textAnchor="middle" fill={colors.textSecondary} fontSize="12">
+                {processNode}nm process node — transistor charge capacity
+              </text>
+              <text x="200" y="22" textAnchor="middle" fill={colors.textMuted} fontSize="11">
+                Fault rate: {effectiveFaultRate.toFixed(2)}/s
+              </text>
+            </svg>
 
             {/* Process Node Slider */}
             <div style={{ marginTop: '24px' }}>
@@ -2090,7 +2129,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
-        <style>{keyframes}</style>
+
 
         <div style={{
           flex: 1,
@@ -2239,7 +2278,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
-        <style>{keyframes}</style>
+
 
         <div style={{
           flex: 1,
@@ -2361,6 +2400,10 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
               ))}
             </div>
 
+            <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '16px', lineHeight: 1.6 }}>
+              <strong style={{ color: app.color }}>How it works: </strong>{app.howItWorks}
+            </div>
+
             {/* Got It button */}
             <button
               onClick={() => {
@@ -2417,7 +2460,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
           overflow: 'hidden',
         }}>
           {renderProgressBar()}
-          <style>{keyframes}</style>
+  
 
           <div style={{
             flex: 1,
@@ -2436,7 +2479,10 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
                 <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
                   {passed ? 'Mission Success!' : 'Needs More Training'}
                 </h2>
-                <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: '8px 0 4px' }}>
+                  You scored:
+                </p>
+                <p style={{ ...typo.h1, color: colors.textPrimary, margin: '0 0 16px' }}>
                   {testScore} / 10
                 </p>
                 <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
@@ -2550,7 +2596,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
         padding: '24px',
       }}>
         {renderProgressBar()}
-        <style>{keyframes}</style>
+
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           {/* Progress */}
@@ -2561,7 +2607,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
             marginBottom: '24px',
           }}>
             <span style={{ ...typo.small, color: colors.textSecondary }}>
-              Question {currentQuestion + 1} of 10
+              Question {currentQuestion + 1} of 10 &nbsp;|&nbsp; {testAnswers.filter(a => a !== null).length}/10 answered
             </span>
             <div style={{ display: 'flex', gap: '6px' }}>
               {testQuestions.map((_, i) => (
@@ -2722,7 +2768,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
         textAlign: 'center',
       }}>
         {renderProgressBar()}
-        <style>{keyframes}</style>
+
 
         <div style={{
           fontSize: '100px',

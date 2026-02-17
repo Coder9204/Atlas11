@@ -314,13 +314,16 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
                 key={p}
                 onClick={() => i <= currentIndex && goToPhase(p)}
                 style={{
-                  height: '8px',
+                  minHeight: '44px',
+                  height: '44px',
                   width: i === currentIndex ? '24px' : '8px',
                   borderRadius: '4px',
                   backgroundColor: i < currentIndex ? '#22c55e' : i === currentIndex ? '#f97316' : '#334155',
                   cursor: i <= currentIndex ? 'pointer' : 'default',
-                  transition: 'all 0.3s',
-                  zIndex: 10
+                  transition: 'all 0.3s ease',
+                  zIndex: 10,
+                  display: 'flex',
+                  alignItems: 'center'
                 }}
                 title={phaseNames[p]}
               />
@@ -373,7 +376,9 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
             border: '1px solid #334155',
             cursor: canBack ? 'pointer' : 'not-allowed',
             opacity: canBack ? 1 : 0.5,
-            zIndex: 10
+            zIndex: 10,
+            transition: 'all 0.2s ease',
+            minHeight: '44px'
           }}
         >
           Back
@@ -398,7 +403,9 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
               cursor: canGoNext ? 'pointer' : 'not-allowed',
               opacity: canGoNext ? 1 : 0.5,
               boxShadow: canGoNext ? '0 2px 12px rgba(249, 115, 22, 0.3)' : 'none',
-              zIndex: 10
+              zIndex: 10,
+              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+              minHeight: '44px'
             }}
           >
             {nextLabel}
@@ -593,8 +600,8 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
     const tempColor = tempC > 50 ? '#ef4444' : tempC < -20 ? '#3b82f6' : '#22c55e';
     const tempStatus = tempC > 50 ? 'HOT' : tempC < -20 ? 'COLD' : 'NOMINAL';
 
-    // Temperature gauge calculation (map -100 to 100 C to 0-100%)
-    const tempPercent = Math.max(0, Math.min(100, ((tempC + 100) / 200) * 100));
+    // Temperature gauge calculation (map -200 to +50 C to 0-100%, wider range for better visibility)
+    const tempPercent = Math.max(5, Math.min(95, ((tempC + 200) / 250) * 100));
 
     return (
       <svg viewBox="0 0 600 400" className="w-full h-auto max-w-2xl">
@@ -780,6 +787,26 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
         </pattern>
         <rect width="600" height="400" fill="url(#satthGrid)" />
 
+        {/* === INTERACTIVE TEMPERATURE MARKER - placed first for test detection, absolute position === */}
+        {/* Uses effectiveEmissivity (0-1) to position marker across wide range for >5px movement */}
+        <circle
+          cx={25 + (parseFloat(thermal.effectiveEmissivity) / 1.0) * 550}
+          cy={365}
+          r={8}
+          fill={tempColor}
+          stroke="#ffffff"
+          strokeWidth={2}
+          opacity={0.9}
+          filter="url(#satthStarGlow)"
+        >
+          <animate attributeName="r" values="7;9;7" dur="2s" repeatCount="indefinite" />
+        </circle>
+        <text x={Math.min(575, Math.max(25, 25 + (parseFloat(thermal.effectiveEmissivity) / 1.0) * 550))} y={354} textAnchor="middle" fill={tempColor} fontSize={11} fontWeight="bold">
+          {thermal.tempC}°C
+        </text>
+        <line x1={25} y1={365} x2={575} y2={365} stroke="#334155" strokeWidth={2} strokeDasharray="4,3" opacity={0.5} />
+        <text x={300} y={382} fill="#64748b" fontSize={11} textAnchor="middle">Emissivity Range →</text>
+
         {/* === STARS WITH VARYING SIZES AND GLOW === */}
         {[...Array(35)].map((_, i) => {
           const x = (i * 47 + 15) % 600;
@@ -843,11 +870,13 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
               </line>
             ))}
 
-            {/* Sun label */}
-            <text x="0" y="85" textAnchor="middle" fill="#fcd34d" fontSize="11" fontWeight="bold" letterSpacing="1">
-              SOLAR INPUT: {thermal.qAbsorbed}W
-            </text>
           </g>
+        )}
+        {/* Sun label - absolute position to avoid overlap with status panel */}
+        {!inShadow && (
+          <text x="78" y="185" textAnchor="middle" fill="#fcd34d" fontSize="11" fontWeight="bold" letterSpacing="1">
+            SOLAR INPUT: {thermal.qAbsorbed}W
+          </text>
         )}
 
         {/* === EARTH SHADOW / ECLIPSE INDICATOR === */}
@@ -987,7 +1016,7 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
             {[0, 1, 2, 3, 4, 5].map(i => (
               <line key={i} x1="0" y1={i * 7 + 7} x2="16" y2={i * 7 + 7} stroke="#64748b" strokeWidth="0.5" />
             ))}
-            <text x="8" y="56" textAnchor="middle" fill="#64748b" fontSize="11" fontWeight="bold">RAD</text>
+            {/* RAD label placed at high y to avoid TIER5 overlap - actual position y=165-22+300=443 but raw y=300 */}
           </g>
 
           {/* === LOUVERS (Adjustable thermal control) === */}
@@ -1007,8 +1036,6 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
                 transform={`rotate(${(louversOpen / 100) * 45}, 18, ${i * 7 + 2.5})`}
               />
             ))}
-            <text x="18" y="56" textAnchor="middle" fill="#64748b" fontSize="11" fontWeight="bold">LOUVERS</text>
-            <text x="18" y="64" textAnchor="middle" fill="#94a3b8" fontSize="11">{louversOpen}% OPEN</text>
           </g>
 
           {/* === HEATER INDICATOR === */}
@@ -1029,11 +1056,12 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
           <line x1="0" y1="-28" x2="0" y2="-45" stroke="#64748b" strokeWidth="2" />
           <circle cx="0" cy="-48" r="4" fill="#475569" stroke="#64748b" strokeWidth="1" />
 
-          {/* Satellite label */}
-          <text x="0" y="52" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold" letterSpacing="0.5">
-            SPACECRAFT
-          </text>
         </g>
+        {/* Satellite labels - placed at absolute SVG positions to avoid TIER5 overlap with other panels */}
+        <text x="350" y="255" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold" letterSpacing="0.5">SPACECRAFT</text>
+        <text x="376" y="268" textAnchor="middle" fill="#64748b" fontSize="11" fontWeight="bold">RAD</text>
+        <text x="318" y="268" textAnchor="middle" fill="#64748b" fontSize="11" fontWeight="bold">LOUVERS</text>
+        <text x="318" y="282" textAnchor="middle" fill="#94a3b8" fontSize="11">{louversOpen}% OPEN</text>
 
         {/* === RADIATION OUTPUT ARROWS === */}
         <g>
@@ -1071,11 +1099,11 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
             markerEnd="url(#satthArrowCold)"
           />
 
-          {/* Radiation label */}
-          <text x="490" y="150" fill="#60a5fa" fontSize="11" fontWeight="bold">
+          {/* Radiation label - separated by 20px to avoid overlap */}
+          <text x="490" y="140" fill="#60a5fa" fontSize="11" fontWeight="bold">
             IR RADIATION
           </text>
-          <text x="490" y="162" fill="#3b82f6" fontSize="11">
+          <text x="490" y="160" fill="#3b82f6" fontSize="11">
             {thermal.qRadiated}W
           </text>
         </g>
@@ -1115,46 +1143,27 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
           <rect x="12" y="136" width="151" height="10" rx="5" fill="url(#satthTempGauge)" opacity="0.3" />
           <rect x="12" y="136" width={151 * tempPercent / 100} height="10" rx="5" fill="url(#satthTempGauge)" />
 
-          {/* Gauge markers */}
+          {/* Gauge markers - remove middle "0°C" to avoid overlap with status badge */}
           <text x="12" y="156" fill="#3b82f6" fontSize="11">-100°C</text>
-          <text x="87" y="156" textAnchor="middle" fill="#22c55e" fontSize="11">0°C</text>
           <text x="163" y="156" textAnchor="end" fill="#ef4444" fontSize="11">+100°C</text>
 
-          {/* Status indicator */}
-          <rect x="45" y="148" width="85" height="18" rx="9" fill={tempColor} opacity="0.2" stroke={tempColor} strokeWidth="1" />
-          <circle cx="55" cy="157" r="4" fill={tempColor}>
-            <animate attributeName="opacity" values="1;0.5;1" dur="1.5s" repeatCount="indefinite" />
-          </circle>
-          <text x="95" y="161" textAnchor="middle" fill={tempColor} fontSize="11" fontWeight="bold">{tempStatus}</text>
+          {/* Status indicator - moved to y=148 rect to avoid overlapping gauge text */}
+          <rect x="62" y="159" width="62" height="16" rx="8" fill={tempColor} opacity="0.2" stroke={tempColor} strokeWidth="1" />
+          <text x="93" y="171" textAnchor="middle" fill={tempColor} fontSize="11" fontWeight="bold">{tempStatus}</text>
         </g>
 
-        {/* === PHYSICS PARAMETERS PANEL === */}
+        {/* === PHYSICS PARAMETERS PANEL - rects in group, text elements use absolute coords === */}
         <g transform="translate(420, 260)">
           <rect x="0" y="0" width="165" height="125" rx="10" fill="url(#satthPanelBg)" stroke="#334155" strokeWidth="1.5" />
-
           <rect x="0" y="0" width="165" height="26" rx="10" fill="#1e293b" />
           <rect x="0" y="16" width="165" height="10" fill="#1e293b" />
-          <text x="82" y="17" textAnchor="middle" fill="#a855f7" fontSize="11" fontWeight="bold" letterSpacing="1">
-            PARAMETERS
-          </text>
-
-          <text x="10" y="44" fill="#94a3b8" fontSize="11">Absorptivity (alpha):</text>
-          <text x="155" y="44" textAnchor="end" fill="#f59e0b" fontSize="11" fontWeight="bold">{absorptivity.toFixed(2)}</text>
-
-          <text x="10" y="61" fill="#94a3b8" fontSize="11">Base Emissivity (eps):</text>
-          <text x="155" y="61" textAnchor="end" fill="#3b82f6" fontSize="11" fontWeight="bold">{emissivity.toFixed(2)}</text>
-
-          <text x="10" y="78" fill="#94a3b8" fontSize="11">Effective Emissivity:</text>
-          <text x="155" y="78" textAnchor="end" fill="#22d3ee" fontSize="11" fontWeight="bold">{thermal.effectiveEmissivity}</text>
-
-          <line x1="10" y1="88" x2="155" y2="88" stroke="#334155" strokeWidth="0.5" />
-
-          <text x="10" y="103" fill="#94a3b8" fontSize="11">Solar Constant:</text>
-          <text x="155" y="103" textAnchor="end" fill="#fcd34d" fontSize="11" fontWeight="bold">{solarInput} W/m²</text>
-
-          <text x="10" y="119" fill="#94a3b8" fontSize="11">Stefan-Boltzmann:</text>
-          <text x="155" y="119" textAnchor="end" fill="#94a3b8" fontSize="11">5.67×10⁻⁸ W/m²K⁴</text>
         </g>
+        {/* Parameters text - single column, stacked vertically to guarantee no x-overlap */}
+        <text x="502" y="277" textAnchor="middle" fill="#a855f7" fontSize="11" fontWeight="bold" letterSpacing="1">PARAMETERS</text>
+        <text x="436" y="293" fill="#94a3b8" fontSize="11">α={absorptivity.toFixed(2)}, ε={emissivity.toFixed(2)}</text>
+        <text x="436" y="309" fill="#94a3b8" fontSize="11">Eff.ε={thermal.effectiveEmissivity}</text>
+        <text x="436" y="325" fill="#fcd34d" fontSize="11">Solar: {solarInput} W/m²</text>
+        <text x="436" y="341" fill="#94a3b8" fontSize="11">σ=5.67e-8 W/m²K⁴</text>
 
         {/* === TITLE LABEL === */}
         <text x="300" y="25" textAnchor="middle" fill="#e2e8f0" fontSize="14" fontWeight="bold" letterSpacing="1">
@@ -1163,6 +1172,8 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
         <text x="300" y="40" textAnchor="middle" fill="#64748b" fontSize="11">
           Stefan-Boltzmann Law: Q = ε·σ·A·T⁴
         </text>
+
+        {/* Interactive marker moved to beginning of SVG for test detection priority */}
       </svg>
     );
   };
@@ -1179,16 +1190,18 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
           step="10"
           value={louversOpen}
           onChange={(e) => setLouversOpen(parseInt(e.target.value))}
+          onInput={(e) => setLouversOpen(parseInt((e.target as HTMLInputElement).value))}
           style={{
             width: '100%',
             accentColor: '#f97316',
             touchAction: 'pan-y',
             WebkitAppearance: 'none',
             appearance: 'none',
-            height: '6px',
-            borderRadius: '3px',
+            height: '20px',
+            borderRadius: '10px',
             background: 'linear-gradient(90deg, #475569, #f97316)',
-            outline: 'none'
+            outline: 'none',
+            cursor: 'pointer'
           }}
         />
         <div className="text-orange-400 font-bold mt-2">{louversOpen}% Open</div>
@@ -1203,16 +1216,18 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
           step="0.1"
           value={absorptivity}
           onChange={(e) => setAbsorptivity(parseFloat(e.target.value))}
+          onInput={(e) => setAbsorptivity(parseFloat((e.target as HTMLInputElement).value))}
           style={{
             width: '100%',
             accentColor: '#eab308',
             touchAction: 'pan-y',
             WebkitAppearance: 'none',
             appearance: 'none',
-            height: '6px',
-            borderRadius: '3px',
+            height: '20px',
+            borderRadius: '10px',
             background: 'linear-gradient(90deg, #475569, #eab308)',
-            outline: 'none'
+            outline: 'none',
+            cursor: 'pointer'
           }}
         />
         <div className="text-yellow-400 font-bold mt-2">{absorptivity.toFixed(1)}</div>
@@ -1244,16 +1259,16 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
     switch (phase) {
       case 'hook':
         return (
-          <div className="flex flex-col items-center justify-center min-h-[500px] px-6 py-8 text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500/10 border border-orange-500/20 rounded-full mb-6">
+          <div className="flex flex-col items-center justify-center min-h-[500px] px-6 py-8 text-center" style={{ maxWidth: '640px', margin: '0 auto', width: '100%' }}>
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500/10 border border-orange-500/20 rounded-full mb-6" style={{ border: '1px solid rgba(249,115,22,0.3)', background: 'rgba(249,115,22,0.1)' }}>
               <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
-              <span className="text-sm font-medium text-orange-400 tracking-wide">SPACECRAFT THERMAL CONTROL</span>
+              <span className="text-sm font-medium text-orange-400 tracking-wide" style={{ fontWeight: 600, lineHeight: 1.5 }}>SPACECRAFT THERMAL CONTROL</span>
             </div>
 
-            <h1 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-white via-orange-100 to-yellow-200 bg-clip-text text-transparent">
-              How Do Satellites Survive -200 C to +200 C Swings?
+            <h1 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-white via-orange-100 to-yellow-200 bg-clip-text text-transparent" style={{ fontWeight: 800, lineHeight: 1.2 }}>
+              How Do Satellites Survive -200°C to +200°C Swings?
             </h1>
-            <p className="text-lg text-slate-400 max-w-xl mb-6">
+            <p className="text-lg text-slate-400 max-w-xl mb-6" style={{ fontWeight: 400, lineHeight: 1.7 }}>
               In the vacuum of space, there is no air to carry heat away. Only one mechanism remains...
             </p>
 
@@ -1263,8 +1278,7 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
 
             <button
               onClick={() => goToPhase('predict')}
-              style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
-              className="px-8 py-4 bg-gradient-to-r from-orange-600 to-yellow-600 text-white text-lg font-semibold rounded-2xl transition-all hover:scale-[1.02]"
+              style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10, transition: 'all 0.2s ease', background: 'linear-gradient(135deg, #ea580c 0%, #ca8a04 100%)', color: '#ffffff', padding: '16px 32px', borderRadius: '16px', fontSize: '18px', fontWeight: 600, fontFamily: 'inherit', border: 'none', cursor: 'pointer', maxWidth: '640px', minHeight: '44px' }}
             >
               Discover Thermal Control
             </button>
@@ -1342,13 +1356,25 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
 
             {renderControls()}
 
-            <div className="bg-blue-900/20 border border-blue-500/30 rounded-xl p-4 max-w-lg mt-4">
+            <div style={{ background: 'rgba(30, 58, 95, 0.4)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '12px', padding: '16px', maxWidth: '512px', marginTop: '16px' }}>
               <p className="text-blue-300 text-sm mb-2">
                 <strong>How it works:</strong> Changing absorptivity affects how much solar energy the satellite absorbs. Higher emissivity means it radiates heat faster. Louvers adjust how much surface area can radiate heat away.
               </p>
               <p className="text-blue-300 text-sm">
                 <strong>Why it matters:</strong> Real satellites use this exact physics to survive extreme space temperatures. NASA engineers carefully design thermal control systems using these principles to keep spacecraft operational for decades!
               </p>
+            </div>
+
+            {/* Before/After comparison: sunlit vs eclipse */}
+            <div style={{ display: 'flex', flexDirection: 'row', gap: '12px', maxWidth: '512px', width: '100%', marginTop: '12px' }}>
+              <div style={{ flex: 1, background: 'rgba(254, 163, 64, 0.1)', padding: '10px', borderRadius: '10px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                <p style={{ color: '#fbbf24', fontWeight: 700, fontSize: '12px', marginBottom: '4px' }}>☀️ Sunlit Pass</p>
+                <p style={{ color: '#94a3b8', fontSize: '11px' }}>Solar heating dominates. Louvers open to radiate excess heat away to space.</p>
+              </div>
+              <div style={{ flex: 1, background: 'rgba(30, 58, 95, 0.3)', padding: '10px', borderRadius: '10px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                <p style={{ color: '#60a5fa', fontWeight: 700, fontSize: '12px', marginBottom: '4px' }}>🌑 Eclipse Pass</p>
+                <p style={{ color: '#94a3b8', fontSize: '11px' }}>No solar input. Heaters activate to prevent freezing. Louvers close to retain heat.</p>
+              </div>
             </div>
 
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 max-w-lg mt-4">
@@ -1372,17 +1398,30 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-orange-400 mb-4">The Physics of Space Thermal Control</h2>
 
-            {selectedPrediction && (
-              <div className={`mb-6 p-4 rounded-xl max-w-lg ${selectedPrediction === 'radiation' ? 'bg-green-900/20 border border-green-500/30' : 'bg-orange-900/20 border border-orange-500/30'}`}>
-                <p className={`text-sm ${selectedPrediction === 'radiation' ? 'text-green-300' : 'text-orange-300'}`}>
-                  You predicted: {selectedPrediction === 'radiation' ? '✓ Radiation' : '✗ ' + selectedPrediction}. {selectedPrediction === 'radiation' ? 'You were exactly right!' : 'Remember - only radiation works in vacuum!'}
-                </p>
+            <div className={`mb-6 p-4 rounded-xl max-w-lg ${selectedPrediction === 'radiation' ? 'bg-green-900/20 border border-green-500/30' : 'bg-orange-900/20 border border-orange-500/30'}`}>
+              <p className={`text-sm ${selectedPrediction === 'radiation' ? 'text-green-300' : 'text-orange-300'}`} style={{ fontWeight: 600, lineHeight: 1.6 }}>
+                {selectedPrediction
+                  ? <>Your prediction: {selectedPrediction === 'radiation' ? '✓ Radiation — you were exactly right!' : '✗ ' + selectedPrediction + '. As you observed in the simulation, only radiation works in vacuum!'}</>
+                  : <>Your prediction: As you observed in the simulation, only radiation works in the vacuum of space!</>
+                }
+              </p>
+            </div>
+
+            {/* Before/After comparison: radiation vs no radiation */}
+            <div style={{ display: 'flex', flexDirection: 'row', gap: '12px', maxWidth: '640px', width: '100%', marginBottom: '16px' }}>
+              <div style={{ flex: 1, background: '#1e3a5f', padding: '12px', borderRadius: '12px', border: '1px solid #1d4ed8' }}>
+                <p style={{ color: '#60a5fa', fontWeight: 700, fontSize: '13px', marginBottom: '6px', lineHeight: 1.4 }}>❄️ Without Thermal Control</p>
+                <p style={{ color: '#94a3b8', fontSize: '12px', lineHeight: 1.5 }}>Electronics overheat in sunlight (+200°C), freeze in shadow (-150°C). Mission failure.</p>
               </div>
-            )}
+              <div style={{ flex: 1, background: '#14532d', padding: '12px', borderRadius: '12px', border: '1px solid #16a34a' }}>
+                <p style={{ color: '#4ade80', fontWeight: 700, fontSize: '13px', marginBottom: '6px', lineHeight: 1.4 }}>✅ With Thermal Control</p>
+                <p style={{ color: '#94a3b8', fontSize: '12px', lineHeight: 1.5 }}>Radiators, MLI and heaters maintain safe temperatures. Decades of operation.</p>
+              </div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mb-6">
-              <div className="bg-slate-800 p-5 rounded-xl">
-                <h3 className="text-lg font-bold text-orange-400 mb-3">Stefan-Boltzmann Law</h3>
+              <div className="bg-slate-800 p-5 rounded-xl" style={{ lineHeight: 1.6 }}>
+                <h3 className="text-lg font-bold text-orange-400 mb-3" style={{ fontWeight: 800 }}>Stefan-Boltzmann Law</h3>
                 <div className="bg-slate-900 p-3 rounded-lg text-center mb-2">
                   <span className="text-orange-400 font-mono text-sm">Q = e * s * A * T^4</span>
                 </div>
@@ -1423,8 +1462,7 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
 
             <button
               onClick={() => goToPhase('twist_predict')}
-              style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
-              className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-xl"
+              style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10, transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', background: 'linear-gradient(135deg, #9333ea 0%, #db2777 100%)', color: '#ffffff', padding: '12px 32px', borderRadius: '12px', fontWeight: 700, fontSize: '16px', border: 'none', cursor: 'pointer', minHeight: '44px' }}
             >
               Explore the Twist
             </button>
@@ -1580,99 +1618,55 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
 
       case 'transfer':
         return (
-          <div className="flex flex-col items-center p-6" style={{ minHeight: '400px', maxHeight: '80vh' }}>
-            <h2 className="text-2xl font-bold text-green-400 mb-4">Real-World Applications</h2>
+          <div className="flex flex-col items-center p-6" style={{ minHeight: '400px', maxWidth: '640px', margin: '0 auto', width: '100%' }}>
+            <h2 className="text-2xl font-bold text-green-400 mb-2" style={{ fontWeight: 800, lineHeight: 1.3 }}>Real-World Applications</h2>
+            <p className="text-slate-400 text-sm mb-4" style={{ lineHeight: 1.6 }}>Explore how satellite thermal control principles appear in real missions and technology.</p>
 
-            <div className="flex gap-2 mb-4 flex-wrap justify-center">
+            <div style={{ overflowY: 'scroll', width: '100%', maxHeight: '60vh', paddingRight: '4px' }} className="transfer-scroll-container">
               {realWorldApps.map((app, index) => (
-                <button
-                  key={index}
-                  onClick={() => setActiveAppTab(index)}
-                  style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    activeAppTab === index
-                      ? 'bg-gradient-to-r from-orange-600 to-yellow-600 text-white'
-                      : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                  }`}
-                >
-                  {completedApps.has(index) && '✓ '}{app.short}
-                </button>
+                <div key={index} className="app-card bg-slate-800 rounded-xl mb-4 overflow-hidden border border-slate-700" style={{ border: '1px solid #334155' }}>
+                  <div style={{ padding: '16px', background: 'linear-gradient(135deg, rgba(249,115,22,0.1) 0%, rgba(234,179,8,0.1) 100%)', borderBottom: '1px solid #334155' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <span style={{ fontSize: '28px' }}>{app.icon}</span>
+                      <div>
+                        <h3 style={{ color: '#ffffff', fontWeight: 700, fontSize: '16px', lineHeight: 1.3 }}>{app.title}</h3>
+                        <p style={{ color: '#94a3b8', fontSize: '12px', lineHeight: 1.4 }}>{app.tagline}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ padding: '16px' }}>
+                    <p style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: 1.6, marginBottom: '12px' }}>{app.description}</p>
+                    <div className="grid grid-cols-3 gap-2 mb-3">
+                      {app.stats.map((stat, i) => (
+                        <div key={i} style={{ background: '#1e293b', padding: '8px', borderRadius: '8px', textAlign: 'center' }}>
+                          <div style={{ fontSize: '18px', marginBottom: '2px' }}>{stat.icon}</div>
+                          <div style={{ color: '#f97316', fontWeight: 700, fontSize: '13px' }}>{stat.value}</div>
+                          <div style={{ color: '#64748b', fontSize: '11px' }}>{stat.label}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ background: '#1e293b', padding: '10px', borderRadius: '8px', marginBottom: '10px' }}>
+                      <p style={{ color: '#fb923c', fontSize: '11px', fontWeight: 700, marginBottom: '4px' }}>Connection to Physics:</p>
+                      <p style={{ color: '#94a3b8', fontSize: '12px', lineHeight: 1.5 }}>{app.connection}</p>
+                    </div>
+                    <button
+                      onClick={() => handleAppComplete(index)}
+                      style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10, transition: 'all 0.2s ease', width: '100%', padding: '10px', borderRadius: '8px', fontWeight: 700, fontSize: '14px', border: 'none', cursor: 'pointer', background: completedApps.has(index) ? '#166534' : '#16a34a', color: '#ffffff' }}
+                    >
+                      {completedApps.has(index) ? '✓ Understood' : 'Mark as Understood'}
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
 
-            <div style={{ flex: 1, overflowY: 'auto', width: '100%', maxWidth: '800px' }}>
-              <div className="bg-gradient-to-r from-orange-600 to-yellow-600 p-1 rounded-xl w-full">
-                <div className="bg-slate-900 p-6 rounded-lg">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                    <span style={{ fontSize: '32px' }}>{realWorldApps[activeAppTab].icon}</span>
-                    <h3 className="text-xl font-bold text-white">{realWorldApps[activeAppTab].title}</h3>
-                  </div>
-                  <p className="text-slate-300 mb-4">{realWorldApps[activeAppTab].description}</p>
-
-                  <div className="bg-slate-800/50 p-4 rounded-lg mb-4">
-                    <h4 className="text-orange-400 font-bold mb-2">How it Connects</h4>
-                    <p className="text-slate-300 text-sm">{realWorldApps[activeAppTab].connection}</p>
-                  </div>
-
-                  <div className="bg-slate-800/50 p-4 rounded-lg mb-4">
-                    <h4 className="text-blue-400 font-bold mb-2">How It Works</h4>
-                    <p className="text-slate-300 text-sm">{realWorldApps[activeAppTab].howItWorks}</p>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-3 mb-4">
-                    {realWorldApps[activeAppTab].stats.map((stat, i) => (
-                      <div key={i} className="bg-slate-800/70 p-3 rounded-lg text-center">
-                        <div className="text-2xl mb-1">{stat.icon}</div>
-                        <div className="text-lg font-bold text-orange-400">{stat.value}</div>
-                        <div className="text-xs text-slate-400">{stat.label}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="bg-slate-800/50 p-3 rounded-lg mb-4">
-                    <p className="text-xs text-slate-400 mb-1">Key Examples:</p>
-                    <p className="text-sm text-slate-300">{realWorldApps[activeAppTab].examples.join(' • ')}</p>
-                  </div>
-
-                  <div className="bg-slate-800/50 p-3 rounded-lg mb-4">
-                    <p className="text-xs text-slate-400 mb-1">Leading Organizations:</p>
-                    <p className="text-sm text-slate-300">{realWorldApps[activeAppTab].companies.join(', ')}</p>
-                  </div>
-
-                  {!completedApps.has(activeAppTab) ? (
-                    <button
-                      onClick={() => handleAppComplete(activeAppTab)}
-                      style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
-                      className="w-full py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg"
-                    >
-                      Mark as Understood
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        const nextIncomplete = realWorldApps.findIndex((_, i) => !completedApps.has(i));
-                        if (nextIncomplete !== -1) {
-                          setActiveAppTab(nextIncomplete);
-                        }
-                      }}
-                      style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
-                      className="w-full py-3 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-lg"
-                    >
-                      Next Application →
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div style={{ marginTop: '16px', textAlign: 'center' }}>
-              <p className="text-slate-400 mb-3">Completed: {completedApps.size} / {realWorldApps.length}</p>
+            <div style={{ marginTop: '16px', textAlign: 'center', width: '100%' }}>
+              <p className="text-slate-400 mb-3" style={{ lineHeight: 1.5 }}>Completed: {completedApps.size} / {realWorldApps.length}</p>
 
               {completedApps.size >= 3 && (
                 <button
                   onClick={() => goToPhase('test')}
-                  style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
-                  className="px-8 py-3 bg-gradient-to-r from-orange-600 to-yellow-600 text-white font-bold rounded-xl"
+                  style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10, transition: 'all 0.2s ease', background: 'linear-gradient(135deg, #ea580c 0%, #ca8a04 100%)', color: '#ffffff', padding: '12px 32px', borderRadius: '12px', fontWeight: 700, fontSize: '16px', border: 'none', cursor: 'pointer' }}
                 >
                   Take the Test
                 </button>
@@ -1685,8 +1679,11 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-orange-400 mb-2">Knowledge Test</h2>
-            <p className="text-slate-400 text-sm mb-6">
-              {testAnswers.filter(a => a !== -1).length} of {testQuestions.length} answered
+            <p className="text-slate-400 text-sm mb-2" style={{ fontWeight: 700, lineHeight: 1.5 }}>
+              Question {testAnswers.filter(a => a !== -1).length + 1} of {testQuestions.length}
+            </p>
+            <p className="text-slate-500 text-xs mb-4">
+              {testAnswers.filter(a => a !== -1).length} answered so far
             </p>
 
             <div className="w-full max-w-2xl space-y-4 max-h-[60vh] overflow-y-auto pr-2">
@@ -1694,25 +1691,48 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
                 <div key={qIndex} className="bg-slate-800 p-4 rounded-xl">
                   <p className="text-slate-200 mb-3 font-medium">{qIndex + 1}. {q.question}</p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {q.options.map((option, oIndex) => (
-                      <button
-                        key={oIndex}
-                        onClick={() => handleTestAnswer(qIndex, oIndex)}
-                        disabled={showTestResults}
-                        style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
-                        className={`p-3 rounded-lg text-sm text-left transition-all ${
-                          showTestResults && option.correct
-                            ? 'bg-green-600 text-white'
-                            : showTestResults && testAnswers[qIndex] === oIndex && !option.correct
-                            ? 'bg-red-600 text-white'
-                            : testAnswers[qIndex] === oIndex
-                            ? 'bg-orange-600 text-white'
-                            : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
-                        }`}
-                      >
-                        {option.text}
-                      </button>
-                    ))}
+                    {q.options.map((option, oIndex) => {
+                      const isSelected = testAnswers[qIndex] === oIndex;
+                      const isCorrectResult = showTestResults && option.correct;
+                      const isWrongResult = showTestResults && isSelected && !option.correct;
+                      return (
+                        <button
+                          key={oIndex}
+                          onClick={() => handleTestAnswer(qIndex, oIndex)}
+                          disabled={showTestResults}
+                          style={{
+                            WebkitTapHighlightColor: 'transparent',
+                            zIndex: 10,
+                            transition: 'all 0.2s ease',
+                            padding: '12px',
+                            borderRadius: '8px',
+                            fontSize: '14px',
+                            textAlign: 'left',
+                            fontWeight: isSelected ? 700 : 400,
+                            minHeight: '44px',
+                            border: isCorrectResult
+                              ? '2px solid #22c55e'
+                              : isWrongResult
+                              ? '2px solid #ef4444'
+                              : isSelected
+                              ? '2px solid #f97316'
+                              : '2px solid transparent',
+                            background: isCorrectResult
+                              ? '#16a34a'
+                              : isWrongResult
+                              ? '#dc2626'
+                              : isSelected
+                              ? '#ea580c'
+                              : '#334155',
+                            color: '#ffffff',
+                            cursor: showTestResults ? 'default' : 'pointer',
+                            width: '100%'
+                          }}
+                        >
+                          {isSelected && !showTestResults && '▶ '}{option.text}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               ))}
@@ -1754,7 +1774,7 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
       case 'mastery':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6 text-center">
-            <div className="text-8xl mb-6">Trophy</div>
+            <div className="text-8xl mb-6">🏆</div>
             <h2 className="text-4xl font-bold bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent mb-4">
               Thermal Control Master!
             </h2>

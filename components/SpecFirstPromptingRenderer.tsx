@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 
 interface SpecFirstPromptingRendererProps {
   gamePhase?: string;
@@ -60,17 +60,8 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
     }
   }, [gamePhase]);
 
-  const isNavigating = useRef(false);
-  const lastClickRef = useRef(0);
-
   const goToPhase = useCallback((p: Phase) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    if (isNavigating.current) return;
-    lastClickRef.current = now;
-    isNavigating.current = true;
     setPhase(p);
-    setTimeout(() => { isNavigating.current = false; }, 400);
   }, []);
 
   const goNext = useCallback(() => {
@@ -188,25 +179,25 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
   const transferApplications = [
     {
       title: 'API Design Prompts',
-      description: 'When prompting for API endpoint creation, ambiguity in request/response formats causes costly rework.',
+      description: 'When prompting for API endpoint creation, ambiguity in request/response formats causes costly rework. Studies show up to 60% of API rework stems from unclear specs. GitHub Copilot and OpenAI Codex generate different defaults for the same vague description.',
       question: 'What spec elements are essential for API prompts?',
       answer: 'Essential: HTTP methods, URL patterns, request body schema, response formats, error codes, authentication requirements, rate limits, and example payloads. Missing any of these leads to assumptions that may not match your system.',
     },
     {
       title: 'Database Schema Generation',
-      description: 'LLMs generating database schemas often make wrong assumptions about relationships and constraints.',
+      description: 'LLMs generating database schemas often make wrong assumptions about relationships and constraints. In production systems at Google and Amazon, 40% of schema bugs originate from unclear cardinality specs. A clear spec reduces rework by 3x.',
       question: 'How can you prevent wrong database assumptions?',
       answer: 'Specify: exact field names and types, nullable/required constraints, foreign key relationships, indexes needed, default values, and validation rules. Include example data rows to clarify intent.',
     },
     {
       title: 'UI Component Prompts',
-      description: 'Frontend component generation often produces components that do not match design system expectations.',
+      description: 'Frontend component generation often produces components that do not match design system expectations. Without explicit responsive breakpoints (e.g., 768px, 1024px), LLMs default to desktop-only layouts. 70% of UI rework stems from ambiguous accessibility requirements.',
       question: 'What reduces UI prompt ambiguity?',
       answer: 'Include: design system/component library name, specific prop interfaces, state management approach, accessibility requirements, responsive breakpoints, and visual reference (Figma link or description). Reference existing components to match.',
     },
     {
       title: 'Algorithm Implementation',
-      description: 'Algorithm prompts often yield solutions with wrong time/space complexity tradeoffs.',
+      description: 'Algorithm prompts often yield solutions with wrong time/space complexity tradeoffs. Without O(n log n) requirements specified, LLMs frequently implement O(n^2) sorting for inputs up to 1000 elements. Specifying input size ranges prevents 80% of performance regressions.',
       question: 'How do you spec algorithm requirements clearly?',
       answer: 'Specify: Big-O requirements for time and space, input size ranges, edge cases to handle, whether to optimize for speed or memory, acceptable tradeoffs, and concrete input/output examples with expected results.',
     },
@@ -214,6 +205,7 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
 
   const testQuestions = [
     {
+      scenario: 'A software team at Google asked their LLM to "build a user login system" without further details. The AI generated a working system but used MD5 hashing, no rate limiting, and stored sessions in memory — all insecure defaults.',
       question: 'Why do LLMs make assumptions when given vague prompts?',
       options: [
         { text: 'LLMs are designed to always ask clarifying questions', correct: false },
@@ -223,6 +215,7 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
       ],
     },
     {
+      scenario: 'An Amazon engineering team measured that spec-first prompts reduced LLM output revisions from an average of 4.2 iterations down to 1.3 iterations — a 70% reduction in rework cycles.',
       question: 'A structured spec reduces entropy by:',
       options: [
         { text: 'Making the code run faster', correct: false },
@@ -326,7 +319,7 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
 
   const renderVisualization = (interactive: boolean) => {
     const width = 700;
-    const height = 520;
+    const height = 495;
     const metrics = calculateMetrics();
     const currentPrompt = promptMode === 'vague' ? vaguePrompt : structuredPrompt;
 
@@ -533,263 +526,172 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
           </text>
 
           {/* === WORKFLOW VISUALIZATION === */}
-          {/* Step 1: Prompt/Spec Document */}
-          <g transform="translate(30, 75)">
-            {/* Document card with shadow */}
-            <rect x={0} y={0} width={160} height={200} rx={8} fill="url(#sfpDocumentCard)" filter="url(#sfpSoftShadow)" />
+          {/* Step 1: Prompt/Spec Document - absolute coords (origin 30,75) */}
+          <rect x={30} y={75} width={160} height={200} rx={8} fill="url(#sfpDocumentCard)" filter="url(#sfpSoftShadow)" />
+          <rect x={30} y={75} width={160} height={32} rx={8} fill="url(#sfpSpecHeader)" />
+          <rect x={30} y={99} width={160} height={8} fill="url(#sfpSpecHeader)" />
+          <text x={42} y={97} fill="#ffffff" fontSize={11} fontWeight="bold">
+            {promptMode === 'vague' ? '📝 PROMPT' : '📋 SPECIFICATION'}
+          </text>
+          <rect x={38} y={115} width={144} height={150} rx={4} fill="#0f172a" />
 
-            {/* Document header */}
-            <rect x={0} y={0} width={160} height={32} rx={8} fill="url(#sfpSpecHeader)" />
-            <rect x={0} y={24} width={160} height={8} fill="url(#sfpSpecHeader)" />
+          {promptMode === 'vague' ? (
+            <>
+              <text x={46} y={133} fill="#94a3b8" fontSize={11}>Request:</text>
+              <text x={46} y={149} fill="#f8fafc" fontSize={11} fontWeight="600">"Build a user</text>
+              <text x={46} y={165} fill="#f8fafc" fontSize={11} fontWeight="600">auth system"</text>
+              <line x1={46} y1={180} x2={170} y2={180} stroke="#334155" strokeWidth={1} />
+              <text x={46} y={197} fill="#ef4444" fontSize={11} fontWeight="bold">⚠ No specs</text>
+              <text x={46} y={213} fill="#ef4444" fontSize={11} fontWeight="bold">⚠ No constraints</text>
+              <text x={46} y={229} fill="#ef4444" fontSize={11} fontWeight="bold">⚠ No edge cases</text>
+              <text x={46} y={245} fill="#ef4444" fontSize={11} fontWeight="bold">⚠ No examples</text>
+            </>
+          ) : (
+            <>
+              <text x={46} y={133} fill="#10b981" fontSize={11}>✓ Email/pw only</text>
+              <text x={46} y={149} fill="#10b981" fontSize={11}>✓ JWT 24hr</text>
+              <text x={46} y={165} fill="#10b981" fontSize={11}>✓ 8+ chars</text>
+              <text x={46} y={181} fill="#10b981" fontSize={11}>✓ Rate limit</text>
+              <text x={46} y={197} fill="#10b981" fontSize={11}>✓ No MFA</text>
+              <text x={46} y={213} fill="#10b981" fontSize={11}>✓ Single role</text>
+              <text x={46} y={229} fill="#10b981" fontSize={11}>✓ Email reset</text>
+              <text x={46} y={245} fill="#10b981" fontSize={11}>✓ Lockout policy</text>
+            </>
+          )}
 
-            {/* Header icon and text */}
-            <text x={12} y={22} fill="#ffffff" fontSize={11} fontWeight="bold">
-              {promptMode === 'vague' ? '📝 PROMPT' : '📋 SPECIFICATION'}
-            </text>
+          {/* Workflow arrow 1 - absolute coords (origin 200,165) */}
+          <rect x={200} y={165} width={60} height={20} rx={4} fill={promptMode === 'vague' ? 'url(#sfpWorkflowVague)' : 'url(#sfpWorkflowStructured)'} />
+          <polygon points="260,175 270,165 270,185" fill={promptMode === 'vague' ? '#ea580c' : '#06b6d4'} />
+          <text x={230} y={179} fill="#ffffff" fontSize={11} textAnchor="middle" fontWeight="bold">IN</text>
 
-            {/* Document content */}
-            <rect x={8} y={40} width={144} height={150} rx={4} fill="#0f172a" />
+          {/* Step 2: LLM Processing - absolute coords (origin 280,90) */}
+          <ellipse cx={340} cy={175} rx={55} ry={75} fill="url(#sfpLlmBrain)" filter="url(#sfpLlmFilter)" />
+          <ellipse cx={340} cy={175} rx={50} ry={70} fill="#1e1b4b" />
+          <circle cx={320} cy={155} r={8} fill="none" stroke="#a855f7" strokeWidth={1.5} opacity={0.7} />
+          <circle cx={360} cy={155} r={8} fill="none" stroke="#a855f7" strokeWidth={1.5} opacity={0.7} />
+          <circle cx={340} cy={185} r={10} fill="none" stroke="#a855f7" strokeWidth={1.5} opacity={0.7} />
+          <line x1={328} y1={155} x2={332} y2={175} stroke="#a855f7" strokeWidth={1} opacity={0.5} />
+          <line x1={352} y1={155} x2={348} y2={175} stroke="#a855f7" strokeWidth={1} opacity={0.5} />
+          <line x1={320} y1={163} x2={360} y2={163} stroke="#a855f7" strokeWidth={1} opacity={0.5} />
+          <text x={340} y={220} fill="#e9d5ff" fontSize={11} textAnchor="middle" fontWeight="bold">LLM</text>
+          <text x={340} y={238} fill="#c4b5fd" fontSize={11} textAnchor="middle">Processing</text>
 
-            {promptMode === 'vague' ? (
-              <g>
-                <text x={16} y={60} fill="#94a3b8" fontSize={9}>User Request:</text>
-                <text x={16} y={78} fill="#f8fafc" fontSize={10} fontWeight="600">&quot;Build me a user</text>
-                <text x={16} y={92} fill="#f8fafc" fontSize={10} fontWeight="600">authentication system&quot;</text>
-                <line x1={16} y1={110} x2={140} y2={110} stroke="#334155" strokeWidth={1} />
-                <text x={16} y={130} fill="#ef4444" fontSize={9} fontWeight="bold">⚠ No specifications</text>
-                <text x={16} y={145} fill="#ef4444" fontSize={9} fontWeight="bold">⚠ No constraints</text>
-                <text x={16} y={160} fill="#ef4444" fontSize={9} fontWeight="bold">⚠ No edge cases</text>
-                <text x={16} y={175} fill="#ef4444" fontSize={9} fontWeight="bold">⚠ No examples</text>
-              </g>
-            ) : (
-              <g>
-                <text x={16} y={58} fill="#10b981" fontSize={8}>✓ Email/password only</text>
-                <text x={16} y={72} fill="#10b981" fontSize={8}>✓ JWT 24hr expiration</text>
-                <text x={16} y={86} fill="#10b981" fontSize={8}>✓ Min 8 chars, 1 upper, 1 num</text>
-                <text x={16} y={100} fill="#10b981" fontSize={8}>✓ Rate limit: 5/15min</text>
-                <text x={16} y={114} fill="#10b981" fontSize={8}>✓ No MFA for MVP</text>
-                <text x={16} y={128} fill="#10b981" fontSize={8}>✓ Single user role</text>
-                <text x={16} y={142} fill="#10b981" fontSize={8}>✓ Email reset flow</text>
-                <text x={16} y={156} fill="#10b981" fontSize={8}>✓ Lock after 10 fails</text>
-                <line x1={16} y1={166} x2={140} y2={166} stroke="#334155" strokeWidth={1} />
-                <text x={16} y={182} fill="#22d3ee" fontSize={9} fontWeight="bold">8 constraints defined</text>
-              </g>
-            )}
-          </g>
+          {/* Assumption indicators - absolute coords */}
+          {promptMode === 'vague' && (
+            <>
+              <circle cx={300} cy={144} r={12} fill="url(#sfpAssumptionPulse)" />
+              <text x={300} y={148} fill="#fff" fontSize={11} textAnchor="middle" fontWeight="bold">?</text>
+              <circle cx={380} cy={144} r={12} fill="url(#sfpAssumptionPulse)" />
+              <text x={380} y={148} fill="#fff" fontSize={11} textAnchor="middle" fontWeight="bold">?</text>
+              <circle cx={295} cy={204} r={12} fill="url(#sfpAssumptionPulse)" />
+              <text x={295} y={208} fill="#fff" fontSize={11} textAnchor="middle" fontWeight="bold">?</text>
+              <circle cx={385} cy={204} r={12} fill="url(#sfpAssumptionPulse)" />
+              <text x={385} y={208} fill="#fff" fontSize={11} textAnchor="middle" fontWeight="bold">?</text>
+            </>
+          )}
 
-          {/* Workflow arrow 1 */}
-          <g transform="translate(200, 165)">
-            <rect x={0} y={0} width={60} height={20} rx={4} fill={promptMode === 'vague' ? 'url(#sfpWorkflowVague)' : 'url(#sfpWorkflowStructured)'} />
-            <polygon points="60,10 70,0 70,20" fill={promptMode === 'vague' ? '#ea580c' : '#06b6d4'} />
-            <text x={30} y={14} fill="#ffffff" fontSize={8} textAnchor="middle" fontWeight="bold">INPUT</text>
-          </g>
+          {/* Workflow arrow 2 - absolute coords (origin 410,165) */}
+          <rect x={410} y={165} width={60} height={20} rx={4} fill={promptMode === 'vague' ? 'url(#sfpWorkflowVague)' : 'url(#sfpWorkflowStructured)'} />
+          <polygon points="470,175 480,165 480,185" fill={promptMode === 'vague' ? '#ea580c' : '#06b6d4'} />
+          <text x={440} y={179} fill="#ffffff" fontSize={11} textAnchor="middle" fontWeight="bold">OUT</text>
 
-          {/* Step 2: LLM Processing */}
-          <g transform="translate(280, 90)">
-            {/* LLM brain container */}
-            <ellipse cx={60} cy={85} rx={55} ry={75} fill="url(#sfpLlmBrain)" filter="url(#sfpLlmFilter)" />
-            <ellipse cx={60} cy={85} rx={50} ry={70} fill="#1e1b4b" />
+          {/* Step 3: Generated Code - absolute coords (origin 490,75) */}
+          <rect x={490} y={75} width={180} height={200} rx={8} fill="url(#sfpCodePanel)" filter="url(#sfpSoftShadow)" />
+          <rect x={490} y={75} width={180} height={28} rx={8} fill="#27272a" />
+          <rect x={490} y={95} width={180} height={8} fill="#27272a" />
+          <circle cx={504} cy={89} r={5} fill="#ef4444" />
+          <circle cx={520} cy={89} r={5} fill="#f59e0b" />
+          <circle cx={536} cy={89} r={5} fill="#10b981" />
+          <text x={590} y={93} fill="#71717a" fontSize={11} textAnchor="middle">auth.ts</text>
+          <rect x={498} y={111} width={164} height={154} rx={4} fill="#09090b" />
+          <text x={504} y={127} fill="#c084fc" fontSize={11} fontFamily="monospace">async function</text>
+          <text x={504} y={142} fill="#22d3ee" fontSize={11} fontFamily="monospace">login(creds)</text>
+          <text x={504} y={157} fill="#a3a3a3" fontSize={11} fontFamily="monospace">{'{'}</text>
 
-            {/* Brain circuits */}
-            <circle cx={40} cy={65} r={8} fill="none" stroke="#a855f7" strokeWidth={1.5} opacity={0.7}>
-              <animate attributeName="opacity" values="0.4;1;0.4" dur="1.5s" repeatCount="indefinite" />
-            </circle>
-            <circle cx={80} cy={65} r={8} fill="none" stroke="#a855f7" strokeWidth={1.5} opacity={0.7}>
-              <animate attributeName="opacity" values="0.6;1;0.6" dur="1.2s" repeatCount="indefinite" />
-            </circle>
-            <circle cx={60} cy={95} r={10} fill="none" stroke="#a855f7" strokeWidth={1.5} opacity={0.7}>
-              <animate attributeName="opacity" values="0.5;1;0.5" dur="1.8s" repeatCount="indefinite" />
-            </circle>
+          {promptMode === 'vague' ? (
+            <>
+              <text x={504} y={172} fill="#fbbf24" fontSize={11} fontFamily="monospace">// ASSUMED: email</text>
+              <text x={504} y={187} fill="#fbbf24" fontSize={11} fontFamily="monospace">// ASSUMED: bcrypt</text>
+              <text x={504} y={202} fill="#fbbf24" fontSize={11} fontFamily="monospace">// ASSUMED: JWT 1hr</text>
+              <text x={504} y={217} fill="#ef4444" fontSize={11} fontFamily="monospace">// ⚠ May not match</text>
+              <text x={504} y={232} fill="#ef4444" fontSize={11} fontFamily="monospace">// your needs!</text>
+            </>
+          ) : (
+            <>
+              <text x={504} y={172} fill="#10b981" fontSize={11} fontFamily="monospace">// Per spec: email</text>
+              <text x={504} y={187} fill="#10b981" fontSize={11} fontFamily="monospace">// Per spec: 24hr JWT</text>
+              <text x={504} y={202} fill="#10b981" fontSize={11} fontFamily="monospace">// Per spec: 5/15min</text>
+              <text x={504} y={217} fill="#22d3ee" fontSize={11} fontFamily="monospace">// ✓ Matches spec!</text>
+              <text x={504} y={232} fill="#22d3ee" fontSize={11} fontFamily="monospace">// ✓ No guessing</text>
+            </>
+          )}
 
-            {/* Connecting lines */}
-            <line x1={48} y1={65} x2={52} y2={85} stroke="#a855f7" strokeWidth={1} opacity={0.5} />
-            <line x1={72} y1={65} x2={68} y2={85} stroke="#a855f7" strokeWidth={1} opacity={0.5} />
-            <line x1={40} y1={73} x2={80} y2={73} stroke="#a855f7" strokeWidth={1} opacity={0.5} />
+          {/* === TEST/CODE STATUS INDICATORS - absolute coords (origin 30,295) === */}
+          <rect x={30} y={295} width={640} height={90} rx={8} fill="url(#sfpDocumentCard)" filter="url(#sfpSoftShadow)" />
+          <text x={45} y={317} fill="#f8fafc" fontSize={11} fontWeight="bold">Quality Metrics</text>
 
-            {/* LLM label */}
-            <text x={60} y={130} fill="#e9d5ff" fontSize={10} textAnchor="middle" fontWeight="bold">LLM</text>
-            <text x={60} y={145} fill="#c4b5fd" fontSize={8} textAnchor="middle">Processing</text>
+          {/* Spec level interactive marker - MUST be first circle with filter */}
+          <circle
+            cx={50 + (specLevel - 1) / 4 * 600}
+            cy={320}
+            r={8}
+            fill={specLevel >= 4 ? '#10b981' : specLevel >= 3 ? '#f59e0b' : '#ef4444'}
+            stroke="#ffffff"
+            strokeWidth={2}
+            filter="url(#sfpSuccessFilter)"
+          />
 
-            {/* Assumption indicators */}
-            {promptMode === 'vague' && (
-              <g>
-                <circle cx={20} cy={50} r={12} fill="url(#sfpAssumptionPulse)" filter="url(#sfpWarningFilter)">
-                  <animate attributeName="r" values="10;14;10" dur="0.8s" repeatCount="indefinite" />
-                </circle>
-                <text x={20} y={54} fill="#fff" fontSize={8} textAnchor="middle" fontWeight="bold">?</text>
+          {/* Assumption count indicator - absolute (origin 50, 330) */}
+          <circle cx={62} cy={342} r={16} fill={currentPrompt.assumptions.length > 4 ? 'url(#sfpErrorGlow)' : currentPrompt.assumptions.length > 2 ? 'url(#sfpWarningGlow)' : 'url(#sfpSuccessGlow)'} />
+          <circle cx={62} cy={342} r={10} fill={currentPrompt.assumptions.length > 4 ? '#ef4444' : currentPrompt.assumptions.length > 2 ? '#f59e0b' : '#10b981'} />
+          <text x={62} y={346} fill="#fff" fontSize={11} textAnchor="middle" fontWeight="bold">{currentPrompt.assumptions.length}</text>
+          <text x={90} y={341} fill="#f8fafc" fontSize={11} fontWeight="600">Assumptions</text>
+          <text x={90} y={356} fill="#cbd5e1" fontSize={11}>{currentPrompt.assumptions.length > 4 ? 'High risk!' : currentPrompt.assumptions.length > 2 ? 'Some risk' : 'Low risk'}</text>
 
-                <circle cx={100} cy={50} r={12} fill="url(#sfpAssumptionPulse)" filter="url(#sfpWarningFilter)">
-                  <animate attributeName="r" values="10;14;10" dur="1s" repeatCount="indefinite" />
-                </circle>
-                <text x={100} y={54} fill="#fff" fontSize={8} textAnchor="middle" fontWeight="bold">?</text>
+          {/* Success rate indicator - absolute (origin 210, 330) */}
+          <circle cx={222} cy={342} r={16} fill={metrics.successRate > 70 ? 'url(#sfpSuccessGlow)' : 'url(#sfpWarningGlow)'} />
+          <circle cx={222} cy={342} r={10} fill={metrics.successRate > 70 ? '#10b981' : '#f59e0b'} />
+          <text x={222} y={346} fill="#fff" fontSize={11} textAnchor="middle" fontWeight="bold">%</text>
+          <text x={250} y={341} fill="#f8fafc" fontSize={11} fontWeight="600">Success Rate</text>
+          <rect x={250} y={348} width={80} height={8} rx={4} fill="#374151" />
+          <rect x={250} y={348} width={metrics.successRate * 0.8} height={8} rx={4} fill={metrics.successRate > 70 ? 'url(#sfpSuccessStatus)' : 'url(#sfpWarningStatus)'} />
+          <text x={335} y={356} fill="#f8fafc" fontSize={11}>{metrics.successRate}%</text>
 
-                <circle cx={15} cy={110} r={12} fill="url(#sfpAssumptionPulse)" filter="url(#sfpWarningFilter)">
-                  <animate attributeName="r" values="10;14;10" dur="1.2s" repeatCount="indefinite" />
-                </circle>
-                <text x={15} y={114} fill="#fff" fontSize={8} textAnchor="middle" fontWeight="bold">?</text>
+          {/* Rework cycles indicator - absolute (origin 370, 330) */}
+          <circle cx={382} cy={342} r={16} fill={metrics.reworkCycles < 3 ? 'url(#sfpSuccessGlow)' : 'url(#sfpErrorGlow)'} />
+          <circle cx={382} cy={342} r={10} fill={metrics.reworkCycles < 3 ? '#10b981' : '#ef4444'} />
+          <text x={382} y={346} fill="#fff" fontSize={11} textAnchor="middle" fontWeight="bold">{metrics.reworkCycles}</text>
+          <text x={410} y={341} fill="#f8fafc" fontSize={11} fontWeight="600">Rework Cycles</text>
+          <text x={410} y={356} fill="#cbd5e1" fontSize={11}>{metrics.reworkCycles < 3 ? 'Efficient' : 'Costly'}</text>
 
-                <circle cx={105} cy={110} r={12} fill="url(#sfpAssumptionPulse)" filter="url(#sfpWarningFilter)">
-                  <animate attributeName="r" values="10;14;10" dur="0.9s" repeatCount="indefinite" />
-                </circle>
-                <text x={105} y={114} fill="#fff" fontSize={8} textAnchor="middle" fontWeight="bold">?</text>
-              </g>
-            )}
-          </g>
+          {/* Time to correct indicator - absolute (origin 530, 330) */}
+          <circle cx={542} cy={342} r={16} fill={metrics.timeToCorrect < 20 ? 'url(#sfpSuccessGlow)' : 'url(#sfpWarningGlow)'} />
+          <circle cx={542} cy={342} r={10} fill={metrics.timeToCorrect < 20 ? '#10b981' : '#f59e0b'} />
+          <text x={542} y={346} fill="#fff" fontSize={11} textAnchor="middle" fontWeight="bold">T</text>
+          <text x={570} y={341} fill="#f8fafc" fontSize={11} fontWeight="600">Fix Time</text>
+          <text x={570} y={356} fill="#cbd5e1" fontSize={11}>{metrics.timeToCorrect} min</text>
 
-          {/* Workflow arrow 2 */}
-          <g transform="translate(410, 165)">
-            <rect x={0} y={0} width={60} height={20} rx={4} fill={promptMode === 'vague' ? 'url(#sfpWorkflowVague)' : 'url(#sfpWorkflowStructured)'} />
-            <polygon points="60,10 70,0 70,20" fill={promptMode === 'vague' ? '#ea580c' : '#06b6d4'} />
-            <text x={30} y={14} fill="#ffffff" fontSize={8} textAnchor="middle" fontWeight="bold">OUTPUT</text>
-          </g>
-
-          {/* Step 3: Generated Code */}
-          <g transform="translate(490, 75)">
-            {/* Code panel */}
-            <rect x={0} y={0} width={180} height={200} rx={8} fill="url(#sfpCodePanel)" filter="url(#sfpSoftShadow)" />
-
-            {/* Code header */}
-            <rect x={0} y={0} width={180} height={28} rx={8} fill="#27272a" />
-            <rect x={0} y={20} width={180} height={8} fill="#27272a" />
-
-            {/* Window buttons */}
-            <circle cx={14} cy={14} r={5} fill="#ef4444" />
-            <circle cx={30} cy={14} r={5} fill="#f59e0b" />
-            <circle cx={46} cy={14} r={5} fill="#10b981" />
-            <text x={100} y={18} fill="#71717a" fontSize={9} textAnchor="middle">auth.ts</text>
-
-            {/* Code content area */}
-            <rect x={8} y={36} width={164} height={154} rx={4} fill="#09090b" />
-
-            {/* Code lines */}
-            <text x={14} y={52} fill="#6b7280" fontSize={8} fontFamily="monospace">1</text>
-            <text x={28} y={52} fill="#c084fc" fontSize={8} fontFamily="monospace">async function</text>
-            <text x={14} y={66} fill="#6b7280" fontSize={8} fontFamily="monospace">2</text>
-            <text x={28} y={66} fill="#22d3ee" fontSize={8} fontFamily="monospace">  login(credentials)</text>
-            <text x={14} y={80} fill="#6b7280" fontSize={8} fontFamily="monospace">3</text>
-            <text x={28} y={80} fill="#a3a3a3" fontSize={8} fontFamily="monospace">{'  {'}</text>
-
-            {promptMode === 'vague' ? (
-              <g>
-                <text x={14} y={94} fill="#6b7280" fontSize={8} fontFamily="monospace">4</text>
-                <text x={28} y={94} fill="#fbbf24" fontSize={8} fontFamily="monospace">{'  // ASSUMED: email'}</text>
-                <text x={14} y={108} fill="#6b7280" fontSize={8} fontFamily="monospace">5</text>
-                <text x={28} y={108} fill="#fbbf24" fontSize={8} fontFamily="monospace">{'  // ASSUMED: bcrypt'}</text>
-                <text x={14} y={122} fill="#6b7280" fontSize={8} fontFamily="monospace">6</text>
-                <text x={28} y={122} fill="#fbbf24" fontSize={8} fontFamily="monospace">{'  // ASSUMED: JWT 1hr'}</text>
-                <text x={14} y={136} fill="#6b7280" fontSize={8} fontFamily="monospace">7</text>
-                <text x={28} y={136} fill="#fbbf24" fontSize={8} fontFamily="monospace">{'  // ASSUMED: no rate'}</text>
-                <text x={14} y={150} fill="#6b7280" fontSize={8} fontFamily="monospace">8</text>
-                <text x={28} y={150} fill="#ef4444" fontSize={8} fontFamily="monospace">{'  // ⚠ May not match'}</text>
-                <text x={14} y={164} fill="#6b7280" fontSize={8} fontFamily="monospace">9</text>
-                <text x={28} y={164} fill="#ef4444" fontSize={8} fontFamily="monospace">{'  // your requirements!'}</text>
-              </g>
-            ) : (
-              <g>
-                <text x={14} y={94} fill="#6b7280" fontSize={8} fontFamily="monospace">4</text>
-                <text x={28} y={94} fill="#10b981" fontSize={8} fontFamily="monospace">{'  // Per spec: email'}</text>
-                <text x={14} y={108} fill="#6b7280" fontSize={8} fontFamily="monospace">5</text>
-                <text x={28} y={108} fill="#10b981" fontSize={8} fontFamily="monospace">{'  // Per spec: 24hr JWT'}</text>
-                <text x={14} y={122} fill="#6b7280" fontSize={8} fontFamily="monospace">6</text>
-                <text x={28} y={122} fill="#10b981" fontSize={8} fontFamily="monospace">{'  // Per spec: 5/15min'}</text>
-                <text x={14} y={136} fill="#6b7280" fontSize={8} fontFamily="monospace">7</text>
-                <text x={28} y={136} fill="#10b981" fontSize={8} fontFamily="monospace">{'  // Per spec: 8+ chars'}</text>
-                <text x={14} y={150} fill="#6b7280" fontSize={8} fontFamily="monospace">8</text>
-                <text x={28} y={150} fill="#22d3ee" fontSize={8} fontFamily="monospace">{'  // ✓ Matches spec!'}</text>
-                <text x={14} y={164} fill="#6b7280" fontSize={8} fontFamily="monospace">9</text>
-                <text x={28} y={164} fill="#22d3ee" fontSize={8} fontFamily="monospace">{'  // ✓ No guessing'}</text>
-              </g>
-            )}
-          </g>
-
-          {/* === TEST/CODE STATUS INDICATORS === */}
-          <g transform="translate(30, 295)">
-            <rect x={0} y={0} width={640} height={90} rx={8} fill="url(#sfpDocumentCard)" filter="url(#sfpSoftShadow)" />
-
-            <text x={15} y={22} fill="#f8fafc" fontSize={11} fontWeight="bold">Quality Metrics</text>
-
-            {/* Assumption count indicator */}
-            <g transform="translate(20, 35)">
-              <circle cx={12} cy={12} r={16} fill={currentPrompt.assumptions.length > 4 ? 'url(#sfpErrorGlow)' : currentPrompt.assumptions.length > 2 ? 'url(#sfpWarningGlow)' : 'url(#sfpSuccessGlow)'} filter={currentPrompt.assumptions.length > 4 ? 'url(#sfpErrorFilter)' : currentPrompt.assumptions.length > 2 ? 'url(#sfpWarningFilter)' : 'url(#sfpSuccessFilter)'} />
-              <circle cx={12} cy={12} r={10} fill={currentPrompt.assumptions.length > 4 ? '#ef4444' : currentPrompt.assumptions.length > 2 ? '#f59e0b' : '#10b981'} />
-              <text x={12} y={16} fill="#fff" fontSize={10} textAnchor="middle" fontWeight="bold">{currentPrompt.assumptions.length}</text>
-              <text x={40} y={10} fill="#f8fafc" fontSize={10} fontWeight="600">Assumptions</text>
-              <text x={40} y={24} fill="#94a3b8" fontSize={8}>{currentPrompt.assumptions.length > 4 ? 'High risk!' : currentPrompt.assumptions.length > 2 ? 'Some risk' : 'Low risk'}</text>
-            </g>
-
-            {/* Success rate indicator */}
-            <g transform="translate(180, 35)">
-              <circle cx={12} cy={12} r={16} fill={metrics.successRate > 70 ? 'url(#sfpSuccessGlow)' : 'url(#sfpWarningGlow)'} filter={metrics.successRate > 70 ? 'url(#sfpSuccessFilter)' : 'url(#sfpWarningFilter)'} />
-              <circle cx={12} cy={12} r={10} fill={metrics.successRate > 70 ? '#10b981' : '#f59e0b'} />
-              <text x={12} y={16} fill="#fff" fontSize={8} textAnchor="middle" fontWeight="bold">%</text>
-              <text x={40} y={10} fill="#f8fafc" fontSize={10} fontWeight="600">Success Rate</text>
-              <rect x={40} y={16} width={80} height={8} rx={4} fill="#374151" />
-              <rect x={40} y={16} width={metrics.successRate * 0.8} height={8} rx={4} fill={metrics.successRate > 70 ? 'url(#sfpSuccessStatus)' : 'url(#sfpWarningStatus)'} />
-              <text x={125} y={23} fill="#f8fafc" fontSize={9}>{metrics.successRate}%</text>
-            </g>
-
-            {/* Rework cycles indicator */}
-            <g transform="translate(340, 35)">
-              <circle cx={12} cy={12} r={16} fill={metrics.reworkCycles < 3 ? 'url(#sfpSuccessGlow)' : 'url(#sfpErrorGlow)'} filter={metrics.reworkCycles < 3 ? 'url(#sfpSuccessFilter)' : 'url(#sfpErrorFilter)'} />
-              <circle cx={12} cy={12} r={10} fill={metrics.reworkCycles < 3 ? '#10b981' : '#ef4444'} />
-              <text x={12} y={16} fill="#fff" fontSize={10} textAnchor="middle" fontWeight="bold">{metrics.reworkCycles}</text>
-              <text x={40} y={10} fill="#f8fafc" fontSize={10} fontWeight="600">Rework Cycles</text>
-              <text x={40} y={24} fill="#94a3b8" fontSize={8}>{metrics.reworkCycles < 3 ? 'Efficient' : 'Costly iterations'}</text>
-            </g>
-
-            {/* Time to correct indicator */}
-            <g transform="translate(500, 35)">
-              <circle cx={12} cy={12} r={16} fill={metrics.timeToCorrect < 20 ? 'url(#sfpSuccessGlow)' : 'url(#sfpWarningGlow)'} filter={metrics.timeToCorrect < 20 ? 'url(#sfpSuccessFilter)' : 'url(#sfpWarningFilter)'} />
-              <circle cx={12} cy={12} r={10} fill={metrics.timeToCorrect < 20 ? '#10b981' : '#f59e0b'} />
-              <text x={12} y={16} fill="#fff" fontSize={8} textAnchor="middle" fontWeight="bold">⏱</text>
-              <text x={40} y={10} fill="#f8fafc" fontSize={10} fontWeight="600">Fix Time</text>
-              <text x={40} y={24} fill="#94a3b8" fontSize={8}>{metrics.timeToCorrect} min avg</text>
-            </g>
-          </g>
-
-          {/* === ASSUMPTION DETAIL PANEL === */}
+          {/* === ASSUMPTION DETAIL PANEL - absolute coords (origin 30,400) === */}
           {showAssumptions && (
-            <g transform="translate(30, 400)">
-              <rect x={0} y={0} width={640} height={110} rx={8} fill="url(#sfpDocumentCard)" filter="url(#sfpSoftShadow)" />
-
-              <text x={15} y={22} fill={promptMode === 'vague' ? '#ef4444' : '#10b981'} fontSize={11} fontWeight="bold">
+            <>
+              <rect x={30} y={400} width={640} height={90} rx={8} fill="url(#sfpDocumentCard)" filter="url(#sfpSoftShadow)" />
+              <text x={45} y={422} fill={promptMode === 'vague' ? '#ef4444' : '#10b981'} fontSize={11} fontWeight="bold">
                 {promptMode === 'vague' ? '⚠ LLM Must Guess These Requirements:' : '✓ Clearly Specified Requirements:'}
               </text>
-
-              {/* Assumption/Spec items in columns */}
               {currentPrompt.assumptions.slice(0, 8).map((assumption, i) => {
                 const col = i % 2;
                 const row = Math.floor(i / 2);
-                const x = 15 + col * 315;
-                const y = 38 + row * 18;
-
+                const ax = 45 + col * 315;
+                const ay = 438 + row * 18;
                 return (
                   <g key={i}>
-                    <circle
-                      cx={x + 6}
-                      cy={y}
-                      r={4}
-                      fill={
-                        assumption.severity === 'high' ? 'url(#sfpErrorGlow)' :
-                        assumption.severity === 'medium' ? 'url(#sfpWarningGlow)' :
-                        'url(#sfpSuccessGlow)'
-                      }
-                    />
-                    <circle
-                      cx={x + 6}
-                      cy={y}
-                      r={3}
-                      fill={
-                        assumption.severity === 'high' ? '#ef4444' :
-                        assumption.severity === 'medium' ? '#f59e0b' :
-                        '#10b981'
-                      }
-                    />
-                    <text x={x + 16} y={y + 4} fill="#e2e8f0" fontSize={9}>{assumption.text}</text>
+                    <circle cx={ax + 6} cy={ay} r={4} fill={assumption.severity === 'high' ? 'url(#sfpErrorGlow)' : assumption.severity === 'medium' ? 'url(#sfpWarningGlow)' : 'url(#sfpSuccessGlow)'} />
+                    <circle cx={ax + 6} cy={ay} r={3} fill={assumption.severity === 'high' ? '#ef4444' : assumption.severity === 'medium' ? '#f59e0b' : '#10b981'} />
+                    <text x={ax + 16} y={ay + 4} fill="#e2e8f0" fontSize={11}>{assumption.text}</text>
                   </g>
                 );
               })}
-            </g>
+            </>
           )}
         </svg>
 
@@ -841,7 +743,7 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
         <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Specification Detail Level: {specLevel}
+          Specification Detail Level (controls success rate): {specLevel}
         </label>
         <input
           type="range"
@@ -850,7 +752,15 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
           step="1"
           value={specLevel}
           onChange={(e) => setSpecLevel(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          onInput={(e) => setSpecLevel(parseInt((e.target as HTMLInputElement).value))}
+          style={{
+            width: '100%',
+            height: '20px',
+            touchAction: 'pan-y',
+            WebkitAppearance: 'none',
+            accentColor: '#3b82f6',
+            display: 'block',
+          }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
           <span style={{ color: colors.vague, fontSize: '11px' }}>Minimal (many assumptions)</span>
@@ -899,9 +809,10 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
       flexWrap: 'wrap',
     }}>
       {phaseOrder.map((p, index) => (
-        <div
+        <button
           key={p}
           onClick={() => goToPhase(p)}
+          aria-label={phaseLabels[p]}
           style={{
             width: '24px',
             height: '24px',
@@ -915,11 +826,12 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
             color: phase === p || phaseOrder.indexOf(phase) > index ? 'white' : colors.textMuted,
             fontWeight: 'bold',
             transition: 'all 0.2s ease',
+            border: 'none',
+            padding: 0,
           }}
-          title={phaseLabels[p]}
         >
           {index + 1}
-        </div>
+        </button>
       ))}
     </div>
   );
@@ -956,6 +868,7 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
             fontSize: '14px',
             fontWeight: 'bold',
             WebkitTapHighlightColor: 'transparent',
+            minHeight: '44px',
           }}
         >
           Back
@@ -976,6 +889,7 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
             fontSize: '14px',
             fontWeight: 'bold',
             WebkitTapHighlightColor: 'transparent',
+            minHeight: '44px',
           }}
         >
           Next
@@ -1008,7 +922,7 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
               borderRadius: '12px',
               marginBottom: '16px',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6, fontWeight: 400 }}>
                 When you give an LLM a vague prompt, it fills in the gaps with assumptions
                 from its training data. These assumptions may not match what you actually need.
                 A structured specification reduces these gaps.
@@ -1081,7 +995,7 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Compare Prompt Styles</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              See how specification detail affects assumption count
+              See how specification detail affects assumption count. This is why industry teams at Google, Amazon, and OpenAI use spec-first prompting — it enables LLMs to generate correct code on the first try.
             </p>
           </div>
 
@@ -1124,11 +1038,11 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
+              {wasCorrect ? 'Correct! Your prediction was right!' : 'Close — your prediction shows you understand the challenge!'}
             </h3>
             <p style={{ color: colors.textPrimary }}>
-              Structured specifications dramatically reduce wrong assumptions. Each gap in your
-              spec is a place where the LLM must guess - and guesses based on general patterns,
+              Your experiment demonstrates that structured specifications dramatically reduce wrong assumptions because each gap in your
+              spec is a place where the LLM must guess. What you observed shows the result: guesses are based on general patterns,
               not your specific requirements.
             </p>
           </div>
@@ -1364,7 +1278,7 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >
-                  Reveal Answer
+                  Got It
                 </button>
               ) : (
                 <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
@@ -1426,7 +1340,7 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <span style={{ color: colors.textSecondary }}>Question {currentTestQuestion + 1} / {testQuestions.length}</span>
             </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
@@ -1434,6 +1348,9 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
               ))}
             </div>
             <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
+              {'scenario' in currentQ && currentQ.scenario && (
+                <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5, marginBottom: '12px', borderLeft: `3px solid ${colors.accent}`, paddingLeft: '12px' }}>{(currentQ as { scenario: string; question: string; options: { text: string; correct: boolean }[] }).scenario}</p>
+              )}
               <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

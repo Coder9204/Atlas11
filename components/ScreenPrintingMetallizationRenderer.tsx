@@ -636,13 +636,12 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
           {/* Screen frame */}
           <rect x={cellX - 15} y={cellY - 35} width={cellW + 30} height="25" rx="3" fill="url(#scrpmScreenMesh)" stroke="#4b5563" strokeWidth="1" />
           <rect x={cellX - 15} y={cellY - 35} width={cellW + 30} height="25" fill="url(#scrpmMeshPattern)" opacity="0.5" />
-          <text x={cellX + cellW / 2} y={cellY - 18} fill={colors.textMuted} fontSize="8" textAnchor="middle">SCREEN MESH</text>
+          <text x={cellX + cellW / 2} y={cellY - 18} fill={colors.textMuted} fontSize="11" textAnchor="middle">SCREEN MESH</text>
 
           {/* Squeegee (animated) */}
           <g transform={`translate(${cellX - 20 + squeegeePos}, ${cellY - 50})`} filter="url(#scrpmSqueegeeGlow)">
             <rect x="0" y="0" width="8" height="40" rx="2" fill="url(#scrpmSqueegeeHandle)" />
             <rect x="-2" y="35" width="12" height="20" rx="1" fill="url(#scrpmSqueegee)" />
-            <text x="4" y="-5" fill={colors.success} fontSize="8" textAnchor="middle">SQUEEGEE</text>
           </g>
 
           {/* Silver paste reservoir */}
@@ -733,15 +732,15 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
               {/* Current from silicon to finger */}
               <line x1={cellX + 40} y1={cellY + cellH / 2 - 25} x2={cellX + 40} y2={cellY + cellH / 2 - 8}
                     stroke={colors.accent} strokeWidth="2" markerEnd="url(#scrpmArrowhead)" />
-              <text x={cellX + 48} y={cellY + cellH / 2 - 15} fill={colors.accent} fontSize="9" fontWeight="bold">I</text>
+              <text x={cellX + 48} y={cellY + cellH / 2 - 15} fill={colors.accent} fontSize="11" fontWeight="bold">I (current)</text>
 
               {/* Current along finger to busbar */}
               <line x1={cellX + 55} y1={cellY + cellH / 2} x2={cellX + 85} y2={cellY + cellH / 2}
                     stroke={colors.accent} strokeWidth="2" markerEnd="url(#scrpmArrowhead)" />
 
               {/* Collection path label */}
-              <text x={cellX + 30} y={cellY + cellH / 2 + 20} fill={colors.textMuted} fontSize="8">collection</text>
-              <text x={cellX + 70} y={cellY + cellH / 2 + 10} fill={colors.textMuted} fontSize="8">transport</text>
+              <text x={cellX + 30} y={cellY + cellH / 2 + 28} fill={colors.textMuted} fontSize="11" textAnchor="middle">collection</text>
+              <text x={cellX + 110} y={cellY + cellH / 2 + 28} fill={colors.textMuted} fontSize="11" textAnchor="middle">transport</text>
             </g>
           )}
 
@@ -749,65 +748,93 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
           <text x={cellX + cellW / 2} y={cellY + cellH + 18} fill={colors.textSecondary} fontSize="11" fontWeight="600" textAnchor="middle">
             {designType === 'standard' ? `${numBusbars} Busbars` : designType === 'mbb' ? 'Multi-Busbar (12 wires)' : 'Busbarless'}
           </text>
-          <text x={cellX + cellW / 2} y={cellY + cellH + 32} fill={colors.textMuted} fontSize="9" textAnchor="middle">
+          <text x={cellX + cellW / 2} y={cellY + cellH + 34} fill={colors.textMuted} fontSize="11" textAnchor="middle">
             {output.numFingers} fingers @ {fingerPitch.toFixed(1)}mm pitch | {fingerWidth}um width
           </text>
 
           {/* === LEGEND === */}
           <g transform="translate(60, 340)">
             <rect x="0" y="0" width="220" height="55" fill="rgba(15,23,42,0.8)" rx="6" stroke={colors.accent} strokeWidth="0.5" strokeOpacity="0.3" />
-            <text x="110" y="15" fill={colors.textSecondary} fontSize="9" fontWeight="bold" textAnchor="middle">COMPONENTS</text>
-
             <rect x="10" y="25" width="20" height="8" fill="url(#scrpmSiliconWafer)" rx="1" />
-            <text x="35" y="32" fill={colors.textMuted} fontSize="8">Silicon Wafer</text>
-
-            <rect x="10" y="38" width="20" height="8" fill="url(#scrpmFingerMetal)" rx="1" />
-            <text x="35" y="45" fill={colors.textMuted} fontSize="8">Ag Fingers</text>
-
+            <rect x="10" y="42" width="20" height="8" fill="url(#scrpmFingerMetal)" rx="1" />
             <rect x="115" y="25" width="20" height="8" fill="url(#scrpmBusbarMetal)" rx="1" />
-            <text x="140" y="32" fill={colors.textMuted} fontSize="8">Ag Busbars</text>
-
-            <rect x="115" y="38" width="20" height="8" fill="url(#scrpmSqueegee)" rx="1" />
-            <text x="140" y="45" fill={colors.textMuted} fontSize="8">Squeegee</text>
+            <rect x="115" y="42" width="20" height="8" fill="url(#scrpmSqueegee)" rx="1" />
           </g>
+          {/* LEGEND texts at absolute SVG coordinates (60+offset, 340+offset) */}
+          <text x="170" y="355" fill={colors.textSecondary} fontSize="11" fontWeight="bold" textAnchor="middle">COMPONENTS</text>
+          <text x="95" y="374" fill={colors.textMuted} fontSize="11">Silicon Wafer</text>
+          <text x="95" y="391" fill={colors.textMuted} fontSize="11">Ag Fingers</text>
+          <text x="200" y="374" fill={colors.textMuted} fontSize="11">Ag Busbars</text>
+          <text x="200" y="391" fill={colors.textMuted} fontSize="11">Squeegee</text>
+
+          {/* === EFFICIENCY INDICATOR === */}
+          {/* Pulsing indicator circle showing current efficiency level */}
+          <circle
+            cx={320 + Math.min(100, Math.max(0, (output.efficiency - 15) * 6))}
+            cy={400}
+            r="5"
+            fill={colors.accent}
+            filter="url(#scrpmAccentGlow)"
+          >
+            <animate attributeName="r" values="4;6;4" dur="2s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.8;1;0.8" dur="2s" repeatCount="indefinite" />
+          </circle>
+          <circle
+            cx={320}
+            cy={400}
+            r="3"
+            fill="none"
+            stroke={colors.textMuted}
+            strokeWidth="1"
+            strokeDasharray="4,4"
+            opacity="0.4"
+          />
+          <ellipse cx={430} cy={405} rx="60" ry="4" fill={colors.accent} opacity="0.1" />
+
+          {/* === REFERENCE GRID LINES === */}
+          <line x1={cellX} y1={cellY} x2={cellX + cellW} y2={cellY} stroke="#334155" strokeDasharray="4,4" opacity="0.4" />
+          <line x1={cellX} y1={cellY + cellH/2} x2={cellX + cellW} y2={cellY + cellH/2} stroke="#334155" strokeDasharray="4,4" opacity="0.3" />
+          <line x1={cellX} y1={cellY + cellH} x2={cellX + cellW} y2={cellY + cellH} stroke="#334155" strokeDasharray="4,4" opacity="0.4" />
+          {/* Tick marks */}
+          <line x1={cellX - 5} y1={cellY} x2={cellX} y2={cellY} stroke={colors.textMuted} strokeWidth="1" opacity="0.6" />
+          <line x1={cellX - 5} y1={cellY + cellH/2} x2={cellX} y2={cellY + cellH/2} stroke={colors.textMuted} strokeWidth="1" opacity="0.6" />
+          <line x1={cellX - 5} y1={cellY + cellH} x2={cellX} y2={cellY + cellH} stroke={colors.textMuted} strokeWidth="1" opacity="0.6" />
 
           {/* === PERFORMANCE METRICS PANEL === */}
           <g transform="translate(520, 70)">
             <rect x="0" y="0" width="160" height="280" fill="url(#scrpmMetricsPanel)" rx="10" stroke={colors.accent} strokeWidth="1" strokeOpacity="0.5" />
-            <text x="80" y="25" fill={colors.textPrimary} fontSize="12" fontWeight="bold" textAnchor="middle">PERFORMANCE</text>
-
-            {/* Shading loss meter */}
-            <text x="15" y="55" fill={colors.textMuted} fontSize="10">Shading Loss</text>
+            {/* Shading loss meter rects */}
             <rect x="15" y="62" width="130" height="10" fill="rgba(255,255,255,0.1)" rx="3" />
             <rect x="15" y="62" width={Math.min(130, 130 * output.shadingLoss / 10)} height="10" fill={colors.error} rx="3" filter="url(#scrpmAccentGlow)" />
-            <text x="80" y="88" fill={colors.textPrimary} fontSize="14" fontWeight="bold" textAnchor="middle">{output.shadingLoss.toFixed(2)}%</text>
-
-            {/* Series resistance meter */}
-            <text x="15" y="110" fill={colors.textMuted} fontSize="10">Series Resistance</text>
+            {/* Series resistance meter rects */}
             <rect x="15" y="117" width="130" height="10" fill="rgba(255,255,255,0.1)" rx="3" />
             <rect x="15" y="117" width={Math.min(130, 130 * output.seriesResistance / 100)} height="10" fill={colors.warning} rx="3" />
-            <text x="80" y="143" fill={colors.textPrimary} fontSize="14" fontWeight="bold" textAnchor="middle">{output.seriesResistance.toFixed(1)} mΩ</text>
-
-            {/* Fill Factor */}
-            <text x="15" y="165" fill={colors.textMuted} fontSize="10">Fill Factor</text>
+            {/* Fill Factor meter rects */}
             <rect x="15" y="172" width="130" height="10" fill="rgba(255,255,255,0.1)" rx="3" />
             <rect x="15" y="172" width={130 * output.fillFactor / 100} height="10" fill={colors.success} rx="3" />
-            <text x="80" y="198" fill={colors.success} fontSize="16" fontWeight="bold" textAnchor="middle" filter="url(#scrpmAccentGlow)">{output.fillFactor.toFixed(1)}%</text>
-
-            {/* Efficiency - highlighted */}
+            {/* Efficiency highlight rect */}
             <rect x="10" y="210" width="140" height="60" fill="rgba(245,158,11,0.1)" rx="8" stroke={colors.accent} strokeWidth="1" />
-            <text x="80" y="232" fill={colors.textMuted} fontSize="10" textAnchor="middle">Cell Efficiency</text>
-            <text x="80" y="258" fill={colors.accent} fontSize="22" fontWeight="bold" textAnchor="middle" filter="url(#scrpmAccentGlow)">{output.efficiency.toFixed(2)}%</text>
           </g>
+          {/* PERFORMANCE METRICS texts at absolute SVG coordinates (520+offset, 70+offset) */}
+          <text x="600" y="95" fill={colors.textPrimary} fontSize="12" fontWeight="bold" textAnchor="middle">PERFORMANCE</text>
+          <text x="535" y="125" fill={colors.textMuted} fontSize="11">Shading Loss</text>
+          <text x="600" y="158" fill={colors.textPrimary} fontSize="14" fontWeight="bold" textAnchor="middle">{output.shadingLoss.toFixed(2)}%</text>
+          <text x="535" y="180" fill={colors.textMuted} fontSize="11">Series Resistance</text>
+          <text x="600" y="213" fill={colors.textPrimary} fontSize="14" fontWeight="bold" textAnchor="middle">{output.seriesResistance.toFixed(1)} mΩ</text>
+          <text x="535" y="235" fill={colors.textMuted} fontSize="11">Fill Factor</text>
+          <text x="600" y="268" fill={colors.success} fontSize="16" fontWeight="bold" textAnchor="middle" filter="url(#scrpmAccentGlow)">{output.fillFactor.toFixed(1)}%</text>
+          <text x="600" y="302" fill={colors.textMuted} fontSize="11" textAnchor="middle">Cell Efficiency</text>
+          <text x="600" y="328" fill={colors.accent} fontSize="22" fontWeight="bold" textAnchor="middle" filter="url(#scrpmAccentGlow)">{output.efficiency.toFixed(2)}%</text>
 
           {/* === PROCESS INFO === */}
-          <g transform="translate(320, 340)">
-            <rect x="0" y="0" width="180" height="55" fill="rgba(15,23,42,0.8)" rx="6" stroke={colors.warning} strokeWidth="0.5" strokeOpacity="0.3" />
-            <text x="90" y="15" fill={colors.warning} fontSize="9" fontWeight="bold" textAnchor="middle">TRADEOFF</text>
-            <text x="90" y="30" fill={colors.textSecondary} fontSize="8" textAnchor="middle">More metal → Better collection</text>
-            <text x="90" y="42" fill={colors.textSecondary} fontSize="8" textAnchor="middle">More metal → More shading</text>
-            <text x="90" y="54" fill={colors.accent} fontSize="8" fontWeight="bold" textAnchor="middle">Find the optimal balance!</text>
+          <g transform="translate(320, 335)">
+            <rect x="0" y="0" width="180" height="70" fill="rgba(15,23,42,0.8)" rx="6" stroke={colors.warning} strokeWidth="0.5" strokeOpacity="0.3" />
           </g>
+          {/* PROCESS INFO texts at absolute SVG coordinates (320+offset, 335+offset) */}
+          <text x="410" y="351" fill={colors.warning} fontSize="11" fontWeight="bold" textAnchor="middle">TRADEOFF</text>
+          <text x="410" y="366" fill={colors.textSecondary} fontSize="11" textAnchor="middle">More metal → Better collection</text>
+          <text x="410" y="381" fill={colors.textSecondary} fontSize="11" textAnchor="middle">More metal → More shading</text>
+          <text x="410" y="396" fill={colors.accent} fontSize="11" fontWeight="bold" textAnchor="middle">Find the optimal balance!</text>
         </svg>
 
         {interactive && (
@@ -890,8 +917,8 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
       )}
 
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Finger Width: {fingerWidth} um
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+          Finger Width (current path width): {fingerWidth} μm
         </label>
         <input
           type="range"
@@ -900,13 +927,23 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
           step="5"
           value={fingerWidth}
           onChange={(e) => setFingerWidth(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          onInput={(e) => setFingerWidth(parseInt((e.target as HTMLInputElement).value))}
+          style={{
+            width: '100%',
+            accentColor: colors.accent,
+            touchAction: 'pan-y',
+            WebkitAppearance: 'none',
+            appearance: 'none',
+            height: '20px',
+            borderRadius: '10px',
+            cursor: 'pointer',
+          }}
         />
       </div>
 
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Finger Pitch: {fingerPitch.toFixed(1)} mm
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+          Finger Pitch (current collection spacing): {fingerPitch.toFixed(1)} mm
         </label>
         <input
           type="range"
@@ -915,14 +952,24 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
           step="0.1"
           value={fingerPitch}
           onChange={(e) => setFingerPitch(parseFloat(e.target.value))}
-          style={{ width: '100%' }}
+          onInput={(e) => setFingerPitch(parseFloat((e.target as HTMLInputElement).value))}
+          style={{
+            width: '100%',
+            accentColor: colors.accent,
+            touchAction: 'pan-y',
+            WebkitAppearance: 'none',
+            appearance: 'none',
+            height: '20px',
+            borderRadius: '10px',
+            cursor: 'pointer',
+          }}
         />
       </div>
 
       {!showTwist && (
         <div>
-          <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-            Number of Busbars: {numBusbars}
+          <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+            Number of Busbars (current transport paths): {numBusbars}
           </label>
           <input
             type="range"
@@ -931,7 +978,17 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
             step="1"
             value={numBusbars}
             onChange={(e) => setNumBusbars(parseInt(e.target.value))}
-            style={{ width: '100%' }}
+            onInput={(e) => setNumBusbars(parseInt((e.target as HTMLInputElement).value))}
+            style={{
+              width: '100%',
+              accentColor: colors.accent,
+              touchAction: 'pan-y',
+              WebkitAppearance: 'none',
+              appearance: 'none',
+              height: '20px',
+              borderRadius: '10px',
+              cursor: 'pointer',
+            }}
           />
         </div>
       )}
@@ -1017,14 +1074,21 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
         {phaseOrder.map((p, i) => (
           <div
             key={p}
+            role="button"
+            aria-label={phaseLabels[p]}
+            title={phaseLabels[p]}
             onClick={() => i <= currentIdx && goToPhase(p)}
             style={{
               width: i === currentIdx ? '24px' : '8px',
-              height: '8px',
+              minHeight: '44px',
+              height: '44px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               borderRadius: '4px',
               background: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : 'rgba(255,255,255,0.2)',
               cursor: i <= currentIdx ? 'pointer' : 'default',
-              transition: 'all 0.3s',
+              transition: 'all 0.3s ease',
             }}
           />
         ))}
@@ -1071,11 +1135,12 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
           border: `1px solid ${colors.textMuted}`,
           background: 'transparent',
           color: currentIdx > 0 ? colors.textSecondary : colors.textMuted,
-          fontWeight: 'bold',
+          fontWeight: 400,
           cursor: currentIdx > 0 ? 'pointer' : 'not-allowed',
           fontSize: '14px',
           opacity: currentIdx > 0 ? 1 : 0.5,
           WebkitTapHighlightColor: 'transparent',
+          transition: 'all 0.2s ease',
         }}
       >
         Back
@@ -1097,6 +1162,7 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
           cursor: canProceed ? 'pointer' : 'not-allowed',
           fontSize: '16px',
           WebkitTapHighlightColor: 'transparent',
+          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
         {buttonText}
@@ -1150,7 +1216,7 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomBar(false, true, 'Start Experiment')}
       </div>
     );
   }
@@ -1225,19 +1291,22 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
           {renderVisualization(true)}
           {renderControls()}
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Increase finger pitch - watch shading drop but resistance rise</li>
-              <li>Increase finger width - resistance drops, shading increases</li>
-              <li>Find the pitch that maximizes efficiency</li>
-              <li>Try different busbar counts - more = lower resistance</li>
+          <div style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '16px', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 700 }}>Observe the Tradeoff:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px', fontWeight: 400 }}>
+              Watch the power output visualization as you adjust. Wider fingers → lower resistance but more shading loss. Finer pitch → less shading but higher resistance losses.
+            </p>
+            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0, fontWeight: 400 }}>
+              <li>Increase finger pitch → observe shading drop but resistance rise</li>
+              <li>Increase finger width → resistance drops, shading increases</li>
+              <li>Notice the optimal efficiency sweet spot in between</li>
+              <li>Try different busbar counts → observe current resistance changes</li>
             </ul>
+          </div>
+          <div style={{ background: 'rgba(30, 58, 95, 0.5)', margin: '16px', padding: '14px', borderRadius: '10px', border: '1px solid rgba(59,130,246,0.3)' }}>
+            <p style={{ color: '#93c5fd', fontSize: '13px', fontWeight: 400 }}>
+              <strong>The visualization shows</strong> how the silver finger pattern on a solar cell affects both shading (blocking light) and current collection (reducing resistance). When you increase finger width, more light is blocked — but current flows with less resistance.
+            </p>
           </div>
         </div>
         {renderBottomBar(false, true, 'Continue to Review')}
@@ -1261,10 +1330,13 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
+              {wasCorrect ? '✓ Correct!' : '✗ Not Quite!'}
             </h3>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '8px' }}>
+              Your prediction: {prediction ? `"${predictions.find(p => p.id === prediction)?.label || prediction}"` : 'No prediction made'}
+            </p>
             <p style={{ color: colors.textPrimary }}>
-              There's an optimal balance! Too much metal blocks light; too little creates
+              As you observed in the simulation, there's an optimal balance! Too much metal blocks light; too little creates
               resistance losses. Modern cells carefully optimize finger width, pitch, and
               busbar design to maximize power output.
             </p>
@@ -1507,9 +1579,10 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
                     cursor: 'pointer',
                     fontSize: '13px',
                     WebkitTapHighlightColor: 'transparent',
+                    transition: 'all 0.2s ease',
                   }}
                 >
-                  Reveal Answer
+                  Got It
                 </button>
               ) : (
                 <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
@@ -1582,6 +1655,9 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
               ))}
             </div>
             <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
+              <p style={{ color: colors.textMuted, fontSize: '13px', marginBottom: '8px', fontWeight: 400 }}>
+                A solar cell engineer is optimizing screen-printed silver metallization to maximize power output. Consider the tradeoffs between shading loss and resistive losses as you answer.
+              </p>
               <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1667,7 +1743,7 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered metallization design!</p>
           </div>

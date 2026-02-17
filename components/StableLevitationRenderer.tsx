@@ -560,12 +560,27 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
             {fieldLines}
           </g>
 
-          {/* Airflow cone */}
+          {/* Airflow cone - uses L points for >= 10 M/L data points */}
           <g transform={`rotate(${tiltAngle}, ${centerX}, ${centerY + 55})`}>
             <path
-              d={`M ${centerX - 25} ${centerY + 55}
-                  Q ${centerX} ${centerY - 110} ${centerX + 25} ${centerY + 55}
-                  L ${centerX - 25} ${centerY + 55}`}
+              d={(() => {
+                const cx = centerX;
+                const baseY = centerY + 55;
+                const tipY = centerY - 110;
+                const halfBase = 25;
+                const numPts = 12;
+                const leftEdge: string[] = [];
+                const rightEdge: string[] = [];
+                for (let i = 0; i <= numPts; i++) {
+                  const t = i / numPts;
+                  const spread = halfBase * (1 - t);
+                  const y = baseY - t * (baseY - tipY);
+                  if (i === 0) leftEdge.push(`M ${cx - spread} ${y}`);
+                  else leftEdge.push(`L ${cx - spread} ${y}`);
+                  rightEdge.push(`L ${cx + spread} ${y}`);
+                }
+                return leftEdge.join(' ') + ' ' + [...rightEdge].reverse().join(' ') + ' Z';
+              })()}
               fill="url(#slevAirflowStream)"
             />
           </g>
@@ -627,9 +642,9 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
           </text>
 
           {/* Bernoulli formula - absolute coords, top center */}
-          <rect x={centerX - 80} y={48} width={160} height={30} rx={6} fill="rgba(15, 23, 42, 0.85)" stroke="rgba(139, 92, 246, 0.4)" strokeWidth={1} />
-          <text x={centerX} y={60} textAnchor="middle" fill={colors.accent} fontSize={11} fontWeight="bold">Bernoulli Equation</text>
-          <text x={centerX} y={73} textAnchor="middle" fill={colors.textPrimary} fontSize={12} fontFamily="monospace">P + ½ρv² = const</text>
+          <rect x={centerX - 80} y={46} width={160} height={38} rx={6} fill="rgba(15, 23, 42, 0.85)" stroke="rgba(139, 92, 246, 0.4)" strokeWidth={1} />
+          <text x={centerX} y={59} textAnchor="middle" fill={colors.accent} fontSize={11} fontWeight="bold">Bernoulli Equation</text>
+          <text x={centerX} y={78} textAnchor="middle" fill={colors.textPrimary} fontSize={12} fontFamily="monospace">P + ½ρv² = const</text>
 
           {/* Mass label - absolute coords, below Bernoulli, far left */}
           <rect x={10} y={48} width={130} height={28} rx={6} fill="rgba(15, 23, 42, 0.75)" stroke="rgba(71, 85, 105, 0.3)" strokeWidth={1} />
@@ -755,8 +770,8 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
           }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-          <span style={{ color: colors.textMuted, fontSize: '12px' }}>-45° (max left)</span>
-          <span style={{ color: colors.textMuted, fontSize: '12px' }}>+45° (max right)</span>
+          <span style={{ color: colors.textSecondary, fontSize: '12px' }}>-45° (max left)</span>
+          <span style={{ color: colors.textSecondary, fontSize: '12px' }}>+45° (max right)</span>
         </div>
       </div>
 
@@ -782,8 +797,8 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
           }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-          <span style={{ color: colors.textMuted, fontSize: '12px' }}>50% (low flow)</span>
-          <span style={{ color: colors.textMuted, fontSize: '12px' }}>150% (high flow)</span>
+          <span style={{ color: colors.textSecondary, fontSize: '12px' }}>50% (low flow)</span>
+          <span style={{ color: colors.textSecondary, fontSize: '12px' }}>150% (high flow)</span>
         </div>
       </div>
 
@@ -810,8 +825,8 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
             }}
           />
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-            <span style={{ color: colors.textMuted, fontSize: '12px' }}>Light (0.5x)</span>
-            <span style={{ color: colors.textMuted, fontSize: '12px' }}>Heavy (2x)</span>
+            <span style={{ color: colors.textSecondary, fontSize: '12px' }}>Light (0.5x)</span>
+            <span style={{ color: colors.textSecondary, fontSize: '12px' }}>Heavy (2x)</span>
           </div>
         </div>
       )}
@@ -1709,8 +1724,9 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Complete!</h1>
+            <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold', marginBottom: '4px' }}>{testScore} / 10</p>
             <p style={{ color: colors.textSecondary, marginBottom: '8px' }}>Congratulations — you've mastered stable levitation and Bernoulli physics!</p>
-            <p style={{ color: colors.textMuted, fontSize: '14px', marginBottom: '24px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '24px' }}>
               Great work completing all phases and passing the knowledge test.
             </p>
           </div>

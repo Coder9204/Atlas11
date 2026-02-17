@@ -344,7 +344,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Slow Closure',
+    twist_play: 'Twist Experiment',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -517,7 +517,8 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
   const renderBottomNav = () => {
     const currentIndex = phaseOrder.indexOf(phase);
     const canGoBack = currentIndex > 0;
-    const canGoNext = currentIndex < phaseOrder.length - 1;
+    const isActiveTest = phase === 'test' && !testSubmitted;
+    const canGoNext = currentIndex < phaseOrder.length - 1 && !isActiveTest;
 
     return (
       <div style={{
@@ -531,7 +532,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        zIndex: 50,
+        zIndex: 100,
       }}>
         {canGoBack ? (
           <button
@@ -597,12 +598,22 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
       }}>
         {renderProgressBar()}
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '24px',
+          textAlign: 'center',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+        }}>
 
         <div style={{
           fontSize: '64px',
@@ -611,7 +622,6 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
         }}>
           💧🔧
         </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
         <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
           Water Hammer
@@ -637,19 +647,24 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
             "When flowing water is suddenly stopped, all that momentum has to go somewhere. The kinetic energy transforms into a pressure wave that can burst pipes, damage equipment, and even cause catastrophic failures in industrial systems."
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+          <p className="text-secondary" style={{ ...typo.small, color: 'rgba(156,163,175,0.7)', marginTop: '8px' }}>
             - Fluid Dynamics Engineering
           </p>
         </div>
+
+        <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '16px' }}>
+          Discover how first principles of fluid dynamics explain this everyday phenomenon.
+        </p>
 
         <button
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          Investigate the Pressure Wave
+          Start Exploring
         </button>
 
         {renderNavDots()}
+        </div>
         {renderBottomNav()}
       </div>
     );
@@ -890,7 +905,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
 
               {/* Water particles when valve is open */}
               {valveOpen && [0, 1, 2, 3, 4].map(i => (
-                <circle key={i} cx={60 + i * 60} cy="110" r="8" fill="url(#waterGradient)" opacity="0.8" filter="url(#glow)">
+                <circle key={i} cx={60 + i * 60} cy="110" r="8" fill="url(#waterGradient)" opacity="0.8">
                   <animate attributeName="cx" values={`${60 + i * 60};${120 + i * 60}`} dur="0.5s" repeatCount="indefinite" />
                 </circle>
               ))}
@@ -909,41 +924,67 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
                 {valveOpen ? 'OPEN' : 'CLOSED'}
               </text>
 
-              {/* Pressure gauge */}
-              <g transform="translate(100, 210)">
-                <circle cx="0" cy="0" r="45" fill="#1e293b" stroke="#64748b" strokeWidth="2" />
-                {/* Gauge markings */}
-                {[0, 1, 2, 3, 4].map(i => {
-                  const angle = -135 + i * 67.5;
-                  const rad = angle * Math.PI / 180;
-                  return (
-                    <g key={i}>
-                      <line x1={Math.cos(rad) * 32} y1={Math.sin(rad) * 32} x2={Math.cos(rad) * 40} y2={Math.sin(rad) * 40} stroke="#f8fafc" strokeWidth="2" />
-                      <text x={Math.cos(rad) * 24} y={Math.sin(rad) * 24 + 4} fill="#f8fafc" fontSize="11" textAnchor="middle">{i * 12}</text>
-                    </g>
-                  );
-                })}
-                {/* Needle */}
-                {(() => {
-                  const pressureBars = Math.abs(pressureInBars(currentPressure));
-                  const needleAngle = -135 + Math.min(pressureBars, 48) * 5.625;
-                  const needleRad = needleAngle * Math.PI / 180;
-                  return (
-                    <line x1={-Math.cos(needleRad) * 8} y1={-Math.sin(needleRad) * 8} x2={Math.cos(needleRad) * 30} y2={Math.sin(needleRad) * 30} stroke="#ef4444" strokeWidth="3" strokeLinecap="round" style={{ transition: 'all 0.1s' }} />
-                  );
-                })()}
-                <circle cx="0" cy="0" r="6" fill="#ef4444" />
-                <text x="0" y="55" textAnchor="middle" fill="#94a3b8" fontSize="11">PRESSURE (bar)</text>
-              </g>
+              {/* Velocity indicator - moves with slider */}
+              <circle
+                cx={50 + ((flowVelocity - 1) / 5) * 300}
+                cy={70}
+                r="8"
+                fill={colors.accent}
+                stroke="white"
+                strokeWidth="2"
+                filter="url(#glow)"
+              />
+              <text x={50 + ((flowVelocity - 1) / 5) * 300} y="56" textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="bold">
+                {flowVelocity} m/s
+              </text>
 
-              {/* Pressure bar */}
-              <g transform="translate(250, 230)">
-                <rect x="-100" y="0" width="200" height="16" rx="8" fill="#1e293b" stroke="#334155" />
-                <rect x="-98" y="2" width={Math.min(Math.abs(pressureInBars(currentPressure)) * 4, 196)} height="12" rx="6" fill={Math.abs(pressureInBars(currentPressure)) > 30 ? "#ef4444" : Math.abs(pressureInBars(currentPressure)) > 15 ? "#f59e0b" : "#22c55e"} style={{ transition: 'all 0.1s' }} />
-                <text x="0" y="32" textAnchor="middle" fill="#f8fafc" fontSize="12" fontWeight="bold">
-                  {Math.abs(pressureInBars(currentPressure)).toFixed(1)} bar
-                </text>
-              </g>
+              {/* Pressure gauge circle */}
+              <circle cx="100" cy="210" r="45" fill="#1e293b" stroke="#64748b" strokeWidth="2" />
+              {/* Gauge needle */}
+              {(() => {
+                const pressureBars = Math.abs(pressureInBars(currentPressure));
+                const needleAngle = -135 + Math.min(pressureBars, 48) * 5.625;
+                const needleRad = needleAngle * Math.PI / 180;
+                return (
+                  <line
+                    x1={100 - Math.cos(needleRad) * 8}
+                    y1={210 - Math.sin(needleRad) * 8}
+                    x2={100 + Math.cos(needleRad) * 30}
+                    y2={210 + Math.sin(needleRad) * 30}
+                    stroke="#ef4444" strokeWidth="3" strokeLinecap="round"
+                  />
+                );
+              })()}
+              <circle cx="100" cy="210" r="5" fill="#ef4444" />
+              <text x="100" y="267" textAnchor="middle" fill="#94a3b8" fontSize="11">PRESSURE (bar)</text>
+
+              {/* Gauge tick marks and labels at absolute positions */}
+              {[0, 1, 2, 3, 4].map(i => {
+                const angle = -135 + i * 67.5;
+                const rad = angle * Math.PI / 180;
+                const cx = 100, cy = 210;
+                return (
+                  <g key={i}>
+                    <line
+                      x1={cx + Math.cos(rad) * 32} y1={cy + Math.sin(rad) * 32}
+                      x2={cx + Math.cos(rad) * 40} y2={cy + Math.sin(rad) * 40}
+                      stroke="#f8fafc" strokeWidth="2"
+                    />
+                    <text
+                      x={cx + Math.cos(rad) * 22}
+                      y={cy + Math.sin(rad) * 22 + 4}
+                      fill="#f8fafc" fontSize="11" textAnchor="middle"
+                    >{i * 12}</text>
+                  </g>
+                );
+              })}
+
+              {/* Pressure readout - far right, clearly separated */}
+              <rect x="395" y="175" width="90" height="60" rx="6" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+              <text x="440" y="195" textAnchor="middle" fill="#94a3b8" fontSize="11">Pressure</text>
+              <text x="440" y="217" textAnchor="middle" fill={Math.abs(pressureInBars(currentPressure)) > 30 ? "#ef4444" : "#22c55e"} fontSize="14" fontWeight="bold">
+                {Math.abs(pressureInBars(currentPressure)).toFixed(1)} bar
+              </text>
             </svg>
 
             {/* Velocity slider */}
@@ -1145,6 +1186,11 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
             The Physics of Water Hammer
           </h2>
 
+          <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px', textAlign: 'center' }}>
+            As you observed in the experiment, closing a valve suddenly creates a dramatic pressure spike.
+            Your prediction helped you explore this phenomenon.
+          </p>
+
           {prediction && (
             <div style={{
               background: prediction === 'c' ? `${colors.success}11` : `${colors.warning}11`,
@@ -1282,24 +1328,38 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <svg viewBox="0 0 400 120" style={{ width: '100%', maxWidth: '400px', margin: '0 auto', display: 'block' }}>
-              {/* Fast closure */}
-              <g transform="translate(0, 0)">
-                <rect x="20" y="25" width="150" height="35" fill="#475569" rx="3" />
-                <rect x="25" y="30" width="120" height="25" fill="#3b82f6" opacity="0.5" />
-                <rect x="145" y="20" width="20" height="45" fill="#ef4444" rx="2" />
-                <text x="95" y="80" textAnchor="middle" fill="#f8fafc" fontSize="11" fontWeight="bold">Instant Close</text>
-                <text x="95" y="95" textAnchor="middle" fill="#f87171" fontSize="11">t = 10 ms</text>
-              </g>
+            <svg viewBox="0 0 400 160" style={{ width: '100%', maxWidth: '400px', margin: '0 auto', display: 'block' }}>
+              {/* Fast closure - left side */}
+              <text x="95" y="16" textAnchor="middle" fill="#f87171" fontSize="11" fontWeight="bold">FAST Closure</text>
+              <rect x="20" y="25" width="150" height="35" fill="#475569" rx="3" />
+              <rect x="25" y="30" width="120" height="25" fill="#3b82f6" opacity="0.5" />
+              <rect x="145" y="20" width="20" height="45" fill="#ef4444" rx="2" />
+              {/* Pressure spike */}
+              <line x1="160" y1="20" x2="160" y2="60" stroke="#ef4444" strokeWidth="2" strokeDasharray="4,2" />
+              <circle cx="160" cy="20" r="6" fill="#ef4444" />
+              <text x="95" y="80" textAnchor="middle" fill="#f8fafc" fontSize="11" fontWeight="bold">Instant Close</text>
+              <text x="95" y="95" textAnchor="middle" fill="#f87171" fontSize="11">t = 10 ms</text>
+              <text x="95" y="112" textAnchor="middle" fill="#fca5a5" fontSize="11">High pressure spike!</text>
+              <line x1="20" y1="130" x2="170" y2="130" stroke="#334155" strokeWidth="1" />
+              <circle cx="20" cy="130" r="4" fill="#475569" />
+              <circle cx="170" cy="130" r="4" fill="#475569" />
+              <text x="95" y="148" textAnchor="middle" fill="#94a3b8" fontSize="11">Pressure wave = ρcΔv</text>
 
-              {/* Slow closure */}
-              <g transform="translate(200, 0)">
-                <rect x="20" y="25" width="150" height="35" fill="#475569" rx="3" />
-                <rect x="25" y="30" width="120" height="25" fill="#3b82f6" opacity="0.5" />
-                <rect x="145" y="30" width="20" height="25" fill="#22c55e" rx="2" />
-                <text x="95" y="80" textAnchor="middle" fill="#f8fafc" fontSize="11" fontWeight="bold">Slow Close</text>
-                <text x="95" y="95" textAnchor="middle" fill="#4ade80" fontSize="11">t = 500 ms</text>
-              </g>
+              {/* Slow closure - right side */}
+              <text x="295" y="16" textAnchor="middle" fill="#4ade80" fontSize="11" fontWeight="bold">SLOW Closure</text>
+              <rect x="220" y="25" width="150" height="35" fill="#475569" rx="3" />
+              <rect x="225" y="30" width="120" height="25" fill="#3b82f6" opacity="0.5" />
+              <rect x="345" y="30" width="20" height="25" fill="#22c55e" rx="2" />
+              {/* Pressure reduction */}
+              <line x1="360" y1="30" x2="360" y2="55" stroke="#22c55e" strokeWidth="2" strokeDasharray="4,2" />
+              <circle cx="360" cy="30" r="6" fill="#22c55e" />
+              <text x="295" y="80" textAnchor="middle" fill="#f8fafc" fontSize="11" fontWeight="bold">Slow Close</text>
+              <text x="295" y="95" textAnchor="middle" fill="#4ade80" fontSize="11">t = 500 ms</text>
+              <text x="295" y="112" textAnchor="middle" fill="#86efac" fontSize="11">Reduced pressure!</text>
+              <line x1="220" y1="130" x2="370" y2="130" stroke="#334155" strokeWidth="1" />
+              <circle cx="220" cy="130" r="4" fill="#475569" />
+              <circle cx="370" cy="130" r="4" fill="#475569" />
+              <text x="295" y="148" textAnchor="middle" fill="#94a3b8" fontSize="11">t &gt; Tc → ΔP reduced</text>
             </svg>
             <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginTop: '16px' }}>
               <strong>Critical time</strong> = 2L/c (time for wave to travel pipe length and back)
@@ -1419,13 +1479,13 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
                 strokeDasharray="5,5"
               />
               <text
-                x={50 + Math.min((criticalTime / 0.3) * 330, 330)}
-                y="165"
-                textAnchor="middle"
+                x={Math.min(50 + (criticalTime / 0.3) * 330 + 5, 350)}
+                y="35"
+                textAnchor="start"
                 fill={colors.accent}
                 fontSize="11"
               >
-                Tc = {(criticalTime * 1000).toFixed(0)}ms
+                Tc={(criticalTime * 1000).toFixed(0)}ms
               </text>
 
               {/* Pressure curve */}
@@ -1440,7 +1500,25 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
                 />
               )}
 
-              <text x="215" y="175" textAnchor="middle" fill="#64748b" fontSize="11">Time</text>
+              {/* Real-time peak pressure indicator */}
+              <circle
+                cx={50 + Math.min((closureTime / 0.3) * 330, 320)}
+                cy={150 - (peakPressure / 50) * 130}
+                r="6"
+                fill={colors.accent}
+                stroke="white"
+                strokeWidth="2"
+              />
+              <text
+                x={Math.min(50 + (closureTime / 0.3) * 330 + 12, 360)}
+                y={Math.max(150 - (peakPressure / 50) * 130 - 10, 32)}
+                fill={colors.accent}
+                fontSize="11"
+              >
+                {peakPressure.toFixed(1)} bar
+              </text>
+
+              <text x="215" y="178" textAnchor="middle" fill="#64748b" fontSize="11">Time (s)</text>
             </svg>
 
             {/* Stats grid */}

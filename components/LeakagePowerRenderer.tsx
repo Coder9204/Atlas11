@@ -36,7 +36,7 @@ const playSound = (type: 'click' | 'success' | 'error' | 'transition') => {
 const colors = {
   textPrimary: '#ffffff',
   textSecondary: '#e2e8f0',
-  textMuted: '#e2e8f0',
+  textMuted: 'rgba(148, 163, 184, 0.7)',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -70,7 +70,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
     review: 'Review',
     twist_predict: 'Twist',
     twist_play: 'Explore',
-    twist_review: 'Explain',
+    twist_review: 'Deep Insight',
     transfer: 'Transfer',
     test: 'Test',
     mastery: 'Mastery',
@@ -178,6 +178,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [currentTransferApp, setCurrentTransferApp] = useState(0);
   const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
@@ -498,18 +499,28 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
           <button
             key={p}
             onClick={() => goToPhase(p)}
+            aria-label={phaseLabels[p]}
             style={{
+              width: '44px',
+              height: '44px',
+              border: 'none',
+              background: 'transparent',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 0,
+            }}
+          >
+            <span style={{
               width: i === currentIdx ? '24px' : '10px',
               height: '10px',
               borderRadius: '5px',
-              border: 'none',
               background: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : 'rgba(255,255,255,0.2)',
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-            title={phaseLabels[p]}
-          />
+              display: 'block',
+              transition: 'all 0.3s ease',
+            }} />
+          </button>
         ))}
       </div>
     );
@@ -544,13 +555,14 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
             opacity: canBack ? 1 : 0.3,
             minHeight: '44px',
             WebkitTapHighlightColor: 'transparent',
+            transition: 'all 0.2s ease',
           }}
           disabled={!canBack}
         >
           Back
         </button>
 
-        <span style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>
+        <span style={{ fontSize: '12px', color: colors.textSecondary, fontWeight: 400 }}>
           {phaseLabels[phase]}
         </span>
 
@@ -570,6 +582,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
             boxShadow: canProceed ? `0 2px 12px ${colors.accent}30` : 'none',
             minHeight: '44px',
             WebkitTapHighlightColor: 'transparent',
+            transition: 'all 0.2s ease',
           }}
         >
           {buttonText}
@@ -580,9 +593,9 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
 
   // Wrapper for phase content
   const wrapPhaseContent = (content: React.ReactNode, bottomBarContent?: React.ReactNode) => (
-    <div className="absolute inset-0 flex flex-col" style={{ background: colors.bgPrimary, color: colors.textPrimary }}>
+    <div style={{ minHeight: '100vh', background: colors.bgPrimary, color: colors.textPrimary, display: 'flex', flexDirection: 'column', fontWeight: 400 }}>
       <div style={{ flexShrink: 0 }}>{renderProgressBar()}</div>
-      <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden', paddingTop: '56px' }}>
+      <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden', paddingTop: '56px', paddingBottom: '80px' }}>
         {content}
       </div>
       {bottomBarContent && <div style={{ flexShrink: 0 }}>{bottomBarContent}</div>}
@@ -591,7 +604,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
 
   // Power breakdown visualization
   const renderPowerVisualization = () => {
-    const maxBarWidth = 300;
+    const maxBarWidth = 260;
     const normalizedDynamic = (power.dynamicPower / power.totalPower) * maxBarWidth;
     const normalizedLeakage = (power.leakagePower / power.totalPower) * maxBarWidth;
     const normalizedClock = (power.clockPower / power.totalPower) * maxBarWidth;
@@ -599,183 +612,141 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
 
     // Animated transistor leakage visualization
     const leakageParticles = Array.from({ length: 8 }, (_, i) => ({
-      x: 50 + Math.sin((animationTime + i * 45) * Math.PI / 180) * 20,
-      y: 180 + (animationTime + i * 20) % 60 - 30,
+      x: 55 + Math.sin((animationTime + i * 45) * Math.PI / 180) * 20,
+      y: 60 + (animationTime + i * 20) % 60 - 30,
       opacity: 0.3 + Math.sin((animationTime + i * 30) * Math.PI / 180) * 0.3,
     }));
 
     return (
       <svg width="100%" height={isMobile ? '380' : '420'} viewBox="0 0 500 420" style={{ maxWidth: '600px' }}>
         <defs>
-          <linearGradient id="dynamicGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <linearGradient id="lp-dynamicGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.dynamic} />
             <stop offset="100%" stopColor="#60a5fa" />
           </linearGradient>
-          <linearGradient id="staticGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <linearGradient id="lp-staticGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.static} />
             <stop offset="100%" stopColor="#f87171" />
           </linearGradient>
-          <linearGradient id="tempGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+          <linearGradient id="lp-tempGrad" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#22c55e" />
             <stop offset="50%" stopColor="#f59e0b" />
             <stop offset="100%" stopColor="#ef4444" />
           </linearGradient>
+          <filter id="lp-glow">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+            <feMerge>
+              <feMergeNode in="coloredBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="lp-shadow">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.4" />
+          </filter>
         </defs>
 
         {/* Background */}
         <rect width="500" height="420" fill="#0f172a" rx="12" />
 
+        {/* Grid lines layer */}
+        <g id="lp-grid">
+          <line x1="20" y1="210" x2="480" y2="210" stroke="#1e293b" strokeWidth="1" strokeDasharray="4,4" opacity="0.6" />
+          <line x1="20" y1="285" x2="480" y2="285" stroke="#1e293b" strokeWidth="1" strokeDasharray="4,4" opacity="0.6" />
+          <line x1="140" y1="40" x2="140" y2="290" stroke="#1e293b" strokeWidth="1" strokeDasharray="4,4" opacity="0.4" />
+          <line x1="420" y1="40" x2="420" y2="290" stroke="#1e293b" strokeWidth="1" strokeDasharray="4,4" opacity="0.4" />
+        </g>
+
         {/* Title */}
-        <text x="250" y="28" fill="#f8fafc" fontSize="16" fontWeight="bold" textAnchor="middle">
+        <text x="250" y="25" fill="#f8fafc" fontSize="14" fontWeight="bold" textAnchor="middle">
           Power Breakdown at {loadPercent}% Load
         </text>
 
         {/* Chip visualization with leakage */}
-        <g transform="translate(30, 50)">
-          <rect x="0" y="0" width="100" height="100" fill="#1e293b" rx="8" stroke="#475569" strokeWidth="2" />
-          <text x="50" y="20" fill="#e2e8f0" fontSize="10" textAnchor="middle">CPU Die</text>
-
-          {/* Transistor representation */}
-          <rect x="20" y="35" width="60" height="40" fill="#334155" rx="4" />
-          <text x="50" y="60" fill="#f8fafc" fontSize="8" textAnchor="middle">Transistors</text>
-
-          {/* Leakage particles animation */}
+        <g id="lp-chip">
+          <rect x="20" y="40" width="110" height="95" fill="#1e293b" rx="8" stroke="#475569" strokeWidth="2" />
+          <text x="75" y="57" fill="#e2e8f0" fontSize="11" textAnchor="middle">CPU Die</text>
+          <rect x="35" y="63" width="80" height="36" fill="#334155" rx="4" />
+          <text x="75" y="86" fill="#f8fafc" fontSize="11" textAnchor="middle">Transistors</text>
           {leakageParticles.map((p, i) => (
-            <circle
-              key={i}
-              cx={p.x}
-              cy={p.y - 120}
-              r="3"
-              fill={colors.static}
-              opacity={p.opacity}
-            />
+            <circle key={i} cx={20 + p.x} cy={40 + p.y} r="3" fill={colors.static} opacity={p.opacity} filter="url(#lp-glow)" />
           ))}
-
-          {/* Leakage arrow */}
-          <path d="M 50 80 L 50 95" stroke={colors.static} strokeWidth="2" strokeDasharray="4,2" />
-          <text x="50" y="110" fill={colors.static} fontSize="8" textAnchor="middle">Leakage</text>
+          <path d="M 75 100 L 75 125" stroke={colors.static} strokeWidth="2" strokeDasharray="4,2" />
+          <text x="75" y="141" fill={colors.static} fontSize="11" textAnchor="middle" fontWeight="bold">Leakage</text>
         </g>
 
-        {/* Power bars */}
-        <g transform="translate(150, 55)">
-          <text x="0" y="0" fill="#e2e8f0" fontSize="11" fontWeight="bold">Power Components</text>
+        {/* Power bars section label */}
+        <text x="145" y="55" fill="#e2e8f0" fontSize="12" fontWeight="bold">Power Components (mW)</text>
 
-          {/* Dynamic Power */}
-          <g transform="translate(0, 15)">
-            <rect x="0" y="0" width={maxBarWidth} height="18" fill="#1e293b" rx="4" />
-            <rect x="0" y="0" width={normalizedDynamic} height="18" fill="url(#dynamicGrad)" rx="4" />
-            <text x="5" y="13" fill="#f8fafc" fontSize="10">Dynamic</text>
-            <text x={maxBarWidth + 10} y="13" fill={colors.dynamic} fontSize="10">{power.dynamicPower.toFixed(1)}mW</text>
-          </g>
+        {/* Dynamic Power bar */}
+        <rect x="145" y="62" width={maxBarWidth} height="22" fill="#1e293b" rx="4" />
+        <rect x="145" y="62" width={normalizedDynamic} height="22" fill="url(#lp-dynamicGrad)" rx="4" filter="url(#lp-glow)" />
+        <text x="151" y="78" fill="#f8fafc" fontSize="11">Dynamic</text>
+        <text x={145 + maxBarWidth + 8} y="78" fill={colors.dynamic} fontSize="11" fontWeight="bold">{power.dynamicPower.toFixed(1)}</text>
 
-          {/* Leakage Power */}
-          <g transform="translate(0, 40)">
-            <rect x="0" y="0" width={maxBarWidth} height="18" fill="#1e293b" rx="4" />
-            <rect x="0" y="0" width={normalizedLeakage} height="18" fill="url(#staticGrad)" rx="4" />
-            <text x="5" y="13" fill="#f8fafc" fontSize="10">Leakage</text>
-            <text x={maxBarWidth + 10} y="13" fill={colors.static} fontSize="10">{power.leakagePower.toFixed(1)}mW</text>
-          </g>
+        {/* Leakage Power bar */}
+        <rect x="145" y="92" width={maxBarWidth} height="22" fill="#1e293b" rx="4" />
+        <rect x="145" y="92" width={normalizedLeakage} height="22" fill="url(#lp-staticGrad)" rx="4" filter="url(#lp-glow)" />
+        <text x="151" y="108" fill="#f8fafc" fontSize="11">Leakage</text>
+        <text x={145 + maxBarWidth + 8} y="108" fill={colors.static} fontSize="11" fontWeight="bold">{power.leakagePower.toFixed(1)}</text>
 
-          {/* Clock Power */}
-          <g transform="translate(0, 65)">
-            <rect x="0" y="0" width={maxBarWidth} height="18" fill="#1e293b" rx="4" />
-            <rect x="0" y="0" width={normalizedClock} height="18" fill={colors.clock} rx="4" />
-            <text x="5" y="13" fill="#f8fafc" fontSize="10">Clock Tree</text>
-            <text x={maxBarWidth + 10} y="13" fill={colors.clock} fontSize="10">{power.clockPower.toFixed(1)}mW</text>
-          </g>
+        {/* Clock Power bar */}
+        <rect x="145" y="122" width={maxBarWidth} height="22" fill="#1e293b" rx="4" />
+        <rect x="145" y="122" width={normalizedClock} height="22" fill={colors.clock} rx="4" />
+        <text x="151" y="138" fill="#f8fafc" fontSize="11">Clock Tree</text>
+        <text x={145 + maxBarWidth + 8} y="138" fill={colors.clock} fontSize="11" fontWeight="bold">{power.clockPower.toFixed(1)}</text>
 
-          {/* Memory Refresh */}
-          <g transform="translate(0, 90)">
-            <rect x="0" y="0" width={maxBarWidth} height="18" fill="#1e293b" rx="4" />
-            <rect x="0" y="0" width={normalizedMemory} height="18" fill={colors.memory} rx="4" />
-            <text x="5" y="13" fill="#f8fafc" fontSize="10">Memory</text>
-            <text x={maxBarWidth + 10} y="13" fill={colors.memory} fontSize="10">{power.memoryPower.toFixed(1)}mW</text>
-          </g>
-        </g>
+        {/* Memory Refresh bar */}
+        <rect x="145" y="152" width={maxBarWidth} height="22" fill="#1e293b" rx="4" />
+        <rect x="145" y="152" width={normalizedMemory} height="22" fill={colors.memory} rx="4" />
+        <text x="151" y="168" fill="#f8fafc" fontSize="11">Memory</text>
+        <text x={145 + maxBarWidth + 8} y="168" fill={colors.memory} fontSize="11" fontWeight="bold">{power.memoryPower.toFixed(1)}</text>
 
         {/* Temperature Gauge */}
-        <g transform="translate(30, 180)">
-          <text x="50" y="0" fill="#e2e8f0" fontSize="11" fontWeight="bold" textAnchor="middle">Temperature</text>
-          <rect x="35" y="10" width="30" height="80" fill="#1e293b" rx="4" />
-          <rect
-            x="35"
-            y={10 + 80 - (power.junctionTemp / 100) * 80}
-            width="30"
-            height={(power.junctionTemp / 100) * 80}
-            fill="url(#tempGrad)"
-            rx="4"
-          />
-          <text x="50" y="105" fill={colors.temperature} fontSize="12" fontWeight="bold" textAnchor="middle">
-            {power.junctionTemp.toFixed(0)}C
-          </text>
-        </g>
+        <text x="72" y="165" fill="#e2e8f0" fontSize="11" fontWeight="bold" textAnchor="middle">Temperature</text>
+        <rect x="54" y="176" width="36" height="70" fill="#1e293b" rx="4" stroke="#334155" strokeWidth="1" />
+        <rect
+          x="54"
+          y={176 + 70 - (power.junctionTemp / 100) * 70}
+          width="36"
+          height={(power.junctionTemp / 100) * 70}
+          fill="url(#lp-tempGrad)"
+          rx="4"
+        />
+        <text x="72" y="262" fill={colors.temperature} fontSize="13" fontWeight="bold" textAnchor="middle">
+          {power.junctionTemp.toFixed(0)}°C
+        </text>
 
-        {/* Summary Stats */}
-        <g transform="translate(150, 190)">
-          <rect x="0" y="0" width="320" height="70" fill="rgba(30, 41, 59, 0.8)" rx="8" />
-
-          <g transform="translate(20, 20)">
-            <text x="0" y="0" fill="#e2e8f0" fontSize="10">Total Power</text>
-            <text x="0" y="18" fill="#f8fafc" fontSize="16" fontWeight="bold">{power.totalPower.toFixed(1)} mW</text>
-          </g>
-
-          <g transform="translate(110, 20)">
-            <text x="0" y="0" fill="#e2e8f0" fontSize="10">Leakage %</text>
-            <text x="0" y="18" fill={colors.static} fontSize="16" fontWeight="bold">{power.leakagePercent.toFixed(1)}%</text>
-          </g>
-
-          <g transform="translate(200, 20)">
-            <text x="0" y="0" fill="#e2e8f0" fontSize="10">Battery Life</text>
-            <text x="0" y="18" fill={colors.success} fontSize="16" fontWeight="bold">{power.batteryLife.toFixed(1)} hrs</text>
-          </g>
-        </g>
+        {/* Summary Stats - highlighted with glow */}
+        <rect x="145" y="193" width="340" height="78" fill="rgba(30, 41, 59, 0.9)" rx="8" stroke={colors.accent} strokeWidth="1" filter="url(#lp-shadow)" />
+        <text x="161" y="212" fill="#e2e8f0" fontSize="11">Total Power</text>
+        <text x="161" y="234" fill="#f8fafc" fontSize="16" fontWeight="bold" filter="url(#lp-glow)">{power.totalPower.toFixed(1)} mW</text>
+        <text x="291" y="212" fill="#e2e8f0" fontSize="11">Leakage %</text>
+        <text x="291" y="234" fill={colors.static} fontSize="16" fontWeight="bold">{power.leakagePercent.toFixed(1)}%</text>
+        <text x="401" y="212" fill="#e2e8f0" fontSize="11">Battery</text>
+        <text x="401" y="234" fill={colors.success} fontSize="16" fontWeight="bold">{power.batteryLife.toFixed(1)}h</text>
 
         {/* Power Equation */}
-        <g transform="translate(30, 290)">
-          <rect x="0" y="0" width="440" height="50" fill="rgba(59, 130, 246, 0.1)" rx="8" />
-          <text x="220" y="20" fill={colors.dynamic} fontSize="11" textAnchor="middle" fontWeight="bold">
-            Dynamic: P = alpha * C * V^2 * f
-          </text>
-          <text x="220" y="38" fill={colors.static} fontSize="11" textAnchor="middle" fontWeight="bold">
-            Static: P = I_leak * V (temperature dependent)
-          </text>
-        </g>
+        <rect x="20" y="290" width="460" height="52" fill="rgba(59, 130, 246, 0.1)" rx="8" />
+        <text x="250" y="312" fill={colors.dynamic} fontSize="11" textAnchor="middle" fontWeight="bold">
+          Dynamic: P = alpha × C × V² × f
+        </text>
+        <text x="250" y="332" fill={colors.static} fontSize="11" textAnchor="middle" fontWeight="bold">
+          Static: P = I_leak × V (temperature-dependent)
+        </text>
 
         {/* Power Saving Mode Indicators */}
-        <g transform="translate(30, 355)">
-          <rect
-            x="0" y="0" width="140" height="35"
-            fill={clockGating ? 'rgba(16, 185, 129, 0.2)' : 'rgba(71, 85, 105, 0.3)'}
-            rx="6"
-            stroke={clockGating ? colors.success : '#475569'}
-            strokeWidth="1"
-          />
-          <text x="70" y="22" fill={clockGating ? colors.success : '#e2e8f0'} fontSize="10" textAnchor="middle">
-            Clock Gating: {clockGating ? 'ON' : 'OFF'}
-          </text>
-
-          <rect
-            x="150" y="0" width="140" height="35"
-            fill={powerGating ? 'rgba(16, 185, 129, 0.2)' : 'rgba(71, 85, 105, 0.3)'}
-            rx="6"
-            stroke={powerGating ? colors.success : '#475569'}
-            strokeWidth="1"
-          />
-          <text x="220" y="22" fill={powerGating ? colors.success : '#e2e8f0'} fontSize="10" textAnchor="middle">
-            Power Gating: {powerGating ? 'ON' : 'OFF'}
-          </text>
-
-          <rect
-            x="300" y="0" width="140" height="35"
-            fill={dvfs ? 'rgba(16, 185, 129, 0.2)' : 'rgba(71, 85, 105, 0.3)'}
-            rx="6"
-            stroke={dvfs ? colors.success : '#475569'}
-            strokeWidth="1"
-          />
-          <text x="370" y="22" fill={dvfs ? colors.success : '#e2e8f0'} fontSize="10" textAnchor="middle">
-            DVFS: {dvfs ? 'ON' : 'OFF'}
-          </text>
-        </g>
+        <rect x="20" y="355" width="140" height="32" fill={clockGating ? 'rgba(16, 185, 129, 0.2)' : 'rgba(71, 85, 105, 0.3)'} rx="6" stroke={clockGating ? colors.success : '#475569'} strokeWidth="1" />
+        <text x="90" y="375" fill={clockGating ? colors.success : '#e2e8f0'} fontSize="11" textAnchor="middle">
+          Clock: {clockGating ? 'ON' : 'OFF'}
+        </text>
+        <rect x="170" y="355" width="140" height="32" fill={powerGating ? 'rgba(16, 185, 129, 0.2)' : 'rgba(71, 85, 105, 0.3)'} rx="6" stroke={powerGating ? colors.success : '#475569'} strokeWidth="1" />
+        <text x="240" y="375" fill={powerGating ? colors.success : '#e2e8f0'} fontSize="11" textAnchor="middle">
+          Power Gate: {powerGating ? 'ON' : 'OFF'}
+        </text>
+        <rect x="320" y="355" width="140" height="32" fill={dvfs ? 'rgba(16, 185, 129, 0.2)' : 'rgba(71, 85, 105, 0.3)'} rx="6" stroke={dvfs ? colors.success : '#475569'} strokeWidth="1" />
+        <text x="390" y="375" fill={dvfs ? colors.success : '#e2e8f0'} fontSize="11" textAnchor="middle">
+          DVFS: {dvfs ? 'ON' : 'OFF'}
+        </text>
       </svg>
     );
   };
@@ -794,7 +765,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
           step="5"
           value={loadPercent}
           onChange={(e) => setLoadPercent(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={{ width: '100%', accentColor: colors.accent, touchAction: 'pan-y', WebkitAppearance: 'none', height: '20px' }}
         />
       </div>
 
@@ -809,7 +780,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
           step="0.05"
           value={voltage}
           onChange={(e) => setVoltage(parseFloat(e.target.value))}
-          style={{ width: '100%', accentColor: colors.dynamic }}
+          style={{ width: '100%', accentColor: colors.dynamic, touchAction: 'pan-y', WebkitAppearance: 'none', height: '20px' }}
         />
       </div>
 
@@ -824,7 +795,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
           step="0.1"
           value={frequency}
           onChange={(e) => setFrequency(parseFloat(e.target.value))}
-          style={{ width: '100%', accentColor: colors.clock }}
+          style={{ width: '100%', accentColor: colors.clock, touchAction: 'pan-y', WebkitAppearance: 'none', height: '20px' }}
         />
       </div>
 
@@ -839,7 +810,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
           step="5"
           value={temperature}
           onChange={(e) => setTemperature(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.temperature }}
+          style={{ width: '100%', accentColor: colors.temperature, touchAction: 'pan-y', WebkitAppearance: 'none', height: '20px' }}
         />
       </div>
 
@@ -854,7 +825,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
           step="1"
           value={processNode}
           onChange={(e) => setProcessNode(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={{ width: '100%', accentColor: colors.accent, touchAction: 'pan-y', WebkitAppearance: 'none', height: '20px' }}
         />
       </div>
     </div>
@@ -933,7 +904,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
           step="5"
           value={loadPercent}
           onChange={(e) => setLoadPercent(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={{ width: '100%', accentColor: colors.accent, touchAction: 'pan-y', WebkitAppearance: 'none', height: '20px' }}
         />
       </div>
 
@@ -1087,16 +1058,16 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
       <rect x="168" y="35" width="64" height="115" rx="4" fill="#0f172a" />
 
       {/* Status text */}
-      <text x="200" y="90" fill="#e2e8f0" fontSize="10" textAnchor="middle">IDLE</text>
-      <text x="200" y="105" fill="#e2e8f0" fontSize="8" textAnchor="middle">Screen Off</text>
+      <text x="200" y="90" fill="#e2e8f0" fontSize="11" textAnchor="middle">IDLE</text>
+      <text x="200" y="108" fill="#e2e8f0" fontSize="11" textAnchor="middle">Screen Off</text>
 
       {/* Power question marks */}
       <text x="80" y="100" fill={colors.accent} fontSize="28" textAnchor="middle" fontWeight="bold">?</text>
       <text x="320" y="100" fill={colors.accent} fontSize="28" textAnchor="middle" fontWeight="bold">?</text>
 
       {/* Labels */}
-      <text x="80" y="130" fill="#e2e8f0" fontSize="10" textAnchor="middle">Power</text>
-      <text x="80" y="145" fill="#e2e8f0" fontSize="10" textAnchor="middle">Usage</text>
+      <text x="80" y="132" fill="#e2e8f0" fontSize="11" textAnchor="middle">Power</text>
+      <text x="80" y="148" fill="#e2e8f0" fontSize="11" textAnchor="middle">Usage</text>
       <text x="320" y="130" fill="#e2e8f0" fontSize="10" textAnchor="middle">Battery</text>
       <text x="320" y="145" fill="#e2e8f0" fontSize="10" textAnchor="middle">Drain</text>
     </svg>
@@ -1162,7 +1133,19 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
 
           {renderControls()}
 
-          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginTop: '24px' }}>
+          {/* Before vs After comparison */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '16px' }}>
+            <div style={{ background: 'rgba(59,130,246,0.1)', padding: '14px', borderRadius: '10px', borderLeft: `3px solid ${colors.dynamic}` }}>
+              <div style={{ color: colors.dynamic, fontWeight: 700, fontSize: typo.small, marginBottom: '6px' }}>Before: Full Load</div>
+              <div style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.5 }}>Dynamic power dominates. Leakage is small relative fraction.</div>
+            </div>
+            <div style={{ background: 'rgba(239,68,68,0.1)', padding: '14px', borderRadius: '10px', borderLeft: `3px solid ${colors.static}` }}>
+              <div style={{ color: colors.static, fontWeight: 700, fontSize: typo.small, marginBottom: '6px' }}>After: 0% Load</div>
+              <div style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.5 }}>Leakage becomes dominant. Power is NOT zero &mdash; never will be!</div>
+            </div>
+          </div>
+
+          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginTop: '16px' }}>
             <h3 style={{ color: colors.accent, marginBottom: '12px', fontSize: typo.body }}>Experiments to Try:</h3>
             <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', fontSize: typo.body }}>
               <li>Set load to 0% - notice power is NOT zero</li>
@@ -1259,6 +1242,46 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
       <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '24px', fontSize: typo.heading }}>The Power-Saving Twist</h2>
+
+          {/* Static SVG showing power-saving techniques comparison */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <svg width="100%" height="200" viewBox="0 0 460 200" style={{ maxWidth: '460px' }}>
+              <defs>
+                <filter id="tp-glow">
+                  <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                  <feMerge>
+                    <feMergeNode in="coloredBlur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+              <rect width="460" height="200" fill="#0f172a" rx="12" />
+              {/* Grid lines */}
+              <line x1="40" y1="20" x2="40" y2="160" stroke="#1e293b" strokeWidth="1" />
+              <line x1="40" y1="160" x2="440" y2="160" stroke="#1e293b" strokeWidth="1" />
+              {[0.25, 0.5, 0.75].map((t, i) => (
+                <line key={i} x1="40" y1={160 - t * 130} x2="440" y2={160 - t * 130} stroke="#1e293b" strokeWidth="1" strokeDasharray="4,4" />
+              ))}
+              {/* Before bars */}
+              <rect x="55" y="30" width="30" height="130" fill={colors.static} rx="3" opacity="0.8" filter="url(#tp-glow)" />
+              <text x="70" y="175" fill="#e2e8f0" fontSize="11" textAnchor="middle">Before</text>
+              {/* Clock Gating */}
+              <rect x="155" y="78" width="30" height="82" fill={colors.clock} rx="3" opacity="0.8" />
+              <text x="170" y="175" fill="#e2e8f0" fontSize="11" textAnchor="middle">Clock</text>
+              <text x="170" y="187" fill="#e2e8f0" fontSize="11" textAnchor="middle">Gating</text>
+              {/* Power Gating */}
+              <rect x="255" y="117" width="30" height="43" fill={colors.success} rx="3" opacity="0.8" filter="url(#tp-glow)" />
+              <text x="270" y="175" fill="#e2e8f0" fontSize="11" textAnchor="middle">Power</text>
+              <text x="270" y="187" fill="#e2e8f0" fontSize="11" textAnchor="middle">Gating</text>
+              {/* DVFS */}
+              <rect x="355" y="90" width="30" height="70" fill={colors.dynamic} rx="3" opacity="0.8" />
+              <text x="370" y="175" fill="#e2e8f0" fontSize="11" textAnchor="middle">DVFS</text>
+              {/* Y axis labels */}
+              <text x="35" y="163" fill="#94a3b8" fontSize="11" textAnchor="end">0</text>
+              <text x="35" y="32" fill="#94a3b8" fontSize="11" textAnchor="end">100%</text>
+              <text x="230" y="16" fill="#f8fafc" fontSize="13" textAnchor="middle" fontWeight="bold">Power at Idle Load</text>
+            </svg>
+          </div>
 
           <div style={{ background: 'rgba(168, 85, 247, 0.1)', padding: '20px', borderRadius: '12px', marginBottom: '24px', borderLeft: '4px solid #a855f7' }}>
             <p style={{ fontSize: typo.body, marginBottom: '12px', lineHeight: 1.6 }}>
@@ -1400,75 +1423,175 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
+    const totalApps = realWorldApps.length;
+    const app = realWorldApps[currentTransferApp];
+    const isCompleted = transferCompleted.has(currentTransferApp);
+    const allCompleted = transferCompleted.size >= totalApps;
+
     return wrapPhaseContent(
       <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', marginBottom: '8px', fontSize: typo.heading }}>Real-World Applications</h2>
-          <p style={{ textAlign: 'center', color: colors.textMuted, marginBottom: '24px', fontSize: typo.body }}>
-            Complete all 4 to unlock the test ({transferCompleted.size}/4)
+          <h2 style={{ textAlign: 'center', marginBottom: '4px', fontSize: typo.heading }}>Real-World Applications</h2>
+          <p style={{ textAlign: 'center', color: colors.textMuted, marginBottom: '8px', fontSize: typo.body }}>
+            App {currentTransferApp + 1} of {totalApps} &mdash; {transferCompleted.size}/{totalApps} completed
           </p>
 
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
+          {/* App navigation dots */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '20px' }}>
+            {realWorldApps.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentTransferApp(i)}
+                aria-label={`App ${i + 1}`}
+                style={{
+                  width: '32px', height: '32px', borderRadius: '50%', border: 'none',
+                  background: transferCompleted.has(i) ? colors.success : i === currentTransferApp ? app.color : 'rgba(71,85,105,0.5)',
+                  color: 'white', cursor: 'pointer', fontSize: '12px', fontWeight: 700,
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+
+          {/* Current App Card */}
+          <div style={{
+            background: 'rgba(30, 41, 59, 0.8)',
+            padding: '20px',
+            borderRadius: '12px',
+            marginBottom: '16px',
+            border: isCompleted ? `2px solid ${colors.success}` : `1px solid ${app.color}40`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+              <span style={{ fontSize: '32px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ color: colors.textPrimary, marginBottom: '2px', fontSize: typo.body }}>{app.title}</h3>
+                <span style={{ color: app.color, fontSize: typo.small, fontWeight: 600 }}>{app.tagline}</span>
+              </div>
+            </div>
+
+            <p style={{ color: colors.textSecondary, fontSize: typo.small, marginBottom: '12px', fontWeight: 400, lineHeight: 1.6 }}>
+              {app.description}
+            </p>
+
+            {/* Stats grid - before/after comparison data */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '12px' }}>
+              {app.stats.map((stat, si) => (
+                <div key={si} style={{ background: `${app.color}15`, padding: '10px', borderRadius: '8px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '16px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ color: app.color, fontWeight: 700, fontSize: typo.small }}>{stat.value}</div>
+                  <div style={{ color: colors.textMuted, fontSize: '11px', fontWeight: 400 }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Connection to leakage power */}
+            <div style={{ background: 'rgba(245, 158, 11, 0.08)', padding: '10px', borderRadius: '8px', marginBottom: '10px', borderLeft: `3px solid ${colors.accent}` }}>
+              <p style={{ color: colors.textMuted, fontSize: '11px', lineHeight: 1.5, fontWeight: 400 }}><strong style={{ color: colors.accent }}>Leakage Connection:</strong> {app.connection}</p>
+            </div>
+
+            {/* How it works */}
+            <div style={{ background: `${app.color}10`, padding: '12px', borderRadius: '8px', marginBottom: '12px', borderLeft: `3px solid ${app.color}` }}>
+              <p style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.6, fontWeight: 400 }}><strong>How It Works:</strong> {app.howItWorks}</p>
+            </div>
+
+            {/* Examples */}
+            <div style={{ marginBottom: '10px' }}>
+              <p style={{ color: colors.textMuted, fontSize: '11px', marginBottom: '6px', fontWeight: 600 }}>Real Products:</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                {app.examples.map((ex, ei) => (
+                  <span key={ei} style={{ background: `${app.color}20`, color: app.color, padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 600 }}>{ex}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Future impact */}
+            <p style={{ color: colors.textMuted, fontSize: '11px', lineHeight: 1.5, marginBottom: '12px', fontStyle: 'italic' }}>
+              Future: {app.futureImpact}
+            </p>
+
+            {/* Companies */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+              {app.companies.map((c, ci) => (
+                <span key={ci} style={{ background: 'rgba(30,41,59,0.9)', color: colors.textSecondary, padding: '4px 8px', borderRadius: '4px', fontSize: '11px', border: '1px solid #334155' }}>
+                  {c}
+                </span>
+              ))}
+            </div>
+
+            {!isCompleted ? (
+              <button
+                onClick={() => {
+                  const next = new Set(transferCompleted);
+                  next.add(currentTransferApp);
+                  setTransferCompleted(next);
+                  playSound('success');
+                  if (currentTransferApp < totalApps - 1) setCurrentTransferApp(currentTransferApp + 1);
+                }}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: app.color,
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: typo.small,
+                  minHeight: '44px',
+                  WebkitTapHighlightColor: 'transparent',
+                  transition: 'all 0.2s ease',
+                  fontWeight: 700,
+                  width: '100%',
+                }}
+              >
+                Got It &mdash; {currentTransferApp < totalApps - 1 ? 'Next App' : 'Complete'}
+              </button>
+            ) : (
+              <button
+                onClick={() => { if (currentTransferApp < totalApps - 1) setCurrentTransferApp(currentTransferApp + 1); }}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: colors.success,
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: typo.small,
+                  minHeight: '44px',
+                  WebkitTapHighlightColor: 'transparent',
+                  transition: 'all 0.2s ease',
+                  fontWeight: 700,
+                  width: '100%',
+                }}
+              >
+                {currentTransferApp < totalApps - 1 ? 'Got It ✓ Next App' : 'Got It ✓ All Done!'}
+              </button>
+            )}
+          </div>
+
+          {allCompleted && (
+            <button
+              onClick={goNext}
               style={{
-                background: 'rgba(30, 41, 59, 0.8)',
-                padding: '20px',
-                borderRadius: '12px',
-                marginBottom: '16px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid #334155',
+                width: '100%',
+                padding: '14px 24px',
+                borderRadius: '10px',
+                border: 'none',
+                background: `linear-gradient(135deg, ${colors.accent} 0%, #d97706 100%)`,
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: typo.body,
+                minHeight: '44px',
+                fontWeight: 700,
+                transition: 'all 0.2s ease',
               }}
             >
-              <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontSize: typo.body }}>{app.title}</h3>
-              <p style={{ color: colors.textMuted, fontSize: typo.small, marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
-                <p style={{ color: colors.accent, fontWeight: 'bold', fontSize: typo.small }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => { setTransferCompleted(new Set([...transferCompleted, index])); playSound('success'); }}
-                  style={{
-                    padding: '10px 20px',
-                    borderRadius: '8px',
-                    border: `1px solid ${colors.accent}`,
-                    background: 'transparent',
-                    color: colors.accent,
-                    cursor: 'pointer',
-                    fontSize: typo.small,
-                    minHeight: '44px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div>
-                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
-                    <p style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.6 }}>{app.answer}</p>
-                  </div>
-                  <button
-                    onClick={() => playSound('click')}
-                    style={{
-                      padding: '10px 20px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      background: colors.success,
-                      color: 'white',
-                      cursor: 'pointer',
-                      fontSize: typo.small,
-                      minHeight: '44px',
-                      WebkitTapHighlightColor: 'transparent',
-                    }}
-                  >
-                    Got It
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
+              Take the Test
+            </button>
+          )}
         </div>
       </div>,
-      renderBottomBar(transferCompleted.size >= 4, 'Take the Test')
+      renderBottomBar(allCompleted, 'Take the Test')
     );
   }
 
@@ -1519,6 +1642,18 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2 style={{ fontSize: typo.heading }}>Knowledge Test</h2>
             <span style={{ color: colors.textSecondary, fontSize: typo.body }}>Question {currentTestQuestion + 1} of 10</span>
+          </div>
+
+          {/* Before/After comparison showing leakage impact */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+            <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.dynamic}` }}>
+              <div style={{ color: colors.dynamic, fontSize: typo.small, fontWeight: 700, marginBottom: '4px' }}>Dynamic Power</div>
+              <div style={{ color: colors.textSecondary, fontSize: typo.small, fontWeight: 400 }}>Scales with: C × V² × f. Drops to near zero when idle. Can be controlled by clock gating and DVFS.</div>
+            </div>
+            <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.static}` }}>
+              <div style={{ color: colors.static, fontSize: typo.small, fontWeight: 700, marginBottom: '4px' }}>Leakage Power</div>
+              <div style={{ color: colors.textSecondary, fontSize: typo.small, fontWeight: 400 }}>Always flows: P = I_leak × V. Exponential with temperature. Requires power gating to reduce. Never truly zero.</div>
+            </div>
           </div>
 
           <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>

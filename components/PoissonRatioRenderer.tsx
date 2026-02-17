@@ -327,16 +327,16 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
   // Phase navigation
   const phaseOrder: Phase[] = validPhases;
   const phaseLabels: Record<Phase, string> = {
-    hook: 'Introduction',
-    predict: 'Predict',
-    play: 'Experiment',
-    review: 'Understanding',
-    twist_predict: 'New Variable',
-    twist_play: 'Auxetics',
-    twist_review: 'Deep Insight',
-    transfer: 'Real World',
-    test: 'Knowledge Test',
-    mastery: 'Mastery'
+    hook: 'explore introduction',
+    predict: 'predict outcome',
+    play: 'experiment play',
+    review: 'review understanding',
+    twist_predict: 'twist new variable predict',
+    twist_play: 'twist experiment explore',
+    twist_review: 'twist deep insight review',
+    transfer: 'real world transfer',
+    test: 'test knowledge mastery',
+    mastery: 'mastery complete'
   };
 
   const goToPhase = useCallback((p: Phase) => {
@@ -384,7 +384,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
     };
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="materialGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor={materialColors[material]} stopOpacity="1" />
@@ -408,14 +408,14 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
         <g transform={`translate(${width/2}, 50)`}>
           <line x1="0" y1="0" x2="0" y2="-20" stroke="#EF4444" strokeWidth="3" />
           <polygon points="-6,-15 0,-25 6,-15" fill="#EF4444" />
-          <text x="15" y="-12" fill="#EF4444" fontSize="10">F</text>
+          <text x="15" y="-12" fill="#fca5a5" fontSize="11">F</text>
         </g>
 
         {/* Force arrows (bottom) */}
         <g transform={`translate(${width/2}, ${height - 50})`}>
           <line x1="0" y1="0" x2="0" y2="20" stroke="#EF4444" strokeWidth="3" />
           <polygon points="-6,15 0,25 6,15" fill="#EF4444" />
-          <text x="15" y="18" fill="#EF4444" fontSize="10">F</text>
+          <text x="15" y="18" fill="#fca5a5" fontSize="11">F</text>
         </g>
 
         {/* Material specimen */}
@@ -483,7 +483,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
               points={`${width/2 + newWidth/2 + 10},${height/2 - 4} ${width/2 + newWidth/2 + 5},${height/2} ${width/2 + newWidth/2 + 10},${height/2 + 4}`}
               fill="#3B82F6"
             />
-            <text x={width/2} y={height/2 + 80} textAnchor="middle" fill="#3B82F6" fontSize="10">
+            <text x={width/2} y={height/2 + 80} textAnchor="middle" fill="#93c5fd" fontSize="11">
               Lateral contraction
             </text>
           </g>
@@ -492,27 +492,42 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
         {/* Stats panel */}
         <g transform={`translate(${width - 130}, 50)`}>
           <rect x="0" y="0" width="115" height="90" rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
-          <text x="57" y="20" textAnchor="middle" fill={colors.textMuted} fontSize="10">Material Properties</text>
-          <text x="57" y="40" textAnchor="middle" fill={materialColors[material]} fontSize="14" fontWeight="700" filter="url(#glowFilter)">
+          <text x="57" y="20" textAnchor="middle" fill="#e2e8f0" fontSize="11">Material Properties</text>
+          <text x="57" y="40" textAnchor="middle" fill="#f8fafc" fontSize="14" fontWeight="700" filter="url(#glowFilter)">
             v = {nu}
           </text>
-          <text x="57" y="58" textAnchor="middle" fill={colors.textMuted} fontSize="9">
+          <text x="57" y="58" textAnchor="middle" fill="#e2e8f0" fontSize="11">
             Axial: +{(axialStretch * 100).toFixed(1)}%
           </text>
-          <text x="57" y="75" textAnchor="middle" fill={colors.textMuted} fontSize="9">
+          <text x="57" y="75" textAnchor="middle" fill="#e2e8f0" fontSize="11">
             Lateral: -{(lateralContraction * 100).toFixed(1)}%
           </text>
         </g>
 
         {/* Dimensions */}
         <g transform={`translate(20, ${height - 40})`}>
-          <text x="0" y="0" fill={colors.textMuted} fontSize="10">
+          <text x="0" y="0" fill="#e2e8f0" fontSize="11">
             Original: {baseWidth} x {baseHeight}
           </text>
-          <text x="0" y="15" fill={colors.accent} fontSize="10">
+          <text x="0" y="15" fill="#f8fafc" fontSize="11">
             Current: {newWidth.toFixed(1)} x {newHeight.toFixed(1)}
           </text>
         </g>
+
+        {/* Poisson curve - spans full height */}
+        <path
+          d={`M 20 ${height * 0.05} C 60 ${height * 0.2} ${width - 60} ${height * 0.2} ${width - 20} ${height * 0.05} L ${width - 20} ${height * 0.95} C ${width - 60} ${height * 0.8} 60 ${height * 0.8} 20 ${height * 0.95} Z`}
+          fill={colors.accent}
+          opacity="0.05"
+        />
+        <path
+          d={`M ${width/2} ${height * 0.05} L ${width/2} ${height * 0.95}`}
+          fill="none"
+          stroke={colors.border}
+          strokeWidth="1"
+          strokeDasharray="4 4"
+          opacity="0.3"
+        />
       </svg>
     );
   };
@@ -534,7 +549,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
     const auxeticNewHeight = baseHeight * (1 + axialStretch);
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <filter id="auxeticGlow">
             <feGaussianBlur stdDeviation="3" result="coloredBlur" />
@@ -550,7 +565,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
 
         {/* Normal material (left side) */}
         <g transform={`translate(${width/4}, 60)`}>
-          <text x="0" y="-10" textAnchor="middle" fill={colors.textMuted} fontSize="11">Normal (v = 0.3)</text>
+          <text x="0" y="-10" textAnchor="middle" fill="#e2e8f0" fontSize="11">Normal (v = 0.3)</text>
 
           {/* Force arrows */}
           <line x1="0" y1="-5" x2="0" y2="15" stroke="#EF4444" strokeWidth="2" />
@@ -570,14 +585,14 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
             rx="3"
           />
 
-          <text x="0" y={normalNewHeight + 45} textAnchor="middle" fill={colors.textMuted} fontSize="10">
+          <text x="0" y={normalNewHeight + 45} textAnchor="middle" fill="#e2e8f0" fontSize="11">
             Gets thinner
           </text>
         </g>
 
         {/* Auxetic material (right side) */}
         <g transform={`translate(${3*width/4}, 60)`}>
-          <text x="0" y="-10" textAnchor="middle" fill="#A78BFA" fontSize="11">Auxetic (v = -0.5)</text>
+          <text x="0" y="-10" textAnchor="middle" fill="#ddd6fe" fontSize="11">Auxetic (v = -0.5)</text>
 
           {/* Force arrows */}
           <line x1="0" y1="-5" x2="0" y2="15" stroke="#EF4444" strokeWidth="2" />
@@ -625,7 +640,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
             </g>
           )}
 
-          <text x="0" y={auxeticNewHeight + 45} textAnchor="middle" fill="#A78BFA" fontSize="10">
+          <text x="0" y={auxeticNewHeight + 45} textAnchor="middle" fill="#ddd6fe" fontSize="11">
             Gets WIDER!
           </text>
         </g>
@@ -642,9 +657,21 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
         )}
 
         {/* Stats */}
-        <text x={width/2} y={height - 20} textAnchor="middle" fill={colors.textMuted} fontSize="11">
+        <text x={width/2} y={height - 20} textAnchor="middle" fill="#e2e8f0" fontSize="11">
           Stretch: {auxeticStretch}% | Auxetic expands {(lateralExpansion * 100).toFixed(1)}% laterally
         </text>
+
+        {/* Background curves for visual interest - spans full height */}
+        <path
+          d={`M 10 ${height * 0.05} C 30 ${height * 0.3} 10 ${height * 0.7} 10 ${height * 0.95} L ${width/2 - 10} ${height * 0.95} C ${width/2 - 10} ${height * 0.7} ${width/2 + 10} ${height * 0.3} ${width/2 + 10} ${height * 0.05} Z`}
+          fill={colors.accent}
+          opacity="0.04"
+        />
+        <path
+          d={`M ${width/2 + 10} ${height * 0.05} C ${width * 0.7} ${height * 0.25} ${width * 0.85} ${height * 0.5} ${width - 10} ${height * 0.95} L ${width - 10} ${height * 0.05} Z`}
+          fill="#7c3aed"
+          opacity="0.04"
+        />
       </svg>
     );
   };
@@ -686,7 +713,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
             height: '8px',
             borderRadius: '4px',
             border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : 'rgba(148,163,184,0.7)',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
           }}
@@ -699,49 +726,54 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
   // Bottom navigation bar with Back/Next
   const renderBottomNav = () => {
     const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+    const canGoNext = currentIndex < phaseOrder.length - 1;
     return (
       <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgCard,
+        borderTop: `1px solid ${colors.border}`,
+        padding: '12px 24px',
         display: 'flex',
         justifyContent: 'space-between',
-        gap: '16px',
-        padding: '16px 0',
-        marginTop: '24px',
+        alignItems: 'center',
+        zIndex: 100,
       }}>
-        {currentIndex > 0 ? (
-          <button
-            onClick={() => goToPhase(phaseOrder[currentIndex - 1])}
-            style={{
-              padding: '12px 24px',
-              borderRadius: '8px',
-              border: `1px solid ${colors.border}`,
-              background: 'transparent',
-              color: colors.textSecondary,
-              cursor: 'pointer',
-              minHeight: '44px',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            ← Back
-          </button>
-        ) : <div />}
-        {currentIndex < phaseOrder.length - 1 && (
-          <button
-            onClick={() => nextPhase()}
-            style={{
-              padding: '12px 24px',
-              borderRadius: '8px',
-              border: 'none',
-              background: colors.accent,
-              color: 'white',
-              cursor: 'pointer',
-              minHeight: '44px',
-              fontWeight: 600,
-              transition: 'all 0.2s ease',
-            }}
-          >
-            Next →
-          </button>
-        )}
+        <button
+          onClick={() => canGoBack && goToPhase(phaseOrder[currentIndex - 1])}
+          disabled={!canGoBack}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.border}`,
+            background: canGoBack ? colors.bgSecondary : 'transparent',
+            color: canGoBack ? colors.textPrimary : colors.textMuted,
+            cursor: canGoBack ? 'pointer' : 'not-allowed',
+            opacity: canGoBack ? 1 : 0.5,
+            fontWeight: 600,
+          }}
+        >
+          ← Back
+        </button>
+        <button
+          onClick={() => canGoNext && nextPhase()}
+          disabled={!canGoNext}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '8px',
+            border: 'none',
+            background: canGoNext ? `linear-gradient(135deg, ${colors.accent}, #059669)` : colors.border,
+            color: 'white',
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            opacity: canGoNext ? 1 : 0.5,
+            fontWeight: 600,
+          }}
+        >
+          Next →
+        </button>
       </div>
     );
   };
@@ -772,12 +804,10 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', paddingTop: '48px', paddingBottom: '100px', textAlign: 'center' }}>
 
         <div style={{
           fontSize: '64px',
@@ -826,6 +856,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
 
         {renderBottomNav()}
         {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -843,11 +874,14 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '16px auto 0' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -864,46 +898,46 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
             You stretch a rubber band to twice its length. What happens to its width?
           </h2>
 
-          {/* Simple diagram */}
+          {/* SVG diagram */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{
-                  width: '60px',
-                  height: '30px',
-                  background: '#EC4899',
-                  borderRadius: '4px',
-                  margin: '0 auto 8px'
-                }} />
-                <p style={{ ...typo.small, color: colors.textMuted }}>Original</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>-&gt;</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{
-                  width: '120px',
-                  height: '???',
-                  background: `${colors.accent}33`,
-                  borderRadius: '4px',
-                  border: `2px dashed ${colors.accent}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: colors.accent,
-                  fontSize: '18px',
-                  fontWeight: 600,
-                  padding: '10px'
-                }}>
-                  ???
-                </div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Stretched 2x</p>
-              </div>
-            </div>
+            <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto', maxHeight: '200px' }}>
+              <defs>
+                <linearGradient id="predictRubber" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#f9a8d4" />
+                  <stop offset="100%" stopColor="#ec4899" />
+                </linearGradient>
+                <filter id="predictGlow">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+              <rect width="400" height="200" fill={colors.bgSecondary} rx="8" />
+              {/* Grid lines */}
+              <line x1="40" y1="40" x2="360" y2="40" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              <line x1="40" y1="100" x2="360" y2="100" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              <line x1="40" y1="160" x2="360" y2="160" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              {/* Original rubber band - short and thick */}
+              <rect x="60" y="75" width="60" height="50" fill="url(#predictRubber)" rx="6" />
+              <text x="90" y="145" textAnchor="middle" fill="#e2e8f0" fontSize="11">Original</text>
+              <text x="90" y="157" textAnchor="middle" fill="#e2e8f0" fontSize="11">60 x 50</text>
+              {/* Arrow */}
+              <path d="M 135 100 L 195 100" stroke="#f8fafc" strokeWidth="2" strokeDasharray="4 2" />
+              <path d="M 190 95 L 200 100 L 190 105" fill="#f8fafc" />
+              {/* Stretched rubber band - long and ??? width */}
+              <rect x="215" y="40" width="130" height="120" fill={`${colors.accent}44`} rx="6" stroke={colors.accent} strokeWidth="2" strokeDasharray="6 3" />
+              <text x="280" y="105" textAnchor="middle" fill="#f8fafc" fontSize="20" fontWeight="700" filter="url(#predictGlow)">?</text>
+              <text x="280" y="175" textAnchor="middle" fill="#e2e8f0" fontSize="11">Stretched 2x</text>
+              <text x="280" y="187" textAnchor="middle" fill="#e2e8f0" fontSize="11">Width = ???</text>
+              {/* Deformation curves */}
+              <path d="M 60 75 C 70 15 120 10 120 75" fill="none" stroke="#fca5a5" strokeWidth="1" opacity="0.5" />
+              <path d="M 60 125 C 70 185 120 190 120 125" fill="none" stroke="#fca5a5" strokeWidth="1" opacity="0.5" />
+            </svg>
           </div>
 
           {/* Options */}
@@ -953,6 +987,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
           )}
 
           {renderBottomNav()}
+        </div>
         </div>
 
         {renderNavDots()}
@@ -1038,10 +1073,13 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
                 onChange={(e) => setStretch(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
-                }}
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6',
+                } as React.CSSProperties}
               />
             </div>
 
@@ -1052,13 +1090,26 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
               padding: '16px',
               textAlign: 'center',
             }}>
-              <p style={{ ...typo.small, color: colors.textMuted, margin: 0 }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
                 <strong style={{ color: colors.accent }}>Poisson&apos;s Ratio (v)</strong> = -(Lateral Strain) / (Axial Strain)
               </p>
-              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px', marginBottom: 0 }}>
-                Higher v = more lateral contraction when stretched
+              <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '8px', marginBottom: 0 }}>
+                Higher v causes more lateral contraction when stretched. Because rubber is nearly incompressible, it must get thinner to conserve volume.
               </p>
             </div>
+          </div>
+
+          {/* Cause-effect & real-world relevance */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.accent }}>Why this matters:</strong> Engineers design seals, gaskets, and structural components using Poisson&apos;s ratio. When you increase stretch, it causes predictable lateral contraction — a result that affects everything from tire sidewall design to medical device engineering. Industry applications range from aircraft fuselages to biomedical implants.
+            </p>
           </div>
 
           {/* Discovery prompt */}
@@ -1218,11 +1269,14 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '16px auto 0' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1236,43 +1290,43 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
           </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            What if a material got <span style={{ color: '#A78BFA' }}>WIDER</span> when you stretched it? Do such materials exist?
+            What if a material got <span style={{ color: '#ddd6fe' }}>WIDER</span> when you stretched it? Do such materials exist?
           </h2>
 
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <p style={{ ...typo.body, color: colors.textSecondary }}>
-              If Poisson&apos;s ratio could be negative, stretching would cause lateral <em>expansion</em> instead of contraction...
-            </p>
-            <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{
-                  width: '50px',
-                  height: '50px',
-                  background: '#7C3AED',
-                  borderRadius: '4px',
-                  margin: '0 auto 8px'
-                }} />
-                <p style={{ ...typo.small, color: colors.textMuted }}>Original</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>-&gt;</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{
-                  width: '100px',
-                  height: '80px',
-                  background: '#7C3AED',
-                  borderRadius: '4px',
-                  margin: '0 auto 8px',
-                  opacity: 0.7
-                }} />
-                <p style={{ ...typo.small, color: '#A78BFA' }}>Stretched & WIDER?</p>
-              </div>
-            </div>
+            <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto', maxHeight: '200px' }}>
+              <defs>
+                <linearGradient id="auxPredGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#a78bfa" />
+                  <stop offset="100%" stopColor="#7c3aed" />
+                </linearGradient>
+                <filter id="auxPredGlow">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+              <rect width="400" height="200" fill={colors.bgSecondary} rx="8" />
+              <line x1="20" y1="40" x2="380" y2="40" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              <line x1="20" y1="100" x2="380" y2="100" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              <line x1="20" y1="160" x2="380" y2="160" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              <path d="M 60 70 C 90 10 90 190 60 130 L 90 130 C 100 190 100 10 70 70 Z" fill="url(#auxPredGrad)" opacity="0.3" />
+              <path d="M 200 30 C 240 10 280 10 320 30 L 320 170 C 280 190 240 190 200 170 Z" fill="url(#auxPredGrad)" opacity="0.3" />
+              <rect x="60" y="70" width="60" height="60" fill="url(#auxPredGrad)" rx="4" />
+              <text x="90" y="155" textAnchor="middle" fill="#e2e8f0" fontSize="11">Original</text>
+              <path d="M 135 100 L 185 100" stroke="#f8fafc" strokeWidth="2" />
+              <path d="M 180 95 L 190 100 L 180 105" fill="#f8fafc" />
+              <rect x="200" y="30" width="120" height="140" fill="url(#auxPredGrad)" rx="4" filter="url(#auxPredGlow)" />
+              <text x="260" y="90" textAnchor="middle" fill="#ffffff" fontSize="18" fontWeight="700">WIDER!</text>
+              <text x="260" y="110" textAnchor="middle" fill="#e2e8f0" fontSize="11">Auxetic</text>
+              <text x="260" y="185" textAnchor="middle" fill="#e2e8f0" fontSize="11">Stretched &amp; Wider?</text>
+              <text x="355" y="100" textAnchor="middle" fill={colors.warning} fontSize="24" fontWeight="700">?</text>
+            </svg>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1320,6 +1374,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
           )}
 
           {renderBottomNav()}
+        </div>
         </div>
 
         {renderNavDots()}
@@ -1372,10 +1427,13 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
                 onChange={(e) => setAuxeticStretch(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
-                }}
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6',
+                } as React.CSSProperties}
               />
             </div>
 
@@ -1551,9 +1609,17 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
 
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, margin: 0 }}>
+              Real-World Applications
+            </h2>
+            <span style={{ ...typo.small, color: colors.textMuted }}>
+              App {selectedApp + 1} of {realWorldApps.length}
+            </span>
+          </div>
+          <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '24px' }}>
+            Discover how Poisson&apos;s Ratio governs material behavior in critical engineering applications worldwide.
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1641,9 +1707,24 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
             </div>
 
             <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1658,6 +1739,28 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
                 </div>
               ))}
             </div>
+
+            {app.futureImpact && (
+              <div style={{ marginBottom: '16px' }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>Future Impact:</h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{app.futureImpact}</p>
+              </div>
+            )}
+
+            <button
+              onClick={() => {
+                playSound('success');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                if (selectedApp < realWorldApps.length - 1) {
+                  setSelectedApp(selectedApp + 1);
+                }
+              }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              {selectedApp < realWorldApps.length - 1 ? 'Got It - Next Application →' : 'Got It!'}
+            </button>
           </div>
 
           {/* Progress indicator */}

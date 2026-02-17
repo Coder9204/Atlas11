@@ -167,6 +167,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
+  const [questionConfirmed, setQuestionConfirmed] = useState(false);
 
   // Calculate apparent motion - memoized for performance
   const getApparentSpeed = useMemo(() => {
@@ -501,22 +502,33 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
             Wagon Wheel Aliasing — Temporal Sampling Visualization
           </text>
 
-          {/* Formula display */}
-          <g transform={`translate(${width / 2}, 38)`}>
-            <rect x={-195} y={0} width={390} height={22} rx={5} fill="rgba(30, 41, 59, 0.9)" stroke="#475569" strokeWidth={1} />
-            <text x={0} y={15} textAnchor="middle" fill={colors.textPrimary} fontSize={11} fontFamily="monospace">
-              apparent_speed = (true_speed × 360 / fps) mod spoke_spacing
-            </text>
-          </g>
+          {/* Formula display - absolute coords */}
+          <rect x={width / 2 - 195} y={38} width={390} height={22} rx={5} fill="rgba(30, 41, 59, 0.9)" stroke="#475569" strokeWidth={1} />
+          <text x={width / 2} y={53} textAnchor="middle" fill={colors.textPrimary} fontSize={11} fontFamily="monospace">
+            apparent_speed = (true_speed × 360 / fps) mod spoke_spacing
+          </text>
+
+          {/* Interactive speed indicator - tracks rotationSpeed directly for slider response */}
+          <circle
+            cx={30}
+            cy={430 - ((rotationSpeed - 1) / 14) * 150}
+            r={7}
+            fill={colors.success}
+            stroke="white"
+            strokeWidth={2}
+            filter="url(#wwaTextGlow)"
+          />
+
+          {/* TRUE WHEEL label - absolute coords to avoid overlap with SAMPLED WHEEL */}
+          <text x={148} y={175 - wheelRadius - 16} textAnchor="middle" fill={colors.textPrimary} fontSize={12} fontWeight="bold">
+            TRUE WHEEL
+          </text>
+          <text x={148} y={175 - wheelRadius - 2} textAnchor="middle" fill={colors.textMuted} fontSize={11}>
+            Actual rotation
+          </text>
 
           {/* === TRUE WHEEL SECTION (Left) === */}
           <g transform="translate(148, 175)">
-            <text x={0} y={-wheelRadius - 16} textAnchor="middle" fill={colors.textPrimary} fontSize={12} fontWeight="bold">
-              TRUE WHEEL
-            </text>
-            <text x={0} y={-wheelRadius - 2} textAnchor="middle" fill={colors.textMuted} fontSize={11}>
-              Actual rotation
-            </text>
 
             <circle cx={0} cy={0} r={wheelRadius + 10} fill="url(#wwaTireRubber)" filter="url(#wwaWheelGlow)" />
             <circle cx={0} cy={0} r={wheelRadius} fill="none" stroke="url(#wwaWheelRim)" strokeWidth={7} />
@@ -544,9 +556,6 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
             </g>
 
             <rect x={-40} y={wheelRadius + 18} width={80} height={20} rx={5} fill="rgba(16, 185, 129, 0.2)" stroke={colors.success} strokeWidth={1} />
-            <text x={0} y={wheelRadius + 31} textAnchor="middle" fill={colors.success} fontSize={12} fontWeight="bold">
-              {rotationSpeed.toFixed(1)} r/s
-            </text>
 
             {/* Interactive marker - reference spoke end */}
             <circle
@@ -560,6 +569,10 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
               filter="url(#wwaWheelGlow)"
             />
           </g>
+          {/* True wheel speed label - absolute coords */}
+          <text x={148} y={175 + wheelRadius + 31} textAnchor="middle" fill={colors.success} fontSize={12} fontWeight="bold">
+            {rotationSpeed.toFixed(1)} r/s
+          </text>
 
           {/* === CAMERA / SAMPLING VISUALIZATION (Center) === */}
           <g transform={`translate(${width / 2}, 155)`}>
@@ -572,35 +585,26 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
               {isPlaying && <animate attributeName="opacity" values="1;0.3;1" dur="1s" repeatCount="indefinite" />}
             </circle>
 
-            <text x={0} y={5} textAnchor="middle" fill={colors.accent} fontSize={11} fontWeight="bold">CAMERA</text>
-
-            <rect x={-42} y={14} width={84} height={32} rx={5} fill="rgba(30, 41, 59, 0.9)" stroke="#475569" strokeWidth={1} />
-            <text x={0} y={28} textAnchor="middle" fill={colors.accent} fontSize={11} fontWeight="bold">
-              FRAME RATE
-            </text>
-            <text x={0} y={42} textAnchor="middle" fill={colors.textPrimary} fontSize={13} fontWeight="bold">
-              {frameRate} fps
-            </text>
-
-            <g transform="translate(0, 60)">
-              <rect x={-50} y={0} width={100} height={28} rx={4} fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth={1} />
-              <text x={0} y={12} textAnchor="middle" fill={colors.textMuted} fontSize={11}>
-                SAMPLING RATE
-              </text>
-              <text x={0} y={23} textAnchor="middle" fill={colors.textSecondary} fontSize={11}>
-                {frameRate} samples/sec
-              </text>
-            </g>
           </g>
+          {/* Camera labels - absolute coords to avoid overlaps */}
+          <text x={width / 2} y={155 + 5} textAnchor="middle" fill={colors.accent} fontSize={11} fontWeight="bold">CAMERA</text>
+          <rect x={width / 2 - 42} y={155 + 14} width={84} height={32} rx={5} fill="rgba(30, 41, 59, 0.9)" stroke="#475569" strokeWidth={1} />
+          <text x={width / 2} y={155 + 28} textAnchor="middle" fill={colors.accent} fontSize={11} fontWeight="bold">FRAME RATE</text>
+          <text x={width / 2} y={155 + 42} textAnchor="middle" fill={colors.textPrimary} fontSize={13} fontWeight="bold">{frameRate} fps</text>
+          <rect x={width / 2 - 50} y={155 + 60} width={100} height={32} rx={4} fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth={1} />
+          <text x={width / 2} y={155 + 72} textAnchor="middle" fill={colors.textMuted} fontSize={11}>SAMPLING RATE</text>
+          <text x={width / 2} y={155 + 87} textAnchor="middle" fill={colors.textSecondary} fontSize={11}>{frameRate} samples/sec</text>
+
+          {/* SAMPLED WHEEL label - absolute coords to avoid overlap with TRUE WHEEL */}
+          <text x={552} y={175 - wheelRadius - 16} textAnchor="middle" fill={colors.textPrimary} fontSize={12} fontWeight="bold">
+            SAMPLED WHEEL
+          </text>
+          <text x={552} y={175 - wheelRadius - 2} textAnchor="middle" fill={colors.textMuted} fontSize={11}>
+            Camera perception
+          </text>
 
           {/* === SAMPLED/APPARENT WHEEL (Right) === */}
           <g transform="translate(552, 175)">
-            <text x={0} y={-wheelRadius - 16} textAnchor="middle" fill={colors.textPrimary} fontSize={12} fontWeight="bold">
-              SAMPLED WHEEL
-            </text>
-            <text x={0} y={-wheelRadius - 2} textAnchor="middle" fill={colors.textMuted} fontSize={11}>
-              Camera perception
-            </text>
 
             <circle cx={0} cy={0} r={wheelRadius + 10} fill="url(#wwaTireRubber)" filter="url(#wwaSampledGlow)" />
             <circle cx={0} cy={0} r={wheelRadius} fill="none" stroke="url(#wwaSampledRim)" strokeWidth={7} />
@@ -647,11 +651,6 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
               fill={motionDirection === 'forward' ? 'rgba(16, 185, 129, 0.2)' : motionDirection === 'backward' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)'}
               stroke={motionDirection === 'forward' ? colors.success : motionDirection === 'backward' ? colors.error : colors.warning}
               strokeWidth={1} />
-            <text x={0} y={wheelRadius + 31} textAnchor="middle"
-              fill={motionDirection === 'forward' ? colors.success : motionDirection === 'backward' ? colors.error : colors.warning}
-              fontSize={12} fontWeight="bold">
-              {motionDirection === 'stopped' ? 'STOPPED' : `${Math.abs(apparentSpeed).toFixed(1)} r/s${motionDirection === 'backward' ? ' ←' : ''}`}
-            </text>
 
             {/* Interactive marker that moves with slider changes */}
             <circle
@@ -665,6 +664,12 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
               filter="url(#wwaSampledGlow)"
             />
           </g>
+          {/* Sampled wheel speed label - absolute coords */}
+          <text x={552} y={175 + wheelRadius + 31} textAnchor="middle"
+            fill={motionDirection === 'forward' ? colors.success : motionDirection === 'backward' ? colors.error : colors.warning}
+            fontSize={12} fontWeight="bold">
+            {motionDirection === 'stopped' ? 'STOPPED' : `${Math.abs(apparentSpeed).toFixed(1)} r/s${motionDirection === 'backward' ? ' ←' : ''}`}
+          </text>
 
           {/* === SPEED COMPARISON CHART === */}
           <g transform="translate(88, 350)">
@@ -700,7 +705,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
               <>
                 <rect x={140} y={110} width={70} height={Math.min((Math.abs(apparentSpeed) / 15) * 110, 110)}
                   fill={colors.warning} opacity={0.75} />
-                <text x={175} y={128} textAnchor="middle" fill={colors.warning} fontSize={11}>backward</text>
+                <text x={175} y={143} textAnchor="middle" fill={colors.warning} fontSize={11}>backward</text>
               </>
             )}
             <text x={175} y={128} textAnchor="middle" fill={colors.textPrimary} fontSize={11}>Sampled</text>
@@ -718,45 +723,34 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
           </g>
 
           {/* === BOTTOM INFO PANEL === */}
-          <g transform="translate(475, 380)">
-            <rect x={-150} y={0} width={310} height={80} rx={8} fill="rgba(30, 41, 59, 0.95)" stroke="#475569" strokeWidth={1} />
-
-            {/* Spoke spacing */}
-            <g transform="translate(-90, 12)">
-              <text x={0} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontWeight="bold">SPOKE</text>
-              <text x={0} y={14} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontWeight="bold">SPACING</text>
-              <text x={0} y={35} textAnchor="middle" fill={colors.textSecondary} fontSize={14} fontWeight="bold">{(360 / numSpokes).toFixed(0)}°</text>
-            </g>
-
-            {/* Degrees per frame */}
-            <g transform="translate(10, 12)">
-              <text x={0} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontWeight="bold">DEG/FRAME</text>
-              <text x={0} y={14} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontWeight="bold">SHIFT</text>
-              <text x={0} y={35} textAnchor="middle" fill={colors.accent} fontSize={14} fontWeight="bold">{((rotationSpeed * 360) / frameRate).toFixed(1)}°</text>
-            </g>
-
-            {/* Alias shift */}
-            <g transform="translate(115, 12)">
-              <text x={0} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontWeight="bold">ALIAS</text>
-              <text x={0} y={14} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontWeight="bold">RESULT</text>
-              <text x={0} y={35} textAnchor="middle"
-                fill={motionDirection === 'forward' ? colors.success : motionDirection === 'backward' ? colors.error : colors.warning}
-                fontSize={14} fontWeight="bold">
-                {(() => {
-                  const degreesPerFrame = (rotationSpeed * 360) / frameRate;
-                  const spokeSpacing = 360 / numSpokes;
-                  let apparentPerFrame = degreesPerFrame % spokeSpacing;
-                  if (apparentPerFrame > spokeSpacing / 2) apparentPerFrame = apparentPerFrame - spokeSpacing;
-                  return `${apparentPerFrame >= 0 ? '+' : ''}${apparentPerFrame.toFixed(1)}°`;
-                })()}
-              </text>
-            </g>
-
-            {/* Direction label at bottom of panel */}
-            <text x={10} y={70} textAnchor="middle" fill={motionDirection === 'stopped' ? colors.warning : motionDirection === 'backward' ? colors.error : colors.success} fontSize={11} fontWeight="bold">
-              {motionDirection === 'stopped' ? '⏸ Appears frozen' : motionDirection === 'backward' ? '← Backward (aliased!)' : '→ Forward'}
-            </text>
-          </g>
+          {/* Bottom info panel - absolute coordinates */}
+          <rect x={475 - 150} y={380} width={310} height={80} rx={8} fill="rgba(30, 41, 59, 0.95)" stroke="#475569" strokeWidth={1} />
+          {/* Spoke spacing */}
+          <text x={475 - 90} y={380 + 12} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontWeight="bold">SPOKE</text>
+          <text x={475 - 90} y={380 + 26} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontWeight="bold">SPACING</text>
+          <text x={475 - 90} y={380 + 47} textAnchor="middle" fill={colors.textSecondary} fontSize={14} fontWeight="bold">{(360 / numSpokes).toFixed(0)}°</text>
+          {/* Degrees per frame */}
+          <text x={475 + 10} y={380 + 12} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontWeight="bold">DEG/FRAME</text>
+          <text x={475 + 10} y={380 + 26} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontWeight="bold">SHIFT</text>
+          <text x={475 + 10} y={380 + 47} textAnchor="middle" fill={colors.accent} fontSize={14} fontWeight="bold">{((rotationSpeed * 360) / frameRate).toFixed(1)}°</text>
+          {/* Alias shift */}
+          <text x={475 + 115} y={380 + 12} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontWeight="bold">ALIAS</text>
+          <text x={475 + 115} y={380 + 26} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontWeight="bold">RESULT</text>
+          <text x={475 + 115} y={380 + 47} textAnchor="middle"
+            fill={motionDirection === 'forward' ? colors.success : motionDirection === 'backward' ? colors.error : colors.warning}
+            fontSize={14} fontWeight="bold">
+            {(() => {
+              const degreesPerFrame = (rotationSpeed * 360) / frameRate;
+              const spokeSpacing = 360 / numSpokes;
+              let apparentPerFrame = degreesPerFrame % spokeSpacing;
+              if (apparentPerFrame > spokeSpacing / 2) apparentPerFrame = apparentPerFrame - spokeSpacing;
+              return `${apparentPerFrame >= 0 ? '+' : ''}${apparentPerFrame.toFixed(1)}°`;
+            })()}
+          </text>
+          {/* Direction label */}
+          <text x={475 + 10} y={380 + 70} textAnchor="middle" fill={motionDirection === 'stopped' ? colors.warning : motionDirection === 'backward' ? colors.error : colors.success} fontSize={11} fontWeight="bold">
+            {motionDirection === 'stopped' ? '⏸ Appears frozen' : motionDirection === 'backward' ? '← Backward (aliased!)' : '→ Forward'}
+          </text>
         </svg>
 
         {interactive && (
@@ -882,7 +876,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
         disabled={currentPhaseIndex === 0}
         style={{
           padding: '8px 16px',
-          minHeight: '36px',
+          minHeight: '44px',
           borderRadius: '8px',
           border: `1px solid ${colors.textMuted}`,
           background: 'transparent',
@@ -906,8 +900,8 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
             if (ph === 'twist_predict') return 'predict twist';
             if (ph === 'twist_play') return 'experiment twist';
             if (ph === 'twist_review') return 'review twist';
-            if (ph === 'transfer') return 'apply';
-            if (ph === 'test') return 'quiz';
+            if (ph === 'transfer') return 'transfer';
+            if (ph === 'test') return 'test';
             if (ph === 'mastery') return 'transfer mastery';
             return ph;
           };
@@ -933,11 +927,12 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
       </div>
 
       <button
-        onClick={goNext}
+        onClick={phase === 'test' && !testSubmitted ? undefined : goNext}
+        disabled={phase === 'test' && !testSubmitted}
         aria-label="Next"
         style={{
           padding: '8px 16px',
-          minHeight: '36px',
+          minHeight: '44px',
           borderRadius: '8px',
           border: 'none',
           background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
@@ -1043,6 +1038,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
     flex: 1,
     overflowY: 'auto',
     paddingBottom: '100px',
+    paddingTop: '56px',
   };
 
   const maxWidthStyle: React.CSSProperties = {
@@ -1316,7 +1312,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist! →')}
+        {renderBottomBar(false, true, 'Continue →')}
       </div>
     );
   }
@@ -1551,7 +1547,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
                       transition: 'all 0.15s ease',
                     }}
                   >
-                    Reveal Answer
+                    Got It
                   </button>
                 ) : (
                   <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
@@ -1710,7 +1706,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <h2 style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: '700', margin: 0, lineHeight: '1.4' }}>Knowledge Test</h2>
               <span style={{ color: colors.textSecondary, fontSize: '15px', fontWeight: '600' }}>
-                {currentTestQuestion + 1} / {testQuestions.length}
+                Question {currentTestQuestion + 1} of {testQuestions.length}
               </span>
             </div>
             <div style={{ display: 'flex', gap: '3px', marginBottom: '20px' }}>
@@ -1750,8 +1746,66 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
               ))}
             </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px', maxWidth: '800px', margin: '0 auto' }}>
-            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
+          {testAnswers[currentTestQuestion] !== null && !questionConfirmed && (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 16px', maxWidth: '800px', margin: '0 auto' }}>
+              <button
+                onClick={() => setQuestionConfirmed(true)}
+                style={{
+                  padding: '10px 24px', borderRadius: '8px', border: 'none',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  color: 'white', cursor: 'pointer', fontSize: '14px',
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                  fontWeight: 'bold', transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 8px rgba(16,185,129,0.3)',
+                }}>
+                Confirm Answer
+              </button>
+            </div>
+          )}
+          {questionConfirmed && (
+            <div style={{ ...maxWidthStyle, padding: '8px 16px' }}>
+              <div style={{
+                background: currentQ.options[testAnswers[currentTestQuestion]!]?.correct
+                  ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                padding: '12px 16px', borderRadius: '8px',
+                borderLeft: `3px solid ${currentQ.options[testAnswers[currentTestQuestion]!]?.correct ? colors.success : colors.error}`,
+                marginBottom: '8px',
+              }}>
+                {currentQ.options[testAnswers[currentTestQuestion]!]?.correct ? (
+                  <p style={{ color: colors.success, margin: 0, fontSize: '14px', fontWeight: '600' }}>
+                    ✓ Correct! The correct answer is {currentQ.options.find(o => o.correct)?.text}.
+                  </p>
+                ) : (
+                  <p style={{ color: colors.error, margin: 0, fontSize: '14px', fontWeight: '600' }}>
+                    ✗ Not quite. The correct answer is: {currentQ.options.find(o => o.correct)?.text}.
+                    Because temporal aliasing occurs when the sampling rate is insufficient to capture true motion.
+                  </p>
+                )}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <button
+                  onClick={() => {
+                    setQuestionConfirmed(false);
+                    if (currentTestQuestion < testQuestions.length - 1) {
+                      setCurrentTestQuestion(currentTestQuestion + 1);
+                    } else {
+                      submitTest();
+                    }
+                  }}
+                  style={{
+                    padding: '10px 24px', borderRadius: '8px', border: 'none',
+                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                    color: 'white', cursor: 'pointer', fontSize: '14px',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                    fontWeight: 'bold', transition: 'all 0.2s ease',
+                  }}>
+                  {currentTestQuestion < testQuestions.length - 1 ? 'Next Question →' : 'Submit Test ✓'}
+                </button>
+              </div>
+            </div>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 16px', maxWidth: '800px', margin: '0 auto' }}>
+            <button onClick={() => { setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1)); setQuestionConfirmed(false); }}
               disabled={currentTestQuestion === 0}
               style={{
                 padding: '10px 20px', borderRadius: '8px',
@@ -1764,7 +1818,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
               ← Previous
             </button>
             {currentTestQuestion < testQuestions.length - 1 ? (
-              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
+              <button onClick={() => { setCurrentTestQuestion(currentTestQuestion + 1); setQuestionConfirmed(false); }}
                 style={{
                   padding: '10px 20px', borderRadius: '8px', border: 'none',
                   background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',

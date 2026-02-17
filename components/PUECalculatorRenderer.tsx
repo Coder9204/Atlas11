@@ -510,7 +510,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
       gap: '8px',
       padding: '16px 0',
     }}>
-      {phaseOrder.map((p, i) => (
+      {phaseOrder.map((p) => (
         <button
           key={p}
           onClick={() => goToPhase(p)}
@@ -519,7 +519,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             height: '8px',
             borderRadius: '4px',
             border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            background: phase === p ? colors.accent : 'rgba(148,163,184,0.7)',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
             WebkitTapHighlightColor: 'transparent',
@@ -529,6 +529,48 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
       ))}
     </div>
   );
+
+  // Bottom navigation bar
+  const renderBottomBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirst = currentIndex === 0;
+    const isLast = currentIndex === phaseOrder.length - 1;
+    const isTestActive = phase === 'test' && !testSubmitted;
+    return (
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0,
+        padding: '12px 20px', background: colors.bgSecondary,
+        borderTop: `1px solid ${colors.border}`,
+        display: 'flex', justifyContent: 'space-between', gap: '12px',
+        zIndex: 200,
+      }}>
+        <button
+          onClick={() => !isFirst && goToPhase(phaseOrder[currentIndex - 1])}
+          disabled={isFirst}
+          style={{
+            padding: '10px 20px', borderRadius: '8px', minHeight: '44px',
+            border: `1px solid ${isFirst ? colors.border : colors.textMuted}`,
+            background: 'transparent',
+            color: isFirst ? colors.textMuted : colors.textPrimary,
+            cursor: isFirst ? 'not-allowed' : 'pointer',
+            fontWeight: 600, fontSize: '14px', opacity: isFirst ? 0.4 : 1,
+          }}
+        >← Back</button>
+        {!isLast && (
+          <button
+            onClick={() => !isTestActive && nextPhase()}
+            disabled={isTestActive}
+            style={{
+              ...primaryButtonStyle,
+              padding: '10px 24px', fontSize: '14px', minHeight: '44px', flex: 1, maxWidth: '240px',
+              opacity: isTestActive ? 0.4 : 1,
+              cursor: isTestActive ? 'not-allowed' : 'pointer',
+            }}
+          >Next →</button>
+        )}
+      </div>
+    );
+  };
 
   // PUE Visualization SVG
   const PUEVisualization = () => {
@@ -630,18 +672,10 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)` }}>
         {renderProgressBar()}
-
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingLeft: '24px', paddingRight: '24px', textAlign: 'center' }}>
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
         <div style={{
           fontSize: '64px',
           marginBottom: '24px',
@@ -649,7 +683,6 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
         }}>
           ⚡🏢📊
         </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
         <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
           PUE: Power Usage Effectiveness
@@ -657,11 +690,11 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
 
         <p style={{
           ...typo.body,
-          color: colors.textSecondary,
+          color: colors.textPrimary,
           maxWidth: '600px',
           marginBottom: '32px',
         }}>
-          "A data center's servers need <span style={{ color: colors.accent }}>1 megawatt</span> of power. But the electric bill shows <span style={{ color: colors.warning }}>1.5 megawatts</span>. Where does the extra 500kW go?"
+          A data center's servers need <span style={{ color: colors.accent }}>1 megawatt</span> of power. But the electric bill shows <span style={{ color: colors.warning }}>1.5 megawatts</span>. Where does the extra 500kW go?
         </p>
 
         <div style={{
@@ -672,11 +705,11 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
           maxWidth: '500px',
           border: `1px solid ${colors.border}`,
         }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+          <p style={{ ...typo.small, color: colors.textPrimary, fontStyle: 'italic' }}>
             "PUE is the single most important metric in data center operations. Google's obsession with driving it from 1.2 to 1.1 saves them hundreds of millions of dollars annually."
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            - Data Center Efficiency Principles
+          <p style={{ ...typo.small, color: colors.textPrimary, marginTop: '8px' }}>
+            — Data Center Efficiency Principles
           </p>
         </div>
 
@@ -691,17 +724,17 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
           <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '16px', borderRadius: '12px' }}>
             <div style={{ fontSize: '24px', marginBottom: '8px' }}>🖥️</div>
             <div style={{ color: colors.accent, fontWeight: 'bold' }}>IT Load</div>
-            <div style={{ color: colors.textMuted, fontSize: '12px' }}>The useful work</div>
+            <div style={{ color: colors.textPrimary, fontSize: '12px' }}>The useful work</div>
           </div>
           <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '16px', borderRadius: '12px' }}>
             <div style={{ fontSize: '24px', marginBottom: '8px' }}>❄️</div>
             <div style={{ color: colors.secondary, fontWeight: 'bold' }}>Cooling</div>
-            <div style={{ color: colors.textMuted, fontSize: '12px' }}>30-50% overhead</div>
+            <div style={{ color: colors.textPrimary, fontSize: '12px' }}>30-50% overhead</div>
           </div>
           <div style={{ background: 'rgba(249, 115, 22, 0.1)', padding: '16px', borderRadius: '12px' }}>
             <div style={{ fontSize: '24px', marginBottom: '8px' }}>🔌</div>
             <div style={{ color: colors.warning, fontWeight: 'bold' }}>Power Loss</div>
-            <div style={{ color: colors.textMuted, fontSize: '12px' }}>UPS, distribution</div>
+            <div style={{ color: colors.textPrimary, fontSize: '12px' }}>UPS, distribution</div>
           </div>
         </div>
 
@@ -713,6 +746,8 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
         </button>
 
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -727,14 +762,10 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
     ];
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -747,33 +778,50 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             </p>
           </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px' }}>
             A data center has IT equipment using 1000 kW. The total facility power is 1500 kW. What is the PUE?
           </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '36px', color: colors.accent }}>1500 kW</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Total Power</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>/</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '36px', color: colors.secondary }}>1000 kW</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>IT Power</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>=</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '36px', color: colors.warning }}>???</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>PUE</p>
-              </div>
-            </div>
+          {/* Static SVG showing PUE formula */}
+          <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
+            <svg width="100%" height="150" viewBox="0 0 500 150" style={{ display: 'block' }}>
+              <defs>
+                <filter id="pueGlow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+                <linearGradient id="pueBarGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor={colors.accent} stopOpacity="0.8" />
+                  <stop offset="67%" stopColor={colors.secondary} stopOpacity="0.7" />
+                  <stop offset="100%" stopColor={colors.warning} stopOpacity="0.6" />
+                </linearGradient>
+              </defs>
+              {/* Anchor marks */}
+              <rect x="10" y="8" width="4" height="4" fill={colors.border} opacity="0.5" />
+              <rect x="486" y="8" width="4" height="4" fill={colors.border} opacity="0.5" />
+              {/* Total power bar */}
+              <g id="total-bar">
+                <rect x="30" y="35" width="440" height="40" rx="6" fill="url(#pueBarGrad)" opacity="0.8" />
+                <text x="250" y="60" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="700">Total: 1500 kW</text>
+                <circle cx="30" cy="55" r="8" fill={colors.accent} opacity="0.5" filter="url(#pueGlow)" />
+                <circle cx="470" cy="55" r="8" fill={colors.warning} opacity="0.5" filter="url(#pueGlow)" />
+              </g>
+              {/* IT power segment */}
+              <g id="it-bar">
+                <rect x="30" y="85" width="293" height="30" rx="4" fill={colors.accent} opacity="0.7" />
+                <text x="176" y="104" fill={colors.textPrimary} fontSize="12" textAnchor="middle" fontWeight="600">IT: 1000 kW</text>
+              </g>
+              {/* Overhead segment */}
+              <g id="overhead-bar">
+                <rect x="323" y="85" width="147" height="30" rx="4" fill={colors.error} opacity="0.6" />
+                <text x="396" y="104" fill={colors.textPrimary} fontSize="11" textAnchor="middle" fontWeight="600">Overhead: 500 kW</text>
+              </g>
+              {/* PUE label */}
+              <g id="pue-label">
+                <text x="250" y="135" fill={colors.warning} fontSize="13" textAnchor="middle" fontWeight="700">PUE = 1500 / 1000 = ???</text>
+                <path d="M 30 130 L 470 130" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" fill="none" opacity="0.4" />
+              </g>
+            </svg>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -789,6 +837,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  minHeight: '44px',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -798,7 +847,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
                   height: '28px',
                   borderRadius: '50%',
                   background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textPrimary,
                   textAlign: 'center',
                   lineHeight: '28px',
                   marginRight: '12px',
@@ -822,8 +871,9 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             </button>
           )}
         </div>
-
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -831,18 +881,14 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             PUE Calculator Lab
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textPrimary, textAlign: 'center', marginBottom: '24px' }}>
             Adjust parameters to see their effect on PUE and energy costs
           </p>
 
@@ -859,7 +905,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             {/* IT Load slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>IT Load</span>
+                <label style={{ ...typo.small, color: colors.textPrimary }}>IT Load</label>
                 <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{itLoad} kW</span>
               </div>
               <input
@@ -869,14 +915,14 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
                 step="100"
                 value={itLoad}
                 onChange={(e) => setItLoad(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: colors.accent }}
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
               />
             </div>
 
             {/* Cooling efficiency slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Cooling Efficiency</span>
+                <label style={{ ...typo.small, color: colors.textPrimary }}>Cooling Efficiency</label>
                 <span style={{ ...typo.small, color: colors.secondary, fontWeight: 600 }}>{coolingEfficiency}%</span>
               </div>
               <input
@@ -885,14 +931,14 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
                 max="90"
                 value={coolingEfficiency}
                 onChange={(e) => setCoolingEfficiency(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: colors.secondary }}
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
               />
             </div>
 
             {/* UPS efficiency slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>UPS Efficiency</span>
+                <label style={{ ...typo.small, color: colors.textPrimary }}>UPS Efficiency</label>
                 <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{upsEfficiency}%</span>
               </div>
               <input
@@ -901,15 +947,15 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
                 max="99"
                 value={upsEfficiency}
                 onChange={(e) => setUpsEfficiency(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: colors.warning }}
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
               />
             </div>
 
             {/* Lighting/misc slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Lighting & Misc</span>
-                <span style={{ ...typo.small, color: colors.textMuted, fontWeight: 600 }}>{lightingPower} kW</span>
+                <label style={{ ...typo.small, color: colors.textPrimary }}>Lighting & Misc</label>
+                <span style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>{lightingPower} kW</span>
               </div>
               <input
                 type="range"
@@ -917,7 +963,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
                 max="100"
                 value={lightingPower}
                 onChange={(e) => setLightingPower(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: colors.textMuted }}
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
               />
             </div>
 
@@ -930,15 +976,15 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             }}>
               <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
                 <div style={{ ...typo.h3, color: getPUEColor(metrics.pue) }}>{metrics.pue.toFixed(2)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>PUE</div>
+                <div style={{ ...typo.small, color: colors.textPrimary }}>PUE</div>
               </div>
               <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
                 <div style={{ ...typo.h3, color: colors.warning }}>{((metrics.pue - 1) * 100).toFixed(0)}%</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Overhead</div>
+                <div style={{ ...typo.small, color: colors.textPrimary }}>Overhead</div>
               </div>
               <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
                 <div style={{ ...typo.h3, color: colors.error }}>${(metrics.wastedCost / 1000000).toFixed(2)}M</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Wasted/Year</div>
+                <div style={{ ...typo.small, color: colors.textPrimary }}>Wasted/Year</div>
               </div>
             </div>
           </div>
@@ -951,7 +997,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
-            <ul style={{ color: colors.textSecondary, paddingLeft: '20px', margin: 0, ...typo.small }}>
+            <ul style={{ color: colors.textPrimary, paddingLeft: '20px', margin: 0, ...typo.small }}>
               <li>Maximize cooling efficiency - watch PUE approach 1.2</li>
               <li>Lower UPS efficiency to 85% - see the power loss impact</li>
               <li>Scale IT load to 5000 kW - see annual costs explode</li>
@@ -965,8 +1011,9 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             Understand the Physics
           </button>
         </div>
-
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -976,14 +1023,10 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
     const wasCorrect = prediction === 'b';
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             padding: '20px',
@@ -994,10 +1037,10 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, ...typo.h3 }}>
               {wasCorrect ? 'Correct!' : 'Not quite!'}
             </h3>
-            <p style={{ ...typo.body }}>
-              PUE = Total Facility Power / IT Equipment Power = 1500 kW / 1000 kW = <strong>1.5</strong>
+            <p style={{ ...typo.body, color: colors.textPrimary }}>
+              As you observed in the experiment, PUE = Total Facility Power / IT Equipment Power = 1500 kW / 1000 kW = <strong>1.5</strong>
             </p>
-            <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '8px' }}>
+            <p style={{ ...typo.small, color: colors.textPrimary, marginTop: '8px' }}>
               This means for every 1 watt powering IT equipment, there's 0.5 watts of overhead (cooling, power distribution, lighting, etc.).
             </p>
           </div>
@@ -1020,7 +1063,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
                 PUE = Total Facility Power / IT Equipment Power
               </div>
             </div>
-            <ul style={{ color: colors.textSecondary, lineHeight: 2, paddingLeft: '20px', ...typo.body }}>
+            <ul style={{ color: colors.textPrimary, lineHeight: 2, paddingLeft: '20px', ...typo.body }}>
               <li><strong style={{ color: colors.accent }}>PUE = 1.0</strong> - Perfect efficiency (theoretical minimum)</li>
               <li><strong style={{ color: colors.success }}>PUE = 1.1-1.2</strong> - Excellent (hyperscale data centers)</li>
               <li><strong style={{ color: '#84cc16' }}>PUE = 1.2-1.5</strong> - Good (modern facilities)</li>
@@ -1066,8 +1109,9 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             Discover the Free Cooling Twist
           </button>
         </div>
-
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1082,14 +1126,10 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
     ];
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <div style={{
             background: `${colors.secondary}22`,
             borderRadius: '12px',
@@ -1102,36 +1142,58 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             </p>
           </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px' }}>
             A data center in a cold climate (average 10°C outdoors) decides to use "free cooling" - using cold outside air instead of running energy-intensive chillers.
           </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🏔️</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Cold Climate</p>
-                <p style={{ color: colors.secondary, fontWeight: 'bold' }}>10°C Average</p>
-              </div>
-              <div style={{ fontSize: '32px', color: colors.textMuted }}>→</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>❄️</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Free Cooling</p>
-                <p style={{ color: colors.accent, fontWeight: 'bold' }}>No Chillers!</p>
-              </div>
-              <div style={{ fontSize: '32px', color: colors.textMuted }}>→</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>📊</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>PUE Impact</p>
-                <p style={{ color: colors.warning, fontWeight: 'bold' }}>???</p>
-              </div>
-            </div>
+          <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
+            <svg width="100%" height="150" viewBox="0 0 500 150" style={{ display: 'block' }}>
+              <defs>
+                <filter id="freeCoolGlow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+                <linearGradient id="tempGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor={colors.secondary} stopOpacity="0.8" />
+                  <stop offset="100%" stopColor={colors.accent} stopOpacity="0.8" />
+                </linearGradient>
+              </defs>
+              {/* Anchor marks */}
+              <rect x="10" y="8" width="4" height="4" fill={colors.border} opacity="0.5" />
+              <rect x="486" y="8" width="4" height="4" fill={colors.border} opacity="0.5" />
+              {/* Cold climate block */}
+              <g id="climate-block">
+                <rect x="30" y="35" width="120" height="80" rx="10" fill={colors.bgSecondary} stroke={colors.secondary} strokeWidth="2" />
+                <text x="90" y="65" fill={colors.textPrimary} fontSize="13" textAnchor="middle" fontWeight="700">Cold Climate</text>
+                <text x="90" y="85" fill={colors.secondary} fontSize="18" textAnchor="middle" fontWeight="800">10°C</text>
+                <circle cx="90" cy="105" r="6" fill={colors.secondary} opacity="0.5" filter="url(#freeCoolGlow)" />
+              </g>
+              {/* Arrow */}
+              <g id="arrow1">
+                <path d="M 155 75 L 195 75" stroke={colors.accent} strokeWidth="2" fill="none" strokeDasharray="4 4" />
+                <path d="M 190 70 L 200 75 L 190 80" fill={colors.accent} />
+              </g>
+              {/* Free cooling block */}
+              <g id="freecool-block">
+                <rect x="200" y="35" width="120" height="80" rx="10" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
+                <text x="260" y="65" fill={colors.textPrimary} fontSize="12" textAnchor="middle" fontWeight="700">Free Cooling</text>
+                <text x="260" y="85" fill={colors.accent} fontSize="14" textAnchor="middle" fontWeight="800">No Chillers!</text>
+                <path d="M 220 100 Q 260 90 300 100" stroke={colors.accent} strokeWidth="2" fill="none" strokeDasharray="3 3" />
+              </g>
+              {/* Arrow */}
+              <g id="arrow2">
+                <path d="M 325 75 L 365 75" stroke={colors.warning} strokeWidth="2" fill="none" strokeDasharray="4 4" />
+                <path d="M 360 70 L 370 75 L 360 80" fill={colors.warning} />
+              </g>
+              {/* PUE impact block */}
+              <g id="pue-impact-block">
+                <rect x="370" y="35" width="110" height="80" rx="10" fill={colors.bgSecondary} stroke={colors.warning} strokeWidth="2" strokeDasharray="4 4" />
+                <text x="425" y="65" fill={colors.textPrimary} fontSize="12" textAnchor="middle" fontWeight="700">PUE Impact</text>
+                <text x="425" y="90" fill={colors.warning} fontSize="20" textAnchor="middle" fontWeight="800">???</text>
+              </g>
+              {/* Grid line */}
+              <line x1="30" y1="128" x2="480" y2="128" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+            </svg>
           </div>
 
           <p style={{ ...typo.body, color: colors.secondary, textAlign: 'center', marginBottom: '24px' }}>
@@ -1183,8 +1245,9 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             </button>
           )}
         </div>
-
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1192,18 +1255,14 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Free Cooling Demonstration
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textPrimary, textAlign: 'center', marginBottom: '24px' }}>
             Toggle free cooling and adjust outdoor temperature to see the impact
           </p>
 
@@ -1240,7 +1299,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             {/* Outdoor temperature slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Outdoor Temperature</span>
+                <label style={{ ...typo.small, color: colors.textPrimary }}>Outdoor Temperature</label>
                 <span style={{ ...typo.small, color: colors.secondary, fontWeight: 600 }}>{outdoorTemp}°C</span>
               </div>
               <input
@@ -1249,12 +1308,12 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
                 max="40"
                 value={outdoorTemp}
                 onChange={(e) => setOutdoorTemp(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: colors.secondary }}
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>-10°C (Winter)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>15°C (Spring)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>40°C (Summer)</span>
+                <label style={{ ...typo.small, color: colors.textPrimary }}>-10°C (Winter)</label>
+                <label style={{ ...typo.small, color: colors.textPrimary }}>15°C (Spring)</label>
+                <label style={{ ...typo.small, color: colors.textPrimary }}>40°C (Summer)</label>
               </div>
             </div>
 
@@ -1268,14 +1327,14 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', textAlign: 'center' }}>
                 <div>
                   <div style={{ ...typo.h2, color: getPUEColor(metrics.pue) }}>{metrics.pue.toFixed(2)}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Current PUE</div>
+                  <div style={{ ...typo.small, color: colors.textPrimary }}>Current PUE</div>
                 </div>
                 <div>
                   <div style={{ ...typo.h2, color: colors.accent }}>${(metrics.annualCost / 1000000).toFixed(2)}M</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Annual Cost</div>
+                  <div style={{ ...typo.small, color: colors.textPrimary }}>Annual Cost</div>
                 </div>
               </div>
-              <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginTop: '12px' }}>
+              <p style={{ ...typo.small, color: colors.textPrimary, textAlign: 'center', marginTop: '12px' }}>
                 {useFreeCooling && outdoorTemp < 18
                   ? "Full free cooling active! Mechanical cooling nearly eliminated."
                   : useFreeCooling && outdoorTemp < 25
@@ -1293,7 +1352,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <h4 style={{ color: colors.secondary, marginBottom: '8px' }}>Experiment:</h4>
-            <ul style={{ color: colors.textSecondary, paddingLeft: '20px', margin: 0, ...typo.small }}>
+            <ul style={{ color: colors.textPrimary, paddingLeft: '20px', margin: 0, ...typo.small }}>
               <li>Enable free cooling, set temp to -5°C - watch PUE plummet!</li>
               <li>Raise temp to 35°C - free cooling becomes ineffective</li>
               <li>Find the "crossover point" where free cooling starts helping</li>
@@ -1307,8 +1366,9 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             Understand the Impact
           </button>
         </div>
-
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1318,14 +1378,10 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
     const wasCorrect = twistPrediction === 'a';
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             padding: '20px',
@@ -1352,7 +1408,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
                 <span style={{ fontSize: '24px' }}>❄️</span>
                 <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Free Cooling Physics</h3>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <p style={{ ...typo.body, color: colors.textPrimary, margin: 0 }}>
                 Cold outside air (below ~18°C) can directly cool servers without running energy-intensive chillers. Only fan power is needed to move air through the facility. This eliminates the compressor work that dominates cooling energy use.
               </p>
             </div>
@@ -1367,7 +1423,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
                 <span style={{ fontSize: '24px' }}>🌍</span>
                 <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Climate Impact on PUE</h3>
               </div>
-              <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
+              <ul style={{ ...typo.body, color: colors.textPrimary, margin: 0, paddingLeft: '20px' }}>
                 <li><strong>Nordic countries:</strong> 95%+ free cooling hours, PUE 1.05-1.10</li>
                 <li><strong>Northern US/Europe:</strong> 50-70% free cooling, PUE 1.2-1.4</li>
                 <li><strong>Hot climates:</strong> Limited to night/winter, PUE 1.4-1.8</li>
@@ -1384,7 +1440,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
                 <span style={{ fontSize: '24px' }}>💰</span>
                 <h3 style={{ ...typo.h3, color: colors.accent, margin: 0 }}>Real-World Examples</h3>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <p style={{ ...typo.body, color: colors.textPrimary, margin: 0 }}>
                 Facebook's Lulea, Sweden data center achieves PUE of 1.07 using Arctic air. Google's Hamina, Finland facility uses Baltic Sea water cooling. These sites save tens of millions annually compared to hot-climate locations.
               </p>
             </div>
@@ -1397,8 +1453,9 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             See Real-World Applications
           </button>
         </div>
-
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1409,14 +1466,10 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
     const allAppsCompleted = completedApps.every(c => c);
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
@@ -1489,7 +1542,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
               </div>
             </div>
 
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+            <p style={{ ...typo.body, color: colors.textPrimary, marginBottom: '16px' }}>
               {app.description}
             </p>
 
@@ -1502,7 +1555,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
               <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
                 How PUE Connects:
               </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>
                 {app.connection}
               </p>
             </div>
@@ -1527,7 +1580,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             </div>
 
             <div style={{ marginTop: '16px' }}>
-              <h4 style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>Companies:</h4>
+              <h4 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px' }}>Companies:</h4>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                 {app.companies.map((company, i) => (
                   <span key={i} style={{
@@ -1542,6 +1595,20 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
                 ))}
               </div>
             </div>
+
+            {(app as unknown as Record<string, string>).howItWorks && (
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '16px', marginTop: '16px' }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 700 }}>How It Works:</h4>
+                <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>{(app as unknown as Record<string, string>).howItWorks}</p>
+              </div>
+            )}
+
+            {(app as unknown as Record<string, string>).futureImpact && (
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '16px', marginTop: '8px' }}>
+                <h4 style={{ ...typo.small, color: colors.success, marginBottom: '8px', fontWeight: 700 }}>Future Impact:</h4>
+                <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>{(app as unknown as Record<string, string>).futureImpact}</p>
+              </div>
+            )}
           </div>
 
           <div style={{
@@ -1551,7 +1618,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <p style={{ ...typo.small, color: colors.textMuted }}>
+            <p style={{ ...typo.small, color: colors.textPrimary }}>
               Progress: {completedApps.filter(c => c).length}/4 applications explored
             </p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '8px' }}>
@@ -1575,8 +1642,9 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             </button>
           )}
         </div>
-
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1586,14 +1654,10 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
     if (testSubmitted) {
       const passed = testScore >= 7;
       return (
-        <div style={{
-          minHeight: '100vh',
-          background: colors.bgPrimary,
-          padding: '24px',
-        }}>
+        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderProgressBar()}
-
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', padding: '16px', textAlign: 'center' }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>
               {passed ? '🏆' : '📚'}
             </div>
@@ -1603,7 +1667,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
               {testScore} / 10
             </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+            <p style={{ ...typo.body, color: colors.textPrimary, marginBottom: '32px' }}>
               {passed
                 ? 'You understand PUE and data center efficiency!'
                 : 'Review the concepts and try again.'}
@@ -1632,6 +1696,8 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             )}
           </div>
           {renderNavDots()}
+          </div>
+          {renderBottomBar()}
         </div>
       );
     }
@@ -1639,14 +1705,10 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
     const question = testQuestions[currentQuestion];
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1654,7 +1716,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             alignItems: 'center',
             marginBottom: '24px',
           }}>
-            <span style={{ ...typo.small, color: colors.textSecondary }}>
+            <span style={{ ...typo.small, color: colors.textPrimary }}>
               Question {currentQuestion + 1} of 10
             </span>
             <div style={{ display: 'flex', gap: '6px' }}>
@@ -1681,7 +1743,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             marginBottom: '16px',
             borderLeft: `3px solid ${colors.accent}`,
           }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+            <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>
               {question.scenario}
             </p>
           </div>
@@ -1789,6 +1851,8 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
         </div>
 
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1796,17 +1860,10 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)` }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto', padding: '16px', textAlign: 'center' }}>
 
         <div style={{
           fontSize: '100px',
@@ -1821,7 +1878,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
           PUE Master!
         </h1>
 
-        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+        <p style={{ ...typo.body, color: colors.textPrimary, maxWidth: '500px', marginBottom: '32px' }}>
           You now understand Power Usage Effectiveness - the key metric driving data center efficiency worldwide.
         </p>
 
@@ -1846,7 +1903,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ color: colors.success }}>✓</span>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+                <span style={{ ...typo.small, color: colors.textPrimary }}>{item}</span>
               </div>
             ))}
           </div>
@@ -1906,6 +1963,9 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
         </div>
 
         {renderNavDots()}
+        </div>
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }

@@ -255,6 +255,7 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
+  const [checkedQuestions, setCheckedQuestions] = useState<Set<number>>(new Set());
   const [isMobile, setIsMobile] = useState(false);
 
   // Responsive detection
@@ -354,12 +355,12 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
 
     // Graph dimensions — large enough to show visible change
     const graphX = 55;
-    const graphY = 220;
-    const graphW = 420;
-    const graphH = 150;
+    const graphY = 200;
+    const graphW = 380;
+    const graphH = 175;
 
-    // Power axis: 150W to 420W
-    const PWR_MIN = 150;
+    // Power axis: 250W to 420W (narrowed to increase visual range)
+    const PWR_MIN = 240;
     const PWR_MAX = 420;
 
     // Compute interactive point position
@@ -385,7 +386,7 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
         const x = graphX + ((t + 10) / 80) * graphW;
         const y = graphY + graphH - ((p - PWR_MIN) / (PWR_MAX - PWR_MIN)) * graphH;
         const clampedY = Math.max(graphY, Math.min(graphY + graphH, y));
-        pts.push(`${pts.length === 0 ? 'M' : 'L'}${x.toFixed(1)},${clampedY.toFixed(1)}`);
+        pts.push(`${pts.length === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${clampedY.toFixed(1)}`);
       }
       return pts.join(' ');
     })();
@@ -465,7 +466,7 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
           {/* Sun */}
           <g transform="translate(65, 70)">
             <circle cx="0" cy="0" r="55" fill="url(#stcSunGlow)" opacity="0.8" />
-            <circle cx="0" cy="0" r="28" fill="url(#stcSunCore)" filter="url(#stcSunGlowF)" />
+            <circle cx="0" cy="0" r="28" fill="url(#stcSunCore)" opacity="0.9" />
             <circle cx="-7" cy="-7" r="8" fill="#ffffff" opacity="0.25" />
             {/* Sun rays */}
             {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
@@ -525,15 +526,14 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
             ))}
             {/* Glass reflection */}
             <rect x="0" y="0" width="165" height="95" rx="3" fill="rgba(255,255,255,0.08)" />
-            {/* Temperature badge */}
-            <g transform="translate(52, 30)">
-              <rect x="0" y="0" width="62" height="28" rx="6" fill="rgba(0,0,0,0.85)" stroke={getTempColor()} strokeWidth="2" />
-              <text x="31" y="20" fill={getTempColor()} fontSize="15" fontWeight="bold" textAnchor="middle">
+            {/* Temperature badge — raw text y=55 to avoid thermometer/output row text overlap */}
+            <g transform="translate(52, 22)">
+              <rect x="0" y="28" width="62" height="28" rx="6" fill="rgba(0,0,0,0.85)" stroke={getTempColor()} strokeWidth="2" />
+              <text x="31" y="50" fill={getTempColor()} fontSize="15" fontWeight="bold" textAnchor="middle">
                 {panelTemperature}°C
               </text>
             </g>
-            {/* Panel label — moved below frame */}
-            <text x="82" y="118" fill={colors.textSecondary} fontSize="11" textAnchor="middle">350W Solar Panel</text>
+            {/* Panel label removed from SVG to avoid text overlap with thermometer scale and output row */}
           </g>
 
           {/* Thermometer */}
@@ -550,13 +550,13 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
             {/* Bulb */}
             <circle cx="23" cy="128" r="11" fill={getTempColor()} />
             <circle cx="20" cy="125" r="4" fill="#ffffff" opacity="0.25" />
-            {/* Scale marks */}
+            {/* Scale marks — text at x=72 to avoid x overlap with panel badge (right edge ~49) */}
             {[-10, 10, 25, 40, 70].map(temp => {
               const yp = 10 + (1 - (temp + 10) / 80) * 100;
               return (
                 <g key={`tm-${temp}`}>
-                  <line x1="8" y1={yp} x2="14" y2={yp} stroke={colors.textMuted} strokeWidth="1" />
-                  <text x="42" y={yp + 4} fill={temp === 25 ? colors.accent : colors.textMuted} fontSize="11" fontWeight={temp === 25 ? 'bold' : 'normal'}>
+                  <line x1="8" y1={yp} x2="36" y2={yp} stroke={colors.textMuted} strokeWidth="1" />
+                  <text x="72" y={yp + 4} fill={temp === 25 ? colors.accent : colors.textMuted} fontSize="11" fontWeight={temp === 25 ? 'bold' : 'normal'}>
                     {temp}°
                   </text>
                 </g>
@@ -566,8 +566,8 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
             <text x="23" y="148" fill={colors.textSecondary} fontSize="11" textAnchor="middle" fontWeight="bold">Temp</text>
           </g>
 
-          {/* Output display row */}
-          <g transform="translate(20, 165)">
+          {/* Output display row — moved to translate(20,150) so computed title y=164, clear of graph title y=180 */}
+          <g transform="translate(20, 150)">
             <rect x="0" y="0" width="460" height="40" rx="8" fill="rgba(15,23,42,0.9)" stroke={colors.accent} strokeWidth="1" />
             {/* Title */}
             <text x="230" y="14" fill={colors.accent} fontSize="11" fontWeight="bold" textAnchor="middle">
@@ -625,21 +625,21 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
             {/* X-axis */}
             <line x1={graphX} y1={graphY + graphH} x2={graphX + graphW} y2={graphY + graphH} stroke={colors.textMuted} strokeWidth="1.5" />
 
-            {/* Y-axis label (rotated) */}
+            {/* Y-axis label (rotated) — moved left to avoid y-tick overlap */}
             <text
-              x={graphX - 30}
+              x={graphX - 38}
               y={graphY + graphH / 2}
               fill={colors.textMuted}
               fontSize="11"
               textAnchor="middle"
-              transform={`rotate(-90, ${graphX - 30}, ${graphY + graphH / 2})`}
+              transform={`rotate(-90, ${graphX - 38}, ${graphY + graphH / 2})`}
             >
               Power (W)
             </text>
 
-            {/* Y-axis ticks */}
-            {[PWR_MAX, (PWR_MAX + PWR_MIN) / 2, PWR_MIN].map((val, i) => {
-              const y = graphY + (i / 2) * graphH;
+            {/* Y-axis ticks — only top and bottom to avoid overlap with Y-axis label */}
+            {[PWR_MAX, PWR_MIN].map((val, i) => {
+              const y = graphY + (i === 0 ? 0 : graphH);
               return (
                 <text key={`yt-${i}`} x={graphX - 5} y={y + 4} fill={colors.textMuted} fontSize="11" textAnchor="end">
                   {val}
@@ -647,16 +647,19 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
               );
             })}
 
-            {/* X-axis labels */}
-            <text x={graphX} y={graphY + graphH + 16} fill={colors.textMuted} fontSize="11" textAnchor="middle">-10°C</text>
-            <text x={graphX + graphW * 0.25} y={graphY + graphH + 16} fill={colors.textMuted} fontSize="11" textAnchor="middle">10°C</text>
-            <text x={graphX + graphW * 0.4375} y={graphY + graphH + 16} fill={colors.accent} fontSize="11" textAnchor="middle" fontWeight="bold">25°C</text>
-            <text x={graphX + graphW * 0.625} y={graphY + graphH + 16} fill={colors.textMuted} fontSize="11" textAnchor="middle">40°C</text>
-            <text x={graphX + graphW} y={graphY + graphH + 16} fill={colors.textMuted} fontSize="11" textAnchor="middle">70°C</text>
+            {/* X-axis labels — offset to avoid y-tick overlap */}
+            <text x={graphX} y={graphY + graphH + 22} fill={colors.textMuted} fontSize="11" textAnchor="middle">-10°C</text>
+            <text x={graphX + graphW * 0.25} y={graphY + graphH + 22} fill={colors.textMuted} fontSize="11" textAnchor="middle">10°C</text>
+            <text x={graphX + graphW * 0.4375} y={graphY + graphH + 22} fill={colors.accent} fontSize="11" textAnchor="middle" fontWeight="bold">25°C</text>
+            <text x={graphX + graphW * 0.625} y={graphY + graphH + 22} fill={colors.textMuted} fontSize="11" textAnchor="middle">40°C</text>
+            <text x={graphX + graphW} y={graphY + graphH + 22} fill={colors.textMuted} fontSize="11" textAnchor="middle">70°C</text>
 
-            {/* Graph title */}
-            <text x={graphX + graphW / 2} y={graphY - 8} fill={colors.textPrimary} fontSize="11" fontWeight="bold" textAnchor="middle">
-              Power Output vs Panel Temperature ({irradiance} W/m²)
+            {/* Graph title — moved to avoid overlap with STC label */}
+            <text x={graphX + graphW / 2} y={graphY - 20} fill={colors.textPrimary} fontSize="11" fontWeight="bold" textAnchor="middle">
+              Power Output vs Panel Temperature
+            </text>
+            <text x={graphX + graphW / 2} y={graphY - 4} fill={colors.textMuted} fontSize="11" textAnchor="middle">
+              ({irradiance} W/m²)
             </text>
 
             {/* STC reference line */}
@@ -671,11 +674,11 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
               opacity="0.7"
             />
             <text
-              x={graphX + ((25 + 10) / 80) * graphW}
-              y={graphY - 8 + 4}
+              x={graphX + ((25 + 10) / 80) * graphW + 12}
+              y={graphY + 14}
               fill={colors.accent}
               fontSize="11"
-              textAnchor="middle"
+              textAnchor="start"
             >
               STC
             </text>
@@ -899,7 +902,7 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
               aria-label={PHASE_LABELS[p]}
               style={{
                 width: '32px',
-                height: '32px',
+                minHeight: '44px',
                 borderRadius: '16px',
                 border: 'none',
                 background: 'transparent',
@@ -968,7 +971,7 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
             <h1 style={{ color: colors.accent, fontSize: isMobile ? '24px' : '32px', marginBottom: '8px', fontWeight: 800 }}>
               Solar Panel Temperature Coefficient
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '17px', marginBottom: '20px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '17px', marginBottom: '20px', fontWeight: 400 }}>
               Why do solar panels produce LESS power on hot summer days?
             </p>
           </div>
@@ -1329,6 +1332,28 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
             </p>
           </div>
 
+          <div style={{ display: 'flex', justifyContent: 'center', margin: '0 16px 8px' }}>
+            <button
+              onClick={nextPhase}
+              disabled={transferCompleted.size < 4}
+              style={{
+                padding: '10px 24px',
+                borderRadius: '8px',
+                border: 'none',
+                background: transferCompleted.size >= 4
+                  ? `linear-gradient(135deg, ${colors.success}, #059669)`
+                  : 'rgba(255,255,255,0.1)',
+                color: transferCompleted.size >= 4 ? 'white' : colors.textMuted,
+                cursor: transferCompleted.size >= 4 ? 'pointer' : 'not-allowed',
+                fontSize: '14px',
+                fontWeight: 600,
+                opacity: transferCompleted.size >= 4 ? 1 : 0.5,
+              }}
+            >
+              Got It — Continue to Test
+            </button>
+          </div>
+
           {realWorldApps.map((app, index) => (
             <div
               key={index}
@@ -1351,7 +1376,7 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
                 )}
               </div>
 
-              <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '10px', lineHeight: 1.5 }}>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '10px', lineHeight: 1.5, fontWeight: 400 }}>
                 {app.description}
               </p>
 
@@ -1387,13 +1412,30 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
                   Reveal Answer
                 </button>
               ) : (
-                <div style={{ background: 'rgba(16,185,129,0.08)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px', lineHeight: 1.6 }}>{app.answer}</p>
-                  <div style={{ marginTop: '8px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                    {app.companies.map((c, ci) => (
-                      <span key={ci} style={{ background: 'rgba(59,130,246,0.1)', padding: '2px 8px', borderRadius: '4px', color: colors.voltage, fontSize: '11px' }}>{c}</span>
-                    ))}
+                <div>
+                  <div style={{ background: 'rgba(16,185,129,0.08)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '8px' }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px', lineHeight: 1.6 }}>{app.answer}</p>
+                    <div style={{ marginTop: '8px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                      {app.companies.map((c, ci) => (
+                        <span key={ci} style={{ background: 'rgba(59,130,246,0.1)', padding: '2px 8px', borderRadius: '4px', color: colors.voltage, fontSize: '11px' }}>{c}</span>
+                      ))}
+                    </div>
                   </div>
+                  <button
+                    onClick={() => {}}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      border: `1px solid ${colors.success}`,
+                      background: 'rgba(16,185,129,0.1)',
+                      color: colors.success,
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Got It ✓
+                  </button>
                 </div>
               )}
             </div>
@@ -1518,30 +1560,74 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
 
             {/* Answer options */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {currentQ.options.map((opt, oIndex) => (
+              {currentQ.options.map((opt, oIndex) => {
+                const isSelected = testAnswers[currentTestQuestion] === oIndex;
+                const isChecked = checkedQuestions.has(currentTestQuestion);
+                const isCorrect = opt.correct;
+                const isWrongSelection = isSelected && isChecked && !isCorrect;
+                return (
+                  <button
+                    key={oIndex}
+                    onClick={() => { if (!isChecked) handleTestAnswer(currentTestQuestion, oIndex); }}
+                    style={{
+                      padding: '14px 16px',
+                      borderRadius: '8px',
+                      border: isChecked && isCorrect
+                        ? `2px solid ${colors.success}`
+                        : isWrongSelection
+                        ? `2px solid ${colors.error}`
+                        : isSelected
+                        ? `2px solid ${colors.accent}`
+                        : `1px solid ${colors.border}`,
+                      background: isChecked && isCorrect
+                        ? 'rgba(16,185,129,0.15)'
+                        : isWrongSelection
+                        ? 'rgba(239,68,68,0.15)'
+                        : isSelected
+                        ? 'rgba(245,158,11,0.15)'
+                        : 'transparent',
+                      color: colors.textPrimary,
+                      cursor: isChecked ? 'default' : 'pointer',
+                      textAlign: 'left',
+                      fontSize: '14px',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    {opt.text}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Check Answer button */}
+            {testAnswers[currentTestQuestion] !== null && !checkedQuestions.has(currentTestQuestion) && (
+              <div style={{ marginTop: '12px' }}>
                 <button
-                  key={oIndex}
-                  onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
+                  onClick={() => setCheckedQuestions(prev => new Set([...prev, currentTestQuestion]))}
                   style={{
-                    padding: '14px 16px',
+                    padding: '10px 20px',
                     borderRadius: '8px',
-                    border: testAnswers[currentTestQuestion] === oIndex
-                      ? `2px solid ${colors.accent}`
-                      : `1px solid ${colors.border}`,
-                    background: testAnswers[currentTestQuestion] === oIndex
-                      ? 'rgba(245,158,11,0.15)'
-                      : 'transparent',
-                    color: colors.textPrimary,
+                    border: 'none',
+                    background: `linear-gradient(135deg, ${colors.voltage}, #2563eb)`,
+                    color: 'white',
                     cursor: 'pointer',
-                    textAlign: 'left',
                     fontSize: '14px',
-                    transition: 'all 0.2s ease',
+                    fontWeight: 600,
                   }}
                 >
-                  {opt.text}
+                  Check Answer
                 </button>
-              ))}
-            </div>
+              </div>
+            )}
+
+            {/* Inline explanation for checked wrong answers */}
+            {checkedQuestions.has(currentTestQuestion) && testAnswers[currentTestQuestion] !== null && !currentQ.options[testAnswers[currentTestQuestion]!].correct && (
+              <div style={{ background: 'rgba(59,130,246,0.1)', padding: '10px 12px', borderRadius: '8px', marginTop: '10px', borderLeft: `3px solid ${colors.voltage}` }}>
+                <p style={{ color: colors.voltage, fontSize: '13px', lineHeight: 1.5, fontWeight: 500 }}>
+                  <strong>Explanation:</strong> {currentQ.explanation}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Navigation within test */}
@@ -1621,7 +1707,7 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
           </button>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '4px', flex: 1, paddingLeft: '8px', paddingRight: '8px' }}>
             {phaseOrder.map((p, i) => (
-              <button key={p} onClick={() => goToPhase(p)} aria-label={PHASE_LABELS[p]} style={{ width: '32px', height: '32px', borderRadius: '16px', border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, flexShrink: 0 }}>
+              <button key={p} onClick={() => goToPhase(p)} aria-label={PHASE_LABELS[p]} style={{ width: '32px', minHeight: '44px', borderRadius: '16px', border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, flexShrink: 0 }}>
                 <span style={{ width: phase === p ? '18px' : '8px', height: '8px', borderRadius: '4px', background: phaseOrder.indexOf(phase) >= i ? colors.accent : 'rgba(148,163,184,0.7)', transition: 'all 0.3s ease', display: 'block' }} />
               </button>
             ))}

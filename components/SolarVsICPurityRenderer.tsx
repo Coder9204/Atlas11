@@ -115,7 +115,7 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Cost Scaling',
+    twist_play: 'Twist Explore',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -252,25 +252,25 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
   const transferApplications = [
     {
       title: 'Semiconductor Fabs',
-      description: 'Chip manufacturing facilities spend billions on contamination control systems.',
+      description: 'Chip manufacturing facilities spend $100 billion+ annually on contamination control. Modern transistors measure only 3nm — a 1000x smaller feature than a human hair.',
       question: 'Why do chip fabs require cleanrooms with less than 1 particle per cubic meter?',
       answer: 'A single dust particle can destroy transistors measuring only 5nm. With billions of transistors per chip, even tiny contamination causes failures. The extreme purity of silicon must be maintained throughout processing.',
     },
     {
       title: 'Solar Panel Economics',
-      description: 'Solar panel prices dropped 99% since 1976, partly due to using lower-grade silicon.',
+      description: 'Solar panel prices dropped 99% since 1976, partly due to using lower-grade silicon. Today, solar generates over 1.2 TW of global capacity.',
       question: 'How does using less pure silicon help make solar power affordable?',
       answer: 'Solar cells work with 99.9999% pure silicon (6 nines) while ICs need 99.9999999% (9+ nines). This 1000x lower purity requirement makes solar silicon 10-100x cheaper, enabling affordable renewable energy.',
     },
     {
       title: 'Recycled Silicon',
-      description: 'Broken solar panels and rejected IC wafers can be recycled for different uses.',
+      description: 'A $1.2 billion recycling industry recovers 90% of silicon from broken solar panels and rejected IC wafers for reuse in other applications.',
       question: 'Why might rejected IC-grade silicon be perfect for solar cells?',
       answer: 'IC fabrication rejects wafers with defect counts too high for chip yield. These same wafers often exceed solar-grade purity requirements, making recycled IC rejects valuable for solar panel production.',
     },
     {
       title: 'Quantum Computing',
-      description: 'Quantum computers require even more extreme silicon purity than classical ICs.',
+      description: 'Quantum computers require silicon purified to 99.995% Si-28 isotope purity — beyond even the 9N standard used for classical IC chips.',
       question: 'Why do quantum bits (qubits) need isotopically pure silicon?',
       answer: 'Quantum coherence is destroyed by nuclear spin from Si-29 isotopes. Quantum silicon must be 99.995% Si-28, removing impurities AND unwanted isotopes - an extra level of purity beyond even IC-grade.',
     },
@@ -411,6 +411,18 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
               <stop offset="0%" stopColor={colors.error} />
               <stop offset="100%" stopColor="#dc2626" />
             </linearGradient>
+            <linearGradient id="purityBarGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor={colors.error} />
+              <stop offset="60%" stopColor={colors.solarPanel} />
+              <stop offset="100%" stopColor={colors.success} />
+            </linearGradient>
+            <filter id="svgGlow">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+            <filter id="dropShadow">
+              <feDropShadow dx="1" dy="1" stdDeviation="2" floodOpacity="0.4" />
+            </filter>
           </defs>
 
           {/* Title */}
@@ -418,82 +430,97 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
             Silicon Purity: {purityLevel.toFixed(6)}% ({metrics.nines.toFixed(1)} nines)
           </text>
 
-          {/* Silicon crystal lattice visualization */}
-          <rect x={50} y={50} width={140} height={140} fill="url(#siliconGradient)" rx={8} opacity={0.3} />
-          <text x={120} y={75} fill={colors.textSecondary} fontSize={11} textAnchor="middle">Silicon Crystal</text>
+          {/* Group: Silicon crystal lattice visualization */}
+          <g id="crystal-group">
+            <rect x={50} y={50} width={140} height={140} fill="url(#siliconGradient)" rx={8} opacity={0.3} />
+            <text x={120} y={75} fill={colors.textSecondary} fontSize={11} textAnchor="middle">Silicon Crystal</text>
+            {/* Grid lines for lattice */}
+            {[0,1,2,3,4].map(row => (
+              <line key={`hg-${row}`} x1={65} y1={90 + row * 22} x2={165} y2={90 + row * 22} stroke="#4f46e5" strokeOpacity={0.2} strokeDasharray="2,4" />
+            ))}
+            {[0,1,2,3,4].map(col => (
+              <line key={`vg-${col}`} x1={70 + col * 25} y1={80} x2={70 + col * 25} y2={180} stroke="#4f46e5" strokeOpacity={0.2} strokeDasharray="2,4" />
+            ))}
+            {/* Draw lattice points */}
+            {[...Array(5)].map((_, row) =>
+              [...Array(5)].map((_, col) => {
+                const x = 70 + col * 25;
+                const y = 90 + row * 22;
+                const isImpurity = Math.random() < metrics.impurityPPM / 100000;
+                return (
+                  <circle
+                    key={`${row}-${col}`}
+                    cx={x}
+                    cy={y}
+                    r={isImpurity ? 6 : 5}
+                    fill={isImpurity ? colors.error : colors.silicon}
+                    opacity={isImpurity ? 1 : 0.8}
+                  />
+                );
+              })
+            )}
+            {/* Impurity indicator */}
+            <text x={120} y={205} fill={colors.textMuted} fontSize={11} textAnchor="middle">
+              Impurity concentration: {metrics.impurityPPM.toFixed(2)} ppm
+            </text>
+          </g>
 
-          {/* Draw lattice points */}
-          {[...Array(5)].map((_, row) =>
-            [...Array(5)].map((_, col) => {
-              const x = 70 + col * 25;
-              const y = 90 + row * 22;
-              const isImpurity = Math.random() < metrics.impurityPPM / 100000;
-              return (
-                <circle
-                  key={`${row}-${col}`}
-                  cx={x}
-                  cy={y}
-                  r={isImpurity ? 6 : 5}
-                  fill={isImpurity ? colors.error : colors.silicon}
-                  opacity={isImpurity ? 1 : 0.8}
-                />
-              );
-            })
-          )}
+          {/* Group: Application comparison */}
+          <g id="comparison-group">
+            <rect x={210} y={50} width={170} height={65} fill={colors.bgCard} rx={8} stroke={viewMode === 'solar' ? colors.solarPanel : 'transparent'} strokeWidth={2} />
+            <text x={295} y={70} fill={colors.solarPanel} fontSize={12} textAnchor="middle" fontWeight="bold">Solar Cell</text>
+            <text x={220} y={90} fill={colors.textSecondary} fontSize={11}>Carrier Lifetime: {metrics.solarCarrierLifetime.toFixed(0)} us</text>
+            <text x={220} y={105} fill={colors.textSecondary} fontSize={11}>Efficiency: {metrics.solarEfficiency.toFixed(1)}%</text>
 
-          {/* Impurity indicator */}
-          <text x={120} y={205} fill={colors.textMuted} fontSize={10} textAnchor="middle">
-            Impurity: {metrics.impurityPPM.toFixed(2)} ppm
-          </text>
+            <rect x={210} y={125} width={170} height={65} fill={colors.bgCard} rx={8} stroke={viewMode === 'ic' ? colors.chip : 'transparent'} strokeWidth={2} />
+            <text x={295} y={145} fill={colors.chip} fontSize={12} textAnchor="middle" fontWeight="bold">IC Chip</text>
+            <text x={220} y={165} fill={colors.textSecondary} fontSize={11}>Leakage: {metrics.icLeakageCurrent.toFixed(2)} nA</text>
+            <text x={220} y={180} fill={metrics.icTransistorYield > 50 ? colors.success : colors.error} fontSize={11}>
+              Transistor Yield: {Math.max(0, metrics.icTransistorYield).toFixed(0)}%
+            </text>
+          </g>
 
-          {/* Application comparison */}
-          <rect x={210} y={50} width={170} height={65} fill={colors.bgCard} rx={8} stroke={viewMode === 'solar' ? colors.solarPanel : 'transparent'} strokeWidth={2} />
-          <text x={295} y={70} fill={colors.solarPanel} fontSize={12} textAnchor="middle" fontWeight="bold">Solar Cell</text>
-          <text x={220} y={90} fill={colors.textSecondary} fontSize={10}>Carrier Lifetime: {metrics.solarCarrierLifetime.toFixed(0)} us</text>
-          <text x={220} y={105} fill={colors.textSecondary} fontSize={10}>Efficiency: {metrics.solarEfficiency.toFixed(1)}%</text>
+          {/* Group: Cost comparison bars */}
+          <g id="cost-group">
+            <text x={width/2} y={220} fill={colors.textPrimary} fontSize={12} textAnchor="middle" fontWeight="bold">
+              Relative Cost ($/kg)
+            </text>
+            {/* Tick marks for cost axis */}
+            {[0,50,100,150,200,250,300].map(tx => (
+              <line key={`tx-${tx}`} x1={50 + tx} y1={230} x2={50 + tx} y2={236} stroke={colors.textMuted} opacity={0.5} />
+            ))}
+            <rect x={50} y={237} width={Math.min(150, metrics.solarCost * 3)} height={20} fill={colors.solarPanel} rx={4} />
+            <text x={55} y={252} fill={colors.textPrimary} fontSize={11}>Solar: ${metrics.solarCost.toFixed(0)}</text>
+            <rect x={50} y={265} width={Math.min(300, metrics.icCost * 0.5)} height={20} fill={colors.chip} rx={4} />
+            <text x={55} y={280} fill={colors.textPrimary} fontSize={11}>IC: ${metrics.icCost.toFixed(0)}</text>
+          </g>
 
-          <rect x={210} y={125} width={170} height={65} fill={colors.bgCard} rx={8} stroke={viewMode === 'ic' ? colors.chip : 'transparent'} strokeWidth={2} />
-          <text x={295} y={145} fill={colors.chip} fontSize={12} textAnchor="middle" fontWeight="bold">IC Chip</text>
-          <text x={220} y={165} fill={colors.textSecondary} fontSize={10}>Leakage: {metrics.icLeakageCurrent.toFixed(2)} nA</text>
-          <text x={220} y={180} fill={metrics.icTransistorYield > 50 ? colors.success : colors.error} fontSize={10}>
-            Transistor Yield: {Math.max(0, metrics.icTransistorYield).toFixed(0)}%
-          </text>
-
-          {/* Cost comparison bars */}
-          <text x={width/2} y={220} fill={colors.textPrimary} fontSize={12} textAnchor="middle" fontWeight="bold">
-            Relative Cost ($/kg)
-          </text>
-
-          {/* Solar cost bar */}
-          <rect x={50} y={235} width={Math.min(150, metrics.solarCost * 3)} height={20} fill={colors.solarPanel} rx={4} />
-          <text x={55} y={250} fill={colors.textPrimary} fontSize={10}>Solar: ${metrics.solarCost.toFixed(0)}</text>
-
-          {/* IC cost bar */}
-          <rect x={50} y={265} width={Math.min(300, metrics.icCost * 0.5)} height={20} fill={colors.chip} rx={4} />
-          <text x={55} y={280} fill={colors.textPrimary} fontSize={10}>IC: ${metrics.icCost.toFixed(0)}</text>
-
-          {/* Requirements indicators */}
-          <text x={width/2} y={310} fill={colors.textPrimary} fontSize={12} textAnchor="middle" fontWeight="bold">
-            Purity Requirements
-          </text>
-
-          {/* Purity scale */}
-          <rect x={50} y={325} width={300} height={8} fill="#374151" rx={4} />
-
-          {/* Solar requirement marker */}
-          <rect x={50 + 6 * 30} y={325} width={4} height={16} fill={colors.solarPanel} />
-          <text x={50 + 6 * 30} y={355} fill={colors.solarPanel} fontSize={9} textAnchor="middle">6N</text>
-
-          {/* IC requirement marker */}
-          <rect x={50 + 9 * 30} y={325} width={4} height={16} fill={colors.chip} />
-          <text x={50 + 9 * 30} y={355} fill={colors.chip} fontSize={9} textAnchor="middle">9N+</text>
-
-          {/* Current purity marker */}
-          <polygon
-            points={`${50 + metrics.nines * 30 - 5},320 ${50 + metrics.nines * 30 + 5},320 ${50 + metrics.nines * 30},328`}
-            fill={colors.accent}
-          />
-          <text x={50 + metrics.nines * 30} y={370} fill={colors.accent} fontSize={9} textAnchor="middle">Current</text>
+          {/* Group: Purity scale */}
+          <g id="purity-scale-group">
+            <text x={width/2} y={310} fill={colors.textPrimary} fontSize={12} textAnchor="middle" fontWeight="bold">
+              Purity Requirements
+            </text>
+            <rect x={50} y={325} width={300} height={8} fill="#374151" rx={4} />
+            {/* Tick marks on purity scale */}
+            {[0,1,2,3,4,5,6,7,8,9,10].map(n => (
+              <line key={`pn-${n}`} x1={50 + n * 30} y1={323} x2={50 + n * 30} y2={333} stroke={colors.textMuted} opacity={0.4} />
+            ))}
+            <rect x={50 + 6 * 30} y={320} width={4} height={18} fill={colors.solarPanel} />
+            <text x={50 + 6 * 30} y={355} fill={colors.solarPanel} fontSize={11} textAnchor="middle">6N</text>
+            <rect x={50 + 9 * 30} y={320} width={4} height={18} fill={colors.chip} />
+            <text x={50 + 9 * 30} y={355} fill={colors.chip} fontSize={11} textAnchor="middle">9N+</text>
+            {/* Current purity marker with interactive highlight */}
+            <circle
+              cx={50 + metrics.nines * 30}
+              cy={329}
+              r={8}
+              fill={colors.accent}
+              stroke="#ffffff"
+              strokeWidth={2}
+              filter="url(#svgGlow)"
+            />
+            <text x={50 + metrics.nines * 30} y={372} fill={colors.accent} fontSize={11} textAnchor="middle">Current</text>
+          </g>
         </svg>
 
         {interactive && (
@@ -539,8 +566,8 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
   const renderControls = () => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Silicon Purity: {purityLevel.toFixed(6)}% ({calculateMetrics().nines.toFixed(1)} nines)
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+          Impurity concentration &amp; Purity: {purityLevel.toFixed(6)}% ({calculateMetrics().nines.toFixed(1)} nines)
         </label>
         <input
           type="range"
@@ -549,11 +576,11 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
           step="0.0000001"
           value={purityLevel}
           onChange={(e) => setPurityLevel(parseFloat(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', height: '24px', WebkitAppearance: 'none' as const, touchAction: 'pan-y', accentColor: colors.accent }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-          <span style={{ color: colors.textMuted, fontSize: '11px' }}>99% (2N)</span>
-          <span style={{ color: colors.textMuted, fontSize: '11px' }}>99.9999999% (9N)</span>
+          <span style={{ color: colors.textMuted, fontSize: '11px' }}>99% (2N) — High impurity concentration</span>
+          <span style={{ color: colors.textMuted, fontSize: '11px' }}>9N — Ultra-pure</span>
         </div>
       </div>
 
@@ -661,7 +688,8 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
             border: `1px solid ${colors.border}`,
             cursor: canBack ? 'pointer' : 'not-allowed',
             opacity: canBack ? 1 : 0.3,
-            minHeight: '44px'
+            minHeight: '44px',
+            transition: 'all 0.2s ease-out',
           }}
         >
           Back
@@ -696,7 +724,8 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
             cursor: canGoNext ? 'pointer' : 'not-allowed',
             opacity: canGoNext ? 1 : 0.4,
             boxShadow: canGoNext ? `0 2px 12px ${colors.accent}30` : 'none',
-            minHeight: '44px'
+            minHeight: '44px',
+            transition: 'all 0.2s ease-in-out',
           }}
         >
           {nextLabel}
@@ -710,7 +739,7 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '70px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '80px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Solar vs IC Silicon Purity
@@ -729,7 +758,7 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
               borderRadius: '12px',
               marginBottom: '16px',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6, fontWeight: '400' }}>
                 Both solar panels and computer chips are made from silicon. But do they
                 need the same level of purity? The answer reveals a fascinating economic
                 and physics tradeoff that shapes entire industries.
@@ -748,7 +777,7 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomBar(false, true, 'Begin: Make a Prediction')}
       </div>
     );
   }
@@ -758,7 +787,7 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '70px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '80px' }}>
           {renderVisualization(false)}
 
           <div style={{ padding: '16px' }}>
@@ -798,7 +827,7 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '70px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Purity Effects</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -818,6 +847,9 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
             padding: '16px',
             borderRadius: '12px',
           }}>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Silicon Purity is defined as</strong> the ratio of pure silicon atoms to total atoms, measured in "nines" (e.g., 99.9999% = 6N). The formula: <span style={{ fontFamily: 'monospace', color: colors.accent }}>defects = (1 - purity) × density</span>. Higher defects reduce carrier lifetime. This relationship between purity and performance is calculated using semiconductor physics equations.
+            </p>
             <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
             <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
               <li>Set purity to 99.9999% (6 nines) - good for solar, bad for ICs</li>
@@ -839,7 +871,7 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '70px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '80px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -865,19 +897,23 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
             <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Why ICs Need Higher Purity</h3>
             <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
               <p style={{ marginBottom: '12px' }}>
+                As you observed in the experiment, what happened when you increased purity was dramatic.
+                Your prediction was tested against real semiconductor physics.
+              </p>
+              <p style={{ marginBottom: '12px' }}>
+                <strong style={{ color: colors.textPrimary }}>The Formula:</strong> Leakage current ∝ impurity concentration.
+                The relationship is: defect_rate = (1 - purity) × transistor_density. This equation
+                explains why each additional "nine" of purity reduces defects by 10×.
+              </p>
+              <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Tiny Transistors:</strong> Modern
                 transistors are only 5-7nm wide. A single impurity atom can completely change
                 the electrical behavior.
               </p>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Leakage Current:</strong> Impurities
-                create unwanted conduction paths. With billions of transistors, even tiny leakage
-                per transistor adds up to significant power loss.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Solar Tolerance:</strong> Solar cells
                 just need electrons to flow from light absorption. Impurities reduce efficiency but
-                dont cause catastrophic failure.
+                don&apos;t cause catastrophic failure like they do in ICs.
               </p>
             </div>
           </div>
@@ -892,7 +928,7 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '70px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -939,7 +975,7 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '70px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Explore the Cost Curve</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -979,7 +1015,7 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '70px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '80px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1030,7 +1066,7 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '70px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1111,6 +1147,25 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
               )}
             </div>
           ))}
+          {/* Always-visible Got It / Continue button for transfer phase */}
+          <div style={{ padding: '16px', textAlign: 'center' }}>
+            <button
+              onClick={goNext}
+              style={{
+                padding: '12px 32px',
+                borderRadius: '8px',
+                border: 'none',
+                background: transferCompleted.size >= 4 ? colors.success : 'rgba(255,255,255,0.1)',
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: '15px',
+                fontWeight: 700,
+                transition: 'all 0.3s ease-in-out',
+              }}
+            >
+              {transferCompleted.size >= 4 ? 'Got It — Take the Test' : `Complete ${4 - transferCompleted.size} more to continue`}
+            </button>
+          </div>
         </div>
         {renderBottomBar(true, transferCompleted.size >= 4, 'Take the Test')}
       </div>
@@ -1164,7 +1219,7 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '70px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '80px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -1174,6 +1229,11 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
               {testQuestions.map((_, i) => (
                 <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
               ))}
+            </div>
+            <div style={{ background: 'rgba(245,158,11,0.08)', padding: '14px 20px', borderRadius: '10px', marginBottom: '12px', borderLeft: `3px solid ${colors.accent}` }}>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6 }}>
+                Scenario: You are a process engineer at a semiconductor foundry deciding whether to use 6N purity silicon (99.9999%) for a photovoltaic solar panel line or 9N purity silicon (99.9999999%) for an advanced microprocessor fabrication line. Understanding the relationship between purity, cost, and performance determines which material is appropriate for each application.
+              </p>
             </div>
             <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
               <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>

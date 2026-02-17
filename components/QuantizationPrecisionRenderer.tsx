@@ -555,6 +555,8 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
       return `url(#qprec${precType}Gradient)`;
     };
 
+    const precisions: Array<keyof typeof PRECISION_SPECS> = ['FP32', 'FP16', 'INT8', 'INT4'];
+
     return (
       <svg
         viewBox={`0 0 ${width} ${height}`}
@@ -722,243 +724,99 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
         <rect width={width} height={height} fill="url(#qprecLabBg)" />
         <rect width={width} height={height} fill="url(#qprecGrid)" />
 
-        {/* Grid reference lines for visual reference */}
+        {/* Grid reference lines */}
         <line x1="20" y1="100" x2="680" y2="100" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
         <line x1="20" y1="200" x2="680" y2="200" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
         <line x1="20" y1="300" x2="680" y2="300" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
-        <line x1="175" y1="0" x2="175" y2="400" stroke="#334155" strokeDasharray="4 4" opacity="0.2" />
-        <line x1="350" y1="0" x2="350" y2="400" stroke="#334155" strokeDasharray="4 4" opacity="0.2" />
-        <line x1="525" y1="0" x2="525" y2="400" stroke="#334155" strokeDasharray="4 4" opacity="0.2" />
 
-        {/* Interactive model-size indicator circle that moves with slider */}
-        {(() => {
-          // Position the circle in the title panel area based on modelSize
-          // modelSize goes 1-70, map to x range 50-650
-          const xPos = 50 + ((modelSize - 1) / 69) * 580;
-          // y is fixed in the title bar area (top panel)
-          const yPos = 8;
+        {/* ── TITLE ROW (y: 10–42) ── absolute flat coords */}
+        <rect x="20" y="10" width="660" height="32" rx="8" fill="url(#qprecPanelGlass)" stroke="#334155" strokeWidth="1" />
+        <text x="350" y="32" textAnchor="middle" fill="#f8fafc" fontSize="14" fontWeight="bold">
+          {precision} — {spec.bits}-bit Precision: {spec.range} dynamic range
+        </text>
+
+        {/* ── PRECISION COMPARISON BARS (y: 55–170) ── */}
+        <rect x="20" y="55" width="660" height="115" rx="10" fill="url(#qprecPanelGlass)" stroke="#334155" strokeWidth="1" />
+        {/* Header at y=75 (range 64–77) */}
+        <text x="35" y="75" fill="#94a3b8" fontSize="11" fontWeight="bold">MEMORY FOOTPRINT — {modelSize}B Parameter Model</text>
+        {/* Four precision bars, each 20px tall, starting y=90 */}
+        {precisions.map((p, i) => {
+          const pSpec = PRECISION_SPECS[p];
+          const memGB = (modelSize * 4 * pSpec.memoryRatio).toFixed(1);
+          const barWidth = 380 * pSpec.memoryRatio;
+          const isActive = p === precision;
+          const rowY = 90 + i * 20;
           return (
-            <circle
-              cx={xPos}
-              cy={yPos}
-              r={8}
-              fill={spec.color}
-              stroke="white"
-              strokeWidth="2"
-              filter="url(#qprecBitGlow)"
-              opacity="0.9"
-            />
-          );
-        })()}
-
-        {/* Main Title Panel */}
-        <g transform="translate(20, 5)">
-          <rect x="0" y="0" width="660" height="30" rx="8" fill="url(#qprecPanelGlass)" stroke="#334155" strokeWidth="1" />
-          <text x="330" y="20" textAnchor="middle" fill="#f8fafc" fontSize="14" fontWeight="bold">
-            {precision} — {spec.bits}-bit Precision
-          </text>
-          <rect x="10" y="27" width="640" height="2" rx="1" fill={`url(#qprec${precision}Gradient)`} opacity="0.6" />
-        </g>
-
-        {/* Bit Representation Panel */}
-        <g transform="translate(20, 70)">
-          <rect x="0" y="0" width="450" height="120" rx="10" fill="url(#qprecPanelGlass)" stroke="#334155" strokeWidth="1" filter="url(#qprecPanelShadow)" />
-          <text x="15" y="22" fill="#94a3b8" fontSize="11" fontWeight="bold" textTransform="uppercase" letterSpacing="0.1em">
-            Binary Representation
-          </text>
-
-          {/* Bit boxes with color coding */}
-          <g transform="translate(15, 35)">
-            {bits.map((bit, i) => (
-              <g key={i}>
-                <rect
-                  x={i * (bitWidth + bitSpacing)}
-                  y="0"
-                  width={bitWidth}
-                  height="35"
-                  rx="3"
-                  fill={bit ? getBitColor(i, bits.length, precision) : 'rgba(255,255,255,0.05)'}
-                  stroke={bit ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)'}
-                  strokeWidth="1"
-                  filter={bit ? 'url(#qprecBitGlow)' : undefined}
-                />
-                <text
-                  x={i * (bitWidth + bitSpacing) + bitWidth / 2}
-                  y="23"
-                  textAnchor="middle"
-                  fill={bit ? '#ffffff' : '#475569'}
-                  fontSize="11"
-                  fontWeight="bold"
-                  fontFamily="monospace"
-                >
-                  {bit ? '1' : '0'}
-                </text>
-              </g>
-            ))}
-          </g>
-
-          {/* Bit section legend for floating point */}
-          {(precision === 'FP32' || precision === 'FP16') && (
-            <g transform="translate(15, 85)">
-              <rect x="0" y="0" width="10" height="10" rx="2" fill="url(#qprecSignBit)" />
-              <text x="14" y="9" fill="#94a3b8" fontSize="11">Sign</text>
-              <rect x="60" y="0" width="10" height="10" rx="2" fill="url(#qprecExponentBit)" />
-              <text x="74" y="9" fill="#94a3b8" fontSize="11">Exponent</text>
-              <rect x="155" y="0" width="10" height="10" rx="2" fill="url(#qprecMantissaBit)" />
-              <text x="169" y="9" fill="#94a3b8" fontSize="11">Mantissa</text>
+            <g key={p}>
+              <text x="35" y={rowY + 13} fill={isActive ? pSpec.color : '#64748b'} fontSize="11" fontWeight={isActive ? 'bold' : 'normal'}>{p}</text>
+              <rect x="80" y={rowY} width="380" height="14" rx="3" fill="rgba(255,255,255,0.05)" />
+              <rect x="80" y={rowY} width={barWidth} height="14" rx="3" fill={`url(#qprec${p}Gradient)`} opacity={isActive ? 1 : 0.5} filter={isActive ? 'url(#qprecBitGlow)' : undefined} />
+              <text x="470" y={rowY + 13} fill={isActive ? '#f8fafc' : '#64748b'} fontSize="11">{memGB} GB</text>
             </g>
-          )}
+          );
+        })}
 
-          {/* Bit count info */}
-          <text x="435" y="60" textAnchor="end" fill="#64748b" fontSize="11">
-            {bits.length} bits = {Math.pow(2, bits.length).toLocaleString()} values
-          </text>
-        </g>
-
-        {/* Precision Stats Panel */}
-        <g transform="translate(480, 70)">
-          <rect x="0" y="0" width="200" height="120" rx="10" fill="url(#qprecPanelGlass)" stroke="#334155" strokeWidth="1" filter="url(#qprecPanelShadow)" />
-          <text x="15" y="22" fill="#94a3b8" fontSize="11" fontWeight="bold" letterSpacing="0.1em">
-            PRECISION SPECS
-          </text>
-
-          <text x="15" y="48" fill="#64748b" fontSize="11">Dynamic Range:</text>
-          <text x="185" y="48" textAnchor="end" fill={spec.color} fontSize="11" fontWeight="bold">{spec.range}</text>
-
-          <text x="15" y="70" fill="#64748b" fontSize="11">Memory Ratio:</text>
-          <text x="185" y="70" textAnchor="end" fill="#10b981" fontSize="12" fontWeight="bold">{(spec.memoryRatio * 100).toFixed(0)}%</text>
-
-          <text x="15" y="92" fill="#64748b" fontSize="11">Speed Multiplier:</text>
-          <text x="185" y="92" textAnchor="end" fill="#06b6d4" fontSize="12" fontWeight="bold">{spec.speedRatio}x</text>
-
-          <rect x="10" y="102" width="180" height="8" rx="4" fill="rgba(255,255,255,0.05)" />
-          <rect x="10" y="102" width={180 * spec.memoryRatio} height="8" rx="4" fill={`url(#qprec${precision}Gradient)`} />
-        </g>
-
-        {/* Value Comparison Panel */}
-        <g transform="translate(20, 200)">
-          <rect x="0" y="0" width="320" height="100" rx="10" fill="url(#qprecPanelGlass)" stroke="#334155" strokeWidth="1" filter="url(#qprecPanelShadow)" />
-          <text x="15" y="22" fill="#94a3b8" fontSize="11" fontWeight="bold" letterSpacing="0.1em">
-            VALUE COMPARISON
-          </text>
-
-          <g transform="translate(15, 40)">
-            <text x="0" y="0" fill="#64748b" fontSize="11">Original (FP32):</text>
-            <text x="180" y="0" fill="#3b82f6" fontSize="14" fontWeight="bold" filter="url(#qprecValueGlow)">{originalValue.toFixed(6)}</text>
-
-            <text x="0" y="28" fill="#64748b" fontSize="11">Quantized ({precision}):</text>
-            <text x="180" y="28" fill={spec.color} fontSize="14" fontWeight="bold" filter="url(#qprecValueGlow)">
-              {quantizedValues[precision].toFixed(precision === 'INT4' ? 3 : precision === 'INT8' ? 4 : 6)}
+        {/* ── VALUE & ACCURACY PANEL (y: 185–285) ── */}
+        <rect x="20" y="185" width="320" height="100" rx="10" fill="url(#qprecPanelGlass)" stroke="#334155" strokeWidth="1" />
+        {/* Header at y=205 (range 194–207) */}
+        <text x="35" y="205" fill="#94a3b8" fontSize="11" fontWeight="bold">VALUE COMPARISON</text>
+        <text x="35" y="230" fill="#64748b" fontSize="11">Original (FP32):</text>
+        <text x="200" y="230" fill="#3b82f6" fontSize="13" fontWeight="bold">{originalValue.toFixed(6)}</text>
+        <text x="35" y="252" fill="#64748b" fontSize="11">Quantized ({precision}):</text>
+        <text x="200" y="252" fill={spec.color} fontSize="13" fontWeight="bold">
+          {quantizedValues[precision].toFixed(precision === 'INT4' ? 3 : precision === 'INT8' ? 4 : 6)}
+        </text>
+        {showQuantizationError && (
+          <>
+            <text x="35" y="274" fill="#64748b" fontSize="11">Quantization Error:</text>
+            <text x="200" y="274" fill={quantizationError > 1 ? colors.warning : colors.success} fontSize="13" fontWeight="bold">
+              {quantizationError.toFixed(3)}%
             </text>
+          </>
+        )}
 
-            {showQuantizationError && (
-              <>
-                <text x="0" y="56" fill="#64748b" fontSize="11">Quantization Error:</text>
-                <text
-                  x="180"
-                  y="56"
-                  fill={quantizationError > 1 ? colors.warning : colors.success}
-                  fontSize="14"
-                  fontWeight="bold"
-                  filter="url(#qprecValueGlow)"
-                >
-                  {quantizationError.toFixed(3)}%
-                </text>
-              </>
-            )}
-          </g>
-        </g>
+        {/* ── ACCURACY / SPEED PANEL (y: 185–285) ── */}
+        <rect x="360" y="185" width="320" height="100" rx="10" fill="url(#qprecPanelGlass)" stroke="#334155" strokeWidth="1" />
+        {/* Header at y=205 (range 194–207) — same y as left panel is OK since x ranges don't overlap */}
+        <text x="375" y="205" fill="#94a3b8" fontSize="11" fontWeight="bold">ACCURACY vs SPEED</text>
+        {/* Accuracy circle */}
+        <circle cx="420" cy="248" r="22" fill="url(#qprecAccuracyGlow)" opacity={0.8} />
+        <circle cx="420" cy="248" r="15" fill="#15803d" stroke="#22c55e" strokeWidth="2" />
+        <text x="420" y="253" textAnchor="middle" fill="#ffffff" fontSize="11" fontWeight="bold">{(100 - quantizationError).toFixed(0)}%</text>
+        <text x="420" y="278" textAnchor="middle" fill="#22c55e" fontSize="11">Accuracy</text>
+        {/* Speed circle */}
+        <circle cx="510" cy="248" r="22" fill="url(#qprecPerformanceGlow)" opacity={0.8} />
+        <circle cx="510" cy="248" r="15" fill="#92400e" stroke="#f59e0b" strokeWidth="2" />
+        <text x="510" y="253" textAnchor="middle" fill="#ffffff" fontSize="11" fontWeight="bold">{spec.speedRatio}x</text>
+        <text x="510" y="278" textAnchor="middle" fill="#f59e0b" fontSize="11">Speed</text>
+        {/* Arrow */}
+        <text x="600" y="248" textAnchor="middle" fill="#64748b" fontSize="11">Lower prec.</text>
+        <text x="600" y="265" textAnchor="middle" fill="#64748b" fontSize="11">= faster</text>
 
-        {/* Accuracy vs Performance Tradeoff Indicators */}
-        <g transform="translate(350, 200)">
-          <rect x="0" y="0" width="330" height="100" rx="10" fill="url(#qprecPanelGlass)" stroke="#334155" strokeWidth="1" filter="url(#qprecPanelShadow)" />
-          <text x="15" y="22" fill="#94a3b8" fontSize="11" fontWeight="bold" letterSpacing="0.1em">
-            ACCURACY / PERFORMANCE TRADEOFF
-          </text>
-
-          {/* Accuracy indicator */}
-          <g transform="translate(30, 55)">
-            <circle cx="25" cy="15" r="22" fill="url(#qprecAccuracyGlow)" filter="url(#qprecPulse)" opacity={1 - (quantizationError / 5)}>
-              <animate attributeName="opacity" values={`${1 - quantizationError/5};${0.7 - quantizationError/5};${1 - quantizationError/5}`} dur="2s" repeatCount="indefinite" />
-            </circle>
-            <circle cx="25" cy="15" r="15" fill="#15803d" stroke="#22c55e" strokeWidth="2" />
-            <text x="25" y="20" textAnchor="middle" fill="#ffffff" fontSize="11" fontWeight="bold">
-              {(100 - quantizationError).toFixed(0)}%
-            </text>
-            <text x="25" y="50" textAnchor="middle" fill="#22c55e" fontSize="11" fontWeight="bold">Accuracy</text>
-          </g>
-
-          {/* Performance indicator */}
-          <g transform="translate(120, 55)">
-            <circle cx="25" cy="15" r="22" fill="url(#qprecPerformanceGlow)" filter="url(#qprecPulse)" opacity={spec.speedRatio / 10}>
-              <animate attributeName="opacity" values={`${spec.speedRatio/10};${spec.speedRatio/12};${spec.speedRatio/10}`} dur="1.5s" repeatCount="indefinite" />
-            </circle>
-            <circle cx="25" cy="15" r="15" fill="#92400e" stroke="#f59e0b" strokeWidth="2" />
-            <text x="25" y="20" textAnchor="middle" fill="#ffffff" fontSize="11" fontWeight="bold">
-              {spec.speedRatio}x
-            </text>
-            <text x="25" y="50" textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="bold">Speed</text>
-          </g>
-
-          {/* Tradeoff arrow indicator */}
-          <g transform="translate(200, 40)">
-            <line x1="0" y1="25" x2="100" y2="25" stroke="#475569" strokeWidth="2" strokeDasharray="4 2" />
-            <polygon points="100,25 90,20 90,30" fill="#475569" />
-            <text x="50" y="15" textAnchor="middle" fill="#64748b" fontSize="11">Lower precision</text>
-            <text x="50" y="55" textAnchor="middle" fill="#64748b" fontSize="11">Better performance</text>
-          </g>
-        </g>
-
-        {/* Memory Footprint Visualization */}
-        <g transform="translate(20, 310)">
-          <rect x="0" y="0" width="660" height="80" rx="10" fill="url(#qprecPanelGlass)" stroke="#334155" strokeWidth="1" filter="url(#qprecPanelShadow)" />
-          <text x="15" y="22" fill="#94a3b8" fontSize="11" fontWeight="bold" letterSpacing="0.1em">
-            MEMORY FOOTPRINT ({modelSize}B Parameter Model)
-          </text>
-
-          {/* Memory bars for all precisions */}
-          <g transform="translate(15, 35)">
-            {(['FP32', 'FP16', 'INT8', 'INT4'] as const).map((p, i) => {
-              const pSpec = PRECISION_SPECS[p];
-              const memGB = (modelSize * 4 * pSpec.memoryRatio).toFixed(1);
-              const barWidth = 400 * pSpec.memoryRatio;
-              const isActive = p === precision;
-              return (
-                <g key={p} transform={`translate(0, ${i * 14})`}>
-                  <text x="0" y="8" fill={isActive ? pSpec.color : '#64748b'} fontSize="11" fontWeight={isActive ? 'bold' : 'normal'}>{p}</text>
-                  <rect x="40" y="0" width="400" height="8" rx="2" fill="rgba(255,255,255,0.05)" />
-                  <rect
-                    x="40"
-                    y="0"
-                    width={barWidth}
-                    height="8"
-                    rx="2"
-                    fill={`url(#qprec${p}Gradient)`}
-                    opacity={isActive ? 1 : 0.5}
-                    filter={isActive ? 'url(#qprecBitGlow)' : undefined}
-                  />
-                  <text x="450" y="8" fill={isActive ? '#f8fafc' : '#64748b'} fontSize="11" fontWeight={isActive ? 'bold' : 'normal'}>
-                    {memGB} GB
-                  </text>
-                  {isActive && (
-                    <circle cx="500" cy="4" r="4" fill={pSpec.color}>
-                      <animate attributeName="opacity" values="1;0.5;1" dur="1s" repeatCount="indefinite" />
-                    </circle>
-                  )}
-                </g>
-              );
-            })}
-          </g>
-
-          {/* Savings indicator */}
-          <g transform="translate(540, 35)">
-            <rect x="0" y="0" width="105" height="35" rx="6" fill="rgba(16, 185, 129, 0.1)" stroke="#10b981" strokeWidth="1" />
-            <text x="52" y="15" textAnchor="middle" fill="#10b981" fontSize="11">Memory Saved</text>
-            <text x="52" y="30" textAnchor="middle" fill="#22c55e" fontSize="14" fontWeight="bold">
-              {((1 - spec.memoryRatio) * 100).toFixed(0)}%
-            </text>
-          </g>
-        </g>
+        {/* ── PRECISION CURVE (y: 300–390) ── Interactive visualization */}
+        <rect x="20" y="300" width="660" height="90" rx="10" fill="url(#qprecPanelGlass)" stroke="#334155" strokeWidth="1" />
+        <text x="35" y="320" fill="#94a3b8" fontSize="11" fontWeight="bold">PRECISION CURVE — Quantization intensity</text>
+        {/* Curve spanning full vertical range of this panel */}
+        <path
+          d={`M 40 388 L 80 370 L 120 355 L 160 ${330 + (1 - spec.memoryRatio) * 40} L 200 ${330 + (1 - spec.memoryRatio) * 35} L 240 ${320 + (1 - spec.memoryRatio) * 35} L 280 ${315 + (1 - spec.memoryRatio) * 30} L 320 ${310 + (1 - spec.memoryRatio) * 25} L 360 ${308 + (1 - spec.memoryRatio) * 20} L 400 305 L 440 302 L 480 300 L 520 298 L 560 296 L 600 288 L 640 ${310 + spec.memoryRatio * 30}`}
+          fill="none"
+          stroke={spec.color}
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          opacity="0.85"
+        />
+        {/* Interactive point */}
+        <circle
+          cx={350 + (modelSize / 70) * 250}
+          cy={350 - (modelSize / 70) * 40}
+          r={9}
+          fill={spec.color}
+          stroke="#ffffff"
+          strokeWidth="2"
+          filter="url(#qprecBitGlow)"
+        />
+        <text x="35" y="392" fill="#64748b" fontSize="11">Low precision</text>
+        <text x="645" y="392" textAnchor="end" fill="#64748b" fontSize="11">High precision</text>
       </svg>
     );
   };
@@ -1152,7 +1010,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
   // Phase renders
   const renderHook = () => (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '100px' }}>
         <div style={{ textAlign: 'center', marginBottom: '24px', maxWidth: '672px', margin: '0 auto 24px' }}>
           <div style={{
             display: 'inline-block',
@@ -1202,7 +1060,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
           </div>
         </div>
       </div>
-      {renderBottomBar(true, 'Make a Prediction')}
+      {renderBottomBar(true, 'Start Predicting')}
     </div>
   );
 
@@ -1216,7 +1074,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
 
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', padding: '24px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '100px' }}>
           <h2 style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 800, textAlign: 'center', marginBottom: '16px' }}>
             Make Your Prediction
           </h2>
@@ -1304,7 +1162,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
 
   const renderPlay = () => (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '100px' }}>
         <h2 style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 800, textAlign: 'center', marginBottom: '16px' }}>
           Quantization Lab
         </h2>
@@ -1354,7 +1212,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
 
   const renderReview = () => (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '100px' }}>
         <h2 style={{ color: colors.textPrimary, fontSize: '24px', textAlign: 'center', marginBottom: '24px' }}>
           Understanding Quantization
         </h2>
@@ -1407,7 +1265,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
 
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', padding: '24px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '100px' }}>
           <h2 style={{ color: colors.warning, fontSize: '24px', fontWeight: 800, textAlign: 'center', marginBottom: '8px' }}>
             The Twist: Layer Sensitivity
           </h2>
@@ -1503,7 +1361,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
 
   const renderTwistPlay = () => (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '100px' }}>
         <h2 style={{ color: colors.warning, fontSize: '24px', textAlign: 'center', marginBottom: '16px' }}>
           Layer Sensitivity Lab
         </h2>
@@ -1572,7 +1430,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
 
   const renderTwistReview = () => (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '100px' }}>
         <h2 style={{ color: colors.warning, fontSize: '24px', textAlign: 'center', marginBottom: '24px' }}>
           Mixed-Precision Strategy
         </h2>
@@ -1617,7 +1475,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
 
   const renderTransfer = () => (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '100px' }}>
         <h2 style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 800, textAlign: 'center', marginBottom: '8px' }}>
           Real-World Applications
         </h2>

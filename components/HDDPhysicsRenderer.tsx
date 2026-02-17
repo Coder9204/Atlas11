@@ -787,7 +787,6 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
           <g transform={`translate(${headX}, ${headY + 18})`} data-fly-height={flyHeight}>
             <line x1={0} y1={0} x2={0} y2={flyHeight + 8} stroke={flyHeight < 5 ? colors.error : colors.warning} strokeWidth={1} strokeDasharray="3,2" />
             <circle cx={0} cy={flyHeight + 8} r={flyHeight < 5 ? 4 : 2} fill={flyHeight < 5 ? colors.error : colors.warning} />
-            <text x={8} y={flyHeight + 12} fill={flyHeight < 5 ? colors.error : colors.textSecondary} fontSize="9">{flyHeight}nm</text>
           </g>
 
           {/* Performance metrics panel */}
@@ -827,25 +826,28 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
           <rect x={66} y={271} width={4} height={10} rx={1} fill="#166534" />
 
           {/* SVG Text Labels for Legend and Components */}
-          <text x={85} y={283} fill={colors.ssd} fontSize="11" fontWeight="bold">SSD Comparison</text>
+          <text x={85} y={283} fill={colors.ssd} fontSize="11" fontWeight="bold">SSD Speed Comparison</text>
 
-          {/* Component labels */}
-          <text x={centerX} y={centerY + platterRadius + 15} fill={colors.textSecondary} fontSize="10" textAnchor="middle">Magnetic Platter</text>
-          <text x={280} y={125} fill={colors.textSecondary} fontSize="9" textAnchor="middle">Arm Pivot</text>
-          <text x={headX + 25} y={headY - 10} fill={colors.textSecondary} fontSize="9">Read/Write Head</text>
-          <text x={centerX} y={centerY + 5} fill={colors.textSecondary} fontSize="8" textAnchor="middle">Spindle</text>
+          {/* Component labels - moved to avoid overlaps */}
+          <text x={centerX} y={centerY + platterRadius + 28} fill={colors.textSecondary} fontSize="11" textAnchor="middle">Magnetic Platter</text>
+          <text x={280} y={138} fill={colors.textSecondary} fontSize="11" textAnchor="middle">Arm Pivot</text>
+          <text x={headX + 30} y={headY - 15} fill={colors.textSecondary} fontSize="11">Read/Write Head</text>
+          <text x={centerX} y={centerY + 18} fill={colors.textSecondary} fontSize="11" textAnchor="middle">Spindle</text>
 
-          {/* Legend panel */}
+          {/* Axis labels */}
+          <text x={centerX} y={8} fill={colors.textSecondary} fontSize="11" textAnchor="middle" fontWeight="600">HDD Velocity &amp; Position</text>
+          <text x={5} y={centerY} fill={colors.textSecondary} fontSize="11" textAnchor="start" transform={`rotate(-90, 5, ${centerY})`}>Speed (RPM)</text>
+
+          {/* Legend panel - repositioned to avoid overlaps */}
           <g transform="translate(295, 35)" data-drive-rpm={drive.rpm} data-fly-height={flyHeight} data-sequential={isSequential}>
-            <text x={0} y={10} fill={colors.textPrimary} fontSize="10" fontWeight="bold">Performance</text>
-            <text x={0} y={28} fill={colors.textSecondary} fontSize="8">Seek: {effectiveSeekTime.toFixed(1)}ms</text>
-            <text x={0} y={50} fill={colors.textSecondary} fontSize="8">Latency: {rotationLatency.toFixed(1)}ms</text>
-            <text x={0} y={72} fill={colors.warning} fontSize="8">Total: {totalAccessTime.toFixed(1)}ms</text>
-            <text x={0} y={94} fill={colors.success} fontSize="8">IOPS: {randomIOPS.toFixed(0)}</text>
-            <text x={0} y={116} fill={colors.success} fontSize="8">Seq: {drive.throughput}MB/s</text>
-            <text x={0} y={138} fill={isSequential ? colors.success : colors.error} fontSize="8">{isSequential ? 'Sequential' : 'Random'}</text>
-            <text x={0} y={158} fill={colors.textSecondary} fontSize="8">RPM: {drive.rpm}</text>
-            <text x={0} y={176} fill={flyHeight < 5 ? colors.error : colors.textSecondary} fontSize="8">Fly: {flyHeight}nm</text>
+            <text x={0} y={11} fill={colors.textPrimary} fontSize="11" fontWeight="bold">Performance</text>
+            <text x={0} y={30} fill={colors.textSecondary} fontSize="11">Seek: {effectiveSeekTime.toFixed(1)}ms</text>
+            <text x={0} y={49} fill={colors.textSecondary} fontSize="11">Latency: {rotationLatency.toFixed(1)}ms</text>
+            <text x={0} y={68} fill={colors.warning} fontSize="11">Total: {totalAccessTime.toFixed(1)}ms</text>
+            <text x={0} y={87} fill={colors.success} fontSize="11">IOPS: {randomIOPS.toFixed(0)}</text>
+            <text x={0} y={106} fill={colors.success} fontSize="11">Seq: {drive.throughput}MB/s</text>
+            <text x={0} y={125} fill={isSequential ? colors.success : colors.error} fontSize="11">{isSequential ? 'Sequential' : 'Random'}</text>
+            <text x={0} y={144} fill={colors.textSecondary} fontSize="11">RPM: {drive.rpm}</text>
           </g>
         </svg>
 
@@ -972,7 +974,8 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
           max={driveTypes.length - 1}
           step="1"
           value={driveTypeIndex}
-          onChange={(e) => setDriveTypeIndex(parseInt(e.target.value))}
+          onChange={(e) => setDriveTypeIndex(Math.round(parseFloat(e.target.value)))}
+          onInput={(e) => setDriveTypeIndex(Math.round(parseFloat((e.target as HTMLInputElement).value)))}
           aria-label="Drive speed slider"
           style={{
             width: '100%',
@@ -980,7 +983,9 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
             WebkitTapHighlightColor: 'transparent',
             accentColor: colors.accent,
             cursor: 'pointer',
-            height: '8px',
+            height: '20px',
+            touchAction: 'pan-y',
+            WebkitAppearance: 'none',
           }}
         />
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -1069,14 +1074,17 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
           max="20"
           step="1"
           value={flyHeight}
-          onChange={(e) => setFlyHeight(parseInt(e.target.value))}
+          onChange={(e) => setFlyHeight(Math.round(parseFloat(e.target.value)))}
+          onInput={(e) => setFlyHeight(Math.round(parseFloat((e.target as HTMLInputElement).value)))}
           aria-label="Fly height slider"
           style={{
             width: '100%',
             WebkitTapHighlightColor: 'transparent',
             accentColor: colors.accent,
             cursor: 'pointer',
-            height: '8px',
+            height: '20px',
+            touchAction: 'pan-y',
+            WebkitAppearance: 'none',
           }}
         />
         {flyHeight < 5 && (
@@ -1206,7 +1214,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
     if (phase === 'hook') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '48px' }}>
             <div style={{ padding: '24px', textAlign: 'center' }}>
               <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px', fontWeight: 700 }}>
                 Hard Drive Read Physics
@@ -1274,7 +1282,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
     if (phase === 'predict') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '48px' }}>
             {renderVisualization(false)}
 
             <div style={{
@@ -1327,7 +1335,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
     if (phase === 'play') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '48px' }}>
             <div style={{ padding: '16px', textAlign: 'center' }}>
               <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>Explore HDD Mechanics</h2>
               <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
@@ -1379,7 +1387,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
 
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '48px' }}>
             <div style={{
               background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1433,7 +1441,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
     if (phase === 'twist_predict') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '48px' }}>
             <div style={{ padding: '16px', textAlign: 'center' }}>
               <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
               <p style={{ color: colors.textSecondary }}>
@@ -1493,7 +1501,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
     if (phase === 'twist_play') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '48px' }}>
             <div style={{ padding: '16px', textAlign: 'center' }}>
               <h2 style={{ color: colors.warning, marginBottom: '8px', fontWeight: 700 }}>Head Crash Physics</h2>
               <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
@@ -1546,7 +1554,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
 
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '48px' }}>
             <div style={{
               background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1600,7 +1608,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
     if (phase === 'transfer') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '48px' }}>
             <div style={{ padding: '16px' }}>
               <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center', fontWeight: 700 }}>
                 Real-World Applications
@@ -1721,7 +1729,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
       if (testSubmitted) {
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '48px' }}>
               <div style={{
                 background: testScore >= 7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
                 margin: '16px',
@@ -1764,7 +1772,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
       const currentQ = testQuestions[currentTestQuestion];
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '48px' }}>
             <div style={{ padding: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <h2 style={{ color: colors.textPrimary, fontWeight: 700 }}>Knowledge Test</h2>
@@ -1895,7 +1903,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
     if (phase === 'mastery') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '48px' }}>
             <div style={{ padding: '24px', textAlign: 'center' }}>
               <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
               <h1 style={{ color: colors.success, marginBottom: '8px', fontWeight: 700 }}>Mastery Achieved!</h1>

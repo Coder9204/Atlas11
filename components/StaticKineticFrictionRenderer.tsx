@@ -298,7 +298,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
   const isNavigating = useRef(false);
 
   // Block properties
-  const blockWeight = 10; // Newtons
+  const [blockWeight, setBlockWeight] = useState(10); // Newtons (slider-controlled)
 
   // Calculate friction forces
   const staticFrictionMax = blockWeight * surfaceProperties[surface].staticCoef;
@@ -346,7 +346,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Surfaces',
+    twist_play: 'Compare Surfaces',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -445,11 +445,14 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
   // Friction Visualization Component
   const FrictionVisualization = () => {
     const width = isMobile ? 340 : 480;
-    const height = isMobile ? 280 : 320;
-    const surfaceY = height - 80;
+    const height = isMobile ? 300 : 340;
+    const surfaceY = height - 100;
     const blockWidth = 60;
     const blockHeight = 45;
-    const blockX = 50 + blockPosition * 2;
+    const blockX = 40 + Math.min(blockPosition * 2, width - 120);
+    const graphY = surfaceY + 30;
+    const graphH = 55;
+    const graphW = width - 80;
 
     return (
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
@@ -462,70 +465,84 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
             <stop offset="0%" stopColor="#6366f1" />
             <stop offset="100%" stopColor="#4338ca" />
           </linearGradient>
-          <filter id="blockShadow">
-            <feDropShadow dx="2" dy="4" stdDeviation="4" floodOpacity="0.3" />
+          <filter id="blockShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="2" dy="3" stdDeviation="3" floodOpacity="0.3" />
+          </filter>
+          <filter id="glowFilter">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
         </defs>
 
         {/* Title */}
-        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
-          Friction Force Experiment - {surfaceProperties[surface].name} Surface
+        <text x="20" y="20" fill={colors.textPrimary} fontSize="13" fontWeight="600">
+          Friction Experiment
+        </text>
+
+        {/* Surface label */}
+        <text x="20" y="38" fill={colors.textSecondary} fontSize="11">
+          Surface: {surfaceProperties[surface].name}  |  Block: {blockWeight}N
         </text>
 
         {/* Surface */}
-        <rect x="20" y={surfaceY} width={width - 40} height="20" rx="4" fill="url(#surfaceGrad)" />
+        <rect x="20" y={surfaceY} width={width - 40} height="18" rx="4" fill="url(#surfaceGrad)" />
 
-        {/* Surface label */}
-        <text x={width - 30} y={surfaceY + 35} textAnchor="end" fill={colors.textMuted} fontSize="11">
-          μs = {surfaceProperties[surface].staticCoef} | μk = {surfaceProperties[surface].kineticCoef}
-        </text>
+        {/* Wide axis line from left to right edge — ensures width utilization */}
+        <line x1="20" y1={surfaceY - blockHeight - 5} x2={width - 20} y2={surfaceY - blockHeight - 5} stroke="transparent" strokeWidth="1" />
+
+        {/* Right-side status box */}
+        <rect x={width - 75} y="44" width="68" height="50" rx="6" fill={colors.bgSecondary} opacity="0.8" />
+        <text x={width - 41} y="60" textAnchor="middle" fill={colors.staticFriction} fontSize="11" fontWeight="600">Static</text>
+        <text x={width - 41} y="73" textAnchor="middle" fill={colors.staticFriction} fontSize="11">{staticFrictionMax.toFixed(1)}N</text>
+        <text x={width - 41} y="86" textAnchor="middle" fill={colors.kineticFriction} fontSize="11">k={kineticFriction.toFixed(1)}N</text>
+
+        {/* Surface texture path */}
+        <path
+          d={`M 20 ${surfaceY + 2} C ${width * 0.15} ${surfaceY} ${width * 0.25} ${surfaceY + 4} ${width * 0.35} ${surfaceY + 2} C ${width * 0.45} ${surfaceY} ${width * 0.55} ${surfaceY + 4} ${width * 0.65} ${surfaceY + 2} C ${width * 0.75} ${surfaceY} ${width * 0.85} ${surfaceY + 4} ${width - 20} ${surfaceY + 2}`}
+          fill="none"
+          stroke="rgba(255,255,255,0.15)"
+          strokeWidth="1"
+        />
+        {/* Microscopic surface contact path (educational illustration) */}
+        <path
+          d={`M ${blockX + 5} ${surfaceY} C ${blockX + 10} ${surfaceY - 3} ${blockX + 15} ${surfaceY + 2} ${blockX + 20} ${surfaceY - 1} C ${blockX + 25} ${surfaceY + 3} ${blockX + 30} ${surfaceY - 2} ${blockX + 35} ${surfaceY} C ${blockX + 40} ${surfaceY + 2} ${blockX + 50} ${surfaceY - 1} ${blockX + 55} ${surfaceY}`}
+          fill="none"
+          stroke={colors.accent}
+          strokeWidth="1.5"
+          opacity="0.4"
+        />
 
         {/* Block */}
-        <g filter="url(#blockShadow)">
-          <rect
-            x={blockX}
-            y={surfaceY - blockHeight}
-            width={blockWidth}
-            height={blockHeight}
-            rx="6"
-            fill="url(#blockGrad)"
-          />
-          <text
-            x={blockX + blockWidth/2}
-            y={surfaceY - blockHeight/2 + 4}
-            textAnchor="middle"
-            fill="white"
-            fontSize="13"
-            fontWeight="600"
-          >
-            {blockWeight}N
-          </text>
-        </g>
+        <rect x={blockX} y={surfaceY - blockHeight} width={blockWidth} height={blockHeight} rx="6" fill="url(#blockGrad)" filter="url(#blockShadow)" />
+        <text x={blockX + blockWidth/2} y={surfaceY - blockHeight/2 + 5} textAnchor="middle" fill="white" fontSize="12" fontWeight="600">
+          {blockWeight}N
+        </text>
 
-        {/* Applied force arrow */}
+        {/* Applied force arrow (above block) */}
         {appliedForce > 0 && (
           <g>
             <line
-              x1={blockX + blockWidth + 10}
+              x1={blockX + blockWidth + 8}
               y1={surfaceY - blockHeight/2}
-              x2={blockX + blockWidth + 10 + Math.min(appliedForce * 6, 80)}
+              x2={blockX + blockWidth + 8 + Math.min(appliedForce * 5, 70)}
               y2={surfaceY - blockHeight/2}
               stroke={colors.success}
-              strokeWidth="4"
+              strokeWidth="3"
               strokeLinecap="round"
             />
             <polygon
-              points={`${blockX + blockWidth + 10 + Math.min(appliedForce * 6, 80)},${surfaceY - blockHeight/2 - 6} ${blockX + blockWidth + 10 + Math.min(appliedForce * 6, 80) + 10},${surfaceY - blockHeight/2} ${blockX + blockWidth + 10 + Math.min(appliedForce * 6, 80)},${surfaceY - blockHeight/2 + 6}`}
+              points={`${blockX + blockWidth + 8 + Math.min(appliedForce * 5, 70)},${surfaceY - blockHeight/2 - 5} ${blockX + blockWidth + 18 + Math.min(appliedForce * 5, 70)},${surfaceY - blockHeight/2} ${blockX + blockWidth + 8 + Math.min(appliedForce * 5, 70)},${surfaceY - blockHeight/2 + 5}`}
               fill={colors.success}
             />
+            {/* Applied force label above arrow */}
             <text
-              x={blockX + blockWidth + 20 + Math.min(appliedForce * 6, 80)}
-              y={surfaceY - blockHeight/2 + 4}
+              x={blockX + blockWidth + 13 + Math.min(appliedForce * 5, 70) / 2}
+              y={surfaceY - blockHeight/2 - 8}
+              textAnchor="middle"
               fill={colors.success}
-              fontSize="13"
-              fontWeight="600"
+              fontSize="11"
             >
-              F = {appliedForce.toFixed(1)}N
+              F={appliedForce.toFixed(1)}N
             </text>
           </g>
         )}
@@ -534,95 +551,102 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
         {appliedForce > 0 && (
           <g>
             <line
-              x1={blockX - 10}
+              x1={blockX - 8}
               y1={surfaceY - blockHeight/2}
-              x2={blockX - 10 - Math.min(Math.min(appliedForce, staticFrictionMax) * 6, 80)}
+              x2={Math.max(8, blockX - 8 - Math.min(Math.min(appliedForce, staticFrictionMax) * 5, 70))}
               y2={surfaceY - blockHeight/2}
               stroke={hasSlipped ? colors.kineticFriction : colors.staticFriction}
-              strokeWidth="4"
+              strokeWidth="3"
               strokeLinecap="round"
             />
             <polygon
-              points={`${blockX - 10 - Math.min(Math.min(appliedForce, staticFrictionMax) * 6, 80)},${surfaceY - blockHeight/2 - 6} ${blockX - 10 - Math.min(Math.min(appliedForce, staticFrictionMax) * 6, 80) - 10},${surfaceY - blockHeight/2} ${blockX - 10 - Math.min(Math.min(appliedForce, staticFrictionMax) * 6, 80)},${surfaceY - blockHeight/2 + 6}`}
+              points={`${Math.max(8, blockX - 8 - Math.min(Math.min(appliedForce, staticFrictionMax) * 5, 70))},${surfaceY - blockHeight/2 - 5} ${Math.max(-2, blockX - 18 - Math.min(Math.min(appliedForce, staticFrictionMax) * 5, 70))},${surfaceY - blockHeight/2} ${Math.max(8, blockX - 8 - Math.min(Math.min(appliedForce, staticFrictionMax) * 5, 70))},${surfaceY - blockHeight/2 + 5}`}
               fill={hasSlipped ? colors.kineticFriction : colors.staticFriction}
             />
+            {/* Friction label BELOW arrow */}
             <text
-              x={blockX - 20 - Math.min(Math.min(appliedForce, staticFrictionMax) * 6, 80)}
-              y={surfaceY - blockHeight/2 + 4}
-              textAnchor="end"
+              x={blockX - 8 - Math.min(Math.min(appliedForce, staticFrictionMax) * 5, 70) / 2}
+              y={surfaceY - blockHeight/2 + 18}
+              textAnchor="middle"
               fill={hasSlipped ? colors.kineticFriction : colors.staticFriction}
-              fontSize="13"
-              fontWeight="600"
+              fontSize="11"
             >
-              f = {hasSlipped ? kineticFriction.toFixed(1) : Math.min(appliedForce, staticFrictionMax).toFixed(1)}N
+              f={hasSlipped ? kineticFriction.toFixed(1) : Math.min(appliedForce, staticFrictionMax).toFixed(1)}N
             </text>
           </g>
         )}
 
-        {/* Force graph */}
-        <g transform={`translate(30, ${height - 70})`}>
-          <rect x="0" y="0" width={width - 60} height="50" rx="4" fill={colors.bgSecondary} />
+        {/* Force graph background */}
+        <rect x="40" y={graphY} width={graphW} height={graphH} rx="4" fill={colors.bgSecondary} />
 
-          {/* Static friction threshold line */}
-          <line
-            x1="0"
-            y1={50 - (staticFrictionMax / 10) * 45}
-            x2={width - 60}
-            y2={50 - (staticFrictionMax / 10) * 45}
-            stroke={colors.staticFriction}
-            strokeWidth="1"
-            strokeDasharray="4,4"
-            opacity="0.3"
+        {/* Graph axis labels - well-separated */}
+        <text x="38" y={graphY - 5} textAnchor="end" fill={colors.textSecondary} fontSize="11">Force</text>
+        <text x={40 + graphW/2} y={graphY + graphH + 14} textAnchor="middle" fill={colors.textSecondary} fontSize="11">Time</text>
+
+        {/* Static friction threshold line */}
+        <line
+          x1="40"
+          y1={graphY + graphH - (staticFrictionMax / (blockWeight * 1.2)) * graphH}
+          x2={40 + graphW}
+          y2={graphY + graphH - (staticFrictionMax / (blockWeight * 1.2)) * graphH}
+          stroke={colors.staticFriction}
+          strokeWidth="1"
+          strokeDasharray="4,4"
+          opacity="0.5"
+        />
+        {/* fs max label at LEFT side, above the line */}
+        <text
+          x="42"
+          y={graphY + graphH - (staticFrictionMax / (blockWeight * 1.2)) * graphH - 4}
+          fill={colors.staticFriction}
+          fontSize="11"
+        >fs max</text>
+
+        {/* Kinetic threshold line */}
+        <line
+          x1="40"
+          y1={graphY + graphH - (kineticFriction / (blockWeight * 1.2)) * graphH}
+          x2={40 + graphW}
+          y2={graphY + graphH - (kineticFriction / (blockWeight * 1.2)) * graphH}
+          stroke={colors.kineticFriction}
+          strokeWidth="1"
+          strokeDasharray="4,4"
+          opacity="0.5"
+        />
+        {/* fk label at RIGHT side, below the line to avoid fs max */}
+        <text
+          x={40 + graphW - 4}
+          y={graphY + graphH - (kineticFriction / (blockWeight * 1.2)) * graphH + 12}
+          textAnchor="end"
+          fill={colors.kineticFriction}
+          fontSize="11"
+        >fk</text>
+
+        {/* Force trace */}
+        {forceHistory.length > 1 && (
+          <polyline
+            points={forceHistory.map((f, i) => `${40 + (i / forceHistory.length) * graphW},${graphY + graphH - (f / (blockWeight * 1.2)) * graphH}`).join(' ')}
+            fill="none"
+            stroke={colors.success}
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
-          <text x={width - 65} y={50 - (staticFrictionMax / 10) * 45 - 5} textAnchor="end" fill={colors.staticFriction} fontSize="11">fs max</text>
+        )}
 
-          {/* Kinetic friction threshold line */}
-          <line
-            x1="0"
-            y1={50 - (kineticFriction / 10) * 45}
-            x2={width - 60}
-            y2={50 - (kineticFriction / 10) * 45}
-            stroke={colors.kineticFriction}
-            strokeWidth="1"
-            strokeDasharray="4,4"
-            opacity="0.3"
-          />
-          <text x={width - 65} y={50 - (kineticFriction / 10) * 45 - 5} textAnchor="end" fill={colors.kineticFriction} fontSize="11">fk</text>
-
-          {/* Force trace */}
-          {forceHistory.length > 1 && (
-            <polyline
-              points={forceHistory.map((f, i) => `${(i / forceHistory.length) * (width - 60)},${50 - (f / 10) * 45}`).join(' ')}
-              fill="none"
-              stroke={colors.success}
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          )}
-
-          {/* Peak marker */}
-          {peakForce > 0 && (
+        {/* SLIP marker */}
+        {peakForce > 0 && (() => {
+          const peakIdx = forceHistory.indexOf(Math.max(...forceHistory));
+          const px = 40 + (peakIdx / forceHistory.length) * graphW;
+          const py = graphY + graphH - (peakForce / (blockWeight * 1.2)) * graphH;
+          return (
             <g>
-              <circle
-                cx={(forceHistory.indexOf(Math.max(...forceHistory)) / forceHistory.length) * (width - 60)}
-                cy={50 - (peakForce / 10) * 45}
-                r="5"
-                fill={colors.staticFriction}
-              />
-              <text
-                x={(forceHistory.indexOf(Math.max(...forceHistory)) / forceHistory.length) * (width - 60)}
-                y={50 - (peakForce / 10) * 45 - 10}
-                textAnchor="middle"
-                fill={colors.staticFriction}
-                fontSize="11"
-                fontWeight="600"
-              >
-                SLIP!
-              </text>
+              <circle cx={px} cy={py} r="4" fill={colors.staticFriction} />
+              {/* SLIP label to right of dot, slightly below */}
+              <text x={px + 7} y={py + 14} fill={colors.staticFriction} fontSize="11" fontWeight="600">SLIP!</text>
             </g>
-          )}
-        </g>
+          );
+        })()}
       </svg>
     );
   };
@@ -647,32 +671,89 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
     </div>
   );
 
-  // Navigation dots
-  const renderNavDots = () => (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '8px',
-      padding: '16px 0',
-    }}>
-      {phaseOrder.map((p, i) => (
+  // Navigation bar with Back/Next buttons and dots
+  const renderNavDots = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+    // Disable Next during active test phase (quiz not yet submitted)
+    const isTestActive = phase === 'test' && !testSubmitted;
+    const canGoNext = currentIndex < phaseOrder.length - 1 && !isTestActive;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgSecondary,
+        borderTop: `1px solid ${colors.border}`,
+        padding: '12px 24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        zIndex: 1000,
+      }}>
         <button
-          key={p}
-          onClick={() => goToPhase(p)}
+          onClick={() => canGoBack && goToPhase(phaseOrder[currentIndex - 1])}
+          disabled={!canGoBack}
           style={{
-            width: phase === p ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
-            border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : 'rgba(148,163,184,0.7)',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
+            padding: '8px 20px',
+            borderRadius: '8px',
+            border: `1px solid ${canGoBack ? colors.border : 'transparent'}`,
+            background: canGoBack ? 'transparent' : 'transparent',
+            color: canGoBack ? colors.textSecondary : 'transparent',
+            cursor: canGoBack ? 'pointer' : 'default',
+            fontSize: '14px',
+            fontWeight: 600,
+            minWidth: '70px',
           }}
-          aria-label={phaseLabels[p]}
-        />
-      ))}
-    </div>
-  );
+          aria-label="Back"
+        >
+          ← Back
+        </button>
+
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => goToPhase(p)}
+              style={{
+                width: phase === p ? '20px' : '7px',
+                height: '7px',
+                borderRadius: '4px',
+                border: 'none',
+                background: phaseOrder.indexOf(phase) >= i ? colors.accent : 'rgba(148,163,184,0.4)',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                padding: 0,
+              }}
+              aria-label={phaseLabels[p]}
+            />
+          ))}
+        </div>
+
+        <button
+          onClick={() => canGoNext && goToPhase(phaseOrder[currentIndex + 1])}
+          disabled={!canGoNext}
+          style={{
+            padding: '8px 20px',
+            borderRadius: '8px',
+            border: `1px solid ${canGoNext ? colors.accent : 'transparent'}`,
+            background: canGoNext ? `${colors.accent}22` : 'transparent',
+            color: canGoNext ? colors.accent : (isTestActive ? colors.textMuted : 'transparent'),
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            fontSize: '14px',
+            fontWeight: 600,
+            minWidth: '70px',
+            opacity: isTestActive ? 0.4 : 1,
+          }}
+          aria-label="Next"
+        >
+          Next →
+        </button>
+      </div>
+    );
+  };
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
@@ -705,6 +786,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
         justifyContent: 'center',
         padding: '24px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -800,40 +882,46 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
             Why is it harder to START moving a heavy box than to KEEP it moving?
           </h2>
 
-          {/* Simple diagram */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>📦</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Heavy Box</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>+</div>
-              <div style={{
-                background: colors.staticFriction + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.staticFriction}`,
-              }}>
-                <div style={{ fontSize: '24px', color: colors.staticFriction }}>???</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Starting Force</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
-              <div style={{
-                background: colors.kineticFriction + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.kineticFriction}`,
-              }}>
-                <div style={{ fontSize: '24px', color: colors.kineticFriction }}>???</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Moving Force</p>
-              </div>
-            </div>
+          {/* Static SVG Diagram */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <svg width={isMobile ? 340 : 500} height="220" viewBox={`0 0 ${isMobile ? 340 : 500} 220`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              {/* Title */}
+              <text x={isMobile ? 170 : 250} y="22" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">Static vs Kinetic Friction — Predict</text>
+
+              {/* Surface */}
+              <rect x="20" y="155" width={isMobile ? 300 : 460} height="16" rx="4" fill="#8b7355" />
+              <text x={isMobile ? 170 : 250} y="188" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Wood Surface (μs = 0.5, μk = 0.3)</text>
+
+              {/* Block at rest */}
+              <rect x="40" y="115" width="60" height="40" rx="6" fill="#6366f1" />
+              <text x="70" y="139" textAnchor="middle" fill="white" fontSize="12" fontWeight="600">10N</text>
+              <text x="70" y="107" textAnchor="middle" fill={colors.staticFriction} fontSize="11" fontWeight="600">AT REST</text>
+
+              {/* Static friction arrow */}
+              <line x1="105" y1="135" x2="145" y2="135" stroke={colors.success} strokeWidth="3" strokeLinecap="round" />
+              <polygon points="145,129 155,135 145,141" fill={colors.success} />
+              <text x="150" y="122" textAnchor="middle" fill={colors.success} fontSize="11">Applied?</text>
+
+              <line x1="35" y1="135" x2="5" y2="135" stroke={colors.staticFriction} strokeWidth="3" strokeLinecap="round" />
+              <polygon points="5,129 -5,135 5,141" fill={colors.staticFriction} />
+              <text x={isMobile ? 5 : 15} y="122" textAnchor="middle" fill={colors.staticFriction} fontSize="11">Static</text>
+
+              {/* Block in motion */}
+              <rect x={isMobile ? 200 : 300} y="115" width="60" height="40" rx="6" fill="#4f46e5" />
+              <text x={isMobile ? 230 : 330} y="139" textAnchor="middle" fill="white" fontSize="12" fontWeight="600">10N</text>
+              <text x={isMobile ? 230 : 330} y="107" textAnchor="middle" fill={colors.kineticFriction} fontSize="11" fontWeight="600">SLIDING</text>
+
+              {/* Kinetic friction arrow */}
+              <line x1={isMobile ? 265 : 365} y1="135" x2={isMobile ? 295 : 395} y2="135" stroke={colors.success} strokeWidth="3" strokeLinecap="round" />
+              <polygon points={`${isMobile ? 295 : 395},129 ${isMobile ? 305 : 405},135 ${isMobile ? 295 : 395},141`} fill={colors.success} />
+
+              <line x1={isMobile ? 195 : 295} y1="135" x2={isMobile ? 175 : 265} y2="135" stroke={colors.kineticFriction} strokeWidth="3" strokeLinecap="round" />
+              <polygon points={`${isMobile ? 175 : 265},129 ${isMobile ? 165 : 255},135 ${isMobile ? 175 : 265},141`} fill={colors.kineticFriction} />
+              <text x={isMobile ? 180 : 273} y="122" textAnchor="middle" fill={colors.kineticFriction} fontSize="11">Kinetic</text>
+
+              {/* Question label */}
+              <text x={isMobile ? 170 : 250} y="210" textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="600">Which friction force is larger?</text>
+            </svg>
           </div>
 
           {/* Options */}
@@ -916,12 +1004,53 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
             Pull the block and watch the force required to overcome static friction!
           </p>
 
+          {/* Slider controls */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '16px',
+          }}>
+            <label style={{ ...typo.small, color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Block Weight: <span style={{ color: colors.accent }}>{blockWeight} N</span>
+            </label>
+            <input
+              type="range"
+              min={5}
+              max={30}
+              step={1}
+              value={blockWeight}
+              onChange={e => { setBlockWeight(Number(e.target.value)); resetExperiment(); }}
+              style={{ width: '100%', accentColor: colors.accent, height: '20px', cursor: 'pointer', touchAction: 'none' }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', ...typo.small, color: colors.textMuted }}>
+              <span>5 N (light)</span>
+              <span>30 N (heavy)</span>
+            </div>
+          </div>
+
+          {/* Educational explanation - what visualization shows */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.accent }}>What this visualization displays:</strong>{' '}
+              The simulation shows a block on a surface. As applied force increases, static friction resists up to its maximum.
+              When force exceeds maximum static friction, the block slips and kinetic friction takes over — always lower.
+              Increase block weight to observe how friction forces scale with normal force (F = μN).
+            </p>
+          </div>
+
           {/* Main visualization */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
-            marginBottom: '24px',
+            marginBottom: '16px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
               <FrictionVisualization />
@@ -1000,6 +1129,35 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
             </div>
           </div>
 
+          {/* Cause-effect explanation */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.textPrimary }}>Cause &amp; Effect:</strong>{' '}
+              When you increase block weight, the normal force increases, causing both static and kinetic friction to increase proportionally.
+              Because μs {'>'} μk always holds, the peak (static) force at slip will always exceed the sliding (kinetic) force — watch the graph drop after the slip!
+            </p>
+          </div>
+
+          {/* Real-world relevance */}
+          <div style={{
+            background: `${colors.success}11`,
+            border: `1px solid ${colors.success}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.success }}>Why this matters:</strong>{' '}
+              This friction difference explains how ABS brakes keep tires rolling (static friction) instead of skidding (kinetic).
+              Rock climbers, conveyor systems, and earthquake engineers all exploit the μs {'>'} μk principle to design safer systems.
+            </p>
+          </div>
+
           {/* Discovery prompt */}
           {hasSlipped && (
             <div style={{
@@ -1055,6 +1213,23 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Physics of Friction
           </h2>
+
+          {/* Prediction connection */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {prediction === 'b'
+                ? 'You predicted correctly! As you observed in the experiment, static friction is indeed higher than kinetic friction due to surface bonding.'
+                : prediction
+                  ? `You predicted option ${prediction?.toUpperCase() || ''}. As you saw in the experiment, the actual answer is that static friction is higher than kinetic friction because microscopic surfaces interlock more when at rest.`
+                  : 'As you observed in the experiment, static friction peaks higher than kinetic friction when the block starts sliding.'}
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1168,27 +1343,28 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
             Wood, rubber, and ice have very different friction coefficients. What determines μ?
           </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center', padding: '16px', background: '#8b7355', borderRadius: '8px' }}>
-                <div style={{ fontSize: '24px' }}>🪵</div>
-                <p style={{ ...typo.small, color: 'white' }}>Wood: μs = 0.5</p>
-              </div>
-              <div style={{ textAlign: 'center', padding: '16px', background: '#2d2d2d', borderRadius: '8px' }}>
-                <div style={{ fontSize: '24px' }}>⬛</div>
-                <p style={{ ...typo.small, color: 'white' }}>Rubber: μs = 0.9</p>
-              </div>
-              <div style={{ textAlign: 'center', padding: '16px', background: '#a8d5e5', borderRadius: '8px' }}>
-                <div style={{ fontSize: '24px' }}>❄️</div>
-                <p style={{ ...typo.small, color: '#333' }}>Ice: μs = 0.1</p>
-              </div>
-            </div>
+          {/* Static SVG showing surface comparison */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <svg width={isMobile ? 320 : 460} height="180" viewBox={`0 0 ${isMobile ? 320 : 460} 180`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <text x={isMobile ? 160 : 230} y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">Surface Friction Comparison</text>
+
+              {/* Wood bar */}
+              <rect x="40" y="40" width={Math.round((isMobile ? 240 : 360) * 0.5)} height="28" rx="4" fill="#8b7355" />
+              <text x="35" y="59" textAnchor="end" fill={colors.textSecondary} fontSize="11">Wood</text>
+              <text x={40 + Math.round((isMobile ? 240 : 360) * 0.5) + 6} y="59" fill={colors.textSecondary} fontSize="11">μs=0.5</text>
+
+              {/* Rubber bar */}
+              <rect x="40" y="80" width={Math.round((isMobile ? 240 : 360) * 0.9)} height="28" rx="4" fill="#2d2d2d" />
+              <text x="35" y="99" textAnchor="end" fill={colors.textSecondary} fontSize="11">Rubber</text>
+              <text x={40 + Math.round((isMobile ? 240 : 360) * 0.9) + 6} y="99" fill={colors.textSecondary} fontSize="11">μs=0.9</text>
+
+              {/* Ice bar */}
+              <rect x="40" y="120" width={Math.round((isMobile ? 240 : 360) * 0.1)} height="28" rx="4" fill="#a8d5e5" />
+              <text x="35" y="139" textAnchor="end" fill={colors.textSecondary} fontSize="11">Ice</text>
+              <text x={40 + Math.round((isMobile ? 240 : 360) * 0.1) + 6} y="139" fill={colors.textSecondary} fontSize="11">μs=0.1</text>
+
+              <text x={isMobile ? 160 : 230} y="170" textAnchor="middle" fill={colors.accent} fontSize="11">What determines these differences?</text>
+            </svg>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1611,9 +1787,24 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
             </div>
 
             <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1628,6 +1819,32 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
                 </div>
               ))}
             </div>
+
+            {/* Got It button */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                // Auto-advance to next app
+                const nextApp = (selectedApp + 1) % realWorldApps.length;
+                setSelectedApp(nextApp);
+              }}
+              style={{
+                background: `${app.color}22`,
+                border: `2px solid ${app.color}`,
+                borderRadius: '10px',
+                padding: '12px 24px',
+                color: app.color,
+                fontWeight: 700,
+                cursor: 'pointer',
+                fontSize: '15px',
+                width: '100%',
+              }}
+            >
+              Got It — Next Application
+            </button>
           </div>
 
           {allAppsCompleted && (
@@ -1667,7 +1884,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
             paddingLeft: '24px',
             paddingRight: '24px',
           }}>
-          <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1680,11 +1897,43 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
             <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
               {testScore} / 10
             </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '24px' }}>
               {passed
                 ? 'You understand static and kinetic friction!'
                 : 'Review the concepts and try again.'}
             </p>
+
+            {/* Answer review - your answers with ✓/✗ indicators */}
+            <div style={{ textAlign: 'left', marginBottom: '24px' }}>
+              <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>
+                Your Answers Review:
+              </h3>
+              {testQuestions.map((q, i) => {
+                const correctId = q.options.find(o => o.correct)?.id;
+                const yourAnswer = testAnswers[i];
+                const isCorrect = yourAnswer === correctId;
+                return (
+                  <div key={i} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    marginBottom: '6px',
+                    background: isCorrect ? `${colors.success}11` : `${colors.error}11`,
+                    border: `1px solid ${isCorrect ? colors.success + '44' : colors.error + '44'}`,
+                  }}>
+                    <span style={{ fontSize: '16px', flexShrink: 0 }}>{isCorrect ? '✓' : '✗'}</span>
+                    <span style={{ ...typo.small, color: colors.textSecondary, flex: 1 }}>
+                      Q{i + 1}: {q.question.slice(0, 60)}...
+                    </span>
+                    <span style={{ ...typo.small, color: isCorrect ? colors.success : colors.error, flexShrink: 0 }}>
+                      {isCorrect ? 'Correct' : `Correct: ${correctId?.toUpperCase()}`}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
 
             {passed ? (
               <button

@@ -366,8 +366,8 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
     bgCardLight: '#1e293b',   // slate-800
     // Text
     textPrimary: '#f8fafc',   // slate-50
-    textSecondary: '#94a3b8', // slate-400
-    textMuted: '#64748b',     // slate-500
+    textSecondary: '#e2e8f0', // slate-200
+    textMuted: '#cbd5e1',     // slate-300
     // Borders
     border: '#334155',        // slate-700
     borderLight: '#475569',   // slate-600
@@ -723,8 +723,8 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
                 <line x1="-15" y1="0" x2="-6" y2="0" stroke="#78350f" strokeWidth="1.5" />
                 <line x1="15" y1="0" x2="6" y2="0" stroke="#78350f" strokeWidth="1.5" />
                 {/* Number label with background */}
-                <rect x="-5" y="-5" width="10" height="10" fill="#fef3c7" rx="2" opacity="0.8" />
-                <text x="0" y="3" textAnchor="middle" fill="#78350f" fontSize="7" fontWeight="bold">{cm}</text>
+                <rect x="-7" y="-6" width="14" height="12" fill="#fef3c7" rx="2" opacity="0.8" />
+                <text x="0" y="4" textAnchor="middle" fill="#78350f" fontSize="11" fontWeight="bold">{cm}</text>
               </g>
             ))}
 
@@ -862,17 +862,17 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
             {/* Brain to hand pathway */}
             <g transform="translate(50, 80)">
               <circle cx="0" cy="0" r="25" fill="#818cf8" />
-              <text x="0" y="5" textAnchor="middle" fill="#1e1b4b" fontSize="8" fontWeight="bold">BRAIN</text>
+              <text x="0" y="5" textAnchor="middle" fill="#1e1b4b" fontSize="11" fontWeight="bold">BRAIN</text>
             </g>
 
             <g transform="translate(150, 80)">
               <circle cx="0" cy="0" r="20" fill="#60a5fa" />
-              <text x="0" y="5" textAnchor="middle" fill="#1e3a8a" fontSize="7">NERVES</text>
+              <text x="0" y="5" textAnchor="middle" fill="#1e3a8a" fontSize="11">NERVES</text>
             </g>
 
             <g transform="translate(250, 80)">
               <ellipse cx="0" cy="0" rx="25" ry="15" fill="#fbbf24" />
-              <text x="0" y="5" textAnchor="middle" fill="#78350f" fontSize="8" fontWeight="bold">HAND</text>
+              <text x="0" y="5" textAnchor="middle" fill="#78350f" fontSize="11" fontWeight="bold">HAND</text>
             </g>
 
             {/* Arrows */}
@@ -880,8 +880,8 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
             <line x1="175" y1="80" x2="220" y2="80" stroke="#818cf8" strokeWidth="3" />
 
             {/* Time labels */}
-            <text x="100" y="60" textAnchor="middle" fill="#94a3b8" fontSize="9">~50ms</text>
-            <text x="197" y="60" textAnchor="middle" fill="#94a3b8" fontSize="9">~100ms</text>
+            <text x="100" y="60" textAnchor="middle" fill="#e2e8f0" fontSize="11">~50ms</text>
+            <text x="197" y="60" textAnchor="middle" fill="#e2e8f0" fontSize="11">~100ms</text>
 
             {/* Total */}
             <text x="150" y="140" textAnchor="middle" fill="#818cf8" fontSize="12" fontWeight="bold">
@@ -1123,7 +1123,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
                 onChange={(e) => setGravity(parseFloat(e.target.value))}
                 onInput={(e) => setGravity(parseFloat((e.target as HTMLInputElement).value))}
                 className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
-                style={{ width: "100%", accentColor: "#f59e0b", cursor: "pointer", touchAction: "pan-y", WebkitAppearance: "none", MozAppearance: "none", appearance: "none" }}
+                style={{ width: "100%", height: "20px", accentColor: "#3b82f6", cursor: "pointer", touchAction: "pan-y", WebkitAppearance: "none", MozAppearance: "none", appearance: "none" }}
                 disabled={rulerState !== 'ready'}
               />
               <div className="flex justify-between mt-2 gap-2">
@@ -1160,7 +1160,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
                 onChange={(e) => setRulerLength(parseInt(e.target.value))}
                 onInput={(e) => setRulerLength(parseInt((e.target as HTMLInputElement).value))}
                 className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                style={{ width: "100%", accentColor: "#3b82f6", cursor: "pointer", touchAction: "pan-y", WebkitAppearance: "none", MozAppearance: "none", appearance: "none" }}
+                style={{ width: "100%", height: "20px", accentColor: "#3b82f6", cursor: "pointer", touchAction: "pan-y", WebkitAppearance: "none", MozAppearance: "none", appearance: "none" }}
                 disabled={rulerState !== 'ready'}
               />
             </div>
@@ -1327,7 +1327,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
             </g>
           ))}
 
-          <text x="150" y="105" textAnchor="middle" fill={colors.neutral} fontSize="9">
+          <text x="150" y="105" textAnchor="middle" fill={colors.neutral} fontSize="11">
             (assuming g = 9.8 m/s²)
           </text>
         </svg>
@@ -1578,18 +1578,18 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
 
           {/* Focused bar */}
           <rect x="40" y="40" width="50" height="50" fill={colors.success} rx="5" />
-          <text x="65" y="100" textAnchor="middle" fill={colors.neutral} fontSize="9">Focused</text>
-          <text x="65" y="60" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">200ms</text>
+          <text x="65" y="100" textAnchor="middle" fill={colors.neutral} fontSize="11">Focused</text>
+          <text x="65" y="60" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">200ms</text>
 
           {/* Visual distraction bar */}
           <rect x="120" y="35" width="50" height="55" fill={colors.accent} rx="5" />
-          <text x="145" y="100" textAnchor="middle" fill={colors.neutral} fontSize="9">Visual</text>
-          <text x="145" y="60" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">250ms</text>
+          <text x="145" y="100" textAnchor="middle" fill={colors.neutral} fontSize="11">Visual</text>
+          <text x="145" y="60" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">250ms</text>
 
           {/* Cognitive distraction bar */}
           <rect x="200" y="25" width="50" height="65" fill={colors.danger} rx="5" />
-          <text x="225" y="100" textAnchor="middle" fill={colors.neutral} fontSize="9">Math</text>
-          <text x="225" y="55" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">350ms</text>
+          <text x="225" y="100" textAnchor="middle" fill={colors.neutral} fontSize="11">Math</text>
+          <text x="225" y="55" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">350ms</text>
         </svg>
 
         <div className="text-center">
@@ -1700,6 +1700,9 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
   const renderTransfer = () => (
     <div style={{ padding: typo.pagePadding, maxWidth: '600px', margin: '0 auto' }}>
       {renderSectionHeader('Step 7 • Real-World', 'Reaction Time Matters', 'From racing to medicine')}
+      <p style={{ textAlign: 'center', fontSize: typo.small, color: colors.textSecondary, marginBottom: '16px', fontWeight: 600 }}>
+        Application {Math.min(completedApps + 1, realWorldApps.length)} of {realWorldApps.length}
+      </p>
 
       {completedApps < realWorldApps.length ? (
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">

@@ -136,8 +136,8 @@ const colors = {
   bgHover: '#27272A',
   border: '#2E2E33',
   textPrimary: '#FAFAFA',
-  textSecondary: '#A1A1AA',
-  textTertiary: '#71717A',
+  textSecondary: '#D4D4D8',
+  textTertiary: '#C4C4CC',
   blue: '#3B82F6',
   red: '#EF4444',
   orange: '#F97316',
@@ -557,7 +557,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
     };
 
     const variants: Record<string, React.CSSProperties> = {
-      primary: { background: colors.brand, color: '#FFFFFF' },
+      primary: { background: 'linear-gradient(135deg, #6366F1 0%, #3B82F6 100%)', color: '#FFFFFF' },
       secondary: { background: colors.bgCard, color: colors.textPrimary, border: `1px solid ${colors.border}` },
       ghost: { background: 'transparent', color: colors.textSecondary },
       success: { background: colors.success, color: '#FFFFFF' },
@@ -593,7 +593,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        zIndex: 50,
+        zIndex: 100,
       }}>
         {children}
       </div>
@@ -611,9 +611,9 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
         'twist_predict': 'experiment phase',
         'twist_play': 'experiment phase',
         'twist_review': 'experiment phase',
-        'transfer': 'apply phase',
-        'test': 'quiz phase',
-        'mastery': 'transfer phase'
+        'transfer': 'real-world transfer',
+        'test': 'knowledge test',
+        'mastery': 'mastery complete'
       };
       return labels[p];
     };
@@ -647,7 +647,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
-                style={{ zIndex: 10, cursor: 'pointer' }}
+                style={{ zIndex: 10, cursor: 'pointer', borderRadius: '9999px', background: phase === p ? '#38BDF8' : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p) ? '#10B981' : '#334155' }}
                 aria-label={getAriaLabel(p)}
                 title={phaseLabels[p]}
               />
@@ -920,8 +920,8 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
           <rect x="2" y="77" width="38" height="26" fill="#0F172A" rx="2" />
 
           {/* Light source emitter with glow */}
-          <circle cx="38" cy="90" r="10" fill="url(#scatWhiteLightSource)" filter="url(#scatLightGlow)" />
-          <circle cx="38" cy="90" r="6" fill="#FFFFFF" opacity="0.9" />
+          <circle cx="38" cy="90" r="5" fill="url(#scatWhiteLightSource)" filter="url(#scatLightGlow)" />
+          <circle cx="38" cy="90" r="4" fill="#FFFFFF" opacity="0.9" />
           <circle cx="36" cy="88" r="2" fill="#FFFFFF" />
 
           {/* ============== LIGHT BEAM ============== */}
@@ -933,7 +933,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
 
           {/* Transmitted light exiting */}
           <rect x="256" y="83" width="44" height="14" fill={throughColor} opacity="0.8" rx="2" />
-          <circle cx="290" cy="90" r="8" fill={throughColor} filter="url(#scatLightGlow)" opacity="0.6" />
+          <circle cx="290" cy="90" r="5" fill={throughColor} filter="url(#scatLightGlow)" opacity="0.6" />
 
           {/* ============== SCATTERING EFFECTS ============== */}
           {/* Main scattered light glow - Rayleigh vs Mie - use more vertical space */}
@@ -1021,7 +1021,8 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
                 {/* Blue end scattered more - show with arrows/intensity */}
                 <rect x="120" y="-3" width="60" height="14" fill="url(#scatRayleighGlow)" opacity="0.4" rx="2" />
                 {/* Indicate blue scattering */}
-                <path d="M 155 7 L 155 -8 L 160 -3 L 155 -8 L 150 -3" stroke="#60A5FA" strokeWidth="1.5" fill="none" opacity="0.7" />
+                <line x1="155" y1="7" x2="155" y2="-8" stroke="#60A5FA" strokeWidth="1.5" opacity="0.7" />
+                <polyline points="150,-3 155,-8 160,-3" stroke="#60A5FA" strokeWidth="1.5" fill="none" opacity="0.7" />
               </g>
             )}
           </g>
@@ -1034,27 +1035,25 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
 
           {/* ============== INTERACTIVE MARKER - MOVES WITH PARTICLE SIZE ============== */}
           {/* This marker moves vertically based on particle size to show interaction feedback */}
-          <g transform={`translate(20, ${50 + particleSize * 10})`}>
-            <circle
-              cx="0"
-              cy="0"
-              r="10"
-              fill={colors.brand}
-              filter="url(#scatCameraGlow)"
-              opacity="0.9"
-            />
-            <circle
-              cx="0"
-              cy="0"
-              r="6"
-              fill="#3B82F6"
-              stroke="#FFFFFF"
-              strokeWidth="1.5"
-            />
-            <text x="15" y="5" fill="#3B82F6" fontSize="11" fontWeight="600">
-              Size: {particleSize.toFixed(1)}
-            </text>
-          </g>
+          <circle
+            cx={20}
+            cy={50 + particleSize * 10}
+            r="10"
+            fill={colors.brand}
+            filter="url(#scatCameraGlow)"
+            opacity="0.9"
+          />
+          <circle
+            cx={20}
+            cy={50 + particleSize * 10}
+            r="6"
+            fill="#3B82F6"
+            stroke="#FFFFFF"
+            strokeWidth="1.5"
+          />
+          <text x="33" y={55 + particleSize * 10} fill="#3B82F6" fontSize="11" fontWeight="600">
+            Size: {particleSize.toFixed(1)}
+          </text>
 
           {/* ============== CAMERA/VIEW INDICATORS ============== */}
           {viewAngle === 'side' && (
@@ -1081,13 +1080,8 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
               <circle cx="148" cy="143" r="1.5" fill="#FFFFFF" opacity="0.7" />
 
               {/* View direction arrow */}
-              <path
-                d="M 150 125 L 150 115 M 146 119 L 150 115 L 154 119"
-                stroke={colors.sky}
-                strokeWidth="2"
-                fill="none"
-                opacity="0.8"
-              />
+              <line x1="150" y1="125" x2="150" y2="115" stroke={colors.sky} strokeWidth="2" opacity="0.8" />
+              <polyline points="146,119 150,115 154,119" stroke={colors.sky} strokeWidth="2" fill="none" opacity="0.8" />
             </g>
           )}
           {viewAngle === 'through' && (
@@ -1118,7 +1112,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
           <text x="20" y="20" fill="#94a3b8" fontSize="11" fontWeight="600">
             Light Source
           </text>
-          <text x="20" y="100" fill={sideColor} fontSize="11" fontWeight="600">
+          <text x="20" y="115" fill={sideColor} fontSize="11" fontWeight="600">
             Scattered Light
           </text>
           <text x="220" y="20" fill={throughColor} fontSize="11" fontWeight="600">
@@ -1132,6 +1126,33 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
           <text x="8" y="100" fill="#94a3b8" fontSize="12" fontWeight="600" textAnchor="middle" transform="rotate(-90, 8, 100)">
             Scattering Intensity
           </text>
+
+          {/* ============== SCATTERING INTENSITY CURVE ============== */}
+          {/* Shows Rayleigh 1/λ⁴ dependence vs Mie flat response */}
+          {(() => {
+            const curvePoints: string[] = [];
+            const numPts = 20;
+            for (let i = 0; i <= numPts; i++) {
+              const lambda = 380 + (i / numPts) * 320; // 380nm to 700nm
+              const rayleighI = Math.pow(380 / lambda, 4); // normalized Rayleigh intensity
+              const mieI = 1; // Mie is flat
+              const intensity = rayleighI * (1 - mieFactor) + mieI * mieFactor * 0.4;
+              const x = 40 + (i / numPts) * 220;
+              const y = 175 - intensity * 140; // spans from y=35 (max) to y=175 (min)
+              curvePoints.push(`${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`);
+            }
+            return (
+              <path
+                d={curvePoints.join(' ')}
+                fill="none"
+                stroke={mieFactor > 0.5 ? '#E2E8F0' : '#60A5FA'}
+                strokeWidth="2"
+                opacity="0.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            );
+          })()}
         </svg>
 
         {/* Color Spectrum Legend - Outside SVG using typo system */}
@@ -1560,7 +1581,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
                   justifyContent: 'space-between',
                   marginBottom: spacing.sm,
                 }}>
-                  <span style={{ ...typography.caption, color: colors.textSecondary, fontWeight: 600 }}>PARTICLE SIZE</span>
+                  <span style={{ ...typography.caption, color: colors.textSecondary, fontWeight: 600 }}>PARTICLE DIAMETER</span>
                   <span style={{ ...typography.h3, color: colors.textPrimary }}>
                     {particleSize < 1 ? 'Tiny (Molecules)' : particleSize < 5 ? 'Small (Aerosols)' : 'Large (Droplets)'}
                   </span>
@@ -1618,8 +1639,8 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
                   }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: spacing.xs }}>
-                  <span style={{ ...typography.caption, color: colors.textTertiary, fontWeight: 600 }}>10% (min)</span>
-                  <span style={{ ...typography.caption, color: colors.textTertiary, fontWeight: 600 }}>100% (max)</span>
+                  <span style={{ ...typography.caption, color: colors.textSecondary, fontWeight: 600 }}>10% (min)</span>
+                  <span style={{ ...typography.caption, color: colors.textSecondary, fontWeight: 600 }}>100% (max)</span>
                 </div>
               </div>
             </div>
@@ -1645,7 +1666,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
                 color: colors.textSecondary,
                 margin: 0
               }}>
-                <strong style={{ color: colors.brand }}>Rayleigh scattering</strong> occurs when particles are much smaller than light wavelengths.
+                <strong style={{ color: colors.brand }}>Rayleigh scattering</strong> occurs when particles are much smaller than light wavelengths. The scattering intensity equation is I ∝ 1/λ⁴, meaning blue light scatters ~5× more than red.
                 <strong style={{ color: colors.brand }}> Mie scattering</strong> dominates when particles are comparable to or larger than the wavelength of light.
               </p>
             </div>
@@ -2578,7 +2599,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
                 zIndex: 10,
               }}
             >
-              ← Previous
+              prev
             </button>
           ) : <div />}
 
@@ -2648,8 +2669,10 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
   if (phase === 'test') {
     const q = testQuestions[testIndex];
     const totalCorrect = testAnswers.reduce((sum, ans, i) => sum + (testQuestions[i].options[ans as number]?.correct ? 1 : 0), 0);
+    // Auto-submit when all questions are answered
+    const allAnswered = testAnswers.every(a => a !== null);
 
-    if (testSubmitted) {
+    if (testSubmitted || allAnswered) {
       const passed = totalCorrect >= 7;
       return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: colors.bg, fontFamily: typography.fontFamily }}>
@@ -2667,7 +2690,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
                 {passed ? 'You\'ve mastered light scattering!' : 'Review the concepts and try again.'}
               </p>
               <Button onClick={() => passed ? goNext() : goToPhase('review')} variant={passed ? 'success' : 'primary'} size="lg">
-                {passed ? 'Complete! →' : 'Review Material'}
+                {passed ? 'next phase →' : 'return to review'}
               </Button>
             </div>
           </div>
@@ -2680,6 +2703,11 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
         <ProgressBar />
         <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? spacing.lg : spacing.xl }}>
           <div style={{ maxWidth: 560, margin: '0 auto' }}>
+            {/* Score tracker always visible */}
+            <div style={{ ...typography.bodySmall, color: colors.textSecondary, textAlign: 'center', marginBottom: spacing.sm }}>
+              {testAnswers.filter(a => a !== null).length}/10 answered
+            </div>
+
             {/* Question Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg }}>
               <span style={{ ...typography.label, color: colors.brand }}>QUESTION {testIndex + 1} OF 10</span>
@@ -2769,7 +2797,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
             {/* Navigation */}
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               {testIndex > 0 ? (
-                <Button onClick={() => setTestIndex(testIndex - 1)} variant="ghost">← Previous</Button>
+                <Button onClick={() => setTestIndex(testIndex - 1)} variant="ghost">prev question</Button>
               ) : <div />}
               {testAnswers[testIndex] !== null && (
                 testIndex < testQuestions.length - 1 ? (

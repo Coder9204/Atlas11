@@ -716,15 +716,19 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
           <text x={width / 2} y={25} textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">
             CMP Planarization Cross-Section
           </text>
+          {/* Live parameter display - updates with every slider change */}
+          <text x={width / 2} y={40} textAnchor="middle" fill={colors.textMuted} fontSize="11">
+            T:{polishTime}% P:{polishPressure}% S:{slurrySelectivity}%
+          </text>
 
           {/* Polishing pad (above wafer) */}
           {polishTime > 0 && polishTime < 100 && (
             <g>
               <rect x={50} y={45} width={300} height={30} fill="url(#cmpPadGrad)" rx={4} />
-              <text x={200} y={65} textAnchor="middle" fill={colors.textSecondary} fontSize="10">Polishing Pad</text>
+              <text x={200} y={65} textAnchor="middle" fill={colors.textSecondary} fontSize="11">Polishing Pad</text>
               {/* Slurry layer */}
               <rect x={50} y={75} width={300} height={20} fill="url(#cmpSlurryPattern)" opacity={0.8} />
-              <text x={200} y={88} textAnchor="middle" fill="#f9a8d4" fontSize="9">Slurry</text>
+              <text x={200} y={88} textAnchor="middle" fill="#f9a8d4" fontSize="11">Slurry</text>
               {/* Removal particles when animating */}
               {isAnimating && (
                 <g filter="url(#cmpGlow)">
@@ -744,11 +748,10 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
 
           {/* Substrate base */}
           <rect x={50} y={baseY} width={320} height={40} fill="url(#cmpSubstrateGrad)" rx={2} />
-          <text x={210} y={baseY + 25} textAnchor="middle" fill={colors.textMuted} fontSize="10">Silicon Substrate</text>
+          <text x={210} y={baseY + 25} textAnchor="middle" fill={colors.textMuted} fontSize="11">Silicon Substrate</text>
 
           {/* Barrier layer */}
           <rect x={50} y={baseY - 12} width={320} height={12} fill="url(#cmpBarrierGrad)" rx={1} />
-          <text x={400} y={baseY - 3} textAnchor="start" fill={colors.barrier} fontSize="9">Barrier</text>
 
           {/* Features with dynamic heights based on polish */}
           {features.map((feature, i) => {
@@ -795,7 +798,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
             strokeDasharray="6,4"
             opacity={0.6}
           />
-          <text x={385} y={baseY - 12 - 150 * scale / 1.5 + 4} fill={colors.textMuted} fontSize="9">Initial</text>
+          <text x={385} y={baseY - 12 - 150 * scale / 1.5 + 4} fill={colors.textMuted} fontSize="11">Initial</text>
 
           {/* Target surface line */}
           <line
@@ -808,51 +811,58 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
             strokeDasharray="6,4"
             opacity={0.7}
           />
-          <text x={385} y={baseY - 12 - 100 * scale / 1.5 + 4} fill={colors.success} fontSize="9">Target</text>
+          <text x={385} y={baseY - 12 - 100 * scale / 1.5 + 4} fill={colors.success} fontSize="11">Target</text>
 
-          {/* Legend */}
-          <g transform="translate(400, 120)">
-            <text x={0} y={0} fill={colors.textSecondary} fontSize="10" fontWeight="bold">Legend</text>
-            <rect x={0} y={8} width={16} height={10} fill="url(#cmpCopperGrad)" rx={2} />
-            <text x={22} y={17} fill={colors.copper} fontSize="9">Copper</text>
-            <rect x={0} y={24} width={16} height={10} fill="url(#cmpOxideGrad)" rx={2} />
-            <text x={22} y={33} fill={colors.oxide} fontSize="9">Oxide</text>
-          </g>
+          {/* Legend - using absolute coords to avoid transform-based overlap issues */}
+          <text x={403} y={120} fill={colors.textSecondary} fontSize="11" fontWeight="bold">Legend</text>
+          <rect x={403} y={128} width={16} height={10} fill="url(#cmpCopperGrad)" rx={2} />
+          <text x={425} y={137} fill={colors.copper} fontSize="11">Cu</text>
+          <rect x={403} y={144} width={16} height={10} fill="url(#cmpOxideGrad)" rx={2} />
+          <text x={425} y={153} fill={colors.oxide} fontSize="11">Ox</text>
 
-          {/* Metrics panel */}
-          <g transform="translate(400, 170)">
-            <text x={0} y={0} fill={colors.textSecondary} fontSize="10" fontWeight="bold">Metrics</text>
-            <text x={0} y={16} fill={colors.textPrimary} fontSize="9">Step: {result.currentStep.toFixed(0)} nm</text>
-            <text x={0} y={30} fill={result.dishing < 10 ? colors.success : colors.error} fontSize="9">Dish: {result.dishing.toFixed(1)} nm</text>
-            <text x={0} y={44} fill={result.erosion < 10 ? colors.success : colors.warning} fontSize="9">Eros: {result.erosion.toFixed(1)} nm</text>
-            <text x={0} y={58} fill={colors.textMuted} fontSize="9">NU: {result.nonUniformity.toFixed(1)}%</text>
-          </g>
+          {/* Metrics panel - using absolute coords */}
+          <text x={403} y={178} fill={colors.textSecondary} fontSize="11" fontWeight="bold">Metrics</text>
+          <text x={403} y={194} fill={colors.textPrimary} fontSize="11">Step: {result.currentStep.toFixed(0)} nm</text>
+          <text x={403} y={210} fill={result.dishing < 10 ? colors.success : colors.error} fontSize="11">Dish: {result.dishing.toFixed(1)} nm</text>
+          <text x={403} y={226} fill={result.erosion < 10 ? colors.success : colors.warning} fontSize="11">Eros: {result.erosion.toFixed(1)} nm</text>
+          <text x={403} y={242} fill={colors.textMuted} fontSize="11">NU: {result.nonUniformity.toFixed(1)}%</text>
 
-          {/* Status indicator */}
+          {/* Status indicator - moved down to avoid overlap with metrics */}
           <text
-            x={440}
-            y={245}
+            x={435}
+            y={262}
             textAnchor="middle"
             fill={result.isComplete ? colors.success : result.isOverPolished ? colors.error : colors.warning}
-            fontSize="10"
+            fontSize="11"
             fontWeight="bold"
           >
-            {result.isComplete ? 'OPTIMAL' : result.isOverPolished ? 'OVER-POLISH' : 'IN PROGRESS'}
+            {result.isComplete ? 'OPTIMAL' : result.isOverPolished ? 'OVER' : 'ACTIVE'}
           </text>
 
-          {/* Planarity bar */}
-          <g transform="translate(50, 310)">
-            <text x={0} y={-5} fill={colors.textSecondary} fontSize="9">Planarity: {result.planarityScore.toFixed(0)}%</text>
-            <rect x={0} y={0} width={320} height={8} fill="rgba(255,255,255,0.1)" rx={4} />
-            <rect
-              x={0}
-              y={0}
-              width={Math.min(320, result.planarityScore * 3.2)}
-              height={8}
-              fill={result.planarityScore > 70 ? 'url(#cmpPlanarityGood)' : result.planarityScore > 40 ? 'url(#cmpPlanarityWarn)' : 'url(#cmpPlanarityBad)'}
-              rx={4}
-            />
-          </g>
+          {/* Barrier label - moved to avoid overlap with status */}
+          <text x={378} y={baseY - 16} fill={colors.barrier} fontSize="11">Bar</text>
+
+          {/* Planarity bar - using absolute coords with positive y for text */}
+          <text x={53} y={316} fill={colors.textSecondary} fontSize="11">Planarity: {result.planarityScore.toFixed(0)}%</text>
+          <rect x={53} y={320} width={320} height={8} fill="rgba(255,255,255,0.1)" rx={4} />
+          <rect
+            x={53}
+            y={320}
+            width={Math.min(320, result.planarityScore * 3.2)}
+            height={8}
+            fill={result.planarityScore > 70 ? 'url(#cmpPlanarityGood)' : result.planarityScore > 40 ? 'url(#cmpPlanarityWarn)' : 'url(#cmpPlanarityBad)'}
+            rx={4}
+          />
+          {/* Current value indicator with glow */}
+          <circle
+            cx={53 + Math.min(320, result.planarityScore * 3.2)}
+            cy={324}
+            r={8}
+            fill={result.planarityScore > 70 ? colors.success : colors.warning}
+            filter="url(#cmpGlow)"
+            stroke="white"
+            strokeWidth={1.5}
+          />
 
           {/* Defect indicators with labels */}
           {showDefectMode && result.isOverPolished && (
@@ -860,13 +870,13 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
               {result.dishing > 15 && (
                 <g>
                   <circle cx={185} cy={baseY - 70} r={12} fill={colors.error} opacity={0.4} />
-                  <text x={185} y={baseY - 55} textAnchor="middle" fill={colors.error} fontSize="9" fontWeight="bold">Dishing</text>
+                  <text x={185} y={baseY - 55} textAnchor="middle" fill={colors.error} fontSize="11" fontWeight="bold">Dishing</text>
                 </g>
               )}
               {result.erosion > 10 && (
                 <g>
                   <circle cx={285} cy={baseY - 70} r={12} fill={colors.warning} opacity={0.4} />
-                  <text x={285} y={baseY - 55} textAnchor="middle" fill={colors.warning} fontSize="9" fontWeight="bold">Erosion</text>
+                  <text x={285} y={baseY - 55} textAnchor="middle" fill={colors.warning} fontSize="11" fontWeight="bold">Erosion</text>
                 </g>
               )}
             </g>
@@ -1140,6 +1150,12 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
           </div>
 
           {renderVisualization(true)}
+          {/* Before/After reference display */}
+          <div style={{ display: 'flex', flexDirection: 'row', gap: '8px', marginBottom: '8px', justifyContent: 'center' }}>
+            <span style={{ color: colors.textMuted, fontSize: '12px' }}>Before: {(polishTime === 0 ? 150 : 0).toFixed(0)}nm Cu</span>
+            <span style={{ color: colors.textSecondary, fontSize: '12px' }}>→</span>
+            <span style={{ color: colors.accent, fontSize: '12px' }}>Current vs baseline</span>
+          </div>
           {renderControls()}
 
           <div style={{
@@ -1216,31 +1232,31 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
             </linearGradient>
           </defs>
           <rect width="400" height="180" fill="#0f172a" rx="8" />
-          <text x="200" y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="bold">CMP Mechanism</text>
+          <text x="200" y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="bold">CMP Mechanism</text>
 
           {/* Before */}
-          <text x="100" y="50" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Before CMP</text>
+          <text x="100" y="50" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Before CMP</text>
           <rect x="50" y="60" width="40" height="50" fill="url(#reviewCopperGrad)" />
           <rect x="90" y="80" width="20" height="30" fill="url(#reviewOxideGrad)" />
           <rect x="110" y="60" width="40" height="50" fill="url(#reviewCopperGrad)" />
-          <text x="100" y="125" textAnchor="middle" fill={colors.textMuted} fontSize="9">High Cu spots</text>
+          <text x="100" y="125" textAnchor="middle" fill={colors.textMuted} fontSize="11">High Cu spots</text>
 
           {/* Arrow */}
           <text x="200" y="85" textAnchor="middle" fill={colors.accent} fontSize="20">→</text>
-          <text x="200" y="105" textAnchor="middle" fill={colors.textSecondary} fontSize="9">Polish</text>
+          <text x="200" y="105" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Polish</text>
 
           {/* After */}
-          <text x="300" y="50" textAnchor="middle" fill={colors.textSecondary} fontSize="10">After CMP</text>
+          <text x="300" y="50" textAnchor="middle" fill={colors.textSecondary} fontSize="11">After CMP</text>
           <rect x="250" y="80" width="40" height="30" fill="url(#reviewCopperGrad)" />
           <rect x="290" y="80" width="20" height="30" fill="url(#reviewOxideGrad)" />
           <rect x="310" y="80" width="40" height="30" fill="url(#reviewCopperGrad)" />
-          <text x="300" y="125" textAnchor="middle" fill={colors.success} fontSize="9">Flat surface!</text>
+          <text x="300" y="125" textAnchor="middle" fill={colors.success} fontSize="11">Flat surface!</text>
 
           {/* Legend */}
           <rect x="50" y="150" width="12" height="8" fill="url(#reviewCopperGrad)" />
-          <text x="68" y="158" fill={colors.copper} fontSize="9">Copper</text>
+          <text x="68" y="158" fill={colors.copper} fontSize="11">Copper</text>
           <rect x="120" y="150" width="12" height="8" fill="url(#reviewOxideGrad)" />
-          <text x="138" y="158" fill={colors.oxide} fontSize="9">Oxide</text>
+          <text x="138" y="158" fill={colors.oxide} fontSize="11">Oxide</text>
         </svg>
 
         <div style={{
@@ -1347,6 +1363,20 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
         {renderVisualization(true, true)}
         {renderControls(true)}
 
+        {/* Live computed results panel - changes with every slider */}
+        {(() => {
+          const r = calculateCMPResult();
+          return (
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', margin: '8px 0', padding: '8px', background: 'rgba(15,23,42,0.6)', borderRadius: '8px' }}>
+              <span style={{ color: colors.textSecondary, fontSize: '12px' }}>Time: <strong style={{ color: colors.accent }}>{polishTime}%</strong></span>
+              <span style={{ color: colors.textSecondary, fontSize: '12px' }}>Pressure: <strong style={{ color: colors.warning }}>{polishPressure}%</strong></span>
+              <span style={{ color: colors.textSecondary, fontSize: '12px' }}>Selectivity: <strong style={{ color: colors.oxide }}>{slurrySelectivity}%</strong></span>
+              <span style={{ color: colors.textSecondary, fontSize: '12px' }}>Step: <strong style={{ color: r.currentStep > 5 ? colors.warning : colors.success }}>{r.currentStep.toFixed(1)} nm</strong></span>
+              <span style={{ color: colors.textSecondary, fontSize: '12px' }}>NU: <strong style={{ color: r.nonUniformity > 7 ? colors.error : colors.success }}>{r.nonUniformity.toFixed(2)}%</strong></span>
+            </div>
+          );
+        })()}
+
         <div style={{
           background: 'rgba(245, 158, 11, 0.2)',
           padding: '16px',
@@ -1391,26 +1421,26 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
         {/* Review SVG for twist */}
         <svg width="100%" height="160" viewBox="0 0 400 160" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: '500px', display: 'block', margin: '0 auto 16px' }}>
           <rect width="400" height="160" fill="#0f172a" rx="8" />
-          <text x="200" y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="bold">CMP Defect Mechanisms</text>
+          <text x="200" y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="bold">CMP Defect Mechanisms</text>
 
           {/* Dishing */}
-          <text x="100" y="50" textAnchor="middle" fill={colors.error} fontSize="10" fontWeight="bold">Dishing</text>
+          <text x="100" y="50" textAnchor="middle" fill={colors.error} fontSize="11" fontWeight="bold">Dishing</text>
           <rect x="50" y="60" width="100" height="30" fill="#60a5fa" />
           <path d="M 70 60 Q 100 75 130 60" fill="#f59e0b" />
-          <text x="100" y="110" textAnchor="middle" fill={colors.textMuted} fontSize="9">Cu sinks below oxide</text>
+          <text x="100" y="110" textAnchor="middle" fill={colors.textMuted} fontSize="11">Cu sinks below oxide</text>
 
           {/* Erosion */}
-          <text x="300" y="50" textAnchor="middle" fill={colors.warning} fontSize="10" fontWeight="bold">Erosion</text>
+          <text x="300" y="50" textAnchor="middle" fill={colors.warning} fontSize="11" fontWeight="bold">Erosion</text>
           <rect x="250" y="70" width="100" height="20" fill="#60a5fa" />
           <rect x="260" y="60" width="30" height="30" fill="#f59e0b" />
           <rect x="310" y="60" width="30" height="30" fill="#f59e0b" />
-          <text x="300" y="120" textAnchor="middle" fill={colors.textMuted} fontSize="9">Oxide thins in dense Cu</text>
+          <text x="300" y="120" textAnchor="middle" fill={colors.textMuted} fontSize="11">Oxide thins in dense Cu</text>
 
           {/* Legend */}
           <rect x="130" y="140" width="12" height="8" fill="#f59e0b" />
-          <text x="148" y="148" fill={colors.copper} fontSize="9">Copper</text>
+          <text x="148" y="148" fill={colors.copper} fontSize="11">Copper</text>
           <rect x="200" y="140" width="12" height="8" fill="#60a5fa" />
-          <text x="218" y="148" fill={colors.oxide} fontSize="9">Oxide</text>
+          <text x="218" y="148" fill={colors.oxide} fontSize="11">Oxide</text>
         </svg>
 
         <div style={{

@@ -531,7 +531,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
         </defs>
 
         {/* Title */}
-        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+        <text x={width/2} y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
           Processor Thermal Simulation
         </text>
 
@@ -564,12 +564,12 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
         </g>
 
         {/* Y-axis label */}
-        <text x="10" y="60" fill={colors.textMuted} fontSize="10" transform={`rotate(-90, 10, 60)`}>
+        <text x="10" y="55" fill={colors.textMuted} fontSize="11" transform={`rotate(-90, 10, 55)`}>
           Temperature
         </text>
 
         {/* X-axis label */}
-        <text x={width/2} y={height - 5} textAnchor="middle" fill={colors.textMuted} fontSize="10">
+        <text x={width/2} y={height - 5} textAnchor="middle" fill={colors.textMuted} fontSize="11">
           Time
         </text>
 
@@ -585,7 +585,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
           <text x="60" y="95" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="600">
             {clockSpeed.toFixed(2)} GHz
           </text>
-          <text x="60" y="110" textAnchor="middle" fill={colors.textMuted} fontSize="10">
+          <text x="60" y="110" textAnchor="middle" fill={colors.textMuted} fontSize="11">
             {voltage.toFixed(2)}V | {power.toFixed(0)}W
           </text>
 
@@ -614,7 +614,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
         {showCooling && (
           <g transform={`translate(20, 60)`}>
             <rect x="0" y="0" width="70" height="80" rx="8" fill="#0c4a6e" stroke="#0369a1" />
-            <text x="35" y="18" textAnchor="middle" fill="#7dd3fc" fontSize="10" fontWeight="600">COOLING</text>
+            <text x="35" y="10" textAnchor="middle" fill="#7dd3fc" fontSize="11" fontWeight="600">COOLING</text>
 
             {/* Fan blades */}
             <g transform="translate(35, 50)">
@@ -639,7 +639,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
         {/* Temperature gauge */}
         <g transform={`translate(${width - 70}, 50)`}>
           <rect x="0" y="0" width="50" height="120" rx="6" fill={colors.bgSecondary} stroke={colors.border} />
-          <text x="25" y="18" textAnchor="middle" fill={colors.textMuted} fontSize="9">TEMP</text>
+          <text x="20" y="22" textAnchor="middle" fill={colors.textMuted} fontSize="11">TEMP</text>
 
           <rect x="10" y="25" width="30" height="80" rx="4" fill={colors.bgPrimary} />
           <rect x="12" y={27 + 76 * (1 - tempRatio)} width="26" height={76 * tempRatio} rx="3" fill="url(#tempGrad)" />
@@ -657,7 +657,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
             {isThrottling && <animate attributeName="opacity" values="0.5;1;0.5" dur="0.5s" repeatCount="indefinite" />}
           </circle>
 
-          <text x="45" y="22" fill={colors.textMuted} fontSize="10">DVFS STATUS</text>
+          <text x="45" y="20" fill={colors.textMuted} fontSize="11">DVFS STATUS</text>
           <text x="45" y="36" fill={isThrottling ? colors.hot : colors.success} fontSize="13" fontWeight="600">
             {isThrottling ? "THROTTLING ACTIVE" : "NORMAL OPERATION"}
           </text>
@@ -665,7 +665,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
 
         {/* Performance bar */}
         <g transform={`translate(20, ${height - 75})`}>
-          <text x="0" y="0" fill={colors.textMuted} fontSize="10">PERFORMANCE</text>
+          <text x="0" y="0" fill={colors.textMuted} fontSize="11">PERFORMANCE</text>
           <rect x="0" y="10" width={width - 100} height="16" rx="4" fill={colors.bgSecondary} />
           <rect x="0" y="10" width={(width - 100) * performanceRatio} height="16" rx="4" fill={isThrottling ? colors.hot : "url(#perfGrad)"} />
           <text x={width - 90} y="23" fill={colors.textPrimary} fontSize="14" fontWeight="600">
@@ -674,7 +674,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
         </g>
 
         {/* Formula */}
-        <text x={width/2} y={height - 15} textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="600">
+        <text x={width/2} y={height - 22} textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="600">
           P = C * V^2 * f
         </text>
       </svg>
@@ -925,13 +925,17 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
                 min="10"
                 max="100"
                 value={workload}
+                aria-label="CPU Workload"
                 onChange={(e) => setWorkload(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   background: `linear-gradient(to right, ${colors.accent} ${workload}%, ${colors.border} ${workload}%)`,
                   cursor: 'pointer',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  accentColor: colors.accent,
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1307,8 +1311,9 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
                 min="10"
                 max="100"
                 value={workload}
+                aria-label="CPU Workload"
                 onChange={(e) => setWorkload(parseInt(e.target.value))}
-                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: colors.accent }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                 <span style={{ ...typo.small, color: colors.textMuted }}>10%</span>
@@ -1327,8 +1332,9 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
                 min="35"
                 max="150"
                 value={coolingPower}
+                aria-label="Cooling Capacity (TDP)"
                 onChange={(e) => setCoolingPower(parseInt(e.target.value))}
-                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: colors.cool }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                 <span style={{ ...typo.small, color: colors.textMuted }}>Phone (35W)</span>

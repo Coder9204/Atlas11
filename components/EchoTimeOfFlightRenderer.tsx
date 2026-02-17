@@ -2406,7 +2406,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
               color: premiumDesign.colors.text.primary,
               marginBottom: premiumDesign.spacing.md,
             }}>
-              {passed ? 'Excellent Work!' : 'Keep Learning!'}
+              {passed ? 'Excellent Work!' : 'Good Job — Keep Learning!'}
             </h2>
 
             <div style={{
@@ -2573,7 +2573,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
               fontWeight: 600,
               marginBottom: premiumDesign.spacing.sm,
             }}>
-              {question.options[selectedAnswer as number]?.correct ? '✓ Correct!' : '✗ Not quite'}
+              {question.options[selectedAnswer as number]?.correct ? '✓ Correct!' : '✗ Incorrect — the correct answer is highlighted above'}
             </p>
             <p style={{ color: premiumDesign.colors.text.secondary, margin: 0 }}>
               {question.explanation}

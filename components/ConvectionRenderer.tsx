@@ -351,7 +351,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
   const [showExplanation, setShowExplanation] = useState(false);
 
   // Simulation state
-  const [heatIntensity, setHeatIntensity] = useState(70);
+  const [heatIntensity, setHeatIntensity] = useState(40);
   const [isHeating, setIsHeating] = useState(true);
   const [particles, setParticles] = useState<Particle[]>([]);
   const [showFlowLines, setShowFlowLines] = useState(true);
@@ -831,7 +831,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
 
               {/* Bottom - heating and moving right */}
               <path
-                d="M70,195 C120,195 180,195 230,195"
+                d="M70,200 C100,165 140,225 170,175 C200,150 210,210 230,175"
                 stroke="#ef4444"
                 strokeWidth="3"
                 fill="none"
@@ -1000,7 +1000,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
 
           {/* Temperature profile curve (data path using vertical space) */}
           <path
-            d={`M40,${40 + (1 - heatIntensity / 100) * 80} L80,${60 + (1 - heatIntensity / 100) * 60} L120,${90 + (1 - heatIntensity / 100) * 40} L160,${120 + (1 - heatIntensity / 100) * 30} L200,${150 + (1 - heatIntensity / 100) * 20} L240,${170 + (1 - heatIntensity / 100) * 15} L260,${180 + (1 - heatIntensity / 100) * 10}`}
+            d={`M 40 ${40 + (1 - heatIntensity / 100) * 80} L 60 ${50 + (1 - heatIntensity / 100) * 70} L 80 ${60 + (1 - heatIntensity / 100) * 60} L 100 ${75 + (1 - heatIntensity / 100) * 50} L 120 ${90 + (1 - heatIntensity / 100) * 40} L 140 ${105 + (1 - heatIntensity / 100) * 35} L 160 ${120 + (1 - heatIntensity / 100) * 30} L 180 ${135 + (1 - heatIntensity / 100) * 25} L 200 ${150 + (1 - heatIntensity / 100) * 20} L 220 ${162 + (1 - heatIntensity / 100) * 17} L 240 ${170 + (1 - heatIntensity / 100) * 15} L 260 ${180 + (1 - heatIntensity / 100) * 10}`}
             fill="none"
             stroke="#fbbf24"
             strokeWidth="2.5"
@@ -1010,7 +1010,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
           {/* Interactive point on temperature curve */}
           <circle
             cx={150}
-            cy={120 + (1 - heatIntensity / 100) * 30}
+            cy={120 + (1 - heatIntensity / 100) * 100}
             r={9}
             fill="#fbbf24"
             stroke="#ffffff"

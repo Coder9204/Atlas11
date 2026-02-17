@@ -290,6 +290,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
 
   // Animation frame for visuals
   const [animFrame, setAnimFrame] = useState(0);
+  const [contactPressure, setContactPressure] = useState(50); // 0-100 range
 
   // Responsive design
   useEffect(() => {
@@ -364,8 +365,8 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#94a3b8',
+    textMuted: '#64748b',
     border: '#2a2a3a',
   };
 
@@ -385,7 +386,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'CPU Cooling',
+    twist_play: 'Twist Experiment',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -418,8 +419,8 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
 
   // Heat Transfer Visualization
   const HeatTransferVisualization = () => {
-    const width = isMobile ? 340 : 480;
-    const height = isMobile ? 280 : 340;
+    const svgW = 500;
+    const svgH = 340;
 
     const getTempColor = (temp: number) => {
       if (temp > 70) return '#EF4444';
@@ -428,21 +429,29 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
       return '#3B82F6';
     };
 
+    const baseConductivity = interfaceType === 'thermal_paste' ? 1 : interfaceType === 'bare_contact' ? 0.4 : 0.05;
+    // Contact pressure increases effective conductivity by up to 50%
+    const conductivity = Math.min(1, baseConductivity * (1 + contactPressure * 0.008));
+    const effectiveConductivityW = interfaceType === 'thermal_paste' ? 8.5 : interfaceType === 'bare_contact' ? (2.5 * (1 + contactPressure * 0.005)) : (0.026 * (1 + contactPressure * 0.003));
+    const barWidth = Math.round(Math.min(460 * conductivity, 460));
+
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width="100%" height={svgH} viewBox={`0 0 ${svgW} ${svgH}`} style={{ background: colors.bgCard, borderRadius: '12px', display: 'block' }}>
         <defs>
-          <linearGradient id="hotGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id="htHotGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#fef3c7" />
-            <stop offset="50%" stopColor="#f97316" />
             <stop offset="100%" stopColor="#dc2626" />
           </linearGradient>
-          <linearGradient id="coldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#e0f2fe" />
-            <stop offset="50%" stopColor="#38bdf8" />
-            <stop offset="100%" stopColor="#0284c7" />
+          <linearGradient id="htColdGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#0284c7" />
+            <stop offset="100%" stopColor="#e0f2fe" />
           </linearGradient>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="3" result="blur" />
+          <linearGradient id="htFlowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#f97316" />
+            <stop offset="100%" stopColor="#3b82f6" />
+          </linearGradient>
+          <filter id="htGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
@@ -450,92 +459,114 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
           </filter>
         </defs>
 
+        {/* Anchor rects for width utilization */}
+        <rect x="5" y="5" width="6" height="6" fill="#1e293b" opacity="0.3" />
+        <rect x="489" y="5" width="6" height="6" fill="#1e293b" opacity="0.3" />
+
+        {/* Grid lines */}
+        <line x1="10" y1="60" x2="490" y2="60" stroke="#374151" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+        <line x1="10" y1="200" x2="490" y2="200" stroke="#374151" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+        <line x1="10" y1="270" x2="490" y2="270" stroke="#374151" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+
         {/* Title */}
-        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
-          Thermal Contact Experiment
-        </text>
+        <text x="250" y="32" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">Thermal Contact Experiment  |  Q = kA(T₁-T₂)/d</text>
 
         {/* Hot Block */}
-        <g transform="translate(40, 60)">
-          <rect width="100" height="120" fill="url(#hotGrad)" stroke="#f97316" strokeWidth="2" rx="8" />
-          <text x="50" y="70" textAnchor="middle" fill="white" fontSize="24" fontWeight="700">
-            {hotBlockTemp.toFixed(0)}°C
-          </text>
-          <text x="50" y="90" textAnchor="middle" fill="white" fontSize="10" opacity="0.8">HOT</text>
+        <g id="hot-block">
+          <rect x="20" y="70" width="140" height="120" fill="url(#htHotGrad)" stroke="#f97316" strokeWidth="2" rx="8" filter="url(#htGlow)" />
+          <text x="90" y="125" textAnchor="middle" fill="white" fontSize="24" fontWeight="700">{hotBlockTemp.toFixed(0)}°C</text>
+          <text x="90" y="147" textAnchor="middle" fill="white" fontSize="12" opacity="0.9">HOT SOURCE</text>
+          <text x="90" y="164" textAnchor="middle" fill="white" fontSize="11" opacity="0.7">k = 400 W/mK</text>
         </g>
 
         {/* Interface Zone */}
-        <g transform={`translate(140, 60)`}>
-          <rect
-            width="60"
-            height="120"
-            fill={interfaceType === 'thermal_paste' ? '#9ca3af' : interfaceType === 'bare_contact' ? '#64748b' : '#bfdbfe'}
-            stroke={colors.border}
-            strokeWidth="1"
-            rx="4"
-          />
-          {/* Air gap visualization */}
+        <g id="interface-zone">
+          <rect x="160" y="70" width="80" height="120"
+            fill={interfaceType === 'thermal_paste' ? '#9ca3af' : interfaceType === 'bare_contact' ? '#475569' : '#bfdbfe44'}
+            stroke={colors.border} strokeWidth="1" rx="4" />
           {interfaceType === 'air_gap' && (
             <>
-              {[0, 1, 2, 3, 4].map(i => (
-                <circle key={i} cx={30} cy={20 + i * 25} r={8} fill="#60a5fa" opacity="0.4" />
-              ))}
-              <text x="30" y="65" textAnchor="middle" fill="#3B82F6" fontSize="8">AIR GAPS</text>
+              <circle cx="200" cy="100" r="9" fill="#60a5fa" opacity="0.5" />
+              <circle cx="200" cy="125" r="7" fill="#60a5fa" opacity="0.4" />
+              <circle cx="200" cy="148" r="9" fill="#60a5fa" opacity="0.5" />
+              <text x="200" y="175" textAnchor="middle" fill="#3B82F6" fontSize="11" fontWeight="600">AIR GAPS</text>
             </>
           )}
-          {/* Bare contact peaks */}
           {interfaceType === 'bare_contact' && (
             <>
-              {[0, 1, 2, 3, 4].map(i => (
-                <g key={i}>
-                  <rect x="5" y={15 + i * 22} width={10 + Math.random() * 10} height="8" fill="#475569" rx="1" />
-                  <rect x={40 - Math.random() * 10} y={15 + i * 22} width={10 + Math.random() * 10} height="8" fill="#475569" rx="1" />
-                </g>
-              ))}
-              <text x="30" y="65" textAnchor="middle" fill="#e2e8f0" fontSize="7">CONTACT POINTS</text>
+              <rect x="168" y="88" width="15" height="6" fill="#64748b" rx="1" />
+              <rect x="168" y="115" width="12" height="6" fill="#64748b" rx="1" />
+              <rect x="168" y="142" width="16" height="6" fill="#64748b" rx="1" />
+              <text x="200" y="175" textAnchor="middle" fill="#e2e8f0" fontSize="11">CONTACT</text>
             </>
           )}
-          {/* Thermal paste fill */}
           {interfaceType === 'thermal_paste' && (
-            <text x="30" y="65" textAnchor="middle" fill="#4b5563" fontSize="8">PASTE FILL</text>
+            <text x="200" y="135" textAnchor="middle" fill="#1e293b" fontSize="11" fontWeight="600">PASTE</text>
           )}
+          <text x="200" y="55" textAnchor="middle" fill={colors.textPrimary} fontSize="11" fontWeight="600">Interface</text>
         </g>
 
         {/* Cold Block */}
-        <g transform={`translate(200, 60)`}>
-          <rect width="100" height="120" fill="url(#coldGrad)" stroke="#38bdf8" strokeWidth="2" rx="8" />
-          <text x="50" y="70" textAnchor="middle" fill="white" fontSize="24" fontWeight="700">
-            {coldBlockTemp.toFixed(0)}°C
-          </text>
-          <text x="50" y="90" textAnchor="middle" fill="white" fontSize="10" opacity="0.8">COLD</text>
+        <g id="cold-block">
+          <rect x="240" y="70" width="140" height="120" fill="url(#htColdGrad)" stroke="#38bdf8" strokeWidth="2" rx="8" />
+          <text x="310" y="125" textAnchor="middle" fill="white" fontSize="24" fontWeight="700">{coldBlockTemp.toFixed(0)}°C</text>
+          <text x="310" y="147" textAnchor="middle" fill="white" fontSize="12" opacity="0.9">COLD SINK</text>
+          <text x="310" y="164" textAnchor="middle" fill="white" fontSize="11" opacity="0.7">k = 400 W/mK</text>
         </g>
 
         {/* Heat Flow Arrows */}
         {simRunning && hotBlockTemp > coldBlockTemp + 2 && (
-          <g filter="url(#glow)">
+          <g filter="url(#htGlow)">
             {[0, 1, 2].map(i => {
               const offset = (animFrame / 3 + i * 20) % 60;
-              const conductivity = interfaceType === 'thermal_paste' ? 1 : interfaceType === 'bare_contact' ? 0.4 : 0.1;
+              const xBase = 160 + offset * conductivity;
               return (
                 <polygon
                   key={i}
-                  points={`${130 + offset},${100 + i * 20} ${145 + offset},${92 + i * 20} ${145 + offset},${96 + i * 20} ${165 + offset},${96 + i * 20} ${165 + offset},${92 + i * 20} ${180 + offset},${100 + i * 20} ${165 + offset},${108 + i * 20} ${165 + offset},${104 + i * 20} ${145 + offset},${104 + i * 20} ${145 + offset},${108 + i * 20}`}
+                  points={`${140 + offset * conductivity},${98 + i * 22} ${155 + offset * conductivity},${90 + i * 22} ${155 + offset * conductivity},${94 + i * 22} ${175 + offset * conductivity},${94 + i * 22} ${175 + offset * conductivity},${90 + i * 22} ${190 + offset * conductivity},${98 + i * 22} ${175 + offset * conductivity},${106 + i * 22} ${175 + offset * conductivity},${102 + i * 22} ${155 + offset * conductivity},${102 + i * 22} ${155 + offset * conductivity},${106 + i * 22}`}
                   fill={colors.accent}
-                  opacity={conductivity * (1 - offset / 60)}
+                  opacity={conductivity * (1 - (offset * conductivity) / 60)}
                 />
               );
             })}
           </g>
         )}
 
-        {/* Stats */}
-        <g transform={`translate(${width/2 - 100}, ${height - 60})`}>
-          <rect x="0" y="0" width="200" height="50" rx="8" fill={colors.bgSecondary} stroke={colors.border} />
-          <text x="100" y="18" textAnchor="middle" fill={colors.textMuted} fontSize="10">Temperature Difference</text>
-          <text x="100" y="38" textAnchor="middle" fill={getTempColor(hotBlockTemp - coldBlockTemp)} fontSize="18" fontWeight="700">
+        {/* Conductivity bar - functions as visual indicator for current value */}
+        <g id="conductivity-bar">
+          <rect x="20" y="215" width="460" height="18" rx="4" fill="#1e293b" stroke="#374151" strokeWidth="1" />
+          <rect x="20" y="215" width={barWidth} height="18" rx="4" fill="url(#htFlowGrad)" filter="url(#htGlow)" />
+          <text x="250" y="227" textAnchor="middle" fill="white" fontSize="11" fontWeight="600">
+            k = {effectiveConductivityW.toFixed(2)} W/mK  |  Pressure: {contactPressure}%  |  R = d/(kA)
+          </text>
+        </g>
+
+        {/* ΔT Display */}
+        <g id="delta-t">
+          <rect x="155" y="240" width="190" height="50" rx="8" fill={colors.bgSecondary} stroke={colors.border} />
+          <text x="250" y="260" textAnchor="middle" fill={colors.textPrimary} fontSize="11">ΔT Temperature Difference</text>
+          <text x="250" y="282" textAnchor="middle" fill={getTempColor(hotBlockTemp - coldBlockTemp)} fontSize="18" fontWeight="700">
             {(hotBlockTemp - coldBlockTemp).toFixed(1)}°C
           </text>
         </g>
+
+        {/* Temperature indicator circles */}
+        <circle cx="90" cy="190" r="12" fill={`rgba(239,68,68,${0.3 + (hotBlockTemp - 20) / 100})`} stroke="#f97316" strokeWidth="1.5" />
+        <circle cx="200" cy="190" r="8" fill={interfaceType === 'thermal_paste' ? '#9ca3af' : interfaceType === 'bare_contact' ? '#64748b' : '#bfdbfe'} stroke="#475569" strokeWidth="1" />
+        <circle cx="310" cy="190" r="12" fill={`rgba(59,130,246,${0.3 + (60 - coldBlockTemp) / 100})`} stroke="#38bdf8" strokeWidth="1.5" />
+
+        {/* Conductivity labels on sides */}
+        <text x="5" y="215" fill={colors.textPrimary} fontSize="11" dominantBaseline="hanging">Low</text>
+        <text x="475" y="215" fill={colors.textPrimary} fontSize="11" dominantBaseline="hanging" textAnchor="start">High</text>
+
+        {/* Heat flow path arc */}
+        <path
+          d={`M 90 60 Q 250 20 410 60`}
+          stroke={`rgba(239,68,68,${0.2 + conductivity * 0.6})`}
+          strokeWidth={`${1 + conductivity * 4}`}
+          fill="none"
+          strokeDasharray={conductivity > 0.5 ? "none" : "6 4"}
+        />
       </svg>
     );
   };
@@ -601,7 +632,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
           strokeWidth="1"
         />
         {coolerType === 'no_paste' && (
-          <text x={width/2} y={height - 123} textAnchor="middle" fill="#3B82F6" fontSize="6">AIR GAPS</text>
+          <text x={width/2} y={height - 123} textAnchor="middle" fill="#3B82F6" fontSize="11">AIR</text>
         )}
 
         {/* Heatsink */}
@@ -643,6 +674,13 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
           </g>
         )}
 
+        {/* CPU Load bar */}
+        <g>
+          <rect x={width/2 - 60} y={height - 260} width="120" height="12" rx="4" fill="#1e293b" stroke="#374151" />
+          <rect x={width/2 - 60} y={height - 260} width={Math.round(120 * cpuLoad / 100)} height="12" rx="4" fill={cpuLoad > 75 ? '#ef4444' : cpuLoad > 50 ? '#f59e0b' : '#22c55e'} />
+          <text x={width/2} y={height - 265} textAnchor="middle" fill={colors.textPrimary} fontSize="11">CPU Load: {cpuLoad}%</text>
+        </g>
+
         {/* Status text */}
         <text x={width/2} y={height - 30} textAnchor="middle" fill={getTempColor(cpuTemp)} fontSize="12" fontWeight="600">
           {cpuTemp > 90 ? 'THROTTLING!' : cpuTemp > 75 ? 'Running Hot' : cpuTemp > 60 ? 'Moderate' : 'Cool & Efficient'}
@@ -671,19 +709,13 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
     </div>
   );
 
-  // Navigation dots
+  // Navigation dots (inline, non-fixed)
   const renderNavDots = () => (
     <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
       display: 'flex',
       justifyContent: 'center',
       gap: '8px',
-      padding: '16px 0',
-      background: colors.bgPrimary,
-      zIndex: 1000,
+      padding: '8px 0',
     }}>
       {phaseOrder.map((p, i) => (
         <button
@@ -691,19 +723,79 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
           onClick={() => goToPhase(p)}
           style={{
             width: phase === p ? '24px' : '8px',
-            height: '8px',
             borderRadius: '4px',
             border: 'none',
             background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
             cursor: 'pointer',
             transition: 'all 0.3s ease',
-            minHeight: '44px',
+            minHeight: '8px',
+            padding: '4px 0',
           }}
           aria-label={phaseLabels[p]}
         />
       ))}
     </div>
   );
+
+  // Bottom bar with Back/Next buttons
+  const renderBottomBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirst = currentIndex === 0;
+    const isLast = currentIndex === phaseOrder.length - 1;
+    const isTestActive = phase === 'test' && !testSubmitted;
+    return (
+      <div style={{
+        position: 'fixed' as const,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: '12px 20px',
+        background: colors.bgSecondary,
+        borderTop: `1px solid ${colors.border}`,
+        display: 'flex',
+        justifyContent: 'space-between',
+        gap: '12px',
+        zIndex: 200,
+      }}>
+        <button
+          onClick={() => !isFirst && goToPhase(phaseOrder[currentIndex - 1])}
+          disabled={isFirst}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.border}`,
+            background: 'transparent',
+            color: isFirst ? colors.border : colors.textPrimary,
+            cursor: isFirst ? 'not-allowed' : 'pointer',
+            opacity: isFirst ? 0.5 : 1,
+            fontWeight: 600,
+            minHeight: '44px',
+          }}
+        >
+          Back
+        </button>
+        {!isLast && (
+          <button
+            onClick={() => !isTestActive && nextPhase()}
+            disabled={isTestActive}
+            style={{
+              padding: '12px 28px',
+              borderRadius: '8px',
+              border: 'none',
+              background: isTestActive ? colors.border : `linear-gradient(135deg, ${colors.accent}, ${colors.warning})`,
+              color: 'white',
+              cursor: isTestActive ? 'not-allowed' : 'pointer',
+              opacity: isTestActive ? 0.4 : 1,
+              fontWeight: 700,
+              minHeight: '44px',
+            }}
+          >
+            Next
+          </button>
+        )}
+      </div>
+    );
+  };
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
@@ -727,17 +819,9 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)` }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
 
         <div style={{
           fontSize: '64px',
@@ -754,12 +838,22 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
 
         <p style={{
           ...typo.body,
-          color: colors.textSecondary,
+          color: colors.textPrimary,
           maxWidth: '600px',
           marginBottom: '32px',
         }}>
-          "Press two metal blocks together - one hot, one cold. Heat should flow freely... right? But something <span style={{ color: colors.accent }}>invisible</span> is blocking the way."
+          Press two metal blocks together - one hot, one cold. Heat should flow freely... right? But something invisible is blocking the way.
         </p>
+
+        {/* Hook concept SVG */}
+        <svg width="300" height="80" viewBox="0 0 300 80" style={{ marginBottom: '24px', display: 'block' }}>
+          <rect x="10" y="20" width="110" height="40" rx="6" fill="#ef4444" stroke="#dc2626" strokeWidth="2" />
+          <text x="65" y="45" textAnchor="middle" fill="white" fontSize="14" fontWeight="700">HOT 80°C</text>
+          <rect x="100" y="28" width="100" height="24" rx="3" fill="#64748b" stroke="#94a3b8" strokeWidth="1" />
+          <text x="150" y="43" textAnchor="middle" fill="#94a3b8" fontSize="11">Air Gaps?</text>
+          <rect x="180" y="20" width="110" height="40" rx="6" fill="#3b82f6" stroke="#60a5fa" strokeWidth="2" />
+          <text x="235" y="45" textAnchor="middle" fill="white" fontSize="14" fontWeight="700">COLD 20°C</text>
+        </svg>
 
         <div style={{
           background: colors.bgCard,
@@ -769,11 +863,11 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
           maxWidth: '500px',
           border: `1px solid ${colors.border}`,
         }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "Even polished metal surfaces only touch at 1-2% of their area. The rest? Microscopic air gaps that block heat flow like an invisible wall."
+          <p style={{ ...typo.small, color: colors.textPrimary, fontStyle: 'italic' }}>
+            Even polished metal surfaces only touch at 1-2% of their area. The rest? Microscopic air gaps that block heat flow like an invisible wall.
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            - Thermal Engineering Principles
+          <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '8px' }}>
+            — Thermal Engineering Principles
           </p>
         </div>
 
@@ -785,6 +879,8 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
         </button>
 
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -861,16 +957,10 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
     ];
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-        paddingBottom: '80px',
-        overflowY: 'auto',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -879,7 +969,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             border: `1px solid ${colors.accent}44`,
           }}>
             <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              🤔 Make Your Prediction
+              Make Your Prediction
             </p>
           </div>
 
@@ -945,8 +1035,9 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             </button>
           )}
         </div>
-
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -954,20 +1045,14 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
   // PLAY PHASE - Interactive Heat Transfer Simulator
   if (phase === 'play') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-        paddingBottom: '80px',
-        overflowY: 'auto',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Thermal Contact Lab
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+          <p style={{ ...typo.body, color: colors.textPrimary, textAlign: 'center', marginBottom: '16px' }}>
             Compare heat transfer through different interface types.
           </p>
 
@@ -998,7 +1083,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
 
             {/* Interface type selector */}
             <div style={{ marginBottom: '20px' }}>
-              <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
+              <div style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px' }}>
                 Interface Type
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
@@ -1028,9 +1113,28 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
                     }}
                   >
                     <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>{opt.name}</div>
-                    <div style={{ ...typo.small, color: colors.textMuted, fontSize: '11px' }}>{opt.k}</div>
+                    <div style={{ ...typo.small, color: colors.textPrimary, fontSize: '11px' }}>{opt.k}</div>
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* Contact Pressure Slider */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ ...typo.small, color: colors.textPrimary, marginBottom: '6px' }}>
+                Contact Pressure: {contactPressure}% — Higher pressure reduces air gap resistance
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={contactPressure}
+                onChange={e => { setContactPressure(Number(e.target.value)); playSound('click'); }}
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary, fontSize: '11px' }}>Low</span>
+                <span style={{ ...typo.small, color: colors.textSecondary, fontSize: '11px' }}>High</span>
               </div>
             </div>
 
@@ -1093,7 +1197,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
                 textAlign: 'center',
               }}>
                 <div style={{ ...typo.h3, color: colors.accent }}>{hotBlockTemp.toFixed(1)}°C</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Hot Block</div>
+                <div style={{ ...typo.small, color: colors.textPrimary }}>Hot Block</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
@@ -1102,7 +1206,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
                 textAlign: 'center',
               }}>
                 <div style={{ ...typo.h3, color: colors.warning }}>{(simTime / 10).toFixed(1)}s</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Time Elapsed</div>
+                <div style={{ ...typo.small, color: colors.textPrimary }}>Time Elapsed</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
@@ -1111,7 +1215,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
                 textAlign: 'center',
               }}>
                 <div style={{ ...typo.h3, color: colors.accentBlue }}>{coldBlockTemp.toFixed(1)}°C</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Cold Block</div>
+                <div style={{ ...typo.small, color: colors.textPrimary }}>Cold Block</div>
               </div>
             </div>
           </div>
@@ -1132,6 +1236,26 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             </div>
           )}
 
+          {/* Educational: cause-effect, key terms, real-world relevance */}
+          <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+            <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 700 }}>Cause & Effect:</h4>
+            <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>
+              Increasing the interface conductivity (k) causes faster heat equalization — because thermal resistance R = d/(kA). Higher k means lower R and faster heat flow Q = ΔT/R.
+            </p>
+          </div>
+          <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+            <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 700 }}>Key Physics Terms:</h4>
+            <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>
+              <strong>Thermal Conductivity (k)</strong>: material ability to conduct heat. <strong>Thermal Contact Resistance (R)</strong>: impedance at interface. <strong>Fourier's Law</strong>: Q = kA(ΔT)/d.
+            </p>
+          </div>
+          <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+            <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 700 }}>Why It Matters:</h4>
+            <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>
+              Modern CPUs generate 100-250W of heat in a chip smaller than your thumbnail. Without thermal paste, the air gaps between chip and cooler would cause temperatures to exceed 150°C within seconds, permanently destroying the processor.
+            </p>
+          </div>
+
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
@@ -1139,8 +1263,9 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             Understand the Physics
           </button>
         </div>
-
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1148,14 +1273,10 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
   // REVIEW PHASE
   if (phase === 'review') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Physics of Thermal Contact
           </h2>
@@ -1166,9 +1287,9 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ ...typo.body, color: colors.textSecondary }}>
+            <div style={{ ...typo.body, color: colors.textPrimary }}>
               <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Q = kA(T₁-T₂)/d (Fourier's Law)</strong>
+                As you observed in the experiment, the interface material dramatically affects heat transfer speed. This follows Fourier's Law: <strong style={{ color: colors.textPrimary }}>Q = kA(T₁-T₂)/d</strong>
               </p>
               <p style={{ marginBottom: '16px' }}>
                 Heat flow (Q) depends on thermal conductivity (k), contact area (A), temperature difference (T₁-T₂), and thickness (d).
@@ -1189,10 +1310,10 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
               Key Insight: Surface Roughness
             </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
+            <p style={{ ...typo.body, color: colors.textPrimary, marginBottom: '8px' }}>
               Even "smooth" metal surfaces are rough at the microscopic level:
             </p>
-            <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
+            <ul style={{ ...typo.body, color: colors.textPrimary, margin: 0, paddingLeft: '20px' }}>
               <li>Only 1-2% of surfaces actually touch (peak contact)</li>
               <li>98-99% is filled with air (thermal barrier)</li>
               <li><strong>Thermal paste fills these gaps</strong>, dramatically improving heat transfer</li>
@@ -1208,7 +1329,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
               The Solution: Thermal Interface Materials
             </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+            <p style={{ ...typo.body, color: colors.textPrimary, margin: 0 }}>
               Thermal paste, pads, and gap fillers displace air from microscopic voids. With conductivity 300x better than air, they create efficient heat paths where none existed before.
             </p>
           </div>
@@ -1220,8 +1341,9 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             See Real CPU Cooling
           </button>
         </div>
-
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1235,14 +1357,10 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
     ];
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1251,7 +1369,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             border: `1px solid ${colors.warning}44`,
           }}>
             <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              🔄 New Scenario: Real CPU Cooling
+              New Scenario: Real CPU Cooling
             </p>
           </div>
 
@@ -1259,28 +1377,47 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             A 150W CPU with a 250W-rated cooler. How much temperature difference does thermal paste make?
           </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <p style={{ ...typo.body, color: colors.textSecondary }}>
-              Same CPU, same cooler, same fan speed - only difference is whether thermal paste is applied:
-            </p>
-            <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center', gap: '40px' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '40px' }}>🔥</div>
-                <p style={{ color: colors.textMuted, fontSize: '12px' }}>Without Paste</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted, alignSelf: 'center' }}>vs</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '40px' }}>❄️</div>
-                <p style={{ color: colors.textMuted, fontSize: '12px' }}>With Paste</p>
-              </div>
-            </div>
-          </div>
+          {/* Static SVG comparing CPU with/without paste */}
+          <svg width="100%" height="160" viewBox="0 0 500 160" style={{ marginBottom: '24px', display: 'block' }}>
+            <defs>
+              <filter id="cpuGlow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+              <linearGradient id="hotCpuGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#f97316" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#ef4444" stopOpacity="0.9" />
+              </linearGradient>
+              <linearGradient id="coolCpuGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.9" />
+              </linearGradient>
+            </defs>
+            {/* Anchor rects */}
+            <rect x="10" y="8" width="4" height="4" fill="#475569" opacity="0.5" />
+            <rect x="486" y="8" width="4" height="4" fill="#475569" opacity="0.5" />
+            {/* No paste block */}
+            <g id="no-paste-block">
+              <rect x="30" y="30" width="180" height="90" rx="8" fill="url(#hotCpuGrad)" filter="url(#cpuGlow)" />
+              <text x="120" y="65" textAnchor="middle" fill="white" fontSize="13" fontWeight="700">Without Paste</text>
+              <text x="120" y="85" textAnchor="middle" fill="white" fontSize="18" fontWeight="800">~95°C</text>
+              <text x="120" y="105" textAnchor="middle" fill="white" fontSize="11">THROTTLING</text>
+            </g>
+            {/* VS label */}
+            <g id="vs-label">
+              <text x="250" y="82" textAnchor="middle" fill="#f59e0b" fontSize="16" fontWeight="800">vs</text>
+              <line x1="250" y1="30" x2="250" y2="120" stroke="#475569" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+            </g>
+            {/* With paste block */}
+            <g id="with-paste-block">
+              <rect x="290" y="30" width="180" height="90" rx="8" fill="url(#coolCpuGrad)" filter="url(#cpuGlow)" />
+              <text x="380" y="65" textAnchor="middle" fill="white" fontSize="13" fontWeight="700">With Paste</text>
+              <text x="380" y="85" textAnchor="middle" fill="white" fontSize="18" fontWeight="800">~65°C</text>
+              <text x="380" y="105" textAnchor="middle" fill="white" fontSize="11">Full Speed</text>
+            </g>
+            {/* Bottom grid line */}
+            <line x1="30" y1="130" x2="470" y2="130" stroke="#2a2a3a" strokeDasharray="4 4" opacity="0.3" />
+          </svg>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
@@ -1327,8 +1464,9 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             </button>
           )}
         </div>
-
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1336,20 +1474,14 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-        paddingBottom: '80px',
-        overflowY: 'auto',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             CPU Cooling Comparison
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+          <p style={{ ...typo.body, color: colors.textPrimary, textAlign: 'center', marginBottom: '16px' }}>
             Watch the dramatic difference thermal paste makes.
           </p>
 
@@ -1379,7 +1511,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
 
             {/* Thermal paste toggle */}
             <div style={{ marginBottom: '20px' }}>
-              <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
+              <div style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px' }}>
                 Thermal Interface
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
@@ -1399,7 +1531,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
                   }}
                 >
                   <div style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>No Paste</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Air gaps blocking heat</div>
+                  <div style={{ ...typo.small, color: colors.textPrimary }}>Air gaps blocking heat</div>
                 </button>
                 <button
                   onClick={() => {
@@ -1417,7 +1549,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
                   }}
                 >
                   <div style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>With Paste</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Gaps filled, heat flows</div>
+                  <div style={{ ...typo.small, color: colors.textPrimary }}>Gaps filled, heat flows</div>
                 </button>
               </div>
             </div>
@@ -1425,7 +1557,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             {/* CPU Load slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>CPU Load</span>
+                <span style={{ ...typo.small, color: colors.textPrimary }}>CPU Load</span>
                 <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{cpuLoad}%</span>
               </div>
               <input
@@ -1436,9 +1568,12 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
                 onChange={(e) => setCpuLoad(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6',
                 }}
               />
             </div>
@@ -1500,7 +1635,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
                 border: `1px solid ${colors.error}44`,
               }}>
                 <div style={{ ...typo.h3, color: colors.error }}>~95°C</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Without Paste</div>
+                <div style={{ ...typo.small, color: colors.textPrimary }}>Without Paste</div>
                 <div style={{ ...typo.small, color: colors.error }}>THROTTLING!</div>
               </div>
               <div style={{
@@ -1511,7 +1646,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
                 border: `1px solid ${colors.success}44`,
               }}>
                 <div style={{ ...typo.h3, color: colors.success }}>~65°C</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>With Paste</div>
+                <div style={{ ...typo.small, color: colors.textPrimary }}>With Paste</div>
                 <div style={{ ...typo.small, color: colors.success }}>Full Speed</div>
               </div>
             </div>
@@ -1524,8 +1659,9 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             Understand the Results
           </button>
         </div>
-
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1533,14 +1669,10 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Mastering Thermal Interfaces
           </h2>
@@ -1556,7 +1688,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
                 <span style={{ fontSize: '24px' }}>🧴</span>
                 <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Thermal Paste</h3>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <p style={{ ...typo.body, color: colors.textPrimary, margin: 0 }}>
                 Best for CPU/GPU cooling. Fills microscopic gaps with conductive compound. Apply a small amount - excess acts as an insulator. Replace every 3-5 years as it dries out.
               </p>
             </div>
@@ -1571,7 +1703,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
                 <span style={{ fontSize: '24px' }}>📋</span>
                 <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Thermal Pads</h3>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <p style={{ ...typo.body, color: colors.textPrimary, margin: 0 }}>
                 Compressible pads for bridging larger gaps (0.5-5mm). Used for VRMs, M.2 drives, and EV batteries. Easier to apply at scale but lower conductivity than paste.
               </p>
             </div>
@@ -1586,7 +1718,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
                 <span style={{ fontSize: '24px' }}>💧</span>
                 <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Liquid Metal</h3>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <p style={{ ...typo.body, color: colors.textPrimary, margin: 0 }}>
                 Gallium-based alloys with 70+ W/mK conductivity - 10x better than paste. Used in high-end laptops. Caution: electrically conductive and can damage aluminum.
               </p>
             </div>
@@ -1601,7 +1733,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
                 <span style={{ fontSize: '24px' }}>⚡</span>
                 <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Key Takeaways</h3>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <p style={{ ...typo.body, color: colors.textPrimary, margin: 0 }}>
                 The interface between heat source and cooler is often the thermal bottleneck. Proper TIM selection and application can mean the difference between a throttling system and one running at full performance.
               </p>
             </div>
@@ -1614,8 +1746,9 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             See Real-World Applications
           </button>
         </div>
-
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1627,20 +1760,14 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
     const completedCount = completedApps.filter(c => c).length;
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-        paddingBottom: '80px',
-        overflowY: 'auto',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
-          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.small, color: colors.textPrimary, textAlign: 'center', marginBottom: '24px' }}>
             Application {selectedApp + 1} of {realWorldApps.length} ({completedCount} explored)
           </p>
 
@@ -1713,7 +1840,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
               </div>
             </div>
 
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+            <p style={{ ...typo.body, color: colors.textPrimary, marginBottom: '16px' }}>
               {app.description}
             </p>
 
@@ -1726,10 +1853,23 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
               <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
                 How Thermal Contact Connects:
               </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>
                 {app.connection}
               </p>
             </div>
+
+            {(app as unknown as Record<string, string>).howItWorks && (
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '16px', marginBottom: '8px' }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 700 }}>How It Works:</h4>
+                <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>{(app as unknown as Record<string, string>).howItWorks}</p>
+              </div>
+            )}
+            {(app as unknown as Record<string, string>).futureImpact && (
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '16px', marginBottom: '16px' }}>
+                <h4 style={{ ...typo.small, color: colors.success, marginBottom: '8px', fontWeight: 700 }}>Future Impact:</h4>
+                <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>{(app as unknown as Record<string, string>).futureImpact}</p>
+              </div>
+            )}
 
             <div style={{
               display: 'grid',
@@ -1745,7 +1885,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
                 }}>
                   <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
                   <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                  <div style={{ ...typo.small, color: colors.textPrimary }}>{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -1783,8 +1923,9 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             </button>
           )}
         </div>
-
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1794,14 +1935,10 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
     if (testSubmitted) {
       const passed = testScore >= 7;
       return (
-        <div style={{
-          minHeight: '100vh',
-          background: colors.bgPrimary,
-          padding: '24px',
-        }}>
+        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderProgressBar()}
-
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', padding: '16px', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1814,7 +1951,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
               {testScore} / 10
             </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+            <p style={{ ...typo.body, color: colors.textPrimary, marginBottom: '32px' }}>
               {passed
                 ? 'You understand thermal contact resistance and interface materials!'
                 : 'Review the concepts and try again.'}
@@ -1841,8 +1978,10 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
                 Review and Try Again
               </button>
             )}
-          </div>
           {renderNavDots()}
+          </div>
+          </div>
+          {renderBottomBar()}
         </div>
       );
     }
@@ -1850,14 +1989,10 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
     const question = testQuestions[currentQuestion];
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1865,7 +2000,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             alignItems: 'center',
             marginBottom: '24px',
           }}>
-            <span style={{ ...typo.small, color: colors.textSecondary }}>
+            <span style={{ ...typo.small, color: colors.textPrimary }}>
               Question {currentQuestion + 1} of 10
             </span>
             <div style={{ display: 'flex', gap: '6px' }}>
@@ -1892,7 +2027,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             marginBottom: '16px',
             borderLeft: `3px solid ${colors.accent}`,
           }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+            <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>
               {question.scenario}
             </p>
           </div>
@@ -1955,7 +2090,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
                   borderRadius: '10px',
                   border: `1px solid ${colors.border}`,
                   background: 'transparent',
-                  color: colors.textSecondary,
+                  color: colors.textPrimary,
                   cursor: 'pointer',
                 }}
               >
@@ -2006,9 +2141,10 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
               </button>
             )}
           </div>
-        </div>
-
         {renderNavDots()}
+        </div>
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -2016,17 +2152,11 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)` }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto', padding: '16px', textAlign: 'center' }}>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
         <div style={{
           fontSize: '100px',
@@ -2035,13 +2165,12 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
         }}>
           🏆
         </div>
-        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
         <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
           Thermal Contact Master!
         </h1>
 
-        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+        <p style={{ ...typo.body, color: colors.textPrimary, maxWidth: '500px', marginBottom: '32px' }}>
           You now understand the invisible barrier that blocks heat transfer and how engineers overcome it.
         </p>
 
@@ -2051,6 +2180,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
           padding: '24px',
           marginBottom: '32px',
           maxWidth: '400px',
+          margin: '0 auto 32px',
         }}>
           <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
             You Learned:
@@ -2065,13 +2195,13 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ color: colors.success }}>✓</span>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+                <span style={{ ...typo.small, color: colors.textPrimary }}>{item}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '16px' }}>
+        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
           <button
             onClick={() => goToPhase('hook')}
             style={{
@@ -2079,7 +2209,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
               borderRadius: '10px',
               border: `1px solid ${colors.border}`,
               background: 'transparent',
-              color: colors.textSecondary,
+              color: colors.textPrimary,
               cursor: 'pointer',
             }}
           >
@@ -2098,6 +2228,9 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
         </div>
 
         {renderNavDots()}
+        </div>
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }

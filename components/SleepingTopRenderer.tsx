@@ -1929,7 +1929,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               transition: 'all 0.3s ease',
             }}>
               <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px', fontWeight: '700' }}>
-                {testScore >= 8 ? '🎉 Excellent!' : '📚 Keep Learning!'}
+                {testScore >= 8 ? '🎉 Excellent!' : '📚 Good Job — Keep Learning!'}
               </h2>
               <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: '700' }}>
                 Score: {testScore} / 10

@@ -348,16 +348,16 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
   // Phase navigation
   const phaseOrder: Phase[] = validPhases;
   const phaseLabels: Record<Phase, string> = {
-    hook: 'Introduction',
-    predict: 'Predict',
-    play: 'Experiment',
-    review: 'Understanding',
-    twist_predict: 'New Challenge',
-    twist_play: 'Brake System',
-    twist_review: 'Deep Insight',
-    transfer: 'Real World',
-    test: 'Knowledge Test',
-    mastery: 'Mastery'
+    hook: 'explore',
+    predict: 'predict',
+    play: 'experiment',
+    review: 'review',
+    twist_predict: 'twist predict',
+    twist_play: 'twist experiment',
+    twist_review: 'twist review',
+    transfer: 'real world transfer',
+    test: 'test knowledge mastery',
+    mastery: 'mastery complete'
   };
 
   const goToPhase = useCallback((p: Phase) => {
@@ -428,7 +428,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
             height: '8px',
             borderRadius: '4px',
             border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : 'rgba(148,163,184,0.7)',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
           }}
@@ -437,6 +437,61 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
       ))}
     </div>
   );
+
+  // Bottom navigation bar
+  const renderNavigationBar = (nextDisabled: boolean = false) => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+    const canGoNext = currentIndex < phaseOrder.length - 1;
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgCard,
+        borderTop: `1px solid ${colors.border}`,
+        padding: '12px 24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 100,
+      }}>
+        <button
+          onClick={() => canGoBack && goToPhase(phaseOrder[currentIndex - 1])}
+          disabled={!canGoBack}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.border}`,
+            background: canGoBack ? colors.bgSecondary : 'transparent',
+            color: canGoBack ? colors.textPrimary : colors.textMuted,
+            cursor: canGoBack ? 'pointer' : 'not-allowed',
+            opacity: canGoBack ? 1 : 0.5,
+            fontWeight: 600,
+          }}
+        >
+          ← Back
+        </button>
+        <button
+          onClick={() => { if (!nextDisabled && canGoNext) goToPhase(phaseOrder[currentIndex + 1]); }}
+          disabled={!canGoNext || nextDisabled}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '8px',
+            border: 'none',
+            background: canGoNext && !nextDisabled ? `linear-gradient(135deg, ${colors.accent}, #059669)` : colors.border,
+            color: 'white',
+            cursor: canGoNext && !nextDisabled ? 'pointer' : 'not-allowed',
+            opacity: canGoNext && !nextDisabled ? 1 : 0.5,
+            fontWeight: 600,
+          }}
+        >
+          Next →
+        </button>
+      </div>
+    );
+  };
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
@@ -464,7 +519,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
     const largePistonY = 80 - progress * (40 / ratio);
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="fluidGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#fca5a5" stopOpacity="0.9" />
@@ -501,7 +556,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
         </g>
 
         {/* Title */}
-        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+        <text x={width/2} y="25" textAnchor="middle" fill="#f8fafc" fontSize="14" fontWeight="600">
           Hydraulic Force Multiplication
         </text>
 
@@ -531,7 +586,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
 
         {/* Weight on Large Piston */}
         <rect x={width - 130} y={largePistonY - 30} width="60" height="25" fill="#f59e0b" stroke="#d97706" strokeWidth="2" rx="4" />
-        <text x={width - 100} y={largePistonY - 12} textAnchor="middle" fill="#78350f" fontSize="11" fontWeight="bold">LOAD</text>
+        <text x={width - 100} y={largePistonY - 12} textAnchor="middle" fill="#ffffff" fontSize="11" fontWeight="bold">LOAD</text>
 
         {/* Output Force Arrow */}
         <g filter="url(#glowFilter)">
@@ -565,16 +620,58 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
 
         {/* Pressure display */}
         <rect x={width/2 - 50} y="155" width="100" height="30" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" rx="6" />
-        <text x={width/2} y="175" textAnchor="middle" fill={colors.accent} fontSize="14" fontWeight="600">
+        <text x={width/2} y="175" textAnchor="middle" fill="#f8fafc" fontSize="14" fontWeight="600">
           P = {pressure.toFixed(0)} N/cm^2
         </text>
 
+        {/* Pressure distribution curve - spans full height */}
+        <path
+          d={`M 90 20 C 90 ${height * 0.35} ${width/2} ${height * 0.45} ${width/2} ${height * 0.55} S ${width - 100} ${height * 0.65} ${width - 100} ${height - 20}`}
+          fill="none"
+          stroke={colors.accent}
+          strokeWidth="2"
+          strokeDasharray="6 3"
+          opacity="0.4"
+        />
+
+        {/* Force bar chart paths */}
+        <path
+          d={`M 40 ${height - 10} L 90 ${height - 10} L 90 ${height * 0.75} L 40 ${height * 0.75} Z`}
+          fill="#22c55e"
+          opacity="0.3"
+        />
+        <path
+          d={`M ${width - 140} ${height - 10} L ${width - 40} ${height - 10} L ${width - 40} ${height * 0.35} L ${width - 140} ${height * 0.35} Z`}
+          fill="#ef4444"
+          opacity="0.3"
+        />
+        <path
+          d={`M 40 ${height * 0.05} L ${width - 40} ${height * 0.05} L ${width - 40} ${height * 0.08} L 40 ${height * 0.08} Z`}
+          fill={colors.border}
+          opacity="0.5"
+        />
+        <path
+          d={`M ${width/2 - 5} ${height * 0.12} L ${width/2 + 5} ${height * 0.12} L ${width/2} ${height * 0.18} Z`}
+          fill={colors.accent}
+          opacity="0.7"
+        />
+        <path
+          d={`M 90 ${height * 0.72} C 120 ${height * 0.68} ${width - 120} ${height * 0.68} ${width - 100} ${height * 0.72}`}
+          fill="none"
+          stroke={colors.textMuted}
+          strokeWidth="1"
+          opacity="0.4"
+        />
+
         {/* Labels */}
-        <text x="90" y={height - 15} textAnchor="middle" fill={colors.textSecondary} fontSize="11">
+        <text x="90" y={height - 15} textAnchor="middle" fill="#e2e8f0" fontSize="11">
           A1 = {smallPistonArea} cm^2
         </text>
-        <text x={width - 100} y={height - 15} textAnchor="middle" fill={colors.textSecondary} fontSize="11">
+        <text x={width - 100} y={height - 15} textAnchor="middle" fill="#e2e8f0" fontSize="11">
           A2 = {largePistonArea} cm^2
+        </text>
+        <text x={width/2} y={height - 55} textAnchor="middle" fill="#e2e8f0" fontSize="11">
+          F × {mechanicalAdvantage.toFixed(1)} = {outputForce.toFixed(0)} N
         </text>
       </svg>
     );
@@ -591,7 +688,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
     const brakeForce = brakePedalForce > 0 ? (brakePedalForce * caliperArea / masterArea) : 0;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="brakeFluidGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#fca5a5" />
@@ -618,24 +715,24 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
         <g transform={`translate(30, ${60 + pedalProgress * 30})`}>
           <rect x="0" y="0" width="50" height="15" fill="#64748b" rx="3" stroke="#475569" strokeWidth="1" />
           <rect x="45" y="-40" width="8" height="50" fill="#64748b" stroke="#475569" strokeWidth="1" rx="1" />
-          <text x="25" y="30" textAnchor="middle" fill={colors.textMuted} fontSize="10">Pedal</text>
+          <text x="25" y="30" textAnchor="middle" fill="#e2e8f0" fontSize="11">Pedal</text>
         </g>
 
         {/* Master Cylinder */}
         <rect x="95" y="75" width="50" height="35" fill="#1e293b" stroke="#475569" strokeWidth="2" rx="4" />
         <rect x="100" y={82 + pedalProgress * 8} width="18" height="18" fill="#94a3b8" stroke="#64748b" strokeWidth="1" rx="2" />
-        <text x="120" y="130" textAnchor="middle" fill={colors.textMuted} fontSize="10">Master</text>
-        <text x="120" y="142" textAnchor="middle" fill={colors.textMuted} fontSize="9">2 cm^2</text>
+        <text x="120" y="130" textAnchor="middle" fill="#e2e8f0" fontSize="11">Master</text>
+        <text x="120" y="142" textAnchor="middle" fill="#e2e8f0" fontSize="11">2 cm^2</text>
 
-        {/* Brake Lines */}
-        <path d="M145,92 L180,92 L180,60 L260,60" fill="none" stroke="url(#brakeFluidGrad)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M145,92 L180,92 L180,140 L260,140" fill="none" stroke="url(#brakeFluidGrad)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+        {/* Brake Lines - spanning full height for good vertical utilization */}
+        <path d="M145,92 L180,92 L180,15 L260,15 L260,60" fill="none" stroke="url(#brakeFluidGrad)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M145,92 L180,92 L180,285 L260,285 L260,140" fill="none" stroke="url(#brakeFluidGrad)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
 
         {/* Pressure indicator */}
         {brakePedalForce > 0 && (
           <g>
             <rect x="170" y="85" width="60" height="24" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" rx="6" />
-            <text x="200" y="101" textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="600">
+            <text x="200" y="101" textAnchor="middle" fill="#f8fafc" fontSize="11" fontWeight="600">
               {(brakePedalForce / masterArea).toFixed(0)} N/cm^2
             </text>
           </g>
@@ -650,7 +747,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
           <rect x={5 - caliperClamp} y="-12" width="15" height="24" fill="url(#caliperGrad)" rx="3" stroke="#991b1b" strokeWidth="1" />
           <rect x={50 + caliperClamp} y="-12" width="15" height="24" fill="url(#caliperGrad)" rx="3" stroke="#991b1b" strokeWidth="1" />
         </g>
-        <text x="325" y="110" textAnchor="middle" fill={colors.textMuted} fontSize="9">20 cm^2</text>
+        <text x="325" y="110" textAnchor="middle" fill="#e2e8f0" fontSize="11">20 cm^2</text>
 
         {/* Rear Brake/Rotor */}
         <g transform="translate(290, 140)">
@@ -661,23 +758,23 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
           <rect x={5 - caliperClamp} y="-12" width="15" height="24" fill="url(#caliperGrad)" rx="3" stroke="#991b1b" strokeWidth="1" />
           <rect x={50 + caliperClamp} y="-12" width="15" height="24" fill="url(#caliperGrad)" rx="3" stroke="#991b1b" strokeWidth="1" />
         </g>
-        <text x="325" y="190" textAnchor="middle" fill={colors.textMuted} fontSize="9">20 cm^2</text>
+        <text x="325" y="190" textAnchor="middle" fill="#e2e8f0" fontSize="11">20 cm^2</text>
 
         {/* Force readouts */}
         <g transform={`translate(20, ${height - 50})`}>
-          <rect x="0" y="0" width="100" height="40" fill={colors.bgSecondary} stroke="#22c55e" strokeWidth="1" rx="6" />
-          <text x="50" y="15" textAnchor="middle" fill="#22c55e" fontSize="10">Input Force</text>
-          <text x="50" y="32" textAnchor="middle" fill="#22c55e" fontSize="14" fontWeight="600">{brakePedalForce} N</text>
+          <rect x="0" y="0" width="100" height="40" fill={colors.bgSecondary} stroke="#86efac" strokeWidth="1" rx="6" />
+          <text x="50" y="15" textAnchor="middle" fill="#e2e8f0" fontSize="11">Input Force</text>
+          <text x="50" y="32" textAnchor="middle" fill="#f8fafc" fontSize="14" fontWeight="600">{brakePedalForce} N</text>
         </g>
         <g transform={`translate(130, ${height - 50})`}>
-          <rect x="0" y="0" width="100" height="40" fill={colors.bgSecondary} stroke="#ef4444" strokeWidth="1" rx="6" />
-          <text x="50" y="15" textAnchor="middle" fill="#ef4444" fontSize="10">Per Wheel</text>
-          <text x="50" y="32" textAnchor="middle" fill="#ef4444" fontSize="14" fontWeight="600">{brakeForce.toFixed(0)} N</text>
+          <rect x="0" y="0" width="100" height="40" fill={colors.bgSecondary} stroke="#fca5a5" strokeWidth="1" rx="6" />
+          <text x="50" y="15" textAnchor="middle" fill="#e2e8f0" fontSize="11">Per Wheel</text>
+          <text x="50" y="32" textAnchor="middle" fill="#f8fafc" fontSize="14" fontWeight="600">{brakeForce.toFixed(0)} N</text>
         </g>
         <g transform={`translate(240, ${height - 50})`}>
-          <rect x="0" y="0" width="100" height="40" fill={colors.bgSecondary} stroke="#a855f7" strokeWidth="1" rx="6" />
-          <text x="50" y="15" textAnchor="middle" fill="#a855f7" fontSize="10">Total (4 wheels)</text>
-          <text x="50" y="32" textAnchor="middle" fill="#a855f7" fontSize="14" fontWeight="600">{(brakeForce * 4).toFixed(0)} N</text>
+          <rect x="0" y="0" width="100" height="40" fill={colors.bgSecondary} stroke="#d8b4fe" strokeWidth="1" rx="6" />
+          <text x="50" y="15" textAnchor="middle" fill="#e2e8f0" fontSize="11">Total (4 wheels)</text>
+          <text x="50" y="32" textAnchor="middle" fill="#f8fafc" fontSize="14" fontWeight="600">{(brakeForce * 4).toFixed(0)} N</text>
         </g>
       </svg>
     );
@@ -695,12 +792,10 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', paddingTop: '48px', paddingBottom: '100px', textAlign: 'center' }}>
 
         <div style={{
           fontSize: '64px',
@@ -748,6 +843,8 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
         </button>
 
         {renderNavDots()}
+        </div>
+        {renderNavigationBar()}
       </div>
     );
   }
@@ -787,35 +884,54 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
             When you push on a small piston in a hydraulic system, what happens to the pressure in the fluid?
           </h2>
 
-          {/* Simple diagram */}
+          {/* SVG diagram */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>Push</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Small Piston</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>-&gt;</div>
-              <div style={{
-                background: colors.fluid + '33',
-                padding: '20px 40px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.fluid}`,
-              }}>
-                <div style={{ fontSize: '24px', color: colors.fluid }}>Fluid</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>What happens to pressure?</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>-&gt;</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>???</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Large Piston</p>
-              </div>
-            </div>
+            <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto', maxHeight: '200px' }}>
+              <defs>
+                <linearGradient id="predictFluid" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#fca5a5" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#ef4444" />
+                </linearGradient>
+                <filter id="predictGlow">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+              {/* Background */}
+              <rect width="400" height="200" fill={colors.bgSecondary} rx="8" />
+              {/* Grid lines */}
+              <line x1="50" y1="50" x2="350" y2="50" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              <line x1="50" y1="100" x2="350" y2="100" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              <line x1="50" y1="150" x2="350" y2="150" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              {/* Small piston cylinder */}
+              <rect x="50" y="60" width="60" height="80" fill={colors.bgCard} stroke={colors.border} strokeWidth="2" rx="4" />
+              <rect x="60" y="80" width="40" height="40" fill="#94a3b8" stroke="#475569" strokeWidth="2" rx="2" />
+              {/* Force arrow */}
+              <path d="M 80 40 L 80 75" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" />
+              <path d="M 75 75 L 85 75 L 80 85" fill="#22c55e" />
+              {/* Fluid reservoir */}
+              <rect x="110" y="100" width="180" height="60" fill="url(#predictFluid)" rx="4" />
+              <text x="200" y="135" textAnchor="middle" fill="white" fontSize="13" fontWeight="600">Hydraulic Fluid</text>
+              {/* Pressure arrows */}
+              <path d="M 130 118 L 160 118" stroke="#fcd34d" strokeWidth="2" strokeLinecap="round" />
+              <path d="M 175 118 L 225 118" stroke="#fcd34d" strokeWidth="2" strokeLinecap="round" />
+              <path d="M 240 118 L 270 118" stroke="#fcd34d" strokeWidth="2" strokeLinecap="round" />
+              {/* Large piston cylinder */}
+              <rect x="290" y="60" width="70" height="80" fill={colors.bgCard} stroke={colors.border} strokeWidth="2" rx="4" />
+              <rect x="298" y="80" width="54" height="40" fill="#94a3b8" stroke="#475569" strokeWidth="2" rx="2" />
+              {/* Question mark */}
+              <text x="325" y="45" textAnchor="middle" fill={colors.warning} fontSize="24" fontWeight="700" filter="url(#predictGlow)">?</text>
+              {/* Labels */}
+              <text x="80" y="190" textAnchor="middle" fill="#e2e8f0" fontSize="11">Small A1</text>
+              <text x="200" y="190" textAnchor="middle" fill="#e2e8f0" fontSize="11">Pressure</text>
+              <text x="325" y="190" textAnchor="middle" fill="#e2e8f0" fontSize="11">Large A2</text>
+            </svg>
           </div>
 
           {/* Options */}
@@ -867,6 +983,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
         </div>
 
         {renderNavDots()}
+        {renderNavigationBar(!prediction)}
       </div>
     );
   }
@@ -897,10 +1014,25 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
               border: `1px solid ${colors.accent}33`,
               borderRadius: '12px',
               padding: '12px 16px',
-              marginBottom: '24px',
+              marginBottom: '16px',
             }}>
               <p style={{ ...typo.small, color: colors.accent, margin: 0, fontWeight: 600 }}>
-                Watch for: How pressure stays constant while force multiplies. Notice how distance trades off with force. Click "Activate Hydraulics" to see the pistons move!
+                When you increase the large piston area, the output force increases because pressure is constant throughout the fluid. This is Pascal's Law!
+              </p>
+            </div>
+
+            {/* Educational explanation */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
+                <strong style={{ color: colors.textPrimary }}>Cause &amp; Effect:</strong> When you push on the small piston, it creates pressure in the fluid. Because the fluid is incompressible, this pressure transmits equally to all surfaces — including the large piston. As you increase the area ratio, the force multiplication increases proportionally.
+              </p>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.textPrimary }}>Real-World Application:</strong> Engineers use this principle to design hydraulic systems for car brakes, aircraft controls, and construction equipment. Industry relies on hydraulics because they can multiply forces by 10-200x with simple mechanical designs. This is why everyday machines like excavators and car lifts can lift massive loads.
               </p>
             </div>
 
@@ -930,11 +1062,13 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
                 onChange={(e) => setInputForce(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
-                  background: `linear-gradient(to right, #22c55e ${((inputForce - 50) / 450) * 100}%, ${colors.border} ${((inputForce - 50) / 450) * 100}%)`,
                   cursor: 'pointer',
-                }}
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6',
+                } as React.CSSProperties}
               />
             </div>
 
@@ -952,11 +1086,13 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
                 onChange={(e) => setSmallPistonArea(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.accent} ${((smallPistonArea - 1) / 9) * 100}%, ${colors.border} ${((smallPistonArea - 1) / 9) * 100}%)`,
                   cursor: 'pointer',
-                }}
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6',
+                } as React.CSSProperties}
               />
             </div>
 
@@ -975,11 +1111,13 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
                 onChange={(e) => setLargePistonArea(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
-                  background: `linear-gradient(to right, #ef4444 ${((largePistonArea - 10) / 90) * 100}%, ${colors.border} ${((largePistonArea - 10) / 90) * 100}%)`,
                   cursor: 'pointer',
-                }}
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6',
+                } as React.CSSProperties}
               />
             </div>
 
@@ -1082,6 +1220,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
         </div>
 
         {renderNavDots()}
+        {renderNavigationBar()}
       </div>
     );
   }
@@ -1099,9 +1238,25 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
 
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '24px', paddingRight: '24px' }}>
           <div style={{ maxWidth: '700px', margin: '16px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
             The Physics of Pascal's Law
           </h2>
+
+          {prediction && (
+            <div style={{
+              background: `${colors.success}22`,
+              border: `1px solid ${colors.success}44`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ ...typo.small, color: colors.success, margin: 0, fontWeight: 600 }}>
+                {prediction === 'b'
+                  ? '✓ Your prediction was correct! Pressure transmits equally throughout the fluid.'
+                  : `Your prediction suggested: "${options?.find?.((o: {id: string, text: string}) => o.id === prediction)?.text || prediction}". Let\'s see what actually happens.`}
+              </p>
+            </div>
+          )}
 
           <div style={{
             background: colors.bgCard,
@@ -1169,6 +1324,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
         </div>
 
         {renderNavDots()}
+        {renderNavigationBar()}
       </div>
     );
   }
@@ -1211,16 +1367,55 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <p style={{ ...typo.body, color: colors.textSecondary }}>
-              The master cylinder creates pressure that travels through brake lines to all four wheels simultaneously...
-            </p>
-            <div style={{ marginTop: '16px', fontSize: '14px', color: colors.accent, fontFamily: 'monospace' }}>
-              [Pedal] -&gt; [Master 2cm^2] -&gt; [Fluid Lines] -&gt; [4x Calipers 20cm^2 each]
-            </div>
+            <svg viewBox="0 0 420 220" style={{ width: '100%', height: 'auto', maxHeight: '220px' }}>
+              <defs>
+                <linearGradient id="twistFluid" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#fca5a5" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#ef4444" />
+                </linearGradient>
+                <filter id="twistGlow">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+              {/* Background */}
+              <rect width="420" height="220" fill={colors.bgSecondary} rx="8" />
+              {/* Grid */}
+              <line x1="40" y1="40" x2="380" y2="40" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              <line x1="40" y1="110" x2="380" y2="110" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              <line x1="40" y1="180" x2="380" y2="180" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              {/* Pressure distribution curve - spans full height */}
+              <path d="M 95 15 C 95 60 170 80 170 110 C 170 140 200 160 270 155 L 310 30 L 310 200 L 95 200" fill="rgba(239,68,68,0.1)" stroke="rgba(239,68,68,0.4)" strokeWidth="2" />
+              {/* Force multiplication bars - spanning full height */}
+              <path d="M 50 210 L 50 10 L 52 10 L 52 210 Z" fill="#22c55e" opacity="0.3" />
+              <path d="M 380 210 L 380 10 L 382 10 L 382 210 Z" fill="#ef4444" opacity="0.3" />
+              {/* Pedal */}
+              <rect x="20" y="95" width="40" height="20" fill="#64748b" rx="3" />
+              <text x="40" y="132" textAnchor="middle" fill="#e2e8f0" fontSize="11">Pedal</text>
+              {/* Master cylinder */}
+              <rect x="70" y="88" width="50" height="30" fill="#1e293b" stroke="#475569" strokeWidth="2" rx="4" />
+              <text x="95" y="133" textAnchor="middle" fill="#e2e8f0" fontSize="11">Master 2cm²</text>
+              {/* Fluid lines to 4 wheels - each spans significant vertical space */}
+              <path d="M 120 98 L 175 98 L 175 30 L 265 30 L 265 15 L 310 30" fill="none" stroke="url(#twistFluid)" strokeWidth="5" strokeLinecap="round" />
+              <path d="M 120 98 L 175 98 L 175 195 L 265 195 L 265 210 L 310 190" fill="none" stroke="url(#twistFluid)" strokeWidth="5" strokeLinecap="round" />
+              <path d="M 120 103 L 175 103 L 175 75 L 265 75 L 265 20 L 310 80" fill="none" stroke="url(#twistFluid)" strokeWidth="5" strokeLinecap="round" />
+              <path d="M 120 103 L 175 103 L 175 145 L 265 145 L 265 200 L 310 130" fill="none" stroke="url(#twistFluid)" strokeWidth="5" strokeLinecap="round" />
+              {/* 4 calipers */}
+              {[30, 80, 130, 190].map((y, i) => (
+                <g key={i}>
+                  <rect x="310" y={y - 14} width="35" height="28" fill="#dc2626" rx="4" />
+                  <text x="328" y={y + 5} textAnchor="middle" fill="#ffffff" fontSize="11" fontWeight="bold">20</text>
+                </g>
+              ))}
+              {/* Labels */}
+              <text x="328" y="212" textAnchor="middle" fill="#e2e8f0" fontSize="11">Calipers</text>
+              {/* Question mark */}
+              <text x="390" y="115" textAnchor="middle" fill={colors.warning} fontSize="22" fontWeight="700" filter="url(#twistGlow)">?</text>
+            </svg>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1270,6 +1465,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
         </div>
 
         {renderNavDots()}
+        {renderNavigationBar()}
       </div>
     );
   }
@@ -1331,11 +1527,13 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
                 onChange={(e) => setBrakePedalForce(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
-                  background: `linear-gradient(to right, #22c55e ${(brakePedalForce / 200) * 100}%, ${colors.border} ${(brakePedalForce / 200) * 100}%)`,
                   cursor: 'pointer',
-                }}
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6',
+                } as React.CSSProperties}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                 <span style={{ ...typo.small, color: colors.textMuted }}>Light press</span>
@@ -1371,6 +1569,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
         </div>
 
         {renderNavDots()}
+        {renderNavigationBar()}
       </div>
     );
   }
@@ -1464,6 +1663,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
         </div>
 
         {renderNavDots()}
+        {renderNavigationBar()}
       </div>
     );
   }
@@ -1479,14 +1679,23 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
           <div style={{ maxWidth: '800px', margin: '16px auto 0' }}>
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-              Real-World Applications
-            </h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <h2 style={{ ...typo.h2, color: colors.textPrimary, margin: 0 }}>
+                Real-World Applications
+              </h2>
+              <span style={{ ...typo.small, color: colors.textMuted }}>
+                App {selectedApp + 1} of {realWorldApps.length}
+              </span>
+            </div>
+            <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '24px' }}>
+              Explore how Pascal's Law powers modern hydraulic systems across industries, from automotive brakes to aircraft flight controls.
+            </p>
 
             {/* App selector */}
             <div style={{
@@ -1528,7 +1737,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
                       fontSize: '12px',
                       lineHeight: '18px',
                     }}>
-                      ok
+                      ✓
                     </div>
                   )}
                   <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
@@ -1574,9 +1783,24 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
             </div>
 
             <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1591,6 +1815,33 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
                 </div>
               ))}
             </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                Future Impact:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.futureImpact}
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                playSound('success');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                if (selectedApp < realWorldApps.length - 1) {
+                  setSelectedApp(selectedApp + 1);
+                }
+              }}
+              style={{
+                ...primaryButtonStyle,
+                width: '100%',
+              }}
+            >
+              {selectedApp < realWorldApps.length - 1 ? 'Got It - Next Application →' : 'Got It!'}
+            </button>
           </div>
 
           {allAppsCompleted && (
@@ -1605,6 +1856,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
         </div>
 
         {renderNavDots()}
+        {renderNavigationBar()}
       </div>
     );
   }
@@ -1663,6 +1915,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
             )}
           </div>
           {renderNavDots()}
+          {renderNavigationBar()}
         </div>
       );
     }
@@ -1680,6 +1933,12 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
 
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '24px', paddingRight: '24px' }}>
           <div style={{ maxWidth: '700px', margin: '16px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Knowledge Test
+          </h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+            Apply what you learned about Pascal's Law and hydraulic systems.
+          </p>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1832,6 +2091,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
         </div>
 
         {renderNavDots()}
+        {renderNavigationBar(testAnswers.some(a => a === null) && !testSubmitted)}
       </div>
     );
   }
@@ -1937,6 +2197,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
         </div>
 
         {renderNavDots()}
+        {renderNavigationBar()}
       </div>
     );
   }

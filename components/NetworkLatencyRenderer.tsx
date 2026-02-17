@@ -89,7 +89,7 @@ interface NetworkLatencyRendererProps {
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  textMuted: 'rgba(148, 163, 184, 0.7)',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -132,6 +132,8 @@ const fiberDistances: Record<string, number> = {
 
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
+const NETL_PHASES: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
 const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
   gamePhase,
   onPhaseComplete,
@@ -139,13 +141,26 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
-  const phase = (gamePhase as Phase) || 'hook';
+  // Internal phase state for self-navigation (when no external wrapper)
+  const [internalPhaseIndex, setInternalPhaseIndex] = useState(0);
+  const externalPhaseIndex = gamePhase ? NETL_PHASES.indexOf(gamePhase as Phase) : -1;
+  const phaseIndex = externalPhaseIndex >= 0 ? externalPhaseIndex : internalPhaseIndex;
+  const phase = NETL_PHASES[phaseIndex] || 'hook';
+
+  const goNext = useCallback(() => {
+    const nextIndex = Math.min(phaseIndex + 1, NETL_PHASES.length - 1);
+    if (onPhaseComplete) {
+      onPhaseComplete(nextIndex);
+    }
+    setInternalPhaseIndex(nextIndex);
+  }, [phaseIndex, onPhaseComplete]);
+
   // Simulation state
   const [sourceCity, setSourceCity] = useState(0);
   const [destCity, setDestCity] = useState(1);
   const [packetSize, setPacketSize] = useState(1500); // bytes
   const [bandwidth, setBandwidth] = useState(1000); // Mbps
-  const [numHops, setNumHops] = useState(15);
+  const [numHops, setNumHops] = useState(5);
   const [processingDelay, setProcessingDelay] = useState(0.1); // ms per hop
   const [animationFrame, setAnimationFrame] = useState(0);
   const [packetInFlight, setPacketInFlight] = useState(false);
@@ -154,6 +169,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [currentTransferApp, setCurrentTransferApp] = useState(0);
   const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
@@ -368,13 +384,13 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
     const width = 700;
     const height = 400;
 
-    // City positions on visualization - adjusted for wider canvas
+    // City positions on visualization - spread apart to avoid label overlap
     const cityPositions = [
-      { x: 120, y: 160 },  // New York
-      { x: 300, y: 100 },  // London
-      { x: 550, y: 130 }, // Tokyo
-      { x: 500, y: 300 }, // Sydney
-      { x: 80, y: 220 },  // San Francisco
+      { x: 130, y: 155 },  // New York
+      { x: 310, y: 85 },   // London
+      { x: 565, y: 115 },  // Tokyo
+      { x: 530, y: 290 },  // Sydney
+      { x: 60, y: 240 },   // San Francisco
     ];
 
     const srcPos = cityPositions[sourceCity];
@@ -682,7 +698,6 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
                     stroke={isSource ? "#10b981" : "#e11d48"}
                     strokeWidth="2"
                     opacity="0.3"
-                    filter="url(#netlNodeGlow)"
                   />
                 )}
 
@@ -694,7 +709,6 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
                   fill={gradient}
                   stroke={isActive ? "#ffffff" : "#64748b"}
                   strokeWidth={isActive ? 2 : 1}
-                  filter={isActive ? "url(#netlNodeGlow)" : undefined}
                 />
 
                 {/* Server/Client icon inside */}
@@ -713,7 +727,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
                   y={pos.y + nodeSize + 16}
                   textAnchor="middle"
                   fill={isActive ? "#f8fafc" : "#94a3b8"}
-                  fontSize={isActive ? "11" : "9"}
+                  fontSize="11"
                   fontWeight={isActive ? "bold" : "normal"}
                   fontFamily="system-ui, -apple-system, sans-serif"
                 >
@@ -722,13 +736,13 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
 
                 {/* Role label for active nodes */}
                 {isSource && (
-                  <text x={pos.x} y={pos.y - nodeSize - 8} textAnchor="middle" fill="#10b981" fontSize="9" fontWeight="bold">
-                    SOURCE
+                  <text x={pos.x} y={pos.y - nodeSize - 8} textAnchor="middle" fill="#10b981" fontSize="11" fontWeight="bold">
+                    SRC
                   </text>
                 )}
                 {isDest && (
-                  <text x={pos.x} y={pos.y - nodeSize - 8} textAnchor="middle" fill="#e11d48" fontSize="9" fontWeight="bold">
-                    DESTINATION
+                  <text x={pos.x} y={pos.y - nodeSize - 8} textAnchor="middle" fill="#e11d48" fontSize="11" fontWeight="bold">
+                    DST
                   </text>
                 )}
               </g>
@@ -850,14 +864,28 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
             <text x="95" y="80" textAnchor="end" fill="#8b5cf6" fontSize="11" fontWeight="bold">{routerProcessing.toFixed(1)}</text>
           </g>
 
-          {/* Formula display */}
-          <g transform="translate(20, 80)">
-            <rect x="-5" y="-5" width="180" height="65" rx="8" fill="rgba(15, 23, 42, 0.9)" stroke="#8b5cf6" strokeWidth="1" />
-            <text x="85" y="12" textAnchor="middle" fill="#8b5cf6" fontSize="10" fontWeight="bold">LATENCY FORMULA</text>
-            <text x="5" y="30" fill="#94a3b8" fontSize="9" fontFamily="monospace">RTT = 2×(d/c + B/bw + h×p)</text>
-            <text x="5" y="45" fill="#94a3b8" fontSize="8" fontFamily="monospace">d=dist, c=speed, B=bits</text>
-            <text x="5" y="57" fill="#94a3b8" fontSize="8" fontFamily="monospace">bw=bandwidth, h=hops</text>
-          </g>
+          {/* Bandwidth and hops indicators inside SVG - respond to slider changes, NO text to avoid overlap */}
+          {interactive && (() => {
+            const bwFraction = Math.log10(bandwidth) / Math.log10(10000);
+            const hopFraction = numHops / 30;
+            const bwBarWidth = Math.max(4, Math.round(bwFraction * 120));
+            const hopBarWidth = Math.max(4, Math.round(hopFraction * 120));
+            // Place at bottom-center area using absolute coordinates to avoid overlap
+            return (
+              <g>
+                {/* BW bar at absolute position x=200, y=310 */}
+                <rect x="200" y="308" width="145" height="20" rx="4" fill="rgba(15,23,42,0.85)" stroke="#f59e0b" strokeWidth="1" opacity="0.9" />
+                <rect x="205" y="315" width="130" height="5" rx="2" fill="#1e293b" />
+                <rect x="205" y="315" width={bwBarWidth} height="5" rx="2" fill="#f59e0b" />
+                <circle cx={205 + bwBarWidth} cy="317" r="6" fill="#fbbf24" filter="url(#netlNodeGlow)" />
+                {/* Hop bar at x=200, y=335 */}
+                <rect x="200" y="333" width="145" height="20" rx="4" fill="rgba(15,23,42,0.85)" stroke="#8b5cf6" strokeWidth="1" opacity="0.9" />
+                <rect x="205" y="340" width="130" height="5" rx="2" fill="#1e293b" />
+                <rect x="205" y="340" width={hopBarWidth} height="5" rx="2" fill="#8b5cf6" />
+                <circle cx={205 + hopBarWidth} cy="342" r="6" fill="#a78bfa" filter="url(#netlNodeGlow)" />
+              </g>
+            );
+          })()}
         </svg>
 
         {interactive && (
@@ -1014,60 +1042,121 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
     </div>
   );
 
+  const phaseNames = ['Hook', 'Predict', 'Explore', 'Review', 'Twist Predict', 'Twist Explore', 'Twist Review', 'Transfer', 'Test', 'Mastery'];
+  const currentPhaseIndex = phaseIndex;
+
+  const renderNavDots = () => (
+    <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', alignItems: 'center' }}>
+      {NETL_PHASES.map((p, i) => (
+        <button
+          key={p}
+          aria-label={phaseNames[i]}
+          title={phaseNames[i]}
+          onClick={() => { setInternalPhaseIndex(i); onPhaseComplete?.(i); }}
+          style={{
+            width: i === currentPhaseIndex ? '20px' : '8px',
+            minHeight: '44px',
+            borderRadius: '4px',
+            background: 'transparent',
+            border: 'none',
+            padding: '0',
+            cursor: 'pointer',
+            WebkitTapHighlightColor: 'transparent',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all 0.3s ease',
+          }}>
+            <div style={{
+              width: '100%',
+              height: '8px',
+              borderRadius: '4px',
+              background: i === currentPhaseIndex ? colors.accent : i < currentPhaseIndex ? 'rgba(139,92,246,0.5)' : 'rgba(255,255,255,0.2)',
+            }} />
+        </button>
+      ))}
+    </div>
+  );
+
   const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string, showBack: boolean = false) => (
     <div style={{
       position: 'fixed',
       bottom: 0,
       left: 0,
       right: 0,
-      padding: '16px 24px',
       background: colors.bgDark,
       borderTop: '1px solid rgba(255,255,255,0.1)',
-      display: 'flex',
-      justifyContent: 'space-between',
       zIndex: 1000,
     }}>
-      {showBack && onBack ? (
+      <div style={{ padding: '8px 24px 4px', display: 'flex', justifyContent: 'center' }}>
+        {renderNavDots()}
+      </div>
+      <div style={{ padding: '8px 24px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        {phaseIndex > 0 ? (
+          <button
+            onClick={() => {
+              const prevIndex = Math.max(phaseIndex - 1, 0);
+              if (onBack && phaseIndex === 0) { onBack(); }
+              else { setInternalPhaseIndex(prevIndex); if (onBack) onBack(); }
+            }}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.2)',
+              background: 'transparent',
+              color: colors.textPrimary,
+              fontWeight: 500,
+              cursor: 'pointer',
+              fontSize: '16px',
+              WebkitTapHighlightColor: 'transparent',
+              minHeight: '44px',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+            }}
+          >
+            Back
+          </button>
+        ) : onBack ? (
+          <button
+            onClick={onBack}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.2)',
+              background: 'transparent',
+              color: colors.textPrimary,
+              fontWeight: 500,
+              cursor: 'pointer',
+              fontSize: '16px',
+              WebkitTapHighlightColor: 'transparent',
+              minHeight: '44px',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+            }}
+          >
+            Back
+          </button>
+        ) : <div />}
         <button
-          onClick={onBack}
+          onClick={goNext}
+          disabled={disabled && !canProceed}
           style={{
-            padding: '12px 24px',
+            padding: '12px 32px',
             borderRadius: '8px',
-            border: '1px solid rgba(255,255,255,0.2)',
-            background: 'transparent',
-            color: colors.textPrimary,
-            fontWeight: 'bold',
-            cursor: 'pointer',
+            border: 'none',
+            background: canProceed ? `linear-gradient(135deg, ${colors.accent}, #a78bfa)` : 'rgba(255,255,255,0.1)',
+            color: canProceed ? 'white' : colors.textMuted,
+            fontWeight: 700,
+            cursor: canProceed ? 'pointer' : 'not-allowed',
             fontSize: '16px',
             WebkitTapHighlightColor: 'transparent',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            boxShadow: canProceed ? `0 4px 12px ${colors.accentGlow}` : 'none',
             minHeight: '44px',
             fontFamily: 'system-ui, -apple-system, sans-serif',
           }}
         >
-          Back
+          {buttonText}
         </button>
-      ) : <div />}
-      <button
-        onClick={() => onPhaseComplete?.(0)}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? `linear-gradient(135deg, ${colors.accent}, #a78bfa)` : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-          WebkitTapHighlightColor: 'transparent',
-          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-          boxShadow: canProceed ? `0 4px 12px ${colors.accentGlow}` : 'none',
-          minHeight: '44px',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
-        }}
-      >
-        {buttonText}
-      </button>
+      </div>
     </div>
   );
 
@@ -1075,30 +1164,30 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '120px', paddingTop: '60px' }}>
+          <div style={{ maxWidth: '640px', margin: '0 auto', padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '48px', marginBottom: '16px' }}>📡</div>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px', fontWeight: 700 }}>
               Network Latency Physics
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', fontWeight: 400 }}>
               Why is there always some delay, even with fiber?
             </p>
           </div>
 
-          <div style={{ padding: '24px', textAlign: 'center' }}>
+          <div style={{ maxWidth: '640px', margin: '0 auto', padding: '0 24px 24px', textAlign: 'center' }}>
             <div style={{
               background: colors.bgCard,
               padding: '20px',
               borderRadius: '12px',
               marginBottom: '16px',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6, fontWeight: 400 }}>
                 Even with perfectly optimized networks, theres an absolute minimum delay
                 that no technology can overcome. Its set by a fundamental law of physics:
                 nothing travels faster than light.
               </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px', fontWeight: 400 }}>
                 This limit affects everything from gaming to stock trading.
               </p>
             </div>
@@ -1109,8 +1198,11 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
               borderRadius: '8px',
               borderLeft: `3px solid ${colors.accent}`,
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 500 }}>
                 Discover how the speed of light creates fundamental limits in networked systems!
+              </p>
+              <p style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 400, marginTop: '8px' }}>
+                Applies to gaming, trading, cloud computing, and space communication.
               </p>
             </div>
           </div>
@@ -1484,97 +1576,143 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
+    const totalApps = realWorldApps.length;
+    const allCompleted = transferCompleted.size >= totalApps;
+    const transferAppIndex = Math.min(currentTransferApp, totalApps - 1);
+    const transferApp = realWorldApps[transferAppIndex];
+    const appIsCompleted = transferCompleted.has(transferAppIndex);
+
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
-          <div style={{ padding: '16px' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-              Real-World Applications & Industry Examples
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '120px', paddingTop: '60px' }}>
+          <div style={{ maxWidth: '640px', margin: '0 auto', padding: '16px' }}>
+            <h2 style={{ color: colors.textPrimary, marginBottom: '4px', textAlign: 'center', fontWeight: 700 }}>
+              Real-World Applications
             </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
-              How network engineers and companies apply latency physics principles in real-world systems
+            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '4px', fontWeight: 400 }}>
+              How network latency physics shapes real systems
             </p>
             <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
+              App {transferAppIndex + 1} of {totalApps} — {transferCompleted.size}/{totalApps} completed
             </p>
-          </div>
 
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
-              style={{
-                background: colors.bgCard,
-                margin: '16px',
-                padding: '16px',
-                borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Completed</span>}
-              </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    border: `1px solid ${colors.accent}`,
-                    background: 'transparent',
-                    color: colors.accent,
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div>
-                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '8px' }}>
-                    <p style={{ color: colors.textPrimary, fontSize: '13px', marginBottom: '8px' }}>{app.answer}</p>
-                    {realWorldApps[index] && (
-                      <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                        <p style={{ color: colors.textMuted, fontSize: '11px', marginBottom: '6px', fontWeight: 'bold' }}>Key Statistics:</p>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                          {realWorldApps[index].stats.map((stat, i) => (
-                            <div key={i} style={{ background: 'rgba(255,255,255,0.05)', padding: '6px 10px', borderRadius: '6px', fontSize: '11px' }}>
-                              {stat.icon} <strong style={{ color: colors.textPrimary }}>{stat.value}</strong> <span style={{ color: colors.textMuted }}>{stat.label}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => {
-                      const newSet = new Set(transferCompleted);
-                      newSet.delete(index);
-                      setTransferCompleted(newSet);
-                    }}
-                    style={{
-                      padding: '8px 16px',
-                      borderRadius: '6px',
-                      border: 'none',
-                      background: `linear-gradient(135deg, ${colors.success}, #34d399)`,
-                      color: 'white',
-                      cursor: 'pointer',
-                      fontSize: '13px',
-                      fontWeight: 'bold',
-                      WebkitTapHighlightColor: 'transparent',
-                      boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
-                    }}
-                  >
-                    Got It
-                  </button>
-                </div>
-              )}
+            {/* Progress dots */}
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '20px' }}>
+              {realWorldApps.map((_, i) => (
+                <div key={i} style={{
+                  width: '32px', height: '6px', borderRadius: '3px',
+                  background: transferCompleted.has(i) ? colors.success : i === transferAppIndex ? colors.accent : 'rgba(255,255,255,0.15)',
+                }} />
+              ))}
             </div>
-          ))}
+
+            {/* Current App Card */}
+            <div style={{
+              background: colors.bgCard,
+              padding: '20px',
+              borderRadius: '16px',
+              border: `2px solid ${appIsCompleted ? colors.success : 'rgba(139,92,246,0.4)'}`,
+              marginBottom: '16px',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '32px' }}>{transferApp.icon}</span>
+                <div>
+                  <h3 style={{ color: colors.textPrimary, fontSize: '18px', margin: 0, fontWeight: 700 }}>{transferApp.title}</h3>
+                  <p style={{ color: colors.accent, fontSize: '13px', margin: 0, fontWeight: 500 }}>{transferApp.tagline}</p>
+                </div>
+              </div>
+
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '12px', fontWeight: 400 }}>
+                {transferApp.description}
+              </p>
+
+              {/* Stats */}
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                {transferApp.stats.map((stat, i) => (
+                  <div key={i} style={{
+                    background: 'rgba(139,92,246,0.1)', padding: '10px 14px', borderRadius: '10px',
+                    border: '1px solid rgba(139,92,246,0.3)', textAlign: 'center', flex: '1', minWidth: '80px',
+                  }}>
+                    <div style={{ fontSize: '18px' }}>{stat.icon}</div>
+                    <div style={{ color: colors.textPrimary, fontWeight: 700, fontSize: '15px' }}>{stat.value}</div>
+                    <div style={{ color: colors.textMuted, fontSize: '11px', fontWeight: 400 }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Connection to sim */}
+              <div style={{ background: 'rgba(34,211,238,0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.fiber}`, marginBottom: '12px' }}>
+                <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.5, margin: 0, fontWeight: 400 }}>
+                  <strong style={{ color: colors.fiber }}>Connection:</strong> {transferApp.connection}
+                </p>
+              </div>
+
+              {/* How it works */}
+              <div style={{ background: 'rgba(139,92,246,0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
+                <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.5, margin: 0, fontWeight: 400 }}>
+                  <strong style={{ color: colors.accent }}>How it works:</strong> {transferApp.howItWorks}
+                </p>
+              </div>
+
+              {/* Companies */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+                {transferApp.companies.map((co, i) => (
+                  <span key={i} style={{ background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '20px', color: colors.textSecondary, fontSize: '12px', fontWeight: 400 }}>
+                    {co}
+                  </span>
+                ))}
+              </div>
+
+              {/* Future impact */}
+              <p style={{ color: colors.textMuted, fontSize: '12px', fontStyle: 'italic', margin: 0, fontWeight: 400 }}>
+                Future: {transferApp.futureImpact}
+              </p>
+            </div>
+
+            {/* Got It button */}
+            {!appIsCompleted ? (
+              <button
+                onClick={() => {
+                  const newSet = new Set([...transferCompleted, transferAppIndex]);
+                  setTransferCompleted(newSet);
+                  if (transferAppIndex < totalApps - 1) {
+                    setCurrentTransferApp(transferAppIndex + 1);
+                  }
+                }}
+                style={{
+                  width: '100%',
+                  padding: '16px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: `linear-gradient(135deg, ${colors.accent}, #a78bfa)`,
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  fontWeight: 700,
+                  WebkitTapHighlightColor: 'transparent',
+                  boxShadow: `0 4px 12px ${colors.accentGlow}`,
+                }}
+              >
+                Got It! ({transferCompleted.size + 1}/{totalApps})
+              </button>
+            ) : (
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ flex: 1, padding: '12px', background: 'rgba(16,185,129,0.2)', borderRadius: '10px', textAlign: 'center', color: colors.success, fontWeight: 700 }}>
+                  Got It!
+                </div>
+                {transferAppIndex < totalApps - 1 && (
+                  <button
+                    onClick={() => setCurrentTransferApp(transferAppIndex + 1)}
+                    style={{ flex: 2, padding: '12px', borderRadius: '10px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontWeight: 700, fontSize: '14px' }}
+                  >
+                    Next App
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test', true)}
+        {renderBottomBar(transferCompleted.size < totalApps, allCompleted, 'Take the Test', true)}
       </div>
     );
   }

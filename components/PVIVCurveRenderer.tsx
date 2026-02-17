@@ -375,25 +375,25 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
   const transferApplications = [
     {
       title: 'MPPT Solar Charge Controllers',
-      description: 'Maximum Power Point Tracking (MPPT) controllers continuously adjust the load to keep the solar panel operating at its sweet spot.',
+      description: 'MPPT controllers capture 15-30% more energy than PWM controllers by continuously tracking the Maximum Power Point. Typical systems save $500/year in energy costs.',
       question: 'Why do MPPT controllers outperform simple PWM controllers?',
       answer: 'PWM controllers connect panels directly to batteries, forcing operation at battery voltage. MPPT controllers use DC-DC conversion to operate panels at their MPP regardless of battery voltage, capturing 15-30% more energy especially in cold weather or partial shade.',
     },
     {
       title: 'Solar Farm Inverters',
-      description: 'Grid-tied inverters in solar farms track the MPP of thousands of panels while converting DC to AC for the power grid.',
+      description: 'Grid-tied inverters convert DC from up to 10,000W of solar panels to AC for the power grid. Modern 1kW microinverters have 97% efficiency.',
       question: 'Why do modern solar farms use microinverters or power optimizers on each panel?',
       answer: 'When panels are connected in series, shade on one panel drags down the entire string. Per-panel MPPT allows each panel to operate at its own optimal point, preventing a 10% shaded panel from causing 50%+ system losses.',
     },
     {
       title: 'Space Solar Arrays',
-      description: 'Satellites use gallium arsenide solar cells that have different I-V characteristics than silicon, with higher efficiency but different temperature coefficients.',
+      description: 'Space solar cells achieve 30% efficiency using multi-junction technology, operating over a temperature range from -150C to +100C between shadow and full sun.',
       question: 'Why do space solar cells perform better than terrestrial panels despite extreme temperatures?',
       answer: 'In the cold of space (-150C in shadow), solar cell voltage increases significantly. Combined with no atmosphere absorbing light, space panels can achieve 30%+ efficiency. The challenge is managing thermal cycling between sun and shadow.',
     },
     {
       title: 'Electric Vehicle Solar Roofs',
-      description: 'Some EVs integrate solar panels that must track MPP while the car moves through changing light conditions.',
+      description: 'Vehicle solar roofs add 10-30 km of daily range using 200W roof panels. Advanced MPPT algorithms respond in under 100ms to handle rapid shading changes.',
       question: 'What unique challenges do vehicle-integrated solar panels face?',
       answer: 'Rapid shading changes from trees/buildings require very fast MPPT algorithms. Curved surfaces mean different panel sections receive different intensities. Vibration affects connections. Despite challenges, solar roofs can add 10-30 miles of range per day.',
     },
@@ -540,7 +540,7 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
               border: 'none',
               backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.primary : colors.border,
               cursor: i <= currentIdx ? 'pointer' : 'default',
-              transition: 'all 0.2s',
+              transition: 'all 0.2s ease-in-out',
               opacity: i > currentIdx ? 0.5 : 1
             }}
             title={`${phaseLabels[p]} (${i + 1}/${phaseOrder.length})`}
@@ -584,7 +584,7 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
             minHeight: '44px'
           }}
         >
-          Back
+          ← Back
         </button>
 
         <span style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>
@@ -875,7 +875,7 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
                 <animate attributeName="opacity" values={`${0.3 + (lightIntensity / 100) * 0.3};${0.6 + (lightIntensity / 100) * 0.4};${0.3 + (lightIntensity / 100) * 0.3}`} dur="2s" repeatCount="indefinite" begin={`${i * 0.25}s`} />
               </line>
             ))}
-            <text y="60" fill={colors.textSecondary} fontSize="10" textAnchor="middle" fontWeight="600">
+            <text y="60" fill={colors.textSecondary} fontSize="11" textAnchor="middle" fontWeight="600">
               {lightIntensity}% Intensity
             </text>
           </g>
@@ -915,7 +915,7 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
             ))}
 
             {/* Panel label */}
-            <text x="45" y="75" fill={colors.textSecondary} fontSize="9" textAnchor="middle" fontWeight="600">
+            <text x="45" y="75" fill={colors.textSecondary} fontSize="11" textAnchor="middle" fontWeight="600">
               PV Module
             </text>
           </g>
@@ -940,7 +940,7 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
               <animate attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite" />
             </circle>
             {/* Temperature reading */}
-            <text x="18" y="75" fill={colors.textSecondary} fontSize="9" textAnchor="middle" fontWeight="600">
+            <text x="18" y="75" fill={colors.textSecondary} fontSize="11" textAnchor="middle" fontWeight="600">
               {temperature}C
             </text>
             {/* Scale marks */}
@@ -955,7 +955,7 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
             {/* Display header */}
             <rect x="0" y="0" width="120" height="18" fill="rgba(245, 158, 11, 0.15)" rx="8" />
             <rect x="0" y="10" width="120" height="8" fill="rgba(245, 158, 11, 0.15)" />
-            <text x="60" y="13" fill={colors.accent} fontSize="8" textAnchor="middle" fontWeight="700" letterSpacing="0.5">OPERATING POINT</text>
+            <text x="60" y="13" fill={colors.accent} fontSize="11" textAnchor="middle" fontWeight="700" letterSpacing="0.5">OPERATING POINT</text>
 
             {/* Values with glow effect */}
             <g filter="url(#pvivTextGlow)">
@@ -984,7 +984,7 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
             <rect x="-8" y="-24" width={graphWidth + 35} height={graphHeight + 48} fill="url(#pvivGraphBg)" rx="8" stroke="#334155" strokeWidth="0.5" />
 
             {/* Graph title */}
-            <text x={graphWidth / 2} y="-8" fill={colors.textPrimary} fontSize="10" textAnchor="middle" fontWeight="700">
+            <text x={graphWidth / 2} y="-8" fill={colors.textPrimary} fontSize="11" textAnchor="middle" fontWeight="700">
               I-V Characteristic Curve
             </text>
 
@@ -1001,10 +1001,10 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
             <line x1="0" y1="-2" x2="0" y2={graphHeight} stroke={colors.textMuted} strokeWidth="1.5" />
 
             {/* Axis labels */}
-            <text x={graphWidth / 2} y={graphHeight + 18} fill={colors.textSecondary} fontSize="9" textAnchor="middle" fontWeight="600">
+            <text x={graphWidth / 2} y={graphHeight + 18} fill={colors.textSecondary} fontSize="11" textAnchor="middle" fontWeight="600">
               Voltage (V)
             </text>
-            <text x="-12" y={graphHeight / 2} fill={colors.textSecondary} fontSize="9" textAnchor="middle" fontWeight="600" transform={`rotate(-90, -12, ${graphHeight / 2})`}>
+            <text x="-12" y={graphHeight / 2} fill={colors.textSecondary} fontSize="11" textAnchor="middle" fontWeight="600" transform={`rotate(-90, -12, ${graphHeight / 2})`}>
               Current (A)
             </text>
 
@@ -1048,7 +1048,7 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
                 <circle r="5" fill="none" stroke={colors.mpp} strokeWidth="2" strokeDasharray="4,2">
                   <animate attributeName="r" values="5;7;5" dur="1.5s" repeatCount="indefinite" />
                 </circle>
-                <text x="12" y="-8" fill={colors.mpp} fontSize="8" fontWeight="700">MPP</text>
+                <text x="12" y="-8" fill={colors.mpp} fontSize="11" fontWeight="700">MPP</text>
               </g>
             )}
 
@@ -1059,8 +1059,8 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
             </g>
 
             {/* Isc and Voc labels */}
-            <text x="8" y="14" fill={colors.current} fontSize="9" fontWeight="700">Isc</text>
-            <text x={graphWidth - 20} y={graphHeight - 6} fill={colors.voltage} fontSize="9" fontWeight="700">Voc</text>
+            <text x="8" y="14" fill={colors.current} fontSize="11" fontWeight="700">Isc</text>
+            <text x={graphWidth - 20} y={graphHeight - 6} fill={colors.voltage} fontSize="11" fontWeight="700">Voc</text>
           </g>
 
           {/* === P-V CURVE GRAPH === */}
@@ -1069,7 +1069,7 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
             <rect x="-8" y="-24" width={graphWidth + 35} height={graphHeight + 48} fill="url(#pvivGraphBg)" rx="8" stroke="#334155" strokeWidth="0.5" />
 
             {/* Graph title */}
-            <text x={graphWidth / 2} y="-8" fill={colors.textPrimary} fontSize="10" textAnchor="middle" fontWeight="700">
+            <text x={graphWidth / 2} y="-8" fill={colors.textPrimary} fontSize="11" textAnchor="middle" fontWeight="700">
               P-V Power Curve
             </text>
 
@@ -1086,10 +1086,10 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
             <line x1="0" y1="-2" x2="0" y2={graphHeight} stroke={colors.textMuted} strokeWidth="1.5" />
 
             {/* Axis labels */}
-            <text x={graphWidth / 2} y={graphHeight + 18} fill={colors.textSecondary} fontSize="9" textAnchor="middle" fontWeight="600">
+            <text x={graphWidth / 2} y={graphHeight + 18} fill={colors.textSecondary} fontSize="11" textAnchor="middle" fontWeight="600">
               Voltage (V)
             </text>
-            <text x="-12" y={graphHeight / 2} fill={colors.textSecondary} fontSize="9" textAnchor="middle" fontWeight="600" transform={`rotate(-90, -12, ${graphHeight / 2})`}>
+            <text x="-12" y={graphHeight / 2} fill={colors.textSecondary} fontSize="11" textAnchor="middle" fontWeight="600" transform={`rotate(-90, -12, ${graphHeight / 2})`}>
               Power (W)
             </text>
 
@@ -1129,10 +1129,10 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
                   <circle r="7" fill={colors.mpp} stroke="white" strokeWidth="2">
                     <animate attributeName="r" values="7;9;7" dur="1.5s" repeatCount="indefinite" />
                   </circle>
-                  <text y="-16" fill={colors.mpp} fontSize="10" textAnchor="middle" fontWeight="700">
+                  <text y="-16" fill={colors.mpp} fontSize="11" textAnchor="middle" fontWeight="700">
                     Max Power
                   </text>
-                  <text y="-6" fill="white" fontSize="7" textAnchor="middle" fontWeight="600">
+                  <text y="-6" fill="white" fontSize="11" textAnchor="middle" fontWeight="600">
                     {mpp.power.toFixed(2)}W
                   </text>
                 </g>
@@ -1160,13 +1160,13 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
             {/* MPP Values - Left column */}
             <g transform="translate(15, 38)">
               <circle cx="0" cy="0" r="4" fill={colors.mpp} />
-              <text x="10" y="4" fill={colors.textSecondary} fontSize="10">
+              <text x="10" y="4" fill={colors.textSecondary} fontSize="11">
                 MPP Voltage: <tspan fill={colors.voltage} fontWeight="700" fontFamily="monospace">{mpp.voltage.toFixed(3)} V</tspan>
               </text>
             </g>
             <g transform="translate(15, 56)">
               <circle cx="0" cy="0" r="4" fill={colors.mpp} />
-              <text x="10" y="4" fill={colors.textSecondary} fontSize="10">
+              <text x="10" y="4" fill={colors.textSecondary} fontSize="11">
                 MPP Current: <tspan fill={colors.current} fontWeight="700" fontFamily="monospace">{mpp.current.toFixed(2)} A</tspan>
               </text>
             </g>
@@ -1174,13 +1174,13 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
             {/* MPP Values - Right column */}
             <g transform="translate(200, 38)">
               <circle cx="0" cy="0" r="4" fill={colors.power} />
-              <text x="10" y="4" fill={colors.textSecondary} fontSize="10">
+              <text x="10" y="4" fill={colors.textSecondary} fontSize="11">
                 Max Power: <tspan fill={colors.mpp} fontWeight="700" fontFamily="monospace">{mpp.power.toFixed(2)} W</tspan>
               </text>
             </g>
             <g transform="translate(200, 56)">
               <circle cx="0" cy="0" r="4" fill={colors.accent} />
-              <text x="10" y="4" fill={colors.textSecondary} fontSize="10">
+              <text x="10" y="4" fill={colors.textSecondary} fontSize="11">
                 Efficiency: <tspan fill={colors.accent} fontWeight="700" fontFamily="monospace">{((currentValues.power / mpp.power) * 100).toFixed(1)}%</tspan>
               </text>
             </g>
@@ -1273,7 +1273,7 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
           value={loadResistance}
           onInput={(e) => setLoadResistance(parseInt((e.target as HTMLInputElement).value))}
           onChange={(e) => setLoadResistance(parseInt(e.target.value))}
-          style={{ width: '100%', height: '32px', cursor: 'pointer' }}
+          style={{ width: '100%', height: '32px', cursor: 'pointer', accentColor: colors.voltage, touchAction: 'none', appearance: 'auto' }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
           <span>Short Circuit (0%)</span>
@@ -1293,7 +1293,7 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
           value={lightIntensity}
           onInput={(e) => setLightIntensity(parseInt((e.target as HTMLInputElement).value))}
           onChange={(e) => setLightIntensity(parseInt(e.target.value))}
-          style={{ width: '100%', height: '32px', cursor: 'pointer' }}
+          style={{ width: '100%', height: '32px', cursor: 'pointer', accentColor: colors.solar, touchAction: 'none', appearance: 'auto' }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
           <span>Cloudy (10%)</span>
@@ -1314,7 +1314,7 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
             value={temperature}
             onInput={(e) => setTemperature(parseInt((e.target as HTMLInputElement).value))}
             onChange={(e) => setTemperature(parseInt(e.target.value))}
-            style={{ width: '100%', height: '32px', cursor: 'pointer' }}
+            style={{ width: '100%', height: '32px', cursor: 'pointer', accentColor: colors.error, touchAction: 'none', appearance: 'auto' }}
           />
           <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
             <span>Cool (10C)</span>
@@ -1363,7 +1363,7 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
         return (
           <>
             <div style={{ padding: '24px', textAlign: 'center' }}>
-              <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+              <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px', fontWeight: 800 }}>
                 PV I-V Curve: The Solar Sweet Spot
               </h1>
               <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
@@ -1654,14 +1654,17 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
                 {!transferCompleted.has(index) ? (
                   <button
                     onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                    style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
+                    style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: `linear-gradient(135deg, ${colors.accent}, ${colors.warning})`, color: 'white', cursor: 'pointer', fontSize: '14px', fontWeight: 700, width: '100%' }}
                   >
-                    Reveal Answer
+                    Got It →
                   </button>
                 ) : (
-                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                    <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                  </div>
+                  <>
+                    <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '8px' }}>
+                      <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                    </div>
+                    <span style={{ color: colors.success, fontSize: '13px', fontWeight: 600 }}>✓ Got It</span>
+                  </>
                 )}
               </div>
             ))}
@@ -1710,8 +1713,10 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
           <>
             <div style={{ padding: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-                <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+                <h2 style={{ color: colors.textPrimary, fontWeight: 700 }}>Knowledge Test</h2>
+                <span style={{ color: colors.accent, fontWeight: 700, fontSize: '16px', background: `${colors.accent}22`, padding: '4px 10px', borderRadius: '8px' }}>
+                  Question {currentTestQuestion + 1} of {testQuestions.length}
+                </span>
               </div>
               <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
                 {testQuestions.map((_, i) => (
@@ -1744,7 +1749,7 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
         return (
           <>
             <div style={{ padding: '24px', textAlign: 'center' }}>
-              <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+              <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
               <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
               <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You have mastered PV I-V curve characteristics</p>
             </div>

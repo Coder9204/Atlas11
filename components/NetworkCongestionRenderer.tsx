@@ -174,9 +174,9 @@ const realWorldApps = [
     title: 'Online Gaming Networks',
     short: 'Low latency for competitive gaming',
     tagline: 'Every millisecond counts in esports',
-    description: 'Online games require consistent low latency (under 50ms) for responsive gameplay. Network congestion causes lag spikes that ruin the player experience. Game servers use sophisticated queue management to prioritize game traffic over background updates.',
-    connection: 'The queueing theory you explored explains why games become unplayable during peak hours. When utilization spikes, latency explodes. Game developers use techniques like client-side prediction and lag compensation to mask network jitter.',
-    howItWorks: 'Game traffic uses small, frequent UDP packets. Dedicated game servers have reserved bandwidth and priority queuing. Geographic server placement minimizes base latency. Matchmaking considers ping to ensure fair play.',
+    description: 'Online games require consistent low latency (under 50ms) for responsive gameplay. Network congestion causes lag spikes that ruin the player experience. Game servers use sophisticated queue management to prioritize game traffic over background updates. When utilization approaches 100%, the M/M/1 queue formula predicts latency to explode — this is exactly the lag spike gamers experience during peak hours.',
+    connection: 'The queueing theory you explored explains why games become unplayable during peak hours. When utilization spikes, latency explodes exponentially. Game developers use techniques like client-side prediction and lag compensation to mask network jitter. By keeping server utilization below 80%, game studios ensure consistent response times even during traffic bursts.',
+    howItWorks: 'Game traffic uses small, frequent UDP packets to minimize serialization delay. Dedicated game servers have reserved bandwidth and priority queuing. Geographic server placement minimizes base propagation latency. Matchmaking considers ping to ensure fair play. Active queue management keeps buffer sizes small, trading some throughput for predictable latency.',
     stats: [
       { value: '<20ms', label: 'Pro gaming target', icon: '🎯' },
       { value: '64', label: 'Tick rate (Hz)', icon: '⚡' },
@@ -407,16 +407,16 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
   // Phase navigation
   const phaseOrder: Phase[] = validPhases;
   const phaseLabels: Record<Phase, string> = {
-    hook: 'Introduction',
+    hook: 'Explore',
     predict: 'Predict',
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
     twist_play: 'Packet Size Lab',
     twist_review: 'Deep Insight',
-    transfer: 'Real World',
-    test: 'Knowledge Test',
-    mastery: 'Mastery'
+    transfer: 'Apply',
+    test: 'Quiz',
+    mastery: 'Transfer'
   };
 
   const goToPhase = useCallback((p: Phase) => {
@@ -440,6 +440,13 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
     const currentIndex = phaseOrder.indexOf(phase);
     if (currentIndex < phaseOrder.length - 1) {
       goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
     }
   }, [phase, goToPhase, phaseOrder]);
 
@@ -474,7 +481,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
     const maxQueueDisplay = 15;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="queueGradient" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.success} stopOpacity="0.3" />
@@ -497,18 +504,43 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
           </filter>
         </defs>
 
+        <g id="background-layer">
+        {/* Latency curve paths */}
+        <path
+          d={`M 80,${height - 60} Q ${80 + (width-180)*0.25},${height - 130} ${80 + (width-180)*0.5},${height - 100} Q ${80 + (width-180)*0.75},${height - 70} ${width - 100},${30}`}
+          fill="none"
+          stroke={colors.accent}
+          strokeWidth="2"
+          opacity="0.25"
+        />
+        <path
+          d={`M 0,${height/2} L 80,${height/2}`}
+          fill="none"
+          stroke={colors.packet}
+          strokeWidth="1.5"
+          opacity="0.6"
+        />
+        <path
+          d={`M ${width - 90},${height/2} L ${width - 20},${height/2}`}
+          fill="none"
+          stroke={colors.success}
+          strokeWidth="1.5"
+          opacity="0.6"
+        />
         {/* Grid lines for reference */}
         <line x1="80" y1={height/2 - 40} x2={width - 100} y2={height/2 - 40} stroke={colors.border} strokeDasharray="2,2" strokeOpacity="0.5" />
         <line x1="80" y1={height/2} x2={width - 100} y2={height/2} stroke={colors.border} strokeDasharray="2,2" strokeOpacity="0.5" />
         <line x1="80" y1={height/2 + 40} x2={width - 100} y2={height/2 + 40} stroke={colors.border} strokeDasharray="2,2" strokeOpacity="0.5" />
 
         {/* Axis labels */}
-        <text x="40" y={height/2} fill={colors.textSecondary} fontSize="10" textAnchor="middle" transform={`rotate(-90 40 ${height/2})`}>
-          Queue Depth
+        <text x="40" y={height/2} fill={colors.textSecondary} fontSize="11" textAnchor="middle" transform={`rotate(-90 40 ${height/2})`}>
+          Arrival Rate
         </text>
-        <text x={width/2} y={height - 45} fill={colors.textSecondary} fontSize="10" textAnchor="middle">
-          Flow Direction
+        <text x={width/2} y={height - 45} fill={colors.textSecondary} fontSize="11" textAnchor="middle">
+          Time
         </text>
+        </g>
+        <g id="queue-elements">
 
         {/* Incoming arrow */}
         <text x="20" y="30" fill={colors.textSecondary} fontSize="12">Incoming</text>
@@ -567,7 +599,17 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
           rx="8"
         />
         <text x={width - 75} y={height/2 + 5} fill={colors.success} fontSize="20" fontWeight="bold">S</text>
-        <text x={width - 60} y={height/2 + 55} fill={colors.textSecondary} fontSize="10" textAnchor="middle">Server</text>
+        <text x={width - 60} y={height/2 + 55} fill={colors.textSecondary} fontSize="11" textAnchor="middle">Server</text>
+        {/* Utilization indicator with glow - moves based on slider */}
+        <circle
+          cx={80 + (width - 180) * utilization}
+          cy={height/2 - 40 * utilization}
+          r="7"
+          fill={utilizationStatus.color}
+          filter="url(#packetGlow)"
+          stroke="white"
+          strokeWidth="1.5"
+        />
 
         {/* Output arrow */}
         <polygon points={`${width - 20},${height/2-5} ${width - 10},${height/2} ${width - 20},${height/2+5}`} fill={colors.success} />
@@ -596,9 +638,10 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
             opacity="0.5"
           />
         ))}
-        <text x="85" y={height - 10} fill={colors.textSecondary} fontSize="10">
+        <text x="85" y={height - 10} fill={colors.textSecondary} fontSize="11">
           Utilization: {(utilization * 100).toFixed(0)}%
         </text>
+        </g>
       </svg>
     );
   };
@@ -627,7 +670,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
       : '';
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '8px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '8px' }}>
         {/* Grid lines */}
         {[0, 0.25, 0.5, 0.75, 1].map(frac => (
           <line
@@ -702,7 +745,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
               x={width - padding.right - 5}
               y={padding.top + chartHeight - (p99Latency / maxLatency) * chartHeight - 5}
               fill={colors.error}
-              fontSize="9"
+              fontSize="11"
               textAnchor="end"
             >
               p99
@@ -711,12 +754,12 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
         )}
 
         {/* Y-axis labels */}
-        <text x={padding.left - 5} y={padding.top + 5} fill={colors.textMuted} fontSize="9" textAnchor="end">{maxLatency.toFixed(0)}</text>
-        <text x={padding.left - 5} y={height - padding.bottom} fill={colors.textMuted} fontSize="9" textAnchor="end">0</text>
-        <text x={padding.left / 2} y={height / 2} fill={colors.textSecondary} fontSize="10" textAnchor="middle" transform={`rotate(-90 ${padding.left / 2} ${height / 2})`}>Latency</text>
+        <text x={padding.left - 5} y={padding.top + 5} fill={colors.textMuted} fontSize="11" textAnchor="end">{maxLatency.toFixed(0)}</text>
+        <text x={padding.left - 5} y={height - padding.bottom} fill={colors.textMuted} fontSize="11" textAnchor="end">0</text>
+        <text x={padding.left / 2} y={height / 2} fill={colors.textSecondary} fontSize="11" textAnchor="middle" transform={`rotate(-90 ${padding.left / 2} ${height / 2})`}>Latency</text>
 
         {/* X-axis label */}
-        <text x={width / 2} y={height - 5} fill={colors.textSecondary} fontSize="10" textAnchor="middle">Time</text>
+        <text x={width / 2} y={height - 5} fill={colors.textSecondary} fontSize="11" textAnchor="middle">Time</text>
       </svg>
     );
   };
@@ -768,6 +811,55 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
     </div>
   );
 
+  // Bottom navigation bar
+  const renderBottomBar = (canProceed: boolean, buttonText: string) => (
+    <div style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      zIndex: 200,
+      background: colors.bgSecondary,
+      borderTop: `1px solid ${colors.border}`,
+      padding: '12px 24px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    }}>
+      <button
+        onClick={prevPhase}
+        style={{
+          background: 'transparent',
+          border: `1px solid ${colors.border}`,
+          color: colors.textSecondary,
+          padding: '10px 20px',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          fontSize: '14px',
+        }}
+      >
+        Back
+      </button>
+      <button
+        onClick={() => { if (canProceed) nextPhase(); }}
+        disabled={!canProceed}
+        style={{
+          background: canProceed ? `linear-gradient(135deg, ${colors.accent}, #0891B2)` : colors.border,
+          border: 'none',
+          color: 'white',
+          padding: '10px 24px',
+          borderRadius: '8px',
+          cursor: canProceed ? 'pointer' : 'not-allowed',
+          fontSize: '14px',
+          fontWeight: 600,
+          boxShadow: canProceed ? `0 4px 20px ${colors.accentGlow}` : 'none',
+        }}
+      >
+        {buttonText}
+      </button>
+    </div>
+  );
+
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
@@ -794,59 +886,54 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{
+            fontSize: '64px',
+            marginBottom: '24px',
+            animation: 'pulse 2s infinite',
+          }}>
+            🌐📦
+          </div>
+          <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
-        <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
-        }}>
-          🌐📦
-        </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
-
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Network Congestion Physics
-        </h1>
-
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          "If you add bandwidth, does latency always drop? The surprising answer reveals one of the most important principles in <span style={{ color: colors.accent }}>queueing theory</span>."
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
-        }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "Network congestion is like traffic flow - it's not the road capacity that determines travel time, but how close you are to maximum capacity. At 95% utilization, adding one more car creates chaos."
+          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '8px' }}>
+            Network Congestion Physics
+          </h1>
+          <p style={{ ...typo.small, color: '#C4C9D4', marginBottom: '16px' }}>
+            Introduction to Queue Theory &amp; Latency
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            - Queueing Theory Fundamentals
+
+          <p style={{
+            ...typo.body,
+            color: '#D1D5DB',
+            maxWidth: '600px',
+            marginBottom: '32px',
+          }}>
+            If you add bandwidth, does latency always drop? Discover the surprising answer — one of the most important principles in <span style={{ color: colors.accent }}>queueing theory</span>.
           </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '500px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.small, color: '#D1D5DB', fontStyle: 'italic' }}>
+              "Network congestion is like traffic flow - it's not the road capacity that determines travel time, but how close you are to maximum capacity. At 95% utilization, adding one more car creates chaos."
+            </p>
+            <p style={{ ...typo.small, color: 'rgba(156, 163, 175, 0.8)', marginTop: '8px' }}>
+              - Queueing Theory Fundamentals
+            </p>
+          </div>
+
+          {renderNavDots()}
         </div>
-
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Explore Network Physics
-        </button>
-
-        {renderNavDots()}
+        {renderBottomBar(true, 'Next')}
       </div>
     );
   }
@@ -865,13 +952,14 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '64px',
+          paddingTop: '48px',
           paddingBottom: '100px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -893,35 +981,62 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
             A network switch can process 100 packets/second. Currently receiving 50 packets/second (50% utilization). What happens to latency as traffic increases toward 100%?
           </h2>
 
-          {/* Simple diagram */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '40px' }}>📦📦📦</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Incoming Packets</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-              <div style={{
-                background: colors.queue + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.queue}`,
-              }}>
-                <div style={{ fontSize: '24px', color: colors.textPrimary }}>Queue</div>
-                <p style={{ ...typo.small, color: colors.queue }}>Wait here...</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '40px' }}>🖥️</div>
-                <p style={{ ...typo.small, color: colors.success }}>Process</p>
-              </div>
-            </div>
+          {/* Static SVG diagram */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <svg viewBox="0 0 500 220" width="100%" style={{ maxWidth: '500px', background: colors.bgCard, borderRadius: '12px' }}>
+              <defs>
+                <linearGradient id="latencyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor={colors.success} stopOpacity="0.6" />
+                  <stop offset="60%" stopColor={colors.warning} stopOpacity="0.8" />
+                  <stop offset="100%" stopColor={colors.error} stopOpacity="1" />
+                </linearGradient>
+                <filter id="predictGlow">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+              </defs>
+              <g id="chart-area">
+                {/* Background grid */}
+                <g id="grid-lines" opacity="0.3">
+                  {[0.25, 0.5, 0.75].map((f, i) => (
+                    <line key={i} x1="60" y1={30 + f * 140} x2="460" y2={30 + f * 140} stroke={colors.border} strokeDasharray="3,3" />
+                  ))}
+                  {[0.25, 0.5, 0.75].map((f, i) => (
+                    <line key={i} x1={60 + f * 400} y1="30" x2={60 + f * 400} y2="170" stroke={colors.border} strokeDasharray="3,3" />
+                  ))}
+                </g>
+                {/* Axes */}
+                <line x1="60" y1="170" x2="460" y2="170" stroke={colors.textSecondary} strokeWidth="1.5" />
+                <line x1="60" y1="30" x2="60" y2="170" stroke={colors.textSecondary} strokeWidth="1.5" />
+                {/* Latency curve - exponential shape */}
+                <path
+                  d="M 60,165 Q 160,162 220,155 Q 280,145 320,130 Q 360,110 390,80 Q 420,50 440,35"
+                  fill="none"
+                  stroke="url(#latencyGrad)"
+                  strokeWidth="3"
+                  filter="url(#predictGlow)"
+                />
+                {/* Linear reference line */}
+                <path
+                  d="M 60,165 L 440,40"
+                  fill="none"
+                  stroke={colors.textMuted}
+                  strokeWidth="1.5"
+                  strokeDasharray="6,4"
+                  opacity="0.5"
+                />
+                {/* Axis labels */}
+                <text x="250" y="195" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Utilization (%)</text>
+                <text x="20" y="105" fill={colors.textSecondary} fontSize="12" textAnchor="middle" transform="rotate(-90 20 105)">Latency</text>
+                <text x="60" y="185" fill={colors.textMuted} fontSize="11" textAnchor="middle">0%</text>
+                <text x="460" y="185" fill={colors.textMuted} fontSize="11" textAnchor="middle">100%</text>
+                {/* Labels */}
+                <text x="350" y="90" fill={colors.accent} fontSize="11" textAnchor="start">Actual</text>
+                <text x="380" y="60" fill={colors.textMuted} fontSize="11" textAnchor="start">Linear?</text>
+                {/* Highlighted point at high utilization */}
+                <circle cx="420" cy="48" r="6" fill={colors.error} filter="url(#predictGlow)" stroke="white" strokeWidth="1.5" />
+              </g>
+            </svg>
           </div>
 
           {/* Options */}
@@ -961,18 +1076,11 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
             ))}
           </div>
 
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test My Prediction
-            </button>
-          )}
+          {renderNavDots()}
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomBar(!!prediction, 'Test My Prediction')}
       </div>
     );
   }
@@ -1000,9 +1108,25 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Network Queue Simulator
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: '#D1D5DB', textAlign: 'center', marginBottom: '24px' }}>
               Adjust traffic load and watch how queue depth and latency respond
             </p>
+
+          {/* Educational explanation */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.small, color: '#D1D5DB', margin: '0 0 8px 0' }}>
+              <strong style={{ color: colors.accent }}>Cause and Effect:</strong> When you increase the arrival rate slider, it causes the queue to build up and latency to spike dramatically. Higher utilization leads to exponentially longer waits — because packets must wait behind each other. This non-linear explosion visualizes why networks must stay below 80% utilization.
+            </p>
+            <p style={{ ...typo.small, color: '#C4C9D4', margin: 0 }}>
+              This is important in real-world applications — internet service providers, cloud data centers, and CDNs all use queueing theory to provision capacity and avoid congestion collapse.
+            </p>
+          </div>
 
           {/* Main visualization */}
           <div style={{
@@ -1023,10 +1147,10 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
               marginBottom: '16px',
               textAlign: 'center',
             }}>
-              <span style={{ ...typo.small, color: colors.accent, fontFamily: 'monospace' }}>
+              <span style={{ ...typo.small, color: '#E0F2FE', fontFamily: 'monospace' }}>
                 Wait Time = 1 / (1 - Utilization)
               </span>
-              <span style={{ ...typo.small, color: colors.textMuted, marginLeft: '12px' }}>
+              <span style={{ ...typo.small, color: '#C4C9D4', marginLeft: '12px' }}>
                 = 1 / (1 - {utilization.toFixed(2)}) = {isFinite(theoreticalLatency) ? theoreticalLatency.toFixed(1) : '∞'}
               </span>
             </div>
@@ -1034,7 +1158,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
             {/* Arrival rate slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Arrival Rate (packets/sec)</span>
+                <span style={{ ...typo.small, color: '#D1D5DB' }}>Arrival Rate (packets/sec)</span>
                 <span style={{ ...typo.small, color: colors.packet, fontWeight: 600 }}>{arrivalRate}</span>
               </div>
               <input
@@ -1045,10 +1169,13 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
                 onChange={(e) => setArrivalRate(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.packet} ${((arrivalRate - 10) / 85) * 100}%, ${colors.border} ${((arrivalRate - 10) / 85) * 100}%)`,
                   cursor: 'pointer',
+                  accentColor: '#3b82f6',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
                 }}
               />
             </div>
@@ -1056,7 +1183,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
             {/* Service rate slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Service Rate (max capacity)</span>
+                <span style={{ ...typo.small, color: '#D1D5DB' }}>Service Rate (max capacity)</span>
                 <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{serviceRate}</span>
               </div>
               <input
@@ -1067,10 +1194,13 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
                 onChange={(e) => setServiceRate(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.success} ${((serviceRate - 50) / 50) * 100}%, ${colors.border} ${((serviceRate - 50) / 50) * 100}%)`,
                   cursor: 'pointer',
+                  accentColor: '#3b82f6',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
                 }}
               />
             </div>
@@ -1188,17 +1318,10 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
               </p>
             </div>
           )}
-
-          <button
-            onClick={() => { playSound('success'); setIsSimulating(false); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Physics
-          </button>
           </div>
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
+        {renderBottomBar(true, 'Understand the Physics')}
       </div>
     );
   }
@@ -1211,13 +1334,14 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '64px',
+          paddingTop: '48px',
           paddingBottom: '100px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -1226,6 +1350,22 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The M/M/1 Queue: Why Latency Explodes
           </h2>
+
+          {/* Prediction review */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: '0 0 8px 0', fontWeight: 600 }}>
+              Connecting to Your Prediction
+            </p>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              As you observed in the experiment, latency does not increase linearly. You saw how the queue depth and average latency exploded as you increased the arrival rate. This confirms the non-linear relationship you may have predicted — the formula below explains exactly why this happens.
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1284,16 +1424,10 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
             </p>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Explore Packet Size Effects
-          </button>
+          {renderNavDots()}
           </div>
         </div>
-
-        {renderNavDots()}
+        {renderBottomBar(true, 'Explore Packet Size Effects')}
       </div>
     );
   }
@@ -1340,6 +1474,44 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
             An online game sends many small 100-byte packets. A file download sends fewer large 1500-byte packets. Same total data rate. How does packet size affect latency and jitter?
           </h2>
 
+          {/* Static SVG for twist_predict */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <svg viewBox="0 0 500 200" width="100%" style={{ maxWidth: '500px', background: colors.bgCard, borderRadius: '12px' }}>
+              <defs>
+                <filter id="twistGlow">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+              </defs>
+              <g id="packet-size-comparison">
+                {/* Small packets lane */}
+                <g id="small-packets">
+                  <rect x="20" y="30" width="220" height="60" fill={colors.bgSecondary} rx="8" stroke={colors.success} strokeWidth="1.5" />
+                  <text x="30" y="50" fill={colors.success} fontSize="12" fontWeight="600">Small Packets (100 bytes)</text>
+                  {[0, 1, 2, 3, 4, 5, 6, 7].map(i => (
+                    <rect key={i} x={30 + i * 24} y="55" width="18" height="25" fill={colors.success} rx="3" opacity="0.7" />
+                  ))}
+                  <text x="130" y="110" fill={colors.success} fontSize="11" textAnchor="middle">Consistent timing ✓</text>
+                </g>
+                {/* Large packets lane */}
+                <g id="large-packets">
+                  <rect x="260" y="30" width="220" height="60" fill={colors.bgSecondary} rx="8" stroke={colors.warning} strokeWidth="1.5" />
+                  <text x="270" y="50" fill={colors.warning} fontSize="12" fontWeight="600">Large Packets (1500 bytes)</text>
+                  {[0, 1, 2].map(i => (
+                    <rect key={i} x={270 + i * 60} y="55" width="50" height="25" fill={colors.warning} rx="3" opacity="0.7" />
+                  ))}
+                  <text x="370" y="110" fill={colors.warning} fontSize="11" textAnchor="middle">Blocking effect !</text>
+                </g>
+                {/* Axis labels */}
+                <text x="250" y="185" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Packet Size →</text>
+                <text x="130" y="145" fill={colors.textMuted} fontSize="11" textAnchor="middle">Low jitter</text>
+                <text x="370" y="145" fill={colors.textMuted} fontSize="11" textAnchor="middle">High jitter</text>
+                {/* Highlighted indicator */}
+                <circle cx="370" cy="67" r="8" fill="none" stroke={colors.error} strokeWidth="2" filter="url(#twistGlow)" />
+              </g>
+            </svg>
+          </div>
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
               <button
@@ -1375,18 +1547,10 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
             ))}
           </div>
 
-          {twistPrediction && (
-            <button
-              onClick={() => { playSound('success'); resetSimulation(); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Compare Packet Sizes
-            </button>
-          )}
+          {renderNavDots()}
           </div>
         </div>
-
-        {renderNavDots()}
+        {renderBottomBar(!!twistPrediction, 'Compare Packet Sizes')}
       </div>
     );
   }
@@ -1495,9 +1659,13 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
                 onChange={(e) => setArrivalRate(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  accentColor: '#3b82f6',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
                 }}
               />
             </div>
@@ -1595,16 +1763,10 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
             </p>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); setIsSimulating(false); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Tradeoffs
-          </button>
+          {renderNavDots()}
           </div>
         </div>
-
-        {renderNavDots()}
+        {renderBottomBar(true, 'Understand the Tradeoffs')}
       </div>
     );
   }
@@ -1617,13 +1779,14 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '64px',
+          paddingTop: '48px',
           paddingBottom: '100px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -1680,16 +1843,10 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
             </div>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            See Real-World Applications
-          </button>
+          {renderNavDots()}
           </div>
         </div>
-
-        {renderNavDots()}
+        {renderBottomBar(true, 'See Real-World Applications')}
       </div>
     );
   }
@@ -1705,21 +1862,25 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '64px',
+          paddingTop: '48px',
           paddingBottom: '100px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
             </h2>
+            <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+              App {selectedApp + 1} of {realWorldApps.length}
+            </p>
 
             {/* App selector */}
             <div style={{
@@ -1826,6 +1987,32 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
             </div>
           </div>
 
+          {/* Got It button */}
+          <button
+            onClick={() => {
+              playSound('click');
+              const newCompleted = [...completedApps];
+              newCompleted[selectedApp] = true;
+              setCompletedApps(newCompleted);
+              if (selectedApp < realWorldApps.length - 1) {
+                setSelectedApp(selectedApp + 1);
+              }
+            }}
+            style={{
+              background: `${app.color}22`,
+              border: `2px solid ${app.color}`,
+              color: app.color,
+              padding: '12px 24px',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              width: '100%',
+              marginBottom: '16px',
+            }}
+          >
+            Got It — Next Application
+          </button>
+
           {allAppsCompleted && (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
@@ -1834,10 +2021,10 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
               Take the Knowledge Test
             </button>
           )}
+          {renderNavDots()}
           </div>
         </div>
-
-        {renderNavDots()}
+        {renderBottomBar(allAppsCompleted, 'Take the Knowledge Test')}
       </div>
     );
   }
@@ -1851,6 +2038,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
           minHeight: '100vh',
           background: colors.bgPrimary,
           padding: '24px',
+          overflowY: 'auto',
         }}>
           {renderProgressBar()}
 
@@ -1873,6 +2061,29 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
                 : 'Review the concepts and try again.'}
             </p>
 
+            {/* Answer review */}
+            <div style={{ textAlign: 'left', marginBottom: '24px' }}>
+              {testQuestions.map((q, i) => {
+                const correctId = q.options.find(o => o.correct)?.id;
+                const userAnswerId = testAnswers[i];
+                const isCorrect = userAnswerId === correctId;
+                return (
+                  <div key={i} style={{
+                    background: colors.bgCard,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    marginBottom: '8px',
+                    borderLeft: `3px solid ${isCorrect ? colors.success : colors.error}`,
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span>{isCorrect ? '✅' : '❌'}</span>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Q{i + 1}: {q.question.slice(0, 60)}...</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
             {passed ? (
               <button
                 onClick={() => { playSound('complete'); nextPhase(); }}
@@ -1891,7 +2102,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
                 }}
                 style={primaryButtonStyle}
               >
-                Review & Try Again
+                Replay
               </button>
             )}
           </div>
@@ -1908,13 +2119,14 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '64px',
+          paddingTop: '48px',
           paddingBottom: '100px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -2021,7 +2233,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
                   cursor: 'pointer',
                 }}
               >
-                Previous
+                Back
               </button>
             )}
             {currentQuestion < 9 ? (
@@ -2039,7 +2251,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
                   fontWeight: 600,
                 }}
               >
-                Next
+                Next Question
               </button>
             ) : (
               <button
@@ -2084,11 +2296,9 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', textAlign: 'center' }}>
         {renderProgressBar()}
 
         <div style={{
@@ -2162,6 +2372,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
         </div>
 
         {renderNavDots()}
+      </div>
       </div>
     );
   }

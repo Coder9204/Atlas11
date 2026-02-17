@@ -327,6 +327,18 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
   gamePhase
 }) => {
   const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Twist Explore',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
   const getInitialPhase = (): Phase => {
     if (gamePhase && validPhases.includes(gamePhase as Phase)) return gamePhase as Phase;
     return 'hook';
@@ -682,6 +694,7 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
       if (currentIndex > 0) goToPhase(validPhases[currentIndex - 1]);
     };
 
+    const dotIdx = validPhases.indexOf(phase);
     return (
       <div style={{
         position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, minHeight: '72px',
@@ -696,6 +709,24 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
             transition: 'all 0.2s ease'
           }}>← Back</button>
         ) : <div />}
+
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          {validPhases.map((p, i) => (
+            <div
+              key={p}
+              onClick={() => i < dotIdx && goToPhase(p)}
+              style={{
+                height: '8px',
+                width: i === dotIdx ? '20px' : '8px',
+                borderRadius: '4px',
+                backgroundColor: i < dotIdx ? colors.primary : i === dotIdx ? colors.accent : colors.border,
+                cursor: i < dotIdx ? 'pointer' : 'default',
+                transition: 'all 0.3s',
+              }}
+              title={phaseLabels[p]}
+            />
+          ))}
+        </div>
 
         {canProceed ? (
           <button onClick={handleNext} style={{
@@ -749,7 +780,7 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, "Let's Explore →")}
+        {renderBottomBar(false, true, "Start Exploring →")}
       </div>
     );
   }

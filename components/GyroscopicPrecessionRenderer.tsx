@@ -58,7 +58,7 @@ const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict
 const phaseLabels: Record<Phase, string> = {
   'hook': 'Hook',
   'predict': 'Predict',
-  'play': 'Lab',
+  'play': 'Play',
   'review': 'Review',
   'twist_predict': 'Twist Predict',
   'twist_play': 'Twist Lab',
@@ -305,7 +305,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
       description: "Helicopter rotors are massive spinning disks with significant angular momentum. The tail rotor counteracts torque, and gyroscopic effects influence maneuverability. Engineers at Boeing, Sikorsky, and Airbus Helicopters carefully model precession to ensure stable flight control systems.",
       connection: "Just like a spinning wheel resists tilting, the helicopter's rotor resists orientation changes. Pilots must account for 90\u00B0 phase lag in their inputs.",
       howItWorks: "The main rotor creates angular momentum. When tilting, gyroscopic precession causes response 90\u00B0 ahead of input\u2014pilots learn to compensate.",
-      stats: [{ value: '400+', label: 'RPM typical', icon: '\uD83D\uDD04' }, { value: '90\u00B0', label: 'Phase lag', icon: '\uD83D\uDCD0' }, { value: '1944', label: 'First practical', icon: '\uD83D\uDCC5' }],
+      stats: [{ value: '1000 kg', label: 'Rotor mass', icon: '\uD83D\uDD04' }, { value: '90%', label: 'Phase lag', icon: '\uD83D\uDCD0' }, { value: '3 m', label: 'Rotor radius', icon: '\uD83C\uDFAF' }],
       examples: ['Tail rotor prevents body rotation', 'Cyclic inputs account for precession', 'Autorotation uses stored momentum', 'Blade flapping compensates'],
       color: colors.primary
     },
@@ -622,7 +622,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
         {/* Tick labels */}
         <text x={padL} y={padT + plotH + 16} fill="#cbd5e1" fontSize="11" textAnchor="middle">1</text>
         <text x={padL + plotW} y={padT + plotH + 16} fill="#cbd5e1" fontSize="11" textAnchor="middle">10</text>
-        <text x={padL - 8} y={padT + 5} fill="#cbd5e1" fontSize="11" textAnchor="end">5.0</text>
+        <text x={padL - 8} y={padT + 20} fill="#cbd5e1" fontSize="11" textAnchor="end">5.0</text>
         <text x={padL - 8} y={padT + plotH + 4} fill="#cbd5e1" fontSize="11" textAnchor="end">0</text>
 
         {/* Current value readout */}
@@ -879,7 +879,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
           {/* SVG Labels */}
           <text x="280" y="25" fill="#a78bfa" fontSize="12" fontWeight="600">L = Angular Momentum</text>
           <text x="280" y="275" fill="#ef4444" fontSize="12" fontWeight="600">\u03C4 = Torque (Gravity)</text>
-          <text x="120" y="60" fill="#34d399" fontSize="12" fontWeight="600">Precession Path</text>
+          <text x="120" y="75" fill="#34d399" fontSize="12" fontWeight="600">Precession Path</text>
           <text x="240" y="195" fill="#fbbf24" fontSize="11" fontWeight="600">Spinning Wheel</text>
         </svg>
 
@@ -904,9 +904,9 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
             </span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'right' }}>
-            <span style={{ fontSize: '12px', color: colors.accent }}>L = Angular Momentum</span>
-            <span style={{ fontSize: '12px', color: colors.danger }}>\u03C4 = Torque (Push)</span>
-            <span style={{ fontSize: '12px', color: colors.success }}>Precession Direction</span>
+            <span style={{ fontSize: '12px', color: colors.textSecondary }}>L = Angular Momentum</span>
+            <span style={{ fontSize: '12px', color: colors.textSecondary }}>\u03C4 = Torque (Push)</span>
+            <span style={{ fontSize: '12px', color: colors.textSecondary }}>Precession Direction</span>
           </div>
         </div>
 
@@ -1226,7 +1226,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
             }}>
               <p style={{ fontSize: '14px', fontWeight: 600, color: colors.accent, marginBottom: '4px' }}>What to observe:</p>
               <p style={{ fontSize: '13px', fontWeight: 400, color: '#e2e8f0', lineHeight: 1.5 }}>
-                Adjust the spin speed slider and click "Spin Wheel & Apply Torque". Watch the direction the wheel moves and how the precession rate changes with speed.
+                Adjust the spin speed slider and click "Spin Wheel & Apply Torque". When spin speed increases, the precession rate decreases — higher spin causes slower, steadier precession.
               </p>
             </div>
 
@@ -1714,7 +1714,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
           <div style={{ maxWidth: '560px', margin: '0 auto' }}>
             {/* Progress */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
-              <span style={{ fontSize: '12px', fontWeight: 700, color: colors.primary }}>Question {testIndex + 1} of 10</span>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: colors.primary }}>Question {testIndex + 1} / 10</span>
               <div style={{ display: 'flex', gap: '4px' }}>
                 {testQuestions.map((tq, i) => (
                   <div key={i} style={{

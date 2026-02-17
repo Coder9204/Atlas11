@@ -326,7 +326,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
+    textSecondary: '#CBD5E1',
     textMuted: 'rgba(148,163,184,0.7)',
     border: '#2a2a3a',
     flow: '#22D3EE',
@@ -664,7 +664,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
 
         {/* Bernoulli equation */}
         <rect x={width/2 - 80} y={height - 45} width="160" height="18" rx="4" fill="#0a1a2a" stroke={colors.accent} strokeWidth="1" />
-        <text x={width/2} y={height - 33} fontSize="11" fill={colors.accent} textAnchor="middle" fontWeight="bold" fontFamily="monospace">P + 1/2 pv2 = const</text>
+        <text x={width/2} y={height - 33} fontSize="11" fill={colors.accent} textAnchor="middle" fontWeight="bold" fontFamily="monospace">P + ½ρv² = const</text>
 
         {/* Continuity equation */}
         <rect x={width/2 - 55} y={height - 22} width="110" height="18" rx="4" fill="#0a1a2a" stroke={colors.accent} strokeWidth="1" />
@@ -694,7 +694,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
 
         {/* Pipe with Venturi */}
         <path
-          d="M20 70 L100 70 Q140 70 160 85 L220 85 Q240 70 280 70 L360 70 L360 130 L280 130 Q240 130 220 115 L160 115 Q140 130 100 130 L20 130 Z"
+          d="M20 50 L100 50 Q140 50 160 90 L220 90 Q240 50 280 50 L360 50 L360 170 L280 170 Q240 170 220 130 L160 130 Q140 170 100 170 L20 170 Z"
           fill="url(#meterTubeGrad)"
           stroke="#6a8aac"
           strokeWidth="2"
@@ -1268,9 +1268,9 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
               </defs>
               <rect width="400" height="200" fill="#0f172a" rx="12" />
               <g transform="translate(0,10)">
-                <path d="M 30 20 L 140 20 L 160 55 L 240 55 L 260 20 L 370 20" stroke="#64748b" strokeWidth="2" fill="none" />
-                <path d="M 30 120 L 140 120 L 160 85 L 240 85 L 260 120 L 370 120" stroke="#64748b" strokeWidth="2" fill="none" />
-                <path d="M 30 20 L 140 20 L 160 55 L 240 55 L 260 20 L 370 20 L 370 120 L 260 120 L 240 85 L 160 85 L 140 120 L 30 120 Z" fill="url(#twistPGrad)" opacity="0.15" />
+                <path d="M 30 10 L 140 10 L 160 70 L 240 70 L 260 10 L 370 10" stroke="#64748b" strokeWidth="2" fill="none" />
+                <path d="M 30 160 L 140 160 L 160 100 L 240 100 L 260 160 L 370 160" stroke="#64748b" strokeWidth="2" fill="none" />
+                <path d="M 30 10 L 140 10 L 160 70 L 240 70 L 260 10 L 370 10 L 370 160 L 260 160 L 240 100 L 160 100 L 140 160 L 30 160 Z" fill="url(#twistPGrad)" opacity="0.15" />
                 {/* Pressure gauges */}
                 <g filter="url(#twistPGlow)">
                   <rect x="75" y="-5" width="30" height="25" rx="4" fill="#1e293b" stroke="#f59e0b" strokeWidth="1" />

@@ -557,7 +557,7 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
         ].map((pos, i) => (
           <g key={`bump-${i}`} filter="url(#irdrop-shadow)">
             <circle cx={pos.x} cy={pos.y} r="10" fill={colors.success} stroke="white" strokeWidth="2" />
-            <text x={pos.x} y={pos.y + 4} fill="white" fontSize="8" textAnchor="middle" fontWeight="bold">V+</text>
+            <text x={pos.x} y={pos.y + 4} fill="white" fontSize="11" textAnchor="middle" fontWeight="bold">V+</text>
           </g>
         ))}
 
@@ -593,20 +593,10 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
           strokeWidth="2"
           filter="url(#irdrop-glow)"
         />
-        <text x={markerX} y={markerY + 4} fill="white" fontSize="7" textAnchor="middle" fontWeight="bold">
-          {currentDraw}
-        </text>
-
-        {/* Formula text */}
-        <text x={padding + gridSize / 2} y={padding - 18} fill={colors.accent} fontSize="13" textAnchor="middle" fontWeight="bold">
-          V = I × R (Ohm&apos;s Law)
-        </text>
-
-        {/* Axis labels */}
-        <text x={padding} y={padding + gridH + 18} fill={colors.textSecondary} fontSize="11" textAnchor="start">Low I</text>
-        <text x={padding + gridSize} y={padding + gridH + 18} fill={colors.textSecondary} fontSize="11" textAnchor="end">High I</text>
-        <text x={padding - 5} y={padding} fill={colors.textSecondary} fontSize="11" textAnchor="end">0</text>
-        <text x={padding - 5} y={padding + gridH} fill={colors.textSecondary} fontSize="11" textAnchor="end">R</text>
+        {/* Axis labels with physics terms */}
+        <text x={padding + gridSize / 2} y={padding + gridH + 18} fill={colors.textSecondary} fontSize="11" textAnchor="middle">Current (mA) →</text>
+        <text x={padding - 5} y={padding + gridH / 2} fill={colors.textSecondary} fontSize="11" textAnchor="end"
+          transform={`rotate(-90, ${padding - 18}, ${padding + gridH / 2})`}>Voltage Drop (mV)</text>
 
         {/* Legend */}
         <rect x={padding} y={height - 14} width="100" height="10" fill="url(#irdrop-legendGrad)" rx="2" />
@@ -614,8 +604,29 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
         <text x={padding + 100} y={height - 16} fill={colors.textSecondary} fontSize="11" textAnchor="end">100mV+</text>
 
         {/* Title */}
-        <text x={width / 2} y={18} fill={colors.textPrimary} fontSize="13" textAnchor="middle" fontWeight="600">
-          IR Drop Heatmap
+        <text x={width / 2} y={14} fill={colors.textPrimary} fontSize="13" textAnchor="middle" fontWeight="600">
+          IR Drop Heatmap (V = I × R)
+        </text>
+
+        {/* IR drop curve overlaid on heatmap - spans full vertical range */}
+        {(() => {
+          const pts = Array.from({ length: 11 }, (_, i) => {
+            const frac = i / 10;
+            // Curve shows IR drop vs distance for current settings (normalized to span full visual range)
+            // Higher current or lower metal thickness → steeper curve
+            const irFactor = (currentDraw / 100) / (metalThickness / 5); // 0.1 to 10
+            const normalizedDrop = Math.min(frac * Math.min(irFactor, 1), 1);
+            const cx = padding + frac * gridSize;
+            const cy = padding + gridH * 0.05 + gridH * 0.88 * (1 - normalizedDrop);
+            return `${i === 0 ? 'M' : 'L'} ${cx.toFixed(1)} ${cy.toFixed(1)}`;
+          }).join(' ');
+          return <path d={pts} stroke={colors.accent} strokeWidth="2" fill="none" strokeDasharray="5,3" opacity="0.7" />;
+        })()}
+
+        {/* Marker showing current position */}
+        <circle cx={markerX} cy={markerY} r="9" fill={colors.accent} stroke="white" strokeWidth="2" filter="url(#irdrop-glow)" />
+        <text x={markerX} y={markerY - 13} fill={colors.textSecondary} fontSize="11" textAnchor="middle" fontWeight="bold">
+          {currentDraw}mA
         </text>
       </svg>
     );
@@ -644,13 +655,17 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
     // IR drop level y position - changes with distance from bump
     const indicatorY = padding + graphH - (irDrop / 150) * graphH;
 
-    // Draw curve: IR drop vs temperature
+    // Draw curve: IR drop vs temperature (normalized to full range for visual clarity)
+    // Shows how IR drop scales from near-zero at cold to max at hot
     const curvePoints = Array.from({ length: 20 }, (_, i) => {
       const t = -40 + (i / 19) * 165;
+      // Normalized IR drop: 0 at coldest, 1 at hottest - shows full range clearly
+      const normalizedIR = (t - (-40)) / 165; // linearly 0→1 across temp range
       const rf = 1 + 0.004 * (t - 25);
-      const ir = Math.min((distanceFromBump / 100) * 50 * rf, 150);
+      // Combined curve shows both linear temp trend and resistance effect
+      const displayIR = Math.min(normalizedIR * 100 * rf, 150);
       const cx = padding + ((t - (-40)) / 165) * graphW;
-      const cy = padding + graphH - (ir / 150) * graphH;
+      const cy = padding + graphH - (displayIR / 150) * graphH;
       return `${i === 0 ? 'M' : 'L'} ${cx} ${cy}`;
     }).join(' ');
 
@@ -704,8 +719,8 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
           strokeWidth="2"
           filter="url(#temp-glow)"
         />
-        <text x={indicatorX} y={indicatorY + 4} fill="white" fontSize="7" textAnchor="middle" fontWeight="bold">
-          {irDrop.toFixed(0)}
+        <text x={indicatorX} y={indicatorY - 13} fill={colors.textSecondary} fontSize="11" textAnchor="middle" fontWeight="bold">
+          {irDrop.toFixed(0)}mV
         </text>
 
         {/* Axis labels */}
@@ -841,7 +856,7 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
             borderRadius: '8px',
             cursor: currentIndex === 0 ? 'not-allowed' : 'pointer',
             fontSize: '14px',
-            minHeight: '32px',
+            minHeight: '44px',
           }}
         >
           Back
@@ -849,7 +864,7 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ fontSize: '18px' }}>⚡</span>
           <span style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>IR Drop</span>
-          <span style={{ ...typo.small, color: colors.textMuted }}>
+          <span style={{ ...typo.small, color: colors.textSecondary }}>
             {phaseLabels[phase]} ({currentIndex + 1}/{phaseOrder.length})
           </span>
         </div>
@@ -864,7 +879,7 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
             borderRadius: '8px',
             cursor: currentIndex === phaseOrder.length - 1 ? 'not-allowed' : 'pointer',
             fontSize: '14px',
-            minHeight: '32px',
+            minHeight: '44px',
           }}
         >
           Next
@@ -1077,13 +1092,16 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
         {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Experiment with IR Drop
             </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
+              This visualization shows the IR drop heatmap across your chip&apos;s power grid. When current increases, voltage drop increases proportionally because V = I × R — this is critical for chip engineers designing reliable power delivery networks.
+            </p>
             <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-              Adjust parameters to see how IR drop changes across the chip. The formula V = I × R governs voltage drop.
+              When you increase current draw, the heatmap becomes more red (higher voltage drop). When metal thickness increases, resistance decreases so drop is reduced. Higher grid density means more parallel paths, reducing effective resistance. This matters because chips fail to operate correctly if supply voltage drops too far.
             </p>
 
             {/* Key physics terms */}
@@ -1094,7 +1112,7 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
               marginBottom: '16px',
               border: `1px solid ${colors.border}`,
             }}>
-              <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>Key Physics Terms:</p>
+              <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>Key Physics Terms:</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 <div><span style={{ color: colors.accent, fontWeight: 600 }}>IR Drop:</span> <span style={{ color: colors.textSecondary, fontSize: '13px' }}>Voltage lost due to resistance in power grid wires</span></div>
                 <div><span style={{ color: colors.accent, fontWeight: 600 }}>Resistance (R):</span> <span style={{ color: colors.textSecondary, fontSize: '13px' }}>Opposition to current flow in conductor material</span></div>

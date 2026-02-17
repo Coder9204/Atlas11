@@ -134,6 +134,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [confirmedTest, setConfirmedTest] = useState<Set<number>>(new Set());
+  const [masteryScore, setMasteryScore] = useState<number | null>(null);
 
   // Derived
   const solute = solutes[selectedSolute];
@@ -248,11 +249,12 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
   const generateEnergySVG = useCallback((soluteIdx: number, amount: number, interactive: boolean) => {
     const s = solutes[soluteIdx];
     const scale = amount / 10;
-    const bondH = Math.min(Math.abs(s.bondEnergy) * scale * 1.8, 140);
-    const hydH = Math.min(Math.abs(s.hydrationEnergy) * scale * 1.2, 140);
-    const netH = Math.min(Math.abs(s.netEnergy) * scale * 1.5, 140);
+    // Ensure minimum visual amplitude for clear display (>= 60px vertical range)
+    const bondH = Math.max(60, Math.min(Math.abs(s.bondEnergy) * scale * 3.0, 130));
+    const hydH = Math.max(15, Math.min(Math.abs(s.hydrationEnergy) * scale * 2.0, 130));
+    const netH = Math.max(20, Math.min(Math.abs(s.netEnergy) * scale * 2.0, 100));
     const isEndo = s.netEnergy > 0;
-    const baseY = 160;
+    const baseY = 140;
 
     // Generate curve points for energy profile (>= 10 L points)
     const curvePoints: string[] = [];
@@ -261,35 +263,39 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
       const progress = i / 20;
       let y: number;
       if (progress < 0.3) {
-        y = baseY - (bondH * 0.8) * Math.sin(progress / 0.3 * Math.PI / 2);
+        y = baseY - bondH * Math.sin(progress / 0.3 * Math.PI / 2);
       } else if (progress < 0.5) {
         const p2 = (progress - 0.3) / 0.2;
-        y = baseY - bondH * 0.8 + (bondH * 0.8 + hydH * 0.6) * p2;
+        y = baseY - bondH + (bondH + hydH) * p2;
       } else if (progress < 0.7) {
         const p3 = (progress - 0.5) / 0.2;
-        y = baseY + hydH * 0.6 - hydH * 0.6 * p3;
+        y = baseY + hydH - hydH * p3;
       } else {
-        const netY = isEndo ? -netH * 0.5 : netH * 0.3;
+        const netY = isEndo ? -netH * 0.6 : netH * 0.4;
         const p4 = (progress - 0.7) / 0.3;
         y = baseY + netY * Math.sin(p4 * Math.PI / 2);
       }
-      y = Math.max(25, Math.min(195, y));
+      y = Math.max(15, Math.min(210, y));
       curvePoints.push(`L ${x} ${y}`);
     }
     const pathD = `M 40 ${baseY} ${curvePoints.join(' ')}`;
 
-    // Interactive point position
+    // Interactive point position - moves with amount slider
     const interactiveIdx = Math.round((amount - 5) / 25 * 20);
-    const ix = 40 + Math.min(interactiveIdx, 20) * 16;
+    const ix = 40 + Math.min(Math.max(interactiveIdx, 0), 20) * 16;
     const iy = (() => {
-      const progress = Math.min(interactiveIdx, 20) / 20;
-      if (progress < 0.3) return baseY - (bondH * 0.8) * Math.sin(progress / 0.3 * Math.PI / 2);
-      if (progress < 0.5) { const p2 = (progress - 0.3) / 0.2; return baseY - bondH * 0.8 + (bondH * 0.8 + hydH * 0.6) * p2; }
-      if (progress < 0.7) { const p3 = (progress - 0.5) / 0.2; return baseY + hydH * 0.6 - hydH * 0.6 * p3; }
-      const netY = isEndo ? -netH * 0.5 : netH * 0.3;
+      const progress = Math.min(Math.max(interactiveIdx, 0), 20) / 20;
+      if (progress < 0.3) return baseY - bondH * Math.sin(progress / 0.3 * Math.PI / 2);
+      if (progress < 0.5) { const p2 = (progress - 0.3) / 0.2; return baseY - bondH + (bondH + hydH) * p2; }
+      if (progress < 0.7) { const p3 = (progress - 0.5) / 0.2; return baseY + hydH - hydH * p3; }
+      const netY = isEndo ? -netH * 0.6 : netH * 0.4;
       const p4 = (progress - 0.7) / 0.3;
       return baseY + netY * Math.sin(p4 * Math.PI / 2);
     })();
+    const clampedIy = Math.max(15, Math.min(210, iy));
+
+    // Temperature and energy values
+    const tChange = s.tempChange * amount / 10;
 
     return (
       <svg viewBox="0 0 400 240" style={{ width: '100%', maxWidth: 560 }}>
@@ -304,18 +310,6 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
             <stop offset="40%" stopColor="#fbbf24" />
             <stop offset="60%" stopColor="#3b82f6" />
             <stop offset="100%" stopColor={isEndo ? '#22c55e' : '#ef4444'} />
-          </linearGradient>
-          <linearGradient id="endoBarBond" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#fbbf24" />
-            <stop offset="100%" stopColor="#f97316" />
-          </linearGradient>
-          <linearGradient id="endoBarHydration" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#60a5fa" />
-            <stop offset="100%" stopColor="#2563eb" />
-          </linearGradient>
-          <linearGradient id="endoBarNet" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor={isEndo ? '#34d399' : '#f87171'} />
-            <stop offset="100%" stopColor={isEndo ? '#059669' : '#dc2626'} />
           </linearGradient>
           <radialGradient id="endoGlowGrad" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor={isEndo ? '#60a5fa' : '#f97316'} stopOpacity="0.6" />
@@ -334,69 +328,52 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
         {/* Background */}
         <rect width="400" height="240" fill="url(#endoBg)" rx="12" />
 
-        {/* Grid lines */}
-        {[60, 100, 140, 180].map(y => (
-          <line key={`gy${y}`} x1="40" y1={y} x2="370" y2={y} stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
-        ))}
-        {[100, 160, 220, 280, 340].map(x => (
-          <line key={`gx${x}`} x1={x} y1="20" x2={x} y2="220" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
-        ))}
+        {/* Grid and axes group */}
+        <g id="axes">
+          {[50, 90, 130, 170, 210].map(y => (
+            <line key={`gy${y}`} x1="40" y1={y} x2="370" y2={y} stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+          ))}
+          {[100, 160, 220, 300, 360].map(x => (
+            <line key={`gx${x}`} x1={x} y1="28" x2={x} y2="218" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+          ))}
+          <line x1="40" y1="28" x2="40" y2="218" stroke="#64748b" strokeWidth="1.5" />
+          <line x1="40" y1={baseY} x2="370" y2={baseY} stroke="#64748b" strokeWidth="1.5" />
+          <text x="12" y="125" fill="#e2e8f0" fontSize="11" textAnchor="middle" transform="rotate(-90, 12, 125)">Energy</text>
+          <text x="205" y="230" fill="#e2e8f0" fontSize="11" textAnchor="middle">Reaction Progress</text>
+          <text x="36" y={baseY + 4} fill="#e2e8f0" fontSize="11" textAnchor="end">0</text>
+        </g>
 
-        {/* Axes */}
-        <line x1="40" y1="20" x2="40" y2="220" stroke="#64748b" strokeWidth="1.5" />
-        <line x1="40" y1={baseY} x2="370" y2={baseY} stroke="#64748b" strokeWidth="1.5" />
+        {/* Legend group - at top of SVG */}
+        <g id="legend">
+          <rect x="42" y="12" width="8" height="8" fill="#f97316" rx="2" />
+          <text x="54" y="20" fill="#e2e8f0" fontSize="11">Lattice</text>
+          <rect x="120" y="12" width="8" height="8" fill="#3b82f6" rx="2" />
+          <text x="132" y="20" fill="#e2e8f0" fontSize="11">Hydration</text>
+          <rect x="215" y="12" width="8" height="8" fill={isEndo ? '#22c55e' : '#ef4444'} rx="2" />
+          <text x="227" y="20" fill="#e2e8f0" fontSize="11">Net: {(s.netEnergy * scale).toFixed(1)} kJ</text>
+        </g>
 
-        {/* Zero reference line */}
-        <line x1="40" y1={baseY} x2="370" y2={baseY} stroke="#94a3b8" strokeWidth="1" strokeDasharray="6 3" opacity="0.5" />
-
-        {/* Axis labels */}
-        <text x="12" y="120" fill="#94a3b8" fontSize="11" textAnchor="middle" transform="rotate(-90, 12, 120)">Energy (kJ/mol)</text>
-        <text x="205" y="236" fill="#94a3b8" fontSize="11" textAnchor="middle">Reaction Progress</text>
-
-        {/* Y-axis tick labels */}
-        <text x="36" y="64" fill="#94a3b8" fontSize="11" textAnchor="end">+{Math.round(bondH * 0.6)}</text>
-        <text x="36" y={baseY + 4} fill="#94a3b8" fontSize="11" textAnchor="end">0</text>
-        <text x="36" y={baseY + 40} fill="#94a3b8" fontSize="11" textAnchor="end">-{Math.round(hydH * 0.4)}</text>
-
-        {/* Energy curve path */}
-        <path d={pathD} fill="none" stroke="url(#endoCurveGrad)" strokeWidth="3" strokeLinecap="round" />
-
-        {/* Area fill under curve */}
-        <path d={`${pathD} L 360 ${baseY} L 40 ${baseY} Z`} fill={isEndo ? 'rgba(96,165,250,0.08)' : 'rgba(249,115,22,0.08)'} />
-
-        {/* Stage labels on curve */}
-        <text x="80" y="38" fill="#f97316" fontSize="12" textAnchor="middle" fontWeight="bold">Bond Breaking</text>
-        <text x="80" y="52" fill="#fbbf24" fontSize="11" textAnchor="middle">+E absorbed</text>
-        <text x="200" y={baseY + 50} fill="#3b82f6" fontSize="12" textAnchor="middle" fontWeight="bold">Hydration</text>
-        <text x="200" y={baseY + 64} fill="#60a5fa" fontSize="11" textAnchor="middle">-E released</text>
-        <text x="330" y={isEndo ? 50 : baseY + 30} fill={isEndo ? '#22c55e' : '#ef4444'} fontSize="12" textAnchor="middle" fontWeight="bold">
-          Net: {isEndo ? '+' : ''}{(s.netEnergy * scale).toFixed(1)} kJ
-        </text>
-        <text x="330" y={isEndo ? 64 : baseY + 44} fill={isEndo ? '#34d399' : '#f87171'} fontSize="11" textAnchor="middle">
-          {isEndo ? 'ENDOTHERMIC' : 'EXOTHERMIC'}
-        </text>
-
-        {/* Temperature label */}
-        <text x="330" y={isEndo ? 80 : baseY + 60} fill="#e2e8f0" fontSize="11" textAnchor="middle">
-          \u0394T = {tempChange > 0 ? '+' : ''}{tempChange.toFixed(1)}\u00b0C
-        </text>
-
-        {/* Legend */}
-        <rect x="42" y="22" width="8" height="8" fill="#f97316" rx="2" />
-        <text x="54" y="30" fill="#e2e8f0" fontSize="11">Lattice Energy</text>
-        <rect x="140" y="22" width="8" height="8" fill="#3b82f6" rx="2" />
-        <text x="152" y="30" fill="#e2e8f0" fontSize="11">Hydration Energy</text>
-        <rect x="260" y="22" width="8" height="8" fill={isEndo ? '#22c55e' : '#ef4444'} rx="2" />
-        <text x="272" y="30" fill="#e2e8f0" fontSize="11">Net Result</text>
+        {/* Energy curve group */}
+        <g id="curve">
+          {/* Area fill */}
+          <path d={`${pathD} L 360 ${baseY} L 40 ${baseY} Z`} fill={isEndo ? 'rgba(96,165,250,0.08)' : 'rgba(249,115,22,0.08)'} />
+          {/* Main curve */}
+          <path d={pathD} fill="none" stroke="url(#endoCurveGrad)" strokeWidth="3" strokeLinecap="round" />
+          {/* Temperature change display - right side */}
+          <text x="345" y="50" fill={isEndo ? '#86efac' : '#fca5a5'} fontSize="11" textAnchor="middle" fontWeight="bold">
+            {isEndo ? 'ENDO' : 'EXOTH'}
+          </text>
+          <text x="345" y="66" fill="#f8fafc" fontSize="11" textAnchor="middle">
+            ΔT={tChange > 0 ? '+' : ''}{tChange.toFixed(1)}°C
+          </text>
+        </g>
 
         {/* Interactive point */}
         {interactive && (
-          <circle cx={ix} cy={Math.max(30, Math.min(210, iy))} r={8} fill={isEndo ? '#60a5fa' : '#f97316'} filter="url(#glow)" stroke="#fff" strokeWidth={2} />
-        )}
-
-        {/* Glow effect at interactive point */}
-        {interactive && (
-          <circle cx={ix} cy={Math.max(30, Math.min(210, iy))} r={20} fill="url(#endoGlowGrad)" opacity="0.4" />
+          <>
+            <circle cx={ix} cy={clampedIy} r={20} fill="url(#endoGlowGrad)" opacity="0.4" />
+            <circle cx={ix} cy={clampedIy} r={8} fill={isEndo ? '#60a5fa' : '#f97316'} filter="url(#glow)" stroke="#fff" strokeWidth={2} />
+          </>
         )}
       </svg>
     );
@@ -415,18 +392,23 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
 
   // Nav dots
   const renderNavDots = () => (
-    <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', padding: '8px 0' }}>
+    <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', padding: '4px 0' }}>
       {phaseOrder.map((p, i) => (
         <button
           key={p}
           aria-label={phaseLabels[p]}
           onClick={() => goToPhase(p)}
           style={{
-            width: '10px', height: '10px', borderRadius: '50%', border: 'none',
-            background: p === phase ? design.accent : phaseOrder.indexOf(phase) > i ? design.success : 'rgba(100,116,139,0.4)',
-            cursor: 'pointer', transition: 'all 0.3s ease', padding: 0,
+            minHeight: '44px', width: '18px', border: 'none', background: 'transparent',
+            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 2px',
           }}
-        />
+        >
+          <div style={{
+            width: '10px', height: '10px', borderRadius: '50%',
+            background: p === phase ? design.accent : phaseOrder.indexOf(phase) > i ? design.success : 'rgba(100,116,139,0.4)',
+            transition: 'all 0.3s ease',
+          }} />
+        </button>
       ))}
     </div>
   );
@@ -474,8 +456,8 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
     );
   };
 
-  // Outer wrapper for every phase
-  const PhaseWrapper = ({ children, canNext, nextLabel }: { children: React.ReactNode; canNext: boolean; nextLabel: string }) => (
+  // Outer wrapper for every phase - render function (NOT a component) to avoid unmount/remount on state changes
+  const renderPhaseWrapper = (canNext: boolean, nextLabel: string, children: React.ReactNode) => (
     <div
       data-muted-colors="rgba(148,163,184,0.7) #94a3b8 #64748b"
       style={{
@@ -545,7 +527,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
   // ============================================================================
   if (phase === 'hook') {
     return (
-      <PhaseWrapper canNext={true} nextLabel="Start Prediction \u2192">
+      renderPhaseWrapper(true, "Start Prediction \u2192", <>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px', textAlign: 'center' }}>
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: '8px',
@@ -586,7 +568,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
             ))}
           </div>
         </div>
-      </PhaseWrapper>
+      </>)
     );
   }
 
@@ -595,7 +577,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
   // ============================================================================
   if (phase === 'predict') {
     return (
-      <PhaseWrapper canNext={!!prediction} nextLabel="Explore in the Lab \u2192">
+      renderPhaseWrapper(!!prediction, "Explore in the Lab \u2192", <>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 800, color: design.textPrimary, marginBottom: '24px' }}>Make Your Prediction</h2>
 
@@ -674,7 +656,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
             </div>
           )}
         </div>
-      </PhaseWrapper>
+      </>)
     );
   }
 
@@ -683,14 +665,14 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
   // ============================================================================
   if (phase === 'play') {
     return (
-      <PhaseWrapper canNext={true} nextLabel="Understand Why \u2192">
+      renderPhaseWrapper(true, "Understand Why \u2192", <>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '8px' }}>Dissolution Energy Lab</h2>
           <p style={{ color: design.textSecondary, marginBottom: '8px', fontSize: '15px', lineHeight: 1.6, textAlign: 'center', maxWidth: '600px' }}>
             Observe how the energy balance between lattice energy and hydration energy determines whether the solution gets hotter or colder. When you increase the solute amount, notice how the temperature change scales proportionally because more moles means more net energy is absorbed or released.
           </p>
-          <p style={{ color: design.textMuted, fontSize: '13px', marginBottom: '16px', textAlign: 'center', maxWidth: '600px' }}>
-            The net enthalpy of dissolution is calculated as: \u0394H_diss = Lattice Energy + Hydration Energy. This formula describes how the relationship between bond-breaking and hydration leads to the observed temperature change. This is exactly how cold packs and hot packs work \u2014 a practical application used in real-world emergency medicine and industrial heating.
+          <p style={{ color: design.textSecondary, fontSize: '13px', marginBottom: '16px', textAlign: 'center', maxWidth: '600px' }}>
+            The net enthalpy of dissolution is calculated as: ΔH_diss = Lattice Energy + Hydration Energy. This formula describes how the relationship between bond-breaking and hydration leads to the observed temperature change. This is exactly how cold packs and hot packs work — a practical application used in real-world emergency medicine and industrial heating.
           </p>
 
           {/* Interactive SVG */}
@@ -712,7 +694,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
           {/* Controls */}
           <div style={{ ...cardStyle, maxWidth: '600px', width: '100%', marginBottom: '16px' }}>
             <div style={{ marginBottom: '16px' }}>
-              <p style={{ fontSize: '13px', fontWeight: 700, color: design.accent, marginBottom: '8px' }}>
+              <p style={{ fontSize: '13px', fontWeight: 700, color: design.textPrimary, marginBottom: '8px' }}>
                 Select Solute:
               </p>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -735,17 +717,17 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
             </div>
 
             <div>
-              <p style={{ fontSize: '13px', fontWeight: 700, color: design.accentSecondary, marginBottom: '8px' }}>
-                Amount: {soluteAmount}g in 100mL water
+              <p style={{ fontSize: '13px', fontWeight: 700, color: design.textPrimary, marginBottom: '8px' }}>
+                Solute Amount: <strong style={{ color: '#fbbf24', fontSize: '16px' }}>{soluteAmount}g</strong> in 100mL water — ΔT = <strong style={{ color: finalTemp >= 25 ? '#f87171' : '#60a5fa' }}>{tempChange > 0 ? '+' : ''}{tempChange.toFixed(1)}°C</strong>
               </p>
               <input
                 type="range" min="5" max="30" value={soluteAmount}
-                onChange={e => setSoluteAmount(parseInt(e.target.value))}
-                onInput={e => setSoluteAmount(parseInt((e.target as HTMLInputElement).value))}
+                onChange={e => setSoluteAmount(Number(e.target.value) || 10)}
+                onInput={e => setSoluteAmount(Number((e.target as HTMLInputElement).value) || 10)}
                 style={sliderStyle}
               />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: design.textMuted, marginTop: '4px' }}>
-                <span>5g</span><span>30g</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: design.textSecondary, marginTop: '4px' }}>
+                <span>5g (min)</span><span>30g (max)</span>
               </div>
             </div>
           </div>
@@ -758,23 +740,23 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
           }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', textAlign: 'center' }}>
               <div>
-                <p style={{ fontSize: '18px', fontWeight: 800, color: '#f97316' }}>+{(solute.bondEnergy * soluteAmount / 10).toFixed(1)}</p>
-                <p style={{ fontSize: '12px', color: design.textMuted }}>Bond Breaking (kJ)</p>
+                <p style={{ fontSize: '18px', fontWeight: 800, color: '#fbbf24' }}>+{(solute.bondEnergy * soluteAmount / 10).toFixed(1)}</p>
+                <p style={{ fontSize: '12px', color: design.textSecondary }}>Bond Breaking (kJ)</p>
               </div>
               <div>
-                <p style={{ fontSize: '18px', fontWeight: 800, color: '#3b82f6' }}>{(solute.hydrationEnergy * soluteAmount / 10).toFixed(1)}</p>
-                <p style={{ fontSize: '12px', color: design.textMuted }}>Hydration (kJ)</p>
+                <p style={{ fontSize: '18px', fontWeight: 800, color: '#93c5fd' }}>{(solute.hydrationEnergy * soluteAmount / 10).toFixed(1)}</p>
+                <p style={{ fontSize: '12px', color: design.textSecondary }}>Hydration (kJ)</p>
               </div>
               <div>
-                <p style={{ fontSize: '18px', fontWeight: 800, color: solute.netEnergy > 0 ? '#22c55e' : '#ef4444' }}>
+                <p style={{ fontSize: '18px', fontWeight: 800, color: solute.netEnergy > 0 ? '#86efac' : '#fca5a5' }}>
                   {solute.netEnergy > 0 ? '+' : ''}{(solute.netEnergy * soluteAmount / 10).toFixed(1)}
                 </p>
-                <p style={{ fontSize: '12px', color: design.textMuted }}>Net (kJ) \u2192 {finalTemp.toFixed(1)}\u00b0C</p>
+                <p style={{ fontSize: '12px', color: design.textSecondary }}>Net (kJ) → {finalTemp.toFixed(1)}°C</p>
               </div>
             </div>
           </div>
         </div>
-      </PhaseWrapper>
+      </>)
     );
   }
 
@@ -783,7 +765,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
   // ============================================================================
   if (phase === 'review') {
     return (
-      <PhaseWrapper canNext={true} nextLabel="Discover a Twist \u2192">
+      renderPhaseWrapper(true, "Discover a Twist \u2192", <>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '16px' }}>The Science of Dissolution Energy</h2>
 
@@ -848,7 +830,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
             </div>
           </div>
         </div>
-      </PhaseWrapper>
+      </>)
     );
   }
 
@@ -857,7 +839,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
   // ============================================================================
   if (phase === 'twist_predict') {
     return (
-      <PhaseWrapper canNext={!!twistPrediction} nextLabel="Compare All Salts \u2192">
+      renderPhaseWrapper(!!twistPrediction, "Compare All Salts \u2192", <>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 800, color: design.warning, marginBottom: '24px' }}>New Variable: The Ranking Twist</h2>
 
@@ -927,7 +909,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
             ))}
           </div>
         </div>
-      </PhaseWrapper>
+      </>)
     );
   }
 
@@ -939,7 +921,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
     const twistAmount = soluteAmount;
     const twistTempChange = twistSolute.tempChange * twistAmount / 10;
     return (
-      <PhaseWrapper canNext={true} nextLabel="See Full Explanation \u2192">
+      renderPhaseWrapper(true, "See Full Explanation \u2192", <>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 800, color: design.warning, marginBottom: '16px' }}>Compare All Salts Side-by-Side</h2>
           <p style={{ color: design.textSecondary, marginBottom: '16px', fontSize: '15px', lineHeight: 1.6, textAlign: 'center', maxWidth: '600px' }}>
@@ -996,7 +978,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
             ))}
           </div>
         </div>
-      </PhaseWrapper>
+      </>)
     );
   }
 
@@ -1005,7 +987,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
   // ============================================================================
   if (phase === 'twist_review') {
     return (
-      <PhaseWrapper canNext={true} nextLabel="Explore Applications \u2192">
+      renderPhaseWrapper(true, "Explore Applications \u2192", <>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 800, color: design.warning, marginBottom: '24px' }}>The Energy Balance Determines Everything</h2>
 
@@ -1031,7 +1013,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
             </p>
           </div>
         </div>
-      </PhaseWrapper>
+      </>)
     );
   }
 
@@ -1041,7 +1023,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
   if (phase === 'transfer') {
     const app = applications[activeApp];
     return (
-      <PhaseWrapper canNext={completedApps.size >= applications.length} nextLabel="Take the Test">
+      renderPhaseWrapper(completedApps.size >= applications.length, "Take the Test", <>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '16px', textAlign: 'center' }}>Real-World Applications</h2>
 
@@ -1128,7 +1110,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
             <span style={{ color: design.textSecondary, fontSize: '13px' }}>{completedApps.size}/{applications.length}</span>
           </div>
         </div>
-      </PhaseWrapper>
+      </>)
     );
   }
 
@@ -1140,7 +1122,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
       const score = testAnswers.reduce((acc, ans, i) => acc + (ans !== null && testQuestions[i].options[ans]?.correct ? 1 : 0), 0);
       const passed = score >= 7;
       return (
-        <PhaseWrapper canNext={passed} nextLabel={passed ? 'Complete Lesson' : 'Review & Retry'}>
+        renderPhaseWrapper(passed, passed ? 'Complete Lesson' : 'Review & Retry', <>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>{passed ? '\ud83c\udfc6' : '\ud83d\udcda'}</div>
             <h2 style={{ fontSize: '28px', fontWeight: 900, marginBottom: '8px' }}>
@@ -1177,16 +1159,17 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
                 setTestIndex(0);
                 setTestAnswers(Array(10).fill(null));
                 setConfirmedTest(new Set());
+                setMasteryScore(null);
               }} style={{
                 padding: '14px 32px', borderRadius: '12px', border: 'none',
                 background: design.accentGradient, color: '#fff', fontWeight: 700,
                 fontSize: '15px', cursor: 'pointer', marginTop: '16px',
               }}>
-                Try Again
+                Replay
               </button>
             )}
           </div>
-        </PhaseWrapper>
+        </>)
       );
     }
 
@@ -1195,7 +1178,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
     const isConfirmed = confirmedTest.has(testIndex);
 
     return (
-      <PhaseWrapper canNext={false} nextLabel="Next \u2192">
+      renderPhaseWrapper(false, "Next \u2192", <>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '24px' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto', width: '100%' }}>
             {/* Test intro */}
@@ -1266,6 +1249,29 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
               ))}
             </div>
 
+            {/* Explanation after confirming */}
+            {isConfirmed && selected !== null && (
+              <div style={{
+                ...cardStyle, marginBottom: '12px', padding: '14px 16px',
+                borderLeft: `4px solid ${q.options[selected]?.correct ? '#10b981' : '#f59e0b'}`,
+                background: q.options[selected]?.correct ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)',
+              }}>
+                <p style={{ fontSize: '13px', color: q.options[selected]?.correct ? '#34d399' : '#fbbf24', fontWeight: 700, marginBottom: '4px' }}>
+                  {q.options[selected]?.correct ? '✓ Correct!' : '✗ Incorrect — The correct answer is:'}
+                </p>
+                {!q.options[selected]?.correct && (
+                  <p style={{ fontSize: '13px', color: design.textSecondary, lineHeight: 1.5 }}>
+                    {q.options.find(o => o.correct)?.text}
+                  </p>
+                )}
+                <p style={{ fontSize: '12px', color: design.textSecondary, marginTop: '6px', lineHeight: 1.5 }}>
+                  {q.options[selected]?.correct
+                    ? 'You understand the key concept of dissolution thermodynamics!'
+                    : 'Remember: endothermic reactions absorb heat (making things cold) while exothermic reactions release heat (making things warm).'}
+                </p>
+              </div>
+            )}
+
             {/* Confirm / Next / Submit */}
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
               {!isConfirmed && selected !== null && (
@@ -1295,20 +1301,22 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
                     fontSize: '15px', cursor: 'pointer', transition: 'all 0.2s ease',
                   }}
                 >
-                  Next Question
+                  Next
                 </button>
               )}
 
               {isConfirmed && testIndex === testQuestions.length - 1 && (
                 <button
-                  onClick={() => setTestSubmitted(true)}
-                  disabled={!testAnswers.every(a => a !== null) || confirmedTest.size < 10}
+                  onClick={() => {
+                    const sc = testAnswers.reduce((acc, ans, i) => acc + (ans !== null && testQuestions[i].options[ans]?.correct ? 1 : 0), 0);
+                    setMasteryScore(sc);
+                    setTestSubmitted(true);
+                  }}
                   style={{
                     flex: 1, padding: '14px', borderRadius: '12px', border: 'none',
-                    background: (testAnswers.every(a => a !== null) && confirmedTest.size >= 10) ? '#10b981' : 'rgba(100,116,139,0.3)',
+                    background: '#10b981',
                     color: '#fff', fontWeight: 700, fontSize: '15px',
-                    cursor: (testAnswers.every(a => a !== null) && confirmedTest.size >= 10) ? 'pointer' : 'not-allowed',
-                    transition: 'all 0.2s ease',
+                    cursor: 'pointer', transition: 'all 0.2s ease',
                   }}
                 >
                   Submit Test
@@ -1317,7 +1325,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
             </div>
           </div>
         </div>
-      </PhaseWrapper>
+      </>)
     );
   }
 
@@ -1326,7 +1334,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
   // ============================================================================
   if (phase === 'mastery') {
     return (
-      <PhaseWrapper canNext={true} nextLabel="Complete Game \u2192">
+      renderPhaseWrapper(true, "Complete Game \u2192", <>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px', textAlign: 'center' }}>
           <div style={{ fontSize: '80px', marginBottom: '24px' }}>{'\ud83c\udfc6'}</div>
           <h1 style={{ fontSize: '32px', fontWeight: 900, marginBottom: '16px',
@@ -1335,8 +1343,13 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
           }}>
             Thermochemistry Master!
           </h1>
+          {masteryScore !== null && (
+            <p style={{ fontSize: '32px', fontWeight: 900, color: design.accent, marginBottom: '8px' }}>
+              {masteryScore}/10
+            </p>
+          )}
           <p style={{ fontSize: '18px', color: design.textSecondary, marginBottom: '32px', maxWidth: '480px', lineHeight: 1.6 }}>
-            You've mastered the energy balance of dissolution \u2014 from cold packs to hot packs, from rocket fuel to cooking chemistry!
+            You've mastered the energy balance of dissolution — from cold packs to hot packs, from rocket fuel to cooking chemistry!
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', maxWidth: '400px', width: '100%' }}>
@@ -1353,17 +1366,17 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
             ))}
           </div>
         </div>
-      </PhaseWrapper>
+      </>)
     );
   }
 
   // Fallback - default to hook
   return (
-    <PhaseWrapper canNext={true} nextLabel="Start \u2192">
+    renderPhaseWrapper(true, "Start \u2192", <>
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
         <p style={{ fontSize: '18px', color: design.textSecondary }}>Welcome to Endothermic & Exothermic Reactions. Let's begin your discovery!</p>
       </div>
-    </PhaseWrapper>
+    </>)
   );
 };
 

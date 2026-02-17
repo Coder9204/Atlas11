@@ -123,7 +123,7 @@ const phaseLabels: Record<Phase, string> = {
   play: 'Experiment',
   review: 'Understanding',
   twist_predict: 'New Variable',
-  twist_play: 'Read Disturb',
+  twist_play: 'Explore Disturb',
   twist_review: 'Deep Insight',
   transfer: 'Real World',
   test: 'Knowledge Test',
@@ -343,13 +343,13 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
   const transferApplications = [
     {
       title: 'CPU Cache Memory',
-      description: 'L1/L2/L3 caches use SRAM for fast access. Stability directly impacts reliability - a flipped bit could crash your program!',
+      description: 'L1/L2/L3 caches use SRAM for fast access with <1ns latency. Stability directly impacts reliability - modern CPUs dedicate 50% of die area to cache!',
       question: 'Why do CPU caches use SRAM instead of DRAM?',
       answer: 'SRAM is much faster (no refresh needed, direct access) and can be placed close to the CPU core. The tradeoff is 6 transistors per bit vs 1 transistor + capacitor for DRAM, making SRAM ~6x larger and more expensive per bit.',
     },
     {
       title: 'Register Files',
-      description: 'CPU registers are the fastest memory, holding data being actively computed. They use specially designed high-performance SRAM.',
+      description: 'CPU registers are the fastest memory, holding data being actively computed. They are accessed billions of times per second (>3GHz) using high-performance SRAM with 6T cells.',
       question: 'Why are register files even more critical for stability than caches?',
       answer: 'Registers are accessed every clock cycle (billions of times per second). Even a tiny failure probability compounds into significant risk. Register SRAM uses larger transistors and higher cell ratios for maximum stability.',
     },
@@ -361,7 +361,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
     },
     {
       title: 'Low-Power IoT Devices',
-      description: 'Battery-powered devices need to retain SRAM contents during sleep modes at very low voltage to save power.',
+      description: 'Battery-powered devices need to retain SRAM contents during sleep at 0.5V to save power. At such low voltage, noise margins shrink by 60% requiring careful cell design.',
       question: 'Why is ultra-low voltage SRAM operation challenging?',
       answer: 'SNM decreases with voltage - at 0.5V, the noise margin may be only 50-100mV. Process variations that were tolerable at 1V become critical at low voltage. Special 8T or 10T cells with separate read/write paths improve low-voltage stability.',
     },
@@ -481,7 +481,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
 
   const renderVisualization = (interactive: boolean) => {
     const width = 400;
-    const height = 380;
+    const height = 400;
     const output = calculateStability();
 
     // Node voltages based on stored bit
@@ -869,23 +869,23 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
           <text x={25} y={250} fill={colors.textMuted} fontSize="11" fontWeight="bold">Voltage (V)</text>
 
           {/* Y-axis tick labels */}
-          <text x={72} y={248} fill={colors.textSecondary} fontSize="10" textAnchor="end">1.0</text>
-          <text x={72} y={288} fill={colors.textSecondary} fontSize="10" textAnchor="end">0.75</text>
-          <text x={72} y={313} fill={colors.textSecondary} fontSize="10" textAnchor="end">0.5</text>
-          <text x={72} y={338} fill={colors.textSecondary} fontSize="10" textAnchor="end">0.25</text>
-          <text x={72} y={363} fill={colors.textSecondary} fontSize="10" textAnchor="end">0.0</text>
+          <text x={72} y={248} fill={colors.textSecondary} fontSize="11" textAnchor="end">1.0</text>
+          <text x={72} y={288} fill={colors.textSecondary} fontSize="11" textAnchor="end">0.75</text>
+          <text x={72} y={313} fill={colors.textSecondary} fontSize="11" textAnchor="end">0.5</text>
+          <text x={72} y={338} fill={colors.textSecondary} fontSize="11" textAnchor="end">0.25</text>
+          <text x={72} y={363} fill={colors.textSecondary} fontSize="11" textAnchor="end">0.0</text>
 
           {/* X-axis */}
           <line x1={80} y1={360} x2={370} y2={360} stroke={colors.textMuted} strokeWidth={1.5} />
-          <text x={225} y={373} fill={colors.textMuted} fontSize="11" fontWeight="bold" textAnchor="middle">Cell State</text>
+          <text x={225} y={392} fill={colors.textMuted} fontSize="11" fontWeight="bold" textAnchor="middle">Cell State</text>
 
           {/* X-axis tick marks and labels */}
           <line x1={130} y1={360} x2={130} y2={365} stroke={colors.textMuted} strokeWidth={1} />
-          <text x={130} y={375} fill={colors.textSecondary} fontSize="9" textAnchor="middle">Q</text>
+          <text x={130} y={378} fill={colors.textSecondary} fontSize="11" textAnchor="middle">Q</text>
           <line x1={225} y1={360} x2={225} y2={365} stroke={colors.textMuted} strokeWidth={1} />
-          <text x={225} y={375} fill={colors.textSecondary} fontSize="9" textAnchor="middle">SNM</text>
+          <text x={225} y={378} fill={colors.textSecondary} fontSize="11" textAnchor="middle">SNM</text>
           <line x1={320} y1={360} x2={320} y2={365} stroke={colors.textMuted} strokeWidth={1} />
-          <text x={320} y={375} fill={colors.textSecondary} fontSize="9" textAnchor="middle">Q̄</text>
+          <text x={320} y={378} fill={colors.textSecondary} fontSize="11" textAnchor="middle">Q-bar</text>
 
           {/* Dynamic voltage visualization curve - changes with supply voltage */}
           <path
@@ -934,8 +934,8 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
             opacity={0.3}
             rx={4}
           />
-          <text x={125} y={320} fill={colors.textPrimary} fontSize="10" textAnchor="middle" fontWeight="bold">
-            β={cellRatio.toFixed(1)}
+          <text x={125} y={320} fill={colors.textPrimary} fontSize="11" textAnchor="middle" fontWeight="bold">
+            beta={cellRatio.toFixed(1)}
           </text>
         </svg>
 
@@ -1130,9 +1130,9 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
             step="0.1"
             value={cellRatio}
             onChange={(e) => setCellRatio(parseFloat(e.target.value))}
-            style={{ width: '100%', touchAction: 'pan-y' }}
+            style={{ width: '100%', touchAction: 'pan-y', accentColor: colors.accent }}
           />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: colors.textMuted }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: colors.textMuted }}>
             <span>1.0 (weak read)</span>
             <span>2.0 (balanced)</span>
             <span>3.0 (strong read)</span>
@@ -1150,7 +1150,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
             step="0.05"
             value={supplyVoltage}
             onChange={(e) => setSupplyVoltage(parseFloat(e.target.value))}
-            style={{ width: '100%', touchAction: 'pan-y' }}
+            style={{ width: '100%', touchAction: 'pan-y', accentColor: colors.accent }}
           />
         </div>
 
@@ -1165,7 +1165,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
             step="1"
             value={processVariation}
             onChange={(e) => setProcessVariation(parseInt(e.target.value))}
-            style={{ width: '100%', touchAction: 'pan-y' }}
+            style={{ width: '100%', touchAction: 'pan-y', accentColor: colors.accent }}
           />
         </div>
 
@@ -1180,7 +1180,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
             step="5"
             value={temperature}
             onChange={(e) => setTemperature(parseInt(e.target.value))}
-            style={{ width: '100%', touchAction: 'pan-y' }}
+            style={{ width: '100%', touchAction: 'pan-y', accentColor: colors.accent }}
           />
         </div>
 
@@ -1306,7 +1306,8 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
             border: `1px solid ${colors.border}`,
             cursor: canBack ? 'pointer' : 'not-allowed',
             opacity: canBack ? 1 : 0.3,
-            minHeight: '44px'
+            minHeight: '44px',
+            transition: 'opacity 0.2s ease, background-color 0.2s ease'
           }}
         >
           Back
@@ -1333,7 +1334,8 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
             cursor: canGoNext ? 'pointer' : 'not-allowed',
             opacity: canGoNext ? 1 : 0.4,
             boxShadow: canGoNext ? `0 2px 12px ${colors.accent}30` : 'none',
-            minHeight: '44px'
+            minHeight: '44px',
+            transition: 'opacity 0.2s ease, box-shadow 0.2s ease'
           }}
         >
           {nextLabel}
@@ -1385,7 +1387,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomBar(false, true, 'Start Predicting →')}
       </div>
     );
   }
@@ -1455,7 +1457,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
               Read and write to the cell, adjust parameters
             </p>
             <p style={{ color: colors.textSecondary, fontSize: '13px', fontStyle: 'italic', marginTop: '8px' }}>
-              Observe how the cell ratio, voltage, and process variation affect stability before adjusting controls.
+              This is why chip engineers design SRAM so carefully: every parameter affects how reliably the cell works in real-world products like CPU caches and mobile devices.
             </p>
           </div>
 
@@ -1498,11 +1500,11 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Good try!'}
+              {wasCorrect ? 'Correct! Your prediction was right!' : 'Good try! Let\'s review your prediction.'}
             </h3>
             <p style={{ color: colors.textPrimary }}>
-              The 6T SRAM cell uses two cross-coupled inverters to create a bistable circuit.
-              Once set, it naturally locks into one of two stable states (0 or 1).
+              Your prediction vs. what you observed: The 6T SRAM cell uses two cross-coupled inverters
+              to create a bistable circuit. Once set, it naturally locks into one of two stable states (0 or 1).
             </p>
           </div>
 
@@ -1793,9 +1795,9 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
               {!transferCompleted.has(index) ? (
                 <button
                   onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px', WebkitTapHighlightColor: 'transparent' }}
+                  style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', background: `linear-gradient(135deg, ${colors.accent} 0%, ${colors.warning} 100%)`, color: '#0f172a', cursor: 'pointer', fontSize: '13px', fontWeight: 700, WebkitTapHighlightColor: 'transparent', transition: 'opacity 0.2s ease' }}
                 >
-                  Reveal Answer
+                  Got It →
                 </button>
               ) : (
                 <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
@@ -1860,10 +1862,10 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <span style={{ color: colors.textSecondary, fontWeight: 700 }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
             </div>
             <p style={{ color: colors.textMuted, fontSize: '13px', marginBottom: '16px', lineHeight: 1.5 }}>
-              Test your understanding of SRAM cell stability, read disturb, static noise margin, and the design tradeoffs between read and write operations. Answer all questions to see your score.
+              Test your understanding of SRAM cell stability, read disturb, static noise margin, and the design tradeoffs between read and write operations. You have explored how the 6-transistor SRAM cell uses cross-coupled inverters to store bits, how the cell ratio determines stability margins, and how supply voltage and process variation affect reliability. Answer all 10 questions to see your final score.
             </p>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
@@ -1901,7 +1903,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px', WebkitOverflowScrolling: 'touch' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You have mastered SRAM cell stability!</p>
           </div>

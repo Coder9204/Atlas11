@@ -316,6 +316,18 @@ const ViscosityTemperatureRenderer: React.FC<ViscosityTemperatureRendererProps> 
   gamePhase
 }) => {
   const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Twist Explore',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
   const getInitialPhase = (): Phase => {
     if (gamePhase && validPhases.includes(gamePhase as Phase)) {
       return gamePhase as Phase;
@@ -679,6 +691,27 @@ const ViscosityTemperatureRenderer: React.FC<ViscosityTemperatureRendererProps> 
           </button>
         ) : <div />}
 
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          {validPhases.map((p, i) => {
+            const dotIdx = validPhases.indexOf(phase);
+            return (
+              <div
+                key={p}
+                onClick={() => i < dotIdx && goToPhase(p)}
+                style={{
+                  height: '8px',
+                  width: i === dotIdx ? '20px' : '8px',
+                  borderRadius: '4px',
+                  backgroundColor: i < dotIdx ? colors.primary : i === dotIdx ? colors.accent : colors.border,
+                  cursor: i < dotIdx ? 'pointer' : 'default',
+                  transition: 'all 0.3s',
+                }}
+                title={phaseLabels[p]}
+              />
+            );
+          })}
+        </div>
+
         {canProceed ? (
           <button
             onClick={handleNext}
@@ -789,7 +822,7 @@ const ViscosityTemperatureRenderer: React.FC<ViscosityTemperatureRendererProps> 
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, "Let's Investigate →")}
+        {renderBottomBar(false, true, "Start Investigating →")}
       </div>
     );
   }

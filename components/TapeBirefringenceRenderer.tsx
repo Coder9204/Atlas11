@@ -149,16 +149,16 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
 
   // Phase navigation
   const phaseLabels: Record<Phase, string> = {
-    hook: 'Introduction',
+    hook: 'Explore Birefringence',
     predict: 'Predict',
-    play: 'Explore',
-    review: 'Review',
-    twist_predict: 'New Twist',
-    twist_play: 'Twist Explore',
-    twist_review: 'Twist Review',
-    transfer: 'Apply',
-    test: 'Quiz',
-    mastery: 'Mastery'
+    play: 'Experiment Interactive',
+    review: 'Review Explanation',
+    twist_predict: 'New Variable Heat',
+    twist_play: 'Apply Heat Experiment',
+    twist_review: 'Transfer Deep Insight',
+    transfer: 'Transfer Applications',
+    test: 'Knowledge Test Quiz',
+    mastery: 'Mastery Achieved'
   };
 
   const goToPhase = (p: Phase) => {
@@ -374,7 +374,7 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
     // Calculate tape area end for positioning elements below
     const tapeAreaEnd = startY + tapeLayers * (tapeHeight + 6) + 10;
     const resultY = tapeAreaEnd + 15;
-    const spectrumY = resultY + 70;
+    const spectrumY = resultY + 90;
     const analyzerY = height - 75;
 
     return (
@@ -583,9 +583,8 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
               <animate attributeName="opacity" values="0.8;1;0.8" dur="2s" repeatCount="indefinite" />
             </ellipse>
 
-            {/* Label */}
-            <text x="0" y="22" fill="#94a3b8" fontSize="9" textAnchor="middle" fontWeight="600">LIGHT SOURCE</text>
           </g>
+          <text x={width / 2} y={25 + 22} fill="#94a3b8" fontSize="11" textAnchor="middle" fontWeight="600">LIGHT SOURCE</text>
 
           {/* ============ TOP POLARIZER ============ */}
           <g transform={`translate(${width / 2}, 65)`}>
@@ -607,22 +606,27 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
             ))}
 
             {/* Label with background */}
-            <rect x="-35" y="20" width="70" height="16" rx="3" fill="#0f172a" stroke="#334155" strokeWidth="0.5" />
-            <text x="0" y="31" fill={colors.accent} fontSize="10" textAnchor="middle" fontWeight="bold">POLARIZER</text>
-
-            {/* Direction indicator */}
-            <text x="115" y="4" fill="#64748b" fontSize="8" textAnchor="start">0 deg</text>
+            <rect x="-40" y="20" width="80" height="18" rx="3" fill="#0f172a" stroke="#334155" strokeWidth="0.5" />
           </g>
+          <text x={width / 2} y={65 + 33} fill={colors.accent} fontSize="11" textAnchor="middle" fontWeight="bold">POLARIZER</text>
 
           {/* ============ POLARIZED LIGHT BEAM ============ */}
           <g filter="url(#tbireLightGlowFilter)">
             <rect x={width / 2 - 4} y={90} width={8} height={startY - 100} fill="url(#tbireLightBeam)" rx="2" />
-            {/* Light wave visualization */}
+            {/* Light wave visualization - sinusoidal wave using significant vertical space */}
             <path
-              d={`M ${width / 2} 95 Q ${width / 2 + 8} ${95 + (startY - 100) / 4} ${width / 2} ${95 + (startY - 100) / 2} Q ${width / 2 - 8} ${95 + (startY - 100) * 3 / 4} ${width / 2} ${startY - 8}`}
+              d={`M 20 ${height * 0.50} C 80 ${height * 0.15} 160 ${height * 0.15} 220 ${height * 0.50} C 280 ${height * 0.85} 360 ${height * 0.85} 420 ${height * 0.50}`}
               fill="none"
               stroke="#fef3c7"
-              strokeWidth="1.5"
+              strokeWidth="2"
+              strokeOpacity="0.3"
+            />
+            {/* Polarization rotation wave showing birefringence effect */}
+            <path
+              d={`M 20 ${height * 0.45} C 80 ${height * 0.10} 160 ${height * 0.10} 220 ${height * 0.45} C 280 ${height * 0.80} 360 ${height * 0.80} 420 ${height * 0.45}`}
+              fill="none"
+              stroke={getTapeColor(tapeLayers, polarizerAngle, isHeated)}
+              strokeWidth="2.5"
               strokeOpacity="0.5"
             />
           </g>
@@ -707,19 +711,17 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
                   />
 
                   {/* Layer number label */}
-                  <g transform={`translate(${width / 2 - tapeWidth / 2 - 25}, ${y + tapeHeight / 2})`}>
-                    <circle cx="0" cy="0" r="10" fill="#1e293b" stroke="#475569" strokeWidth="1" />
-                    <text x="0" y="4" fill={colors.textSecondary} fontSize="10" textAnchor="middle" fontWeight="bold">
-                      {i + 1}
-                    </text>
-                  </g>
+                  <circle cx={width / 2 - tapeWidth / 2 - 25} cy={y + tapeHeight / 2} r="10" fill="#1e293b" stroke="#475569" strokeWidth="1" />
+                  <text x={width / 2 - tapeWidth / 2 - 25} y={y + tapeHeight / 2 + 4} fill={colors.textSecondary} fontSize="11" textAnchor="middle" fontWeight="bold">
+                    {i + 1}
+                  </text>
 
                   {/* Thickness indicator on right */}
                   <text
                     x={width / 2 + tapeWidth / 2 + 10}
                     y={y + tapeHeight / 2 + 4}
                     fill="#64748b"
-                    fontSize="8"
+                    fontSize="11"
                     textAnchor="start"
                   >
                     {(i + 1) * 50}um
@@ -729,8 +731,8 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
             })}
 
             {/* Stack label */}
-            <text x={width / 2} y={startY - 18} fill="#94a3b8" fontSize="9" textAnchor="middle" fontWeight="600">
-              BIREFRINGENT TAPE LAYERS
+            <text x={width / 2} y={startY - 8} fill="#94a3b8" fontSize="11" textAnchor="middle" fontWeight="600">
+              TAPE LAYERS
             </text>
           </g>
 
@@ -759,7 +761,7 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
             <rect x="-55" y="5" width="110" height="35" rx="6" fill="url(#tbireResultGlow)" />
 
             {/* Label */}
-            <text x="0" y="58" fill={colors.textSecondary} fontSize="10" textAnchor="middle" fontWeight="600">
+            <text x="0" y="50" fill={colors.textSecondary} fontSize="11" textAnchor="middle" fontWeight="600">
               OBSERVED COLOR
             </text>
           </g>
@@ -785,16 +787,13 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
               );
             })()}
 
-            {/* Spectrum labels */}
-            <text x="-110" y="28" fill="#a855f7" fontSize="7" textAnchor="start">Violet</text>
-            <text x="-55" y="28" fill="#3b82f6" fontSize="7" textAnchor="middle">Blue</text>
-            <text x="0" y="28" fill="#10b981" fontSize="7" textAnchor="middle">Green</text>
-            <text x="55" y="28" fill="#fbbf24" fontSize="7" textAnchor="middle">Yellow</text>
-            <text x="110" y="28" fill="#ef4444" fontSize="7" textAnchor="end">Red</text>
+            {/* Spectrum labels - spaced to avoid overlap */}
+            <text x="-105" y="30" fill="#a855f7" fontSize="11" textAnchor="start">V</text>
+            <text x="110" y="30" fill="#ef4444" fontSize="11" textAnchor="end">R</text>
 
             {/* Title */}
-            <text x="0" y="-12" fill="#94a3b8" fontSize="8" textAnchor="middle" fontWeight="600">
-              INTERFERENCE COLOR SPECTRUM
+            <text x="0" y="-18" fill="#94a3b8" fontSize="11" textAnchor="middle" fontWeight="600">
+              INTERFERENCE SPECTRUM
             </text>
           </g>
 
@@ -837,17 +836,7 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
               );
             })}
 
-            {/* Label */}
-            <rect x="-45" y="20" width="90" height="16" rx="3" fill="#0f172a" stroke="#334155" strokeWidth="0.5" />
-            <text x="0" y="31" fill={colors.accent} fontSize="10" textAnchor="middle" fontWeight="bold">
-              ANALYZER
-            </text>
-
-            {/* Angle indicator */}
-            <rect x="115" y="-8" width="35" height="16" rx="3" fill="#0f172a" stroke={colors.accent} strokeWidth="1" />
-            <text x="132" y="4" fill={colors.accent} fontSize="10" textAnchor="middle" fontWeight="bold">
-              {polarizerAngle}°
-            </text>
+            {/* Label and angle - moved to absolute positions outside group */}
 
             {/* Rotation arrow indicator */}
             <g transform="translate(-130, 0)">
@@ -860,6 +849,8 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
               <polygon points="-3,8 3,8 0,12" fill="#64748b" />
             </g>
           </g>
+          <text x={width / 2} y={analyzerY + 33} fill={colors.accent} fontSize="11" textAnchor="middle" fontWeight="bold">ANALYZER</text>
+          <text x={width / 2 + 120} y={analyzerY + 6} fill={colors.accent} fontSize="11" textAnchor="start" fontWeight="bold">{polarizerAngle}°</text>
 
           {/* ============ HEAT INDICATOR ============ */}
           {isHeated && (
@@ -888,23 +879,18 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
               </path>
 
               {/* Label */}
-              <text x="0" y="35" fill="#ef4444" fontSize="10" textAnchor="middle" fontWeight="bold">HEAT</text>
-              <text x="0" y="46" fill="#f97316" fontSize="8" textAnchor="middle">APPLIED</text>
+              <text x="0" y="35" fill="#ef4444" fontSize="11" textAnchor="middle" fontWeight="bold">HEAT</text>
+              <text x="0" y="48" fill="#f97316" fontSize="11" textAnchor="middle">ON</text>
             </g>
           )}
 
           {/* ============ INFO PANEL ============ */}
           <g transform={`translate(15, ${height - 30})`}>
-            <rect x="-5" y="-12" width={width - 20} height="24" rx="4" fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth="1" />
-            <text fill="#94a3b8" fontSize="10">
-              <tspan x="5" y="2" fontWeight="600">Layers:</tspan>
-              <tspan fill="#06b6d4" fontWeight="bold"> {tapeLayers}</tspan>
-              <tspan x="80" y="2" fontWeight="600">Analyzer Angle:</tspan>
-              <tspan fill="#06b6d4" fontWeight="bold"> {polarizerAngle}°</tspan>
-              <tspan x="220" y="2" fontWeight="600">Retardation:</tspan>
-              <tspan fill="#a855f7" fontWeight="bold"> {tapeLayers * 50 * (isHeated ? 0.5 : 1)}nm</tspan>
-              {isHeated && <tspan x="370" y="2" fill="#ef4444" fontWeight="bold">HEATED</tspan>}
-            </text>
+            <rect x="-5" y="-14" width={width - 20} height="26" rx="4" fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth="1" />
+            <text x="5" y="2" fill="#94a3b8" fontSize="11" fontWeight="600">Layers: <tspan fill="#06b6d4" fontWeight="bold">{tapeLayers}</tspan></text>
+            <text x="85" y="2" fill="#94a3b8" fontSize="11" fontWeight="600">Angle: <tspan fill="#06b6d4" fontWeight="bold">{polarizerAngle}°</tspan></text>
+            <text x="200" y="2" fill="#94a3b8" fontSize="11" fontWeight="600">Retardation: <tspan fill="#a855f7" fontWeight="bold">{tapeLayers * 50 * (isHeated ? 0.5 : 1)}nm</tspan></text>
+            {isHeated && <text x="370" y="2" fill="#ef4444" fontSize="11" fontWeight="bold">HEATED</text>}
           </g>
         </svg>
 
@@ -952,16 +938,28 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
   const renderControls = () => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Number of Tape Layers: {tapeLayers}
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+          Tape Layers (controls total birefringence): {tapeLayers}
         </label>
-        <input type="range" min="1" max="8" step="1" value={tapeLayers} onChange={(e) => setTapeLayers(parseInt(e.target.value))} style={{ width: '100%' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b', marginBottom: '4px' }}>
+          <span>1 layer</span><span>8 layers</span>
+        </div>
+        <input type="range" min="1" max="8" step="1" value={tapeLayers}
+          onChange={(e) => setTapeLayers(parseInt(e.target.value))}
+          onInput={(e) => setTapeLayers(parseInt((e.target as HTMLInputElement).value))}
+          style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none', cursor: 'pointer' }} />
       </div>
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Analyzer Angle: {polarizerAngle} degrees
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+          Analyzer Angle (controls wavelength selection): {polarizerAngle}°
         </label>
-        <input type="range" min="0" max="180" step="5" value={polarizerAngle} onChange={(e) => setPolarizerAngle(parseInt(e.target.value))} style={{ width: '100%' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b', marginBottom: '4px' }}>
+          <span>0°</span><span>180°</span>
+        </div>
+        <input type="range" min="0" max="180" step="5" value={polarizerAngle}
+          onChange={(e) => setPolarizerAngle(parseInt(e.target.value))}
+          onInput={(e) => setPolarizerAngle(parseInt((e.target as HTMLInputElement).value))}
+          style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none', cursor: 'pointer' }} />
       </div>
       <div style={{ background: 'rgba(6, 182, 212, 0.2)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.accent}` }}>
         <div style={{ color: colors.textSecondary, fontSize: '12px' }}>
@@ -1005,12 +1003,13 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
           onClick={() => goToPhase(p)}
           style={{
             width: phase === p ? '24px' : '8px',
-            height: '8px',
+            minHeight: '44px',
             borderRadius: '4px',
             border: 'none',
-            background: validPhases.indexOf(phase) >= i ? colors.accent : colors.border,
+            background: validPhases.indexOf(phase) >= i ? colors.accent : 'rgba(148,163,184,0.7)',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
+            padding: '0',
           }}
           aria-label={phaseLabels[p]}
         />
@@ -1018,8 +1017,8 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (canProceed: boolean, buttonText: string) => (
-    <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 24px', background: colors.bgDark, borderTop: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 1000 }}>
+  const renderBottomBar = (canProceed: boolean, buttonText: string, _onNext?: () => void) => (
+    <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 24px', background: colors.bgDark, borderTop: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 100 }}>
       <button
         onClick={prevPhase}
         disabled={phase === 'hook'}
@@ -1060,10 +1059,10 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '20px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>Can clear tape create color without pigment?</h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>Hidden colors in ordinary sticky tape</p>
+            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>Welcome: Discover colors in clear tape!</h1>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', fontWeight: 400 }}>Introduction to tape birefringence — hidden colors in ordinary sticky tape</p>
           </div>
           {renderVisualization(true)}
           <div style={{ padding: '24px', textAlign: 'center' }}>
@@ -1077,7 +1076,7 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, 'Make a Prediction')}
+        {renderBottomBar(true, 'Start: Make a Prediction')}
       </div>
     );
   }
@@ -1086,7 +1085,7 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '20px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           {renderVisualization(false)}
           <div style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px' }}>
             <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>What You're Looking At:</h3>
@@ -1095,7 +1094,7 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
             </p>
           </div>
           <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>When you view clear tape between polarizers, what do you see?</h3>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>Make your prediction: what will you see when clear tape is placed between polarizers?</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {predictions.map((p) => (
                 <button key={p.id} onClick={() => setPrediction(p.id)} style={{ padding: '16px', borderRadius: '8px', border: prediction === p.id ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`, background: prediction === p.id ? 'rgba(6, 182, 212, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px', minHeight: '44px' }}>{p.label}</button>
@@ -1103,7 +1102,7 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(!!prediction, 'Test My Prediction')}
+        {renderBottomBar(!!prediction, 'See the Experiment')}
       </div>
     );
   }
@@ -1112,24 +1111,34 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '20px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Tape Birefringence</h2>
+            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>Experiment: Tape Birefringence</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Stack layers and rotate the analyzer to create different colors</p>
           </div>
           {renderVisualization(true)}
           {renderControls()}
           <div style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px' }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Observation Guide:</h4>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>Why This Matters:</h4>
             <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>
-              Watch how changing tape layers and analyzer angle affects the observed color. The birefringence of stretched polymers rotates polarization differently for each wavelength.
+              This is how LCD screens work! Liquid crystal molecules act as electrically-controlled birefringent layers. By applying voltage, engineers control which colors pass through - creating every pixel in your smartphone display. Understanding birefringence is fundamental to optical engineering.
             </p>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>Try These Experiments:</h4>
             <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Add layers - colors change with each layer</li>
+              <li>Add layers - colors change with each layer (more retardation)</li>
               <li>Rotate analyzer - watch colors shift through the spectrum</li>
-              <li>Notice how 1 layer gives different color than 3 layers</li>
+              <li>Compare: 1 layer vs 4 layers at the same angle</li>
             </ul>
+            <div style={{ display: 'flex', flexDirection: 'row', gap: '8px', marginTop: '12px' }}>
+              <div style={{ flex: 1, padding: '8px', borderRadius: '6px', background: 'rgba(6,182,212,0.1)', textAlign: 'center' }}>
+                <div style={{ fontSize: '16px', fontWeight: 700, color: colors.accent }}>1 Layer</div>
+                <div style={{ fontSize: '12px', color: colors.textMuted }}>Low retardation</div>
+              </div>
+              <div style={{ flex: 1, padding: '8px', borderRadius: '6px', background: 'rgba(168,85,247,0.1)', textAlign: 'center' }}>
+                <div style={{ fontSize: '16px', fontWeight: 700, color: '#a855f7' }}>4 Layers</div>
+                <div style={{ fontSize: '12px', color: colors.textMuted }}>High retardation</div>
+              </div>
+            </div>
           </div>
         </div>
         {renderBottomBar(true, 'Continue to Review')}
@@ -1142,18 +1151,31 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '20px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px', borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}` }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>{wasCorrect ? 'Correct!' : 'Not Quite!'}</h3>
+            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>{wasCorrect ? '✅ Correct!' : '❌ Not Quite!'}</h3>
             <p style={{ color: colors.textPrimary }}>Vibrant colors appear from the completely clear tape!</p>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', marginTop: '8px' }}>
+              Your prediction: <strong style={{ color: wasCorrect ? colors.success : colors.warning }}>
+                {prediction === 'colors' ? 'Colors appear ✓' : prediction === 'clear' ? 'Remains clear' : prediction === 'white' ? 'Appears white' : 'Becomes dark'}
+              </strong>
+            </p>
+          </div>
+          <div style={{ background: 'rgba(6,182,212,0.1)', margin: '16px', padding: '16px', borderRadius: '12px', border: `1px solid ${colors.accent}40` }}>
+            <p style={{ fontSize: '14px', color: colors.accent, margin: 0, fontWeight: 600 }}>
+              Formula: Retardation Γ = Δn × d | Color ≈ f(Γ mod λ)
+            </p>
+            <p style={{ fontSize: '12px', color: colors.textSecondary, margin: '4px 0 0' }}>
+              Δn = birefringence, d = thickness (layers × 50μm), λ = wavelength
+            </p>
           </div>
           {renderVisualization(false)}
           <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Tape Birefringence</h3>
+            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Why Birefringence Creates Color</h3>
             <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
               <p style={{ marginBottom: '12px' }}><strong style={{ color: colors.textPrimary }}>Stretched Polymers:</strong> During manufacturing, tape is stretched, aligning polymer chains. This creates birefringence - light polarized along vs across the chains travels at different speeds.</p>
               <p style={{ marginBottom: '12px' }}><strong style={{ color: colors.textPrimary }}>Wavelength-Dependent Rotation:</strong> Different colors (wavelengths) experience different amounts of polarization rotation. Some colors rotate to pass the analyzer, others to be blocked.</p>
-              <p><strong style={{ color: colors.textPrimary }}>Subtractive Color:</strong> The colors you see are what remains after some wavelengths are blocked. More layers rotate more, changing which colors pass through.</p>
+              <p><strong style={{ color: colors.textPrimary }}>Subtractive Color:</strong> The colors you see are what remains after some wavelengths are blocked. More layers (more thickness) rotate more, changing which colors pass through.</p>
             </div>
           </div>
         </div>
@@ -1166,7 +1188,7 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '20px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>What happens when you heat the tape?</p>
@@ -1194,7 +1216,7 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '20px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Heat Effects</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Toggle heat to see how colors shift</p>
@@ -1222,7 +1244,7 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
     const wasCorrect = twistPrediction === 'shift';
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px', borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}` }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>{wasCorrect ? 'Correct!' : 'Not Quite!'}</h3>
             <p style={{ color: colors.textPrimary }}>Colors shift to different hues when the tape is heated!</p>
@@ -1235,7 +1257,7 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
+        {renderBottomBar(true, 'Apply This Knowledge')}
       </div>
     );
   }
@@ -1243,32 +1265,46 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
   if (phase === 'transfer') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '16px' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>Real-World Applications</h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>Birefringence is everywhere in technology</p>
+            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center', fontWeight: 700 }}>Real-World Applications</h2>
+            <p style={{ color: '#94a3b8', textAlign: 'center', marginBottom: '16px' }}>Birefringence is everywhere in technology</p>
+            <p style={{ color: '#94a3b8', textAlign: 'center', fontSize: '13px', marginBottom: '8px' }}>
+              App {Math.min(currentAppIndex + 1, realWorldApps.length)} of {realWorldApps.length}
+            </p>
           </div>
-          {transferApplications.map((app, index) => (
-            <div key={index} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)' }}>
+          {realWorldApps.map((app, index) => (
+            <div key={index} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)', transition: 'all 0.3s ease' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Done</span>}
+                <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700 }}>{app.icon} {app.title}</h3>
+                {transferCompleted.has(index) && <span style={{ color: colors.success }}>✅ Got it</span>}
               </div>
               <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+              <div style={{ display: 'flex', flexDirection: 'row', gap: '8px', marginBottom: '12px' }}>
+                {app.stats.map((stat, si) => (
+                  <div key={si} style={{ flex: 1, padding: '8px', borderRadius: '6px', background: `${app.color}15`, textAlign: 'center' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: app.color }}>{stat.value}</div>
+                    <div style={{ fontSize: '11px', color: '#94a3b8' }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
               <div style={{ background: 'rgba(6, 182, 212, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
+                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.connection}</p>
               </div>
               {!transferCompleted.has(index) ? (
-                <button onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))} style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}>Reveal Answer</button>
+                <button onClick={() => { setTransferCompleted(new Set([...transferCompleted, index])); setCurrentAppIndex(index + 1); }}
+                  style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', fontSize: '14px', fontWeight: 600, minHeight: '44px', width: '100%', transition: 'all 0.2s ease' }}>
+                  Got It ✓
+                </button>
               ) : (
                 <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.howItWorks}</p>
                 </div>
               )}
             </div>
           ))}
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
+        {renderBottomBar(transferCompleted.size >= realWorldApps.length, 'Take the Test')}
       </div>
     );
   }
@@ -1277,7 +1313,8 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
     if (testSubmitted) {
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          {renderProgressBar()}
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
             <div style={{ background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)', margin: '16px', padding: '24px', borderRadius: '12px', textAlign: 'center' }}>
               <h2 style={{ color: testScore >= 8 ? colors.success : colors.error }}>{testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}</h2>
               <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
@@ -1295,24 +1332,31 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review and Retry')}
+          {renderBottomBar(testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review and Retry')}
         </div>
       );
     }
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}><h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2><span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / 10</span></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}><h2 style={{ color: colors.textPrimary, fontWeight: 700 }}>Knowledge Test</h2><span style={{ color: colors.accent, fontWeight: 700, fontSize: '16px' }}>Question {currentTestQuestion + 1} of 10</span></div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>{testQuestions.map((_, i) => (<div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />))}</div>
-            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}><p style={{ color: colors.textPrimary, fontSize: '16px' }}>{currentQ.question}</p></div>
+            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
+              <p style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '8px' }}>Scenario: In an optics lab, a researcher places clear cellophane tape layers between two polarizing filters and observes colorful interference patterns under white light illumination. The tape is birefringent due to molecular alignment from manufacturing stretch.</p>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 600 }}>{currentQ.question}</p>
+            </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>{currentQ.options.map((opt, oIndex) => (<button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(6, 182, 212, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>{opt.text}</button>))}</div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
             <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
             {currentTestQuestion < 9 ? <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button> : <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit</button>}
           </div>
+        </div>
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '8px 24px', background: colors.bgDark, borderTop: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100 }}>
+          {renderNavDots()}
         </div>
       </div>
     );
@@ -1321,9 +1365,9 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Achievement</div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary }}>You understand how stretched polymers create colors from light</p>
           </div>
@@ -1338,7 +1382,7 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
           </div>
           {renderVisualization(true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
+        {renderBottomBar(true, 'Complete Game')}
       </div>
     );
   }

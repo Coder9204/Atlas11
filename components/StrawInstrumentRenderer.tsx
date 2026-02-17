@@ -377,7 +377,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Musical Scale',
+    twist_play: 'Explore Musical Scale',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -523,7 +523,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
         {/* Frequency display panel */}
         <g transform={`translate(${width - 130}, 50)`}>
           <rect x="0" y="0" width="110" height="75" rx="10" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="1" />
-          <text x="55" y="22" textAnchor="middle" fill={colors.textMuted} fontSize="10">Frequency</text>
+          <text x="55" y="22" textAnchor="middle" fill={colors.textMuted} fontSize="11">Frequency</text>
           <text x="55" y="45" textAnchor="middle" fill={colors.success} fontSize="18" fontWeight="700">
             {currentFreq.toFixed(0)} Hz
           </text>
@@ -535,7 +535,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
         {/* Length display */}
         <g transform="translate(20, 50)">
           <rect x="0" y="0" width="90" height="50" rx="8" fill={colors.bgSecondary} stroke={colors.pipe} strokeWidth="1" />
-          <text x="45" y="20" textAnchor="middle" fill={colors.textMuted} fontSize="10">Length</text>
+          <text x="45" y="20" textAnchor="middle" fill={colors.textMuted} fontSize="11">Length</text>
           <text x="45" y="40" textAnchor="middle" fill={colors.pipe} fontSize="16" fontWeight="700">
             {strawLength} cm
           </text>
@@ -1006,11 +1006,13 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
                 onChange={(e) => setStrawLength(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.pipe} ${((strawLength - 5) / 25) * 100}%, ${colors.border} ${((strawLength - 5) / 25) * 100}%)`,
                   cursor: 'pointer',
-                }}
+                  accentColor: '#3b82f6',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                } as React.CSSProperties}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                 <span style={{ ...typo.small, color: colors.textMuted }}>5 cm (high pitch)</span>
@@ -1503,9 +1505,12 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
         {renderProgressBar()}
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px', fontWeight: 600 }}>
+            Application {selectedApp + 1} of {realWorldApps.length}
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1596,6 +1601,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1610,6 +1616,34 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
                 </div>
               ))}
             </div>
+
+            {/* Got It button */}
+            {selectedApp < realWorldApps.length - 1 ? (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                  setSelectedApp(selectedApp + 1);
+                }}
+                style={{ ...primaryButtonStyle, width: '100%', fontSize: '16px', padding: '14px' }}
+              >
+                Got It - Next Application →
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{ ...primaryButtonStyle, width: '100%', fontSize: '16px', padding: '14px', background: colors.success }}
+              >
+                Got It - Complete!
+              </button>
+            )}
           </div>
 
           {allAppsCompleted && (

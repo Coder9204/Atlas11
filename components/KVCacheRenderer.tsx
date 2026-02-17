@@ -337,7 +337,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Memory Lab',
+    twist_play: 'Twist Lab',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -759,7 +759,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
             onClick={() => { playSound('click'); nextPhase(); }}
             style={primaryButtonStyle}
           >
-            Discover the Cache Secret
+            Start: Discover the Cache Secret
           </button>
 
           {renderNavDots()}
@@ -960,6 +960,19 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
               Generate tokens and see how caching changes compute requirements
             </p>
 
+            {/* Physics definition */}
+            <div style={{
+              background: `${colors.memory}11`,
+              border: `1px solid ${colors.memory}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.memory }}>Key Concept:</strong> KV Cache refers to storing Key (K) and Value (V) projections from attention layers. Without cache, compute = <span style={{ color: colors.error, fontFamily: 'monospace' }}>n²</span> per step (each token attends to all). With cache, compute = <span style={{ color: colors.success, fontFamily: 'monospace' }}>n</span> per step. The formula for savings is: <span style={{ color: colors.accent, fontFamily: 'monospace' }}>savings = (n²-n) / n² × 100%</span>. This relationship between n and compute is calculated using attention complexity theory.
+              </p>
+            </div>
+
             {/* Observation guidance */}
             <div style={{
               background: `${colors.accent}11`,
@@ -1017,11 +1030,14 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
                 disabled={isGenerating}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '24px',
                   borderRadius: '4px',
                   background: `linear-gradient(to right, ${colors.accent} ${(tokenCount / 8) * 100}%, ${colors.border} ${(tokenCount / 8) * 100}%)`,
                   cursor: isGenerating ? 'not-allowed' : 'pointer',
                   opacity: isGenerating ? 0.5 : 1,
+                  WebkitAppearance: 'none',
+                  touchAction: 'pan-y',
+                  accentColor: colors.accent,
                 }}
               />
             </div>
@@ -1433,9 +1449,12 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
                 onChange={(e) => setContextLength(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '24px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  WebkitAppearance: 'none',
+                  touchAction: 'pan-y',
+                  accentColor: colors.accent,
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1459,9 +1478,12 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
                 onChange={(e) => setNumLayers(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '24px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  WebkitAppearance: 'none',
+                  touchAction: 'pan-y',
+                  accentColor: colors.memory,
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1469,6 +1491,58 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
                 <span style={{ ...typo.small, color: colors.textMuted }}>96 (large)</span>
               </div>
             </div>
+
+            {/* KV Cache Memory Scaling SVG */}
+            {(() => {
+              const svgW = isMobile ? 320 : 460;
+              const svgH = 200;
+              const pad = { top: 30, right: 20, bottom: 40, left: 55 };
+              const chartW = svgW - pad.left - pad.right;
+              const chartH = svgH - pad.top - pad.bottom;
+              const maxCtx = 8192;
+              const maxMem = (maxCtx * 96 * 2 * 128 * 2) / (1024 * 1024); // MB at max layers
+              const pts = Array.from({ length: 20 }, (_, k) => {
+                const ctx = (k / 19) * maxCtx;
+                const mem = (ctx * numLayers * 2 * 128 * 2) / (1024 * 1024);
+                const px = pad.left + (ctx / maxCtx) * chartW;
+                const py = pad.top + chartH * (1 - Math.min(mem / maxMem, 1));
+                return `${k === 0 ? 'M' : 'L'} ${px.toFixed(1)} ${py.toFixed(1)}`;
+              }).join(' ');
+              const curCtxX = pad.left + (contextLength / maxCtx) * chartW;
+              const curMem = (contextLength * numLayers * 2 * 128 * 2) / (1024 * 1024);
+              const curY = pad.top + chartH * (1 - Math.min(curMem / maxMem, 1));
+              return (
+                <svg width={svgW} height={svgH} viewBox={`0 0 ${svgW} ${svgH}`} style={{ background: colors.bgCard, borderRadius: '12px', marginBottom: '16px' }}>
+                  <defs>
+                    <linearGradient id="kvMemGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={colors.error} stopOpacity={0.8} />
+                      <stop offset="100%" stopColor={colors.memory} stopOpacity={0.3} />
+                    </linearGradient>
+                    <filter id="kvGlow">
+                      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+                      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                    </filter>
+                  </defs>
+                  {/* Grid lines */}
+                  {[0, 1, 2, 3, 4].map(i => (
+                    <line key={i} x1={pad.left} y1={pad.top + i * chartH / 4} x2={pad.left + chartW} y2={pad.top + i * chartH / 4}
+                      stroke="#334155" strokeWidth={0.5} opacity={0.4} strokeDasharray="4,4" />
+                  ))}
+                  {/* Area fill */}
+                  <path d={`${pts} L ${pad.left + chartW} ${pad.top + chartH} L ${pad.left} ${pad.top + chartH} Z`} fill="url(#kvMemGrad)" opacity={0.3} />
+                  {/* Memory line */}
+                  <path d={pts} fill="none" stroke={colors.memory} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+                  {/* Current position marker */}
+                  <line x1={curCtxX} y1={pad.top} x2={curCtxX} y2={pad.top + chartH} stroke={colors.accent} strokeWidth={1.5} strokeDasharray="4,3" opacity={0.7} />
+                  <circle cx={curCtxX} cy={curY} r={8} fill={colors.accent} stroke="#ffffff" strokeWidth={2} filter="url(#kvGlow)" />
+                  <text x={curCtxX + 12} y={curY - 4} fill={colors.accent} fontSize={11} fontWeight="600">{curMem.toFixed(0)} MB</text>
+                  {/* Axis labels */}
+                  <text x={pad.left + chartW / 2} y={svgH - 4} fill={colors.textMuted} fontSize={11} textAnchor="middle">Context Length (tokens)</text>
+                  <text x={14} y={pad.top + chartH / 2} fill={colors.textMuted} fontSize={11} textAnchor="middle" transform={`rotate(-90, 14, ${pad.top + chartH / 2})`}>Memory (MB)</text>
+                  <text x={svgW / 2} y={20} fill={colors.textSecondary} fontSize={12} fontWeight="600" textAnchor="middle">KV Cache Memory Scaling</text>
+                </svg>
+              );
+            })()}
 
             {/* Memory visualization */}
             <div style={{

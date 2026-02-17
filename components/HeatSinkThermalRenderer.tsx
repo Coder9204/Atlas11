@@ -336,7 +336,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
     textSecondary: '#cbd5e1',
-    textMuted: '#94a3b8',
+    textMuted: 'rgba(148,163,184,0.8)',
     border: '#2a2a3a',
   };
 
@@ -551,7 +551,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
 
         {/* Formula label */}
         <text x={width / 2} y={height - 20} textAnchor="middle" fill={colors.textMuted} fontSize="11">
-          ΔT = P × R_total = {cpuPower}W × {thermalRes.total.toFixed(2)} K/W = {(cpuPower * thermalRes.total).toFixed(1)}°C
+          Temperature rise: ΔT = P × R_total = {(cpuPower * thermalRes.total).toFixed(1)}°C
         </text>
 
         {/* Thermal Resistance Chain */}
@@ -564,8 +564,8 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
           <text x="0" y="84" fill={colors.accent} fontSize="12" fontWeight="700">Total: {thermalRes.total.toFixed(2)}</text>
         </g>
 
-        {/* Power indicator - in chain group area, after last chain item */}
-        <text x="20" y="108" fill={colors.textSecondary} fontSize="11">Input: {cpuPower}W</text>
+        {/* Power indicator - spaced below chain group to avoid overlap */}
+        <text x="20" y="128" fill={colors.textSecondary} fontSize="11">Input: {cpuPower}W</text>
       </svg>
     );
   };
@@ -779,7 +779,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
             <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
               "Every interface between your CPU and the air is a thermal resistance. Like resistors in a circuit, they add up - and the total determines whether your chip runs cool or catches fire."
             </p>
-            <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '8px' }}>
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
               - Thermal Engineering Fundamentals
             </p>
           </div>

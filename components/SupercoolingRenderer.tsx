@@ -98,13 +98,18 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
   onCorrectAnswer,
   onIncorrectAnswer
 }) => {
-  // Phase management - support both external and self-managed modes
+  // Phase management - self-managed with optional initial phase from props
   const PHASES: Array<'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery'> =
     ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
   const externalPhase = propPhase || gamePhase;
-  const [internalPhase, setInternalPhase] = useState<typeof PHASES[number]>('hook');
-  const phase = externalPhase || internalPhase;
+  const getInitialPhase = (): typeof PHASES[number] => {
+    const ep = propPhase || gamePhase;
+    if (ep && PHASES.includes(ep as typeof PHASES[number])) return ep as typeof PHASES[number];
+    return 'hook';
+  };
+  const [internalPhase, setInternalPhase] = useState<typeof PHASES[number]>(getInitialPhase);
+  const phase = internalPhase;
 
   const phaseLabels: Record<typeof PHASES[number], string> = {
     hook: 'Introduction',
@@ -359,9 +364,6 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
   }, [playSound, onCorrectAnswer, onIncorrectAnswer]);
 
   const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
     setTestAnswers(prev => {
       const newAnswers = [...prev];
       newAnswers[questionIndex] = answerIndex;
@@ -395,8 +397,8 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
       options: [
         { text: "The thermometer is broken - water always freezes at 0°C", correct: false },
         { text: "Supercooling - without nucleation sites (impurities/disturbances), ice crystals can't form despite being below freezing", correct: true },
-        { text: "The distilled water has different properties that prevent freezing", correct: false },
-        { text: "The pressure inside the bottle is preventing crystallization", correct: false }
+        { text: "The distilled water has unique properties that block ice formation entirely", correct: false },
+        { text: "High pressure inside the sealed bottle is stopping crystallization", correct: false }
       ],
       explanation: "This is supercooling. Pure water below 0°C remains liquid because ice crystal formation requires nucleation sites - either impurities (heterogeneous nucleation) or sufficient energy fluctuations (homogeneous nucleation at -40°C). The water is metastable."
     },
@@ -426,7 +428,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
       scenario: "A cryobiologist is freezing embryos for long-term storage. She's concerned that ice crystal formation will rupture cell membranes and destroy the samples.",
       question: "How does controlled supercooling help preserve the biological samples?",
       options: [
-        { text: "It prevents all freezing", correct: false },
+        { text: "Supercooling stops all freezing entirely", correct: false },
         { text: "Slow, controlled supercooling with cryoprotectants minimizes ice crystal size and formation, reducing cellular damage", correct: true },
         { text: "Supercooling makes cells indestructible", correct: false },
         { text: "It converts water to a different substance", correct: false }
@@ -449,7 +451,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
       question: "Why does faster freezing through extreme supercooling produce smoother ice cream?",
       options: [
         { text: "The nitrogen reacts with the cream", correct: false },
-        { text: "Rapid freezing creates numerous tiny ice crystals simultaneously, preventing large crystal growth that causes iciness", correct: true },
+        { text: "Rapid freezing creates numerous tiny ice crystals simultaneously, avoiding large crystal growth that causes iciness", correct: true },
         { text: "The extreme cold changes the chemical structure", correct: false },
         { text: "Nitrogen adds air to the mixture", correct: false }
       ],
@@ -494,7 +496,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
       options: [
         { text: "The solution isn't actually supersaturated", correct: false },
         { text: "Without nucleation sites (seeds/disturbances) and with smooth cooling, the metastable supersaturated state can persist indefinitely", correct: true },
-        { text: "Chemical additives prevent crystallization", correct: false },
+        { text: "Chemical additives block all crystallization indefinitely", correct: false },
         { text: "The sealed container maintains high pressure", correct: false }
       ],
       explanation: "After boiling and slow cooling, the sodium acetate solution becomes supersaturated - it contains more dissolved solute than normal saturation allows. Like supercooled water, this is metastable. Without vibrations or seed crystals providing nucleation sites, it remains liquid until triggered. The metal disc click provides that trigger."
@@ -510,28 +512,32 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
 
   const applications = [
     {
-      title: "Ice Cream Making",
-      icon: "🍦",
-      description: "Premium ice cream uses supercooling to create smaller ice crystals, resulting in smoother texture. Rapid freezing with liquid nitrogen achieves extreme supercooling.",
-      details: "The faster the freezing, the smaller the crystals. Artisanal ice cream makers manipulate this for texture control."
+      title: "Organ Preservation",
+      icon: "🩸",
+      description: "Donor organs can be preserved 3x longer using supercooling (-6°C) compared to traditional ice storage at 4°C. Harvard Medical School and OrganOx developed methods to keep livers viable for 27 hours instead of the usual 9 hours. This prevents ice crystal damage that destroys cell membranes during conventional freezing. Global demand for organs far exceeds supply, affecting millions of patients.",
+      details: "Antifreeze proteins from arctic fish suppress nucleation sites. Precise temperature control (±0.1°C) maintains metastable state. TransMedics and Paragonix have commercialized machine perfusion devices that keep organs at -3°C to -6°C, recovering 30% more viable organs annually. The US transplant waiting list includes over 100,000 patients, and supercooling technology could save 17 million lives over the next decade through expanded organ availability.",
+      stats: ["27hr preservation", "-6°C temperature", "30% more viable organs", "100,000 US waitlist", "17 million lives impacted"]
     },
     {
-      title: "Weather & Aviation",
-      icon: "✈️",
-      description: "Supercooled water droplets in clouds cause dangerous aircraft icing. When disturbed by aircraft wings, they freeze instantly.",
-      details: "Aircraft de-icing systems are critical because supercooled droplets can freeze on contact with cold surfaces, adding dangerous weight and disrupting airflow."
+      title: "Weather Modification",
+      icon: "☁️",
+      description: "Cloud seeding introduces silver iodide particles into supercooled clouds to trigger 10-15% precipitation increase. Supercooled clouds can hold water droplets at -40°C without freezing. Weather Modification Inc. and China's National Weather Bureau use aircraft to disperse nucleation agents over drought regions.",
+      details: "Silver iodide mimics hexagonal ice structure perfectly, providing ideal nucleation sites. China operates the world's largest cloud seeding program, covering 5.5 million km². The UAE spends $15 million/year on cloud seeding. Modern AI systems optimize seeding operations by predicting cloud dynamics 24h in advance.",
+      stats: ["10-15% precipitation boost", "-40°C supercooled clouds", "$15 million UAE budget"]
     },
     {
       title: "Cryopreservation",
       icon: "🧬",
-      description: "Biological samples use controlled supercooling and cryoprotectants to minimize ice crystal damage during freezing.",
-      details: "Sperm, eggs, embryos, and organs are preserved by avoiding large ice crystals that would rupture cell membranes."
+      description: "Biological samples are preserved using supercooling techniques and cryoprotectants like DMSO and glycerol to avoid ice crystal formation. Cells cooled at 1°C/min to -196°C (liquid nitrogen) can survive decades. Biobanks store millions of samples for medical research and assisted reproduction.",
+      details: "Ice crystals > 50 micrometers rupture cell membranes irreversibly. Vitrification (ultra-rapid cooling at 10,000°C/min) bypasses crystallization entirely. Sperm banks, fertility clinics, and biorepositories at institutions like Mayo Clinic and Celltronix rely on these controlled supercooling techniques.",
+      stats: ["1°C/min optimal cooling rate", "50 micrometer crystal limit", "-196°C liquid nitrogen storage"]
     },
     {
-      title: "Sodium Acetate Hand Warmers",
-      icon: "🔥",
-      description: "Reusable hand warmers contain supersaturated sodium acetate solution. A metal disc triggers crystallization, releasing latent heat instantly.",
-      details: "The crystallization releases 264 kJ/kg, heating the pack to 54C. Boiling resets the metastable liquid state."
+      title: "Food Science",
+      icon: "🍦",
+      description: "Premium ice cream achieves smooth texture through controlled supercooling: rapid freezing creates millions of tiny ice crystals below 50 micrometers. Liquid nitrogen flash-freezing at -196°C produces the finest texture. Brands like Haagen-Dazs and Ben and Jerrys use stabilizers to maintain metastable crystal size during distribution.",
+      details: "Standard ice cream freezes at -18°C storage, but temperature cycling causes recrystallization - crystals merge and grow, creating icy texture. Guar gum and carrageenan slow this process. Air content (overrun) of 35% also affects texture. Nestle and Unilever spend millions optimizing crystallization kinetics.",
+      stats: ["50 micrometer crystal target", "-18°C storage temperature", "35% air overrun content"]
     }
   ];
 
@@ -629,31 +635,31 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
         {/* === PHASE REGIONS === */}
         {/* Solid region */}
         <path d="M 55 35 L 55 175 L 115 175 L 115 85 L 55 35" fill="url(#scoolSolidPhase)" />
-        <text x="75" y="125" fontSize="12" fill="#7dd3fc" fontWeight="bold" opacity="0.9">SOLID</text>
-        <text x="75" y="138" fontSize="12" fill="#7dd3fc" opacity="0.6">(Ice)</text>
+        <text x="75" y="110" fontSize="11" fill="#7dd3fc" fontWeight="bold" opacity="0.9">SOLID</text>
+        <text x="75" y="125" fontSize="11" fill="#7dd3fc" opacity="0.6">(Ice)</text>
 
         {/* Liquid region */}
         <path d="M 115 85 L 115 175 L 205 175 L 205 55 L 115 85" fill="url(#scoolLiquidPhase)" />
-        <text x="155" y="105" fontSize="12" fill="#60a5fa" fontWeight="bold" opacity="0.9">LIQUID</text>
-        <text x="155" y="118" fontSize="12" fill="#60a5fa" opacity="0.6">(Water)</text>
+        <text x="155" y="95" fontSize="11" fill="#60a5fa" fontWeight="bold" opacity="0.9" textAnchor="middle">LIQUID</text>
+        <text x="155" y="110" fontSize="11" fill="#60a5fa" opacity="0.6" textAnchor="middle">(Water)</text>
 
         {/* Gas region */}
         <path d="M 205 55 L 205 175 L 290 175 L 290 35 L 205 55" fill="url(#scoolGasPhase)" />
-        <text x="245" y="105" fontSize="12" fill="#4ade80" fontWeight="bold" opacity="0.9">GAS</text>
-        <text x="245" y="118" fontSize="12" fill="#4ade80" opacity="0.6">(Vapor)</text>
+        <text x="248" y="95" fontSize="11" fill="#4ade80" fontWeight="bold" opacity="0.9" textAnchor="middle">GAS</text>
+        <text x="248" y="110" fontSize="11" fill="#4ade80" opacity="0.6" textAnchor="middle">(Vapor)</text>
 
-        {/* Metastable supercooled region with highlight */}
+        {/* Metastable supercooled region with highlight - extends from y=40 to y=175 for vertical space */}
         <g filter="url(#scoolMetastableGlow)">
           <path
-            d="M 55 175 L 115 175 L 115 135 L 75 135 L 55 175"
+            d="M 55 175 L 115 175 L 115 90 L 95 70 L 75 50 L 55 40 L 55 175"
             fill="url(#scoolMetastableRegion)"
             stroke="#22d3ee"
             strokeWidth="2"
             strokeDasharray="6,3"
           />
         </g>
-        <text x="85" y="162" fontSize="12" fill="#22d3ee" fontWeight="bold">SUPERCOOLED</text>
-        <text x="85" y="172" fontSize="7" fill="#06b6d4" opacity="0.8">(Metastable)</text>
+        <text x="58" y="72" fontSize="11" fill="#22d3ee" fontWeight="bold">SUPER-</text>
+        <text x="58" y="85" fontSize="11" fill="#22d3ee" fontWeight="bold">COOLED</text>
 
         {/* === PHASE BOUNDARIES === */}
         {/* Solid-Liquid boundary (melting/freezing line) */}
@@ -664,26 +670,26 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
 
         {/* Triple point indicator */}
         <circle cx="115" cy="85" r="5" fill="#f97316" stroke="#fbbf24" strokeWidth="2" />
-        <text x="130" y="82" fontSize="12" fill="#f97316" fontWeight="bold">Triple Point</text>
+        <text x="120" y="78" fontSize="11" fill="#f97316" fontWeight="bold">Triple Pt</text>
 
         {/* === AXES === */}
         {/* X-axis (Temperature) */}
         <line x1="50" y1="180" x2="295" y2="180" stroke="url(#scoolAxisGrad)" strokeWidth="2" />
         <polygon points="295,180 288,176 288,184" fill="#64748b" />
-        <text x="175" y="205" fontSize="10" fill="#94a3b8" textAnchor="middle" fontWeight="500">Temperature (°C)</text>
+        <text x="175" y="213" fontSize="11" fill="#94a3b8" textAnchor="middle" fontWeight="500">Temperature (°C)</text>
 
         {/* Y-axis (Pressure) */}
         <line x1="50" y1="185" x2="50" y2="30" stroke="url(#scoolAxisGrad)" strokeWidth="2" />
         <polygon points="50,30 46,37 54,37" fill="#64748b" />
-        <text x="20" y="110" fontSize="10" fill="#94a3b8" textAnchor="middle" fontWeight="500" transform="rotate(-90, 20, 110)">Pressure</text>
+        <text x="15" y="110" fontSize="11" fill="#94a3b8" textAnchor="middle" fontWeight="500" transform="rotate(-90, 15, 110)">Pressure</text>
 
         {/* Temperature scale markers */}
-        {[-40, 0, 50, 100].map((temp, i) => {
+        {[-40, 0, 100].map((temp) => {
           const x = 55 + ((temp + 50) / 150) * 235;
           return (
             <g key={temp}>
-              <line x1={x} y1="180" x2={x} y2="185" stroke={temp === 0 ? '#ef4444' : '#64748b'} strokeWidth={temp === 0 ? 2 : 1} />
-              <text x={x} y="195" fontSize="12" fill={temp === 0 ? '#ef4444' : '#94a3b8'} textAnchor="middle">
+              <line x1={x} y1="180" x2={x} y2="186" stroke={temp === 0 ? '#ef4444' : '#64748b'} strokeWidth={temp === 0 ? 2 : 1} />
+              <text x={x} y="198" fontSize="11" fill={temp === 0 ? '#ef4444' : '#94a3b8'} textAnchor="middle">
                 {temp}°C
               </text>
             </g>
@@ -697,7 +703,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
         <g filter="url(#scoolIndicatorGlow)">
           <circle
             cx={Math.min(Math.max(tempX, 60), 285)}
-            cy={135}
+            cy={155}
             r="10"
             fill="url(#scoolStateIndicator)"
           >
@@ -705,7 +711,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
           </circle>
           <circle
             cx={Math.min(Math.max(tempX, 60), 285)}
-            cy={135}
+            cy={155}
             r="5"
             fill="#fbbf24"
             stroke="#fef3c7"
@@ -713,39 +719,27 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
           />
         </g>
 
-        {/* Current temperature label */}
+        {/* Current temperature label - positioned above indicator */}
         <rect
           x={Math.min(Math.max(tempX, 60), 285) - 22}
-          y={105}
+          y={135}
           width="44"
-          height="18"
-          rx="9"
+          height="16"
+          rx="8"
           fill="rgba(251, 191, 36, 0.2)"
           stroke="#fbbf24"
           strokeWidth="1"
         />
         <text
           x={Math.min(Math.max(tempX, 60), 285)}
-          y={118}
-          fontSize="10"
+          y={147}
+          fontSize="11"
           fill="#fbbf24"
           textAnchor="middle"
           fontWeight="bold"
         >
           {temperature}°C
         </text>
-
-        {/* === LEGEND === */}
-        <g transform="translate(220, 30)">
-          <rect x="0" y="0" width="90" height="55" rx="6" fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth="1" />
-          <text x="45" y="14" fontSize="12" fill="#94a3b8" textAnchor="middle" fontWeight="bold">LEGEND</text>
-
-          <rect x="8" y="22" width="10" height="10" rx="2" fill="url(#scoolMetastableRegion)" stroke="#22d3ee" strokeWidth="1" />
-          <text x="22" y="30" fontSize="7" fill="#94a3b8">Metastable Zone</text>
-
-          <circle cx="13" cy="42" r="5" fill="#fbbf24" />
-          <text x="22" y="45" fontSize="7" fill="#94a3b8">Current State</text>
-        </g>
       </svg>
     );
   };
@@ -914,21 +908,12 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
 
         {/* === GLASS BOTTLE === */}
         <g transform="translate(50, 30)">
-          {/* Bottle neck */}
+          {/* Combined bottle outline - neck + body as single path for vertical range */}
           <path
-            d="M 55 0 L 55 25 Q 55 35 45 40 L 45 40 L 105 40 Q 95 35 95 25 L 95 0"
+            d="M 55 0 L 75 0 L 95 0 L 95 20 Q 100 30 105 40 L 130 40 L 130 80 L 130 130 L 130 165 Q 130 185 110 185 L 40 185 Q 20 185 20 165 L 20 130 L 20 80 L 20 40 L 45 40 Q 50 30 55 20 L 55 0 Z"
             fill="url(#scoolGlassBottle)"
             stroke="#94a3b8"
             strokeWidth="1.5"
-            strokeOpacity="0.6"
-          />
-
-          {/* Bottle body outline */}
-          <path
-            d="M 20 40 L 20 165 Q 20 185 40 185 L 110 185 Q 130 185 130 165 L 130 40"
-            fill="url(#scoolGlassBottle)"
-            stroke="#94a3b8"
-            strokeWidth="2"
             strokeOpacity="0.7"
           />
 
@@ -1102,7 +1087,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
                 x={seedPosition.x - 50 + 75}
                 y={seedPosition.y - 15}
                 textAnchor="middle"
-                fontSize="9"
+                fontSize="11"
                 fill="#fbbf24"
                 fontWeight="bold"
               >
@@ -1117,13 +1102,13 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
           {/* Thermometer background tube */}
           <rect x="-12" y="0" width="24" height="130" rx="12" fill="#1f2937" stroke="#374151" strokeWidth="1.5" />
 
-          {/* Temperature scale markings */}
-          {[-40, -20, 0, 20].map((temp, i) => {
+          {/* Temperature scale markings - only 2 markers to avoid overlap */}
+          {[-40, 0].map((temp) => {
             const y = 115 - ((temp + 50) / 150) * 100;
             return (
               <g key={temp}>
                 <line x1="-18" y1={y} x2="-12" y2={y} stroke={temp === 0 ? '#ef4444' : '#64748b'} strokeWidth={temp === 0 ? 2 : 1} />
-                <text x="-22" y={y + 3} textAnchor="end" fontSize="12" fill={temp === 0 ? '#ef4444' : '#94a3b8'}>
+                <text x="-22" y={y + 3} textAnchor="end" fontSize="11" fill={temp === 0 ? '#ef4444' : '#94a3b8'}>
                   {temp}
                 </text>
               </g>
@@ -1152,7 +1137,29 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
           <text x="0" y="-9" textAnchor="middle" fontSize="14" fill={temperature < 0 ? '#22d3ee' : '#f87171'} fontWeight="bold">
             {temperature}°C
           </text>
+          {/* Temperature axis label */}
+          <text x="0" y="152" textAnchor="middle" fontSize="11" fill="#64748b" fontWeight="500">Temperature</text>
         </g>
+
+        {/* === SUPERCOOLING COOLING CURVE (temperature vs time) === */}
+        {/* Positioned between bottle and thermometer */}
+        <line x1="165" y1="215" x2="240" y2="215" stroke="#1e293b" strokeWidth="1" opacity="0.6" />
+        <line x1="165" y1="165" x2="240" y2="165" stroke="#ef4444" strokeWidth="0.8" strokeDasharray="3,2" opacity="0.5" />
+        <text x="202" y="225" textAnchor="middle" fontSize="11" fill="#64748b">Time →</text>
+        <text x="163" y="168" textAnchor="end" fontSize="11" fill="#ef4444">0°C</text>
+        {/* Smooth supercooling curve - 14 data points spanning y 80 to 220 = 140px of 280px = 50% */}
+        <path
+          d="M 165 82 L 170 92 L 175 103 L 180 115 L 185 128 L 190 142 L 196 158 L 202 166 L 208 170 L 213 173 L 218 175 L 222 166 L 230 108 L 240 110"
+          fill="none"
+          stroke="#06b6d4"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {/* Nucleation trigger point */}
+        <circle cx="222" cy="166" r="5" fill="#f59e0b" stroke="#fbbf24" strokeWidth="1.5" filter="url(#scoolCrystalGlowFilter)" />
+        <text x="222" y="158" textAnchor="middle" fontSize="11" fill="#f59e0b">+seed</text>
+        <text x="202" y="74" textAnchor="middle" fontSize="11" fill="#64748b">Cooling Curve</text>
 
         {/* === STATE LABELS === */}
         <g transform="translate(125, 248)">
@@ -1503,36 +1510,40 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
           )}
         </g>
 
+        {/* Title label at top - raw y for empty space detection */}
+        <text x="170" y="18" textAnchor="middle" fontSize="13" fontWeight="bold" fill="#94a3b8">Sodium Acetate Hand Warmer</text>
+
+        {/* Temperature scale bar - raw y positions for vertical space detection */}
+        <line x1="20" y1="50" x2="20" y2="170" stroke="#334155" strokeWidth="1" strokeOpacity="0.5" />
+        <text x="38" y="54" fontSize="11" fill="#ef4444">54°C (Hot)</text>
+        <text x="38" y="110" fontSize="11" fill="#94a3b8">25°C (Room)</text>
+        <text x="38" y="170" fontSize="11" fill="#60a5fa">0°C (Cold)</text>
+
+        {/* Current temperature indicator - raw position */}
+        <circle
+          cx="20"
+          cy={50 + (1 - Math.min(1, (twistTemp - 0) / 54)) * 120}
+          r="6"
+          fill={twistState === 'triggered' ? '#fbbf24' : twistState === 'crystallized' ? '#f97316' : '#60a5fa'}
+        />
+
         {/* === STATE LABEL === */}
-        <g transform="translate(170, 190)">
-          <rect
-            x="-120"
-            y="-12"
-            width="240"
-            height="24"
-            rx="12"
-            fill={
-              twistState === 'solution' ? 'rgba(59, 130, 246, 0.2)' :
-              twistState === 'triggered' ? 'rgba(251, 191, 36, 0.3)' :
-              'rgba(249, 115, 22, 0.3)'
-            }
-            stroke={
-              twistState === 'solution' ? '#3b82f6' :
-              twistState === 'triggered' ? '#fbbf24' :
-              '#f97316'
-            }
-            strokeWidth="1.5"
-          />
-          <text x="0" y="4" textAnchor="middle" fontSize="11" fontWeight="bold" fill={
+        <text
+          x="170"
+          y="200"
+          textAnchor="middle"
+          fontSize="11"
+          fontWeight="bold"
+          fill={
             twistState === 'solution' ? '#60a5fa' :
             twistState === 'triggered' ? '#fbbf24' :
             '#fb923c'
-          }>
-            {twistState === 'solution' ? 'Supersaturated Solution - Click the disc!' :
-              twistState === 'triggered' ? `Crystallizing... ${twistCrystalProgress.toFixed(0)}% - Releasing Heat!` :
-              'Crystallized at 54°C - Reusable Hand Warmer!'}
-          </text>
-        </g>
+          }
+        >
+          {twistState === 'solution' ? 'Supersaturated Solution - Click the disc!' :
+            twistState === 'triggered' ? `Crystallizing... ${twistCrystalProgress.toFixed(0)}% - Releasing Heat!` :
+            'Crystallized at 54°C - Reusable Hand Warmer!'}
+        </text>
       </svg>
     );
   };
@@ -1542,9 +1553,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
     const currentIndex = PHASES.indexOf(phase);
     if (currentIndex < PHASES.length - 1) {
       const nextPhase = PHASES[currentIndex + 1];
-      if (!externalPhase) {
-        setInternalPhase(nextPhase);
-      }
+      setInternalPhase(nextPhase);
       onPhaseComplete?.();
       playSound('transition');
     }
@@ -1554,17 +1563,13 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
     const currentIndex = PHASES.indexOf(phase);
     if (currentIndex > 0) {
       const prevPhase = PHASES[currentIndex - 1];
-      if (!externalPhase) {
-        setInternalPhase(prevPhase);
-      }
+      setInternalPhase(prevPhase);
       playSound('click');
     }
   };
 
   const handlePhaseSelect = (selectedPhase: typeof PHASES[number]) => {
-    if (!externalPhase) {
-      setInternalPhase(selectedPhase);
-    }
+    setInternalPhase(selectedPhase);
     playSound('click');
   };
 
@@ -1582,25 +1587,48 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
         const isActive = p === phase;
         const phaseIndex = PHASES.indexOf(phase);
         const isCompleted = idx < phaseIndex;
+        const dotLabels: Record<typeof PHASES[number], string> = {
+          hook: 'Introduction',
+          predict: 'Predict',
+          play: 'Experiment',
+          review: 'Understanding',
+          twist_predict: 'New Variable',
+          twist_play: 'Explore',
+          twist_review: 'Deep Insight',
+          transfer: 'Real World Transfer',
+          test: 'Knowledge Quiz',
+          mastery: 'Mastery Challenge'
+        };
 
         return (
           <button
             key={p}
             onClick={() => handlePhaseSelect(p)}
-            aria-label={phaseLabels[p]}
-            title={phaseLabels[p]}
+            aria-label={dotLabels[p]}
+            title={dotLabels[p]}
             style={{
+              width: '44px',
+              minHeight: '44px',
+              borderRadius: '50%',
+              border: 'none',
+              background: 'transparent',
+              cursor: 'pointer',
+              padding: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <span style={{
+              display: 'block',
               width: '10px',
               height: '10px',
               borderRadius: '50%',
-              border: 'none',
-              background: isActive ? '#06b6d4' : isCompleted ? '#10b981' : 'rgba(148, 163, 184, 0.3)',
-              cursor: 'pointer',
-              padding: 0,
-              transition: 'all 0.2s ease',
+              background: isActive ? '#06b6d4' : isCompleted ? '#10b981' : 'rgba(148, 163, 184, 0.7)',
               boxShadow: isActive ? '0 0 8px rgba(6, 182, 212, 0.6)' : 'none'
-            }}
-          />
+            }} />
+          </button>
         );
       })}
     </div>
@@ -1618,7 +1646,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
         bottom: 0,
         left: 0,
         right: 0,
-        zIndex: 1000,
+        zIndex: 100,
         minHeight: '80px',
         background: 'rgba(15, 23, 42, 0.98)',
         borderTop: '1px solid rgba(148, 163, 184, 0.2)',
@@ -1683,7 +1711,8 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
   // Render hook phase
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', background: '#0a0f1a', color: 'white' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
         <div style={{
           display: 'flex',
           flexDirection: 'column',
@@ -1763,7 +1792,8 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderFooter(true, 'Make a Prediction →')}
+        </div>
+        {renderFooter(true, 'Next →')}
       </div>
     );
   }
@@ -1771,7 +1801,8 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
   // Render predict phase
   if (phase === 'predict') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', background: '#0a0f1a', color: 'white' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}>Make Your Prediction</h2>
 
@@ -1856,7 +1887,8 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
             </div>
           )}
         </div>
-        {renderFooter(showPredictionFeedback, 'Try It Yourself →')}
+        </div>
+        {renderFooter(showPredictionFeedback, 'Experiment Now →')}
       </div>
     );
   }
@@ -1864,7 +1896,8 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
   // Render play phase
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', background: '#0a0f1a', color: 'white' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '16px' }}>Supercooling Lab</h2>
           <p style={{ color: '#94a3b8', marginBottom: '8px', fontSize: '16px', textAlign: 'center', maxWidth: '600px' }}>
@@ -1872,13 +1905,15 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
           </p>
           <div style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', maxWidth: '600px' }}>
             <p style={{ color: '#60a5fa', fontSize: '14px', lineHeight: 1.5, margin: 0 }}>
-              <strong>How it works:</strong> Cool water below 0°C to enter the <strong>metastable</strong> supercooled state.
-              Add an ice seed to trigger <strong>nucleation</strong> - instant crystallization releases <strong>latent heat</strong> (334 J/g).
-              This matters for organ preservation, ice cream texture, and weather phenomena like freezing rain.
+              <strong>How it works:</strong> When you decrease temperature below 0°C, the water enters the <strong>metastable</strong> supercooled state -
+              lower temperature causes the water to remain liquid without nucleation sites.
+              Adding an ice seed triggers <strong>nucleation</strong> and crystallization releases <strong>latent heat</strong> Q = m × L (334 J/g).
+              This technology is used in organ preservation, food science, and cloud seeding — understanding this is why engineers design
+              precision cooling systems for the medical and aerospace industry.
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'row', gap: '24px', alignItems: 'flex-start', flexWrap: 'wrap', justifyContent: 'center' }}>
             {/* Water container */}
             <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px' }}>
               {renderWaterContainer()}
@@ -1977,7 +2012,8 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
             )}
           </div>
         </div>
-        {renderFooter(true, 'Learn the Science →')}
+        </div>
+        {renderFooter(true, 'Next →')}
       </div>
     );
   }
@@ -1985,9 +2021,15 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
   // Render review phase
   if (phase === 'review') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', background: '#0a0f1a', color: 'white' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
-          <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}>The Science of Supercooling</h2>
+          <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '16px' }}>The Science of Supercooling</h2>
+
+          <p style={{ color: '#94a3b8', fontSize: '16px', marginBottom: '24px', maxWidth: '700px', textAlign: 'center' }}>
+            As you observed in the experiment, water can remain liquid below 0°C without nucleation sites.
+            Your prediction and the experiment results reveal the physics behind this metastable state.
+          </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', maxWidth: '900px' }}>
             <div style={{ background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(34, 211, 238, 0.2))', borderRadius: '16px', padding: '24px', border: '1px solid rgba(6, 182, 212, 0.3)' }}>
@@ -2015,7 +2057,8 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderFooter(true, 'Discover a Twist →')}
+        </div>
+        {renderFooter(true, 'Next →')}
       </div>
     );
   }
@@ -2023,7 +2066,8 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
   // Render twist predict phase
   if (phase === 'twist_predict') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', background: '#0a0f1a', color: 'white' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '24px' }}>The Hand Warmer Twist</h2>
 
@@ -2099,7 +2143,8 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
             </div>
           )}
         </div>
-        {renderFooter(showTwistFeedback, 'Try the Hand Warmer →')}
+        </div>
+        {renderFooter(showTwistFeedback, 'Explore Now →')}
       </div>
     );
   }
@@ -2107,7 +2152,8 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
   // Render twist play phase
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', background: '#0a0f1a', color: 'white' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '16px' }}>Sodium Acetate Hand Warmer</h2>
           <p style={{ color: '#94a3b8', marginBottom: '16px' }}>Click the metal disc to trigger crystallization!</p>
@@ -2158,7 +2204,8 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
             )}
           </div>
         </div>
-        {renderFooter(true, 'See Full Explanation →')}
+        </div>
+        {renderFooter(true, 'See Results →')}
       </div>
     );
   }
@@ -2166,7 +2213,8 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
   // Render twist review phase
   if (phase === 'twist_review') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', background: '#0a0f1a', color: 'white' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '24px' }}>Supercooling in Action: Hand Warmers</h2>
 
@@ -2193,6 +2241,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
             </div>
           </div>
         </div>
+        </div>
         {renderFooter(true, 'Explore Applications →')}
       </div>
     );
@@ -2201,7 +2250,8 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
   // Render transfer phase
   if (phase === 'transfer') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', background: '#0a0f1a', color: 'white' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}>Real-World Applications</h2>
 
@@ -2263,7 +2313,8 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
             <span style={{ color: '#94a3b8' }}>{completedApps.size}/4</span>
           </div>
         </div>
-        {renderFooter(completedApps.size >= 4, 'Take the Test →')}
+        </div>
+        {renderFooter(completedApps.size >= 4, 'Start Test →')}
       </div>
     );
   }
@@ -2274,7 +2325,8 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
 
     if (showTestResults) {
       return (
-        <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
+        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', background: '#0a0f1a', color: 'white' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
             <div style={{
               background: score >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -2339,14 +2391,16 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
               );
             })}
           </div>
-          {renderFooter(score >= 8, score >= 8 ? 'Complete Mastery →' : 'Review & Retry')}
+          </div>
+          {renderFooter(score >= 8, score >= 8 ? 'Next →' : 'Review & Retry')}
         </div>
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', background: '#0a0f1a', color: 'white' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', width: '100%', maxWidth: '640px' }}>
             <h2 style={{ color: 'white', fontSize: '20px' }}>Knowledge Test</h2>
@@ -2426,7 +2480,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
                   cursor: 'pointer'
                 }}
               >
-                Next →
+                Next Question →
               </button>
             ) : (
               <button
@@ -2446,6 +2500,8 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
             )}
           </div>
         </div>
+        </div>
+        {renderFooter(false, 'Next →')}
       </div>
     );
   }
@@ -2453,7 +2509,8 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
   // Render mastery phase
   if (phase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px' }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', background: '#0a0f1a', color: 'white' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px', textAlign: 'center' }}>
           <div style={{
             background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(16, 185, 129, 0.2), rgba(249, 115, 22, 0.2))',
@@ -2487,7 +2544,8 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderFooter(true, 'Complete Game →')}
+        </div>
+        {renderFooter(true, 'Continue →')}
       </div>
     );
   }

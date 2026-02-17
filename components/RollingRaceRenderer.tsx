@@ -401,7 +401,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
       options: [
         { text: 'The solid wins by a larger margin', correct: false },
         { text: 'The hollow catches up', correct: false },
-        { text: 'The winner stays the same, but both finish faster', correct: true },
+        { text: 'The winner stays the same, but both complete the race faster', correct: true },
         { text: 'The race becomes a tie at steep angles', correct: false },
       ],
     },
@@ -921,7 +921,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
           {showTwist && (
             <g transform={`translate(${width - 100}, 15)`}>
               <rect x={0} y={0} width={85} height={20} rx={4} fill="rgba(245, 158, 11, 0.2)" stroke={colors.warning} strokeWidth={1} />
-              <text x={42} y={14} fill={colors.warning} fontSize={10} textAnchor="middle" fontWeight="bold">
+              <text x={42} y={14} fill={colors.warning} fontSize={11} textAnchor="middle" fontWeight="bold">
                 Coins: {coinCount}
               </text>
             </g>
@@ -929,8 +929,8 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
 
           {/* Mass display */}
           <g transform={`translate(${width - 100}, ${showTwist ? 42 : 15})`}>
-            <rect x={0} y={0} width={85} height={18} rx={4} fill="rgba(148, 163, 184, 0.2)" stroke={colors.textMuted} strokeWidth={1} />
-            <text x={42} y={13} fill={colors.textMuted} fontSize={9} textAnchor="middle" fontWeight="bold">
+            <rect x={0} y={48} width={85} height={18} rx={4} fill="rgba(148, 163, 184, 0.2)" stroke={colors.textMuted} strokeWidth={1} />
+            <text x={42} y={60} fill={colors.textMuted} fontSize={11} textAnchor="middle" fontWeight="bold">
               Mass: {objectMass.toFixed(1)} kg
             </text>
           </g>
@@ -1123,6 +1123,8 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
           <div
             key={p}
             aria-label={`${p} phase`}
+            title={p}
+            onClick={() => goToPhase(p)}
             style={{
               width: '10px',
               height: '10px',
@@ -1221,7 +1223,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction ->')}
+        {renderBottomBar(false, true, 'Next →')}
       </div>
     );
   }
@@ -1249,7 +1251,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
 
           <div style={{ padding: '0 16px 16px 16px' }}>
             <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              When released together, which object wins the race?
+              Predict: what will happen when they're released together?
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {predictions.map((p) => (
@@ -1273,7 +1275,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction ->')}
+        {renderBottomBar(true, true, 'Next →')}
       </div>
     );
   }
@@ -1348,7 +1350,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
             <p style={{ color: colors.textPrimary }}>
-              The solid cylinder wins! It has less rotational inertia, so less energy goes into spinning.
+              Your prediction vs the experiment result: The solid cylinder wins! It has less rotational inertia, so less energy goes into spinning.
             </p>
           </div>
 
@@ -1589,14 +1591,14 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
                 <circle r="40" fill="none" stroke={colors.hollowHoop} strokeWidth="6" />
                 <circle r="28" fill={colors.bgPrimary} />
                 <text y="70" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Empty Hoop</text>
-                <text y="85" textAnchor="middle" fill={colors.warning} fontSize="10">I/MR² = 1.0</text>
+                <text y="85" textAnchor="middle" fill={colors.warning} fontSize="11">I/MR² = 1.0</text>
               </g>
 
               {/* Arrow */}
               <g transform="translate(200, 100)">
                 <line x1="-30" y1="0" x2="30" y2="0" stroke={colors.accent} strokeWidth="2" />
                 <polygon points="30,0 25,-4 25,4" fill={colors.accent} />
-                <text y="-10" textAnchor="middle" fill={colors.warning} fontSize="10">Add coins</text>
+                <text y="-10" textAnchor="middle" fill={colors.warning} fontSize="11">Add coins</text>
               </g>
 
               {/* Hoop with coins */}
@@ -1607,7 +1609,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
                 <circle cx="-6" cy="0" r="3" fill="url(#rraceCoinGold)" />
                 <circle cx="6" cy="0" r="3" fill="url(#rraceCoinGold)" />
                 <text y="70" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Coins Added</text>
-                <text y="85" textAnchor="middle" fill={colors.success} fontSize="10">I/MR² &lt; 1.0</text>
+                <text y="85" textAnchor="middle" fill={colors.success} fontSize="11">I/MR² &lt; 1.0</text>
               </g>
 
               {/* Title */}
@@ -1663,9 +1665,9 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
               {!transferCompleted.has(index) ? (
                 <button
                   onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
+                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: colors.accent, color: 'white', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}
                 >
-                  Reveal Answer
+                  Got It
                 </button>
               ) : (
                 <div>
@@ -1693,6 +1695,9 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+            <div style={{ textAlign: 'center', padding: '16px', color: colors.textMuted, fontSize: '13px' }}>
+              Mastery Test Results
+            </div>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',

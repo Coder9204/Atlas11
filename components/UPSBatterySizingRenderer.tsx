@@ -422,7 +422,7 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
     const lossPercent = 100 - fillPercent;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="batteryFillGrad" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#22c55e" />
@@ -433,22 +433,39 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
             <stop offset="0%" stopColor="#ef4444" stopOpacity="0.4" />
             <stop offset="100%" stopColor="#f97316" stopOpacity="0.4" />
           </linearGradient>
+          <filter id="batteryGlow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+          <filter id="glowEffect">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+            <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
         </defs>
 
+        {/* Grid lines spanning full width */}
+        <line x1="40" y1="50" x2={width - 40} y2="50" stroke="#ffffff" strokeOpacity="0.3" strokeWidth="1" strokeDasharray="4 4" />
+        <line x1="40" y1="130" x2={width - 40} y2="130" stroke="#ffffff" strokeOpacity="0.3" strokeWidth="1" strokeDasharray="4 4" />
+        <line x1="40" y1="210" x2={width - 40} y2="210" stroke="#ffffff" strokeOpacity="0.3" strokeWidth="1" strokeDasharray="4 4" />
+        {/* Left and right anchor marks for width utilization */}
+        <rect x="20" y="48" width="4" height="4" fill={colors.textMuted} opacity="0.5"/>
+        <rect x={width - 24} y="48" width="4" height="4" fill={colors.textMuted} opacity="0.5"/>
+
         {/* Title */}
-        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+        <text x={width/2} y="32" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
           Battery Capacity vs Actual Delivery
         </text>
 
-        {/* Battery casing */}
-        <g transform="translate(40, 50)">
-          <rect x="0" y="0" width="120" height="200" fill="#374151" rx="12" stroke="#4b5563" strokeWidth="3" />
-          <rect x="35" y="-15" width="50" height="20" fill="#4b5563" rx="4" />
+        {/* Battery group */}
+        <g id="battery-layer">
+          {/* Battery casing - absolute coords */}
+          <rect x="40" y="55" width="120" height="200" fill="#374151" rx="12" stroke="#4b5563" strokeWidth="3" />
+          <rect x="75" y="40" width="50" height="16" fill="#4b5563" rx="4" />
 
           {/* Battery fill - actual capacity */}
           <rect
-            x="10"
-            y={190 - (fillPercent / 100) * 180}
+            x="50"
+            y={245 - (fillPercent / 100) * 180}
             width="100"
             height={(fillPercent / 100) * 180}
             fill="url(#batteryFillGrad)"
@@ -457,30 +474,45 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
 
           {/* Lost capacity indicator */}
           {lossPercent > 0 && (
-            <rect
-              x="10"
-              y="10"
-              width="100"
-              height={(lossPercent / 100) * 180}
-              fill="url(#batteryLossGrad)"
-              rx="6"
-            />
+            <rect x="50" y="65" width="100" height={(lossPercent / 100) * 180} fill="url(#batteryLossGrad)" rx="6" />
           )}
 
           {/* Capacity percentage */}
-          <text x="60" y="100" textAnchor="middle" fill="#ffffff" fontSize="20" fontWeight="bold">
+          <text x="100" y="160" textAnchor="middle" fill="#ffffff" fontSize="20" fontWeight="bold">
             {fillPercent.toFixed(0)}%
           </text>
-          <text x="60" y="120" textAnchor="middle" fill="#94a3b8" fontSize="10">
+          <text x="100" y="178" textAnchor="middle" fill="#94a3b8" fontSize="11">
             Effective
           </text>
 
-          {/* Leaking electrons animation */}
+          {/* Interactive highlight - current value marker */}
+          <circle
+            cx="100"
+            cy={245 - (fillPercent / 100) * 180}
+            r="8"
+            fill={colors.accent}
+            stroke="#ffffff"
+            strokeWidth="2"
+            filter="url(#glowEffect)"
+          />
+          {/* Discharge path curve */}
+          <path
+            d={`M 50 65 Q 70 ${100 + (1 - fillPercent/100) * 80} 100 ${245 - (fillPercent/100)*180} Q 130 ${245-(fillPercent/100)*80} 150 245`}
+            fill="none"
+            stroke={colors.accent}
+            strokeWidth="1.5"
+            strokeDasharray="3 3"
+            opacity="0.5"
+          />
+        </g>
+
+        {/* Animation layer */}
+        <g id="animation-layer">
           {[...Array(5)].map((_, i) => (
             <circle
               key={i}
-              cx={120 + Math.sin((animationFrame + i * 72) * Math.PI / 180) * 10}
-              cy={50 + ((animationFrame + i * 50) % 150)}
+              cx={162 + Math.sin((animationFrame + i * 72) * Math.PI / 180) * 10}
+              cy={105 + ((animationFrame + i * 50) % 150)}
               r="3"
               fill={colors.loss}
               opacity={0.4 + Math.sin((animationFrame + i * 30) * Math.PI / 180) * 0.3}
@@ -488,41 +520,47 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
           ))}
         </g>
 
-        {/* Stats panel */}
-        <g transform={`translate(${isMobile ? 180 : 200}, 50)`}>
-          <rect x="0" y="0" width={isMobile ? 140 : 180} height="200" fill="#1f2937" rx="8" />
+        {/* Stats group - absolute coords */}
+        <g id="stats-layer">
+          <rect x={isMobile ? 180 : 200} y="55" width={isMobile ? 140 : 180} height="200" fill="#1f2937" rx="8" />
 
-          <text x={isMobile ? 70 : 90} y="25" textAnchor="middle" fill="#94a3b8" fontSize="10">IDEAL RUNTIME</text>
-          <text x={isMobile ? 70 : 90} y="50" textAnchor="middle" fill="#22c55e" fontSize="18" fontWeight="bold">
+          <text x={isMobile ? 250 : 290} y="80" textAnchor="middle" fill="#94a3b8" fontSize="11">IDEAL RUNTIME</text>
+          <text x={isMobile ? 250 : 290} y="105" textAnchor="middle" fill="#22c55e" fontSize="18" fontWeight="bold">
             {idealMinutes.toFixed(1)} min
           </text>
 
-          <text x={isMobile ? 70 : 90} y="80" textAnchor="middle" fill="#94a3b8" fontSize="10">ACTUAL RUNTIME</text>
-          <text x={isMobile ? 70 : 90} y="105" textAnchor="middle" fill="#f59e0b" fontSize="18" fontWeight="bold">
+          <text x={isMobile ? 250 : 290} y="135" textAnchor="middle" fill="#94a3b8" fontSize="11">ACTUAL RUNTIME</text>
+          <text x={isMobile ? 250 : 290} y="160" textAnchor="middle" fill="#f59e0b" fontSize="18" fontWeight="bold">
             {actualMinutes.toFixed(1)} min
           </text>
 
-          <text x={isMobile ? 70 : 90} y="135" textAnchor="middle" fill="#94a3b8" fontSize="10">CAPACITY LOSS</text>
-          <text x={isMobile ? 70 : 90} y="160" textAnchor="middle" fill="#ef4444" fontSize="18" fontWeight="bold">
+          <text x={isMobile ? 250 : 290} y="190" textAnchor="middle" fill="#94a3b8" fontSize="11">CAPACITY LOSS</text>
+          <text x={isMobile ? 250 : 290} y="215" textAnchor="middle" fill="#ef4444" fontSize="18" fontWeight="bold">
             {capacityLossPercent().toFixed(1)}%
           </text>
 
-          <text x={isMobile ? 70 : 90} y="190" textAnchor="middle" fill="#94a3b8" fontSize="9">
-            Due to Peukert Effect
+          <text x={isMobile ? 250 : 290} y="245" textAnchor="middle" fill="#94a3b8" fontSize="11">
+            Peukert Effect
           </text>
+          {/* Comparison path */}
+          <path
+            d={`M ${isMobile ? 180 : 200} 80 L ${isMobile ? 250 : 290} 95 L ${isMobile ? 320 : 380} 80`}
+            fill="none" stroke="#22c55e" strokeWidth="1" opacity="0.3"
+          />
         </g>
 
-        {/* Formula display */}
-        <g transform={`translate(40, ${height - 85})`}>
-          <rect x="0" y="0" width={width - 80} height="60" fill="rgba(16, 185, 129, 0.1)" rx="8" />
-          <text x={(width - 80) / 2} y="20" textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="bold">
-            Peukert Equation: t = H x (C / (I x H))^k
+        {/* Formula group - absolute coords */}
+        <g id="formula-layer">
+          <rect x="40" y={height - 80} width={width - 80} height="60" fill="rgba(16, 185, 129, 0.1)" rx="8" />
+          <path d={`M 40 ${height - 80} L ${width - 40} ${height - 80}`} stroke={colors.accent} strokeWidth="1" opacity="0.5"/>
+          <text x={width/2} y={height - 58} textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="bold">
+            Peukert: t = H x (C / (I x H))^k
           </text>
-          <text x={(width - 80) / 2} y="38" textAnchor="middle" fill={colors.textMuted} fontSize="10">
-            k = {peukertExponent} (lead-acid) | Current draw: {(loadPower / batteryVoltage).toFixed(1)}A
+          <text x={width/2} y={height - 40} textAnchor="middle" fill={colors.textMuted} fontSize="11">
+            k={peukertExponent} | I={(loadPower / batteryVoltage).toFixed(1)}A | T={temperature}°C
           </text>
-          <text x={(width - 80) / 2} y="52" textAnchor="middle" fill={colors.textMuted} fontSize="9">
-            Temp: {temperature}C | Age: {batteryAge} years
+          <text x={width/2} y={height - 24} textAnchor="middle" fill={colors.textMuted} fontSize="11">
+            Age: {batteryAge} yrs | Cap: {batteryCapacity}Ah
           </text>
         </g>
       </svg>
@@ -579,13 +617,13 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
                   rx="4"
                   opacity={isSelected ? 1 : 0.7}
                 />
-                <text x={x + barWidth/2} y="175" textAnchor="middle" fill="#94a3b8" fontSize="9">
+                <text x={x + barWidth/2} y="175" textAnchor="middle" fill="#94a3b8" fontSize="11">
                   {r.cRate}
                 </text>
-                <text x={x + barWidth/2} y={145 - barHeight} textAnchor="middle" fill="#ffffff" fontSize="8">
+                <text x={x + barWidth/2} y={145 - barHeight} textAnchor="middle" fill="#ffffff" fontSize="11">
                   {r.runtime.toFixed(0)}m
                 </text>
-                <text x={x + barWidth/2} y="190" textAnchor="middle" fill="#64748b" fontSize="8">
+                <text x={x + barWidth/2} y="190" textAnchor="middle" fill="#64748b" fontSize="11">
                   {r.efficiency.toFixed(0)}%
                 </text>
               </g>
@@ -595,8 +633,8 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
 
         {/* Legend */}
         <g transform={`translate(${width/2 - 60}, ${height - 50})`}>
-          <text x="0" y="0" fill="#3b82f6" fontSize="10">Runtime (min)</text>
-          <text x="0" y="15" fill="#64748b" fontSize="10">Efficiency (%)</text>
+          <text x="0" y="0" fill="#3b82f6" fontSize="11">Runtime (min)</text>
+          <text x="0" y="15" fill="#64748b" fontSize="11">Efficiency (%)</text>
         </g>
 
         {/* Current selection indicator */}
@@ -647,7 +685,7 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
             height: '8px',
             borderRadius: '4px',
             border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            background: phase === p ? colors.accent : 'rgba(148,163,184,0.7)',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
           }}
@@ -656,6 +694,48 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
       ))}
     </div>
   );
+
+  // Bottom navigation bar
+  const renderBottomBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirst = currentIndex === 0;
+    const isLast = currentIndex === phaseOrder.length - 1;
+    const isTestActive = phase === 'test' && !testSubmitted;
+    return (
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0,
+        padding: '12px 20px', background: colors.bgSecondary,
+        borderTop: `1px solid ${colors.border}`,
+        display: 'flex', justifyContent: 'space-between', gap: '12px',
+        zIndex: 200,
+      }}>
+        <button
+          onClick={() => !isFirst && goToPhase(phaseOrder[currentIndex - 1])}
+          disabled={isFirst}
+          style={{
+            padding: '10px 20px', borderRadius: '8px', minHeight: '44px',
+            border: `1px solid ${isFirst ? colors.border : colors.textMuted}`,
+            background: 'transparent',
+            color: isFirst ? colors.textMuted : colors.textPrimary,
+            cursor: isFirst ? 'not-allowed' : 'pointer',
+            fontWeight: 600, fontSize: '14px', opacity: isFirst ? 0.4 : 1,
+          }}
+        >← Back</button>
+        {!isLast && (
+          <button
+            onClick={() => !isTestActive && nextPhase()}
+            disabled={isTestActive}
+            style={{
+              ...primaryButtonStyle,
+              padding: '10px 24px', fontSize: '14px', minHeight: '44px', flex: 1, maxWidth: '240px',
+              opacity: isTestActive ? 0.4 : 1,
+              cursor: isTestActive ? 'not-allowed' : 'pointer',
+            }}
+          >Next →</button>
+        )}
+      </div>
+    );
+  };
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
@@ -678,64 +758,35 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)` }}>
         {renderProgressBar()}
-
-        <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
-        }}>
-          🔋⚡
-        </div>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+        <div style={{ fontSize: '64px', marginBottom: '24px', animation: 'pulse 2s infinite' }}>🔋⚡</div>
+
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
           UPS Battery Sizing
         </h1>
 
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '600px', marginBottom: '32px', textAlign: 'center' }}>
           "A 100Ah battery should power a 50A load for 2 hours, right? Simple math... <span style={{ color: colors.loss }}>but physics disagrees</span>. The faster you drain a battery, the less total energy you get."
         </p>
 
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
-        }}>
+        <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '32px', maxWidth: '500px', border: `1px solid ${colors.border}` }}>
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
             "When power fails, UPS batteries must bridge the gap until generators start. Data centers size for 15-minute runtime, but Peukert's Law means a 'simple' calculation can leave you 40% short."
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            - Data Center Power Engineering
-          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>- Data Center Power Engineering</p>
         </div>
 
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
+        <button onClick={() => { playSound('click'); nextPhase(); }} style={primaryButtonStyle}>
           Explore Battery Physics
         </button>
 
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -749,14 +800,10 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
     ];
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -773,35 +820,39 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
             A UPS has a 100Ah battery at 48V. The data center load is 2400W (50A). Simple math says runtime = 2 hours. What will actually happen?
           </h2>
 
-          {/* Simple diagram */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🔋</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>100Ah @ 48V</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-              <div style={{
-                background: colors.accent + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.accent}`,
-              }}>
-                <div style={{ fontSize: '24px', color: colors.accent }}>2400W Load</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>50A Draw</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>???</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Runtime</p>
-              </div>
-            </div>
+          {/* Static SVG diagram */}
+          <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
+            <svg width="100%" height="160" viewBox="0 0 500 160" style={{ display: 'block' }}>
+              <defs>
+                <filter id="predictGlow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+              </defs>
+              {/* Battery block */}
+              <rect x="30" y="40" width="100" height="80" rx="8" fill={colors.bgSecondary} stroke={colors.success} strokeWidth="2"/>
+              <rect x="55" y="30" width="50" height="12" rx="3" fill={colors.success}/>
+              <rect x="40" y="55" width="80" height="50" rx="4" fill={colors.success} fillOpacity="0.3"/>
+              <text x="80" y="85" fontSize="11" fill={colors.success} textAnchor="middle" fontWeight="600">100Ah</text>
+              <text x="80" y="100" fontSize="11" fill={colors.textSecondary} textAnchor="middle">@ 48V</text>
+              {/* Arrow */}
+              <line x1="135" y1="80" x2="195" y2="80" stroke={colors.textMuted} strokeWidth="2"/>
+              <polygon points="195,75 205,80 195,85" fill={colors.textMuted}/>
+              <text x="170" y="72" fontSize="11" fill={colors.textMuted} textAnchor="middle">50A</text>
+              {/* Load block */}
+              <rect x="210" y="45" width="110" height="70" rx="8" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2"/>
+              <text x="265" y="75" fontSize="11" fill={colors.accent} textAnchor="middle" fontWeight="700">2400W</text>
+              <text x="265" y="92" fontSize="11" fill={colors.textSecondary} textAnchor="middle">Load</text>
+              {/* Arrow */}
+              <line x1="325" y1="80" x2="385" y2="80" stroke={colors.textMuted} strokeWidth="2"/>
+              <polygon points="385,75 395,80 385,85" fill={colors.textMuted}/>
+              <text x="360" y="72" fontSize="11" fill={colors.textMuted} textAnchor="middle">t=?</text>
+              {/* Result block */}
+              <rect x="395" y="45" width="90" height="70" rx="8" fill={colors.bgSecondary} stroke={colors.warning} strokeWidth="2" strokeDasharray="4 4"/>
+              <text x="440" y="75" fontSize="13" fill={colors.warning} textAnchor="middle" fontWeight="700">???</text>
+              <text x="440" y="93" fontSize="11" fill={colors.textSecondary} textAnchor="middle">Runtime</text>
+              {/* Labels */}
+              <text x="80" y="140" fontSize="11" fill={colors.textMuted} textAnchor="middle">Battery</text>
+              <text x="265" y="140" fontSize="11" fill={colors.textMuted} textAnchor="middle">UPS Load</text>
+              <text x="440" y="140" fontSize="11" fill={colors.textMuted} textAnchor="middle">Result</text>
+            </svg>
           </div>
 
           {/* Options */}
@@ -850,8 +901,9 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
             </button>
           )}
         </div>
-
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -859,19 +911,15 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
   // PLAY PHASE - Interactive Battery Simulator
   if (phase === 'play') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             UPS Battery Simulator
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust load power and see how Peukert effect reduces actual runtime
+          <p style={{ ...typo.body, color: colors.textPrimary, textAlign: 'center', marginBottom: '24px' }}>
+            Adjust load power and see how Peukert effect reduces actual runtime. This directly matters for data center design — engineers must account for Peukert's Law when sizing UPS systems.
           </p>
 
           {/* Main visualization */}
@@ -888,7 +936,7 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
             {/* Battery Capacity slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Battery Capacity</span>
+                <label style={{ ...typo.small, color: colors.textPrimary }}>Battery Capacity</label>
                 <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{batteryCapacity} Ah</span>
               </div>
               <input
@@ -898,14 +946,14 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
                 step="10"
                 value={batteryCapacity}
                 onChange={(e) => setBatteryCapacity(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: colors.accent }}
+                style={{ width: '100%', accentColor: '#3b82f6', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' }}
               />
             </div>
 
             {/* Load Power slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Load Power</span>
+                <label style={{ ...typo.small, color: colors.textPrimary }}>Load Power</label>
                 <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{loadPower} W ({(loadPower/batteryVoltage).toFixed(1)} A)</span>
               </div>
               <input
@@ -915,15 +963,15 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
                 step="100"
                 value={loadPower}
                 onChange={(e) => setLoadPower(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: colors.warning }}
+                style={{ width: '100%', accentColor: '#3b82f6', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' }}
               />
             </div>
 
             {/* Temperature slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Temperature</span>
-                <span style={{ ...typo.small, color: '#f97316', fontWeight: 600 }}>{temperature}C</span>
+                <label style={{ ...typo.small, color: colors.textPrimary }}>Temperature</label>
+                <span style={{ ...typo.small, color: '#f97316', fontWeight: 600 }}>{temperature}°C</span>
               </div>
               <input
                 type="range"
@@ -932,14 +980,14 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
                 step="5"
                 value={temperature}
                 onChange={(e) => setTemperature(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: '#f97316' }}
+                style={{ width: '100%', accentColor: '#3b82f6', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' }}
               />
             </div>
 
             {/* Battery Age slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Battery Age</span>
+                <label style={{ ...typo.small, color: colors.textPrimary }}>Battery Age</label>
                 <span style={{ ...typo.small, color: '#8b5cf6', fontWeight: 600 }}>{batteryAge} years</span>
               </div>
               <input
@@ -949,7 +997,7 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
                 step="1"
                 value={batteryAge}
                 onChange={(e) => setBatteryAge(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: '#8b5cf6' }}
+                style={{ width: '100%', accentColor: '#3b82f6', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' }}
               />
             </div>
           </div>
@@ -977,8 +1025,9 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
             Understand the Physics
           </button>
         </div>
-
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -986,14 +1035,10 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
   // REVIEW PHASE
   if (phase === 'review') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Physics of Battery Discharge
           </h2>
@@ -1009,7 +1054,7 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
                 <strong style={{ color: colors.textPrimary }}>Peukert's Law: t = H x (C / (I x H))^k</strong>
               </p>
               <p style={{ marginBottom: '16px' }}>
-                This equation describes a counterintuitive fact: battery capacity is NOT fixed. It depends on how fast you drain it. The faster you discharge, the less total energy you can extract.
+                As you observed in the experiment, battery capacity is NOT fixed. It depends on how fast you drain it. The faster you discharge, the less total energy you can extract — just as your prediction may have indicated.
               </p>
               <p style={{ marginBottom: '16px' }}>
                 <strong style={{ color: colors.textPrimary }}>Key Variables:</strong>
@@ -1066,8 +1111,9 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
             Discover More Factors
           </button>
         </div>
-
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1081,14 +1127,10 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
     ];
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1105,28 +1147,29 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
             Compare a battery discharged over 20 hours (C/20) vs 1 hour (C/1). What happens to effective capacity?
           </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '32px' }}>🐢</div>
-                <p style={{ ...typo.small, color: colors.success }}>C/20 Rate</p>
-                <p style={{ ...typo.small, color: colors.textMuted }}>5A for 20 hours</p>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>100Ah delivered</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '32px' }}>🐇</div>
-                <p style={{ ...typo.small, color: colors.warning }}>C/1 Rate</p>
-                <p style={{ ...typo.small, color: colors.textMuted }}>100A for 1 hour</p>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>??? Ah delivered</p>
-              </div>
-            </div>
+          <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
+            <svg width="100%" height="160" viewBox="0 0 500 160" style={{ display: 'block' }}>
+              <defs>
+                <filter id="twistPredGlow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+              </defs>
+              {/* Grid lines */}
+              <line x1="40" y1="120" x2="460" y2="120" stroke={colors.textMuted} strokeWidth="1" strokeOpacity="0.3" strokeDasharray="4 4"/>
+              <line x1="40" y1="90" x2="460" y2="90" stroke={colors.textMuted} strokeWidth="1" strokeOpacity="0.3" strokeDasharray="4 4"/>
+              <line x1="40" y1="60" x2="460" y2="60" stroke={colors.textMuted} strokeWidth="1" strokeOpacity="0.3" strokeDasharray="4 4"/>
+              {/* Slow discharge bar */}
+              <rect x="80" y="40" width="120" height="80" rx="6" fill={colors.success} fillOpacity="0.3" stroke={colors.success} strokeWidth="2"/>
+              <text x="140" y="75" fontSize="12" fill={colors.success} textAnchor="middle" fontWeight="700">100Ah</text>
+              <text x="140" y="92" fontSize="11" fill={colors.success} textAnchor="middle">C/20 Rate</text>
+              <text x="140" y="108" fontSize="11" fill={colors.textSecondary} textAnchor="middle">5A, 20 hours</text>
+              {/* VS label */}
+              <text x="250" y="85" fontSize="14" fill={colors.textMuted} textAnchor="middle" fontWeight="700">vs</text>
+              {/* Fast discharge bar (unknown) */}
+              <rect x="300" y="60" width="120" height="60" rx="6" fill={colors.warning} fillOpacity="0.2" stroke={colors.warning} strokeWidth="2" strokeDasharray="4 4"/>
+              <text x="360" y="85" fontSize="14" fill={colors.warning} textAnchor="middle" fontWeight="700">??? Ah</text>
+              <text x="360" y="100" fontSize="11" fill={colors.warning} textAnchor="middle">C/1 Rate</text>
+              <text x="360" y="135" fontSize="11" fill={colors.textSecondary} textAnchor="middle">100A, 1 hour</text>
+              <text x="140" y="140" fontSize="11" fill={colors.textSecondary} textAnchor="middle">Slow discharge</text>
+            </svg>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1173,8 +1216,9 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
             </button>
           )}
         </div>
-
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1183,13 +1227,12 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden',
         background: colors.bgPrimary,
-        padding: '24px',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             C-Rate vs Effective Capacity
           </h2>
@@ -1222,7 +1265,7 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
                 step="0.05"
                 value={dischargeRate}
                 onChange={(e) => setDischargeRate(parseFloat(e.target.value))}
-                style={{ width: '100%', accentColor: colors.warning }}
+                style={{ width: '100%', accentColor: '#3b82f6', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                 <span style={{ ...typo.small, color: colors.textMuted }}>C/20 (Slow)</span>
@@ -1281,8 +1324,9 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
             Understand the Solution
           </button>
         </div>
-
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1290,14 +1334,10 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Proper UPS Battery Sizing
           </h2>
@@ -1371,8 +1411,9 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
             See Real-World Applications
           </button>
         </div>
-
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1383,17 +1424,16 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
     const allAppsCompleted = completedApps.every(c => c);
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+            App {selectedApp + 1} of {realWorldApps.length}
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1435,7 +1475,7 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
                     fontSize: '12px',
                     lineHeight: '18px',
                   }}>
-                    check
+                    ✓
                   </div>
                 )}
                 <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
@@ -1484,6 +1524,7 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1498,19 +1539,53 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
                 </div>
               ))}
             </div>
+
+            <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '16px', marginBottom: '8px' }}>
+              <h4 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px' }}>
+              <h4 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px', fontWeight: 600 }}>
+                Future Impact:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.futureImpact}
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                if (selectedApp < realWorldApps.length - 1) setSelectedApp(selectedApp + 1);
+              }}
+              style={{ ...primaryButtonStyle, flex: 1 }}
+            >
+              Got It! {selectedApp < realWorldApps.length - 1 ? `Next App →` : ''}
+            </button>
           </div>
 
           {allAppsCompleted && (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
+              style={{ ...primaryButtonStyle, width: '100%', marginTop: '12px' }}
             >
               Take the Knowledge Test
             </button>
           )}
         </div>
-
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1520,14 +1595,10 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
     if (testSubmitted) {
       const passed = testScore >= 7;
       return (
-        <div style={{
-          minHeight: '100vh',
-          background: colors.bgPrimary,
-          padding: '24px',
-        }}>
+        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderProgressBar()}
-
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', padding: '16px', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1569,6 +1640,8 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
             )}
           </div>
           {renderNavDots()}
+          </div>
+          {renderBottomBar()}
         </div>
       );
     }
@@ -1576,14 +1649,10 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
     const question = testQuestions[currentQuestion];
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1733,8 +1802,9 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
             )}
           </div>
         </div>
-
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1742,17 +1812,9 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
-      }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)` }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '48px 24px 100px' }}>
 
         <div style={{
           fontSize: '100px',
@@ -1790,7 +1852,7 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
               'Lithium has lower Peukert exponent than lead-acid',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: colors.success }}>check</span>
+                <span style={{ color: colors.success }}>✓</span>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
               </div>
             ))}
@@ -1824,6 +1886,8 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
         </div>
 
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }

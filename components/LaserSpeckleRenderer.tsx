@@ -840,7 +840,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
           <text x="72" y="-30" fontSize="11" fontWeight="700" fill="#94a3b8" fontFamily="monospace">
             {useLaser ? 'LASER' : 'LED'}
           </text>
-          <text x="72" y="-18" fontSize="8" fill="#64748b" fontFamily="monospace">
+          <text x="72" y="-18" fontSize="11" fill="#64748b" fontFamily="monospace">
             {useLaser ? '532nm Coherent' : 'Broadband Incoherent'}
           </text>
         </g>
@@ -884,7 +884,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
             ))}
 
             {/* Coherent wave annotation */}
-            <text x="250" y="175" fontSize="9" fill="#4ade80" fontFamily="monospace" textAnchor="middle">
+            <text x="250" y="175" fontSize="11" fill="#4ade80" fontFamily="monospace" textAnchor="middle">
               Coherent waves (fixed phase)
             </text>
           </g>
@@ -913,7 +913,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
             ))}
 
             {/* Incoherent annotation */}
-            <text x="270" y="130" fontSize="9" fill="#fbbf24" fontFamily="monospace" textAnchor="middle">
+            <text x="270" y="130" fontSize="11" fill="#fbbf24" fontFamily="monospace" textAnchor="middle">
               Incoherent (random phases)
             </text>
           </g>
@@ -986,10 +986,10 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
           })}
 
           {/* Label */}
-          <text x="7" y={175} fontSize="9" fill="#94a3b8" textAnchor="middle" fontFamily="monospace">
+          <text x="7" y={175} fontSize="11" fill="#94a3b8" textAnchor="middle" fontFamily="monospace">
             Rough
           </text>
-          <text x="7" y={185} fontSize="9" fill="#94a3b8" textAnchor="middle" fontFamily="monospace">
+          <text x="7" y={185} fontSize="11" fill="#94a3b8" textAnchor="middle" fontFamily="monospace">
             Surface
           </text>
         </g>
@@ -1085,10 +1085,10 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
           {/* Interference pattern label for laser */}
           {useLaser && (
             <g>
-              <text x="110" y="-18" fontSize="10" fill="#4ade80" textAnchor="middle" fontWeight="600" fontFamily="monospace">
+              <text x="110" y="-18" fontSize="11" fill="#4ade80" textAnchor="middle" fontWeight="600" fontFamily="monospace">
                 SPECKLE PATTERN
               </text>
-              <text x="110" y="-6" fontSize="8" fill="#22c55e" textAnchor="middle" fontFamily="monospace">
+              <text x="110" y="-6" fontSize="11" fill="#22c55e" textAnchor="middle" fontFamily="monospace">
                 Coherent Interference
               </text>
             </g>
@@ -1097,10 +1097,10 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
           {/* Uniform illumination label for LED */}
           {!useLaser && (
             <g>
-              <text x="110" y="-18" fontSize="10" fill="#fbbf24" textAnchor="middle" fontWeight="600" fontFamily="monospace">
+              <text x="110" y="-18" fontSize="11" fill="#fbbf24" textAnchor="middle" fontWeight="600" fontFamily="monospace">
                 UNIFORM ILLUMINATION
               </text>
-              <text x="110" y="-6" fontSize="8" fill="#f59e0b" textAnchor="middle" fontFamily="monospace">
+              <text x="110" y="-6" fontSize="11" fill="#f59e0b" textAnchor="middle" fontFamily="monospace">
                 No Speckle (Averaging)
               </text>
             </g>
@@ -1109,13 +1109,13 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
 
         {/* ========== AXES AND GRID ========== */}
         {/* X-axis labels */}
-        <text x="30" y="395" fontSize="10" fill="#94a3b8" textAnchor="start">Source</text>
-        <text x="350" y="395" fontSize="10" fill="#94a3b8" textAnchor="middle">X-Position (mm)</text>
-        <text x="680" y="395" fontSize="10" fill="#94a3b8" textAnchor="end">Detector</text>
+        <text x="30" y="395" fontSize="11" fill="#94a3b8" textAnchor="start">Source</text>
+        <text x="350" y="395" fontSize="11" fill="#94a3b8" textAnchor="middle">X-Position (mm)</text>
+        <text x="680" y="395" fontSize="11" fill="#94a3b8" textAnchor="end">Detector</text>
 
         {/* Y-axis labels */}
-        <text x="15" y="50" fontSize="10" fill="#94a3b8" textAnchor="middle" transform="rotate(-90 15 50)">Vertical Height (mm)</text>
-        <text x="15" y="200" fontSize="10" fill="#94a3b8" textAnchor="middle" transform="rotate(-90 15 200)">Y-Position</text>
+        <text x="15" y="50" fontSize="11" fill="#94a3b8" textAnchor="middle" transform="rotate(-90 15 50)">Vertical Height (mm)</text>
+        <text x="15" y="200" fontSize="11" fill="#94a3b8" textAnchor="middle" transform="rotate(-90 15 200)">Y-Position</text>
 
         {/* Tick marks on axes */}
         {[0, 1, 2, 3, 4, 5, 6].map((i) => (
@@ -1289,7 +1289,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
               opacity={0.4 + (i % 4) * 0.2}
             />
           ))}
-          <text x="230" y="135" fontSize="10" fill="#e2e8f0" textAnchor="middle">Speckle?</text>
+          <text x="230" y="135" fontSize="11" fill="#e2e8f0" textAnchor="middle">Speckle?</text>
         </svg>
       </div>
 
@@ -1391,7 +1391,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
             onChange={(e) => {
               setCoherenceLength(Number(e.target.value));
                           }}
-            style={{ width: '100%', accentColor: '#22c55e' }}
+            style={{ width: '100%', accentColor: '#22c55e', touchAction: 'pan-y' }}
           />
         </div>
 
@@ -1409,7 +1409,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
             onChange={(e) => {
               setSurfaceRoughness(Number(e.target.value));
                           }}
-            style={{ width: '100%', accentColor: '#f59e0b' }}
+            style={{ width: '100%', accentColor: '#f59e0b', touchAction: 'pan-y' }}
           />
         </div>
 
@@ -1427,7 +1427,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
             onChange={(e) => {
               setViewpointOffset(Number(e.target.value));
                           }}
-            style={{ width: '100%', accentColor: '#8b5cf6' }}
+            style={{ width: '100%', accentColor: '#8b5cf6', touchAction: 'pan-y' }}
           />
           <p style={{ color: '#64748b', fontSize: '12px', marginTop: '8px' }}>Move to see pattern shift (like moving your head)</p>
         </div>
@@ -1526,18 +1526,18 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
           <rect width="400" height="180" fill="#0f172a" rx="8" />
           {/* Laser */}
           <rect x="20" y="70" width="40" height="40" fill="#475569" rx="4" />
-          <text x="40" y="125" fontSize="10" fill="#e2e8f0" textAnchor="middle">Laser</text>
+          <text x="40" y="125" fontSize="11" fill="#e2e8f0" textAnchor="middle">Laser</text>
           {/* Coherent beam with wave pattern */}
           <rect x="60" y="85" width="100" height="10" fill="url(#reviewBeamGrad)" />
           {[0, 1, 2, 3, 4].map(i => (
             <line key={i} x1={70 + i * 20} y1="82" x2={70 + i * 20} y2="98" stroke="#4ade80" strokeWidth="1" opacity="0.6" />
           ))}
-          <text x="110" y="75" fontSize="8" fill="#4ade80" textAnchor="middle">Same phase</text>
+          <text x="110" y="75" fontSize="11" fill="#4ade80" textAnchor="middle">Same phase</text>
           {/* Rough surface */}
           <rect x="160" y="50" width="15" height="80" fill="#64748b" />
           <path d="M160,55 L175,58 L160,62 L175,68 L160,72 L175,78 L160,82 L175,88 L160,92 L175,98 L160,105 L175,110 L160,118 L175,125" stroke="#94a3b8" strokeWidth="2" fill="none" />
-          <text x="167" y="145" fontSize="8" fill="#e2e8f0" textAnchor="middle">Rough</text>
-          <text x="167" y="155" fontSize="8" fill="#e2e8f0" textAnchor="middle">Surface</text>
+          <text x="167" y="145" fontSize="11" fill="#e2e8f0" textAnchor="middle">Rough</text>
+          <text x="167" y="155" fontSize="11" fill="#e2e8f0" textAnchor="middle">Surface</text>
           {/* Scattered rays */}
           {[30, 45, 60, 75, 90, 105, 120].map((angle, i) => (
             <line
@@ -1564,7 +1564,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
               opacity={0.3 + (i % 5) * 0.15}
             />
           ))}
-          <text x="330" y="165" fontSize="8" fill="#e2e8f0" textAnchor="middle">Speckle Pattern</text>
+          <text x="330" y="165" fontSize="11" fill="#e2e8f0" textAnchor="middle">Speckle Pattern</text>
         </svg>
       </div>
 
@@ -1657,12 +1657,12 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
           {[...Array(8)].map((_, i) => (
             <circle key={i} cx={130 + (i % 3) * 12} cy={28 + Math.floor(i / 3) * 15} r={2 + i % 3} fill="#22c55e" opacity={0.4 + (i % 4) * 0.15} />
           ))}
-          <text x="85" y="85" fontSize="9" fill="#22c55e" textAnchor="middle">Laser</text>
-          <text x="142" y="80" fontSize="8" fill="#e2e8f0" textAnchor="middle">Speckle!</text>
+          <text x="85" y="85" fontSize="11" fill="#22c55e" textAnchor="middle">Laser</text>
+          <text x="142" y="80" fontSize="11" fill="#e2e8f0" textAnchor="middle">Speckle!</text>
 
           {/* Arrow */}
           <text x="175" y="75" fontSize="20" fill="#e2e8f0" textAnchor="middle">→</text>
-          <text x="175" y="95" fontSize="8" fill="#e2e8f0" textAnchor="middle">vs</text>
+          <text x="175" y="95" fontSize="11" fill="#e2e8f0" textAnchor="middle">vs</text>
 
           {/* Flashlight side */}
           <rect x="195" y="30" width="35" height="25" fill="#475569" rx="3" />
@@ -1672,8 +1672,8 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
           {/* Uniform result */}
           <rect x="308" y="15" width="35" height="55" fill="#1e293b" stroke="#475569" rx="3" />
           <rect x="312" y="20" width="27" height="45" fill="#fbbf24" opacity="0.15" />
-          <text x="255" y="85" fontSize="9" fill="#fbbf24" textAnchor="middle">Flashlight</text>
-          <text x="325" y="80" fontSize="8" fill="#e2e8f0" textAnchor="middle">???</text>
+          <text x="255" y="85" fontSize="11" fill="#fbbf24" textAnchor="middle">Flashlight</text>
+          <text x="325" y="80" fontSize="11" fill="#e2e8f0" textAnchor="middle">???</text>
         </svg>
       </div>
 
@@ -1850,8 +1850,8 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
             {[...Array(12)].map((_, i) => (
               <circle key={i} cx={115 + (i % 4) * 13} cy={28 + Math.floor(i / 4) * 15} r={2 + i % 3} fill="#22c55e" opacity={0.4 + (i % 4) * 0.15} />
             ))}
-            <text x="90" y="95" fontSize="10" fill="#22c55e" textAnchor="middle">Coherent</text>
-            <text x="90" y="108" fontSize="10" fill="#22c55e" textAnchor="middle">= Speckle</text>
+            <text x="90" y="95" fontSize="11" fill="#22c55e" textAnchor="middle">Coherent</text>
+            <text x="90" y="108" fontSize="11" fill="#22c55e" textAnchor="middle">= Speckle</text>
           </g>
           {/* Right: Flashlight uniform */}
           <g transform="translate(200, 20)">
@@ -1861,9 +1861,9 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
             <rect x="95" y="25" width="8" height="40" fill="#64748b" />
             <rect x="115" y="15" width="60" height="60" fill="#1e293b" stroke="#fbbf24" strokeWidth="2" rx="4" />
             <rect x="120" y="20" width="50" height="50" fill="#fbbf24" opacity="0.1" />
-            <text x="145" y="50" fontSize="10" fill="#e2e8f0" textAnchor="middle">Uniform</text>
-            <text x="100" y="95" fontSize="10" fill="#fbbf24" textAnchor="middle">Incoherent</text>
-            <text x="100" y="108" fontSize="10" fill="#fbbf24" textAnchor="middle">= Smooth</text>
+            <text x="145" y="50" fontSize="11" fill="#e2e8f0" textAnchor="middle">Uniform</text>
+            <text x="100" y="95" fontSize="11" fill="#fbbf24" textAnchor="middle">Incoherent</text>
+            <text x="100" y="108" fontSize="11" fill="#fbbf24" textAnchor="middle">= Smooth</text>
           </g>
         </svg>
       </div>

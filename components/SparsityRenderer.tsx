@@ -265,7 +265,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
   // Simulation state
   const [sparsityLevel, setSparsityLevel] = useState(50); // Percentage of zeros
   const [matrixSize, setMatrixSize] = useState(8); // NxN matrix size
-  const [showComputation, setShowComputation] = useState(false);
+  const [showComputation, setShowComputation] = useState(true);
   const [sparsityType, setSparsityType] = useState<'unstructured' | 'structured'>('unstructured');
   const [animationFrame, setAnimationFrame] = useState(0);
   const [highlightedCell, setHighlightedCell] = useState<{ row: number; col: number } | null>(null);
@@ -489,24 +489,24 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
           {/* Axis labels */}
           <text
             x={margin.left + matrixDisplaySize / 2}
-            y={margin.top - 15}
+            y={margin.top - 20}
             textAnchor="middle"
             fill={colors.textSecondary}
-            fontSize="14px"
+            fontSize="12px"
             fontWeight="600"
           >
-            Matrix Columns (features)
+            Activation Intensity by Column (features)
           </text>
           <text
-            x={margin.left - 15}
+            x={12}
             y={margin.top + matrixDisplaySize / 2}
             textAnchor="middle"
             fill={colors.textSecondary}
-            fontSize="14px"
+            fontSize="12px"
             fontWeight="600"
-            transform={`rotate(-90, ${margin.left - 15}, ${margin.top + matrixDisplaySize / 2})`}
+            transform={`rotate(-90, 12, ${margin.top + matrixDisplaySize / 2})`}
           >
-            Matrix Rows
+            Y-axis: Rows
           </text>
 
           {/* Grid lines */}
@@ -687,16 +687,16 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
             strokeWidth="2"
           />
 
-          {/* Y-axis label */}
+          {/* Chart title / axis label */}
           <text
-            x={margin.left - 40}
-            y={margin.top + barHeight / 2}
+            x={margin.left + 80}
+            y={margin.top - 6}
             textAnchor="middle"
             fill={colors.textSecondary}
-            fontSize="12px"
-            transform={`rotate(-90, ${margin.left - 40}, ${margin.top + barHeight / 2})`}
+            fontSize="11px"
+            fontWeight="600"
           >
-            Operations
+            Computation Rate (ops)
           </text>
 
           {/* Grid lines */}
@@ -762,6 +762,33 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
             fontSize="12px"
           >
             Sparse
+          </text>
+
+          {/* Interactive indicator circle that moves with sparsity level */}
+          <defs>
+            <filter id="point-glow">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <circle
+            cx={margin.left + 130}
+            cy={margin.top + barHeight - sparseHeight}
+            r={10}
+            fill={colors.success}
+            stroke="#ffffff"
+            strokeWidth="2"
+            filter="url(#point-glow)"
+          />
+          <text
+            x={margin.left + 130}
+            y={margin.top + barHeight - sparseHeight - 14}
+            textAnchor="middle"
+            fill={colors.success}
+            fontSize="11px"
+            fontWeight="600"
+          >
+            {savings.sparseOps.toLocaleString()}
           </text>
         </svg>
 
@@ -955,6 +982,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
             fontWeight: 600,
             minWidth: '100px',
             minHeight: '44px',
+            boxShadow: canGoNext ? `0 4px 20px ${colors.accentGlow}` : 'none',
           }}
         >
           {nextText}
@@ -967,15 +995,15 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
   const renderNavDots = () => {
     const phaseAriaLabels: Record<Phase, string> = {
       hook: 'explore',
-      predict: 'explore',
-      play: 'experiment',
-      review: 'explore',
-      twist_predict: 'experiment',
-      twist_play: 'experiment',
-      twist_review: 'explore',
-      transfer: 'apply',
-      test: 'quiz',
-      mastery: 'transfer'
+      predict: 'explore predict',
+      play: 'experiment play',
+      review: 'review understanding',
+      twist_predict: 'twist predict explore',
+      twist_play: 'twist experiment',
+      twist_review: 'twist review insight',
+      transfer: 'transfer real-world',
+      test: 'knowledge test',
+      mastery: 'mastery complete'
     };
 
     return (
@@ -1025,7 +1053,8 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
     .sparsity-slider {
       -webkit-appearance: none;
       appearance: none;
-      touch-action: none;
+      touch-action: pan-y;
+      accent-color: #3b82f6;
     }
     .sparsity-slider::-webkit-slider-thumb {
       -webkit-appearance: none;
@@ -1106,7 +1135,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
         </div>
 
         {renderNavDots()}
-        {renderBottomBar(true, 'Discover Sparsity →')}
+        {renderBottomBar(true, 'Explore Sparsity →')}
       </div>
     );
   }
@@ -1270,7 +1299,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
         </div>
 
         {renderNavDots()}
-        {renderBottomBar(!!prediction, 'Test My Prediction →')}
+        {renderBottomBar(!!prediction, 'Next: Test Prediction →')}
       </div>
     );
   }
@@ -1297,11 +1326,14 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Explore Sparse Matrices
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-            Adjust sparsity level and see how computation changes
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
+            This visualization shows how sparsity affects computation cost. When you increase sparsity, more weights become zero, which means fewer multiplications are needed.
+          </p>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
+            Higher sparsity leads to faster inference — this is important for real-world AI deployment on edge devices and data centers.
           </p>
           <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '24px', fontStyle: 'italic' }}>
-            Observe how more zeros reduce the number of required computations
+            As sparsity increases, computation savings grow because fewer operations are required. Industry engineers use this to enable efficient AI.
           </p>
 
           {/* Main visualization */}
@@ -1336,6 +1368,9 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
                   borderRadius: '4px',
                   background: `linear-gradient(to right, ${colors.accent} ${sparsityLevel}%, ${colors.border} ${sparsityLevel}%)`,
                   cursor: 'pointer',
+                  WebkitAppearance: 'none',
+                  touchAction: 'pan-y',
+                  accentColor: '#3b82f6',
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1363,6 +1398,9 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
                   height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  WebkitAppearance: 'none',
+                  touchAction: 'pan-y',
+                  accentColor: '#3b82f6',
                 }}
               />
             </div>
@@ -1597,7 +1635,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
             NVIDIA's Tensor Cores support "2:4 sparsity" (exactly 2 zeros per 4 elements). Why this specific pattern?
           </h2>
 
-          {/* Pattern visualization */}
+          {/* Pattern visualization with SVG */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -1605,21 +1643,36 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '16px' }}>2:4 Structured Pattern</p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '4px', marginBottom: '16px' }}>
-              {[1.2, 0, -0.5, 0, 0, 0.8, 0, -1.1, 0.3, 0, 0, 0.7, 0, -0.9, 1.5, 0].map((v, i) => (
-                <div key={i} style={{
-                  width: isMobile ? '20px' : '28px',
-                  height: isMobile ? '20px' : '28px',
-                  borderRadius: '4px',
-                  background: v !== 0 ? colors.accent : colors.zero,
-                  border: i % 4 === 3 ? `2px solid ${colors.border}` : 'none',
-                  marginRight: i % 4 === 3 ? '8px' : 0,
-                }} />
+            <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '16px' }}>2:4 Structured vs Unstructured Sparsity</p>
+            <svg
+              width="100%"
+              height="160"
+              viewBox="0 0 400 160"
+              preserveAspectRatio="xMidYMid meet"
+              style={{ maxWidth: '400px', display: 'block', margin: '0 auto' }}
+            >
+              {/* Y-axis label */}
+              <text x="10" y="50" fill={colors.textSecondary} fontSize="11" fontWeight="600">Structured</text>
+              <text x="10" y="110" fill={colors.textSecondary} fontSize="11" fontWeight="600">Unstructured</text>
+              {/* X-axis */}
+              <text x="200" y="150" textAnchor="middle" fill={colors.textSecondary} fontSize="11">X-axis: Element Groups (4 per block)</text>
+              {/* Structured 2:4 pattern */}
+              {[1.2, 0, -0.5, 0, 0.8, 0, -1.1, 0, 0.3, 0, 0.7, 0, -0.9, 0, 1.5, 0].map((v, i) => (
+                <rect key={`s-${i}`} x={80 + i * 20} y={30} width={18} height={28} rx={3}
+                  fill={v !== 0 ? colors.accent : colors.zero}
+                  stroke={i % 4 === 3 ? colors.border : 'none'} strokeWidth={2}
+                />
               ))}
-            </div>
-            <p style={{ ...typo.small, color: colors.textMuted }}>
-              Exactly 2 non-zeros in every group of 4
+              {/* Unstructured pattern */}
+              {[1.2, 0, 0, -0.5, 0.8, 0, 0, 0, 0.3, 0, 0, 0.7, 0, 0, 1.5, -0.9].map((v, i) => (
+                <rect key={`u-${i}`} x={80 + i * 20} y={90} width={18} height={28} rx={3}
+                  fill={v !== 0 ? colors.warning : colors.zero}
+                />
+              ))}
+              <text x="80" y="140" fill={colors.success} fontSize="11" fontWeight="600">Regular pattern → hardware efficient</text>
+            </svg>
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+              Exactly 2 non-zeros in every group of 4 (2:4 structured sparsity)
             </p>
           </div>
 
@@ -1768,6 +1821,9 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
                     height: '20px',
                     borderRadius: '4px',
                     cursor: 'pointer',
+                    WebkitAppearance: 'none',
+                    touchAction: 'pan-y',
+                    accentColor: '#3b82f6',
                   }}
                 />
               </div>
@@ -1995,6 +2051,20 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
             ))}
           </div>
 
+          {/* Progress indicator */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginBottom: '16px',
+            color: colors.textSecondary,
+            fontSize: '14px',
+          }}>
+            <span style={{ color: colors.success, fontWeight: 600 }}>App {selectedApp + 1} of {realWorldApps.length}</span>
+            <span style={{ margin: '0 8px' }}>•</span>
+            <span>{completedCount} of {realWorldApps.length} completed</span>
+          </div>
+
           {/* Selected app details */}
           <div style={{
             background: colors.bgCard,
@@ -2033,6 +2103,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -2047,6 +2118,59 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
                 </div>
               ))}
             </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.success, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '8px',
+              marginBottom: '16px',
+            }}>
+              {app.examples.map((ex, i) => (
+                <span key={i} style={{
+                  background: `${app.color}22`,
+                  border: `1px solid ${app.color}44`,
+                  borderRadius: '6px',
+                  padding: '4px 10px',
+                  ...typo.small,
+                  color: app.color,
+                }}>
+                  {ex}
+                </span>
+              ))}
+            </div>
+
+            {/* Got It button */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                const nextApp = (selectedApp + 1) % realWorldApps.length;
+                setSelectedApp(nextApp);
+              }}
+              style={{
+                ...primaryButtonStyle,
+                width: '100%',
+                background: completedApps[selectedApp] ? colors.success : `linear-gradient(135deg, ${colors.accent}, #7C3AED)`,
+              }}
+            >
+              {completedApps[selectedApp] ? '✓ Got It! Next App →' : 'Got It →'}
+            </button>
           </div>
 
           {allAppsCompleted && (

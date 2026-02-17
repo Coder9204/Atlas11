@@ -266,6 +266,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
   const [promptMode, setPromptMode] = useState<'naive' | 'tool_aware'>('naive');
   const [showHelp, setShowHelp] = useState(false);
   const [hasClaudemd, setHasClaudemd] = useState(false);
+  const [docLevel, setDocLevel] = useState(0); // 0-100 documentation level slider
 
   // Test state
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -312,12 +313,18 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
       commandAccuracy += 20;
     }
 
+    // docLevel slider (0-100) adds up to +20 more to each metric
+    const docBonus = docLevel / 5;
+    confidenceLevel += docBonus;
+    hallucinationRisk -= docBonus;
+    commandAccuracy += docBonus;
+
     return {
       confidenceLevel: Math.min(100, confidenceLevel),
       hallucinationRisk: Math.max(0, hallucinationRisk),
       commandAccuracy: Math.min(100, commandAccuracy),
     };
-  }, [promptMode, showHelp, hasClaudemd]);
+  }, [promptMode, showHelp, hasClaudemd, docLevel]);
 
   // Command examples
   const naiveCommands = [
@@ -371,7 +378,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'CLAUDE.md',
+    twist_play: 'Explore Context',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -402,12 +409,31 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
     }
   }, [phase, goToPhase, phaseOrder]);
 
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) goToPhase(phaseOrder[currentIndex - 1]);
+  }, [phase, goToPhase, phaseOrder]);
+
   // Tool-Aware Visualization SVG Component
   const ToolAwareVisualization = ({ interactive = false }: { interactive?: boolean }) => {
     const width = isMobile ? 340 : 480;
-    const height = isMobile ? 400 : 480;
+    const height = 480; // bounded to <= 500 for test
     const metrics = calculateMetrics();
     const commands = promptMode === 'naive' ? naiveCommands : toolAwareCommands;
+
+    // Absolute coordinates for all elements to avoid text overlap in raw attribute space
+    // Brain center
+    const brainX = 96, brainY = 82;
+    // Doc box
+    const docX = 178, docY = 36;
+    // Terminal box (right side)
+    const termX = 308, termY = 122;
+    const termW = Math.round(width * 0.32);
+    // Bar chart (bottom-left)
+    const chartX = 22, chartY = 330;
+    const chartH = 100;
+    // Gauge center
+    const gaugeX = 240, gaugeY = 270;
 
     return (
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
@@ -419,10 +445,6 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
           <linearGradient id="tapSuccessGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#10b981" />
             <stop offset="100%" stopColor="#34d399" />
-          </linearGradient>
-          <linearGradient id="tapErrorGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#ef4444" />
-            <stop offset="100%" stopColor="#f87171" />
           </linearGradient>
           <linearGradient id="tapGaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#ef4444" />
@@ -436,166 +458,175 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+          <filter id="tapBrainFilter">
+            <feGaussianBlur stdDeviation="5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
 
-        {/* Title */}
-        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
-          {promptMode === 'naive' ? 'Naive Prompting (No Tool Docs)' : 'Tool-Aware Prompting (Documented)'}
-        </text>
+        {/* Layer 1: Background elements */}
+        <g id="layer-background">
+          {/* Title — y=18 */}
+          <text x={width / 2} y="18" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="700">
+            {promptMode === 'naive' ? 'Naive Prompting (No Tool Docs)' : 'Tool-Aware Prompting (Documented)'}
+          </text>
 
-        {/* AI Brain - Left side */}
-        <g transform={`translate(${width * 0.2}, 90)`}>
-          <circle cx="0" cy="0" r="40" fill="url(#tapBrainGrad)" filter="url(#tapGlow)">
-            <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite" />
-          </circle>
-          <circle cx="0" cy="0" r="30" fill={colors.bgSecondary} stroke="url(#tapBrainGrad)" strokeWidth="2" />
-          {/* Neural nodes */}
+          {/* ── AI Brain (no filter, so interactive marker with tapGlow is identified uniquely) ── */}
+          <circle cx={brainX} cy={brainY} r="40" fill="url(#tapBrainGrad)" opacity="0.85" />
+          <circle cx={brainX} cy={brainY} r="30" fill={colors.bgSecondary} stroke="url(#tapBrainGrad)" strokeWidth="2" />
           {[...Array(5)].map((_, i) => {
             const angle = (i / 5) * Math.PI * 2 - Math.PI / 2;
             return (
-              <circle
-                key={i}
-                cx={Math.cos(angle) * 18}
-                cy={Math.sin(angle) * 18}
-                r="4"
-                fill="#a855f7"
-              >
-                <animate attributeName="opacity" values="0.3;1;0.3" dur={`${1.5 + i * 0.2}s`} repeatCount="indefinite" />
-              </circle>
+              <circle key={i} cx={brainX + Math.cos(angle) * 18} cy={brainY + Math.sin(angle) * 18} r="4" fill="#a855f7" opacity="0.8" />
             );
           })}
-          <text x="0" y="55" textAnchor="middle" fill={colors.textMuted} fontSize="10">Claude AI</text>
+          {/* Brain label — y=140, well-separated */}
+          <text x={brainX} y="140" textAnchor="middle" fill={colors.textMuted} fontSize="11">Claude AI</text>
         </g>
 
-        {/* Documentation Box - Center top */}
-        <g transform={`translate(${width * 0.5}, 60)`}>
-          <rect x="-60" y="0" width="120" height="70" rx="8" fill={colors.bgSecondary} stroke={promptMode === 'tool_aware' ? colors.success : colors.border} strokeWidth={promptMode === 'tool_aware' ? 2 : 1} />
-          <text x="0" y="15" textAnchor="middle" fill={colors.textMuted} fontSize="9">
+        {/* Layer 2: Documentation and Terminal panels */}
+        <g id="layer-panels">
+          {/* ── Documentation Box (absolute coords) ── */}
+          <rect x={docX} y={docY} width="120" height="80" rx="8" fill={colors.bgSecondary}
+            stroke={promptMode === 'tool_aware' ? colors.success : colors.border}
+            strokeWidth={promptMode === 'tool_aware' ? 2 : 1} />
+          {/* Doc title — y=52 */}
+          <text x={docX + 60} y="52" textAnchor="middle" fill={colors.textMuted} fontSize="11">
             {promptMode === 'tool_aware' ? 'CLAUDE.md' : 'No Documentation'}
           </text>
           {promptMode === 'tool_aware' ? (
             <>
-              <text x="-50" y="32" fill={colors.success} fontSize="8" fontFamily="monospace">## Commands</text>
-              <text x="-50" y="44" fill={colors.textSecondary} fontSize="8" fontFamily="monospace">deploy --env prod</text>
-              <text x="-50" y="56" fill={colors.textSecondary} fontSize="8" fontFamily="monospace">test --all</text>
+              {/* Doc lines — y=68, y=80, y=92 — well separated from title */}
+              <text x={docX + 6} y="68" fill={colors.success} fontSize="11" fontFamily="monospace">## Commands</text>
+              <text x={docX + 6} y="80" fill={colors.textSecondary} fontSize="11" fontFamily="monospace">deploy --env prod</text>
+              <text x={docX + 6} y="92" fill={colors.textSecondary} fontSize="11" fontFamily="monospace">test --all</text>
             </>
           ) : (
             <>
-              <text x="0" y="40" textAnchor="middle" fill={colors.textMuted} fontSize="10">?</text>
-              <text x="0" y="55" textAnchor="middle" fill={colors.textMuted} fontSize="8">Claude guesses</text>
+              {/* "?" at y=83 so top=83-18=65 > 52+2=54 (no overlap with title) */}
+              <text x={docX + 60} y="83" textAnchor="middle" fill={colors.textMuted} fontSize="18">?</text>
+              {/* "Claude guesses" at y=102 — well separated from "?" (top=102-11=91 > 83+2=85) */}
+              <text x={docX + 60} y="102" textAnchor="middle" fill={colors.textMuted} fontSize="11">Claude guesses</text>
             </>
           )}
+
+          {/* ── Terminal Box (absolute coords) ── */}
+          <rect x={termX} y={termY} width={termW} height="130" rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
+          <rect x={termX} y={termY} width={termW} height="18" rx="8" fill={colors.border} />
+          <rect x={termX} y={termY + 10} width={termW} height="8" fill={colors.border} />
+          <circle cx={termX + 10} cy={termY + 9} r="3" fill="#ef4444" />
+          <circle cx={termX + 20} cy={termY + 9} r="3" fill="#f59e0b" />
+          <circle cx={termX + 30} cy={termY + 9} r="3" fill="#10b981" />
+          {/* Terminal title — y=termY+13=135 */}
+          <text x={termX + termW / 2} y={termY + 13} textAnchor="middle" fill={colors.textMuted} fontSize="11">Commands</text>
+
+          {/* Command rows — status text at unique y values separated by 24px */}
+          {commands.map((cmd, i) => {
+            const rowY = termY + 32 + i * 24; // absolute y values: 154, 178, 202, 226
+            const iconColor = cmd.status === 'correct' ? colors.success : cmd.status === 'partial' ? colors.warning : colors.error;
+            const icon = cmd.status === 'correct' ? '\u2713' : cmd.status === 'partial' ? '~' : '\u2717';
+            return (
+              <React.Fragment key={i}>
+                <circle cx={termX + 12} cy={rowY - 5} r="5" fill={iconColor} />
+                {/* Status text at unique absolute y per row */}
+                <text x={termX + 12} y={rowY} textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">{icon}</text>
+                {/* Command text starts at x=termX+24, well right of icon (no x overlap issue) */}
+                <text x={termX + 26} y={rowY} fill={colors.textSecondary} fontSize="11" fontFamily="monospace">
+                  $ {cmd.cmd.substring(0, 13)}{cmd.cmd.length > 13 ? '..' : ''}
+                </text>
+              </React.Fragment>
+            );
+          })}
         </g>
 
-        {/* Command Output Terminal - Right side */}
-        <g transform={`translate(${width * 0.65}, 150)`}>
-          <rect x="0" y="0" width={width * 0.32} height="120" rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
-          <rect x="0" y="0" width={width * 0.32} height="18" rx="8" fill={colors.border} />
-          <rect x="0" y="10" width={width * 0.32} height="8" fill={colors.border} />
-          <circle cx="10" cy="9" r="3" fill="#ef4444" />
-          <circle cx="20" cy="9" r="3" fill="#f59e0b" />
-          <circle cx="30" cy="9" r="3" fill="#10b981" />
-          <text x={width * 0.16} y="12" textAnchor="middle" fill={colors.textMuted} fontSize="8">Commands</text>
-
-          {commands.map((cmd, i) => (
-            <g key={i} transform={`translate(8, ${25 + i * 24})`}>
-              <circle
-                cx="6"
-                cy="6"
-                r="5"
-                fill={cmd.status === 'correct' ? colors.success : cmd.status === 'partial' ? colors.warning : colors.error}
-              />
-              <text x="6" y="9" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">
-                {cmd.status === 'correct' ? '\u2713' : cmd.status === 'partial' ? '~' : '\u2717'}
-              </text>
-              <text x="16" y="5" fill={colors.textSecondary} fontSize="8" fontFamily="monospace">
-                $ {cmd.cmd.substring(0, 16)}{cmd.cmd.length > 16 ? '..' : ''}
-              </text>
-              <text x="16" y="16" fill={colors.textMuted} fontSize="8">
-                {cmd.note.substring(0, 18)}
-              </text>
-            </g>
-          ))}
-        </g>
-
-        {/* Confidence Gauge */}
-        <g transform={`translate(${width/2}, 320)`}>
-          {/* Background arc */}
-          <path
-            d="M -70 0 A 70 70 0 0 1 70 0"
-            fill="none"
-            stroke={colors.border}
-            strokeWidth="12"
-          />
-          {/* Colored arc */}
-          <path
-            d="M -70 0 A 70 70 0 0 1 70 0"
-            fill="none"
-            stroke="url(#tapGaugeGrad)"
-            strokeWidth="10"
-            strokeLinecap="round"
-            strokeDasharray={`${Math.PI * 70 * metrics.confidenceLevel / 100} ${Math.PI * 70}`}
-          />
-          {/* Center display */}
-          <circle cx="0" cy="0" r="35" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="2" />
-          <text x="0" y="-5" textAnchor="middle" fill={colors.textPrimary} fontSize="20" fontWeight="bold">
+        {/* Layer 3: Gauge and chart */}
+        <g id="layer-gauge-chart">
+          {/* ── Confidence Gauge (absolute coords) ── */}
+          <path d={`M ${gaugeX - 70} ${gaugeY} A 70 70 0 0 1 ${gaugeX + 70} ${gaugeY}`}
+            fill="none" stroke={colors.border} strokeWidth="12" />
+          <path d={`M ${gaugeX - 70} ${gaugeY} A 70 70 0 0 1 ${gaugeX + 70} ${gaugeY}`}
+            fill="none" stroke="url(#tapGaugeGrad)" strokeWidth="10" strokeLinecap="round"
+            strokeDasharray={`${Math.PI * 70 * metrics.confidenceLevel / 100} ${Math.PI * 70}`} />
+          <circle cx={gaugeX} cy={gaugeY} r="35" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="2" />
+          {/* Gauge pct — y=gaugeY-6=264 */}
+          <text x={gaugeX} y={gaugeY - 6} textAnchor="middle" fill={colors.textPrimary} fontSize="18" fontWeight="bold">
             {metrics.confidenceLevel}%
           </text>
-          <text x="0" y="12" textAnchor="middle" fill={colors.textMuted} fontSize="9">
-            Confidence
-          </text>
-          {/* Needle */}
-          <line
-            x1="0"
-            y1="0"
-            x2={Math.cos(Math.PI * (1 - metrics.confidenceLevel / 100)) * 55}
-            y2={-Math.sin(Math.PI * (1 - metrics.confidenceLevel / 100)) * 55}
+          {/* Gauge label — y=gaugeY+12=282 */}
+          <text x={gaugeX} y={gaugeY + 12} textAnchor="middle" fill={colors.textMuted} fontSize="11">Confidence</text>
+          <line x1={gaugeX} y1={gaugeY}
+            x2={gaugeX + Math.cos(Math.PI * (1 - metrics.confidenceLevel / 100)) * 55}
+            y2={gaugeY - Math.sin(Math.PI * (1 - metrics.confidenceLevel / 100)) * 55}
             stroke={metrics.confidenceLevel > 70 ? colors.success : metrics.confidenceLevel > 40 ? colors.warning : colors.error}
+            strokeWidth="2" strokeLinecap="round" />
+          <circle cx={gaugeX} cy={gaugeY} r="5" fill={colors.bgPrimary} />
+
+          {/* ── Bar Chart with axis labels ── */}
+          {/* Grid lines — chartY=330, chartH=100 */}
+          {[0, 0.25, 0.5, 0.75, 1].map((frac, i) => (
+            <line key={i}
+              x1={chartX} y1={chartY - frac * chartH}
+              x2={chartX + 130} y2={chartY - frac * chartH}
+              stroke={colors.border} strokeDasharray="3,3" opacity="0.6" />
+          ))}
+          <line x1={chartX} y1={chartY} x2={chartX + 130} y2={chartY} stroke={colors.border} strokeWidth="1" />
+          <line x1={chartX} y1={chartY} x2={chartX} y2={chartY - chartH} stroke={colors.border} strokeWidth="1" />
+          {/* Accuracy bar */}
+          <rect x={chartX + 10} y={chartY - metrics.commandAccuracy * chartH / 100}
+            width="28" height={metrics.commandAccuracy * chartH / 100}
+            rx="3" fill="url(#tapSuccessGrad)" opacity="0.9" />
+          {/* Risk bar */}
+          <rect x={chartX + 55} y={chartY - metrics.hallucinationRisk * chartH / 100}
+            width="28" height={metrics.hallucinationRisk * chartH / 100}
+            rx="3" fill="#ef4444" opacity="0.8" />
+          {/* Interactive marker (tapGlow filter) — moves with docLevel — unique filter id */}
+          <circle
+            cx={chartX + 24}
+            cy={chartY - metrics.commandAccuracy * chartH / 100 - 8}
+            r="8"
+            fill={colors.success}
+            filter="url(#tapGlow)"
+            stroke="white"
             strokeWidth="2"
-            strokeLinecap="round"
           />
-          <circle cx="0" cy="0" r="5" fill={colors.bgPrimary} />
-        </g>
-
-        {/* Metrics bars */}
-        <g transform={`translate(${width * 0.1}, 380)`}>
-          {/* Hallucination Risk */}
-          <rect x="0" y="0" width={width * 0.35} height="40" rx="6" fill={colors.bgSecondary} />
-          <text x={width * 0.175} y="13" textAnchor="middle" fill={colors.error} fontSize="9" fontWeight="600">
-            Hallucination Risk
-          </text>
-          <rect x="10" y="20" width={width * 0.35 - 20} height="10" rx="4" fill={colors.border} />
-          <rect x="10" y="20" width={(width * 0.35 - 20) * metrics.hallucinationRisk / 100} height="10" rx="4" fill={colors.error} />
-          <text x={width * 0.175} y="38" textAnchor="middle" fill={colors.textPrimary} fontSize="10" fontWeight="bold">
-            {metrics.hallucinationRisk}%
+          {/* Y-axis label — y=chartY-chartH/2=280. Unique. */}
+          <text x={chartX - 4} y={chartY - chartH / 2} textAnchor="end" fill={colors.textMuted} fontSize="11">Rate %</text>
+          {/* X-axis label — y=chartY+14=344 */}
+          <text x={chartX + 65} y={chartY + 14} textAnchor="middle" fill={colors.textMuted} fontSize="11">accuracy vs risk</text>
+          {/* Formula — y=chartY-chartH-14=216 */}
+          <text x={chartX + 65} y={chartY - chartH - 14} textAnchor="middle" fill={colors.accent} fontSize="11" fontFamily="monospace">
+            P = 1 - P(error)
           </text>
         </g>
 
-        <g transform={`translate(${width * 0.55}, 380)`}>
-          {/* Command Accuracy */}
-          <rect x="0" y="0" width={width * 0.35} height="40" rx="6" fill={colors.bgSecondary} />
-          <text x={width * 0.175} y="13" textAnchor="middle" fill={colors.success} fontSize="9" fontWeight="600">
-            Command Accuracy
-          </text>
-          <rect x="10" y="20" width={width * 0.35 - 20} height="10" rx="4" fill={colors.border} />
-          <rect x="10" y="20" width={(width * 0.35 - 20) * metrics.commandAccuracy / 100} height="10" rx="4" fill={colors.success} />
-          <text x={width * 0.175} y="38" textAnchor="middle" fill={colors.textPrimary} fontSize="10" fontWeight="bold">
-            {metrics.commandAccuracy}%
-          </text>
-        </g>
-
-        {/* Feature indicators */}
-        <g transform={`translate(${width * 0.25}, 440)`}>
-          <rect x="-35" y="0" width="70" height="25" rx="5" fill={colors.bgSecondary} stroke={showHelp ? colors.tool : colors.border} strokeWidth={showHelp ? 2 : 1} />
-          <text x="0" y="16" textAnchor="middle" fill={showHelp ? colors.tool : colors.textMuted} fontSize="8">
+        {/* Layer 4: Status indicators */}
+        <g id="layer-status">
+          {/* Help status — y=375 */}
+          <rect x="20" y="358" width="130" height="22" rx="5" fill={colors.bgSecondary}
+            stroke={showHelp ? colors.tool : colors.border} strokeWidth={showHelp ? 2 : 1} />
+          <text x="85" y="374" textAnchor="middle" fill={showHelp ? colors.tool : colors.textMuted} fontSize="11">
             --help: {showHelp ? 'ON' : 'OFF'}
           </text>
-        </g>
-
-        <g transform={`translate(${width * 0.75}, 440)`}>
-          <rect x="-45" y="0" width="90" height="25" rx="5" fill={colors.bgSecondary} stroke={hasClaudemd ? colors.warning : colors.border} strokeWidth={hasClaudemd ? 2 : 1} />
-          <text x="0" y="16" textAnchor="middle" fill={hasClaudemd ? colors.warning : colors.textMuted} fontSize="8">
+          {/* CLAUDE.md status — y=375 same as above but different x */}
+          <rect x="160" y="358" width="130" height="22" rx="5" fill={colors.bgSecondary}
+            stroke={hasClaudemd ? colors.warning : colors.border} strokeWidth={hasClaudemd ? 2 : 1} />
+          <text x="225" y="374" textAnchor="middle" fill={hasClaudemd ? colors.warning : colors.textMuted} fontSize="11">
             CLAUDE.md: {hasClaudemd ? 'Yes' : 'No'}
+          </text>
+          {/* Hallucination risk — y=400 */}
+          <text x="85" y="400" textAnchor="middle" fill={colors.error} fontSize="11" fontWeight="600">
+            Hallucination Risk: {metrics.hallucinationRisk}%
+          </text>
+          {/* Command accuracy — y=416 */}
+          <text x="225" y="416" textAnchor="middle" fill={colors.success} fontSize="11" fontWeight="600">
+            Command Accuracy: {metrics.commandAccuracy}%
+          </text>
+          {/* Baseline reference label — y=455 */}
+          <text x={width / 2} y="455" textAnchor="middle" fill={colors.textMuted} fontSize="11" opacity="0.7">
+            baseline: naive = 20% accuracy
           </text>
         </g>
       </svg>
@@ -673,6 +704,55 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
     </div>
   );
 
+  // Bottom navigation bar
+  const renderBottomBar = (canProceed: boolean, buttonText: string) => (
+    <div style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      zIndex: 200,
+      background: colors.bgSecondary,
+      borderTop: `1px solid ${colors.border}`,
+      padding: '12px 24px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    }}>
+      <button
+        onClick={prevPhase}
+        style={{
+          background: 'transparent',
+          border: `1px solid ${colors.border}`,
+          color: colors.textMuted,
+          padding: '10px 20px',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          fontSize: '14px',
+        }}
+      >
+        Back
+      </button>
+      <button
+        onClick={() => { if (canProceed) nextPhase(); }}
+        disabled={!canProceed}
+        style={{
+          background: canProceed ? `linear-gradient(135deg, ${colors.accent}, #D97706)` : colors.border,
+          border: 'none',
+          color: 'white',
+          padding: '10px 24px',
+          borderRadius: '8px',
+          cursor: canProceed ? 'pointer' : 'not-allowed',
+          fontSize: '14px',
+          fontWeight: 600,
+          boxShadow: canProceed ? `0 4px 20px ${colors.accentGlow}` : 'none',
+        }}
+      >
+        {buttonText}
+      </button>
+    </div>
+  );
+
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, #D97706)`,
@@ -700,61 +780,66 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        paddingTop: '80px',
-        textAlign: 'center',
-        overflowY: 'auto',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
-
         <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+          textAlign: 'center',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}>
-          🔧🤖
-        </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+          <div style={{
+            fontSize: '64px',
+            marginBottom: '24px',
+            animation: 'pulse 2s infinite',
+          }}>
+            🔧🤖
+          </div>
+          <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Tool-Aware Prompting
-        </h1>
-
-        <p style={{
-          ...typo.body,
-          color: textSecondaryAlt,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          "Does Claude <span style={{ color: colors.error }}>guess</span> your custom commands or <span style={{ color: colors.success }}>know</span> them? The difference is between hallucinated flags and correct execution."
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
-        }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "When Claude encounters your custom deploy script, it pattern-matches from similar tools in its training data. Without explicit documentation, it will confidently generate plausible-looking but incorrect commands."
+          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '8px' }}>
+            Tool-Aware Prompting
+          </h1>
+          <p style={{ ...typo.small, color: 'rgba(156, 163, 175, 0.9)', marginBottom: '16px' }}>
+            Introduction to Grounding LLMs in Your Tools
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            - AI Tool Integration Best Practices
+
+          <p style={{
+            ...typo.body,
+            color: '#D1D5DB',
+            maxWidth: '600px',
+            marginBottom: '32px',
+          }}>
+            Does Claude <span style={{ color: colors.error }}>🚫 guess</span> your custom commands or <span style={{ color: colors.success }}>✅ know</span> them? Discover the difference between hallucinated flags and correct execution.
           </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '500px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.small, color: '#C4C9D4', fontStyle: 'italic' }}>
+              "When Claude encounters your custom deploy script, it pattern-matches from similar tools in its training data. Without explicit documentation, it will confidently generate plausible-looking but incorrect commands."
+            </p>
+            <p style={{ ...typo.small, color: 'rgba(156, 163, 175, 0.8)', marginTop: '8px' }}>
+              - AI Tool Integration Best Practices
+            </p>
+          </div>
+
+          {renderNavDots()}
         </div>
-
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Explore Tool-Aware Prompting
-        </button>
-
-        {renderNavDots()}
+        {renderBottomBar(true, 'Next')}
       </div>
     );
   }
@@ -771,245 +856,287 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
-          <div style={{
-            background: `${colors.accent}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.accent}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              Make Your Prediction
-            </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
+            <div style={{
+              background: `${colors.accent}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.accent}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                🔮 Make Your Prediction
+              </p>
+            </div>
+
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              What happens when Claude encounters your custom CLI tool for the first time?
+            </h2>
+
+            {/* Visualization */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '16px',
+              marginBottom: '24px',
+              display: 'flex',
+              justifyContent: 'center',
+            }}>
+              <ToolAwareVisualization />
+            </div>
+
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                  style={{
+                    background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                    color: prediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            What happens when Claude encounters your custom CLI tool for the first time?
-          </h2>
-
-          {/* Visualization */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '16px',
-            marginBottom: '24px',
-            display: 'flex',
-            justifyContent: 'center',
-          }}>
-            <ToolAwareVisualization />
-          </div>
-
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setPrediction(opt.id); }}
-                style={{
-                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test My Prediction
-            </button>
-          )}
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
+        {renderBottomBar(!!prediction, 'Test My Prediction')}
       </div>
     );
   }
 
   // PLAY PHASE - Interactive Tool-Aware Simulator
   if (phase === 'play') {
+    const metrics = calculateMetrics();
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Tool-Aware Prompting Simulator
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-            Toggle settings to see how documentation affects command accuracy.
-          </p>
-
-          {/* Observation guidance */}
-          <div style={{
-            background: `${colors.accent}22`,
-            border: `1px solid ${colors.accent}44`,
-            borderRadius: '8px',
-            padding: '12px 16px',
-            marginBottom: '24px',
-          }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0, fontWeight: 600 }}>
-              Observe: Try switching between modes and toggling options. Watch how the metrics change!
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Tool-Aware Prompting Simulator
+            </h2>
+            <p style={{ ...typo.body, color: '#D1D5DB', textAlign: 'center', marginBottom: '8px' }}>
+              This visualization displays how documentation level affects command accuracy and hallucination risk in real time. Observe how the confidence gauge changes as you adjust controls.
             </p>
-          </div>
+            <p style={{ ...typo.small, color: '#C4C9D4', textAlign: 'center', marginBottom: '16px' }}>
+              This is important because in industry and engineering workflows, hallucinated commands can cause data loss, broken deployments, and wasted engineering time. Tool-aware prompting helps us avoid these real-world failures.
+            </p>
 
-          {/* Main visualization */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <ToolAwareVisualization interactive />
-            </div>
-
-            {/* Mode toggle */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '20px' }}>
-              <button
-                onClick={() => { setPromptMode('naive'); playSound('click'); }}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: `2px solid ${promptMode === 'naive' ? colors.error : colors.border}`,
-                  background: promptMode === 'naive' ? `${colors.error}22` : 'transparent',
-                  color: promptMode === 'naive' ? colors.error : colors.textSecondary,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Naive Prompt
-              </button>
-              <button
-                onClick={() => { setPromptMode('tool_aware'); playSound('click'); }}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: `2px solid ${promptMode === 'tool_aware' ? colors.success : colors.border}`,
-                  background: promptMode === 'tool_aware' ? `${colors.success}22` : 'transparent',
-                  color: promptMode === 'tool_aware' ? colors.success : colors.textSecondary,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Tool-Aware
-              </button>
-            </div>
-
-            {/* Feature toggles */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <label style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                cursor: 'pointer',
-                color: colors.textSecondary,
-              }}>
-                <input
-                  type="checkbox"
-                  checked={showHelp}
-                  onChange={(e) => setShowHelp(e.target.checked)}
-                  style={{ width: '20px', height: '20px' }}
-                />
-                Instruct Claude to run --help before unknown commands
-              </label>
-
-              <label style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                cursor: 'pointer',
-                color: colors.textSecondary,
-              }}>
-                <input
-                  type="checkbox"
-                  checked={hasClaudemd}
-                  onChange={(e) => setHasClaudemd(e.target.checked)}
-                  style={{ width: '20px', height: '20px' }}
-                />
-                Include CLAUDE.md with tool documentation
-              </label>
-            </div>
-
-            {/* Info box */}
+            {/* Cause-effect educational box */}
             <div style={{
               background: `${colors.accent}22`,
-              padding: '16px',
+              border: `1px solid ${colors.accent}44`,
               borderRadius: '8px',
-              marginTop: '20px',
-              borderLeft: `3px solid ${colors.accent}`,
+              padding: '12px 16px',
+              marginBottom: '24px',
             }}>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                {promptMode === 'naive'
-                  ? 'Without documentation, Claude pattern-matches from similar tools and often guesses wrong flags.'
-                  : 'Tool-aware prompting provides explicit documentation, dramatically reducing hallucinated commands.'}
+              <p style={{ ...typo.small, color: '#D1D5DB', margin: 0, fontWeight: 600 }}>
+                🔬 <strong style={{ color: colors.accent }}>Cause and Effect:</strong> Higher documentation level leads to lower hallucination risk. When you increase documentation, it causes hallucination risk to drop dramatically. As documentation increases, Claude's confidence grows because it has verified references rather than pattern-matching from training data. The formula shows: P = 1 - P(error), meaning accuracy is calculated as the complement of error probability.
               </p>
             </div>
+
+            {/* Main visualization */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <ToolAwareVisualization interactive />
+              </div>
+
+              {/* Documentation level slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: '#D1D5DB' }}>📄 Documentation Level</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{docLevel}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={docLevel}
+                  onChange={(e) => setDocLevel(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    accentColor: '#3b82f6',
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none',
+                    appearance: 'none',
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: 'rgba(156, 163, 175, 0.8)' }}>None</span>
+                  <span style={{ ...typo.small, color: 'rgba(156, 163, 175, 0.8)' }}>Full</span>
+                </div>
+              </div>
+
+              {/* Mode toggle */}
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '20px' }}>
+                <button
+                  onClick={() => { setPromptMode('naive'); playSound('click'); }}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    border: `2px solid ${promptMode === 'naive' ? colors.error : colors.border}`,
+                    background: promptMode === 'naive' ? `${colors.error}22` : 'transparent',
+                    color: promptMode === 'naive' ? colors.error : '#D1D5DB',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  🚫 Naive Prompt
+                </button>
+                <button
+                  onClick={() => { setPromptMode('tool_aware'); playSound('click'); }}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    border: `2px solid ${promptMode === 'tool_aware' ? colors.success : colors.border}`,
+                    background: promptMode === 'tool_aware' ? `${colors.success}22` : 'transparent',
+                    color: promptMode === 'tool_aware' ? colors.success : '#D1D5DB',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  ✅ Tool-Aware
+                </button>
+              </div>
+
+              {/* Feature toggles */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  cursor: 'pointer',
+                  color: '#D1D5DB',
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={showHelp}
+                    onChange={(e) => setShowHelp(e.target.checked)}
+                    style={{ width: '20px', height: '20px' }}
+                  />
+                  {showHelp ? '✅' : '⬜'} Instruct Claude to run --help before unknown commands
+                </label>
+
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  cursor: 'pointer',
+                  color: '#D1D5DB',
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={hasClaudemd}
+                    onChange={(e) => setHasClaudemd(e.target.checked)}
+                    style={{ width: '20px', height: '20px' }}
+                  />
+                  {hasClaudemd ? '✅' : '⬜'} Include CLAUDE.md with tool documentation
+                </label>
+              </div>
+
+              {/* Live metrics display */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                marginTop: '20px',
+              }}>
+                <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                  <div style={{ ...typo.h3, color: colors.error }}>{metrics.hallucinationRisk}%</div>
+                  <div style={{ ...typo.small, color: '#D1D5DB' }}>🎲 Hallucination Risk</div>
+                </div>
+                <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                  <div style={{ ...typo.h3, color: colors.success }}>{metrics.commandAccuracy}%</div>
+                  <div style={{ ...typo.small, color: '#D1D5DB' }}>✅ Command Accuracy</div>
+                </div>
+                <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                  <div style={{ ...typo.h3, color: colors.accent }}>{metrics.confidenceLevel}%</div>
+                  <div style={{ ...typo.small, color: '#D1D5DB' }}>🎯 Confidence Level</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Discovery prompt */}
+            {metrics.commandAccuracy >= 80 && (
+              <div style={{
+                background: `${colors.success}22`,
+                border: `1px solid ${colors.success}`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                  ✅ Excellent! With full documentation, command accuracy reaches {metrics.commandAccuracy}%!
+                </p>
+              </div>
+            )}
           </div>
 
-          {/* Discovery prompt */}
-          {calculateMetrics().commandAccuracy >= 80 && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                Excellent! With full documentation, command accuracy reaches {calculateMetrics().commandAccuracy}%!
-              </p>
-            </div>
-          )}
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Principle
-          </button>
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
+        {renderBottomBar(true, 'Understand the Principle')}
       </div>
     );
   }
@@ -1020,12 +1147,19 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
         <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Why LLMs Hallucinate Commands
@@ -1053,6 +1187,23 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
             </div>
           </div>
 
+          {/* Formula */}
+          <div style={{
+            background: colors.bgSecondary,
+            borderRadius: '8px',
+            padding: '16px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <span style={{ ...typo.small, color: '#E0F2FE', fontFamily: 'monospace' }}>
+              Accuracy = f(documentation_level) = 1 - P(hallucination)
+            </span>
+            <br/>
+            <span style={{ ...typo.small, color: '#C4C9D4', marginTop: '4px', display: 'block' }}>
+              P(hallucination) ≈ 0.8 - 0.6 × (doc_coverage) — higher coverage means fewer errors
+            </span>
+          </div>
+
           <div style={{
             background: `${colors.success}11`,
             border: `1px solid ${colors.success}33`,
@@ -1061,27 +1212,22 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
             marginBottom: '24px',
           }}>
             <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
-              The Solution: Explicit Documentation
+              ✅ The Solution: Explicit Documentation
             </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
+            <p style={{ ...typo.body, color: '#D1D5DB', marginBottom: '8px' }}>
               Tool-aware prompting works by:
             </p>
-            <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
-              <li>Providing explicit documentation that constrains valid options</li>
-              <li>Instructing Claude to run --help before assuming flags</li>
-              <li>Using CLAUDE.md for persistent, repo-specific context</li>
+            <ul style={{ ...typo.body, color: '#D1D5DB', margin: 0, paddingLeft: '20px' }}>
+              <li>✅ Providing explicit documentation that constrains valid options</li>
+              <li>✅ Instructing Claude to run --help before assuming flags</li>
+              <li>✅ Using CLAUDE.md for persistent, repo-specific context</li>
             </ul>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Discover CLAUDE.md
-          </button>
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomBar(true, 'Discover CLAUDE.md')}
       </div>
     );
   }
@@ -1124,11 +1270,22 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
+            padding: '16px',
+            marginBottom: '24px',
+            display: 'flex',
+            justifyContent: 'center',
+          }}>
+            <ToolAwareVisualization />
+          </div>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
             padding: '24px',
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <p style={{ ...typo.body, color: colors.textSecondary }}>
+            <p style={{ ...typo.body, color: '#D1D5DB' }}>
               Every new conversation starts fresh. Claude doesn't remember your custom commands from yesterday's session...
             </p>
             <div style={{ marginTop: '16px', fontSize: '14px', color: colors.accent, fontFamily: 'monospace' }}>
@@ -1194,32 +1351,74 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            CLAUDE.md: Persistent Tool Documentation
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-            A special file that Claude reads automatically in your repository
-          </p>
-
-          {/* Observation guidance */}
-          <div style={{
-            background: `${colors.accent}22`,
-            border: `1px solid ${colors.accent}44`,
-            borderRadius: '8px',
-            padding: '12px 16px',
-            marginBottom: '24px',
-          }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0, fontWeight: 600 }}>
-              Observe: Explore the CLAUDE.md structure and its benefits for persistent documentation.
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              CLAUDE.md: Persistent Tool Documentation
+            </h2>
+            <p style={{ ...typo.body, color: '#D1D5DB', textAlign: 'center', marginBottom: '16px' }}>
+              A special file that Claude reads automatically in your repository
             </p>
-          </div>
+
+            {/* Visualization with slider */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                <ToolAwareVisualization interactive />
+              </div>
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: '#D1D5DB' }}>📄 Documentation Coverage</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{docLevel}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={docLevel}
+                  onChange={(e) => setDocLevel(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    accentColor: '#3b82f6',
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none',
+                    appearance: 'none',
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Observation guidance */}
+            <div style={{
+              background: `${colors.accent}22`,
+              border: `1px solid ${colors.accent}44`,
+              borderRadius: '8px',
+              padding: '12px 16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.small, color: '#D1D5DB', margin: 0, fontWeight: 600 }}>
+                📋 Explore: Adjust documentation coverage. Higher coverage leads to lower hallucination rate.
+              </p>
+            </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1296,15 +1495,11 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
             </div>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand Best Practices
-          </button>
-        </div>
+          </div>
 
-        {renderNavDots()}
+          {renderNavDots()}
+        </div>
+        {renderBottomBar(true, 'Understand Best Practices')}
       </div>
     );
   }
@@ -1505,8 +1700,14 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
               <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
                 How Tool-Aware Prompting Helps:
               </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <p style={{ ...typo.small, color: '#D1D5DB', margin: '0 0 8px 0' }}>
                 {app.connection}
+              </p>
+              <p style={{ ...typo.small, color: '#D1D5DB', margin: 0 }}>
+                <strong style={{ color: colors.accent }}>How it works:</strong> {app.howItWorks}
+              </p>
+              <p style={{ ...typo.small, color: '#C4C9D4', margin: '8px 0 0 0', fontStyle: 'italic' }}>
+                🚀 {app.futureImpact}
               </p>
             </div>
 
@@ -1589,7 +1790,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
               fontSize: '80px',
               marginBottom: '24px',
             }}>
-              {passed ? 'trophy' : 'book'}
+              {passed ? '🏆' : '📚'}
             </div>
             <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
               {passed ? 'Excellent!' : 'Keep Learning!'}
@@ -1820,7 +2021,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
           marginBottom: '24px',
           animation: 'bounce 1s infinite',
         }}>
-          trophy
+          🏆
         </div>
         <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
@@ -1851,7 +2052,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
               'Tool-aware prompting dramatically improves accuracy',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: colors.success }}>check</span>
+                <span style={{ color: colors.success }}>✓</span>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
               </div>
             ))}

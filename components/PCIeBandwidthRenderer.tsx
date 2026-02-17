@@ -328,8 +328,8 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#CFD8DC',
+    textMuted: '#B0BEC5',
     border: '#2a2a3a',
     pcie: '#3B82F6',
     nvlink: '#22C55E',
@@ -352,7 +352,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Overhead Lab',
+    twist_play: 'Twist Experiment',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -400,31 +400,47 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
   // PCIe Visualization Component
   const PCIeVisualization = () => {
     const width = isMobile ? 340 : 600;
-    const height = isMobile ? 280 : 350;
+    const height = 380;
     const dataFlowOffset = animationFrame % 60;
 
+    const chartLeft = 30;
+    const chartRight = width - 30;
+    const chartW = chartRight - chartLeft;
+    const maxBW = 65;
+
+    // 3 reference bars (each one has background track + filled bar)
+    const refBars = [
+      { label: 'PCIe 3.0 x16', bw: 16, color: '#3b82f6' },
+      { label: 'PCIe 4.0 x16', bw: 32, color: '#8b5cf6' },
+      { label: 'PCIe 5.0 x16', bw: 64, color: '#06b6d4' },
+    ];
+    const barH = 26;
+    const barGap = 8;
+    const barChartTop = 200;
+
+    // Current value bar
+    const curBW = useNVLink ? nvlinkBandwidth : effectiveBandwidth;
+    const curColor = useNVLink ? colors.nvlink : colors.accent;
+    const curBarY = barChartTop + refBars.length * (barH + barGap) + 14;
+
+    // Architecture: CPU x=30..110, PCIe x=130..260, GPU x=280..(280+gpuW)
+    const cpuX = 30; const cpuY = 45; const cpuW = 80; const cpuH = 55;
+    const busX = 130; const busY = 62; const busW = isMobile ? 70 : 130; const busH = 22;
+    const gpuX = busX + busW + 16; const gpuW = isMobile ? 80 : 100;
+
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
-          <linearGradient id="cpuGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id="cpuGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#fb923c" />
             <stop offset="100%" stopColor="#ea580c" />
           </linearGradient>
-          <linearGradient id="gpuGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id="gpuGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#a78bfa" />
             <stop offset="100%" stopColor="#7c3aed" />
           </linearGradient>
-          <linearGradient id="pcieGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0" />
-            <stop offset="50%" stopColor="#60a5fa" stopOpacity="1" />
-            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-          </linearGradient>
-          <linearGradient id="nvlinkGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#4ade80" />
-            <stop offset="100%" stopColor="#16a34a" />
-          </linearGradient>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="3" result="blur" />
+          <filter id="glow2">
+            <feGaussianBlur stdDeviation="2.5" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
@@ -432,121 +448,73 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
           </filter>
         </defs>
 
-        {/* Title */}
-        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
-          PCIe Bandwidth Architecture
+        {/* ── Section label: Architecture ── */}
+        <text x={width / 2} y="22" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">
+          PCIe Bandwidth: Architecture &amp; Comparison
         </text>
 
-        {/* CPU */}
-        <g transform={`translate(${isMobile ? 30 : 50}, 60)`}>
-          <rect width="80" height="60" rx="8" fill="url(#cpuGrad)" filter="url(#glow)" />
-          <text x="40" y="35" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">CPU</text>
-          <text x="40" y="50" textAnchor="middle" fill="white" fontSize="9" opacity="0.8">Host</text>
-        </g>
+        {/* ── CPU block ── */}
+        <rect x={cpuX} y={cpuY} width={cpuW} height={cpuH} rx="8" fill="url(#cpuGrad2)" filter="url(#glow2)" />
+        <text x={cpuX + cpuW / 2} y={cpuY + 28} textAnchor="middle" fill="white" fontSize="13" fontWeight="bold">CPU</text>
+        <text x={cpuX + cpuW / 2} y={cpuY + 42} textAnchor="middle" fill="white" fontSize="11">Host</text>
 
-        {/* PCIe Bus */}
-        <g transform={`translate(${isMobile ? 130 : 160}, 80)`}>
-          <rect width={isMobile ? 80 : 120} height="24" rx="4" fill="#1e293b" stroke={colors.pcie} strokeWidth="2" />
-          <text x={isMobile ? 40 : 60} y="16" textAnchor="middle" fill={colors.pcie} fontSize="10" fontWeight="bold">
-            {pcieGen} x{numLanes}
-          </text>
+        {/* ── PCIe Bus ── */}
+        <rect x={busX} y={busY} width={busW} height={busH} rx="4" fill="#1e293b" stroke={colors.pcie} strokeWidth="2" />
+        <text x={busX + busW / 2} y={busY + 14} textAnchor="middle" fill={colors.pcie} fontSize="11" fontWeight="bold">
+          {pcieGen} x{numLanes}
+        </text>
+        {[0, 22, 44].map((offset, i) => (
+          <rect key={i} x={busX + (dataFlowOffset + offset) % busW} y={busY + 7} width="7" height="7" rx="2" fill={colors.pcie} opacity="0.75" />
+        ))}
 
-          {/* Animated data flow */}
-          {[0, 20, 40].map((offset, i) => (
-            <rect
-              key={i}
-              x={(dataFlowOffset + offset) % (isMobile ? 80 : 120)}
-              y="8"
-              width="8"
-              height="8"
-              rx="2"
-              fill="url(#pcieGrad)"
-              opacity="0.8"
-            />
-          ))}
-        </g>
-
-        {/* GPUs */}
-        {Array.from({ length: Math.min(numGPUs, 4) }).map((_, i) => {
-          const gpuX = isMobile ? 230 : 320;
-          const gpuY = 50 + i * (isMobile ? 55 : 70);
-
+        {/* ── GPU blocks (up to 3) ── */}
+        {Array.from({ length: Math.min(numGPUs, 3) }).map((_, i) => {
+          const gy = cpuY + i * 58;
           return (
-            <g key={i} transform={`translate(${gpuX}, ${gpuY})`}>
-              {/* GPU Card */}
-              <rect width={isMobile ? 90 : 110} height={isMobile ? 45 : 55} rx="6" fill="url(#gpuGrad)" filter="url(#glow)" />
-              <text x={isMobile ? 45 : 55} y={isMobile ? 25 : 30} textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">
-                GPU {i + 1}
-              </text>
-              <text x={isMobile ? 45 : 55} y={isMobile ? 38 : 45} textAnchor="middle" fill="white" fontSize="8" opacity="0.7">
-                {(pcieBandwidth).toFixed(1)} GB/s
-              </text>
-
-              {/* PCIe Connection Line */}
-              <line
-                x1={isMobile ? -20 : -30}
-                y1={(isMobile ? 45 : 55) / 2}
-                x2="0"
-                y2={(isMobile ? 45 : 55) / 2}
-                stroke={colors.pcie}
-                strokeWidth="2"
-                strokeDasharray="4,2"
-              >
-                <animate attributeName="stroke-dashoffset" from="0" to="-6" dur="0.3s" repeatCount="indefinite" />
-              </line>
+            <g key={i}>
+              <rect x={gpuX} y={gy} width={gpuW} height={42} rx="6" fill="url(#gpuGrad2)" filter="url(#glow2)" />
+              <text x={gpuX + gpuW / 2} y={gy + 19} textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">GPU {i + 1}</text>
+              <text x={gpuX + gpuW / 2} y={gy + 33} textAnchor="middle" fill="white" fontSize="11">{pcieBandwidth.toFixed(0)} GB/s</text>
+              <line x1={busX + busW} y1={busY + busH / 2} x2={gpuX} y2={gy + 21} stroke={colors.pcie} strokeWidth="1.5" strokeDasharray="4,2" />
             </g>
           );
         })}
 
-        {/* NVLink Connections */}
-        {useNVLink && numGPUs > 1 && (
-          <g>
-            {Array.from({ length: Math.min(numGPUs - 1, 3) }).map((_, i) => {
-              const gpuX = isMobile ? 320 : 430;
-              const y1 = 72 + i * (isMobile ? 55 : 70);
-              const y2 = 72 + (i + 1) * (isMobile ? 55 : 70);
+        {/* Separator */}
+        <line x1={chartLeft} y1={barChartTop - 14} x2={chartRight} y2={barChartTop - 14} stroke={colors.border} strokeWidth="1" />
+        <text x={chartLeft} y={barChartTop - 2} fill={colors.textPrimary} fontSize="11" fontWeight="600">Bandwidth Comparison</text>
 
-              return (
-                <g key={i}>
-                  <rect
-                    x={gpuX}
-                    y={y1}
-                    width="8"
-                    height={y2 - y1}
-                    rx="4"
-                    fill="url(#nvlinkGrad)"
-                    filter="url(#glow)"
-                  />
-                  {/* Animated flow */}
-                  <circle cx={gpuX + 4} cy={y1 + ((animationFrame * 2) % (y2 - y1))} r="3" fill="#86efac">
-                    <animate attributeName="opacity" values="1;0.3;1" dur="0.5s" repeatCount="indefinite" />
-                  </circle>
-                </g>
-              );
-            })}
-            <text x={isMobile ? 340 : 450} y={height - 30} textAnchor="middle" fill={colors.nvlink} fontSize="10" fontWeight="bold">
-              NVLink: {nvlinkBandwidth} GB/s
-            </text>
-          </g>
-        )}
+        {/* ── Reference bandwidth bars ── */}
+        {refBars.map((bar, i) => {
+          const by = barChartTop + i * (barH + barGap);
+          const fillW = Math.round((bar.bw / maxBW) * chartW);
+          return (
+            <g key={i}>
+              <rect x={chartLeft} y={by} width={chartW} height={barH} rx="4" fill="#1e293b" />
+              <rect x={chartLeft} y={by} width={fillW} height={barH} rx="4" fill={bar.color} opacity="0.8" />
+              <text x={chartLeft + 6} y={by + barH / 2 + 4} fill="white" fontSize="11">{bar.label}</text>
+              <text x={chartRight - 4} y={by + barH / 2 + 4} textAnchor="end" fill="white" fontSize="11" fontWeight="bold">{bar.bw} GB/s</text>
+            </g>
+          );
+        })}
 
-        {/* Stats Panel */}
-        <g transform={`translate(${isMobile ? 20 : 50}, ${height - 80})`}>
-          <rect width={width - (isMobile ? 40 : 100)} height="60" rx="8" fill="#0f172a" stroke={colors.border} />
-
-          <text x="15" y="20" fill={colors.textMuted} fontSize="10">Effective Bandwidth:</text>
-          <text x="15" y="38" fill={colors.accent} fontSize="16" fontWeight="bold">{effectiveBandwidth.toFixed(1)} GB/s</text>
-
-          <text x={isMobile ? 130 : 200} y="20" fill={colors.textMuted} fontSize="10">Scaling Efficiency:</text>
-          <text x={isMobile ? 130 : 200} y="38" fill={scalingEfficiency > 0.8 ? colors.success : colors.warning} fontSize="16" fontWeight="bold">
-            {(scalingEfficiency * 100).toFixed(0)}%
-          </text>
-
-          <text x={isMobile ? 240 : 380} y="20" fill={colors.textMuted} fontSize="10">Effective Speedup:</text>
-          <text x={isMobile ? 240 : 380} y="38" fill={colors.textPrimary} fontSize="16" fontWeight="bold">
-            {effectiveSpeedup.toFixed(2)}x
-          </text>
+        {/* ── Current (interactive) bandwidth bar with glow ── */}
+        <g>
+          <rect x={chartLeft} y={curBarY} width={chartW} height={barH} rx="4" fill="#1e293b" />
+          <rect x={chartLeft} y={curBarY} width={Math.round((Math.min(curBW, maxBW) / maxBW) * chartW)} height={barH} rx="4" fill={curColor} filter="url(#glow2)" />
+          <text x={chartLeft + 6} y={curBarY + barH / 2 + 4} fill="white" fontSize="11" fontWeight="bold">{useNVLink ? 'NVLink' : 'Current Config'}</text>
+          <text x={chartRight - 4} y={curBarY + barH / 2 + 4} textAnchor="end" fill="white" fontSize="11" fontWeight="bold">{curBW.toFixed(0)} GB/s</text>
         </g>
+
+        {/* Current-value indicator circle with glow */}
+        <circle cx={chartLeft + Math.round((Math.min(curBW, maxBW) / maxBW) * chartW)} cy={curBarY + barH / 2} r="8" fill={curColor} stroke="white" strokeWidth="2" filter="url(#glow2)">
+          <animate attributeName="r" values="7;9;7" dur="1.5s" repeatCount="indefinite" />
+        </circle>
+
+        {/* ── Stats row ── */}
+        <rect x={chartLeft} y={height - 44} width={chartW} height={36} rx="8" fill="#0f172a" stroke={colors.border} />
+        <text x={chartLeft + 10} y={height - 30} fill={colors.textPrimary} fontSize="11">Efficiency: {(scalingEfficiency * 100).toFixed(0)}%</text>
+        <text x={chartLeft + 10} y={height - 16} fill={colors.accent} fontSize="11" fontWeight="bold">Speedup: {effectiveSpeedup.toFixed(2)}x  |  Bandwidth: {effectiveBandwidth.toFixed(1)} GB/s</text>
       </svg>
     );
   };
@@ -597,7 +565,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
           max="16"
           value={numLanes}
           onChange={(e) => { playSound('click'); setNumLanes(parseInt(e.target.value)); }}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={{ width: '100%', accentColor: colors.accent, touchAction: 'none', height: '20px' }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
           <span style={{ ...typo.small, color: colors.textMuted, fontSize: '11px' }}>x1</span>
@@ -617,7 +585,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
           max="8"
           value={numGPUs}
           onChange={(e) => { playSound('click'); setNumGPUs(parseInt(e.target.value)); }}
-          style={{ width: '100%', accentColor: colors.gpu }}
+          style={{ width: '100%', accentColor: colors.gpu, touchAction: 'none', height: '20px' }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
           <span style={{ ...typo.small, color: colors.textMuted, fontSize: '11px' }}>1 GPU</span>
@@ -637,7 +605,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
           max="100"
           value={modelSize}
           onChange={(e) => { playSound('click'); setModelSize(parseInt(e.target.value)); }}
-          style={{ width: '100%', accentColor: colors.warning }}
+          style={{ width: '100%', accentColor: colors.warning, touchAction: 'none', height: '20px' }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
           <span style={{ ...typo.small, color: colors.textMuted, fontSize: '11px' }}>1 GB</span>
@@ -715,6 +683,48 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
     </div>
   );
 
+  // Bottom navigation bar
+  const renderBottomBar = (backAction?: { text: string; onClick: () => void }, nextAction?: { text: string; onClick: () => void }) => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: '32px',
+      paddingTop: '24px',
+      borderTop: `1px solid ${colors.border}`,
+    }}>
+      <div>
+        {backAction && (
+          <button
+            onClick={backAction.onClick}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+              fontWeight: 400,
+              fontSize: '15px',
+            }}
+          >
+            {backAction.text}
+          </button>
+        )}
+      </div>
+      <div>
+        {nextAction && (
+          <button
+            onClick={nextAction.onClick}
+            style={{ ...primaryButtonStyle }}
+          >
+            {nextAction.text}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
   // ---------------------------------------------------------------------------
   // PHASE RENDERS
   // ---------------------------------------------------------------------------
@@ -727,6 +737,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
+        overflowY: 'auto',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
@@ -749,7 +760,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
 
         <p style={{
           ...typo.body,
-          color: colors.textSecondary,
+          color: 'rgba(156, 163, 175, 0.7)',
           maxWidth: '600px',
           marginBottom: '32px',
         }}>
@@ -782,6 +793,24 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
           Explore PCIe Bandwidth
         </button>
 
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px', width: '100%', maxWidth: '600px' }}>
+          <button
+            onClick={() => { playSound('click'); nextPhase(); }}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '10px',
+              border: 'none',
+              background: `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
+              color: 'white',
+              cursor: 'pointer',
+              fontWeight: 400,
+              fontSize: '15px',
+            }}
+          >
+            Next →
+          </button>
+        </div>
+
         {renderNavDots()}
       </div>
     );
@@ -800,11 +829,13 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', padding: '44px 24px 24px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -821,27 +852,30 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
             What happens to AI training speed as you add more GPUs connected via PCIe?
           </h2>
 
-          {/* Simple diagram */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
-              <div style={{ padding: '16px', background: '#fb923c33', borderRadius: '8px' }}>
-                <div style={{ fontSize: '32px' }}>CPU</div>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.pcie }}>--PCIe--</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i} style={{ padding: '8px 16px', background: '#8b5cf633', borderRadius: '6px', color: colors.gpu }}>
-                    GPU {i}
-                  </div>
-                ))}
-              </div>
-            </div>
+          {/* Static SVG diagram - no sliders */}
+          <div style={{ marginBottom: '24px', textAlign: 'center' }}>
+            <svg width="400" height="220" viewBox="0 0 400 220" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <text x="200" y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="bold">PCIe Bandwidth Bottleneck</text>
+              {/* CPU box */}
+              <rect x="20" y="80" width="70" height="50" rx="8" fill="#fb923c44" stroke="#fb923c" strokeWidth="2" />
+              <text x="55" y="101" textAnchor="middle" fill="#fb923c" fontSize="13" fontWeight="bold">CPU</text>
+              <text x="55" y="118" textAnchor="middle" fill="#fb923c" fontSize="11">Host</text>
+              {/* PCIe bus */}
+              <rect x="100" y="100" width="100" height="10" rx="4" fill="#3b82f6" />
+              <text x="150" y="128" textAnchor="middle" fill={colors.pcie} fontSize="11" fontWeight="bold">PCIe: ~32 GB/s</text>
+              {/* GPU boxes */}
+              {[0, 1, 2, 3].map(i => (
+                <g key={i}>
+                  <rect x="220" y={40 + i * 45} width="70" height="35" rx="6" fill="#8b5cf644" stroke="#8b5cf6" strokeWidth="2" />
+                  <text x="255" y={58 + i * 45} textAnchor="middle" fill="#8b5cf6" fontSize="12" fontWeight="bold">GPU {i + 1}</text>
+                  <text x="255" y={70 + i * 45} textAnchor="middle" fill={colors.textMuted} fontSize="11">900 GB/s</text>
+                  <line x1="200" y1="105" x2="220" y2={57 + i * 45} stroke={colors.pcie} strokeWidth="1.5" strokeDasharray="4,2" />
+                </g>
+              ))}
+              {/* Bandwidth label */}
+              <text x="310" y="200" textAnchor="middle" fill={colors.textMuted} fontSize="11">Internal VRAM bandwidth</text>
+              <text x="150" y="185" textAnchor="middle" fill={colors.warning} fontSize="11">28x bottleneck!</text>
+            </svg>
           </div>
 
           {/* Options */}
@@ -889,6 +923,11 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
               Test My Prediction
             </button>
           )}
+          {renderBottomBar(
+            { text: '← Back', onClick: () => goToPhase('hook') },
+            prediction ? { text: 'Continue →', onClick: () => { playSound('success'); nextPhase(); } } : undefined
+          )}
+        </div>
         </div>
 
         {renderNavDots()}
@@ -902,17 +941,32 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', padding: '44px 24px 24px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             PCIe Bandwidth Lab
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Adjust settings to see how bandwidth affects multi-GPU scaling.
           </p>
+
+          {/* Real-world relevance */}
+          <div style={{
+            background: `${colors.gpu}11`,
+            border: `1px solid ${colors.gpu}33`,
+            borderRadius: '12px',
+            padding: '14px',
+            marginBottom: '16px',
+          }}>
+            <p style={{ ...typo.small, color: colors.gpu, margin: 0 }}>
+              <strong>Why it matters:</strong> AI companies spend billions on multi-GPU clusters. Understanding PCIe bandwidth limits helps engineers design systems that actually scale for training large language models like GPT-4.
+            </p>
+          </div>
 
           {/* Observation Guidance */}
           <div style={{
@@ -1030,12 +1084,11 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
             </div>
           )}
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Physics
-          </button>
+          {renderBottomBar(
+            { text: '← Back', onClick: () => goToPhase('predict') },
+            { text: 'Understand the Physics →', onClick: () => { playSound('success'); nextPhase(); } }
+          )}
+        </div>
         </div>
 
         {renderNavDots()}
@@ -1068,6 +1121,22 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
           </h2>
 
           <div style={{
+            background: `${colors.success}11`,
+            border: `1px solid ${colors.success}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.small, color: colors.success, margin: 0 }}>
+              {prediction
+                ? (<><strong>Your prediction:</strong> {prediction === 'b'
+                    ? 'Correct! As you observed in the experiment, each GPU adds less speedup than the previous one.'
+                    : 'As you observed: each added GPU gives diminishing returns due to PCIe bandwidth limits.'}</>)
+                : 'As you observed in the experiment: bandwidth limits cause diminishing returns when adding more GPUs.'}
+            </p>
+          </div>
+
+          <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
@@ -1075,7 +1144,10 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
           }}>
             <div style={{ ...typo.body, color: colors.textSecondary }}>
               <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Bandwidth = Per-Lane Speed x Number of Lanes</strong>
+                <strong style={{ color: colors.textPrimary }}>Bandwidth = Per-Lane Speed × Number of Lanes</strong>
+              </p>
+              <p style={{ marginBottom: '8px', fontFamily: 'monospace', color: colors.accent, fontWeight: 600 }}>
+                B = v_lane × N_lanes &nbsp;|&nbsp; PCIe 4.0 x16: ~32 GB/s
               </p>
               <p style={{ marginBottom: '16px' }}>
                 PCIe 4.0 x16 provides ~<span style={{ color: colors.accent }}>32 GB/s</span> bidirectional bandwidth.
@@ -1151,11 +1223,13 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', padding: '44px 24px 24px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1172,19 +1246,32 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
             During AI training, GPUs must synchronize gradients after each batch. How does this communication overhead scale with GPU count?
           </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <p style={{ ...typo.body, color: colors.textSecondary }}>
-              Each GPU computes gradients on different data. Before updating weights, all gradients must be averaged across all GPUs.
-            </p>
-            <div style={{ marginTop: '16px', fontSize: '14px', color: colors.accent, fontFamily: 'monospace' }}>
-              GPU1 ---gradient--- GPU2 ---gradient--- GPU3 ---gradient--- GPU4
-            </div>
+          {/* Static SVG - no sliders */}
+          <div style={{ marginBottom: '24px', textAlign: 'center' }}>
+            <svg width="400" height="200" viewBox="0 0 400 200" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <text x="200" y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="bold">Gradient Synchronization</text>
+              {/* 4 GPUs in a ring */}
+              {[0, 1, 2, 3].map(i => {
+                const angle = (i / 4) * Math.PI * 2 - Math.PI / 2;
+                const cx = 200 + 70 * Math.cos(angle);
+                const cy = 110 + 60 * Math.sin(angle);
+                return (
+                  <g key={i}>
+                    <circle cx={cx} cy={cy} r="22" fill="#8b5cf644" stroke="#8b5cf6" strokeWidth="2" />
+                    <text x={cx} y={cy + 4} textAnchor="middle" fill="#8b5cf6" fontSize="12" fontWeight="bold">GPU {i + 1}</text>
+                  </g>
+                );
+              })}
+              {/* Ring connections */}
+              {[0, 1, 2, 3].map(i => {
+                const a1 = (i / 4) * Math.PI * 2 - Math.PI / 2;
+                const a2 = ((i + 1) / 4) * Math.PI * 2 - Math.PI / 2;
+                const x1 = 200 + 70 * Math.cos(a1); const y1 = 110 + 60 * Math.sin(a1);
+                const x2 = 200 + 70 * Math.cos(a2); const y2 = 110 + 60 * Math.sin(a2);
+                return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={colors.warning} strokeWidth="2" strokeDasharray="5,3" />;
+              })}
+              <text x="200" y="185" textAnchor="middle" fill={colors.textMuted} fontSize="11">Ring All-Reduce pattern: O(1) overhead per GPU</text>
+            </svg>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1230,6 +1317,11 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
               Explore Communication Patterns
             </button>
           )}
+          {renderBottomBar(
+            { text: '← Back', onClick: () => goToPhase('review') },
+            twistPrediction ? { text: 'Continue →', onClick: () => { playSound('success'); nextPhase(); } } : undefined
+          )}
+        </div>
         </div>
 
         {renderNavDots()}
@@ -1475,9 +1567,12 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
           paddingBottom: '80px',
         }}>
         <div style={{ maxWidth: '800px', margin: '16px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '12px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '20px', fontWeight: 400 }}>
+            App {selectedApp + 1} of {realWorldApps.length} — explore all applications to unlock the test
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1568,6 +1663,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1582,7 +1678,69 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
                 </div>
               ))}
             </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '14px',
+              marginBottom: '12px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.success, marginBottom: '6px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '14px',
+              marginBottom: '12px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '6px', fontWeight: 600 }}>
+                Real Examples:
+              </h4>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {app.examples.map((ex, i) => (
+                  <span key={i} style={{
+                    background: `${app.color}22`,
+                    border: `1px solid ${app.color}44`,
+                    borderRadius: '6px',
+                    padding: '4px 10px',
+                    ...typo.small,
+                    color: colors.textSecondary,
+                  }}>{ex}</span>
+                ))}
+              </div>
+            </div>
+
+            <p style={{ ...typo.small, color: colors.textMuted, margin: 0 }}>
+              <strong style={{ color: colors.textPrimary }}>Future Impact:</strong> {app.futureImpact}
+            </p>
           </div>
+
+          {/* Got It button */}
+          <button
+            onClick={() => {
+              playSound('click');
+              const newCompleted = [...completedApps];
+              newCompleted[selectedApp] = true;
+              setCompletedApps(newCompleted);
+              if (selectedApp < realWorldApps.length - 1) {
+                setSelectedApp(selectedApp + 1);
+              }
+            }}
+            style={{
+              ...primaryButtonStyle,
+              width: '100%',
+              marginBottom: '16px',
+              background: completedApps[selectedApp] ? `${colors.success}88` : primaryButtonStyle.background,
+            }}
+          >
+            {completedApps[selectedApp] ? '✓ Got It' : 'Got It →'}
+          </button>
 
           {allAppsCompleted && (
             <button
@@ -1591,6 +1749,11 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
             >
               Take the Knowledge Test
             </button>
+          )}
+          {!allAppsCompleted && (
+            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', fontWeight: 400 }}>
+              Visit all {realWorldApps.length} applications to unlock the test
+            </p>
           )}
         </div>
         </div>
