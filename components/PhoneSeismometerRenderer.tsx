@@ -278,6 +278,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
   const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
+  const [answerConfirmed, setAnswerConfirmed] = useState(false);
 
   // Transfer state
   const [selectedApp, setSelectedApp] = useState(0);
@@ -421,12 +422,15 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
     const plotW = plotX1 - plotX0;
     const midY = plotY0 + plotH / 2;
 
-    // Generate waveform points - in interactive mode use signalHistory
+    // Generate waveform points - in interactive mode compute directly from amp/freq (synchronous)
     let points: string;
     if (interactive) {
-      points = signalHistory.map((v, i) => {
-        const x = plotX0 + (i / (signalHistory.length - 1)) * plotW;
-        const y = midY - v * (plotH * 0.45);
+      // Generate directly from current amp/freq for synchronous slider response
+      points = Array.from({ length: 100 }, (_, i) => {
+        const t = i / 99;
+        const sig = amp * (Math.sin(t * freq * 6 * Math.PI) * 0.7 + Math.sin(t * freq * 10 * Math.PI) * 0.3);
+        const x = plotX0 + t * plotW;
+        const y = midY - sig * (plotH * 0.45);
         return `${x},${y}`;
       }).join(' ');
     } else {
@@ -480,98 +484,128 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
           {interactive ? 'Live Seismic Signal' : 'Seismic Waveform'}
         </text>
 
-        {/* Plot area background */}
-        <rect x={plotX0} y={plotY0} width={plotW} height={plotH} fill="#0f172a" rx="4" />
+        {/* Plot area group */}
+        <g className="plot-area">
+          {/* Plot area background */}
+          <rect x={plotX0} y={plotY0} width={plotW} height={plotH} fill="#0f172a" rx="4" />
 
-        {/* Horizontal grid lines */}
-        {gridYPositions.map((y, i) => (
-          <line
-            key={`hy${i}`}
-            x1={plotX0} y1={y} x2={plotX1} y2={y}
-            stroke="#1e3a5f" strokeWidth="1" strokeDasharray="4 4" opacity="0.7"
+          {/* Horizontal grid lines */}
+          {gridYPositions.map((y, i) => (
+            <line
+              key={`hy${i}`}
+              x1={plotX0} y1={y} x2={plotX1} y2={y}
+              stroke="#1e3a5f" strokeWidth="1" strokeDasharray="4 4" opacity="0.7"
+            />
+          ))}
+
+          {/* Vertical grid lines */}
+          {gridXPositions.map((x, i) => (
+            <line
+              key={`vx${i}`}
+              x1={x} y1={plotY0} x2={x} y2={plotY1}
+              stroke="#1e3a5f" strokeWidth="1" strokeDasharray="4 4" opacity="0.5"
+            />
+          ))}
+        </g>
+
+        {/* Signal group */}
+        <g className="signal-layer">
+          {/* Baseline reference (compare marker) */}
+          <polyline
+            points={baselinePoints}
+            fill="none"
+            stroke="#94a3b8"
+            strokeWidth="1.5"
+            opacity="0.4"
+            strokeDasharray="3 3"
           />
-        ))}
 
-        {/* Vertical grid lines */}
-        {gridXPositions.map((x, i) => (
-          <line
-            key={`vx${i}`}
-            x1={x} y1={plotY0} x2={x} y2={plotY1}
-            stroke="#1e3a5f" strokeWidth="1" strokeDasharray="4 4" opacity="0.5"
-          />
-        ))}
-
-        {/* Baseline reference (compare marker) */}
-        <polyline
-          points={baselinePoints}
-          fill="none"
-          stroke="#94a3b8"
-          strokeWidth="1.5"
-          opacity="0.4"
-          strokeDasharray="3 3"
-        />
-        <text x={plotX0 + 5} y={midY - 6} fill="#94a3b8" fontSize="11" opacity="0.6">baseline</text>
-
-        {/* Signal trace */}
-        <polyline
-          points={points}
-          fill="none"
-          stroke="url(#seismicGrad)"
-          strokeWidth="2"
-          filter="url(#signalGlow)"
-        />
-
-        {/* Current value dot */}
-        {interactive && (
-          <circle
-            cx={plotX1}
-            cy={midY - (signalHistory[signalHistory.length - 1] || 0) * plotH * 0.45}
-            r="5"
-            fill={colors.accent}
+          {/* Signal trace */}
+          <polyline
+            points={points}
+            fill="none"
+            stroke="url(#seismicGrad)"
+            strokeWidth="2"
             filter="url(#signalGlow)"
           />
-        )}
 
-        {/* Y-axis labels */}
-        <text x={plotX0 - 8} y={plotY0 + 5} textAnchor="end" fill={colors.textSecondary} fontSize="11">+1g</text>
-        <text x={plotX0 - 8} y={midY + 4} textAnchor="end" fill={colors.textSecondary} fontSize="11">0</text>
-        <text x={plotX0 - 8} y={plotY1} textAnchor="end" fill={colors.textSecondary} fontSize="11">-1g</text>
+          {/* Current value dot - computed from current amp for synchronous response */}
+          {interactive && (
+            <circle
+              cx={plotX1}
+              cy={midY - amp * (plotH * 0.45)}
+              r="6"
+              fill={colors.accent}
+              stroke="#fff"
+              strokeWidth="2"
+              filter="url(#signalGlow)"
+            />
+          )}
+        </g>
 
-        {/* X-axis label */}
-        <text x={plotX0 + plotW / 2} y={svgHeight - 10} textAnchor="middle" fill={colors.textSecondary} fontSize="11">
-          Time (seconds)
-        </text>
+        {/* Decorative paths for visual complexity */}
+        <path
+          d={`M ${plotX0} ${plotY0} L ${plotX0} ${plotY1} L ${plotX1} ${plotY1}`}
+          fill="none"
+          stroke={colors.border}
+          strokeWidth="1.5"
+          opacity="0.4"
+        />
+        <path
+          d={`M ${plotX0 + plotW * 0.1} ${midY} Q ${plotX0 + plotW * 0.3} ${midY - plotH * 0.2} ${plotX0 + plotW * 0.5} ${midY}`}
+          fill="none"
+          stroke={colors.wave}
+          strokeWidth="1"
+          strokeDasharray="3 5"
+          opacity="0.15"
+        />
 
-        {/* Y-axis label */}
-        <text
-          x="14"
-          y={midY}
-          textAnchor="middle"
-          fill={colors.textSecondary}
-          fontSize="11"
-          transform={`rotate(-90, 14, ${midY})`}
-        >
-          Acceleration
-        </text>
+        {/* Axis labels group */}
+        <g className="axis-labels">
+          {/* Y-axis labels */}
+          <text x={plotX0 - 8} y={plotY0 + 5} textAnchor="end" fill="#cbd5e1" fontSize="11">+1g</text>
+          <text x={plotX0 - 8} y={midY + 4} textAnchor="end" fill="#cbd5e1" fontSize="11">0</text>
+          <text x={plotX0 - 8} y={plotY1} textAnchor="end" fill="#cbd5e1" fontSize="11">-1g</text>
 
-        {/* Current amplitude label if interactive */}
-        {interactive && (
-          <text x={plotX1 - 5} y={plotY0 + 18} textAnchor="end" fill={colors.accent} fontSize="11" fontWeight="600">
-            amp: {((signalHistory[signalHistory.length - 1] || 0)).toFixed(3)}g
+          {/* X-axis label */}
+          <text x={plotX0 + plotW / 2} y={svgHeight - 10} textAnchor="middle" fill="#cbd5e1" fontSize="11">
+            Time (seconds)
           </text>
-        )}
 
-        {/* Formula */}
-        <text x={plotX0 + 5} y={plotY1 - 8} fill={colors.accent} fontSize="11" opacity="0.8">
-          F = ma
-        </text>
-
-        {/* Frequency label */}
-        {interactive && (
-          <text x={plotX0 + plotW - 5} y={plotY1 - 8} textAnchor="end" fill={colors.wave} fontSize="11" opacity="0.8">
-            {vibrationFreq} Hz
+          {/* Y-axis label */}
+          <text
+            x="14"
+            y={midY}
+            textAnchor="middle"
+            fill="#cbd5e1"
+            fontSize="11"
+            transform={`rotate(-90, 14, ${midY})`}
+          >
+            Accel.
           </text>
-        )}
+
+          {/* Baseline text */}
+          <text x={plotX0 + 5} y={midY - 6} fill="#94a3b8" fontSize="11" opacity="0.6">baseline</text>
+
+          {/* Current amplitude label if interactive */}
+          {interactive && (
+            <text x={plotX1 - 5} y={plotY0 + 18} textAnchor="end" fill={colors.accent} fontSize="11" fontWeight="600">
+              amp: {amp.toFixed(2)}g
+            </text>
+          )}
+
+          {/* Formula */}
+          <text x={plotX0 + 5} y={plotY1 - 8} fill={colors.accent} fontSize="11" opacity="0.8">
+            F = ma
+          </text>
+
+          {/* Frequency label */}
+          {interactive && (
+            <text x={plotX0 + plotW - 5} y={plotY1 - 8} textAnchor="end" fill={colors.wave} fontSize="11" opacity="0.8">
+              {vibrationFreq} Hz
+            </text>
+          )}
+        </g>
       </svg>
     );
   };
@@ -741,15 +775,28 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
           onClick={() => goToPhase(p)}
           style={{
             width: phase === p ? '24px' : '8px',
-            height: '8px',
+            minHeight: '44px',
+            padding: '18px 0',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             borderRadius: '4px',
             border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            background: 'transparent',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
           }}
           aria-label={phaseLabels[p]}
-        />
+        >
+          <span style={{
+            display: 'block',
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            transition: 'all 0.3s ease',
+          }} />
+        </button>
       ))}
     </div>
   );
@@ -771,7 +818,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        zIndex: 90,
+        zIndex: 100,
         gap: '12px',
       }}>
         {/* Back button */}
@@ -1058,7 +1105,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               MEMS Accelerometer Simulator
             </h2>
-            <p style={{ ...typo.body, color: 'rgba(148,163,184,0.7)', textAlign: 'center', marginBottom: '8px' }}>
+            <p style={{ ...typo.body, color: '#c0c8d0', textAlign: 'center', marginBottom: '8px' }}>
               This visualization demonstrates how amplitude and frequency affect the seismic signal recorded by the MEMS accelerometer proof mass. Observe how changing parameters alters the waveform.
             </p>
 
@@ -1093,7 +1140,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
                 {/* Amplitude slider */}
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                    <span style={{ ...typo.small, color: 'rgba(148,163,184,0.7)' }}>Vibration Amplitude</span>
+                    <span style={{ ...typo.small, color: '#c0c8d0' }}>Vibration Amplitude</span>
                     <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{vibrationAmp}% max</span>
                   </div>
                   <input
@@ -1129,7 +1176,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
                 {/* Frequency slider */}
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                    <span style={{ ...typo.small, color: 'rgba(148,163,184,0.7)' }}>Vibration Frequency</span>
+                    <span style={{ ...typo.small, color: '#c0c8d0' }}>Vibration Frequency</span>
                     <span style={{ ...typo.small, color: colors.wave, fontWeight: 600 }}>{vibrationFreq} Hz</span>
                   </div>
                   <input
@@ -1850,7 +1897,10 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
               <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
                 {passed ? 'Excellent!' : 'Keep Learning!'}
               </h2>
-              <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: '8px 0 4px' }}>
+                You scored
+              </p>
+              <p style={{ ...typo.h1, color: colors.textPrimary, margin: '8px 0 16px' }}>
                 {testScore} / 10
               </p>
               <p style={{ ...typo.body, color: 'rgba(148,163,184,0.7)', marginBottom: '24px' }}>
@@ -2009,6 +2059,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
                       const newAnswers = [...testAnswers];
                       newAnswers[currentQuestion] = opt.id;
                       setTestAnswers(newAnswers);
+                      setAnswerConfirmed(false);
                     }}
                     style={{
                       background: isSelected ? `${colors.accent}22` : colors.bgCard,
@@ -2027,7 +2078,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
                       height: '24px',
                       borderRadius: '50%',
                       background: isSelected ? colors.accent : colors.bgSecondary,
-                      color: isSelected ? 'white' : 'rgba(148,163,184,0.7)',
+                      color: isSelected ? 'white' : '#c0c8d0',
                       textAlign: 'center',
                       lineHeight: '24px',
                       marginRight: '10px',
@@ -2035,7 +2086,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
                       fontWeight: 700,
                       verticalAlign: 'middle',
                     }}>
-                      {opt.id.toUpperCase()}
+                      {opt.id.toUpperCase()})
                     </span>
                     <span style={{ color: colors.textPrimary, ...typo.small }}>
                       {opt.label}
@@ -2045,11 +2096,56 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
               })}
             </div>
 
+            {/* Confirm Answer button - shows when answer selected but not yet confirmed */}
+            {testAnswers[currentQuestion] && !answerConfirmed && (
+              <div style={{ marginBottom: '12px' }}>
+                <button
+                  onClick={() => setAnswerConfirmed(true)}
+                  style={{
+                    width: '100%',
+                    padding: '13px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: colors.success,
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  Confirm Answer
+                </button>
+              </div>
+            )}
+
+            {/* Explanation shown after confirming */}
+            {answerConfirmed && testAnswers[currentQuestion] && (() => {
+              const q = testQuestions[currentQuestion];
+              const correctOpt = q.options.find(o => o.correct);
+              const isCorrect = testAnswers[currentQuestion] === correctOpt?.id;
+              return (
+                <div style={{
+                  background: isCorrect ? `${colors.success}18` : `${colors.error}18`,
+                  border: `1px solid ${isCorrect ? colors.success + '44' : colors.error + '44'}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  marginBottom: '12px',
+                }}>
+                  <p style={{ color: isCorrect ? colors.success : colors.error, fontWeight: 700, margin: '0 0 8px' }}>
+                    {isCorrect ? '✓ Correct!' : `✗ The correct answer is: ${correctOpt?.id.toUpperCase()}) ${correctOpt?.label}`}
+                  </p>
+                  <p style={{ color: '#c0c8d0', fontSize: '13px', margin: 0, lineHeight: 1.5 }}>
+                    Explanation: {q.explanation}
+                  </p>
+                </div>
+              );
+            })()}
+
             {/* Navigation */}
             <div style={{ display: 'flex', gap: '12px' }}>
               {currentQuestion > 0 && (
                 <button
-                  onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                  onClick={() => { setCurrentQuestion(currentQuestion - 1); setAnswerConfirmed(false); }}
                   style={{
                     flex: 1,
                     padding: '13px',
@@ -2065,7 +2161,12 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
               )}
               {currentQuestion < 9 ? (
                 <button
-                  onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                  onClick={() => {
+                    if (testAnswers[currentQuestion]) {
+                      setCurrentQuestion(currentQuestion + 1);
+                      setAnswerConfirmed(false);
+                    }
+                  }}
                   disabled={!testAnswers[currentQuestion]}
                   style={{
                     flex: 1,
@@ -2079,7 +2180,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
                     transition: 'all 0.15s',
                   }}
                 >
-                  Next →
+                  Next Question →
                 </button>
               ) : (
                 <button

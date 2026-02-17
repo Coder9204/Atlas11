@@ -588,9 +588,9 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
           </g>
           {/* Camera labels - absolute coords to avoid overlaps */}
           <text x={width / 2} y={155 + 5} textAnchor="middle" fill={colors.accent} fontSize={11} fontWeight="bold">CAMERA</text>
-          <rect x={width / 2 - 42} y={155 + 14} width={84} height={32} rx={5} fill="rgba(30, 41, 59, 0.9)" stroke="#475569" strokeWidth={1} />
-          <text x={width / 2} y={155 + 28} textAnchor="middle" fill={colors.accent} fontSize={11} fontWeight="bold">FRAME RATE</text>
-          <text x={width / 2} y={155 + 42} textAnchor="middle" fill={colors.textPrimary} fontSize={13} fontWeight="bold">{frameRate} fps</text>
+          <rect x={width / 2 - 42} y={155 + 14} width={84} height={36} rx={5} fill="rgba(30, 41, 59, 0.9)" stroke="#475569" strokeWidth={1} />
+          <text x={width / 2} y={155 + 24} textAnchor="middle" fill={colors.accent} fontSize={11} fontWeight="bold">FRAME RATE</text>
+          <text x={width / 2} y={155 + 44} textAnchor="middle" fill={colors.textPrimary} fontSize={13} fontWeight="bold">{frameRate} fps</text>
           <rect x={width / 2 - 50} y={155 + 60} width={100} height={32} rx={4} fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth={1} />
           <text x={width / 2} y={155 + 72} textAnchor="middle" fill={colors.textMuted} fontSize={11}>SAMPLING RATE</text>
           <text x={width / 2} y={155 + 87} textAnchor="middle" fill={colors.textSecondary} fontSize={11}>{frameRate} samples/sec</text>
@@ -687,7 +687,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
             <text x={-8} y={4} textAnchor="end" fill={colors.textMuted} fontSize={11}>15</text>
             <text x={-8} y={58} textAnchor="end" fill={colors.textMuted} fontSize={11}>7.5</text>
             <text x={-8} y={113} textAnchor="end" fill={colors.textMuted} fontSize={11}>0</text>
-            <text x={-22} y={60} textAnchor="middle" fill={colors.textMuted} fontSize={11} transform="rotate(-90, -22, 60)">r/s</text>
+            <text x={-22} y={85} textAnchor="middle" fill={colors.textMuted} fontSize={11} transform="rotate(-90, -22, 85)">r/s</text>
 
             {/* X-axis */}
             <line x1={0} y1={110} x2={240} y2={110} stroke={colors.textMuted} strokeWidth={1} />
@@ -945,7 +945,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
           boxShadow: '0 2px 8px rgba(245,158,11,0.4)',
         }}
       >
-        Next →
+        {phase === 'test' && !testSubmitted ? '→' : 'Next →'}
       </button>
     </nav>
   );
@@ -1600,6 +1600,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
                 <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px', fontSize: '22px', fontWeight: '700', lineHeight: '1.4' }}>
                   {testScore >= 8 ? '🎉 Excellent!' : '📚 Keep Learning!'}
                 </h2>
+                <p style={{ color: colors.textMuted, fontSize: '14px', margin: '4px 0' }}>You scored:</p>
                 <p style={{ color: colors.textPrimary, fontSize: '28px', fontWeight: 'bold', margin: '8px 0' }}>{testScore} / 10</p>
                 <p style={{ color: colors.textSecondary, margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
                   {testScore >= 8 ? 'Outstanding mastery of temporal aliasing!' : 'Review the material and try again to improve your score.'}
@@ -1815,7 +1816,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
                 fontSize: '14px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
                 fontWeight: '600', transition: 'all 0.2s ease',
               }}>
-              ← Previous
+              ← Back
             </button>
             {currentTestQuestion < testQuestions.length - 1 ? (
               <button onClick={() => { setCurrentTestQuestion(currentTestQuestion + 1); setQuestionConfirmed(false); }}

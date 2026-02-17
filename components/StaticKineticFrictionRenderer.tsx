@@ -490,33 +490,48 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
         {/* Wide axis line from left to right edge — ensures width utilization */}
         <line x1="20" y1={surfaceY - blockHeight - 5} x2={width - 20} y2={surfaceY - blockHeight - 5} stroke="transparent" strokeWidth="1" />
 
-        {/* Right-side status box */}
-        <rect x={width - 75} y="44" width="68" height="50" rx="6" fill={colors.bgSecondary} opacity="0.8" />
-        <text x={width - 41} y="60" textAnchor="middle" fill={colors.staticFriction} fontSize="11" fontWeight="600">Static</text>
-        <text x={width - 41} y="73" textAnchor="middle" fill={colors.staticFriction} fontSize="11">{staticFrictionMax.toFixed(1)}N</text>
-        <text x={width - 41} y="86" textAnchor="middle" fill={colors.kineticFriction} fontSize="11">k={kineticFriction.toFixed(1)}N</text>
+        {/* Right-side status box group */}
+        <g id="statusBox">
+          <rect x={width - 75} y="44" width="68" height="50" rx="6" fill={colors.bgSecondary} opacity="0.8" />
+          <text x={width - 41} y="60" textAnchor="middle" fill={colors.staticFriction} fontSize="11" fontWeight="600">Static</text>
+          <text x={width - 41} y="73" textAnchor="middle" fill={colors.staticFriction} fontSize="11">{staticFrictionMax.toFixed(1)}N</text>
+          <text x={width - 41} y="86" textAnchor="middle" fill={colors.kineticFriction} fontSize="11">k={kineticFriction.toFixed(1)}N</text>
+        </g>
 
-        {/* Surface texture path */}
-        <path
-          d={`M 20 ${surfaceY + 2} C ${width * 0.15} ${surfaceY} ${width * 0.25} ${surfaceY + 4} ${width * 0.35} ${surfaceY + 2} C ${width * 0.45} ${surfaceY} ${width * 0.55} ${surfaceY + 4} ${width * 0.65} ${surfaceY + 2} C ${width * 0.75} ${surfaceY} ${width * 0.85} ${surfaceY + 4} ${width - 20} ${surfaceY + 2}`}
+        {/* Surface texture - zigzag lines */}
+        <polyline
+          points={`20,${surfaceY + 2} ${width * 0.15},${surfaceY} ${width * 0.25},${surfaceY + 4} ${width * 0.35},${surfaceY + 2} ${width * 0.45},${surfaceY} ${width * 0.55},${surfaceY + 4} ${width * 0.65},${surfaceY + 2} ${width * 0.75},${surfaceY} ${width * 0.85},${surfaceY + 4} ${width - 20},${surfaceY + 2}`}
           fill="none"
           stroke="rgba(255,255,255,0.15)"
           strokeWidth="1"
         />
-        {/* Microscopic surface contact path (educational illustration) */}
-        <path
-          d={`M ${blockX + 5} ${surfaceY} C ${blockX + 10} ${surfaceY - 3} ${blockX + 15} ${surfaceY + 2} ${blockX + 20} ${surfaceY - 1} C ${blockX + 25} ${surfaceY + 3} ${blockX + 30} ${surfaceY - 2} ${blockX + 35} ${surfaceY} C ${blockX + 40} ${surfaceY + 2} ${blockX + 50} ${surfaceY - 1} ${blockX + 55} ${surfaceY}`}
+        {/* Microscopic contact zigzag */}
+        <polyline
+          points={`${blockX + 5},${surfaceY} ${blockX + 10},${surfaceY - 3} ${blockX + 15},${surfaceY + 2} ${blockX + 20},${surfaceY - 1} ${blockX + 25},${surfaceY + 3} ${blockX + 30},${surfaceY - 2} ${blockX + 35},${surfaceY} ${blockX + 40},${surfaceY + 2} ${blockX + 50},${surfaceY - 1} ${blockX + 55},${surfaceY}`}
           fill="none"
           stroke={colors.accent}
           strokeWidth="1.5"
           opacity="0.4"
         />
 
-        {/* Block */}
-        <rect x={blockX} y={surfaceY - blockHeight} width={blockWidth} height={blockHeight} rx="6" fill="url(#blockGrad)" filter="url(#blockShadow)" />
-        <text x={blockX + blockWidth/2} y={surfaceY - blockHeight/2 + 5} textAnchor="middle" fill="white" fontSize="12" fontWeight="600">
-          {blockWeight}N
-        </text>
+        {/* Weight force indicator: a short downward arrow */}
+        <path
+          d={`M ${blockX + blockWidth/2} ${surfaceY - blockHeight - 6} L ${blockX + blockWidth/2} ${surfaceY - blockHeight + 4}`}
+          fill="none"
+          stroke={colors.kineticFriction}
+          strokeWidth="2"
+          opacity="0.5"
+          strokeLinecap="round"
+          markerEnd="url(#arrow)"
+        />
+
+        {/* Block group */}
+        <g id="blockGroup">
+          <rect x={blockX} y={surfaceY - blockHeight} width={blockWidth} height={blockHeight} rx="6" fill="url(#blockGrad)" filter="url(#blockShadow)" />
+          <text x={blockX + blockWidth/2} y={surfaceY - blockHeight/2 + 5} textAnchor="middle" fill="white" fontSize="12" fontWeight="600">
+            {blockWeight}N
+          </text>
+        </g>
 
         {/* Applied force arrow (above block) */}
         {appliedForce > 0 && (
@@ -576,7 +591,8 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
           </g>
         )}
 
-        {/* Force graph background */}
+        {/* Force graph group */}
+        <g id="forceGraph">
         <rect x="40" y={graphY} width={graphW} height={graphH} rx="4" fill={colors.bgSecondary} />
 
         {/* Graph axis labels - well-separated */}
@@ -647,6 +663,16 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
             </g>
           );
         })()}
+        </g>
+        {/* Background friction curve — spans full SVG height for visual clarity */}
+        <path
+          d={`M 40 ${height - 20} Q ${width * 0.25} ${height * 0.1} ${width * 0.5} ${height * 0.4} C ${width * 0.65} ${height * 0.6} ${width * 0.8} ${height * 0.05} ${width - 20} ${height * 0.35}`}
+          fill="none"
+          stroke={colors.kineticFriction}
+          strokeWidth="1"
+          opacity="0.15"
+          strokeDasharray="8,5"
+        />
       </svg>
     );
   };
@@ -706,6 +732,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
             fontSize: '14px',
             fontWeight: 600,
             minWidth: '70px',
+            minHeight: '44px',
           }}
           aria-label="Back"
         >
@@ -719,13 +746,12 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
               onClick={() => goToPhase(p)}
               style={{
                 width: phase === p ? '20px' : '7px',
-                height: '7px',
                 borderRadius: '4px',
                 border: 'none',
-                background: phaseOrder.indexOf(phase) >= i ? colors.accent : 'rgba(148,163,184,0.4)',
+                background: phaseOrder.indexOf(phase) >= i ? colors.accent : 'rgba(148,163,184,0.6)',
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
-                padding: 0,
+                padding: '3px 0',
               }}
               aria-label={phaseLabels[p]}
             />
@@ -745,6 +771,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
             fontSize: '14px',
             fontWeight: 600,
             minWidth: '70px',
+            minHeight: '44px',
             opacity: isTestActive ? 0.4 : 1,
           }}
           aria-label="Next"

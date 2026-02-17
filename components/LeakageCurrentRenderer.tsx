@@ -313,93 +313,93 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
 
   const testQuestions = [
     {
-      question: 'What causes gate leakage current in modern transistors?',
+      question: 'A chip designer is working on a 5nm process node where the gate oxide is only 1nm thick — just a few atomic layers. What physical mechanism causes significant gate leakage current at this scale?',
       options: [
-        { text: 'Electrons flowing through damaged oxide', correct: false },
-        { text: 'Quantum tunneling through ultra-thin gate oxide', correct: true },
-        { text: 'Capacitive coupling between adjacent wires', correct: false },
-        { text: 'Thermal noise in the substrate', correct: false },
+        { text: 'Electrons flowing through damaged oxide defects caused by high voltage stress', correct: false },
+        { text: 'Quantum tunneling: electrons pass through the ultra-thin gate oxide barrier even with no defects', correct: true },
+        { text: 'Capacitive coupling between adjacent transistors creates parasitic current paths', correct: false },
+        { text: 'Thermal noise in the substrate creates random electron movement through the gate', correct: false },
       ],
     },
     {
-      question: 'How does subthreshold leakage depend on temperature?',
+      question: 'A smartphone SoC is running in a hot environment (45°C ambient). The chip temperature reaches 85°C compared to 65°C in normal conditions. How does this 20°C increase affect subthreshold leakage current in the idle transistors?',
       options: [
-        { text: 'It decreases with higher temperature', correct: false },
-        { text: 'It roughly doubles for every 10C increase', correct: true },
-        { text: 'It stays constant regardless of temperature', correct: false },
-        { text: 'It only changes above 100C', correct: false },
+        { text: 'Subthreshold leakage decreases because hotter electrons move away from the gate faster', correct: false },
+        { text: 'Subthreshold leakage roughly quadruples — it doubles for each 10°C increase, so 20°C means 4x', correct: true },
+        { text: 'Subthreshold leakage stays constant because it only depends on gate voltage, not temperature', correct: false },
+        { text: 'The leakage only increases significantly above 100°C — below that it stays nearly flat', correct: false },
       ],
     },
     {
-      question: 'At what process node did leakage power become a major design concern?',
+      question: 'Chip designers in the early 2000s were scaling transistors to smaller nodes for better performance. At which process node did leakage power first become a serious enough design challenge to require major architectural changes?',
       options: [
-        { text: '250nm and larger', correct: false },
-        { text: 'Around 130nm to 90nm', correct: true },
-        { text: 'Only below 7nm', correct: false },
-        { text: 'Leakage has always been the dominant power component', correct: false },
+        { text: 'At 250nm and larger nodes — leakage was already significant in the DRAM era', correct: false },
+        { text: 'Around 130nm to 90nm — this is when leakage first became a critical power budget issue', correct: true },
+        { text: 'Only below 7nm — before that, leakage was negligible compared to dynamic power', correct: false },
+        { text: 'Leakage has always been the dominant power component since the first integrated circuits', correct: false },
       ],
     },
     {
-      question: 'What is the primary benefit of High-K gate dielectrics?',
+      question: 'Intel introduced High-K metal gate technology when moving to 45nm and below. A chip uses hafnium oxide (HfO2, K~25) instead of SiO2 (K~3.9) as the gate dielectric. What is the primary advantage that reduces leakage current?',
       options: [
-        { text: 'They conduct electricity better', correct: false },
-        { text: 'They allow thicker oxide with same capacitance, reducing tunneling', correct: true },
-        { text: 'They are cheaper to manufacture', correct: false },
-        { text: 'They increase transistor switching speed', correct: false },
+        { text: 'HfO2 conducts electricity better, allowing faster switching with lower gate voltage', correct: false },
+        { text: 'The higher dielectric constant allows a physically thicker oxide layer with equivalent capacitance, reducing quantum tunneling leakage', correct: true },
+        { text: 'High-K dielectrics are cheaper to deposit, reducing manufacturing defects that cause leakage', correct: false },
+        { text: 'HfO2 creates a wider bandgap that accelerates transistor switching speed and reduces resistance', correct: false },
       ],
     },
     {
-      question: 'How does supply voltage affect leakage power?',
+      question: 'A power engineer is comparing two identical chip designs running at 1.0V vs 0.8V supply voltage. Both chips are idle with the same number of transistors at the same temperature. How does the 20% voltage reduction affect leakage power consumption?',
       options: [
-        { text: 'Leakage is independent of supply voltage', correct: false },
-        { text: 'Leakage increases roughly linearly with voltage', correct: false },
-        { text: 'Leakage increases exponentially as voltage rises', correct: true },
-        { text: 'Leakage decreases with higher voltage', correct: false },
+        { text: 'Leakage is independent of supply voltage — it only depends on oxide thickness and temperature', correct: false },
+        { text: 'Leakage decreases roughly linearly, so a 20% voltage drop gives about 20% less leakage', correct: false },
+        { text: 'Leakage increases exponentially as voltage rises — lower voltage gives disproportionately much less leakage', correct: true },
+        { text: 'Leakage actually increases at lower voltage because electrons move more slowly through the channel', correct: false },
       ],
     },
     {
-      question: 'Why do FinFET transistors have better leakage characteristics than planar transistors?',
+      question: 'Apple transitioned from planar to FinFET transistors starting at the A7 chip (20nm). A FinFET wraps the gate around the silicon fin on three sides instead of sitting flat on top. Why does this 3D geometry improve leakage control compared to planar transistors?',
       options: [
-        { text: 'They use different semiconductor materials', correct: false },
-        { text: 'The 3D gate structure provides better channel control', correct: true },
-        { text: 'They operate at higher voltages', correct: false },
-        { text: 'They have thicker gate oxide', correct: false },
+        { text: 'FinFETs use different semiconductor materials with wider bandgap that block electron flow better', correct: false },
+        { text: 'The 3D gate wraps around the channel, providing superior electrostatic control and allowing higher effective threshold voltage without performance penalty', correct: true },
+        { text: 'FinFETs operate at significantly higher supply voltages which reduces subthreshold leakage', correct: false },
+        { text: 'FinFETs have physically thicker gate oxide because the fin geometry allows more room for the dielectric', correct: false },
       ],
     },
     {
-      question: 'What technique do mobile processors use to minimize idle power?',
+      question: 'An ARM Cortex-A processor has 8 cores but most apps only use 1-2 cores at a time. Battery tests show the phone drains 15% overnight even in airplane mode with no apps running. What is the most effective hardware technique to minimize this idle leakage power drain?',
       options: [
-        { text: 'Running all cores at maximum frequency', correct: false },
-        { text: 'Power gating - completely shutting off unused blocks', correct: true },
-        { text: 'Increasing the clock frequency to finish tasks faster', correct: false },
-        { text: 'Using only planar transistors', correct: false },
+        { text: 'Running all 8 cores at maximum frequency to finish background tasks faster and then sleep longer', correct: false },
+        { text: 'Power gating: completely cutting off power supply to unused core blocks so those transistors cannot leak', correct: true },
+        { text: 'Increasing the clock frequency of active cores to compensate for the power lost to leakage', correct: false },
+        { text: 'Replacing all FinFET transistors with older planar designs that have higher threshold voltages', correct: false },
       ],
     },
     {
-      question: 'How does transistor threshold voltage affect subthreshold leakage?',
+      question: 'A chip designer must choose between two threshold voltage options: Vth = 0.4V (low-Vth for speed) vs Vth = 0.6V (high-Vth for leakage reduction). The subthreshold leakage follows I_sub ∝ exp(-Vth / nVt). How does this 0.2V Vth increase affect subthreshold leakage?',
       options: [
-        { text: 'Higher Vth means exponentially lower leakage', correct: true },
-        { text: 'Higher Vth means higher leakage', correct: false },
-        { text: 'Vth has no effect on leakage', correct: false },
-        { text: 'Lower Vth reduces leakage', correct: false },
+        { text: 'Higher Vth means exponentially lower leakage — at 25°C with n=1.5, the leakage reduces by roughly 100x', correct: true },
+        { text: 'Higher Vth means higher leakage because more gate voltage is needed to turn off the transistor', correct: false },
+        { text: 'Threshold voltage has essentially no effect on leakage — only temperature and oxide thickness matter', correct: false },
+        { text: 'Lower Vth reduces leakage because it lets transistors turn off more sharply and completely', correct: false },
       ],
     },
     {
-      question: 'What is the typical relationship between process node scaling and leakage density?',
+      question: 'A semiconductor company is comparing two process nodes: 28nm planar CMOS vs 7nm FinFET. Both have the same number of transistors per unit area. The 7nm node scales the oxide thinner and reduces Vth for performance. What happens to total leakage power density?',
       options: [
-        { text: 'Leakage density stays constant as nodes shrink', correct: false },
-        { text: 'Leakage density decreases with smaller nodes', correct: false },
-        { text: 'Leakage density increases dramatically with smaller nodes', correct: true },
-        { text: 'Leakage density only depends on temperature', correct: false },
+        { text: 'Leakage power density stays roughly constant because FinFET geometry compensates for the scaling effects', correct: false },
+        { text: 'Leakage power density actually decreases at smaller nodes because electrons have shorter distances to travel', correct: false },
+        { text: 'Leakage power density increases dramatically at smaller nodes — thinner oxide means more tunneling and lower Vth means more subthreshold current', correct: true },
+        { text: 'Leakage power density only depends on operating temperature, not on the specific process node technology', correct: false },
       ],
     },
     {
-      question: 'In a modern smartphone SoC at 5nm, approximately what fraction of total power is leakage at low activity?',
+      question: 'A teardown analysis of a modern 5nm smartphone SoC running a typical social media app finds that the CPU cores are active only about 10% of the time. During the other 90% idle time, approximately what fraction of total chip power consumption comes from leakage current rather than dynamic switching?',
       options: [
-        { text: 'Less than 5%', correct: false },
-        { text: '10-20%', correct: false },
-        { text: '30-50% or more', correct: true },
-        { text: 'Over 90%', correct: false },
+        { text: 'Less than 5% — modern power management nearly eliminates leakage during idle periods', correct: false },
+        { text: 'Around 10-20% — leakage is noticeable but dynamic power still dominates even at low activity', correct: false },
+        { text: '30-50% or more — at advanced nodes and low activity levels, leakage can exceed or match dynamic power', correct: true },
+        { text: 'Over 90% — essentially all power at idle in a modern chip is lost to transistor leakage currents', correct: false },
       ],
     },
   ];
@@ -640,25 +640,25 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
 
             {/* Section label */}
             <rect x={0} y={-25} width={120} height={18} rx={4} fill="#111827" />
-            <text x={60} y={-12} fill="#94a3b8" fontSize={10} fontWeight="bold" textAnchor="middle" style={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+            <text x={60} y={-12} fill="#94a3b8" fontSize={11} fontWeight="bold" textAnchor="middle" style={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}>
               MOSFET Cross-Section
             </text>
 
             {/* Silicon substrate (P-type body) */}
             <rect x={0} y={100} width={260} height={70} fill="url(#leakSiliconGradient)" />
-            <text x={130} y={155} fill="#9ca3af" fontSize={9} textAnchor="middle" fontWeight="bold">P-type Substrate</text>
+            <text x={130} y={155} fill="#9ca3af" fontSize={11} textAnchor="middle" fontWeight="bold">P-type Substrate</text>
 
             {/* Source region (N+ doped) */}
             <rect x={10} y={70} width={60} height={50} rx={4} fill="url(#leakSourceDrainGradient)" />
             <rect x={12} y={72} width={56} height={46} rx={3} fill="none" stroke="#93c5fd" strokeWidth={0.5} strokeOpacity={0.5} />
-            <text x={40} y={100} fill="#bfdbfe" fontSize={10} fontWeight="bold" textAnchor="middle">N+</text>
-            <text x={40} y={135} fill="#60a5fa" fontSize={9} textAnchor="middle" fontWeight="bold">SOURCE</text>
+            <text x={40} y={100} fill="#bfdbfe" fontSize={11} fontWeight="bold" textAnchor="middle">N+</text>
+            <text x={40} y={135} fill="#60a5fa" fontSize={11} textAnchor="middle" fontWeight="bold">SOURCE</text>
 
             {/* Drain region (N+ doped) */}
             <rect x={190} y={70} width={60} height={50} rx={4} fill="url(#leakSourceDrainGradient)" />
             <rect x={192} y={72} width={56} height={46} rx={3} fill="none" stroke="#93c5fd" strokeWidth={0.5} strokeOpacity={0.5} />
-            <text x={220} y={100} fill="#bfdbfe" fontSize={10} fontWeight="bold" textAnchor="middle">N+</text>
-            <text x={220} y={135} fill="#60a5fa" fontSize={9} textAnchor="middle" fontWeight="bold">DRAIN</text>
+            <text x={220} y={100} fill="#bfdbfe" fontSize={11} fontWeight="bold" textAnchor="middle">N+</text>
+            <text x={220} y={135} fill="#60a5fa" fontSize={11} textAnchor="middle" fontWeight="bold">DRAIN</text>
 
             {/* Channel region */}
             <rect x={70} y={70 + oxideThickness} width={120} height={30} fill="url(#leakChannelGradient)" />
@@ -820,117 +820,87 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
           </g>
 
           {/* ============================================ */}
-          {/* LEAKAGE TYPE LEGEND */}
+          {/* LEAKAGE TYPE LEGEND (absolute coords) */}
           {/* ============================================ */}
-          <g transform="translate(40, 285)">
-            <rect x={-10} y={-10} width={280} height={70} rx={6} fill="url(#leakMetricsPanelBg)" stroke="#334155" strokeWidth={1} />
-
-            {/* Gate Leakage indicator */}
-            <circle cx={15} cy={15} r={8} fill="url(#leakGateElectronGlow)" />
-            <circle cx={15} cy={15} r={3} fill="#e879f9" />
-            <text x={30} y={12} fill={colors.gate} fontSize={10} fontWeight="bold">Gate Leakage</text>
-            <text x={30} y={24} fill={colors.textMuted} fontSize={11}>Quantum tunneling through oxide</text>
-            <text x={200} y={18} fill={colors.gate} fontSize={12} fontWeight="bold" textAnchor="end">
-              {output.gateLeakage.toFixed(2)}W
-            </text>
-
-            {/* Subthreshold Leakage indicator */}
-            <circle cx={15} cy={45} r={8} fill="url(#leakSubElectronGlow)" />
-            <circle cx={15} cy={45} r={3} fill="#fb923c" />
-            <text x={30} y={42} fill={colors.subthreshold} fontSize={10} fontWeight="bold">Subthreshold Leakage</text>
-            <text x={30} y={54} fill={colors.textMuted} fontSize={11}>Source-drain current when OFF</text>
-            <text x={200} y={48} fill={colors.subthreshold} fontSize={12} fontWeight="bold" textAnchor="end">
-              {output.subthresholdLeakage.toFixed(2)}W
-            </text>
-          </g>
+          <rect x={30} y={275} width={310} height={90} rx={6} fill="url(#leakMetricsPanelBg)" stroke="#334155" strokeWidth={1} />
+          {/* Gate Leakage indicator */}
+          <circle cx={50} cy={298} r={6} fill="url(#leakGateElectronGlow)" />
+          <text x={62} y={293} fill={colors.gate} fontSize={11} fontWeight="bold">Gate Leakage</text>
+          <text x={290} y={293} fill={colors.gate} fontSize={11} fontWeight="bold" textAnchor="end">
+            {output.gateLeakage.toFixed(2)}W
+          </text>
+          <text x={62} y={308} fill={colors.textMuted} fontSize={11}>Quantum tunneling through gate oxide</text>
+          {/* Subthreshold Leakage indicator */}
+          <circle cx={50} cy={331} r={6} fill="url(#leakSubElectronGlow)" />
+          <text x={62} y={326} fill={colors.subthreshold} fontSize={11} fontWeight="bold">Subthreshold Leakage</text>
+          <text x={290} y={326} fill={colors.subthreshold} fontSize={11} fontWeight="bold" textAnchor="end">
+            {output.subthresholdLeakage.toFixed(2)}W
+          </text>
+          <text x={62} y={341} fill={colors.textMuted} fontSize={11}>Source-to-drain current when transistor is OFF</text>
 
           {/* ============================================ */}
-          {/* POWER COMPARISON BAR CHART */}
+          {/* POWER COMPARISON BAR CHART (absolute coords) */}
           {/* ============================================ */}
-          <g transform="translate(360, 70)">
-            {/* Chart frame */}
-            <rect x={-15} y={-10} width={330} height={200} rx={8} fill="url(#leakPanelBg)" stroke="#334155" strokeWidth={1} />
-
-            {/* Section label */}
-            <rect x={0} y={-25} width={100} height={18} rx={4} fill="#111827" />
-            <text x={50} y={-12} fill="#94a3b8" fontSize={10} fontWeight="bold" textAnchor="middle" style={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-              Power Analysis
-            </text>
-
-            {/* Y-axis */}
-            <line x1={50} y1={10} x2={50} y2={150} stroke={colors.textMuted} strokeWidth={1} />
-            <text x={25} y={80} fill={colors.textMuted} fontSize={9} textAnchor="middle" transform="rotate(-90, 25, 80)">Power (Watts)</text>
-
-            {/* X-axis */}
-            <line x1={50} y1={150} x2={290} y2={150} stroke={colors.textMuted} strokeWidth={1} />
-
-            {/* Dynamic power bar */}
-            <rect x={80} y={150 - dynamicHeight} width={70} height={dynamicHeight} rx={4} fill="url(#leakDynamicBarGradient)" />
-            <rect x={82} y={152 - dynamicHeight} width={66} height={dynamicHeight - 4} rx={3} fill="none" stroke="#60a5fa" strokeWidth={0.5} strokeOpacity={0.5} />
-            <text x={115} y={165} fill={colors.textMuted} fontSize={10} textAnchor="middle" fontWeight="bold">Dynamic</text>
-            <text x={115} y={145 - dynamicHeight} fill={colors.dynamic} fontSize={11} textAnchor="middle" fontWeight="bold">
-              {output.dynamicPower.toFixed(1)}W
-            </text>
-
-            {/* Leakage power bar (stacked: subthreshold + gate) */}
-            <rect x={190} y={150 - subHeight - gateHeight} width={70} height={subHeight} rx={4} fill={colors.subthreshold} />
-            <rect x={190} y={150 - gateHeight} width={70} height={gateHeight} rx={4} fill={colors.gate} />
-            <rect x={192} y={152 - subHeight - gateHeight} width={66} height={subHeight + gateHeight - 4} rx={3} fill="none" stroke="#f87171" strokeWidth={0.5} strokeOpacity={0.5} />
-            <text x={225} y={165} fill={colors.textMuted} fontSize={10} textAnchor="middle" fontWeight="bold">Leakage</text>
-            <text x={225} y={145 - gateHeight - subHeight} fill={colors.leakage} fontSize={11} textAnchor="middle" fontWeight="bold">
-              {output.totalLeakage.toFixed(1)}W
-            </text>
-
-            {/* Stack labels */}
-            {gateHeight > 15 && (
-              <text x={225} y={150 - gateHeight/2} fill="#f5f3ff" fontSize={11} textAnchor="middle">Gate</text>
-            )}
-            {subHeight > 15 && (
-              <text x={225} y={150 - gateHeight - subHeight/2} fill="#fff7ed" fontSize={11} textAnchor="middle">Sub</text>
-            )}
-          </g>
+          {/* Chart frame at x=345, y=60 */}
+          <rect x={345} y={60} width={330} height={200} rx={8} fill="url(#leakPanelBg)" stroke="#334155" strokeWidth={1} />
+          <rect x={360} y={62} width={100} height={18} rx={4} fill="#111827" />
+          <text x={410} y={75} fill="#94a3b8" fontSize={11} fontWeight="bold" textAnchor="middle">Power Analysis</text>
+          {/* Y-axis and X-axis */}
+          <line x1={410} y1={85} x2={410} y2={225} stroke={colors.textMuted} strokeWidth={1} />
+          <line x1={410} y1={225} x2={650} y2={225} stroke={colors.textMuted} strokeWidth={1} />
+          {/* Grid lines for reference */}
+          <line x1={410} y1={158} x2={650} y2={158} stroke={colors.textMuted} strokeWidth={0.5} strokeDasharray="4,4" strokeOpacity={0.5} />
+          <line x1={410} y1={191} x2={650} y2={191} stroke={colors.textMuted} strokeWidth={0.5} strokeDasharray="4,4" strokeOpacity={0.5} />
+          <text x={395} y={260} fill={colors.textMuted} fontSize={11} textAnchor="end">Watts</text>
+          {/* Dynamic power bar */}
+          <rect x={440} y={225 - dynamicHeight} width={70} height={dynamicHeight} rx={4} fill="url(#leakDynamicBarGradient)" />
+          <text x={475} y={240} fill={colors.textMuted} fontSize={11} textAnchor="middle" fontWeight="bold">Dynamic</text>
+          <text x={475} y={220 - dynamicHeight} fill={colors.dynamic} fontSize={11} textAnchor="middle" fontWeight="bold">
+            {output.dynamicPower.toFixed(1)}W
+          </text>
+          {/* Leakage power bars (stacked) */}
+          <rect x={550} y={225 - subHeight - gateHeight} width={70} height={subHeight} rx={4} fill={colors.subthreshold} />
+          <rect x={550} y={225 - gateHeight} width={70} height={gateHeight} rx={4} fill={colors.gate} />
+          <text x={585} y={240} fill={colors.textMuted} fontSize={11} textAnchor="middle" fontWeight="bold">Leakage</text>
+          <text x={585} y={220 - gateHeight - subHeight} fill={colors.leakage} fontSize={11} textAnchor="middle" fontWeight="bold">
+            {output.totalLeakage.toFixed(1)}W
+          </text>
+          {gateHeight > 15 && (
+            <text x={585} y={225 - gateHeight/2} fill="#f5f3ff" fontSize={11} textAnchor="middle">Gate</text>
+          )}
+          {subHeight > 15 && (
+            <text x={585} y={225 - gateHeight - subHeight/2} fill="#fff7ed" fontSize={11} textAnchor="middle">Sub</text>
+          )}
 
           {/* ============================================ */}
-          {/* METRICS & STATUS PANEL */}
+          {/* METRICS & STATUS PANEL (absolute coords) */}
           {/* ============================================ */}
-          <g transform="translate(360, 285)">
-            <rect x={-15} y={-10} width={330} height={70} rx={6} fill="url(#leakMetricsPanelBg)" stroke="#334155" strokeWidth={1} />
-
-            {/* Total Power */}
-            <text x={10} y={12} fill={colors.textSecondary} fontSize={10}>Total Power:</text>
-            <text x={10} y={28} fill={colors.textPrimary} fontSize={14} fontWeight="bold">{output.totalPower.toFixed(1)}W</text>
-
-            {/* Leakage Ratio */}
-            <text x={120} y={12} fill={colors.textSecondary} fontSize={10}>Leakage Ratio:</text>
-            <text x={120} y={28} fill={output.isLeakageDominant ? colors.error : colors.success} fontSize={14} fontWeight="bold">
-              {output.leakageRatio.toFixed(0)}%
-            </text>
-
-            {/* Transistor count */}
-            <text x={220} y={12} fill={colors.textSecondary} fontSize={10}>Transistors:</text>
-            <text x={220} y={28} fill={colors.textPrimary} fontSize={14} fontWeight="bold">{transistorCount}B</text>
-
-            {/* Clock frequency */}
-            <text x={10} y={48} fill={colors.textSecondary} fontSize={10}>Clock: {clockFrequency}GHz</text>
-            <text x={120} y={48} fill={colors.textSecondary} fontSize={10}>Vth: {output.vth.toFixed(2)}V</text>
-
-            {/* Warning indicator with glow */}
-            {output.isLeakageDominant && (
-              <g filter="url(#leakWarningGlow)">
-                <rect x={200} y={35} width={100} height={22} fill={colors.error} rx={4} opacity={0.3} />
-                <text x={250} y={50} fill={colors.error} fontSize={10} textAnchor="middle" fontWeight="bold">
-                  LEAKAGE DOMINANT
-                </text>
-              </g>
-            )}
-          </g>
+          <rect x={345} y={275} width={330} height={70} rx={6} fill="url(#leakMetricsPanelBg)" stroke="#334155" strokeWidth={1} />
+          <text x={370} y={293} fill={colors.textSecondary} fontSize={11}>Total Power:</text>
+          <text x={370} y={309} fill={colors.textPrimary} fontSize={14} fontWeight="bold">{output.totalPower.toFixed(1)}W</text>
+          <text x={480} y={293} fill={colors.textSecondary} fontSize={11}>Leakage Ratio:</text>
+          <text x={480} y={309} fill={output.isLeakageDominant ? colors.error : colors.success} fontSize={14} fontWeight="bold">
+            {output.leakageRatio.toFixed(0)}%
+          </text>
+          <text x={580} y={293} fill={colors.textSecondary} fontSize={11}>Transistors:</text>
+          <text x={580} y={309} fill={colors.textPrimary} fontSize={14} fontWeight="bold">{transistorCount}B</text>
+          <text x={370} y={333} fill={colors.textSecondary} fontSize={11}>Clock: {clockFrequency}GHz  |  Vth: {output.vth.toFixed(2)}V</text>
+          {output.isLeakageDominant && (
+            <>
+              <rect x={545} y={318} width={120} height={22} fill={colors.error} rx={4} opacity={0.3} />
+              <text x={605} y={333} fill={colors.error} fontSize={11} textAnchor="middle" fontWeight="bold">LEAKAGE DOMINANT</text>
+            </>
+          )}
 
           {/* Process node indicator at bottom */}
-          <g transform={`translate(${width/2}, ${height - 25})`}>
-            <text x={0} y={0} fill={colors.textMuted} fontSize={10} textAnchor="middle">
-              Process Technology: {processNode}nm | {processNode <= 7 ? 'FinFET/GAA' : processNode <= 22 ? 'FinFET' : 'Planar MOSFET'}
-            </text>
-          </g>
+          <text x={width/2} y={height - 25} fill={colors.textMuted} fontSize={11} textAnchor="middle">
+            Process: {processNode}nm | {processNode <= 7 ? 'FinFET/GAA' : processNode <= 22 ? 'FinFET' : 'Planar MOSFET'}
+          </text>
+
+          {/* Formula reference near graphic */}
+          <rect x={30} y={height - 60} width={310} height={32} rx={4} fill="rgba(0,0,0,0.4)" />
+          <text x={40} y={height - 44} fill={colors.gate} fontSize={11} fontWeight="bold">I_gate ∝ exp(-t_ox)</text>
+          <text x={175} y={height - 44} fill={colors.subthreshold} fontSize={11} fontWeight="bold">  I_sub ∝ exp(-Vth/nVt)</text>
         </svg>
 
         {interactive && (
@@ -1333,12 +1303,28 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontWeight: 700, marginBottom: '8px' }}>Explore Leakage Power</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
-              Adjust process node, temperature, and voltage
+              The visualization displays how transistor leakage current depends on process node, temperature, and supply voltage.
+              Adjust the sliders to see how each parameter affects gate and subthreshold leakage in real-time.
             </p>
           </div>
 
           {renderVisualization(true)}
           {renderControls()}
+
+          <div style={{
+            background: colors.bgCard,
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+          }}>
+            <h4 style={{ color: colors.accent, fontWeight: 700, marginBottom: '8px' }}>Key Physics Terms:</h4>
+            <ul style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400, lineHeight: 1.8, paddingLeft: '20px', margin: '0 0 12px 0' }}>
+              <li><strong style={{ color: colors.gate }}>Gate Leakage:</strong> Quantum tunneling of electrons through ultra-thin gate oxide (SiO₂). Follows I_gate ∝ exp(-t_ox) where t_ox is oxide thickness.</li>
+              <li><strong style={{ color: colors.subthreshold }}>Subthreshold Leakage:</strong> Current that flows from source to drain even when gate voltage is below threshold. Follows I_sub ∝ exp(-Vth / nVt).</li>
+              <li><strong style={{ color: colors.textPrimary }}>Threshold Voltage (Vth):</strong> The minimum gate voltage needed to create a conducting channel. Lower Vth → higher speed but exponentially more leakage.</li>
+              <li><strong style={{ color: colors.dynamic }}>Dynamic Power:</strong> Power consumed during transistor switching. P_dyn = αCVdd²f where α is activity factor, C is capacitance, f is frequency.</li>
+            </ul>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1405,13 +1391,13 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
         <text x={width/2} y={25} fill="#e2e8f0" fontSize={14} fontWeight="bold" textAnchor="middle">Leakage Types Comparison</text>
         <rect x={80} y={50} width={60} height={100} fill="url(#gateBar)" rx={4} />
         <text x={110} y={170} fill="#a855f7" fontSize={11} textAnchor="middle" fontWeight="bold">Gate</text>
-        <text x={110} y={185} fill="#e2e8f0" fontSize={9} textAnchor="middle">Tunneling</text>
+        <text x={110} y={185} fill="#e2e8f0" fontSize={11} textAnchor="middle">Tunneling</text>
         <rect x={180} y={70} width={60} height={80} fill="url(#subBar)" rx={4} />
         <text x={210} y={170} fill="#fb923c" fontSize={11} textAnchor="middle" fontWeight="bold">Subthreshold</text>
-        <text x={210} y={185} fill="#e2e8f0" fontSize={9} textAnchor="middle">Thermal</text>
+        <text x={210} y={185} fill="#e2e8f0" fontSize={11} textAnchor="middle">Thermal</text>
         <rect x={280} y={40} width={60} height={110} fill="#ef4444" rx={4} />
         <text x={310} y={170} fill="#ef4444" fontSize={11} textAnchor="middle" fontWeight="bold">Total</text>
-        <text x={310} y={185} fill="#e2e8f0" fontSize={9} textAnchor="middle">Leakage</text>
+        <text x={310} y={185} fill="#e2e8f0" fontSize={11} textAnchor="middle">Leakage</text>
       </svg>
     );
   };
@@ -1455,6 +1441,12 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.accent, fontWeight: 700, marginBottom: '12px' }}>Two Types of Leakage</h3>
+            <div style={{ background: 'rgba(245,158,11,0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px', borderLeft: `3px solid ${colors.accent}` }}>
+              <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 700, margin: '0 0 4px 0' }}>Key Formulas:</p>
+              <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 400, fontFamily: 'monospace', margin: '0 0 4px 0' }}>I_gate ∝ exp(-2·t_ox·√(2m·φ_B)/ħ)</p>
+              <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 400, fontFamily: 'monospace', margin: '0 0 4px 0' }}>I_sub ∝ exp(-Vth / nVt)  where Vt = kT/q</p>
+              <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 400, fontFamily: 'monospace', margin: 0 }}>I_leak doubles for every 10°C rise in temperature</p>
+            </div>
             <div style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400, lineHeight: 1.7 }}>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.gate, fontWeight: 700 }}>Gate Leakage:</strong> Electrons quantum tunnel
@@ -1602,18 +1594,18 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
         <text x={width/2} y={25} fill="#e2e8f0" fontSize={14} fontWeight="bold" textAnchor="middle">Power Crossover Point</text>
         <line x1={50} y1={40} x2={50} y2={160} stroke="#475569" strokeWidth={2} />
         <line x1={50} y1={160} x2={370} y2={160} stroke="#475569" strokeWidth={2} />
-        <text x={210} y={185} fill="#e2e8f0" fontSize={10} textAnchor="middle">Process Node (nm)</text>
-        <text x={25} y={100} fill="#e2e8f0" fontSize={10} textAnchor="middle" transform="rotate(-90, 25, 100)">Power</text>
+        <text x={210} y={185} fill="#e2e8f0" fontSize={11} textAnchor="middle">Process Node (nm)</text>
+        <text x={25} y={100} fill="#e2e8f0" fontSize={11} textAnchor="middle" transform="rotate(-90, 25, 100)">Power</text>
         <path d="M 70 140 Q 150 130, 200 100 Q 250 70, 350 50" stroke="#3b82f6" strokeWidth={3} fill="none" />
-        <text x={360} y={55} fill="#3b82f6" fontSize={10}>Dynamic</text>
+        <text x={360} y={55} fill="#3b82f6" fontSize={11}>Dynamic</text>
         <path d="M 70 155 Q 150 150, 200 120 Q 250 80, 350 45" stroke="#ef4444" strokeWidth={3} fill="none" />
-        <text x={360} y={40} fill="#ef4444" fontSize={10}>Leakage</text>
+        <text x={360} y={40} fill="#ef4444" fontSize={11}>Leakage</text>
         <circle cx={230} cy={95} r={8} fill="#f59e0b" opacity={0.8} />
-        <text x={230} y={80} fill="#f59e0b" fontSize={10} textAnchor="middle" fontWeight="bold">Crossover</text>
-        <text x={90} y={175} fill="#e2e8f0" fontSize={9}>90nm</text>
-        <text x={160} y={175} fill="#e2e8f0" fontSize={9}>45nm</text>
-        <text x={230} y={175} fill="#f59e0b" fontSize={9}>14nm</text>
-        <text x={300} y={175} fill="#e2e8f0" fontSize={9}>5nm</text>
+        <text x={230} y={80} fill="#f59e0b" fontSize={11} textAnchor="middle" fontWeight="bold">Crossover</text>
+        <text x={90} y={175} fill="#e2e8f0" fontSize={11}>90nm</text>
+        <text x={160} y={175} fill="#e2e8f0" fontSize={11}>45nm</text>
+        <text x={230} y={175} fill="#f59e0b" fontSize={11}>14nm</text>
+        <text x={300} y={175} fill="#e2e8f0" fontSize={11}>5nm</text>
       </svg>
     );
   };
@@ -1716,19 +1708,26 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
               <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
                 <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
               </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px', minHeight: '44px', WebkitTapHighlightColor: 'transparent' }}
-                >
-                  Reveal Answer
-                </button>
+              {transferGotIt.has(index) ? (
+                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
+                  <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 400 }}>{app.answer}</p>
+                </div>
               ) : (
                 <div>
-                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
-                    <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 400 }}>{app.answer}</p>
-                  </div>
-                  {!transferGotIt.has(index) && (
+                  {transferCompleted.has(index) && (
+                    <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
+                      <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 400 }}>{app.answer}</p>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {!transferCompleted.has(index) && (
+                      <button
+                        onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                        style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px', minHeight: '44px', WebkitTapHighlightColor: 'transparent' }}
+                      >
+                        Reveal Answer
+                      </button>
+                    )}
                     <button
                       onClick={() => setTransferGotIt(new Set([...transferGotIt, index]))}
                       style={{
@@ -1746,7 +1745,7 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
                     >
                       Got It
                     </button>
-                  )}
+                  </div>
                 </div>
               )}
             </div>

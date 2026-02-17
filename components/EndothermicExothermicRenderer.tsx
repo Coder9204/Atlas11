@@ -1122,11 +1122,11 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
       const score = testAnswers.reduce((acc, ans, i) => acc + (ans !== null && testQuestions[i].options[ans]?.correct ? 1 : 0), 0);
       const passed = score >= 7;
       return (
-        renderPhaseWrapper(passed, passed ? 'Complete Lesson' : 'Review & Retry', <>
+        renderPhaseWrapper(true, 'Complete Lesson', <>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>{passed ? '\ud83c\udfc6' : '\ud83d\udcda'}</div>
             <h2 style={{ fontSize: '28px', fontWeight: 900, marginBottom: '8px' }}>
-              {passed ? 'Excellent!' : 'Keep Learning!'}
+              Test Complete! {passed ? 'Excellent!' : 'Keep Learning!'}
             </h2>
             <p style={{ fontSize: '48px', fontWeight: 900, color: design.accent, marginBottom: '16px' }}>{score}/10</p>
             <p style={{ color: design.textSecondary, fontSize: '16px', marginBottom: '24px', textAlign: 'center' }}>

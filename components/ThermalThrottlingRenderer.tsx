@@ -375,7 +375,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Cooling Effect',
+    twist_play: 'Explore Cooling',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -457,31 +457,49 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
   );
 
   // Navigation dots
-  const renderNavDots = () => (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '8px',
-      padding: '16px 0',
-    }}>
-      {phaseOrder.map((p, i) => (
-        <button
-          key={p}
-          onClick={() => goToPhase(p)}
-          style={{
-            width: phase === p ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
-            border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-          }}
-          aria-label={phaseLabels[p]}
-        />
-      ))}
-    </div>
-  );
+  const renderNavDots = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 0 16px 0' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '8px' }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => goToPhase(p)}
+              style={{
+                width: phase === p ? '24px' : '8px',
+                height: '8px',
+                borderRadius: '4px',
+                border: 'none',
+                background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+              }}
+              aria-label={phaseLabels[p]}
+            />
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          {currentIndex > 0 && (
+            <button
+              onClick={() => goToPhase(phaseOrder[currentIndex - 1])}
+              style={{
+                padding: '8px 16px',
+                borderRadius: '8px',
+                border: `1px solid ${colors.border}`,
+                background: 'transparent',
+                color: colors.textSecondary,
+                cursor: 'pointer',
+                fontSize: '14px',
+              }}
+            >
+              ← Back
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
@@ -506,7 +524,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
     const performanceRatio = clockSpeed / 4.5;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="tempGrad" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor={colors.cool} />
@@ -563,8 +581,11 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
           ))}
         </g>
 
+        {/* Temperature trend indicator path */}
+        <path d={`M 30 ${height - 100} Q ${width/4} ${height - 130} ${width/2 - 50} ${80}`} fill="none" stroke={colors.accent} strokeWidth="1.5" strokeDasharray="3,3" opacity="0.4" />
+
         {/* Y-axis label */}
-        <text x="10" y="55" fill={colors.textMuted} fontSize="11" transform={`rotate(-90, 10, 55)`}>
+        <text x="10" y="65" fill={colors.textMuted} fontSize="11" transform={`rotate(-90, 10, 65)`}>
           Temperature
         </text>
 
@@ -614,7 +635,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
         {showCooling && (
           <g transform={`translate(20, 60)`}>
             <rect x="0" y="0" width="70" height="80" rx="8" fill="#0c4a6e" stroke="#0369a1" />
-            <text x="35" y="10" textAnchor="middle" fill="#7dd3fc" fontSize="11" fontWeight="600">COOLING</text>
+            <text x="35" y="14" textAnchor="middle" fill="#7dd3fc" fontSize="11" fontWeight="600">COOLING</text>
 
             {/* Fan blades */}
             <g transform="translate(35, 50)">
@@ -639,26 +660,26 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
         {/* Temperature gauge */}
         <g transform={`translate(${width - 70}, 50)`}>
           <rect x="0" y="0" width="50" height="120" rx="6" fill={colors.bgSecondary} stroke={colors.border} />
-          <text x="20" y="22" textAnchor="middle" fill={colors.textMuted} fontSize="11">TEMP</text>
+          <text x="15" y="28" textAnchor="start" fill="#9CA3AF" fontSize="11">TEMP</text>
 
           <rect x="10" y="25" width="30" height="80" rx="4" fill={colors.bgPrimary} />
           <rect x="12" y={27 + 76 * (1 - tempRatio)} width="26" height={76 * tempRatio} rx="3" fill="url(#tempGrad)" />
 
-          <text x="25" y="118" textAnchor="middle" fill={temperature > T_THROTTLE ? colors.hot : colors.textPrimary} fontSize="14" fontWeight="700">
+          <text x="25" y="128" textAnchor="middle" fill={temperature > T_THROTTLE ? colors.hot : colors.textPrimary} fontSize="14" fontWeight="700">
             {temperature.toFixed(0)}C
           </text>
         </g>
 
         {/* Status panel */}
         <g transform={`translate(20, ${height - 140})`}>
-          <rect x="0" y="0" width={width - 40} height="50" rx="8" fill={isThrottling ? "rgba(239,68,68,0.2)" : colors.bgSecondary} stroke={isThrottling ? colors.hot : colors.border} />
+          <rect x="0" y="0" width={width - 40} height="55" rx="8" fill={isThrottling ? "rgba(239,68,68,0.2)" : colors.bgSecondary} stroke={isThrottling ? colors.hot : colors.border} />
 
-          <circle cx="25" cy="25" r="8" fill={isThrottling ? colors.hot : colors.success}>
+          <circle cx="25" cy="28" r="8" fill={isThrottling ? colors.hot : colors.success}>
             {isThrottling && <animate attributeName="opacity" values="0.5;1;0.5" dur="0.5s" repeatCount="indefinite" />}
           </circle>
 
-          <text x="45" y="20" fill={colors.textMuted} fontSize="11">DVFS STATUS</text>
-          <text x="45" y="36" fill={isThrottling ? colors.hot : colors.success} fontSize="13" fontWeight="600">
+          <text x="45" y="35" fill={colors.textMuted} fontSize="11">DVFS STATUS</text>
+          <text x="45" y="50" fill={isThrottling ? colors.hot : colors.success} fontSize="13" fontWeight="600">
             {isThrottling ? "THROTTLING ACTIVE" : "NORMAL OPERATION"}
           </text>
         </g>
@@ -697,6 +718,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
         justifyContent: 'center',
         padding: '24px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -730,6 +752,11 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
           maxWidth: '500px',
           border: `1px solid ${colors.border}`,
         }}>
+          <svg width="60" height="16" style={{ marginBottom: '8px' }}>
+            <circle cx="8" cy="8" r="5" fill="#9CA3AF" opacity="0.6" />
+            <circle cx="30" cy="8" r="5" fill="#6B7280" opacity="0.6" />
+            <circle cx="52" cy="8" r="5" fill="#9CA3AF" opacity="0.6" />
+          </svg>
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
             "Modern processors can hit 4-5 GHz and dissipate 100+ watts. Without thermal throttling, they'd literally cook themselves in seconds. DVFS (Dynamic Voltage and Frequency Scaling) is the reason your phone survives the summer."
           </p>
@@ -742,7 +769,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          Explore Thermal Throttling
+          Begin Exploring Thermal Throttling
         </button>
 
         {renderNavDots()}
@@ -792,35 +819,43 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
             When a processor approaches dangerous temperatures (95-100C), what happens?
           </h2>
 
-          {/* Simple diagram */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🎮</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Heavy Gaming</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>-&gt;</div>
-              <div style={{
-                background: colors.hot + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.hot}`,
-              }}>
-                <div style={{ fontSize: '24px', color: colors.hot }}>95C+</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>CPU Overheating</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>-&gt;</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>???</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>What Happens?</p>
-              </div>
-            </div>
+          {/* Static SVG diagram */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <svg width="400" height="160" viewBox="0 0 400 160" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <defs>
+                <linearGradient id="predictHotGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor={colors.warning} />
+                  <stop offset="100%" stopColor={colors.hot} />
+                </linearGradient>
+              </defs>
+              {/* Gaming icon box */}
+              <rect x="20" y="40" width="80" height="80" rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
+              <text x="60" y="85" textAnchor="middle" fontSize="32">🎮</text>
+              <text x="60" y="110" textAnchor="middle" fill={colors.textMuted} fontSize="11">Heavy Load</text>
+              {/* Arrow */}
+              <path d="M 110 80 L 140 80" stroke={colors.textMuted} strokeWidth="2" markerEnd="url(#arrowPred)" />
+              <defs>
+                <marker id="arrowPred" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                  <path d="M 0 0 L 6 3 L 0 6 Z" fill={colors.textMuted} />
+                </marker>
+              </defs>
+              {/* CPU hot box */}
+              <rect x="150" y="40" width="100" height="80" rx="8" fill={colors.hot + '33'} stroke={colors.hot} strokeWidth="2" />
+              <text x="200" y="75" textAnchor="middle" fill={colors.hot} fontSize="18" fontWeight="700">95C+</text>
+              <text x="200" y="95" textAnchor="middle" fill={colors.textPrimary} fontSize="11">CPU Critical</text>
+              <text x="200" y="112" textAnchor="middle" fill={colors.textMuted} fontSize="11">Temp</text>
+              {/* Arrow */}
+              <path d="M 260 80 L 290 80" stroke={colors.textMuted} strokeWidth="2" markerEnd="url(#arrowPred2)" />
+              <defs>
+                <marker id="arrowPred2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                  <path d="M 0 0 L 6 3 L 0 6 Z" fill={colors.textMuted} />
+                </marker>
+              </defs>
+              {/* Question box */}
+              <rect x="300" y="40" width="80" height="80" rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
+              <text x="340" y="82" textAnchor="middle" fontSize="28">???</text>
+              <text x="340" y="110" textAnchor="middle" fill={colors.textMuted} fontSize="11">Result?</text>
+            </svg>
           </div>
 
           {/* Options */}
@@ -899,8 +934,11 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Thermal Throttling Simulator
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Increase workload and watch the CPU respond to rising temperatures.
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
+            This visualization shows how temperature rises as workload increases. Notice how the CPU responds when temperatures approach critical levels.
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '24px' }}>
+            When workload increases, power consumption causes more heat. Higher temperatures lead to throttling — a critical mechanism used in real-world chip design to prevent damage.
           </p>
 
           {/* Main visualization */}
@@ -1098,6 +1136,9 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
           }}>
             <div style={{ ...typo.body, color: colors.textSecondary }}>
               <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>What you observed:</strong> As you saw in the experiment, when workload increases, the processor generates more heat. Your prediction was tested against this real thermal behavior.
+              </p>
+              <p style={{ marginBottom: '16px' }}>
                 <strong style={{ color: colors.textPrimary }}>Voltage is Key:</strong> Since power scales with V^2, reducing voltage has a dramatic effect. A 10% voltage drop cuts power by 19%!
               </p>
               <p style={{ marginBottom: '16px' }}>
@@ -1180,36 +1221,38 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
             If you add a better heatsink or cooling system to a processor, what happens to sustained performance?
           </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{
-                background: `${colors.cool}33`,
-                padding: '16px',
-                borderRadius: '12px',
-                border: `2px solid ${colors.cool}`,
-              }}>
-                <div style={{ fontSize: '36px', marginBottom: '8px' }}>❄️</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Better Cooling</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>+</div>
-              <div style={{
-                background: `${colors.hot}33`,
-                padding: '16px',
-                borderRadius: '12px',
-                border: `2px solid ${colors.hot}`,
-              }}>
-                <div style={{ fontSize: '36px', marginBottom: '8px' }}>🔥</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Same Hot CPU</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>=</div>
-              <div style={{ fontSize: '48px' }}>???</div>
-            </div>
+          {/* Static SVG diagram */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <svg width="400" height="180" viewBox="0 0 400 180" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <defs>
+                <linearGradient id="twistGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor={colors.cool} />
+                  <stop offset="100%" stopColor="#0369a1" />
+                </linearGradient>
+              </defs>
+              {/* Title */}
+              <text x="200" y="22" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">Effect of Cooling on Performance</text>
+              {/* Cooling box */}
+              <rect x="20" y="45" width="90" height="80" rx="8" fill={colors.cool + '33'} stroke={colors.cool} strokeWidth="2" />
+              <text x="65" y="82" textAnchor="middle" fontSize="28">❄️</text>
+              <text x="65" y="101" textAnchor="middle" fill={colors.cool} fontSize="12" fontWeight="600">Better</text>
+              <text x="65" y="117" textAnchor="middle" fill={colors.cool} fontSize="11">Cooling</text>
+              {/* Plus */}
+              <text x="130" y="90" textAnchor="middle" fill={colors.textMuted} fontSize="24" fontWeight="700">+</text>
+              {/* Hot CPU box */}
+              <rect x="155" y="45" width="90" height="80" rx="8" fill={colors.hot + '33'} stroke={colors.hot} strokeWidth="2" />
+              <text x="200" y="82" textAnchor="middle" fontSize="28">🔥</text>
+              <text x="200" y="101" textAnchor="middle" fill={colors.hot} fontSize="12" fontWeight="600">Hot CPU</text>
+              <text x="200" y="117" textAnchor="middle" fill={colors.textMuted} fontSize="11">Same load</text>
+              {/* Equals */}
+              <text x="270" y="90" textAnchor="middle" fill={colors.textMuted} fontSize="24" fontWeight="700">=</text>
+              {/* Result question */}
+              <rect x="295" y="45" width="90" height="80" rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
+              <text x="340" y="88" textAnchor="middle" fontSize="28">???</text>
+              <text x="340" y="116" textAnchor="middle" fill={colors.textMuted} fontSize="11">Performance?</text>
+              {/* Bottom hint */}
+              <text x="200" y="158" textAnchor="middle" fill={colors.textMuted} fontSize="11">Make your prediction above</text>
+            </svg>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1505,6 +1548,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
   // TRANSFER PHASE
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
+    const completedCount = completedApps.filter(c => c).length;
     const allAppsCompleted = completedApps.every(c => c);
 
     return (
@@ -1525,9 +1569,12 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
           paddingRight: '24px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
             </h2>
+            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '16px' }}>
+              App {completedCount + (completedApps[selectedApp] ? 0 : 1)} of {realWorldApps.length} — Explore each application
+            </p>
 
             {/* App selector */}
             <div style={{
@@ -1618,6 +1665,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1632,7 +1680,35 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
                 </div>
               ))}
             </div>
+
+            <div style={{
+              background: `${app.color}11`,
+              borderRadius: '8px',
+              padding: '16px',
+              border: `1px solid ${app.color}33`,
+            }}>
+              <h4 style={{ ...typo.small, color: app.color, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
           </div>
+
+            {!completedApps[selectedApp] && (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{ ...primaryButtonStyle, width: '100%', marginBottom: '12px' }}
+              >
+                Got It! Continue
+              </button>
+            )}
 
             {allAppsCompleted && (
               <button
@@ -1680,6 +1756,32 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
                 ? 'You understand thermal throttling and thermal management!'
                 : 'Review the concepts and try again.'}
             </p>
+
+            {/* Answer review */}
+            <div style={{ textAlign: 'left', marginBottom: '24px', overflowY: 'auto', maxHeight: '300px' }}>
+              <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px', textAlign: 'center' }}>Answer Review</h3>
+              {testQuestions.map((q, i) => {
+                const correct = q.options.find(o => o.correct)?.id;
+                const isCorrect = testAnswers[i] === correct;
+                return (
+                  <div key={i} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '8px',
+                    marginBottom: '4px',
+                    background: colors.bgCard,
+                    borderRadius: '8px',
+                    border: `1px solid ${isCorrect ? colors.success : colors.hot}33`,
+                  }}>
+                    <span style={{ color: isCorrect ? colors.success : colors.hot, fontSize: '16px', fontWeight: 700 }}>
+                      {isCorrect ? '✓' : '✗'}
+                    </span>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Q{i + 1}: {isCorrect ? 'Correct' : `Wrong - answer: ${correct?.toUpperCase()}`}</span>
+                  </div>
+                );
+              })}
+            </div>
 
             {passed ? (
               <button

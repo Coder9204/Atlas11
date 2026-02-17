@@ -264,7 +264,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
 
   // Simulation state
   const [fanSpeed, setFanSpeed] = useState(70); // percent
-  const [serverLoad, setServerLoad] = useState(60); // percent
+  const [serverLoad, setServerLoad] = useState(80); // percent — start high so slider change to 60 is visible
   const [blankingPanels, setBlankingPanels] = useState(true);
   const [hotAisleContainment, setHotAisleContainment] = useState(false);
   const [raisedFloorOpenness, setRaisedFloorOpenness] = useState(50); // percent
@@ -462,7 +462,10 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
 
         {/* Raised floor / Plenum */}
         <rect x="20" y="280" width="460" height="50" fill="url(#floorGrad)" rx="4" />
-        <text x="250" y="310" fill={colors.textMuted} fontSize="10" textAnchor="middle">Raised Floor Plenum (Cold Air)</text>
+        <text x="250" y="310" fill={colors.textMuted} fontSize="11" textAnchor="middle">Raised Floor Plenum (Cold Air)</text>
+        {/* Axis labels */}
+        <text x="12" y="180" fill={colors.textMuted} fontSize="11" textAnchor="middle" transform="rotate(-90,12,180)">Temperature →</text>
+        <text x="250" y="348" fill={colors.textMuted} fontSize="11" textAnchor="middle">Airflow Direction →</text>
 
         {/* Cold air in plenum */}
         <ellipse cx="250" cy="295" rx={180 * (raisedFloorOpenness / 100)} ry="15" fill={coldColor} opacity="0.3" />
@@ -488,12 +491,12 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
 
         {/* Hot aisle zones */}
         <rect x="20" y="80" width="60" height="180" fill={hotColor} opacity="0.15" rx="4" />
-        <text x="50" y="100" fill={hotColor} fontSize="10" textAnchor="middle" fontWeight="600">HOT</text>
-        <text x="50" y="114" fill={hotColor} fontSize="9" textAnchor="middle">{metrics.hotAisleTemp.toFixed(1)}°C</text>
+        <text x="50" y="100" fill={hotColor} fontSize="11" textAnchor="middle" fontWeight="600">HOT</text>
+        <text x="50" y="114" fill={hotColor} fontSize="11" textAnchor="middle">{metrics.hotAisleTemp.toFixed(1)}°C</text>
 
         <rect x="420" y="80" width="60" height="180" fill={hotColor} opacity="0.15" rx="4" />
-        <text x="450" y="100" fill={hotColor} fontSize="10" textAnchor="middle" fontWeight="600">HOT</text>
-        <text x="450" y="114" fill={hotColor} fontSize="9" textAnchor="middle">{metrics.hotAisleTemp.toFixed(1)}°C</text>
+        <text x="450" y="100" fill={hotColor} fontSize="11" textAnchor="middle" fontWeight="600">HOT</text>
+        <text x="450" y="114" fill={hotColor} fontSize="11" textAnchor="middle">{metrics.hotAisleTemp.toFixed(1)}°C</text>
 
         {/* Server racks - Left side */}
         <g>
@@ -541,8 +544,8 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
           <>
             <rect x="20" y="75" width="60" height="8" fill={warmColor} opacity="0.8" rx="2" />
             <rect x="420" y="75" width="60" height="8" fill={warmColor} opacity="0.8" rx="2" />
-            <text x="50" y="70" fill={warmColor} fontSize="8" textAnchor="middle">CONTAINMENT</text>
-            <text x="450" y="70" fill={warmColor} fontSize="8" textAnchor="middle">CONTAINMENT</text>
+            <text x="50" y="68" fill={warmColor} fontSize="11" textAnchor="middle">CONTAIN</text>
+            <text x="450" y="68" fill={warmColor} fontSize="11" textAnchor="middle">CONTAIN</text>
           </>
         )}
 
@@ -641,8 +644,8 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
         {/* CRAC unit */}
         <g>
           <rect x="210" y="20" width="80" height="50" fill="#1e293b" rx="6" stroke="#475569" strokeWidth="2" />
-          <text x="250" y="40" fill={colors.textSecondary} fontSize="10" textAnchor="middle">CRAC Unit</text>
-          <text x="250" y="55" fill={coldColor} fontSize="10" textAnchor="middle">{fanSpeed}% CFM</text>
+          <text x="250" y="40" fill={colors.textSecondary} fontSize="11" textAnchor="middle">CRAC Unit</text>
+          <text x="250" y="55" fill={coldColor} fontSize="11" textAnchor="middle">{fanSpeed}% | Load:{serverLoad}%</text>
           {/* Fan animation */}
           {[0, 60, 120, 180, 240, 300].map((angle, i) => (
             <line
@@ -661,7 +664,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
         {/* Metrics display */}
         <g>
           <rect x="20" y="15" width="85" height="50" fill={colors.bgSecondary} rx="6" opacity="0.9" />
-          <text x="62" y="32" fill={colors.textSecondary} fontSize="9" textAnchor="middle">Recirculation</text>
+          <text x="62" y="32" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Recirc.</text>
           <text x="62" y="50" fill={blankingPanels ? colors.success : colors.error} fontSize="14" fontWeight="600" textAnchor="middle">
             {metrics.recirculationPercent.toFixed(0)}%
           </text>
@@ -669,7 +672,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
 
         <g>
           <rect x="395" y="15" width="85" height="50" fill={colors.bgSecondary} rx="6" opacity="0.9" />
-          <text x="437" y="32" fill={colors.textSecondary} fontSize="9" textAnchor="middle">Est. PUE</text>
+          <text x="437" y="32" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Est. PUE</text>
           <text x="437" y="50" fill={metrics.pue < 1.5 ? colors.success : metrics.pue < 1.8 ? colors.warning : colors.error} fontSize="14" fontWeight="600" textAnchor="middle">
             {metrics.pue.toFixed(2)}
           </text>
@@ -695,6 +698,24 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
       borderBottom: `1px solid ${colors.border}`,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {phaseOrder.indexOf(phase) > 0 && (
+          <button
+            onClick={() => { playSound('click'); goToPhase(phaseOrder[phaseOrder.indexOf(phase) - 1]); }}
+            style={{
+              background: 'transparent',
+              border: `1px solid ${colors.border}`,
+              borderRadius: '8px',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+              padding: '4px 10px',
+              fontSize: '14px',
+              minHeight: '44px',
+            }}
+            aria-label="Back"
+          >
+            ← Back
+          </button>
+        )}
         <span style={{ fontSize: '24px' }}>🏢</span>
         <span style={{ color: colors.textPrimary, fontWeight: 600 }}>Server Airflow</span>
       </div>
@@ -702,7 +723,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
         <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
           {phaseLabels[phase]}
         </span>
-        <span style={{ color: colors.textMuted, fontSize: '14px' }}>
+        <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
           ({phaseOrder.indexOf(phase) + 1}/{phaseOrder.length})
         </span>
       </div>
@@ -779,18 +800,15 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        paddingTop: '84px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '84px', paddingBottom: '80px', paddingLeft: '24px', paddingRight: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
 
         <div style={{
           fontSize: '64px',
@@ -838,6 +856,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
         </button>
 
         {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -852,15 +871,17 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '84px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '0 auto', overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '72px', paddingBottom: '80px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -985,6 +1006,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
             </button>
           )}
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -995,21 +1017,54 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '84px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '0 auto', overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '72px', paddingBottom: '80px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Data Center Airflow Lab
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Experiment with blanking panels and see how they affect temperatures
           </p>
+
+          {/* Key Physics Terms */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>Key Physics Terms:</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div style={{ ...typo.small, color: colors.textSecondary, fontWeight: 400 }}><strong style={{ color: colors.textPrimary }}>Recirculation:</strong> Hot exhaust air looping back to server intakes — the primary cause of overheating.</div>
+              <div style={{ ...typo.small, color: colors.textSecondary, fontWeight: 400 }}><strong style={{ color: colors.textPrimary }}>PUE (Power Usage Effectiveness):</strong> Total facility power ÷ IT power. PUE 1.0 is perfect; 1.5 means 50% overhead.</div>
+              <div style={{ ...typo.small, color: colors.textSecondary, fontWeight: 400 }}><strong style={{ color: colors.textPrimary }}>Delta-T (ΔT):</strong> Temperature rise across servers. Higher ΔT means more efficient heat extraction.</div>
+              <div style={{ ...typo.small, color: colors.textSecondary, fontWeight: 400 }}><strong style={{ color: colors.textPrimary }}>Bypass airflow:</strong> Cold air that returns to CRAC without cooling any servers — wasted energy.</div>
+            </div>
+          </div>
+
+          {/* Real-world relevance */}
+          <div style={{
+            background: `${colors.success}11`,
+            border: `1px solid ${colors.success}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+          }}>
+            <h4 style={{ ...typo.small, color: colors.success, marginBottom: '6px', fontWeight: 600 }}>Why This Matters:</h4>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0, fontWeight: 400 }}>
+              A $500M hyperscale data center with poor airflow wastes 30-40% of its cooling energy. The $2 blanking panel that costs less than a coffee can prevent 10°C temperature rises and save thousands per year. Google, Microsoft, and Amazon invest billions in airflow optimization — it&apos;s that impactful.
+            </p>
+          </div>
 
           {/* Observation guidance */}
           <div style={{
@@ -1022,6 +1077,19 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
             <p style={{ ...typo.body, color: colors.accent, margin: 0, textAlign: 'center' }}>
               👀 Observe how toggling blanking panels affects the cold aisle temperature and recirculation rate.
             </p>
+          </div>
+
+          {/* Formula near graphic */}
+          <div style={{
+            background: colors.bgSecondary,
+            borderRadius: '8px',
+            padding: '12px 16px',
+            marginBottom: '16px',
+            textAlign: 'center',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <code style={{ fontSize: '16px', color: colors.warning }}>Q = ṁ × Cp × ΔT</code>
+            <span style={{ ...typo.small, color: colors.textSecondary, marginLeft: '12px', fontWeight: 400 }}>Heat removed = mass flow × specific heat × temperature difference</span>
           </div>
 
           {/* Main visualization */}
@@ -1084,11 +1152,14 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
 
             {/* Server load slider with physics label */}
             <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>
-                  Heat Generation (Server Load) - Controls thermal output in kW
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary, fontWeight: 600 }}>
+                  Server Load: {serverLoad}%
                 </span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{serverLoad}%</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{(serverLoad * 0.8).toFixed(0)} kW heat</span>
+              </div>
+              <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px', fontWeight: 400 }}>
+                Controls heat generation (thermal output) — higher load = more heat to remove via airflow
               </div>
               <input
                 type="range"
@@ -1098,11 +1169,15 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
                 onChange={(e) => setServerLoad(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  accentColor: colors.accent,
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
+                  touchAction: 'none',
                 }}
-                aria-label="Heat Generation slider"
+                aria-label="Server Load slider"
               />
             </div>
 
@@ -1119,7 +1194,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
                 textAlign: 'center',
               }}>
                 <div style={{ ...typo.h3, color: colors.cold }}>{metrics.coldAisleTemp.toFixed(1)}°C</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Cold Aisle</div>
+                <div style={{ ...typo.small, color: colors.textSecondary }}>Cold Aisle</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
@@ -1128,7 +1203,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
                 textAlign: 'center',
               }}>
                 <div style={{ ...typo.h3, color: colors.hot }}>{metrics.hotAisleTemp.toFixed(1)}°C</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Hot Aisle</div>
+                <div style={{ ...typo.small, color: colors.textSecondary }}>Hot Aisle</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
@@ -1142,7 +1217,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
                 }}>
                   {metrics.recirculationPercent.toFixed(0)}%
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Recirculation</div>
+                <div style={{ ...typo.small, color: colors.textSecondary }}>Recirculation</div>
               </div>
             </div>
           </div>
@@ -1185,6 +1260,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
             Continue →
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -1195,18 +1271,37 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '84px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '0 auto', overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '72px', paddingBottom: '80px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Physics of Data Center Cooling
           </h2>
+
+          {/* Prediction callback */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0, fontWeight: 400 }}>
+              {prediction === 'b'
+                ? 'You predicted correctly! As you observed in the experiment, separating cold inlet air from hot exhaust is exactly the purpose of hot/cold aisle layout.'
+                : prediction
+                  ? 'As you observed in the experiment, the real answer is that hot/cold aisle separation prevents wasteful mixing of hot exhaust air with cold supply air.'
+                  : 'As you observed in the simulation, hot/cold aisle separation prevents hot exhaust air from recirculating to server intakes.'}
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1274,6 +1369,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
             Continue →
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -1290,15 +1386,17 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '84px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '0 auto', overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '72px', paddingBottom: '80px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1314,6 +1412,42 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
             A technician removes several servers for maintenance and forgets to install blanking panels. What happens to the remaining servers?
           </h2>
+
+          {/* Static graphic showing gap in rack - no sliders */}
+          <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '24px', textAlign: 'center' }}>
+            <svg width="300" height="200" viewBox="0 0 300 200" style={{ maxWidth: '100%' }}>
+              <rect width="300" height="200" fill={colors.bgCard} />
+              {/* Title */}
+              <text x="150" y="20" fill={colors.warning} fontSize="12" textAnchor="middle" fontWeight="600">Missing Blanking Panels: Hot Air Shortcuts</text>
+              {/* Rack */}
+              <rect x="100" y="35" width="60" height="130" fill="#374151" stroke="#64748b" strokeWidth="1" rx="4" />
+              {/* Servers */}
+              <rect x="105" y="40" width="50" height="20" fill="#1f2937" rx="2" />
+              <circle cx="115" cy="50" r="3" fill="#22c55e" />
+              <rect x="105" y="65" width="50" height="20" fill="#1f2937" rx="2" />
+              <circle cx="115" cy="75" r="3" fill="#22c55e" />
+              {/* Empty gap with red border */}
+              <rect x="105" y="90" width="50" height="20" fill="#0f172a" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="4 2" rx="2" />
+              <text x="130" y="103" fill="#ef4444" fontSize="11" textAnchor="middle">EMPTY!</text>
+              <rect x="105" y="115" width="50" height="20" fill="#1f2937" rx="2" />
+              <circle cx="115" cy="125" r="3" fill="#22c55e" />
+              <rect x="105" y="140" width="50" height="20" fill="#1f2937" rx="2" />
+              <circle cx="115" cy="150" r="3" fill="#22c55e" />
+              {/* Hot air arrow through gap */}
+              <path d="M160,100 Q185,100 185,75 Q185,50 130,50" stroke="#ef4444" strokeWidth="2" strokeDasharray="5 3" fill="none" />
+              <polygon points="130,47 124,53 136,53" fill="#ef4444" />
+              <text x="195" y="75" fill="#ef4444" fontSize="11">Hot air</text>
+              <text x="195" y="90" fill="#ef4444" fontSize="11">bypasses!</text>
+              {/* Temperature labels */}
+              <text x="55" y="80" fill="#3B82F6" fontSize="11" textAnchor="middle">COLD</text>
+              <text x="55" y="95" fill="#3B82F6" fontSize="11" textAnchor="middle">AISLE</text>
+              <text x="55" y="115" fill="#3B82F6" fontSize="11" textAnchor="middle">18°C</text>
+              {/* Bottom label */}
+              <text x="150" y="188" fill={colors.textMuted} fontSize="11" textAnchor="middle">Temperature →</text>
+              {/* Side label */}
+              <text x="12" y="110" fill={colors.textMuted} fontSize="11" textAnchor="middle" transform="rotate(-90,12,110)">Height →</text>
+            </svg>
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
@@ -1360,6 +1494,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
             </button>
           )}
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -1370,15 +1505,17 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '84px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '0 auto', overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '72px', paddingBottom: '80px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Containment & Efficiency Lab
           </h2>
@@ -1487,11 +1624,14 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
 
             {/* Fan speed slider with physics label */}
             <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>
-                  Airflow Rate (CFM) - Controls cooling capacity
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary, fontWeight: 600 }}>
+                  Fan Speed: {fanSpeed}%
                 </span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{fanSpeed}%</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{fanSpeed} CFM</span>
+              </div>
+              <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px', fontWeight: 400 }}>
+                Controls airflow rate (CFM) — higher fan speed = more cooling capacity per Q = ṁ × Cp × ΔT
               </div>
               <input
                 type="range"
@@ -1499,18 +1639,29 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
                 max="100"
                 value={fanSpeed}
                 onChange={(e) => setFanSpeed(parseInt(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
-                aria-label="Airflow Rate slider"
+                style={{
+                  width: '100%',
+                  height: '20px',
+                  cursor: 'pointer',
+                  accentColor: colors.accent,
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
+                  touchAction: 'none',
+                }}
+                aria-label="Fan Speed slider"
               />
             </div>
 
             {/* Raised floor slider with physics label */}
             <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>
-                  Floor Tile Openness - Controls static pressure distribution
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary, fontWeight: 600 }}>
+                  Floor Tile Openness: {raisedFloorOpenness}%
                 </span>
-                <span style={{ ...typo.small, color: colors.cold, fontWeight: 600 }}>{raisedFloorOpenness}%</span>
+                <span style={{ ...typo.small, color: colors.cold, fontWeight: 600 }}>Pressure: {raisedFloorOpenness > 60 ? 'High' : raisedFloorOpenness > 40 ? 'Med' : 'Low'}</span>
+              </div>
+              <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px', fontWeight: 400 }}>
+                Controls static pressure distribution — higher openness = more cold air reaches servers from plenum
               </div>
               <input
                 type="range"
@@ -1518,7 +1669,15 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
                 max="100"
                 value={raisedFloorOpenness}
                 onChange={(e) => setRaisedFloorOpenness(parseInt(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
+                style={{
+                  width: '100%',
+                  height: '20px',
+                  cursor: 'pointer',
+                  accentColor: colors.cold,
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
+                  touchAction: 'none',
+                }}
                 aria-label="Floor Tile Openness slider"
               />
             </div>
@@ -1564,6 +1723,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
             Continue →
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -1574,15 +1734,17 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '84px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '0 auto', overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '72px', paddingBottom: '80px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             CFD Modeling & Optimization
           </h2>
@@ -1641,6 +1803,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
             Continue →
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -1655,15 +1818,17 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '84px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '0 auto', overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '72px', paddingBottom: '80px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
@@ -1759,6 +1924,18 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
               </p>
             </div>
 
+            {/* How it works */}
+            <div style={{ marginBottom: '16px' }}>
+              <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 600 }}>How It Works:</h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0, fontWeight: 400 }}>{app.howItWorks}</p>
+            </div>
+
+            {/* Future impact */}
+            <div style={{ marginBottom: '16px', background: `${app.color}11`, borderRadius: '8px', padding: '12px' }}>
+              <h4 style={{ ...typo.small, color: app.color, marginBottom: '6px', fontWeight: 600 }}>Future Impact:</h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0, fontWeight: 400 }}>{app.futureImpact}</p>
+            </div>
+
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
@@ -1810,6 +1987,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
               Continue →
             </button>
           )}
+        </div>
         </div>
 
         {renderNavDots()}

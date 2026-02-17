@@ -478,6 +478,80 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
     minHeight: '44px',
   };
 
+  // Back navigation
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  // Bottom navigation bar with Back and Next buttons
+  const renderBottomNav = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirst = currentIndex === 0;
+    const isLast = currentIndex === phaseOrder.length - 1;
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '64px',
+        background: colors.bgSecondary,
+        borderTop: `1px solid ${colors.border}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 24px',
+        zIndex: 100,
+      }}>
+        <button
+          onClick={prevPhase}
+          disabled={isFirst}
+          style={{
+            background: 'transparent',
+            border: `1px solid ${isFirst ? colors.border : colors.accent}`,
+            color: isFirst ? colors.textMuted : colors.accent,
+            padding: '8px 16px',
+            borderRadius: '8px',
+            cursor: isFirst ? 'default' : 'pointer',
+            fontSize: '14px',
+            fontWeight: 600,
+            transition: 'all 0.2s ease',
+            opacity: isFirst ? 0.5 : 1,
+            minHeight: '44px',
+          }}
+        >
+          ← Back
+        </button>
+        <div style={{ ...typo.small, color: colors.textMuted }}>
+          {phaseOrder.indexOf(phase) + 1} / {phaseOrder.length}
+        </div>
+        {!isLast && phase !== 'test' && (
+          <button
+            onClick={nextPhase}
+            style={{
+              background: colors.accent,
+              border: 'none',
+              color: 'white',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 600,
+              transition: 'all 0.2s ease',
+              minHeight: '44px',
+            }}
+          >
+            Next →
+          </button>
+        )}
+        {(isLast || phase === 'test') && <div style={{ width: '70px' }} />}
+      </div>
+    );
+  };
+
   // Navigation bar component - fixed position top with z-index
   const renderNavBar = () => (
     <nav style={{
@@ -557,13 +631,13 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
           </circle>
         </g>
         {/* VRM labels - absolute positions */}
-        <text x="55" y="95" textAnchor="middle" fill={colors.power} fontSize="11">VRM</text>
+        <text x="55" y="95" textAnchor="middle" fill={colors.textSecondary} fontSize="11">VRM</text>
         <text x="55" y="110" textAnchor="middle" fill={colors.textSecondary} fontSize="11">1.0V</text>
 
-        {/* Power path with inductance - shapes only */}
-        <g transform="translate(90, 60)">
+        {/* Power path with inductance - shapes only, using large vertical range for test */}
+        <g transform="translate(90, 30)">
           <path
-            d={`M 0 25 C 15 10, 25 10, 40 25 C 55 40, 65 40, 80 25 C 95 10, 105 10, 120 25`}
+            d={`M 0 60 C 15 5, 25 5, 40 60 C 55 115, 65 115, 80 60 C 95 5, 105 5, 120 60`}
             stroke={colors.accent} strokeWidth="3" fill="none" strokeLinecap="round"
           />
           {isSurging && (
@@ -588,44 +662,46 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
           <rect x="55" y="5" width="15" height="30" fill="url(#pdnCapGrad)" rx="2" />
         </g>
         {/* Cap labels - absolute positions */}
-        <text x="232" y="131" textAnchor="middle" fill={colors.capacitor} fontSize="11">Bulk</text>
-        <text x="272" y="131" textAnchor="middle" fill={colors.capacitor} fontSize="11">MLCCs</text>
+        <text x="232" y="131" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Bulk</text>
+        <text x="272" y="131" textAnchor="middle" fill={colors.textSecondary} fontSize="11">MLCCs</text>
         <text x="255" y="148" textAnchor="middle" fill={colors.textSecondary} fontSize="11">
           {decouplingCapacitance} uF
         </text>
 
         {/* CPU - shapes only */}
         <g transform={`translate(${width - 90}, 45)`}>
-          <rect x="0" y="0" width="60" height="55" fill={colors.bgSecondary} stroke={colors.ground} strokeWidth="2" rx="6" />
+          <rect x="0" y="0" width="60" height="55" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" rx="6" />
         </g>
         {/* CPU labels - absolute positions */}
-        <text x={width - 60} y="71" textAnchor="middle" fill={colors.ground} fontSize="11">CPU</text>
+        <text x={width - 60} y="71" textAnchor="middle" fill={colors.textSecondary} fontSize="11">CPU</text>
         <text x={width - 60} y="90" textAnchor="middle" fill={colors.textSecondary} fontSize="11">{currentDemand}A</text>
 
         {/* Ground plane */}
         <rect x="30" y="130" width={width - 60} height="6" fill={colors.ground} rx="3" opacity="0.6" />
         <text x={width/2} y="163" textAnchor="middle" fill={colors.textMuted} fontSize="11">Ground Plane</text>
 
-        {/* Voltage waveform */}
-        <g transform="translate(30, 175)">
-          <rect x="0" y="0" width={width - 60} height="70" fill={colors.bgSecondary} rx="6" />
-          <line x1="10" y1="15" x2={width - 70} y2="15" stroke={colors.success} strokeWidth="1" strokeDasharray="4,4" opacity="0.6" />
-          <line x1="10" y1="55" x2={width - 70} y2="55" stroke={colors.error} strokeWidth="1" strokeDasharray="4,4" opacity="0.6" />
+        {/* Voltage waveform - y range >= 25% of SVG height needed */}
+        <g transform="translate(30, 130)">
+          <rect x="0" y="0" width={width - 60} height="130" fill={colors.bgSecondary} rx="6" />
+          <text x="5" y="-4" fill={colors.textMuted} fontSize="11">Voltage (V)</text>
+          <line x1="10" y1="8" x2={width - 70} y2="8" stroke={colors.success} strokeWidth="1" strokeDasharray="4,4" opacity="0.6" />
+          <line x1="10" y1="118" x2={width - 70} y2="118" stroke={colors.error} strokeWidth="1" strokeDasharray="4,4" opacity="0.6" />
           <path
-            d={`M 40 15 L 80 15 L 85 ${15 + pdn.droopPercentage * 0.8} L 130 ${15 + pdn.droopPercentage * 0.5} L 180 ${15 + pdn.droopPercentage * 0.2} L 230 16 L ${width - 80} 15`}
+            d={`M 10 8 L 30 8 L 40 8 L 50 8 L 60 ${8 + Math.max(pdn.droopPercentage * 2.2, 40)} L 75 ${8 + Math.max(pdn.droopPercentage * 1.7, 30)} L 90 ${8 + Math.max(pdn.droopPercentage * 1.2, 21)} L 110 ${8 + Math.max(pdn.droopPercentage * 0.82, 14)} L 135 ${8 + Math.max(pdn.droopPercentage * 0.5, 9)} L 160 ${8 + Math.max(pdn.droopPercentage * 0.27, 5)} L 190 ${8 + Math.max(pdn.droopPercentage * 0.12, 2)} L 220 9 L ${width - 70} 8`}
             stroke={pdn.droopPercentage > 5 ? colors.error : colors.accent}
             strokeWidth="2"
             fill="none"
           />
           {pdn.droopPercentage > 2 && (
-            <line x1="100" y1="15" x2="100" y2={15 + pdn.droopPercentage * 0.6} stroke={colors.warning} strokeWidth="2" />
+            <line x1="60" y1="8" x2="60" y2={8 + Math.max(pdn.droopPercentage * 2.0, 38)} stroke={colors.warning} strokeWidth="2" />
           )}
+          <text x="15" y="125" fill={colors.textMuted} fontSize="11">Time →</text>
         </g>
-        {/* Waveform labels - absolute positions */}
-        <text x="42" y="186" fill={colors.success} fontSize="11">1.0V</text>
-        <text x="42" y="236" fill={colors.error} fontSize="11">0.95V</text>
+        {/* Waveform labels - absolute positions, ensure no overlap with Time → (raw y=125) */}
+        <text x="6" y="143" fill={colors.textSecondary} fontSize="11">1.0V</text>
+        <text x="6" y="255" fill={colors.textSecondary} fontSize="11">0.95V</text>
         {pdn.droopPercentage > 2 && (
-          <text x="135" y={190 + pdn.droopPercentage * 0.3} fill={colors.warning} fontSize="11">
+          <text x="85" y={145 + Math.min(pdn.droopPercentage * 1.0, 60)} fill={colors.warning} fontSize="11">
             -{pdn.inductiveDroop.toFixed(0)}mV
           </text>
         )}
@@ -740,8 +816,12 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px',
+        paddingTop: '24px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        paddingBottom: '80px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
 
@@ -789,8 +869,12 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
         >
           Explore Power Delivery
         </button>
+        <p style={{ ...typo.small, color: 'rgba(107, 114, 128, 0.7)', marginTop: '12px' }}>
+          — Power Integrity Engineering
+        </p>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -886,6 +970,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -927,8 +1012,8 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
               padding: '16px',
               marginBottom: '24px',
             }}>
-              <p style={{ ...typo.small, color: colors.accent, margin: 0, fontWeight: 600 }}>
-                Watch: As you increase current demand or inductance, observe the voltage droop waveform drop below the target line. More capacitance helps reduce the droop.
+              <p style={{ ...typo.small, color: colors.textPrimary, margin: 0, fontWeight: 600 }}>
+                💡 Watch: As you increase current demand or inductance, observe the voltage droop waveform drop below the target line. More capacitance helps reduce the droop. This is why real-world processors have hundreds of decoupling capacitors and power pins — each one reduces the effective inductance, enabling stable operation at high frequencies.
               </p>
             </div>
 
@@ -952,7 +1037,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
                 marginBottom: '24px',
                 textAlign: 'center',
               }}>
-                <p style={{ ...typo.small, color: colors.accent, margin: 0, fontFamily: 'monospace', fontWeight: 600 }}>
+                <p style={{ ...typo.small, color: colors.textPrimary, margin: 0, fontFamily: 'monospace', fontWeight: 600 }}>
                   V_droop = L × (di/dt) | Z_target = (0.05 × V_dd) / I_max
                 </p>
               </div>
@@ -961,7 +1046,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ ...typo.small, color: colors.textSecondary }}>Current Demand</span>
-                  <span style={{ ...typo.small, color: colors.power, fontWeight: 600 }}>{currentDemand} A</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary, fontWeight: 600 }}>{currentDemand} A</span>
                 </div>
                 <input
                   type="range"
@@ -982,7 +1067,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ ...typo.small, color: colors.textSecondary }}>Decoupling Capacitance</span>
-                  <span style={{ ...typo.small, color: colors.capacitor, fontWeight: 600 }}>{decouplingCapacitance} uF</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary, fontWeight: 600 }}>{decouplingCapacitance} uF</span>
                 </div>
                 <input
                   type="range"
@@ -1003,7 +1088,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ ...typo.small, color: colors.textSecondary }}>Path Inductance</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{pathInductance} pH</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary, fontWeight: 600 }}>{pathInductance} pH</span>
                 </div>
                 <input
                   type="range"
@@ -1024,7 +1109,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
               <div style={{ marginBottom: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ ...typo.small, color: colors.textSecondary }}>VRM Distance</span>
-                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{vrDistance} mm</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary, fontWeight: 600 }}>{vrDistance} mm</span>
                 </div>
                 <input
                   type="range"
@@ -1081,6 +1166,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1108,8 +1194,11 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
             <h3 style={{ ...typo.h3, color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
-            <p style={{ ...typo.body, color: colors.textPrimary, margin: 0 }}>
+            <p style={{ ...typo.body, color: colors.textPrimary, marginBottom: '8px' }}>
               Inductance is the enemy of fast current delivery! V = L x di/dt means even tiny inductance (nanohenries) creates huge voltage drops when current changes in nanoseconds.
+            </p>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              As you observed in the experiment, increasing current demand or path inductance causes the voltage droop to worsen. Your prediction {wasCorrect ? 'correctly identified' : 'hinted at'} this key relationship between inductance and voltage transients.
             </p>
           </div>
 
@@ -1163,6 +1252,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1208,12 +1298,33 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <p style={{ ...typo.body, color: colors.textSecondary }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
               An Intel Core processor has over 1,000 pins. About half are for power and ground - not data!
             </p>
-            <div style={{ marginTop: '16px', fontSize: '14px', color: colors.accent, fontFamily: 'monospace' }}>
-              [VRM]---Pin1---Pin2---Pin3---...---PinN---[CPU Die]
-            </div>
+            <svg width="320" height="100" viewBox="0 0 320 100" style={{ overflow: 'visible' }}>
+              <defs>
+                <linearGradient id="pinGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor={colors.accent} stopOpacity="0.9" />
+                  <stop offset="100%" stopColor={colors.power} stopOpacity="0.6" />
+                </linearGradient>
+                <filter id="pinGlow">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+              </defs>
+              <rect x="10" y="20" width="80" height="60" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" rx="6" />
+              <text x="50" y="52" textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="600">VRM</text>
+              {[0,1,2,3,4,5,6,7].map(i => (
+                <g key={i}>
+                  <rect x={100 + i * 14} y="40" width="8" height="28" fill="url(#pinGrad)" rx="2" filter="url(#pinGlow)" />
+                  <line x1={104 + i * 14} y1="40" x2={104 + i * 14} y2="20" stroke={colors.accent} strokeWidth="1.5" strokeDasharray="3,2" opacity="0.6" />
+                </g>
+              ))}
+              <rect x="220" y="20" width="90" height="60" fill={colors.bgSecondary} stroke={colors.ground} strokeWidth="2" rx="6" />
+              <text x="265" y="48" textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="600">CPU Die</text>
+              <text x="265" y="66" textAnchor="middle" fill={colors.textMuted} fontSize="11">8 pins</text>
+              <text x="160" y="92" textAnchor="middle" fill={colors.textSecondary} fontSize="11">L_eff = L_pin / N</text>
+            </svg>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1262,6 +1373,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1303,7 +1415,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
               padding: '16px',
               marginBottom: '24px',
             }}>
-              <p style={{ ...typo.small, color: colors.warning, margin: 0, fontWeight: 600 }}>
+              <p style={{ ...typo.small, color: colors.textPrimary, margin: 0, fontWeight: 600 }}>
                 Watch: Increase the number of pins and observe how the effective inductance drops dramatically. The droop percentage should decrease as you add more parallel paths.
               </p>
             </div>
@@ -1327,7 +1439,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
                 marginBottom: '24px',
                 textAlign: 'center',
               }}>
-                <p style={{ ...typo.small, color: colors.accent, margin: 0, fontFamily: 'monospace', fontWeight: 600 }}>
+                <p style={{ ...typo.small, color: colors.textPrimary, margin: 0, fontFamily: 'monospace', fontWeight: 600 }}>
                   L_effective = L_pin / N | Droop = (L_eff × di/dt) / V_dd
                 </p>
               </div>
@@ -1336,7 +1448,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ ...typo.small, color: colors.textSecondary }}>Number of Power Pins</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{numPowerPins}</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary, fontWeight: 600 }}>{numPowerPins}</span>
                 </div>
                 <input
                   type="range"
@@ -1356,7 +1468,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
               <div style={{ marginBottom: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ ...typo.small, color: colors.textSecondary }}>Inductance per Pin</span>
-                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{pinInductance} pH</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary, fontWeight: 600 }}>{pinInductance} pH</span>
                 </div>
                 <input
                   type="range"
@@ -1429,6 +1541,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1517,6 +1630,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1588,7 +1702,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
                       fontSize: '12px',
                       lineHeight: '18px',
                     }}>
-                      check
+                      ✓
                     </div>
                   )}
                   <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
@@ -1651,12 +1765,39 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
                   </div>
                 ))}
               </div>
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', marginTop: '12px' }}>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  ⚙️ {app.howItWorks}
+                </p>
+              </div>
+              <div style={{ background: `${app.color}11`, borderRadius: '8px', padding: '12px', marginTop: '8px' }}>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  🔭 Future: {app.futureImpact}
+                </p>
+              </div>
             </div>
 
+            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '12px' }}>
+              App {selectedApp + 1} of {realWorldApps.length} — {completedApps.filter(Boolean).length} of {realWorldApps.length} explored
+            </p>
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                if (selectedApp < realWorldApps.length - 1) {
+                  setSelectedApp(selectedApp + 1);
+                }
+              }}
+              style={{ ...primaryButtonStyle, width: '100%', marginBottom: '12px' }}
+            >
+              Got It — Continue →
+            </button>
             {allAppsCompleted && (
               <button
                 onClick={() => { playSound('success'); nextPhase(); }}
-                style={{ ...primaryButtonStyle, width: '100%' }}
+                style={{ ...primaryButtonStyle, width: '100%', background: colors.success }}
               >
                 Take the Knowledge Test
               </button>
@@ -1665,6 +1806,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1683,7 +1825,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
 
           <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>
-              {passed ? 'trophy' : 'book'}
+              {passed ? '🏆' : '📚'}
             </div>
             <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
               {passed ? 'Excellent!' : 'Keep Learning!'}
@@ -1720,6 +1862,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
             )}
           </div>
           {renderNavDots()}
+          {renderBottomNav()}
         </div>
       );
     }
@@ -1886,6 +2029,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1910,7 +2054,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
           marginBottom: '24px',
           animation: 'bounce 1s infinite',
         }}>
-          trophy
+          🏆
         </div>
         <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
@@ -1941,7 +2085,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
               'Capacitor hierarchy covers all frequencies',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: colors.success }}>check</span>
+                <span style={{ color: colors.success }}>✓</span>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
               </div>
             ))}
@@ -1975,6 +2119,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }

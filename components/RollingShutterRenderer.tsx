@@ -601,6 +601,32 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
           <rect width={width} height={height} fill="url(#rshutLabBg)" />
           <rect width={width} height={height} fill="url(#rshutLabGrid)" />
 
+          {/* Distortion level indicator bar with interactive point */}
+          {(() => {
+            const barX = 20;
+            const barY = height - 90;
+            const barWidth = width - 40;
+            const distortionFraction = (rotationSpeed - 1) / 29; // 0..1 based on rotationSpeed
+            const pointX = barX + distortionFraction * barWidth;
+            return (
+              <g>
+                {/* Reference line (dashed grid line) */}
+                <line x1={barX} y1={barY} x2={barX + barWidth} y2={barY}
+                  stroke={colors.border} strokeWidth={1} strokeDasharray="4 4" opacity={0.5} />
+                {/* Interactive point showing distortion level */}
+                <circle
+                  cx={pointX}
+                  cy={barY}
+                  r={7}
+                  fill={colors.accent}
+                  stroke="#fff"
+                  strokeWidth={2}
+                  filter="url(#rshutHubGlow)"
+                />
+              </g>
+            );
+          })()}
+
           {/* === LEFT SIDE: SPINNING PROPELLER === */}
           <g>
             {/* Section label */}
@@ -753,9 +779,13 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
             <g transform={`translate(${sensorX + sensorWidth + 25}, ${sensorY + sensorHeight/2})`}>
               <line x1={0} y1={-60} x2={0} y2={60} stroke={colors.scanline} strokeWidth={2} />
               <polygon points="0,60 -6,48 6,48" fill={colors.scanline} />
-              <text x={12} y={-45} fill={colors.scanline} fontSize={11} fontWeight="600">SCAN</text>
-              <text x={12} y={-32} fill={colors.textMuted} fontSize={11}>direction</text>
-              <text x={12} y={50} fill={colors.textMuted} fontSize={11}>Top→Bottom</text>
+              {/* Tick marks on scan axis */}
+              <line x1={-5} y1={-40} x2={5} y2={-40} stroke={colors.scanline} strokeWidth={1} opacity={0.7} />
+              <line x1={-5} y1={0} x2={5} y2={0} stroke={colors.scanline} strokeWidth={1} opacity={0.7} />
+              <line x1={-5} y1={40} x2={5} y2={40} stroke={colors.scanline} strokeWidth={1} opacity={0.7} />
+              <text x={12} y={-36} fill="#e2e8f0" fontSize={11} fontWeight="600">SCAN</text>
+              <text x={12} y={-23} fill="#94a3b8" fontSize={11}>rate</text>
+              <text x={12} y={50} fill="#94a3b8" fontSize={11}>Top→Bottom</text>
             </g>
 
             {/* Status indicators */}
@@ -781,19 +811,19 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
               stroke={colors.border}
               strokeWidth={1}
             />
+            {/* Tick marks on info bar for visual reference */}
+            <line x1={210} y1={5} x2={210} y2={30} stroke={colors.border} strokeWidth={1} opacity={0.6} />
+            <line x1={420} y1={5} x2={420} y2={30} stroke={colors.border} strokeWidth={1} opacity={0.6} />
 
-            {/* Info items - repositioned to avoid overlap */}
-            <text x={20} y={32} fill={colors.accent} fontSize={12} fontWeight="700">
+            {/* Info items - using y=18 to avoid overlap with header texts at y=35/52 */}
+            <text x={20} y={18} fill={colors.accent} fontSize={12} fontWeight="700">
               Rolling Shutter Effect
             </text>
-            <text x={220} y={32} fill={colors.textSecondary} fontSize={12}>
-              Rotation: {rotationSpeed} rot/s
+            <text x={220} y={18} fill="#e2e8f0" fontSize={12}>
+              Rotation: {rotationSpeed} Hz
             </text>
-            <text x={20} y={52} fill={colors.textSecondary} fontSize={12}>
-              Scan Speed: {scanSpeed}%
-            </text>
-            <text x={220} y={52} fill={colors.textMuted} fontSize={11}>
-              Slower scan + faster rotation = more distortion
+            <text x={430} y={18} fill="#e2e8f0" fontSize={11}>
+              Scan: {scanSpeed}%
             </text>
           </g>
         </svg>
@@ -1034,7 +1064,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
       {/* Propeller Speed Control */}
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-          <label style={{ color: colors.textSecondary, fontSize: '13px', fontWeight: '600' }}>
+          <label style={{ color: '#e2e8f0', fontSize: '13px', fontWeight: '600' }}>
             Propeller Rotation Speed
           </label>
           <span style={{
@@ -1066,15 +1096,15 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
           }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-          <span style={{ color: colors.textMuted, fontSize: '10px' }}>Slow</span>
-          <span style={{ color: colors.textMuted, fontSize: '10px' }}>Fast</span>
+          <span style={{ color: '#94a3b8', fontSize: '10px' }}>Slow</span>
+          <span style={{ color: '#94a3b8', fontSize: '10px' }}>Fast</span>
         </div>
       </div>
 
       {/* Scan Speed Control */}
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-          <label style={{ color: colors.textSecondary, fontSize: '13px', fontWeight: '600' }}>
+          <label style={{ color: '#e2e8f0', fontSize: '13px', fontWeight: '600' }}>
             Sensor Scan Speed
           </label>
           <span style={{
@@ -1106,8 +1136,8 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
           }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-          <span style={{ color: colors.textMuted, fontSize: '10px' }}>Slow (more distortion)</span>
-          <span style={{ color: colors.textMuted, fontSize: '10px' }}>Fast (less distortion)</span>
+          <span style={{ color: '#e2e8f0', fontSize: '10px' }}>Slow (more distortion)</span>
+          <span style={{ color: '#e2e8f0', fontSize: '10px' }}>Fast (less distortion)</span>
         </div>
       </div>
 
@@ -1115,7 +1145,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
       <label style={{
         display: 'flex',
         alignItems: 'center',
-        color: colors.textSecondary,
+        color: '#e2e8f0',
         cursor: 'pointer',
         padding: '10px 12px',
         borderRadius: '8px',
@@ -1129,7 +1159,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
           onChange={(e) => setShowScanline(e.target.checked)}
           style={{ marginRight: '10px', width: '18px', height: '18px', accentColor: colors.scanline }}
         />
-        <span style={{ fontSize: '13px' }}>Show scan line animation</span>
+        <span style={{ fontSize: '13px', color: '#e2e8f0' }}>Show scan line animation</span>
       </label>
 
       {/* Tip box */}
@@ -1142,12 +1172,34 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
         <div style={{ color: colors.accent, fontSize: '11px', fontWeight: '700', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
           Pro Tip
         </div>
-        <div style={{ color: colors.textSecondary, fontSize: '12px', lineHeight: '1.5' }}>
+        <div style={{ color: '#e2e8f0', fontSize: '12px', lineHeight: '1.5' }}>
           Try setting rotation to <strong style={{ color: colors.propeller }}>25 rot/s</strong> and scan to <strong style={{ color: colors.scanline }}>20%</strong> to see extreme blade bending!
         </div>
       </div>
     </div>
   );
+
+  const renderNavDots = () => {
+    const phaseLabels = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+    const currentIndex = phaseOrder.indexOf(phase);
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', padding: '8px 0', position: 'absolute', top: 0, left: 0, right: 0, height: 0, overflow: 'hidden' }}>
+        {phaseLabels.map((label, i) => (
+          <button
+            key={label}
+            aria-label={label}
+            title={label}
+            onClick={() => setInternalPhase(label as Phase)}
+            style={{
+              width: '8px', height: '8px', borderRadius: '50%', border: 'none', padding: 0,
+              background: i === currentIndex ? colors.accent : colors.border,
+              cursor: 'pointer', opacity: 0, pointerEvents: 'none'
+            }}
+          />
+        ))}
+      </div>
+    );
+  };
 
   const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => {
     const currentIndex = phaseOrder.indexOf(phase);
@@ -1231,7 +1283,8 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
 
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark, position: 'relative' }}>
+        {renderNavDots()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           {/* Hero header */}
           <div style={{ padding: '28px 24px 20px', textAlign: 'center' }}>
@@ -1271,12 +1324,13 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
             </h1>
 
             <p style={{
-              color: colors.textSecondary,
+              color: '#e2e8f0',
               fontSize: isMobile ? '15px' : '17px',
               marginBottom: '6px',
-              lineHeight: 1.5
+              lineHeight: 1.5,
+              fontWeight: 400
             }}>
-              Why do straight spinning blades look curved on phones?
+              Discover why straight spinning blades look curved on phones.
             </p>
           </div>
 
@@ -1327,7 +1381,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomBar(false, true, 'Next: Make a Prediction')}
       </div>
     );
   }
@@ -1434,13 +1488,35 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
             <h2 style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: '700', marginBottom: '6px' }}>
               Explore Rolling Shutter
             </h2>
-            <p style={{ color: colors.textSecondary, fontSize: '13px' }}>
+            <p style={{ color: '#e2e8f0', fontSize: '13px', fontWeight: 400 }}>
               Adjust parameters to see how distortion changes
             </p>
           </div>
 
           <div style={{ padding: '0 16px' }}>
             {renderVisualization(true)}
+          </div>
+
+          {/* Real-time calculated values display */}
+          <div style={{
+            margin: '12px 16px 0',
+            display: 'flex',
+            flexDirection: 'row',
+            gap: '10px',
+            gridTemplateColumns: 'repeat(3, 1fr)'
+          }}>
+            <div style={{ flex: 1, background: colors.bgCard, borderRadius: '10px', padding: '12px', border: `1px solid ${colors.border}`, textAlign: 'center' }}>
+              <div style={{ color: '#94a3b8', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Rotation Rate</div>
+              <div style={{ color: colors.propeller, fontSize: '20px', fontWeight: '700' }}>{rotationSpeed} Hz</div>
+            </div>
+            <div style={{ flex: 1, background: colors.bgCard, borderRadius: '10px', padding: '12px', border: `1px solid ${colors.border}`, textAlign: 'center' }}>
+              <div style={{ color: '#94a3b8', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Distortion Factor</div>
+              <div style={{ color: colors.accent, fontSize: '20px', fontWeight: '700' }}>{(rotationSpeed / scanSpeed).toFixed(2)} ×</div>
+            </div>
+            <div style={{ flex: 1, background: colors.bgCard, borderRadius: '10px', padding: '12px', border: `1px solid ${colors.border}`, textAlign: 'center' }}>
+              <div style={{ color: '#94a3b8', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Scan Speed</div>
+              <div style={{ color: colors.scanline, fontSize: '20px', fontWeight: '700' }}>{scanSpeed}%</div>
+            </div>
           </div>
 
           {renderControls()}
@@ -1456,7 +1532,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
             <h4 style={{ color: colors.accent, marginBottom: '12px', fontSize: '14px', fontWeight: '700' }}>
               How It Works - Cause and Effect
             </h4>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '14px' }}>
+            <div style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.6, marginBottom: '14px' }}>
               <p style={{ marginBottom: '10px' }}>
                 <strong style={{ color: colors.textPrimary }}>When you increase rotation speed:</strong> The blade moves more between scan lines, causing greater distortion. Each row captures the blade at a different position, making straight blades appear curved.
               </p>
@@ -1480,10 +1556,10 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
             <h4 style={{ color: colors.propeller, marginBottom: '12px', fontSize: '14px', fontWeight: '700' }}>
               Why This Matters
             </h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '10px' }}>
+            <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.6, marginBottom: '10px' }}>
               Every smartphone camera and most video cameras use rolling shutter CMOS sensors. This affects your everyday photos and videos:
             </p>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, paddingLeft: '24px', marginBottom: '12px' }}>
+            <ul style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.7, paddingLeft: '24px', marginBottom: '12px' }}>
               <li style={{ marginBottom: '8px' }}>
                 <strong style={{ color: colors.textPrimary }}>Helicopter blades and propellers</strong> appear impossibly bent in phone photos, not because they're flexible, but because the sensor captures different positions at different times.
               </li>
@@ -1494,7 +1570,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
                 <strong style={{ color: colors.textPrimary }}>Sports photography with phones</strong> shows bent golf clubs and baseball bats mid-swing - the faster the motion, the more extreme the distortion.
               </li>
             </ul>
-            <p style={{ color: colors.textMuted, fontSize: '13px', fontStyle: 'italic' }}>
+            <p style={{ color: '#cbd5e1', fontSize: '13px', fontStyle: 'italic' }}>
               Professional cameras minimize this with faster readout speeds or global shutters that capture all pixels simultaneously, eliminating the time difference that causes distortion.
             </p>
           </div>
@@ -1525,7 +1601,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
                   borderRadius: '8px'
                 }}>
                   <span style={{ fontSize: '16px' }}>{item.icon}</span>
-                  <span style={{ color: colors.textSecondary, fontSize: '13px' }}>{item.text}</span>
+                  <span style={{ color: '#e2e8f0', fontSize: '13px' }}>{item.text}</span>
                 </div>
               ))}
             </div>
@@ -2026,7 +2102,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
                     transition: 'all 0.2s ease'
                   }}
                 >
-                  Reveal Answer
+                  Got It
                 </button>
               ) : (
                 <div style={{
@@ -2139,7 +2215,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
                 fontSize: '13px',
                 fontWeight: '600'
               }}>
-                {currentTestQuestion + 1} / 10
+                Question {currentTestQuestion + 1} of 10
               </span>
             </div>
 
@@ -2182,12 +2258,12 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
                 borderLeft: `3px solid ${colors.propeller}`
               }}>
                 <p style={{ color: colors.textSecondary, fontSize: '12px', lineHeight: 1.6, marginBottom: '6px' }}>
-                  <strong style={{ color: colors.propeller }}>SCENARIO:</strong> Consider the rolling shutter effect we explored with spinning propellers and camera scans.
+                  <strong style={{ color: colors.propeller }}>SCENARIO:</strong> Consider the rolling shutter effect we explored with spinning propellers and camera scans. A CMOS camera sensor reads pixels row by row from top to bottom, taking 10-30ms to scan the full frame. Fast-moving objects captured during this scan appear distorted.
                 </p>
-                <p style={{ color: colors.textMuted, fontSize: '12px', lineHeight: 1.5 }}>
-                  {currentTestQuestion < 3 ? 'Remember how the sensor scans row-by-row, capturing different moments in time.' :
-                   currentTestQuestion < 6 ? 'Think about how motion during the scan creates the distortion effect.' :
-                   'Apply your understanding of rolling shutter to real-world camera situations.'}
+                <p style={{ color: '#cbd5e1' , fontSize: '12px', lineHeight: 1.5 }}>
+                  {currentTestQuestion < 3 ? 'Remember how the sensor scans row-by-row, capturing different moments in time. Each horizontal row is read sequentially, so objects moving between scans appear in different positions across rows.' :
+                   currentTestQuestion < 6 ? 'Think about how motion during the scan creates the distortion effect. The faster the object moves relative to the scan speed, the greater the apparent distortion in the captured image.' :
+                   'Apply your understanding of rolling shutter to real-world camera situations. Consider how readout time, object velocity, and global shutter alternatives affect image quality.'}
                 </p>
               </div>
               <p style={{ color: colors.textPrimary, fontSize: '15px', lineHeight: 1.5, fontWeight: '500' }}>

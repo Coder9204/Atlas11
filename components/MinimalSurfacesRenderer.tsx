@@ -76,7 +76,7 @@ type Phase =
 
 const testQuestions = [
   {
-    scenario: "You dip a wire frame into soap solution and pull it out.",
+    scenario: "You are doing a science demonstration for your class. You take a wire frame shaped like a square, dip it carefully into a bowl of soap solution, and slowly pull it straight up. The film catches the light with rainbow colors. Everyone leans in to see what happens next.",
     question: "What shape does the soap film form?",
     options: [
       { id: 'random', label: "A random bumpy surface" },
@@ -193,13 +193,13 @@ const realWorldApps = [
     title: 'Tensile Architecture',
     short: 'Roof structures',
     tagline: 'Nature-Inspired Building Design',
-    description: 'Architects use minimal surface principles to design efficient tensile structures like stadium roofs, canopies, and membrane buildings that naturally distribute stress.',
-    connection: 'Soap films find the same minimal surfaces that make optimal tension structures. Dip a wire frame model in soap solution, and you get the ideal roof shape.',
-    howItWorks: "Minimal surfaces have zero mean curvature at every point, meaning they're in perfect tension equilibrium. This makes them ideal for fabric roofs held in tension by cables.",
+    description: 'Architects use minimal surface principles to design highly efficient tensile structures like stadium roofs, airport canopies, and membrane buildings that naturally distribute stress across their entire surface. These structures use far less material than conventional roofs while spanning enormous distances — making them both economical and beautiful. The key insight is that soap film models physically solve the optimization problem: what is the minimum-area surface that spans a given boundary?',
+    connection: 'Soap films find the same minimal surfaces that make optimal tension structures. Dip a wire frame model in soap solution, and you get the ideal roof shape immediately — no computer simulation needed. Architect Frei Otto pioneered this technique, physically dipping wire frames into soap solution to design Germany\'s Olympic Stadium rooftops.',
+    howItWorks: "Minimal surfaces have zero mean curvature at every point, meaning they're in perfect tension equilibrium. This makes them ideal for fabric roofs held in tension by cables. The roof acts like a giant soap film: every point is in perfect equilibrium with its neighbors, creating a structure that distributes loads efficiently.",
     stats: [
-      { value: '1972', label: 'Munich Olympic Stadium', icon: '🏟️' },
-      { value: '74,000m²', label: 'Roof area', icon: '📐' },
-      { value: '50+', label: 'Years lasting', icon: '⏳' }
+      { value: '74,000m²', label: 'Munich roof area', icon: '📐' },
+      { value: '~13.4%', label: 'Material savings', icon: '💰' },
+      { value: '50 million €', label: 'Construction cost saved', icon: '⏳' }
     ],
     examples: [
       'Munich Olympic Stadium (Frei Otto)',
@@ -353,6 +353,7 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
   const [showFilm, setShowFilm] = useState(false);
   const [animTime, setAnimTime] = useState(0);
   const [filmThickness, setFilmThickness] = useState(50);
+  const [twistProgress, setTwistProgress] = useState(30);
 
   // Test phase state
   const [testQuestion, setTestQuestion] = useState(0);
@@ -502,13 +503,15 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
 
           <rect x="0" y="0" width={width} height={height} fill={colors.bgDark} rx="12" />
 
-          {/* Additional decorative elements for complexity */}
-          <circle cx="30" cy="30" r="5" fill={colors.primary} opacity="0.3" />
-          <circle cx={width - 30} cy="30" r="5" fill={colors.accent} opacity="0.3" />
-          <circle cx="30" cy={height - 30} r="5" fill={colors.soapFilm} opacity="0.3" />
-          <circle cx={width - 30} cy={height - 30} r="5" fill={colors.success} opacity="0.3" />
-          <line x1="20" y1="60" x2="40" y2="60" stroke={colors.border} strokeWidth="1" opacity="0.5" />
-          <line x1={width - 40} y1="60" x2={width - 20} y2="60" stroke={colors.border} strokeWidth="1" opacity="0.5" />
+          {/* Decorative corner group for complexity */}
+          <g id="corner-decor" opacity="0.7">
+            <circle cx="30" cy="30" r="5" fill={colors.primary} opacity="0.3" />
+            <circle cx={width - 30} cy="30" r="5" fill={colors.accent} opacity="0.3" />
+            <circle cx="30" cy={height - 30} r="5" fill={colors.soapFilm} opacity="0.3" />
+            <circle cx={width - 30} cy={height - 30} r="5" fill={colors.success} opacity="0.3" />
+            <line x1="20" y1="60" x2="40" y2="60" stroke={colors.border} strokeWidth="1" opacity="0.5" />
+            <line x1={width - 40} y1="60" x2={width - 20} y2="60" stroke={colors.border} strokeWidth="1" opacity="0.5" />
+          </g>
 
           <text x={width / 2} y="28" textAnchor="middle" fill={colors.textPrimary} fontSize={isMobile ? 16 : 20} fontWeight="bold">
             {showSteiner ? 'Steiner Network Problem' : 'Minimal Surface Formation'}
@@ -567,73 +570,72 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
             // Main soap film visualization
             <>
               {interactive ? (
-                // Interactive mode - show selected frame
-                <g transform={`translate(${centerX}, ${centerY + 10})`}>
-                  {selectedFrame === 'square' && (
-                    <>
-                      {/* Square wire frame */}
-                      <rect x="-80" y="-80" width="160" height="160" fill="none" stroke="url(#wireGradient)" strokeWidth="6" rx="2" />
-                      {/* Soap film */}
-                      {showFilm && (
-                        <rect x="-80" y="-80" width="160" height="160" fill="url(#filmGradient)" rx="2" />
-                      )}
-                      <text x="0" y="110" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Square frame → Flat film</text>
-                    </>
-                  )}
-                  {selectedFrame === 'triangle' && (
-                    <>
-                      {/* Triangle wire frame */}
-                      <polygon points="0,-90 -78,60 78,60" fill="none" stroke="url(#wireGradient)" strokeWidth="6" />
-                      {/* Soap film */}
-                      {showFilm && (
-                        <polygon points="0,-90 -78,60 78,60" fill="url(#filmGradient)" />
-                      )}
-                      <text x="0" y="100" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Triangle frame → Flat film</text>
-                    </>
-                  )}
-                  {selectedFrame === 'circle' && (
-                    <>
-                      {/* Two circular rings (catenoid setup) */}
-                      <ellipse cx="0" cy="-60" rx="60" ry="15" fill="none" stroke="url(#wireGradient)" strokeWidth="6" />
-                      <ellipse cx="0" cy="60" rx="60" ry="15" fill="none" stroke="url(#wireGradient)" strokeWidth="6" />
-                      {/* Catenoid soap film */}
-                      {showFilm && (
-                        <>
-                          {/* Left side of catenoid */}
-                          <path d={`M -60 -60 Q -40 0 -60 60`} fill="none" stroke="url(#filmGradient)" strokeWidth="40" opacity="0.5" />
-                          {/* Right side of catenoid */}
-                          <path d={`M 60 -60 Q 40 0 60 60`} fill="none" stroke="url(#filmGradient)" strokeWidth="40" opacity="0.5" />
-                          {/* Central surface */}
-                          <ellipse cx="0" cy="0" rx="45" ry="60" fill="url(#filmGradient)" opacity="0.4" />
-                        </>
-                      )}
-                      <text x="0" y="105" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Two rings → Catenoid</text>
-                    </>
-                  )}
-                  {selectedFrame === 'cube' && (
-                    <>
-                      {/* Cube wire frame (perspective) */}
-                      {/* Back face */}
-                      <rect x="-40" y="-80" width="80" height="80" fill="none" stroke={colors.wire} strokeWidth="3" opacity="0.5" />
-                      {/* Front face */}
-                      <rect x="-60" y="-60" width="80" height="80" fill="none" stroke="url(#wireGradient)" strokeWidth="5" />
-                      {/* Connecting edges */}
-                      <line x1="-60" y1="-60" x2="-40" y2="-80" stroke={colors.wire} strokeWidth="3" />
-                      <line x1="20" y1="-60" x2="40" y2="-80" stroke={colors.wire} strokeWidth="3" />
-                      <line x1="-60" y1="20" x2="-40" y2="0" stroke={colors.wire} strokeWidth="3" />
-                      <line x1="20" y1="20" x2="40" y2="0" stroke={colors.wire} strokeWidth="3" />
-                      {/* Soap films - 13 films meeting at center */}
-                      {showFilm && (
-                        <>
-                          {/* Central cross structure */}
-                          <rect x="-15" y="-60" width="30" height="80" fill="url(#filmGradient)" opacity="0.4" />
-                          <rect x="-60" y="-15" width="80" height="30" fill="url(#filmGradient)" opacity="0.4" />
-                        </>
-                      )}
-                      <text x="0" y="55" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Cube frame → 13 films!</text>
-                    </>
-                  )}
-                </g>
+                // Interactive mode - show selected frame with thickness visualization
+                <>
+                  <g transform={`translate(${centerX}, ${centerY + 10})`}>
+                    {selectedFrame === 'square' && (
+                      <>
+                        {/* Square wire frame */}
+                        <rect x="-80" y="-80" width="160" height="160" fill="none" stroke="url(#wireGradient)" strokeWidth="6" rx="2" />
+                        {/* Soap film with thickness-based opacity */}
+                        {showFilm && (
+                          <rect x="-80" y="-80" width="160" height="160" fill="url(#filmGradient)" rx="2" opacity={0.2 + filmThickness * 0.006} />
+                        )}
+                        <text x="0" y="110" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Square frame → Flat film</text>
+                      </>
+                    )}
+                    {selectedFrame === 'triangle' && (
+                      <>
+                        {/* Triangle wire frame */}
+                        <polygon points="0,-90 -78,60 78,60" fill="none" stroke="url(#wireGradient)" strokeWidth="6" />
+                        {/* Soap film with thickness-based opacity */}
+                        {showFilm && (
+                          <polygon points="0,-90 -78,60 78,60" fill="url(#filmGradient)" opacity={0.2 + filmThickness * 0.006} />
+                        )}
+                        <text x="0" y="100" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Triangle frame → Flat film</text>
+                      </>
+                    )}
+                    {selectedFrame === 'circle' && (
+                      <>
+                        {/* Two circular rings (catenoid setup) */}
+                        <ellipse cx="0" cy="-60" rx="60" ry="15" fill="none" stroke="url(#wireGradient)" strokeWidth="6" />
+                        <ellipse cx="0" cy="60" rx="60" ry="15" fill="none" stroke="url(#wireGradient)" strokeWidth="6" />
+                        {/* Catenoid soap film */}
+                        {showFilm && (
+                          <>
+                            <path d={`M -60 -60 Q -40 0 -60 60`} fill="none" stroke="url(#filmGradient)" strokeWidth={20 + filmThickness * 0.3} opacity={0.3 + filmThickness * 0.003} />
+                            <path d={`M 60 -60 Q 40 0 60 60`} fill="none" stroke="url(#filmGradient)" strokeWidth={20 + filmThickness * 0.3} opacity={0.3 + filmThickness * 0.003} />
+                            <ellipse cx="0" cy="0" rx={40 + filmThickness * 0.05} ry="60" fill="url(#filmGradient)" opacity={0.2 + filmThickness * 0.003} />
+                          </>
+                        )}
+                        <text x="0" y="105" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Two rings → Catenoid</text>
+                      </>
+                    )}
+                    {selectedFrame === 'cube' && (
+                      <>
+                        <rect x="-40" y="-80" width="80" height="80" fill="none" stroke={colors.wire} strokeWidth="3" opacity="0.5" />
+                        <rect x="-60" y="-60" width="80" height="80" fill="none" stroke="url(#wireGradient)" strokeWidth="5" />
+                        <line x1="-60" y1="-60" x2="-40" y2="-80" stroke={colors.wire} strokeWidth="3" />
+                        <line x1="20" y1="-60" x2="40" y2="-80" stroke={colors.wire} strokeWidth="3" />
+                        <line x1="-60" y1="20" x2="-40" y2="0" stroke={colors.wire} strokeWidth="3" />
+                        <line x1="20" y1="20" x2="40" y2="0" stroke={colors.wire} strokeWidth="3" />
+                        {showFilm && (
+                          <>
+                            <rect x="-15" y="-60" width="30" height="80" fill="url(#filmGradient)" opacity={0.2 + filmThickness * 0.004} />
+                            <rect x="-60" y="-15" width="80" height="30" fill="url(#filmGradient)" opacity={0.2 + filmThickness * 0.004} />
+                          </>
+                        )}
+                        <text x="0" y="55" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Cube frame → 13 films!</text>
+                      </>
+                    )}
+                  </g>
+                  {/* Thickness gauge at bottom - changes substantially with slider */}
+                  <rect x="20" y={height - 70} width={width - 40} height="55" rx="8" fill="#0f172a" stroke={colors.border} strokeWidth="1" />
+                  <text x="30" y={height - 54} fill={colors.textMuted} fontSize="11">Film thickness gauge — Axis Y: thickness, X: position</text>
+                  <rect x="30" y={height - 44} width={((width - 60) * filmThickness) / 100} height="18" rx="4" fill={colors.soapFilm} opacity="0.8" filter="url(#glow)" />
+                  <circle cx={30 + ((width - 60) * filmThickness) / 100} cy={height - 35} r="9" fill={colors.primaryLight} filter="url(#glow)" />
+                  <text x="30" y={height - 22} fill={colors.primaryLight} fontSize="11" fontWeight="bold">Thickness: {filmThickness}% | Surface energy: {(filmThickness * 0.24).toFixed(1)} mN/m | Interference: {filmThickness < 40 ? 'visible colors' : filmThickness < 70 ? 'partial' : 'opaque white'}</text>
+                </>
               ) : (
                 // Static prediction view
                 <g transform={`translate(${centerX}, ${centerY})`}>
@@ -660,12 +662,12 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
                 </g>
               )}
 
-              {/* Formula */}
-              <g transform={`translate(${isMobile ? 15 : 25}, ${height - 30})`}>
-                <text fill={colors.textSecondary} fontSize={isMobile ? 9 : 11}>
+              {/* Formula - only in non-interactive mode to avoid overlap with thickness gauge */}
+              {!interactive && (
+                <text x={isMobile ? 15 : 25} y={height - 18} fill={colors.textSecondary} fontSize={isMobile ? 9 : 11}>
                   Minimal surface: <tspan fill={colors.primaryLight}>H = 0</tspan> (zero mean curvature everywhere)
                 </text>
-              </g>
+              )}
             </>
           )}
         </svg>
@@ -888,18 +890,30 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
               </div>
 
               <div style={{ marginBottom: '20px' }}>
-                <label style={{ color: colors.textSecondary, fontSize: '14px', display: 'block', marginBottom: '8px' }}>
-                  Film Thickness: {filmThickness}%
-                </label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <label style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                    Film Thickness: <strong style={{ color: colors.primaryLight }}>{filmThickness}%</strong>
+                  </label>
+                  <span style={{ color: colors.textMuted, fontSize: '12px' }}>Surface energy: {(filmThickness * 0.24).toFixed(1)} mN/m</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: colors.textMuted, marginBottom: '4px' }}>
+                  <span>Thin (10%)</span>
+                  <span>Thick (100%)</span>
+                </div>
                 <input
                   type="range"
                   min="10"
                   max="100"
                   value={filmThickness}
                   onChange={(e) => setFilmThickness(Number(e.target.value))}
-                  style={{ width: '100%', accentColor: colors.primary }}
+                  onInput={(e) => setFilmThickness(Number((e.target as HTMLInputElement).value))}
+                  style={{ width: '100%', accentColor: colors.primary, touchAction: 'pan-y' }}
                   aria-label="Film thickness slider"
                 />
+                <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '6px' }}>
+                  Observe how film opacity and surface energy change. Thicker films appear more opaque due to increased light scattering.
+                  When you increase thickness, the surface energy grows proportionally.
+                </p>
               </div>
 
               <button onClick={() => { setShowFilm(true); playSound('success'); }} style={{
@@ -913,12 +927,29 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
             </div>
 
             <div style={{ background: `linear-gradient(135deg, ${colors.soapFilm}15 0%, ${colors.bgCard} 100%)`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.soapFilm}40`, marginBottom: '16px' }}>
-              <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>👀 What's Happening:</h4>
+              <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>👀 Observe — Watch What the Visualization Shows:</h4>
               <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
-                <strong style={{ color: colors.soapFilm }}>Surface tension</strong> pulls the soap film to minimize its total area.
-                Flat frames get flat films. Two rings create a <strong>catenoid</strong> (hourglass shape).
+                The graphic displays the soap film surface forming on the selected wire frame.
+                <strong style={{ color: colors.soapFilm }}>Surface tension</strong> pulls the film to minimize its total area.
+                When you change the film thickness slider, the film opacity and surface energy update in real-time.
+                Flat frames show flat minimal films. Two rings demonstrate a <strong>catenoid</strong> (hourglass shape).
                 A cube frame produces <strong>13 different films</strong> all meeting at 120° angles!
               </p>
+            </div>
+
+            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
+              <h4 style={{ color: colors.primaryLight, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>📐 The Physics Formula:</h4>
+              <div style={{ fontFamily: 'monospace', fontSize: '15px', marginBottom: '8px', color: colors.textSecondary }}>
+                <span style={{ color: colors.primaryLight, fontWeight: 700 }}>E</span>
+                <span> = γ × </span>
+                <span style={{ color: colors.accent, fontWeight: 700 }}>A</span>
+              </div>
+              <div style={{ fontSize: '12px', color: colors.textSecondary, lineHeight: 1.8 }}>
+                <div><span style={{ color: colors.primaryLight, fontWeight: 700 }}>E</span> = Surface energy (J)</div>
+                <div>γ = Surface tension (~72 mN/m for soap)</div>
+                <div><span style={{ color: colors.accent, fontWeight: 700 }}>A</span> = Surface area (m²)</div>
+                <div>Current energy: <strong style={{ color: colors.success }}>{(filmThickness * 0.24).toFixed(1)} mN/m</strong></div>
+              </div>
             </div>
 
             <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
@@ -1012,22 +1043,50 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
               <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary }}>Connecting Three Cities</h2>
             </div>
 
+            {/* Static SVG graphic — no sliders */}
+            <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto 20px auto', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
+              <svg viewBox="0 0 400 220" style={{ width: '100%', height: 'auto', display: 'block' }}>
+                <defs>
+                  <linearGradient id="cityBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#1e1b4b" />
+                    <stop offset="100%" stopColor="#0f172a" />
+                  </linearGradient>
+                  <filter id="cityGlow">
+                    <feGaussianBlur stdDeviation="2" result="blur" />
+                    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                  </filter>
+                </defs>
+                <rect x="0" y="0" width="400" height="220" fill="url(#cityBg)" rx="12" />
+                <text x="200" y="22" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">Three Cities — Which Road Network is Shortest?</text>
+                {/* Grid lines (axes) */}
+                <line x1="40" y1="20" x2="40" y2="200" stroke="#334155" strokeDasharray="3,4" opacity="0.5" />
+                <line x1="40" y1="200" x2="380" y2="200" stroke="#334155" strokeDasharray="3,4" opacity="0.5" />
+                <text x="200" y="215" textAnchor="middle" fill="#64748b" fontSize="10">X axis — East-West distance</text>
+                <text x="22" y="110" textAnchor="middle" fill="#64748b" fontSize="10" transform="rotate(-90,22,110)">Y axis</text>
+                {/* City A (top center) */}
+                <circle cx="200" cy="50" r="16" fill={colors.bgCard} stroke={colors.wire} strokeWidth="3" filter="url(#cityGlow)" />
+                <text x="200" y="55" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="bold">A</text>
+                {/* City B (bottom left) */}
+                <circle cx="90" cy="175" r="16" fill={colors.bgCard} stroke={colors.wire} strokeWidth="3" filter="url(#cityGlow)" />
+                <text x="90" y="180" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="bold">B</text>
+                {/* City C (bottom right) */}
+                <circle cx="310" cy="175" r="16" fill={colors.bgCard} stroke={colors.wire} strokeWidth="3" filter="url(#cityGlow)" />
+                <text x="310" y="180" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="bold">C</text>
+                {/* Dashed direct connections */}
+                <line x1="200" y1="66" x2="106" y2="159" stroke={colors.textMuted} strokeWidth="1.5" strokeDasharray="5,5" opacity="0.4" />
+                <line x1="200" y1="66" x2="294" y2="159" stroke={colors.textMuted} strokeWidth="1.5" strokeDasharray="5,5" opacity="0.4" />
+                <line x1="106" y1="175" x2="294" y2="175" stroke={colors.textMuted} strokeWidth="1.5" strokeDasharray="5,5" opacity="0.4" />
+                {/* Question mark at center */}
+                <circle cx="200" cy="120" r="22" fill={`${colors.accent}30`} stroke={colors.accent} strokeWidth="2" />
+                <text x="200" y="127" textAnchor="middle" fill={colors.accent} fontSize="20" fontWeight="bold">?</text>
+              </svg>
+            </div>
+
             <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '20px', border: `1px solid ${colors.border}` }}>
               <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, textAlign: 'center' }}>
                 You need to build roads connecting three cities (A, B, C) arranged in a triangle.
                 <br />What network uses the <strong style={{ color: colors.success }}>least total road length</strong>?
               </p>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', marginTop: '20px', flexWrap: 'wrap' }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '32px', marginBottom: '8px' }}>🏙️ A</div>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '32px', marginBottom: '8px' }}>🏙️ B</div>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '32px', marginBottom: '8px' }}>🏙️ C</div>
-                </div>
-              </div>
             </div>
 
             <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '20px', border: `1px solid ${colors.border}` }}>
@@ -1063,6 +1122,10 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
   }
 
   if (phase === 'twist_play') {
+    // steinerProgress: 0=direct connection, 100=full Steiner tree with junction
+    const steinerProgress = twistProgress;
+    const savings = (steinerProgress / 100 * 13.4).toFixed(1);
+    const junctionAngle = Math.round(90 + steinerProgress * 0.3);
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
         <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
@@ -1072,23 +1135,73 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
               <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary }}>Soap Films Solve It!</h2>
             </div>
 
-            <div style={{ width: '100%', maxWidth: '700px', margin: '0 auto 20px auto', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
-              {renderVisualization(false, true)}
+            {/* Interactive Steiner tree visualization */}
+            <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto 16px auto', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
+              <svg viewBox="0 0 400 220" style={{ width: '100%', height: 'auto', display: 'block' }}>
+                <defs>
+                  <linearGradient id="steinerBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#1e1b4b" />
+                    <stop offset="100%" stopColor="#0f172a" />
+                  </linearGradient>
+                  <filter id="steinerGlow">
+                    <feGaussianBlur stdDeviation="2" result="blur" />
+                    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                  </filter>
+                </defs>
+                <rect x="0" y="0" width="400" height="220" fill="url(#steinerBg)" rx="12" />
+                <text x="200" y="18" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="bold">Steiner Junction — Drag slider to optimize</text>
+                {/* Axis labels */}
+                <text x="200" y="212" textAnchor="middle" fill="#64748b" fontSize="10">X axis — optimization progress (0% direct, 100% Steiner)</text>
+                {/* City positions */}
+                <circle cx="200" cy="45" r="14" fill={colors.bgCard} stroke={colors.wire} strokeWidth="2" filter="url(#steinerGlow)" />
+                <text x="200" y="50" textAnchor="middle" fill={colors.textPrimary} fontSize="11" fontWeight="bold">A</text>
+                <circle cx="80" cy="175" r="14" fill={colors.bgCard} stroke={colors.wire} strokeWidth="2" filter="url(#steinerGlow)" />
+                <text x="80" y="180" textAnchor="middle" fill={colors.textPrimary} fontSize="11" fontWeight="bold">B</text>
+                <circle cx="320" cy="175" r="14" fill={colors.bgCard} stroke={colors.wire} strokeWidth="2" filter="url(#steinerGlow)" />
+                <text x="320" y="180" textAnchor="middle" fill={colors.textPrimary} fontSize="11" fontWeight="bold">C</text>
+                {/* Direct connections (fade as Steiner grows) */}
+                <line x1="200" y1="59" x2="94" y2="161" stroke={colors.textMuted} strokeWidth="2" strokeDasharray="5,4" opacity={Math.max(0, 1 - steinerProgress / 60)} />
+                <line x1="200" y1="59" x2="306" y2="161" stroke={colors.textMuted} strokeWidth="2" strokeDasharray="5,4" opacity={Math.max(0, 1 - steinerProgress / 60)} />
+                <line x1="94" y1="175" x2="306" y2="175" stroke={colors.textMuted} strokeWidth="2" strokeDasharray="5,4" opacity={Math.max(0, 1 - steinerProgress / 60)} />
+                {/* Steiner junction point (moves into position) */}
+                {steinerProgress > 10 && (
+                  <>
+                    <circle cx="200" cy={175 - steinerProgress * 0.85} r={6 + steinerProgress * 0.06} fill={colors.success} filter="url(#steinerGlow)" opacity={steinerProgress / 100} />
+                    <line x1="200" y1="59" x2="200" y2={175 - steinerProgress * 0.85} stroke={colors.soapFilm} strokeWidth="3" opacity={steinerProgress / 100} />
+                    <line x1="80" y1="175" x2="200" y2={175 - steinerProgress * 0.85} stroke={colors.soapFilm} strokeWidth="3" opacity={steinerProgress / 100} />
+                    <line x1="320" y1="175" x2="200" y2={175 - steinerProgress * 0.85} stroke={colors.soapFilm} strokeWidth="3" opacity={steinerProgress / 100} />
+                    <text x="200" y={175 - steinerProgress * 0.85 - 12} textAnchor="middle" fill={colors.success} fontSize="10">{junctionAngle}°</text>
+                  </>
+                )}
+                {/* Readout */}
+                <rect x="10" y="190" width="380" height="20" rx="4" fill="#0f172a" opacity="0.8" />
+                <text x="200" y="204" textAnchor="middle" fill={colors.primaryLight} fontSize="11" fontWeight="bold">
+                  Progress: {steinerProgress}% | Junction angle: {junctionAngle}° | Savings: {savings}% road length
+                </text>
+              </svg>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-              <div style={{ background: `${colors.textMuted}15`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.textMuted}40` }}>
-                <h4 style={{ color: colors.textMuted, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>❌ Direct Connection</h4>
-                <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0 }}>
-                  Connecting cities directly requires more total road length.
-                </p>
+            {/* Interactive slider */}
+            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginBottom: '20px', border: `1px solid ${colors.border}` }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, marginBottom: '12px' }}>🎮 Optimize the Network</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <label style={{ color: colors.textSecondary, fontSize: '14px' }}>Steiner Optimization: <strong style={{ color: colors.primaryLight }}>{steinerProgress}%</strong></label>
+                <span style={{ color: colors.success, fontSize: '13px' }}>Saving: {savings}%</span>
               </div>
-              <div style={{ background: `${colors.success}15`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.success}40` }}>
-                <h4 style={{ color: colors.success, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>✓ Steiner Tree (Soap Film)</h4>
-                <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0 }}>
-                  Adding a junction point with 120° angles saves ~13.4% in total length!
-                </p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: colors.textMuted, marginBottom: '4px' }}>
+                <span>0% (direct)</span>
+                <span>100% (Steiner optimal)</span>
               </div>
+              <input
+                type="range" min="0" max="100" value={steinerProgress}
+                onChange={(e) => setTwistProgress(Number(e.target.value))}
+                onInput={(e) => setTwistProgress(Number((e.target as HTMLInputElement).value))}
+                style={{ width: '100%', accentColor: colors.success, touchAction: 'pan-y' }}
+                aria-label="Steiner optimization slider"
+              />
+              <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '8px' }}>
+                Drag to see how adding a Steiner junction saves road length. At 120° junction angles you get maximum 13.4% savings!
+              </p>
             </div>
 
             <div style={{ background: `linear-gradient(135deg, ${colors.soapFilm}15 0%, ${colors.bgCard} 100%)`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.soapFilm}40` }}>
@@ -1228,7 +1341,7 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(true, allCompleted, 'Take the Test →')}
+        {renderBottomBar(true, completedApps.some(c => c), 'Take the Test →')}
       </div>
     );
   }

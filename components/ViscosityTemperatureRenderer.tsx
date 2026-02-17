@@ -73,8 +73,8 @@ type Phase =
 
 const testQuestions = [
   {
-    scenario: "You're trying to pour cold maple syrup on your pancakes.",
-    question: "Why does cold syrup flow so slowly?",
+    scenario: "You're trying to pour cold maple syrup on your pancakes on a winter morning. The bottle has been in the refrigerator overnight at about 4°C. When you tip the bottle, barely a trickle comes out, even after waiting 30 seconds.",
+    question: "Why does cold syrup flow so slowly compared to warm syrup?",
     options: [
       { id: 'frozen', label: "The syrup is partially frozen" },
       { id: 'viscosity', label: "Cold temperatures increase viscosity (internal friction)", correct: true },
@@ -474,156 +474,179 @@ const ViscosityTemperatureRenderer: React.FC<ViscosityTemperatureRendererProps> 
   // ============================================================
 
   const renderVisualization = (interactive: boolean = false) => {
-    const width = isMobile ? 340 : 680;
-    const height = isMobile ? 300 : 380;
+    const W = 680;
+    const H = 380;
     const tempColor = getTemperatureColor(temperature);
 
-    const legendItems = [
-      { color: colors.syrup, label: 'Maple syrup' },
-      { color: colors.cold, label: 'Cold (high viscosity)' },
-      { color: colors.warm, label: 'Warm (medium)' },
-      { color: colors.hot, label: 'Hot (low viscosity)' },
-    ];
+    // Chart area: x from 70 to 640, y from 40 to 290 (top=high viscosity, bottom=low viscosity)
+    const chartLeft = 70;
+    const chartRight = 640;
+    const chartTop = 40;
+    const chartBottom = 290;
+    const chartW = chartRight - chartLeft;
+    const chartH = chartBottom - chartTop;
+
+    // Map temperature (0-100) to x coordinate
+    const tempToX = (t: number) => chartLeft + (t / 100) * chartW;
+    // Map viscosity (1=low → bottom, 5=high → top) to y
+    // Arrhenius: η = A * exp(Ea/(R*T)); simplified: η(T) = 5 * exp(-0.03 * (T - 0))
+    const viscAtTemp = (t: number) => 5 * Math.exp(-0.035 * t);
+    const viscToY = (v: number) => {
+      const vMin = viscAtTemp(100); // ~0.03
+      const vMax = viscAtTemp(0);   // ~5
+      return chartBottom - ((v - vMin) / (vMax - vMin)) * chartH;
+    };
+
+    // Current temperature marker
+    const curX = tempToX(interactive ? temperature : 50);
+    const curVisc = viscAtTemp(interactive ? temperature : 50);
+    const curY = viscToY(curVisc);
+
+    // Build path for syrup curve
+    const curvePoints: string[] = [];
+    for (let t = 0; t <= 100; t += 5) {
+      const x = tempToX(t);
+      const y = viscToY(viscAtTemp(t));
+      curvePoints.push(`${t === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`);
+    }
+    const curvePath = curvePoints.join(' ');
+
+    // Grid line temperatures
+    const gridTemps = [0, 20, 40, 60, 80, 100];
+    // Grid line viscosity values
+    const gridViscs = [0.5, 1, 2, 3, 4, 5];
 
     return (
-      <div style={{ position: 'relative', width: '100%', maxWidth: '700px', margin: '0 auto' }}>
-        <div style={{
-          position: 'absolute',
-          top: isMobile ? '8px' : '12px',
-          right: isMobile ? '8px' : '12px',
-          background: 'rgba(15, 23, 42, 0.95)',
-          borderRadius: '8px',
-          padding: isMobile ? '8px' : '12px',
-          border: `1px solid ${colors.border}`,
-          zIndex: 10,
-          maxWidth: isMobile ? '130px' : '160px'
-        }}>
-          <p style={{ fontSize: '10px', fontWeight: 700, color: colors.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>
-            Legend
-          </p>
-          {legendItems.map((item, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
-              <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: item.color, flexShrink: 0 }} />
-              <span style={{ fontSize: '10px', color: colors.textSecondary, lineHeight: 1.2 }}>{item.label}</span>
-            </div>
-          ))}
-        </div>
-
+      <div style={{ width: '100%', maxWidth: '700px', margin: '0 auto' }}>
         <svg
-          viewBox={`0 0 ${width} ${height}`}
+          viewBox={`0 0 ${W} ${H}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ width: '100%', height: 'auto', display: 'block' }}
         >
           <defs>
-            <linearGradient id="plateGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#64748b" />
-              <stop offset="100%" stopColor="#334155" />
+            <linearGradient id="viscBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#1e293b" />
             </linearGradient>
-            <linearGradient id="syrupGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={colors.syrupLight} />
-              <stop offset="100%" stopColor={colors.syrup} />
-            </linearGradient>
-            <linearGradient id="tempGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+            <linearGradient id="viscCurveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor={colors.cold} />
               <stop offset="50%" stopColor={colors.warm} />
               <stop offset="100%" stopColor={colors.hot} />
             </linearGradient>
+            <linearGradient id="viscFillGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={colors.syrup} stopOpacity="0.3" />
+              <stop offset="100%" stopColor={colors.syrup} stopOpacity="0.05" />
+            </linearGradient>
+            <filter id="viscGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <filter id="viscDropShadow" x="-10%" y="-10%" width="120%" height="120%">
+              <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="rgba(0,0,0,0.5)" />
+            </filter>
           </defs>
 
-          <rect x="0" y="0" width={width} height={height} fill={colors.bgDark} rx="12" />
+          {/* Background */}
+          <rect x="0" y="0" width={W} height={H} fill="url(#viscBgGrad)" rx="12" />
+          <rect x={chartLeft} y={chartTop} width={chartW} height={chartH} fill="#0a1628" rx="4" />
 
-          <text x={width/2} y="28" textAnchor="middle" fill={colors.textPrimary} fontSize={isMobile ? 16 : 20} fontWeight="bold">
-            Viscosity vs Temperature
+          {/* Title */}
+          <text x={W / 2} y="22" textAnchor="middle" fill={colors.textPrimary} fontSize="15" fontWeight="bold">
+            Viscosity vs Temperature — Arrhenius Relationship
           </text>
-          <text x={width/2} y="48" textAnchor="middle" fill={colors.textSecondary} fontSize={isMobile ? 11 : 14} fontWeight="500">
-            How temperature affects fluid flow
+
+          {/* Y-axis label (vertical) */}
+          <text x="18" y="180" textAnchor="middle" fill={colors.textSecondary} fontSize="11" transform="rotate(-90 18 180)">
+            Viscosity (Pa·s)
           </text>
 
-          {/* Tilted plate */}
-          <g transform={`translate(${width * 0.15}, ${height * 0.25}) rotate(25)`}>
-            <rect x="0" y="0" width={isMobile ? 180 : 300} height={isMobile ? 15 : 20} fill="url(#plateGradient)" rx="4" />
+          {/* X-axis label */}
+          <text x={chartLeft + chartW / 2} y={H - 5} textAnchor="middle" fill={colors.textSecondary} fontSize="11">
+            Temperature (°C)
+          </text>
 
-            {/* Temperature indicator on plate */}
-            <rect x="0" y={isMobile ? -8 : -10} width={isMobile ? 180 : 300} height={isMobile ? 6 : 8}
-              fill={interactive ? tempColor : colors.bgCardLight} rx="2" opacity="0.6" />
+          {/* Horizontal grid lines (viscosity levels) */}
+          {gridViscs.map(v => {
+            const gy = viscToY(v);
+            if (gy < chartTop || gy > chartBottom) return null;
+            return (
+              <g key={`grid-v-${v}`}>
+                <line x1={chartLeft} y1={gy} x2={chartRight} y2={gy} stroke="#334155" strokeDasharray="4,6" strokeWidth="1" opacity="0.6" />
+                <text x={chartLeft - 6} y={gy + 4} textAnchor="end" fill="#64748b" fontSize="11">{v}</text>
+              </g>
+            );
+          })}
 
-            {/* Syrup blob at top */}
-            <ellipse cx={isMobile ? 15 : 25} cy={isMobile ? 7 : 10} rx={isMobile ? 20 : 35} ry={isMobile ? 12 : 18}
-              fill="url(#syrupGradient)" />
+          {/* Vertical grid lines (temperature ticks) */}
+          {gridTemps.map(t => {
+            const gx = tempToX(t);
+            return (
+              <g key={`grid-t-${t}`}>
+                <line x1={gx} y1={chartTop} x2={gx} y2={chartBottom} stroke="#334155" strokeDasharray="4,6" strokeWidth="1" opacity="0.6" />
+                <text x={gx} y={chartBottom + 16} textAnchor="middle" fill="#64748b" fontSize="11">{t}°C</text>
+              </g>
+            );
+          })}
 
-            {/* Flowing syrup trail */}
-            {interactive && (
-              <path
-                d={`M ${isMobile ? 25 : 40} ${isMobile ? 10 : 14}
-                    Q ${isMobile ? 25 + flowPosition * 0.8 : 40 + flowPosition * 1.5} ${isMobile ? 12 : 16}
-                    ${isMobile ? 25 + flowPosition * 1.5 : 40 + flowPosition * 2.5} ${isMobile ? 10 : 14}`}
-                fill="none"
-                stroke={colors.syrup}
-                strokeWidth={isMobile ? 8 : 14}
-                strokeLinecap="round"
-                opacity="0.9"
-              />
-            )}
+          {/* Axis lines */}
+          <line x1={chartLeft} y1={chartTop} x2={chartLeft} y2={chartBottom} stroke="#475569" strokeWidth="2" />
+          <line x1={chartLeft} y1={chartBottom} x2={chartRight} y2={chartBottom} stroke="#475569" strokeWidth="2" />
 
-            {/* Flow indicator arrow */}
-            <text x={isMobile ? 90 : 150} y={isMobile ? 35 : 50} fill={colors.textMuted} fontSize="12">
-              Flow direction →
-            </text>
-          </g>
+          {/* Area fill under curve */}
+          <path
+            d={`${curvePath} L ${chartRight} ${chartBottom} L ${chartLeft} ${chartBottom} Z`}
+            fill="url(#viscFillGrad)"
+            opacity="0.4"
+          />
 
-          {/* Thermometer */}
-          <g transform={`translate(${width - (isMobile ? 80 : 120)}, ${height * 0.3})`}>
-            <rect x="0" y="0" width={isMobile ? 50 : 70} height={isMobile ? 120 : 150} fill={colors.bgCard} rx="8" stroke={colors.border} />
-            <text x={isMobile ? 25 : 35} y="18" textAnchor="middle" fill={colors.textSecondary} fontSize="10" fontWeight="600">
-              Temp
-            </text>
+          {/* Main viscosity curve */}
+          <path
+            d={curvePath}
+            fill="none"
+            stroke="url(#viscCurveGradient)"
+            strokeWidth="3"
+            strokeLinecap="round"
+            filter="url(#viscGlow)"
+          />
 
-            {/* Thermometer tube */}
-            <rect x={isMobile ? 20 : 28} y="25" width={isMobile ? 10 : 14} height={isMobile ? 70 : 90} fill={colors.bgDark} rx="5" />
-            <rect
-              x={isMobile ? 20 : 28}
-              y={25 + (isMobile ? 70 : 90) * (1 - (interactive ? temperature : 50) / 100)}
-              width={isMobile ? 10 : 14}
-              height={(isMobile ? 70 : 90) * ((interactive ? temperature : 50) / 100)}
-              fill={getTemperatureColor(interactive ? temperature : 50)}
-              rx="5"
-            />
-            <circle cx={isMobile ? 25 : 35} cy={(isMobile ? 105 : 125)} r={isMobile ? 10 : 12} fill={getTemperatureColor(interactive ? temperature : 50)} />
-
-            <text x={isMobile ? 25 : 35} y={(isMobile ? 135 : 165) - 15} textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">
-              {interactive ? temperature : 50}°C
-            </text>
-          </g>
-
-          {/* Viscosity meter */}
+          {/* Current temperature indicator (vertical dashed line) */}
           {interactive && (
-            <g transform={`translate(${isMobile ? 20 : 40}, ${height - 70})`}>
-              <rect x="0" y="0" width={isMobile ? 100 : 140} height="55" fill={colors.bgCard} rx="8" stroke={colors.border} />
-              <text x={isMobile ? 50 : 70} y="16" textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="600">
-                Viscosity
-              </text>
-              <rect x="10" y="25" width={isMobile ? 80 : 120} height="10" fill={colors.bgDark} rx="4" />
-              <rect
-                x="10"
-                y="25"
-                width={Math.min((viscosity / 5) * (isMobile ? 80 : 120), isMobile ? 80 : 120)}
-                height="10"
-                fill={tempColor}
-                rx="4"
-              />
-              <text x={isMobile ? 50 : 70} y="48" textAnchor="middle" fill={colors.textPrimary} fontSize="11" fontWeight="bold">
-                {viscosity.toFixed(1)} Pa·s
-              </text>
-            </g>
+            <line
+              x1={curX} y1={chartTop}
+              x2={curX} y2={chartBottom}
+              stroke={tempColor}
+              strokeWidth="1.5"
+              strokeDasharray="4,3"
+              opacity="0.7"
+            />
           )}
 
-          {/* Formula */}
-          <g transform={`translate(${isMobile ? 15 : 25}, ${height - 25})`}>
-            <text fill={colors.textSecondary} fontSize={isMobile ? 10 : 12} fontWeight="600">
-              <tspan fill={colors.primaryLight}>η</tspan> = A × e<tspan baselineShift="super" fontSize="8">(Ea/RT)</tspan>
-              <tspan fill={colors.textMuted} dx="10">Arrhenius equation</tspan>
-            </text>
-          </g>
+          {/* Current point on curve */}
+          <circle cx={curX} cy={curY} r="7" fill={tempColor} filter="url(#viscGlow)" />
+          <circle cx={curX} cy={curY} r="4" fill="white" />
+
+          {/* Current viscosity readout */}
+          <rect x={curX + 10} y={curY - 20} width="110" height="28" rx="4" fill="#1e293b" stroke={tempColor} strokeWidth="1" />
+          <text x={curX + 65} y={curY - 2} textAnchor="middle" fill={tempColor} fontSize="11" fontWeight="bold">
+            {interactive ? `${temperature}°C → ${curVisc.toFixed(2)} Pa·s` : `50°C → ${curVisc.toFixed(2)} Pa·s`}
+          </text>
+
+          {/* Zone labels */}
+          <rect x={chartLeft + 5} y={chartTop + 8} width="72" height="18" rx="3" fill={`${colors.cold}30`} />
+          <text x={chartLeft + 41} y={chartTop + 21} textAnchor="middle" fill={colors.cold} fontSize="11" fontWeight="bold">High Viscosity</text>
+
+          <rect x={chartRight - 80} y={chartBottom - 26} width="72" height="18" rx="3" fill={`${colors.hot}30`} />
+          <text x={chartRight - 44} y={chartBottom - 13} textAnchor="middle" fill={colors.hot} fontSize="11" fontWeight="bold">Low Viscosity</text>
+
+          {/* Formula area at bottom */}
+          <rect x={chartLeft} y={H - 60} width={chartW} height="48" rx="6" fill="#0f172a" stroke="#334155" strokeWidth="1" />
+          <text x={chartLeft + 12} y={H - 42} fill={colors.textMuted} fontSize="11">Arrhenius: η = A × e^(Ea/R·T)</text>
+          <text x={chartLeft + 12} y={H - 24} fill={colors.textMuted} fontSize="11">
+            {interactive ? `Current: η=${curVisc.toFixed(3)} Pa·s at T=${interactive ? temperature : 50}K` : 'Drag slider to explore temperature-viscosity relationship'}
+          </text>
         </svg>
       </div>
     );
@@ -726,7 +749,8 @@ const ViscosityTemperatureRenderer: React.FC<ViscosityTemperatureRendererProps> 
               cursor: 'pointer',
               minHeight: '52px',
               minWidth: '160px',
-              boxShadow: `0 4px 15px ${colors.primary}40`
+              boxShadow: `0 4px 15px ${colors.primary}40`,
+              transition: 'all 0.2s ease-out',
             }}
           >
             {nextLabel}
@@ -790,7 +814,8 @@ const ViscosityTemperatureRenderer: React.FC<ViscosityTemperatureRendererProps> 
               marginBottom: '32px',
               maxWidth: '600px',
               margin: '0 auto 32px auto',
-              lineHeight: 1.6
+              lineHeight: 1.6,
+              fontWeight: '400',
             }}>
               Cold syrup barely moves... warm syrup <strong style={{ color: colors.primaryLight }}>pours easily</strong>.
               What's happening inside?
@@ -1024,10 +1049,12 @@ const ViscosityTemperatureRenderer: React.FC<ViscosityTemperatureRendererProps> 
                   onInput={(e) => setTemperature(Number((e.target as HTMLInputElement).value))}
                   style={{
                     width: '100%',
-                    height: '8px',
+                    height: '24px',
                     borderRadius: '4px',
                     cursor: 'pointer',
-                    accentColor: getTemperatureColor(temperature)
+                    accentColor: getTemperatureColor(temperature),
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none' as const,
                   }}
                 />
               </div>
@@ -1067,7 +1094,7 @@ const ViscosityTemperatureRenderer: React.FC<ViscosityTemperatureRendererProps> 
               border: `1px solid ${getTemperatureColor(temperature)}40`
             }}>
               <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
-                👀 What's Happening:
+                👀 Observe the Chart — Watch How Viscosity Changes:
               </h4>
               <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
                 {temperature < 30 ? (
@@ -1091,16 +1118,23 @@ const ViscosityTemperatureRenderer: React.FC<ViscosityTemperatureRendererProps> 
               </h4>
               <div style={{ fontFamily: 'monospace', fontSize: '16px', marginBottom: '12px' }}>
                 <span style={{ color: colors.primaryLight, fontWeight: 700 }}>η</span>
-                <span style={{ color: colors.textSecondary }}> = A × e</span>
-                <span style={{ color: colors.textSecondary, fontSize: '12px' }}><sup>(Ea/R</sup></span>
-                <span style={{ color: colors.accent, fontWeight: 700, fontSize: '12px' }}><sup>T</sup></span>
-                <span style={{ color: colors.textSecondary, fontSize: '12px' }}><sup>)</sup></span>
+                <span style={{ color: colors.textSecondary }}> = </span>
+                <span style={{ color: '#fbbf24', fontWeight: 700 }}>A</span>
+                <span style={{ color: colors.textSecondary }}> × e</span>
+                <span style={{ color: colors.textSecondary, fontSize: '12px' }}>(Ea/R·</span>
+                <span style={{ color: '#22d3ee', fontWeight: 700, fontSize: '14px' }}>T</span>
+                <span style={{ color: colors.textSecondary, fontSize: '12px' }}>)</span>
               </div>
               <div style={{ fontSize: '12px', color: colors.textSecondary, lineHeight: 1.8 }}>
-                <div><span style={{ color: colors.primaryLight, fontWeight: 700 }}>η</span> = Viscosity</div>
-                <div><span style={{ color: colors.accent, fontWeight: 700 }}>T</span> = Temperature (Kelvin)</div>
-                <div>Higher T → exponentially lower η</div>
+                <div><span style={{ color: colors.primaryLight, fontWeight: 700 }}>η</span> (eta) = Viscosity (Pa·s)</div>
+                <div><span style={{ color: '#fbbf24', fontWeight: 700 }}>A</span> = Pre-exponential factor</div>
+                <div><span style={{ color: '#22d3ee', fontWeight: 700 }}>T</span> = Temperature (Kelvin)</div>
+                <div>Higher <span style={{ color: '#22d3ee', fontWeight: 700 }}>T</span> → exponentially lower <span style={{ color: colors.primaryLight, fontWeight: 700 }}>η</span></div>
               </div>
+              <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '8px', lineHeight: 1.5 }}>
+                This is important in engineering and industry: motor oil viscosity determines engine lubrication,
+                and technology like inkjet printing relies on precise viscosity control at operating temperature.
+              </p>
             </div>
           </div>
         </div>
@@ -1147,8 +1181,9 @@ const ViscosityTemperatureRenderer: React.FC<ViscosityTemperatureRendererProps> 
               }}>
                 {wasCorrect ? 'Excellent Prediction!' : 'Great Learning Moment!'}
               </h2>
-              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-                Warm syrup flows faster because heat reduces viscosity!
+              <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: '400' }}>
+                As you observed in the experiment, warm syrup flows faster because heat reduces viscosity.
+                Your prediction was {wasCorrect ? 'correct' : 'a great learning step'}! The Arrhenius equation: η = A·e^(Ea/RT) shows this relationship.
               </p>
             </div>
 
@@ -1272,27 +1307,44 @@ const ViscosityTemperatureRenderer: React.FC<ViscosityTemperatureRendererProps> 
               </h2>
             </div>
 
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '20px',
-              border: `1px solid ${colors.border}`
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '30px', flexWrap: 'wrap' }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '40px', marginBottom: '8px' }}>🍯</div>
-                  <p style={{ color: colors.syrupLight, fontWeight: 600 }}>Syrup</p>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '40px', marginBottom: '8px' }}>💧</div>
-                  <p style={{ color: colors.cold, fontWeight: 600 }}>Water</p>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '40px', marginBottom: '8px' }}>🫒</div>
-                  <p style={{ color: colors.oil, fontWeight: 600 }}>Oil</p>
-                </div>
-              </div>
+            {/* Static SVG showing viscosity comparison - no sliders */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+              <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '400px', borderRadius: '12px', display: 'block' }}>
+                <defs>
+                  <linearGradient id="twistBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#1e1b4b" />
+                    <stop offset="100%" stopColor="#0f172a" />
+                  </linearGradient>
+                  <filter id="twistGlow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
+                    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                  </filter>
+                </defs>
+                <rect x="0" y="0" width="400" height="200" fill="url(#twistBg)" rx="12" />
+                {/* Y axis */}
+                <line x1="50" y1="20" x2="50" y2="170" stroke="#475569" strokeWidth="1.5" />
+                {/* X axis */}
+                <line x1="50" y1="170" x2="380" y2="170" stroke="#475569" strokeWidth="1.5" />
+                {/* Grid lines */}
+                {[60,100,140].map(gy => (
+                  <line key={gy} x1="50" y1={gy} x2="380" y2={gy} stroke="#334155" strokeDasharray="3,4" opacity="0.5" />
+                ))}
+                {/* Axis labels */}
+                <text x="200" y="190" textAnchor="middle" fill="#94a3b8" fontSize="11">Temperature →</text>
+                <text x="20" y="100" textAnchor="middle" fill="#94a3b8" fontSize="11" transform="rotate(-90,20,100)">Viscosity</text>
+                {/* Syrup curve - steeply decreasing (most sensitive) */}
+                <path d="M 60 35 Q 160 60 280 140 Q 340 158 370 168" fill="none" stroke={colors.syrupLight} strokeWidth="3" filter="url(#twistGlow)" />
+                <text x="375" y="166" fill={colors.syrupLight} fontSize="11" fontWeight="bold">Syrup</text>
+                {/* Oil curve - moderately decreasing */}
+                <path d="M 60 80 Q 160 100 280 145 Q 340 158 370 168" fill="none" stroke={colors.oil} strokeWidth="2.5" />
+                <text x="375" y="148" fill={colors.oil} fontSize="11" fontWeight="bold">Oil</text>
+                {/* Water curve - low sensitivity but visible span */}
+                <path d="M 60 110 Q 160 125 280 148 Q 340 158 370 168" fill="none" stroke={colors.cold} strokeWidth="2" />
+                <text x="60" y="108" fill={colors.cold} fontSize="11" fontWeight="bold">Water</text>
+                {/* Cold/Hot labels */}
+                <text x="60" y="183" textAnchor="middle" fill="#60a5fa" fontSize="11">Cold</text>
+                <text x="370" y="183" textAnchor="middle" fill="#ef4444" fontSize="11">Hot</text>
+              </svg>
             </div>
 
             <div style={{

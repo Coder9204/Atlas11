@@ -264,7 +264,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
 
   // Simulation state
   const [wiringMode, setWiringMode] = useState<'series' | 'parallel'>('series');
-  const [numPanels, setNumPanels] = useState(4);
+  const [numPanels, setNumPanels] = useState(2);
   const [shadedPanel, setShadedPanel] = useState<number | null>(null);
   const [shadeLevel, setShadeLevel] = useState(50); // 0-100%
   const [animationFrame, setAnimationFrame] = useState(0);
@@ -334,8 +334,8 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
     predict: 'Predict',
     play: 'Experiment',
     review: 'Understanding',
-    twist_predict: 'Shading Challenge',
-    twist_play: 'Shading Lab',
+    twist_predict: 'Twist Challenge',
+    twist_play: 'Twist Lab',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -516,15 +516,17 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
           })}
 
           {/* Axis labels */}
-          <text x="20" y={height / 2} fill={colors.textMuted} fontSize="11" textAnchor="start">V</text>
-          <text x={width / 2} y={height - 5} fill={colors.textMuted} fontSize="11" textAnchor="middle">Panels →</text>
+          <text x="20" y={height / 2} fill={colors.textMuted} fontSize="11" textAnchor="start">Voltage</text>
+          <text x={width / 2} y={height - 5} fill={colors.textMuted} fontSize="11" textAnchor="middle">Current →</text>
 
           {/* Grid lines for reference */}
           <line x1={startX - 20} y1={startY + panelH / 2} x2={startX + numPanels * panelW + (numPanels - 1) * gap + 20} y2={startY + panelH / 2} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+          <line x1={startX - 20} y1={startY + panelH * 0.25} x2={startX + numPanels * panelW + (numPanels - 1) * gap + 20} y2={startY + panelH * 0.25} stroke={colors.border} strokeDasharray="4 4" opacity="0.2" />
+          <line x1={startX - 20} y1={startY + panelH * 0.75} x2={startX + numPanels * panelW + (numPanels - 1) * gap + 20} y2={startY + panelH * 0.75} stroke={colors.border} strokeDasharray="4 4" opacity="0.2" />
 
-          {/* Current flow animation */}
+          {/* Current flow animation - highlighted active values */}
           {showCurrentFlow && (
-            <g>
+            <g filter="url(#glow)">
               {[0, 1, 2].map((i) => {
                 const offset = (animationFrame * 3 + i * 30) % (width - 40);
                 return (
@@ -629,6 +631,12 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
           </text>
           <text x={startX - 30} y={startY - 20} fill={colors.error} fontSize="11" textAnchor="middle">+</text>
           <text x={startX + panelW + 30} y={startY - 20} fill={colors.textSecondary} fontSize="11" textAnchor="middle">−</text>
+          {/* Axis labels */}
+          <text x={10} y={height / 2} fill={colors.textMuted} fontSize="11" textAnchor="start">Voltage</text>
+          <text x={width / 2} y={height - 5} fill={colors.textMuted} fontSize="11" textAnchor="middle">Current →</text>
+          {/* Grid reference lines */}
+          <line x1={startX - 25} y1={startY + totalH / 2} x2={startX + panelW + 60} y2={startY + totalH / 2} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />
+          <line x1={startX - 25} y1={startY + totalH * 0.25} x2={startX + panelW + 60} y2={startY + totalH * 0.25} stroke={colors.border} strokeDasharray="4 4" opacity="0.2" />
         </svg>
       );
     }
@@ -693,43 +701,103 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
     </div>
   );
 
-  // Navigation dots
-  const renderNavDots = () => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '8px',
-      padding: '16px 0',
-      background: colors.bgPrimary,
-      zIndex: 1000,
-    }}>
-      {phaseOrder.map((p, i) => (
+  // Navigation bar with Back/Next buttons and dots
+  const renderNavDots = (canProceed: boolean = true, nextText: string = 'Next →') => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '10px 16px',
+        background: colors.bgPrimary,
+        borderTop: `1px solid ${colors.border}`,
+        zIndex: 1000,
+      }}>
         <button
-          key={p}
-          onClick={() => goToPhase(p)}
-          style={{
-            width: phase === p ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
-            border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            minHeight: '44px',
-            minWidth: '44px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+          onClick={() => {
+            if (currentIdx > 0) goToPhase(phaseOrder[currentIdx - 1]);
           }}
-          aria-label={phaseLabels[p]}
-        />
-      ))}
-    </div>
-  );
+          disabled={currentIdx === 0}
+          style={{
+            padding: '10px 16px',
+            minHeight: '44px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.border}`,
+            background: 'transparent',
+            color: currentIdx > 0 ? colors.textSecondary : colors.textMuted,
+            cursor: currentIdx > 0 ? 'pointer' : 'not-allowed',
+            fontSize: '14px',
+            fontWeight: 400,
+            opacity: currentIdx > 0 ? 1 : 0.4,
+            transition: 'all 0.2s ease',
+          }}
+        >
+          Back
+        </button>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', alignItems: 'center' }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => i <= currentIdx && goToPhase(p)}
+              aria-label={phaseLabels[p]}
+              title={phaseLabels[p]}
+              style={{
+                minHeight: '44px',
+                minWidth: '20px',
+                borderRadius: '4px',
+                border: 'none',
+                background: 'transparent',
+                cursor: i <= currentIdx ? 'pointer' : 'default',
+                transition: 'all 0.3s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0 2px',
+              }}
+            >
+              <span style={{
+                display: 'block',
+                width: phase === p ? '20px' : '8px',
+                height: '8px',
+                borderRadius: '4px',
+                background: currentIdx >= i ? colors.accent : colors.border,
+                transition: 'all 0.3s ease',
+              }} />
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => {
+            if (canProceed && currentIdx < phaseOrder.length - 1) {
+              playSound('transition');
+              goToPhase(phaseOrder[currentIdx + 1]);
+            }
+          }}
+          disabled={!canProceed}
+          style={{
+            padding: '10px 16px',
+            minHeight: '44px',
+            borderRadius: '8px',
+            border: 'none',
+            background: canProceed ? colors.accent : colors.border,
+            color: 'white',
+            cursor: canProceed ? 'pointer' : 'not-allowed',
+            fontSize: '14px',
+            fontWeight: 700,
+            opacity: canProceed ? 1 : 0.5,
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+          }}
+        >
+          {nextText}
+        </button>
+      </div>
+    );
+  };
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
@@ -756,16 +824,21 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
-        paddingTop: '48px',
-        paddingBottom: '100px',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '48px 24px 100px 24px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '48px 24px 100px 24px',
+          textAlign: 'center',
+        }}>
 
         <div style={{
           fontSize: '64px',
@@ -800,7 +873,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
             "The way you connect your panels isn't just about voltage—it's about resilience, efficiency, and making every watt count."
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+          <p style={{ ...typo.small, color: 'rgba(107, 114, 128, 0.7)', marginTop: '8px' }}>
             — Solar System Design Principle
           </p>
         </div>
@@ -811,8 +884,9 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
         >
           Discover the Difference →
         </button>
+        </div>
 
-        {renderNavDots()}
+        {renderNavDots(true, 'Next →')}
       </div>
     );
   }
@@ -968,7 +1042,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
         </div>
         </div>
         </div>
-        {renderNavDots()}
+        {renderNavDots(!!prediction, 'Test My Prediction')}
       </div>
     );
   }
@@ -1055,7 +1129,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
             {/* Number of panels slider */}
             <div style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Number of Panels</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Number of voltage panels (current count)</span>
                 <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{numPanels}</span>
               </div>
               <input
@@ -1067,11 +1141,19 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
                   setNumPanels(parseInt(e.target.value));
                   setShadedPanel(null);
                 }}
+                onInput={(e) => {
+                  setNumPanels(parseInt((e.target as HTMLInputElement).value));
+                  setShadedPanel(null);
+                }}
                 style={{
                   width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
+                  height: '20px',
+                  borderRadius: '10px',
                   cursor: 'pointer',
+                  accentColor: colors.accent,
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
                 }}
               />
             </div>
@@ -1183,6 +1265,10 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
             marginBottom: '24px',
           }}>
             <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '12px', color: colors.textMuted, fontSize: '13px' }}>
+                Your prediction: {prediction === 'a' ? '"Series produces more power"' : prediction === 'b' ? '"Parallel produces more power"' : prediction === 'c' ? '"Both produce the same power"' : 'None made'}
+                {prediction === 'c' ? <span style={{ color: colors.success }}> — You predicted this correctly! ✓</span> : prediction ? <span style={{ color: colors.warning }}> — As you observed, both are equal!</span> : ''}
+              </p>
               <p style={{ marginBottom: '16px' }}>
                 <strong style={{ color: colors.textPrimary }}>Because power depends on both voltage and current:</strong> When you increase one, you proportionally decrease the other. This is why P = V × I gives the same result regardless of configuration.
               </p>
@@ -1298,7 +1384,26 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ fontSize: '48px', marginBottom: '12px' }}>🍂☀️</div>
+            {/* Static SVG diagram showing shading scenario */}
+            <svg width="320" height="120" viewBox="0 0 320 120" style={{ background: colors.bgSecondary, borderRadius: '8px', marginBottom: '12px' }}>
+              {/* Series string with shaded panel */}
+              <text x="160" y="15" fill={colors.textPrimary} fontSize="11" textAnchor="middle" fontWeight="600">Series vs Parallel: Shading Effect</text>
+              {/* 4 panels in series */}
+              {[0, 1, 2, 3].map(i => (
+                <g key={i}>
+                  <rect x={30 + i * 55} y={25} width={45} height={35} fill={i === 1 ? `${colors.warning}44` : colors.bgCard} stroke={i === 1 ? colors.warning : colors.border} strokeWidth="2" rx="3" />
+                  <text x={52 + i * 55} y={47} fill={i === 1 ? colors.warning : colors.textMuted} fontSize="10" textAnchor="middle">{i === 1 ? '50%' : '40V'}</text>
+                  {i < 3 && <line x1={75 + i * 55} y1={42} x2={85 + i * 55} y2={42} stroke={colors.accent} strokeWidth="2" />}
+                </g>
+              ))}
+              <text x="270" y="47" fill={colors.error} fontSize="10" fontWeight="600">LOSS</text>
+              {/* Voltage label */}
+              <text x="160" y="72" fill={colors.textMuted} fontSize="10" textAnchor="middle">Voltage: series adds panels, shading reduces current</text>
+              <text x="160" y="85" fill={colors.warning} fontSize="10" textAnchor="middle" fontWeight="600">Which loses more power when 1 panel is 50% shaded?</text>
+              {/* Axis reference */}
+              <text x="10" y="105" fill={colors.textMuted} fontSize="9">Current →</text>
+              <line x1="30" y1="98" x2="290" y2="98" stroke={colors.border} strokeDasharray="3 3" opacity="0.4" />
+            </svg>
             <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
               4 panels, 1 partially shaded (50% blocked)
             </p>
@@ -1801,6 +1906,35 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
                 </div>
               ))}
             </div>
+
+            {/* Got It button for each app */}
+            {!completedApps[selectedApp] && (
+              <button
+                onClick={() => {
+                  playSound('success');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  marginTop: '16px',
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: `1px solid ${app.color}`,
+                  background: 'transparent',
+                  color: app.color,
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Got It
+              </button>
+            )}
+            {completedApps[selectedApp] && (
+              <p style={{ ...typo.small, color: colors.success, marginTop: '12px' }}>✓ Application explored</p>
+            )}
           </div>
 
           {/* Progress indicator */}
@@ -2077,7 +2211,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
                   fontWeight: 600,
                 }}
               >
-                Next →
+                Next Question →
               </button>
             ) : (
               <button
@@ -2109,7 +2243,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
         </div>
         </div>
 
-        {renderNavDots()}
+        {renderNavDots(false, 'Next →')}
       </div>
     );
   }
@@ -2120,16 +2254,21 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
-        paddingTop: '48px',
-        paddingBottom: '100px',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '48px 24px 100px 24px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '48px 24px 100px 24px',
+          textAlign: 'center',
+        }}>
 
         <div style={{
           fontSize: '100px',
@@ -2199,8 +2338,9 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
             Return to Dashboard
           </a>
         </div>
+        </div>
 
-        {renderNavDots()}
+        {renderNavDots(true, 'Complete')}
       </div>
     );
   }

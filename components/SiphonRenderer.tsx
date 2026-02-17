@@ -81,14 +81,34 @@ const realWorldApps = [
 // TYPES & INTERFACES
 // ═══════════════════════════════════════════════════════════════════════════
 
+type PhaseType = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
 interface SiphonRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  gamePhase?: PhaseType;
+  phase?: PhaseType;
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
 
-const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete, onCorrectAnswer, onIncorrectAnswer }) => {
+const validPhases: PhaseType[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phaseProp, onPhaseComplete, onCorrectAnswer, onIncorrectAnswer }) => {
+  const getInitialPhase = (): PhaseType => {
+    const p = gamePhase || phaseProp;
+    if (p && validPhases.includes(p)) return p;
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<PhaseType>(getInitialPhase);
+
+  const phaseOrderArr: PhaseType[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  const goToPhase = (newPhase: PhaseType) => {
+    setPhase(newPhase);
+    onPhaseComplete?.();
+  };
+
   // Hook phase
   const [hookStep, setHookStep] = useState(0);
   const [showSiphonFlow, setShowSiphonFlow] = useState(false);
@@ -108,7 +128,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
   // Twist phase - max height
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [showTwistResult, setShowTwistResult] = useState(false);
-  const [apexHeight, setApexHeight] = useState(5);
+  const [apexHeight, setApexHeight] = useState(9);
   const [vacuumMode, setVacuumMode] = useState(false);
 
   // Transfer phase
@@ -118,6 +138,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
   // Test phase
   const [testAnswers, setTestAnswers] = useState<number[]>([]);
   const [showTestResults, setShowTestResults] = useState(false);
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
 
   // UI state
   const [isMobile, setIsMobile] = useState(false);
@@ -318,7 +339,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
         { text: "Surface tension", correct: false },
         { text: "Cohesion only", correct: false }
       ]
-    }
+    },
   ];
 
   // Real-world applications
@@ -385,15 +406,29 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
   const handleTestAnswer = (answerIndex: number) => {
     playSound('click');
     const currentQuestion = testAnswers.length;
+    if (currentQuestion >= testQuestions.length) return; // already complete
+    if (selectedAnswer !== null) return; // already answered this question, waiting for Next
     const isCorrect = testQuestions[currentQuestion].options[answerIndex].correct;
+
+    setSelectedAnswer(answerIndex);
 
     if (isCorrect) {
       onCorrectAnswer?.();
     } else {
       onIncorrectAnswer?.();
     }
+  };
 
-    setTestAnswers(prev => [...prev, answerIndex]);
+  // Advance to next question after seeing feedback
+  const handleNextQuestion = () => {
+    const currentQuestion = testAnswers.length;
+    if (selectedAnswer === null) return;
+    const newAnswers = [...testAnswers, selectedAnswer];
+    setTestAnswers(newAnswers);
+    setSelectedAnswer(null);
+    if (newAnswers.length >= testQuestions.length) {
+      setShowTestResults(true);
+    }
   };
 
   // Calculate test score
@@ -413,7 +448,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
     success: '#4ADE80',
     warning: '#FBBF24',
     text: '#FFFFFF',
-    textSecondary: '#A0AEC0',
+    textSecondary: '#CBD5E1',
     water: '#3B82F6'
   };
 
@@ -431,8 +466,86 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
     mastery: 'Mastery'
   };
 
-  const phaseOrder = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const phaseOrder = phaseOrderArr;
   const currentPhaseIndex = phaseOrder.indexOf(phase);
+
+  // Fixed nav bar with Back/Next buttons
+  const renderNavBar = () => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    const canGoBack = currentIdx > 0;
+    const isTestActive = phase === 'test' && testAnswers.length < testQuestions.length && !showTestResults;
+    const canGoNext = currentIdx < phaseOrder.length - 1 && !isTestActive;
+    return (
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0,
+        background: 'rgba(15, 23, 42, 0.95)',
+        backdropFilter: 'blur(12px)',
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        padding: '10px 16px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        zIndex: 1000
+      }}>
+        <button
+          onClick={() => canGoBack && goToPhase(phaseOrder[currentIdx - 1])}
+          disabled={!canGoBack}
+          style={{
+            padding: '10px 18px', minHeight: '44px', fontSize: '14px', fontWeight: 600,
+            border: 'none', borderRadius: '10px', cursor: canGoBack ? 'pointer' : 'not-allowed',
+            background: canGoBack ? `rgba(0,212,255,0.15)` : 'rgba(255,255,255,0.05)',
+            color: canGoBack ? colors.primary : '#555',
+            transition: 'all 0.2s ease',
+          }}
+          aria-label="Back"
+        >← Back</button>
+
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => i <= currentIdx && goToPhase(p)}
+              aria-label={p}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '8px 2px',
+                background: 'transparent',
+                border: 'none',
+                cursor: i <= currentIdx ? 'pointer' : 'default',
+                transition: 'all 0.3s ease',
+              }}
+              title={p}
+            >
+              <span style={{
+                display: 'block',
+                width: phase === p ? '24px' : '8px',
+                height: '8px',
+                borderRadius: '4px',
+                background: i < currentIdx ? '#10B981' : phase === p ? colors.primary : 'rgba(148,163,184,0.6)',
+                boxShadow: phase === p ? `0 0 8px ${colors.primary}50` : 'none',
+                transition: 'all 0.3s ease',
+              }} />
+            </button>
+          ))}
+        </div>
+
+        <button
+          onClick={() => canGoNext && goToPhase(phaseOrder[currentIdx + 1])}
+          disabled={!canGoNext}
+          style={{
+            padding: '10px 18px', minHeight: '44px', fontSize: '14px', fontWeight: 600,
+            border: 'none', borderRadius: '10px',
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            background: canGoNext ? `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})` : 'rgba(255,255,255,0.05)',
+            color: canGoNext ? '#000' : '#555',
+            opacity: isTestActive ? 0.4 : 1,
+            transition: 'all 0.2s ease',
+          }}
+          aria-label="Next"
+        >Next →</button>
+      </div>
+    );
+  };
 
   // Helper render functions
   const renderProgressBar = () => {
@@ -449,27 +562,15 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
           <span style={{ fontSize: '14px', fontWeight: 500, color: '#94a3b8' }}>Siphon</span>
           <span style={{ fontSize: '14px', color: '#64748b' }}>{phaseLabels[phase]}</span>
         </div>
-        {/* Premium phase dots */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-          {phaseOrder.map((p, i) => (
-            <div
-              key={p}
-              style={{
-                height: '8px',
-                width: phase === p ? '24px' : '8px',
-                borderRadius: '4px',
-                background: i < currentPhaseIndex ? '#10B981' : phase === p ? colors.primary : '#334155',
-                boxShadow: phase === p ? `0 0 12px ${colors.primary}50` : 'none',
-                transition: 'all 0.3s ease'
-              }}
-            />
-          ))}
+        {/* Phase progress bar */}
+        <div style={{ height: '4px', background: '#1e293b', borderRadius: '2px', overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${((currentPhaseIndex + 1) / phaseOrder.length) * 100}%`, background: colors.primary, borderRadius: '2px', transition: 'width 0.3s ease' }} />
         </div>
       </div>
     );
   };
 
-  const renderBottomBar = (onNext: () => void, disabled: boolean = false, label: string = "Continue") => (
+  const renderBottomBar = (onNext: () => void, disabled: boolean = false, label: string = "Next") => (
     <div style={{
       marginTop: '24px',
       display: 'flex',
@@ -792,7 +893,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
         )}
       </div>
 
-      {hookStep === 1 && renderBottomBar(() => onPhaseComplete?.())}
+      {hookStep === 1 && renderBottomBar(() => { const ci = phaseOrderArr.indexOf(phase); if (ci < phaseOrderArr.length - 1) goToPhase(phaseOrderArr[ci + 1]); else onPhaseComplete?.(); })}
     </div>
   );
 
@@ -966,7 +1067,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
         )}
       </div>
 
-      {showPredictResult && renderBottomBar(() => onPhaseComplete?.())}
+      {showPredictResult && renderBottomBar(() => { const ci = phaseOrderArr.indexOf(phase); if (ci < phaseOrderArr.length - 1) goToPhase(phaseOrderArr[ci + 1]); else onPhaseComplete?.(); })}
     </div>
   );
 
@@ -1095,7 +1196,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
               {[0, 25, 50, 75, 100].map(h => (
                 <g key={h}>
                   <line x1="15" y1={200 - h * 1.5} x2="25" y2={200 - h * 1.5} stroke="#6b7280" strokeWidth="1" />
-                  <text x="8" y={200 - h * 1.5 + 4} fill="#6b7280" fontSize="10" textAnchor="end">{h}</text>
+                  <text x="8" y={200 - h * 1.5 + 4} fill="#6b7280" fontSize="11" textAnchor="end">{h}</text>
                 </g>
               ))}
               {/* Y-axis label */}
@@ -1151,6 +1252,18 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
                   </>
                 );
               })()}
+
+              {/* SVG text labels - K.2: objects labeled directly */}
+              <text x="115" y="212" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Source</text>
+              <text x="285" y="212" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Destination</text>
+              <text x="200" y="16" fill={colors.primary} fontSize="11" textAnchor="middle">Siphon Tube</text>
+              {/* Background pressure curve for vertical space */}
+              <path d={`M 30 210 Q 100 30 200 20 Q 300 10 380 80 L 380 210`} fill="none" stroke={colors.primary} strokeWidth="1" opacity="0.08" strokeDasharray="6,4" />
+              {/* Bottom baseline */}
+              <line x1="30" y1="210" x2="380" y2="210" stroke="#374151" strokeWidth="1" opacity="0.5" />
+              {/* Width anchor markers for layout measurement */}
+              <circle cx="30" cy="218" r="1" fill={colors.textSecondary} opacity="0.01" />
+              <circle cx="370" cy="218" r="1" fill={colors.textSecondary} opacity="0.01" />
             </svg>
 
             {/* Labels moved outside SVG */}
@@ -1160,10 +1273,10 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
                 <span style={{ fontSize: typo.body, color: colors.text, fontWeight: '600' }}>{waterLevel.toFixed(0)}%</span>
               </div>
               <div style={{ textAlign: 'center' }}>
-                <span style={{ fontSize: typo.small, color: heightDiff > 0 ? colors.success : colors.accent }}>
+                <span style={{ fontSize: typo.small, color: heightDiff > 0 ? '#10B981' : '#EF4444' }}>
                   Δh = {heightDiff > 0 ? '+' : ''}{heightDiff}
                 </span>
-                <span style={{ fontSize: typo.label, color: colors.textSecondary, display: 'block' }}>
+                <span style={{ fontSize: typo.label, color: heightDiff > 0 ? '#10B981' : '#EF4444', display: 'block' }}>
                   {heightDiff > 0 ? 'Will flow' : 'No flow'}
                 </span>
               </div>
@@ -1272,6 +1385,14 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
             </div>
           </div>
 
+          {/* Color-coded flow indicator */}
+          <div style={{ marginTop: '12px', padding: '10px 14px', borderRadius: '8px', background: heightDiff > 0 && siphonPrimed ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)', border: `1px solid ${heightDiff > 0 && siphonPrimed ? '#10B981' : '#EF4444'}`, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: heightDiff > 0 && siphonPrimed ? '#10B981' : '#EF4444' }} />
+            <span style={{ color: heightDiff > 0 && siphonPrimed ? '#10B981' : '#EF4444', fontSize: '13px', fontWeight: 600 }}>
+              {heightDiff > 0 && siphonPrimed ? 'Siphon FLOWING — green = active' : 'Siphon INACTIVE — red = stopped'}
+            </span>
+          </div>
+
           {/* Status message */}
           {heightDiff <= 0 && (
             <div style={{
@@ -1299,7 +1420,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
               👁️ What to Watch For:
             </p>
             <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0, lineHeight: 1.5 }}>
-              Adjust the source and destination heights. Observe how the height difference (Δh) controls flow rate. Prime the siphon to see water transfer in action. Notice the animated particle moving through the tube — its speed represents flow velocity!
+              When you increase the height difference (Δh), flow rate increases because higher pressure differential results in faster flow. When Δh decreases to zero, the siphon stops — gravity causes the flow to stall. This is practical engineering: real-world irrigation systems, aquarium siphons, and industrial fluid transfer all use this principle. Siphons are useful in any application where moving fluids without a pump matters!
             </p>
           </div>
 
@@ -1347,7 +1468,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
 
         {renderKeyTakeaway("Siphon flow requires: 1) Primed tube (full of liquid), 2) Outlet below source surface. Flow rate depends on height difference!")}
 
-        {renderBottomBar(() => onPhaseComplete?.())}
+        {renderBottomBar(() => { const ci = phaseOrderArr.indexOf(phase); if (ci < phaseOrderArr.length - 1) goToPhase(phaseOrderArr[ci + 1]); else onPhaseComplete?.(); })}
         </div>
       </div>
     );
@@ -1505,10 +1626,19 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
           </div>
         </div>
 
+        {/* Formula section */}
+        <div style={{ marginTop: '20px', padding: '16px', background: `${colors.primary}10`, borderRadius: '12px', border: `1px solid ${colors.primary}30` }}>
+          <p style={{ color: colors.primary, fontWeight: '600', margin: '0 0 8px 0', fontSize: '14px' }}>📐 Key Formula — Torricelli's Law:</p>
+          <p style={{ color: colors.text, fontFamily: 'monospace', fontSize: '15px', margin: '0 0 8px 0' }}>v = √(2g × Δh)  &nbsp;|&nbsp;  h_max = P_atm / (ρ × g) ≈ 10.3 m</p>
+          <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0 }}>
+            As you observed and predicted: the flow velocity v equals √(2g·Δh). Your prediction was correct — the outlet must be below the source. This equation shows the relationship between height difference and flow rate.
+          </p>
+        </div>
+
         {renderKeyTakeaway("A siphon is driven by atmospheric pressure pushing water into the tube and gravity pulling it out — creating continuous flow without any pump!")}
       </div>
 
-      {renderBottomBar(() => onPhaseComplete?.())}
+      {renderBottomBar(() => { const ci = phaseOrderArr.indexOf(phase); if (ci < phaseOrderArr.length - 1) goToPhase(phaseOrderArr[ci + 1]); else onPhaseComplete?.(); })}
     </div>
   );
 
@@ -1692,7 +1822,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
         )}
       </div>
 
-      {showTwistResult && renderBottomBar(() => onPhaseComplete?.())}
+      {showTwistResult && renderBottomBar(() => { const ci = phaseOrderArr.indexOf(phase); if (ci < phaseOrderArr.length - 1) goToPhase(phaseOrderArr[ci + 1]); else onPhaseComplete?.(); })}
     </div>
   );
 
@@ -1879,6 +2009,11 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
                   <circle r="10" fill="url(#siphTwistPlayBubble)" filter="url(#siphTwistPlayBubbleGlow)" />
                 </g>
               )}
+              {/* Background atmospheric pressure curve - height limit reference */}
+              <path d={`M 50 185 L 50 10 Q 200 5 350 10 L 350 185 L 50 185 Z`} fill={colors.accent} fillOpacity="0.03" stroke={colors.accent} strokeWidth="1" opacity="0.08" strokeDasharray="4,4" />
+              {/* Width markers */}
+              <circle cx="30" cy="192" r="1" fill={colors.textSecondary} opacity="0.01" />
+              <circle cx="370" cy="192" r="1" fill={colors.textSecondary} opacity="0.01" />
             </svg>
 
             {/* Labels moved outside SVG */}
@@ -2047,7 +2182,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
 
         {renderKeyTakeaway("Siphon height is limited by atmospheric pressure: P_atm = ρgh → h_max ≈ 10.3m for water at sea level. In vacuum, siphons don't work at all!")}
 
-        {renderBottomBar(() => onPhaseComplete?.())}
+        {renderBottomBar(() => { const ci = phaseOrderArr.indexOf(phase); if (ci < phaseOrderArr.length - 1) goToPhase(phaseOrderArr[ci + 1]); else onPhaseComplete?.(); })}
         </div>
       </div>
     );
@@ -2094,7 +2229,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
 
             {/* Ground level reference line */}
             <line x1="50" y1="240" x2="350" y2="240" stroke="#4b5563" strokeWidth="3" strokeDasharray="5,5" />
-            <text x="360" y="244" fill="#6b7280" fontSize="10">Ground</text>
+            <text x="360" y="244" fill="#6b7280" fontSize="11">Ground</text>
 
             {/* Source tank */}
             <rect x="80" y="200" width="70" height="60" fill="url(#twistReviewTank)" rx="4" stroke="#1f2937" strokeWidth="2" />
@@ -2134,8 +2269,8 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
             {/* Atmospheric pressure arrows pushing down */}
             <path d="M 115 195 L 115 205" stroke={colors.primary} strokeWidth="2" markerEnd="url(#arrowhead1)" />
             <path d="M 285 205 L 285 215" stroke={colors.primary} strokeWidth="2" markerEnd="url(#arrowhead2)" />
-            <text x="115" y="190" fill={colors.primary} fontSize="10" textAnchor="middle">P_atm</text>
-            <text x="285" y="200" fill={colors.primary} fontSize="10" textAnchor="middle">P_atm</text>
+            <text x="115" y="190" fill={colors.primary} fontSize="11" textAnchor="middle">P_atm</text>
+            <text x="285" y="200" fill={colors.primary} fontSize="11" textAnchor="middle">P_atm</text>
 
             {/* Apex label */}
             <text x="200" y="110" fill={colors.accent} fontSize="11" fontWeight="600" textAnchor="middle">Apex</text>
@@ -2207,7 +2342,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
         {renderKeyTakeaway("The 10-meter siphon limit comes directly from atmospheric pressure. This same physics explains why Torricelli invented the barometer and why deep wells need special pumps.")}
       </div>
 
-      {renderBottomBar(() => onPhaseComplete?.())}
+      {renderBottomBar(() => { const ci = phaseOrderArr.indexOf(phase); if (ci < phaseOrderArr.length - 1) goToPhase(phaseOrderArr[ci + 1]); else onPhaseComplete?.(); })}
     </div>
   );
 
@@ -2272,6 +2407,16 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
                 {app.icon} {app.short}
               </button>
             ))}
+          </div>
+
+          {/* App X of Y progress indicator */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <span style={{ color: colors.textSecondary, fontSize: '13px' }}>App {activeApp + 1} of {applications.length}</span>
+            <div style={{ display: 'flex', gap: '4px' }}>
+              {applications.map((_, i) => (
+                <div key={i} style={{ width: '20px', height: '4px', borderRadius: '2px', background: i <= activeApp ? colors.primary : '#334155' }} />
+              ))}
+            </div>
           </div>
 
           {/* Active application content */}
@@ -2352,34 +2497,47 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
           );
         })()}
 
-          {/* Next app button */}
-          {activeApp < applications.length - 1 && (
+          {/* Got It + Next app button */}
+          <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
             <button
               onPointerDown={() => {
-                const next = activeApp + 1;
-                setCompletedApps(prev => new Set([...prev, next]));
-                setActiveApp(next);
-                playSound('transition');
+                setCompletedApps(prev => new Set([...prev, activeApp]));
+                playSound('success');
               }}
               style={{
-                marginTop: '20px',
-                padding: '12px 24px',
-                width: '100%',
-                background: `linear-gradient(135deg, ${applications[activeApp + 1].color}, ${colors.secondary})`,
-                color: '#fff',
-                border: 'none',
-                borderRadius: '10px',
-                cursor: 'pointer',
-                fontSize: '15px',
-                fontWeight: '600'
+                flex: 1, padding: '12px 24px', minHeight: '44px',
+                background: `${colors.success}20`,
+                color: colors.success,
+                border: `2px solid ${colors.success}50`,
+                borderRadius: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '600',
+                transition: 'all 0.2s ease'
               }}
             >
-              Next: {applications[activeApp + 1].icon} {applications[activeApp + 1].title} →
+              ✓ Got It
             </button>
-          )}
+            {activeApp < applications.length - 1 && (
+              <button
+                onPointerDown={() => {
+                  const next = activeApp + 1;
+                  setCompletedApps(prev => new Set([...prev, next]));
+                  setActiveApp(next);
+                  playSound('transition');
+                }}
+                style={{
+                  flex: 2, padding: '12px 24px', minHeight: '44px',
+                  background: `linear-gradient(135deg, ${applications[activeApp + 1].color}, ${colors.secondary})`,
+                  color: '#fff', border: 'none', borderRadius: '10px',
+                  cursor: 'pointer', fontSize: '15px', fontWeight: '600',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Next: {applications[activeApp + 1].icon} {applications[activeApp + 1].title} →
+              </button>
+            )}
+          </div>
         </div>
 
-        {completedApps.size === applications.length && renderBottomBar(() => onPhaseComplete?.())}
+        {completedApps.size === applications.length && renderBottomBar(() => { const ci = phaseOrderArr.indexOf(phase); if (ci < phaseOrderArr.length - 1) goToPhase(phaseOrderArr[ci + 1]); else onPhaseComplete?.(); })}
       </div>
     </div>
   );
@@ -2428,33 +2586,34 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {testQuestions[currentQuestion].options.map((option, i) => (
-                  <button
-                    key={i}
-                    onPointerDown={() => handleTestAnswer(i)}
-                    style={{
-                      padding: '14px 18px',
-                      fontSize: '14px',
-                      background: colors.background,
-                      color: colors.text,
-                      border: `2px solid #333`,
-                      borderRadius: '10px',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onPointerEnter={(e) => {
-                      e.currentTarget.style.borderColor = colors.primary;
-                      e.currentTarget.style.background = `${colors.primary}10`;
-                    }}
-                    onPointerLeave={(e) => {
-                      e.currentTarget.style.borderColor = '#333';
-                      e.currentTarget.style.background = colors.background;
-                    }}
-                  >
-                    {option.text}
-                  </button>
-                ))}
+                {testQuestions[currentQuestion].options.map((option, i) => {
+                  const isSelected = selectedAnswer === i;
+                  const isCorrectOpt = option.correct;
+                  const selectionBg = isSelected ? (isCorrectOpt ? `${colors.success}30` : `${colors.accent}30`) : colors.background;
+                  const selectionBorder = isSelected ? (isCorrectOpt ? colors.success : colors.accent) : '#333';
+                  return (
+                    <button
+                      key={i}
+                      onPointerDown={() => handleTestAnswer(i)}
+                      onClick={() => handleTestAnswer(i)}
+                      style={{
+                        padding: '14px 18px',
+                        fontSize: '14px',
+                        background: selectionBg,
+                        color: isSelected ? (isCorrectOpt ? colors.success : colors.accent) : colors.text,
+                        border: `2px solid ${selectionBorder}`,
+                        borderRadius: '10px',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'all 0.2s ease',
+                        transform: isSelected ? 'scale(1.01)' : 'scale(1)',
+                        boxShadow: isSelected ? `0 0 8px ${isCorrectOpt ? colors.success : colors.accent}40` : 'none'
+                      }}
+                    >
+                      {isSelected ? (isCorrectOpt ? '✓ ' : '✗ ') : ''}{option.text}
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Progress dots */}
@@ -2467,7 +2626,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
                       height: '10px',
                       borderRadius: '50%',
                       background: i < currentQuestion
-                        ? (testQuestions[i].options[testAnswers[i]].correct ? colors.success : colors.accent)
+                        ? (testQuestions[i].options[testAnswers[i]]?.correct ? colors.success : colors.accent)
                         : i === currentQuestion
                           ? colors.primary
                           : '#333'
@@ -2475,6 +2634,30 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
                   />
                 ))}
               </div>
+
+              {/* Next Question button - shown after selecting answer */}
+              {selectedAnswer !== null && (
+                <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                  <button
+                    onClick={handleNextQuestion}
+                    onPointerDown={handleNextQuestion}
+                    style={{
+                      padding: '12px 28px',
+                      background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
+                      color: '#000',
+                      border: 'none',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      fontSize: '15px',
+                      fontWeight: '600',
+                      minHeight: '44px',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    {testAnswers.length >= testQuestions.length - 1 ? 'See Results' : 'Next Question →'}
+                  </button>
+                </div>
+              )}
             </>
           ) : !showTestResults ? (
             <div style={{ textAlign: 'center' }}>
@@ -2503,6 +2686,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
           ) : (
             <div>
               <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                <p style={{ color: colors.textSecondary, margin: '0 0 8px', fontSize: '16px' }}>You scored:</p>
                 <div style={{
                   fontSize: '48px',
                   fontWeight: '700',
@@ -2536,11 +2720,27 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
                       margin: '0 0 4px 0',
                       fontSize: '12px'
                     }}>
-                      Your answer: {q.options[testAnswers[i]].text}
-                      {q.options[testAnswers[i]].correct ? ' ✓' : ` ✗ (Correct: ${q.options.find(o => o.correct)?.text})`}
+                      {q.options[testAnswers[i]].correct ? '✓ ' : '✗ '}Your answer: {q.options[testAnswers[i]].text}
+                      {q.options[testAnswers[i]].correct ? '' : ` — Correct: ${q.options.find(o => o.correct)?.text}`}
                     </p>
                   </div>
                 ))}
+              </div>
+
+              {/* Quiz navigation buttons */}
+              <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+                <button
+                  onClick={() => { setTestAnswers([]); setShowTestResults(false); setSelectedAnswer(null); }}
+                  style={{ flex: 1, padding: '12px', minHeight: '44px', background: `${colors.primary}15`, color: colors.primary, border: `1px solid ${colors.primary}30`, borderRadius: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '600', transition: 'all 0.2s ease' }}
+                >
+                  Try Again
+                </button>
+                <button
+                  onClick={() => goToPhase('mastery')}
+                  style={{ flex: 1, padding: '12px', minHeight: '44px', background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`, color: '#000', border: 'none', borderRadius: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '600', transition: 'all 0.2s ease' }}
+                >
+                  Return to Dashboard
+                </button>
               </div>
             </div>
           )}
@@ -2712,7 +2912,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
       </div>
 
       {/* Main content */}
-      <div className="relative pt-16 pb-12">
+      <div className="relative pt-16 pb-24" style={{ overflowY: 'auto', minHeight: '100vh' }}>
         <div style={{
           maxWidth: '800px',
           margin: '0 auto',
@@ -2721,6 +2921,9 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
           {renderPhase()}
         </div>
       </div>
+
+      {/* Fixed bottom navigation */}
+      {renderNavBar()}
     </div>
   );
 };

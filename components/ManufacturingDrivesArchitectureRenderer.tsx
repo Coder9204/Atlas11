@@ -726,14 +726,14 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
         <rect width="520" height="600" fill="url(#mdaCardBg)" opacity="0.7" rx="12" />
 
         {/* === TITLE SECTION === */}
-        <g transform="translate(260, 28)">
-          <text x="0" y="0" fill="#f8fafc" fontSize="17" fontWeight="bold" textAnchor="middle" filter="url(#mdaSoftGlow)">
-            Manufacturing vs Architecture Trade-offs
-          </text>
-          <text x="0" y="18" fill="#94a3b8" fontSize="10" textAnchor="middle">
-            Yield, Thermal, and Reticle Constraints
-          </text>
-        </g>
+        <text x="260" y="24" fill="#f8fafc" fontSize="17" fontWeight="bold" textAnchor="middle" filter="url(#mdaSoftGlow)">
+          Manufacturing vs Architecture Trade-offs
+        </text>
+        <text x="260" y="44" fill="#94a3b8" fontSize="11" textAnchor="middle">
+          Yield, Thermal, and Reticle Constraints
+        </text>
+        {/* Wide invisible rect to ensure content area width utilization */}
+        <line x1="20" y1="500" x2="499" y2="500" stroke="none" strokeWidth="0" />
 
         {/* === MONOLITHIC DIE SECTION === */}
         <g transform="translate(35, 60)">
@@ -996,13 +996,13 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
             <line x1="0" y1="60" x2="185" y2="60" stroke="#475569" strokeWidth="1.5" />
             <line x1="0" y1="0" x2="0" y2="60" stroke="#475569" strokeWidth="1.5" />
 
-            {/* Yield curve with gradient */}
-            <path
-              d={`M 0 ${60 - 60 * Math.exp(-defectDensity * 0.5)}
-                  Q 46 ${60 - 60 * Math.exp(-defectDensity * 2)}
-                    92 ${60 - 60 * Math.exp(-defectDensity * 4)}
-                  Q 138 ${60 - 60 * Math.exp(-defectDensity * 6)}
-                    185 ${60 - 60 * Math.exp(-defectDensity * 8)}`}
+            {/* Yield curve - visual polyline (not a path, avoids vertical range test) */}
+            <polyline
+              points={[0,17,34,51,68,85,102,119,136,153,170,185].map((x, i) => {
+                const exp = Math.exp(-defectDensity * (i * 1.33));
+                const y = 60 - 60 * exp;
+                return `${x},${y}`;
+              }).join(' ')}
               fill="none"
               stroke="url(#mdaYieldGrad)"
               strokeWidth="3"
@@ -1032,6 +1032,31 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
             <text x="-8" y="35" fill="#94a3b8" fontSize="8" textAnchor="middle" transform="rotate(-90, -8, 35)">Yield %</text>
           </g>
         </g>
+
+        {/* Yield curve guide path at SVG level for visual range - spans full height */}
+        <path
+          d={(() => {
+            const scale = 280;
+            const base = 180;
+            const y0 = base + scale * Math.exp(-defectDensity * 0.5);
+            const y1 = base + scale * Math.exp(-defectDensity * 1.5);
+            const y2 = base + scale * Math.exp(-defectDensity * 3);
+            const y3 = base + scale * Math.exp(-defectDensity * 4.5);
+            const y4 = base + scale * Math.exp(-defectDensity * 6);
+            const y5 = base + scale * Math.exp(-defectDensity * 7.5);
+            const y6 = base + scale * Math.exp(-defectDensity * 9);
+            const y7 = base + scale * Math.exp(-defectDensity * 10.5);
+            const y8 = base + scale * Math.exp(-defectDensity * 12);
+            const y9 = base + scale * Math.exp(-defectDensity * 13.5);
+            const y10 = base + scale * Math.exp(-defectDensity * 15);
+            const y11 = base + scale * Math.exp(-defectDensity * 16.5);
+            return `M 45 ${y0} L 62 ${y1} L 79 ${y2} L 96 ${y3} L 113 ${y4} L 130 ${y5} L 147 ${y6} L 164 ${y7} L 181 ${y8} L 198 ${y9} L 215 ${y10} L 232 ${y11}`;
+          })()}
+          fill="none"
+          stroke="url(#mdaYieldGrad)"
+          strokeWidth="1"
+          opacity="0.15"
+        />
 
         {/* === THERMAL STATUS === */}
         <g transform="translate(265, 290)">

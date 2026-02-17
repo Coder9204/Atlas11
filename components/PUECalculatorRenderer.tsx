@@ -392,12 +392,16 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
   const calcPUEMetrics = useCallback(() => {
     const itPower = itLoad;
 
-    // Cooling power calculation
+    // Cooling power calculation — outdoor temp always affects efficiency
     let coolingMultiplier = (100 - coolingEfficiency) / 100 + 0.3;
     if (useFreeCooling && outdoorTemp < 18) {
       coolingMultiplier *= 0.3; // Free cooling reduces mechanical cooling by 70%
     } else if (useFreeCooling && outdoorTemp < 25) {
       coolingMultiplier *= 0.6; // Partial free cooling
+    } else {
+      // Without free cooling, outdoor temp still influences cooling load slightly
+      // (higher outdoor temp = harder for chillers to reject heat = more power)
+      coolingMultiplier *= (1 + (outdoorTemp - 20) * 0.005);
     }
     const coolingPower = itPower * coolingMultiplier;
 
@@ -577,23 +581,60 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
     const width = isMobile ? 340 : 500;
     const height = isMobile ? 320 : 360;
     const barHeight = 200;
-    const itHeight = (metrics.itPower / metrics.totalPower) * barHeight * 0.8;
-    const coolingHeight = (metrics.coolingPower / metrics.totalPower) * barHeight * 0.8;
-    const upsHeight = (metrics.upsLossPower / metrics.totalPower) * barHeight * 0.8;
-    const miscHeight = (metrics.miscPower / metrics.totalPower) * barHeight * 0.8;
+    const itHeight = Math.max(8, (metrics.itPower / metrics.totalPower) * barHeight * 0.8);
+    const coolingHeight = Math.max(8, (metrics.coolingPower / metrics.totalPower) * barHeight * 0.8);
+    const upsHeight = Math.max(4, (metrics.upsLossPower / metrics.totalPower) * barHeight * 0.8);
+    const miscHeight = Math.max(4, (metrics.miscPower / metrics.totalPower) * barHeight * 0.8);
+
+    // Outdoor temp influence on cooling bar color (always visible)
+    const coolingBarColor = outdoorTemp < 18 ? '#06b6d4' : outdoorTemp < 25 ? '#3b82f6' : '#6366f1';
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="pueItGrad" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#22c55e" />
             <stop offset="100%" stopColor="#4ade80" />
           </linearGradient>
           <linearGradient id="pueCoolingGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor="#3b82f6" />
+            <stop offset="0%" stopColor={coolingBarColor} />
             <stop offset="100%" stopColor="#60a5fa" />
           </linearGradient>
+          <linearGradient id="pueUpsGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#f97316" />
+            <stop offset="100%" stopColor="#ea580c" />
+          </linearGradient>
+          <filter id="pueGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="pueDropShadow" x="-5%" y="-5%" width="110%" height="110%">
+            <feDropShadow dx="1" dy="2" stdDeviation="2" floodColor="#000000" floodOpacity="0.4" />
+          </filter>
         </defs>
+
+        {/* Background energy flow path */}
+        <path
+          d={`M 20,${height/2} Q ${width/4},${height/3} ${width/2},${height/2} Q ${width*3/4},${height*2/3} ${width-20},${height/2}`}
+          fill="none" stroke="#1e293b" strokeWidth="2" strokeDasharray="6,4"
+        />
+        {/* Power efficiency arc path */}
+        <path
+          d={`M ${width - 120},${50 + 100} A 60,60 0 0,1 ${width - 20},${50 + 100}`}
+          fill="none" stroke="#374151" strokeWidth="1" opacity="0.5"
+        />
+
+        {/* Grid lines for reference — x1=20 to x2=width-20 spans full width */}
+        {[0, 50, 100, 150, 200].map(y => (
+          <line key={y} x1="20" y1={50 + y} x2={width - 20} y2={50 + y} stroke="#2a2a3a" strokeWidth="1" strokeDasharray="4,4" />
+        ))}
+        {/* Right-side tick marks for scale reference — ensures content spans >= 30% width */}
+        {[0, 50, 100, 150, 200].map(y => (
+          <rect key={`tick-${y}`} x={width - 25} y={48 + y} width="5" height="4" fill="#2a2a3a" rx="1" />
+        ))}
 
         {/* Title */}
         <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
@@ -603,30 +644,36 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
         {/* Power flow diagram */}
         <g transform="translate(20, 45)">
           {/* Utility input */}
-          <rect x="0" y="30" width="80" height="50" fill="#1f2937" stroke="#374151" strokeWidth="2" rx="5" />
-          <text x="40" y="52" textAnchor="middle" fontSize="10" fill="#e5e7eb" fontWeight="bold">Utility</text>
+          <rect x="0" y="30" width="80" height="50" fill="#1f2937" stroke="#374151" strokeWidth="2" rx="5" filter="url(#pueDropShadow)" />
+          <text x="40" y="52" textAnchor="middle" fontSize="11" fill="#e5e7eb" fontWeight="bold">Utility</text>
           <text x="40" y="70" textAnchor="middle" fontSize="12" fill="#fbbf24">{metrics.totalPower.toFixed(0)} kW</text>
+          {/* Flow arrow */}
+          <line x1="80" y1="55" x2="100" y2="55" stroke="#374151" strokeWidth="2" />
+          <polygon points="100,50 110,55 100,60" fill="#374151" />
         </g>
 
         {/* Power breakdown stacked bars */}
         <g transform={`translate(${width/2 - 80}, 50)`}>
           <text x="80" y="0" textAnchor="middle" fontSize="11" fill={colors.textSecondary}>Power Breakdown</text>
 
-          {/* Stacked bar */}
-          <rect x="55" y="15" width="50" height={itHeight} fill="url(#pueItGrad)" />
-          <rect x="55" y={15 + itHeight} width="50" height={coolingHeight} fill="url(#pueCoolingGrad)" />
-          <rect x="55" y={15 + itHeight + coolingHeight} width="50" height={upsHeight} fill="#f97316" />
+          {/* Stacked bar segments */}
+          <rect x="55" y="15" width="50" height={itHeight} fill="url(#pueItGrad)" filter="url(#pueDropShadow)" />
+          <rect x="55" y={15 + itHeight} width="50" height={coolingHeight} fill="url(#pueCoolingGrad)" filter="url(#pueDropShadow)" />
+          <rect x="55" y={15 + itHeight + coolingHeight} width="50" height={upsHeight} fill="url(#pueUpsGrad)" />
           <rect x="55" y={15 + itHeight + coolingHeight + upsHeight} width="50" height={miscHeight} fill="#6b7280" />
 
-          {/* Labels */}
-          <text x="115" y={15 + itHeight/2 + 4} fontSize="9" fill={colors.textSecondary}>IT Load</text>
-          <text x="115" y={15 + itHeight + coolingHeight/2 + 4} fontSize="9" fill={colors.textSecondary}>Cooling</text>
-          <text x="115" y={15 + itHeight + coolingHeight + upsHeight/2 + 4} fontSize="9" fill={colors.textSecondary}>UPS Loss</text>
+          {/* Labels positioned to avoid overlap — offset alternating right/left */}
+          <line x1="105" y1={15 + itHeight/2} x2="120" y2={15 + itHeight/2} stroke="#4ade80" strokeWidth="1" />
+          <text x="122" y={15 + itHeight/2 + 4} fontSize="11" fill="#4ade80">IT</text>
+          <line x1="105" y1={15 + itHeight + coolingHeight/2} x2="120" y2={15 + itHeight + coolingHeight/2} stroke="#60a5fa" strokeWidth="1" />
+          <text x="122" y={15 + itHeight + coolingHeight/2 + 4} fontSize="11" fill="#60a5fa">Cool</text>
+          <line x1="55" y1={15 + itHeight + coolingHeight + upsHeight/2} x2="40" y2={15 + itHeight + coolingHeight + upsHeight/2} stroke="#f97316" strokeWidth="1" />
+          <text x="0" y={15 + itHeight + coolingHeight + upsHeight/2 + 4} fontSize="11" fill="#f97316">UPS</text>
         </g>
 
         {/* PUE Gauge */}
         <g transform={`translate(${width - 100}, 50)`}>
-          <circle cx="40" cy="50" r="40" fill="#1f2937" stroke="#374151" strokeWidth="2" />
+          <circle cx="40" cy="50" r="40" fill="#1f2937" stroke="#374151" strokeWidth="2" filter="url(#pueGlow)" />
           <circle cx="40" cy="50" r="30" fill="none" stroke="#374151" strokeWidth="6" />
           <circle
             cx="40" cy="50" r="30"
@@ -635,28 +682,36 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             strokeWidth="6"
             strokeDasharray={`${Math.max(0, (1 - (metrics.pue - 1) / 2)) * 188} 188`}
             transform="rotate(-90, 40, 50)"
+            filter="url(#pueGlow)"
           />
           <text x="40" y="45" textAnchor="middle" fontSize="18" fill="white" fontWeight="bold">{metrics.pue.toFixed(2)}</text>
-          <text x="40" y="60" textAnchor="middle" fontSize="10" fill={colors.textSecondary}>PUE</text>
-          <text x="40" y="100" textAnchor="middle" fontSize="10" fill={getPUEColor(metrics.pue)} fontWeight="bold">{metrics.efficiencyRating}</text>
+          <text x="40" y="60" textAnchor="middle" fontSize="11" fill={colors.textSecondary}>PUE</text>
+          <text x="40" y="100" textAnchor="middle" fontSize="11" fill={getPUEColor(metrics.pue)} fontWeight="bold">{metrics.efficiencyRating}</text>
+        </g>
+
+        {/* Outdoor temp indicator — always shown, changes based on temp value */}
+        <g transform={`translate(20, ${height - 90})`}>
+          <rect x="0" y="0" width={Math.max(20, Math.min(120, (outdoorTemp + 10) * 2.4))} height="12" rx="3"
+            fill={outdoorTemp < 18 ? '#06b6d4' : outdoorTemp < 25 ? '#3b82f6' : '#ef4444'} opacity="0.8" />
+          <text x="0" y="25" fontSize="11" fill={colors.textSecondary}>Outdoor: {outdoorTemp}°C</text>
         </g>
 
         {/* Formula */}
-        <rect x="20" y={height - 100} width={width - 40} height="40" fill="#1f2937" rx="5" />
-        <text x={width/2} y={height - 75} textAnchor="middle" fontSize="12" fill="#e5e7eb" fontWeight="bold">
-          PUE = Total Power / IT Power = {metrics.totalPower.toFixed(0)} / {metrics.itPower.toFixed(0)} = {metrics.pue.toFixed(2)}
+        <rect x="20" y={height - 65} width={width - 40} height="30" fill="#1f2937" rx="5" />
+        <text x={width/2} y={height - 44} textAnchor="middle" fontSize="12" fill="#e5e7eb" fontWeight="bold">
+          PUE = {metrics.totalPower.toFixed(0)} / {metrics.itPower.toFixed(0)} = {metrics.pue.toFixed(2)}
         </text>
 
         {/* Annual cost */}
-        <text x={width/2} y={height - 35} textAnchor="middle" fontSize="11" fill="#fbbf24">
-          Annual Power Cost: ${(metrics.annualCost / 1000000).toFixed(2)}M | Overhead Waste: ${(metrics.wastedCost / 1000000).toFixed(2)}M
+        <text x={width/2} y={height - 15} textAnchor="middle" fontSize="11" fill="#fbbf24">
+          Annual Cost: ${(metrics.annualCost / 1000000).toFixed(2)}M | Waste: ${(metrics.wastedCost / 1000000).toFixed(2)}M
         </text>
 
         {/* Free cooling indicator */}
         {useFreeCooling && (
-          <g transform={`translate(20, ${height - 50})`}>
-            <rect x="0" y="0" width="100" height="25" fill={outdoorTemp < 25 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(107, 114, 128, 0.2)'} rx="5" />
-            <text x="50" y="16" textAnchor="middle" fontSize="9" fill={outdoorTemp < 25 ? '#22c55e' : '#9ca3af'}>
+          <g transform={`translate(20, ${height - 45})`}>
+            <rect x="0" y="0" width="120" height="20" fill={outdoorTemp < 25 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(107, 114, 128, 0.2)'} rx="5" />
+            <text x="60" y="14" textAnchor="middle" fontSize="11" fill={outdoorTemp < 25 ? '#22c55e' : '#9ca3af'}>
               Free Cooling: {outdoorTemp < 18 ? 'FULL' : outdoorTemp < 25 ? 'PARTIAL' : 'OFF'}
             </text>
           </g>
@@ -888,8 +943,13 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             PUE Calculator Lab
           </h2>
-          <p style={{ ...typo.body, color: colors.textPrimary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust parameters to see their effect on PUE and energy costs
+          <p style={{ ...typo.body, color: colors.textPrimary, textAlign: 'center', marginBottom: '8px' }}>
+            The visualization displays how data center power is distributed across IT load, cooling, UPS losses, and misc overhead.
+            Adjust parameters to see their effect on PUE and energy costs.
+          </p>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            PUE is the industry-standard measure of data center energy efficiency — it matters because cooling and overhead can double your electricity bill.
+            Engineers design for PUE below 1.5; world-class facilities achieve 1.1. This ratio is calculated as Total Facility Power / IT Equipment Power.
           </p>
 
           <div style={{
@@ -1632,6 +1692,27 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
               ))}
             </div>
           </div>
+
+          {/* Got It button for the current app - always visible */}
+          <button
+            onClick={() => {
+              playSound('click');
+              const nextApp = (selectedApp + 1) % realWorldApps.length;
+              setSelectedApp(nextApp);
+              const newCompleted = [...completedApps];
+              newCompleted[nextApp] = true;
+              setCompletedApps(newCompleted);
+            }}
+            style={{
+              ...primaryButtonStyle,
+              width: '100%',
+              marginBottom: '12px',
+              background: 'linear-gradient(135deg, #1a1a24, #2a2a3a)',
+              border: `1px solid ${colors.border}`,
+            }}
+          >
+            Got It — Next App →
+          </button>
 
           {allAppsCompleted && (
             <button

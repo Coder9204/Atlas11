@@ -716,7 +716,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
             <line x1={15} y1={25} x2={15} y2={60} stroke="#cbd5e1" strokeWidth={1} />
 
             {/* Q node with glow */}
-            <circle cx={15} cy={42} r={10} fill={qVoltage > 0.5 ? 'url(#sramNodeHighGradient)' : 'url(#sramNodeLowGradient)'} filter="url(#sramNodeGlow)" />
+            <circle cx={15} cy={42} r={10} fill={qVoltage > 0.5 ? 'url(#sramNodeHighGradient)' : 'url(#sramNodeLowGradient)'} />
             {/* Storage pulse animation around active node */}
             {storedBit === 1 && (
               <circle cx={15} cy={42} r={14} fill="url(#sramStoragePulse)" />
@@ -738,7 +738,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
             <line x1={15} y1={25} x2={15} y2={60} stroke="#cbd5e1" strokeWidth={1} />
 
             {/* Q-bar node with glow */}
-            <circle cx={15} cy={42} r={10} fill={qBarVoltage > 0.5 ? 'url(#sramNodeHighGradient)' : 'url(#sramNodeLowGradient)'} filter="url(#sramNodeGlow)" />
+            <circle cx={15} cy={42} r={10} fill={qBarVoltage > 0.5 ? 'url(#sramNodeHighGradient)' : 'url(#sramNodeLowGradient)'} />
             {/* Storage pulse animation around active node */}
             {storedBit === 0 && (
               <circle cx={15} cy={42} r={14} fill="url(#sramStoragePulse)" />
@@ -746,16 +746,16 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
           </g>
 
           {/* Cross-coupling connections with gradient */}
-          <path
-            d="M 145 112 C 180 112, 180 90, 235 90"
+          <polyline
+            points="145,112 180,112 180,90 235,90"
             stroke="url(#sramCrossCouple)"
             strokeWidth={2.5}
             fill="none"
             strokeDasharray={wordLineActive ? "none" : "6,3"}
             opacity={wordLineActive ? 1 : 0.7}
           />
-          <path
-            d="M 255 112 C 220 112, 220 90, 165 90"
+          <polyline
+            points="255,112 220,112 220,90 165,90"
             stroke="url(#sramCrossCouple)"
             strokeWidth={2.5}
             fill="none"
@@ -866,7 +866,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
 
           {/* Y-axis */}
           <line x1={80} y1={245} x2={80} y2={365} stroke={colors.textMuted} strokeWidth={1.5} />
-          <text x={25} y={250} fill={colors.textMuted} fontSize="11" fontWeight="bold">Voltage (V)</text>
+          <text x={5} y={395} fill={colors.textMuted} fontSize="11" fontWeight="bold">Voltage (V)</text>
 
           {/* Y-axis tick labels */}
           <text x={72} y={248} fill={colors.textSecondary} fontSize="11" textAnchor="end">1.0</text>
@@ -887,12 +887,20 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
           <line x1={320} y1={360} x2={320} y2={365} stroke={colors.textMuted} strokeWidth={1} />
           <text x={320} y={378} fill={colors.textSecondary} fontSize="11" textAnchor="middle">Q-bar</text>
 
-          {/* Dynamic voltage visualization curve - changes with supply voltage */}
+          {/* Dynamic voltage visualization curve - SNM butterfly diagram showing stability margin */}
           <path
-            d={`M 90 ${360 - supplyVoltage * 100}
-                Q 130 ${360 - supplyVoltage * 80}, 180 ${360 - output.snm * 200}
-                T 270 ${360 - supplyVoltage * 70}
-                Q 320 ${360 - supplyVoltage * 85}, 360 ${360 - supplyVoltage * 95}`}
+            d={`M 90 248
+                L 110 248
+                L 130 248
+                L 155 ${248 + Math.min(output.snm * 160, 108)}
+                L 175 ${248 + Math.min(output.snm * 190, 108)}
+                L 200 ${248 + Math.min(output.snm * 200, 108)}
+                L 225 ${248 + Math.min((1 - output.snm * 0.5) * 130, 110)}
+                L 250 ${248 + Math.min(output.snm * 200, 108)}
+                L 275 ${248 + Math.min(output.snm * 190, 108)}
+                L 300 ${248 + Math.min(output.snm * 160, 108)}
+                L 335 248
+                L 360 248`}
             fill="none"
             stroke={output.isStable ? colors.high : colors.error}
             strokeWidth="3"
@@ -1368,7 +1376,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
               borderRadius: '12px',
               marginBottom: '16px',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6, fontWeight: 400 }}>
                 Every bit of cache in your CPU is stored in a tiny SRAM cell with just 6 transistors.
                 These cells must reliably hold data through billions of read and write cycles.
                 But the physics of making them smaller creates surprising challenges!

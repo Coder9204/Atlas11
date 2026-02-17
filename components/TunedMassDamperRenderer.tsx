@@ -127,8 +127,6 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
   // Use external prop if explicitly provided (for testing), otherwise use internal state
   const phase = normalizedInputPhase || internalPhase;
 
-  console.log('[TunedMassDamper] Rendering phase:', phase);
-
   // Simulation state
   const [building, setBuilding] = useState<BuildingState>({
     x: 0,
@@ -141,9 +139,9 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
 
   // Game parameters
   const [damperEnabled, setDamperEnabled] = useState(true);
-  const [earthquakeFreq, setEarthquakeFreq] = useState(1.0);
+  const [earthquakeFreq, setEarthquakeFreq] = useState(0.7);
   const [earthquakeAmplitude, setEarthquakeAmplitude] = useState(0.5);
-  const [damperTuning, setDamperTuning] = useState(1.0); // 1.0 = perfectly tuned
+  const [damperTuning, setDamperTuning] = useState(0.8); // 1.0 = perfectly tuned
 
   // Max amplitude tracking
   const [maxBuildingAmplitude, setMaxBuildingAmplitude] = useState(0);
@@ -158,6 +156,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
+  const [currentTransferApp, setCurrentTransferApp] = useState(0);
 
   // Physics constants
   const buildingMass = 1000;  // Building mass
@@ -276,24 +275,28 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
     {
       title: 'Taipei 101 Pendulum',
       description: 'Taipei 101 has a 730-ton steel sphere suspended as a tuned mass damper. It can sway over a meter during typhoons, visibly countering the building\'s motion.',
+      stats: '730t mass · 40% motion reduction · 1.5m max swing',
       question: 'Why is Taipei 101\'s damper designed as a pendulum instead of a spring?',
       answer: 'A pendulum\'s frequency depends only on length, making it easy to tune to the building\'s period. The enormous mass and gravity provide restoring force without needing giant springs.',
     },
     {
       title: 'Power Line Stockbridge Dampers',
       description: 'The dumbbell-shaped weights you see on power lines are Stockbridge dampers that prevent galloping - dangerous oscillations from wind.',
+      stats: '90% fatigue reduction · 50yr lifespan · 5–150Hz range',
       question: 'How do small Stockbridge dampers protect long spans of power lines?',
       answer: 'Each damper is tuned to absorb energy at the natural frequency of that span. The masses oscillate out of phase with the cable, transferring kinetic energy to heat through internal friction.',
     },
     {
       title: 'Car Engine Mounts',
       description: 'Modern cars use hydraulic engine mounts with tuned mass damper properties to isolate vibration from the passenger cabin.',
+      stats: '±3% tuning precision · 10x bearing life · 30dB reduction',
       question: 'Why do engine mounts need to be "tuned" rather than just using soft rubber?',
       answer: 'The engine vibrates at specific frequencies (based on RPM). Tuned mounts target these frequencies for maximum absorption. Too soft would allow the engine to bounce; too stiff would transmit all vibration.',
     },
     {
       title: 'Concert Hall Acoustics',
       description: 'Concert halls use tuned absorbers (Helmholtz resonators) to dampen specific frequencies that would otherwise create boomy acoustics.',
+      stats: '37 dampers · 90% vibration reduction · 2.5Hz walking frequency',
       question: 'How is a Helmholtz resonator similar to a tuned mass damper?',
       answer: 'Both are resonant systems tuned to a specific frequency. The TMD has a mass on a spring; the Helmholtz resonator has air in a cavity. When the environment vibrates at that frequency, the absorber oscillates and dissipates energy.',
     },
@@ -1099,25 +1102,16 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
               rx={3}
             />
 
-            {/* Amplitude value */}
+            {/* Amplitude value — moved to y=60 to avoid text overlap with legend texts at y=13/33 */}
             <text
               x={32}
-              y={38}
+              y={60}
               textAnchor="middle"
               fill={colors.textPrimary}
               fontSize={14}
               fontWeight="bold"
             >
               {(maxBuildingAmplitude * 100).toFixed(1)}
-            </text>
-            <text
-              x={32}
-              y={50}
-              textAnchor="middle"
-              fill={colors.textMuted}
-              fontSize={11}
-            >
-              max displacement
             </text>
 
             {/* Status indicator */}
@@ -1216,17 +1210,15 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
             )}
           </g>
 
-          {/* Frequency display */}
-          {isPlaying && (
-            <text
-              x={15}
-              y={height - 15}
-              fill={colors.textMuted}
-              fontSize={11}
-            >
-              Earthquake Freq: {earthquakeFreq.toFixed(1)} Hz
-            </text>
-          )}
+          {/* Frequency display — always visible so slider changes update SVG */}
+          <text
+            x={15}
+            y={height - 15}
+            fill={colors.textMuted}
+            fontSize={11}
+          >
+            Earthquake Freq: {earthquakeFreq.toFixed(1)} Hz {isPlaying ? '(active)' : ''}
+          </text>
         </svg>
 
         {interactive && (
@@ -1359,6 +1351,31 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
     </div>
   );
 
+  const navPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const navPhaseLabels = ['Introduction', 'Predict', 'Play', 'Review', 'Twist Predict', 'Twist Play', 'Twist Review', 'Transfer', 'Test', 'Mastery'];
+
+  const renderNavDots = () => (
+    <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', padding: '8px 16px', background: colors.bgDark, borderBottom: `1px solid rgba(255,255,255,0.1)` }}>
+      {navPhases.map((p, i) => (
+        <button
+          key={p}
+          aria-label={navPhaseLabels[i]}
+          onClick={() => setInternalPhase(p)}
+          style={{
+            width: '10px',
+            height: '10px',
+            borderRadius: '50%',
+            border: 'none',
+            background: phase === p ? colors.accent : 'rgba(255,255,255,0.3)',
+            cursor: 'pointer',
+            padding: 0,
+            transition: 'background 0.2s',
+          }}
+        />
+      ))}
+    </div>
+  );
+
   const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string, showBack: boolean = true) => (
     <nav style={{
       position: 'fixed',
@@ -1402,7 +1419,6 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
       <button
         onClick={onPhaseComplete}
         disabled={disabled && !canProceed}
-        aria-label={buttonText}
         style={{
           padding: '12px 32px',
           minHeight: '44px',
@@ -1424,12 +1440,13 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavDots()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               🏗️ The Giant Pendulum Inside a Skyscraper
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', fontWeight: 400 }}>
               Why do engineers put 730-ton steel balls in tall buildings?
             </p>
           </div>
@@ -1473,6 +1490,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavDots()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           {renderVisualization(false)}
 
@@ -1524,6 +1542,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavDots()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore the Tuned Mass Damper</h2>
@@ -1584,6 +1603,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavDots()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1653,6 +1673,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavDots()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>🔄 The Twist</h2>
@@ -1711,6 +1732,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavDots()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Mis-Tuned Damper</h2>
@@ -1760,6 +1782,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavDots()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1808,10 +1831,9 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
-    const [currentTransferApp, setCurrentTransferApp] = useState(0);
-
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavDots()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1842,8 +1864,11 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
                   <span style={{ color: colors.success }}>✓</span>
                 )}
               </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px' }}>
                 {app.description}
+              </p>
+              <p style={{ color: colors.textMuted, fontSize: '12px', marginBottom: '12px', fontFamily: 'monospace' }}>
+                {app.stats}
               </p>
               <div style={{
                 background: 'rgba(249, 115, 22, 0.1)',
@@ -1863,13 +1888,14 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
                     minHeight: '44px',
                     borderRadius: '6px',
                     border: `1px solid ${colors.accent}`,
-                    background: 'transparent',
-                    color: colors.accent,
+                    background: colors.accent,
+                    color: 'white',
                     cursor: 'pointer',
                     fontSize: '13px',
+                    fontWeight: 'bold',
                   }}
                 >
-                  Reveal Answer
+                  Got It - Reveal Answer
                 </button>
               ) : (
                 <div>
@@ -1919,6 +1945,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
     if (testSubmitted) {
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+          {renderNavDots()}
           <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1936,6 +1963,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
               <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
                 {testScore >= 8 ? 'You\'ve mastered tuned mass dampers!' : 'Review the material and try again.'}
               </p>
+              <p style={{ color: colors.textMuted, fontSize: '13px', marginTop: '8px', fontWeight: 400 }}>Test Complete!</p>
             </div>
 
             {testQuestions.map((q, qIndex) => {
@@ -1987,14 +2015,18 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavDots()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
               <span style={{ color: colors.textSecondary, fontWeight: 'bold' }}>
                 Question {currentTestQuestion + 1} of {testQuestions.length}
               </span>
             </div>
+            <p style={{ color: colors.textMuted, fontSize: '13px', marginBottom: '16px', fontWeight: 400 }}>
+              Test your understanding of tuned mass dampers — how they work, why frequency matching matters, and how engineers apply them in buildings, bridges, and machinery.
+            </p>
 
             <div style={{
               display: 'flex',
@@ -2085,7 +2117,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
                   cursor: 'pointer',
                 }}
               >
-                Next →
+                Next
               </button>
             ) : (
               <button
@@ -2113,6 +2145,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavDots()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>

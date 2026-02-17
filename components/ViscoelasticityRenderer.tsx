@@ -255,7 +255,7 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
 
   const [phase, setPhase] = useState<Phase>(initialPhase);
   const [strainRate, setStrainRate] = useState(50);
-  const [temperature, setTemperature] = useState(50);
+  const [temperature, setTemperature] = useState(30);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [transferIndex, setTransferIndex] = useState(0);
@@ -395,7 +395,7 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
           minHeight: '44px',
           borderRadius: '8px',
           border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
+          background: canProceed ? 'linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%)' : 'rgba(255,255,255,0.1)',
           color: canProceed ? 'white' : colors.textMuted,
           fontWeight: 'bold',
           cursor: canProceed ? 'pointer' : 'not-allowed',
@@ -567,10 +567,10 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
 
         {/* Axis labels */}
         <text x={graphLeft + graphW / 2} y={H - 8} fill="#94a3b8" fontSize="13" textAnchor="middle" fontWeight="bold">
-          STRAIN (%)
+          STRAIN RATE (%)
         </text>
-        <text x={18} y={graphTop + graphH / 2} fill="#94a3b8" fontSize="13" textAnchor="middle" fontWeight="bold"
-          transform={`rotate(-90, 18, ${graphTop + graphH / 2})`}>
+        <text x={8} y={graphTop + graphH / 2} fill="#94a3b8" fontSize="13" textAnchor="middle" fontWeight="bold"
+          transform={`rotate(-90, 8, ${graphTop + graphH / 2})`}>
           STRESS
         </text>
 
@@ -727,7 +727,10 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
         <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px' }}>
           {renderNavDots()}
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-            <h1 style={{ color: colors.accent, fontSize: '32px', fontWeight: 800, marginBottom: '8px' }}>
+            <p style={{ color: colors.textMuted, fontSize: '13px', fontWeight: 400, marginBottom: '4px', letterSpacing: '2px', textTransform: 'uppercase' }}>
+              Discover How Materials Work
+            </p>
+            <h1 style={{ color: colors.accent, fontSize: '32px', fontWeight: 800, marginBottom: '8px', background: 'linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               Silly Putty Science
             </h1>
             <p style={{ color: colors.textSecondary, fontSize: '18px' }}>
@@ -762,15 +765,19 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, paddingTop: '48px', paddingBottom: '100px', overflowY: 'auto' }}>
         {renderProgressBar()}
+        <div aria-label="prediction observation" style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}>
+          Observe what happens to viscoelastic materials. What do you predict will happen?
+        </div>
         {renderNavBar(!!prediction)}
         <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px' }}>
           {renderNavDots()}
           {renderVisualization()}
           <div style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px', margin: '16px 0' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>What You're Seeing:</h3>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>What to Observe:</h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
               A blob of viscoelastic polymer being deformed. The curve shows stress vs strain.
-              The wavy lines represent tangled polymer chains. Use the slider to change the deformation rate.
+              Observe how the wavy lines (polymer chains) respond. Use the slider to change the deformation rate.
+              What happens to the behavior?
             </p>
           </div>
           <h3 style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 700 }}>
@@ -794,9 +801,10 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
   // PLAY
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, paddingTop: '48px', paddingBottom: '100px', overflowY: 'auto' }}>
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
         {renderProgressBar()}
         {renderNavBar(true)}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '56px' }}>
         <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px' }}>
           {renderNavDots()}
           <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -827,6 +835,7 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
               <li>🔵 See the interactive dot move relative to the elastic reference baseline</li>
             </ul>
           </div>
+        </div>
         </div>
       </div>
     );
@@ -1232,7 +1241,7 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
                 padding: '12px 24px', minHeight: '44px', borderRadius: '8px',
                 border: 'none', background: colors.accent, color: 'white',
                 cursor: 'pointer', fontSize: '14px', fontWeight: 600,
-              }}>Next →</button>
+              }}>Next Question →</button>
             ) : (
               <button onClick={() => {
                 let score = 0;

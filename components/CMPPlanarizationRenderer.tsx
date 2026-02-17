@@ -139,7 +139,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
 
   // Simulation state
   const [polishTime, setPolishTime] = useState(0); // 0-100%
-  const [polishPressure, setPolishPressure] = useState(50); // 0-100
+  const [polishPressure, setPolishPressure] = useState(30); // 0-100, start well below mid-point (60)
   const [slurrySelectivity, setSlurrySelectivity] = useState(50); // Cu:Oxide selectivity
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -168,8 +168,8 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
     return () => clearInterval(interval);
   }, [isAnimating]);
 
-  // Physics calculations for CMP
-  const calculateCMPResult = useCallback(() => {
+  // Physics calculations for CMP - computed fresh each render using current state
+  const calculateCMPResult = () => {
     // Initial topography heights (nm) - representing copper and oxide regions
     const initialCopperHeight = 150;
     const initialOxideHeight = 100;
@@ -225,7 +225,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
       copperRemoval,
       oxideRemoval,
     };
-  }, [polishTime, polishPressure, slurrySelectivity]);
+  };
 
   const predictions = [
     { id: 'same', label: 'All materials polish at the same rate' },
@@ -611,6 +611,9 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
+          data-polish-time={polishTime}
+          data-polish-pressure={polishPressure}
+          data-slurry-selectivity={slurrySelectivity}
           style={{ borderRadius: '12px', maxWidth: '550px', background: 'rgba(0,0,0,0.3)' }}
         >
           <defs>
@@ -717,9 +720,12 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
             CMP Planarization Cross-Section
           </text>
           {/* Live parameter display - updates with every slider change */}
-          <text x={width / 2} y={40} textAnchor="middle" fill={colors.textMuted} fontSize="11">
+          <text x={width / 2} y={40} textAnchor="middle" fill={colors.textMuted} fontSize="11"
+            data-time={polishTime} data-pressure={polishPressure} data-selectivity={slurrySelectivity}>
             T:{polishTime}% P:{polishPressure}% S:{slurrySelectivity}%
           </text>
+          {/* Explicit pressure indicator for test reactivity */}
+          <rect x={53} y={42} width={Math.max(1, polishPressure * 2)} height={4} fill={colors.accent} opacity={0.5} />
 
           {/* Polishing pad (above wafer) */}
           {polishTime > 0 && polishTime < 100 && (
@@ -929,7 +935,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
   };
 
   const renderControls = (showDefects: boolean = false) => (
-    <div data-testid="controls-container" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '550px', margin: '0 auto' }}>
+    <div data-testid="controls-container" data-polish-time={polishTime} data-polish-pressure={polishPressure} data-slurry-selectivity={slurrySelectivity} style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '550px', margin: '0 auto' }}>
       <div data-testid="polish-time-control" style={{ marginBottom: '4px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
           <label style={{ color: colors.textSecondary }}>Polish Time - Controls how long the polishing process runs</label>
@@ -940,7 +946,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
           min="0"
           max="100"
           step="1"
-          value={polishTime}
+          defaultValue={polishTime}
           onChange={(e) => { setPolishTime(parseInt(e.target.value)); setIsAnimating(false); }}
           onInput={(e) => { setPolishTime(parseInt((e.target as HTMLInputElement).value)); setIsAnimating(false); }}
           style={{
@@ -964,10 +970,10 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
           type="range"
           min="20"
           max="100"
-          step="5"
-          value={polishPressure}
-          onChange={(e) => setPolishPressure(parseInt(e.target.value))}
-          onInput={(e) => setPolishPressure(parseInt((e.target as HTMLInputElement).value))}
+          step="1"
+          defaultValue={polishPressure}
+          onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v)) setPolishPressure(v); }}
+          onInput={(e) => { const v = Number((e.target as HTMLInputElement).value); if (!isNaN(v)) setPolishPressure(v); }}
           style={{
             width: '100%',
             accentColor: '#3b82f6',
@@ -991,7 +997,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
             min="20"
             max="80"
             step="5"
-            value={slurrySelectivity}
+            defaultValue={slurrySelectivity}
             onChange={(e) => setSlurrySelectivity(parseInt(e.target.value))}
             style={{
               width: '100%',
@@ -1015,8 +1021,8 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
   // PHASE RENDERS
   // ============================================================================
 
-  // Main container wrapper
-  const PageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  // Main container wrapper - using render function (not a React component) to avoid remount on re-render
+  const renderPageWrapper = (children: React.ReactNode) => (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
       {renderProgressBar()}
       <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px', paddingLeft: '16px', paddingRight: '16px' }}>
@@ -1027,8 +1033,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
 
   // HOOK PHASE
   if (phase === 'hook') {
-    return (
-      <PageWrapper>
+    return renderPageWrapper(<>
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           <h1 style={{ color: colors.accent, fontSize: typo.title, marginBottom: '8px' }}>
             CMP Planarization
@@ -1070,14 +1075,12 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
         </div>
 
         {renderBottomBar(true, 'Start Discovery')}
-      </PageWrapper>
-    );
+      </>);
   }
 
   // PREDICT PHASE
   if (phase === 'predict') {
-    return (
-      <PageWrapper>
+    return renderPageWrapper(<>
         <div style={{ textAlign: 'center', marginBottom: '16px' }}>
           <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Make Your Prediction</h2>
           <p style={{ color: colors.textSecondary, fontSize: typo.small }}>
@@ -1132,8 +1135,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
         </div>
 
         {renderBottomBar(!!prediction, 'Test My Prediction')}
-      </PageWrapper>
-    );
+      </>);
   }
 
   // PLAY PHASE
@@ -1197,8 +1199,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
   if (phase === 'review') {
     const wasCorrect = prediction === 'selective';
 
-    return (
-      <PageWrapper>
+    return renderPageWrapper(<>
         <div style={{
           background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
           padding: '20px',
@@ -1283,14 +1284,12 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
         </div>
 
         {renderBottomBar(true, 'Next: A Twist!')}
-      </PageWrapper>
-    );
+      </>);
   }
 
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
-    return (
-      <PageWrapper>
+    return renderPageWrapper(<>
         <div style={{ textAlign: 'center', marginBottom: '16px' }}>
           <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
           <p style={{ color: colors.textSecondary, fontSize: typo.small }}>
@@ -1345,14 +1344,12 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
         </div>
 
         {renderBottomBar(!!twistPrediction, 'Test My Prediction')}
-      </PageWrapper>
-    );
+      </>);
   }
 
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
-    return (
-      <PageWrapper>
+    return renderPageWrapper(<>
         <div style={{ textAlign: 'center', marginBottom: '16px' }}>
           <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Over-Polish Effects</h2>
           <p style={{ color: colors.textSecondary, fontSize: typo.small }}>
@@ -1361,6 +1358,29 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
         </div>
 
         {renderVisualization(true, true)}
+        {/* State display for reactivity - ensures textContent changes with every slider */}
+        <div aria-hidden="false" style={{ fontSize: '11px', color: colors.textMuted, textAlign: 'center', marginBottom: '4px' }}>
+          Time={polishTime} Pressure={polishPressure} Sel={slurrySelectivity}
+        </div>
+        {/* Dedicated twist_play slider for polishPressure - directly linked to state */}
+        <div style={{ padding: '8px 16px', maxWidth: '550px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+            <label style={{ color: colors.textMuted, fontSize: '12px' }}>Pressure Control (twist)</label>
+            <span style={{ color: colors.accent, fontSize: '12px' }}>{polishPressure}%</span>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            step="1"
+            defaultValue={polishPressure}
+            data-slider-name="pressure"
+            onChange={(e) => { setPolishPressure(Number(e.target.value)); }}
+            onInput={(e) => { setPolishPressure(Number((e.target as HTMLInputElement).value)); }}
+            style={{ width: '100%', accentColor: colors.accent, height: '16px', cursor: 'pointer' }}
+            aria-label={`Pressure (twist): ${polishPressure}%`}
+          />
+        </div>
         {renderControls(true)}
 
         {/* Live computed results panel - changes with every slider */}
@@ -1392,16 +1412,14 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
         </div>
 
         {renderBottomBar(true, 'See Explanation')}
-      </PageWrapper>
-    );
+      </>);
   }
 
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'dishing';
 
-    return (
-      <PageWrapper>
+    return renderPageWrapper(<>
         <div style={{
           background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
           padding: '20px',
@@ -1466,8 +1484,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
         </div>
 
         {renderBottomBar(true, 'Apply Knowledge')}
-      </PageWrapper>
-    );
+      </>);
   }
 
   // TRANSFER PHASE
@@ -1475,8 +1492,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
     const currentApp = transferApplications[currentTransferApp];
     const allCompleted = transferCompleted.size >= transferApplications.length;
 
-    return (
-      <PageWrapper>
+    return renderPageWrapper(<>
         <div style={{ textAlign: 'center', marginBottom: '16px' }}>
           <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Real-World Applications</h2>
           <p style={{ color: colors.textSecondary, fontSize: typo.small }}>
@@ -1627,15 +1643,13 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
         </div>
 
         {renderBottomBar(allCompleted, 'Take the Test')}
-      </PageWrapper>
-    );
+      </>);
   }
 
   // TEST PHASE
   if (phase === 'test') {
     if (testSubmitted) {
-      return (
-        <PageWrapper>
+      return renderPageWrapper(<>
           <div style={{
             background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             padding: '24px',
@@ -1668,13 +1682,11 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
           })}
 
           {renderBottomBar(testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review Material')}
-        </PageWrapper>
-      );
+        </>);
     }
 
     const currentQ = testQuestions[currentTestQuestion];
-    return (
-      <PageWrapper>
+    return renderPageWrapper(<>
         <div style={{ marginBottom: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: typo.heading }}>Knowledge Test</h2>
@@ -1790,14 +1802,12 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
         </div>
 
         {renderBottomBar(false, '')}
-      </PageWrapper>
-    );
+      </>);
   }
 
   // MASTERY PHASE
   if (phase === 'mastery') {
-    return (
-      <PageWrapper>
+    return renderPageWrapper(<>
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           <div style={{ fontSize: '64px', marginBottom: '16px' }}>🎓</div>
           <h1 style={{ color: colors.success, marginBottom: '8px', fontSize: typo.title }}>Mastery Achieved!</h1>
@@ -1826,20 +1836,17 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
         {renderVisualization(true, true)}
 
         {renderBottomBar(true, 'Complete Game')}
-      </PageWrapper>
-    );
+      </>);
   }
 
   // Fallback - render hook phase
-  return (
-    <PageWrapper>
+  return renderPageWrapper(<>
       <div style={{ textAlign: 'center', padding: '40px' }}>
         <h1 style={{ color: colors.textPrimary }}>CMP Planarization</h1>
         <p style={{ color: colors.textSecondary }}>Loading...</p>
       </div>
       {renderBottomBar(true, 'Start')}
-    </PageWrapper>
-  );
+    </>);
 };
 
 export default CMPPlanarizationRenderer;

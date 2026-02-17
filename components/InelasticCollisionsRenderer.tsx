@@ -473,32 +473,86 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
   // Progress bar component (legacy)
   const renderProgressBar = () => renderNavBar();
 
-  // Navigation dots
-  const renderNavDots = () => (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '8px',
-      padding: '16px 0',
-    }}>
-      {phaseOrder.map((p, i) => (
+  // Navigation dots (fixed bottom bar with Back/Next)
+  const renderNavDots = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+    const isTestActive = phase === 'test' && !testSubmitted;
+    const canGoNext = currentIndex < phaseOrder.length - 1 && !isTestActive;
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgSecondary,
+        borderTop: `1px solid ${colors.border}`,
+        padding: '12px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        zIndex: 1000,
+      }}>
         <button
-          key={p}
-          onClick={() => goToPhase(p)}
+          onClick={() => canGoBack && goToPhase(phaseOrder[currentIndex - 1])}
+          disabled={!canGoBack}
           style={{
-            width: phase === p ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
-            border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : 'rgba(148,163,184,0.7)',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
+            padding: '10px 18px',
+            borderRadius: '8px',
+            border: `1px solid ${canGoBack ? colors.border : 'transparent'}`,
+            background: 'transparent',
+            color: canGoBack ? colors.textSecondary : 'transparent',
+            cursor: canGoBack ? 'pointer' : 'default',
+            fontSize: '14px',
+            fontWeight: 600,
+            minWidth: '70px',
+            minHeight: '44px',
           }}
-          aria-label={phaseLabels[p]}
-        />
-      ))}
-    </div>
-  );
+          aria-label="Back"
+        >
+          ← Back
+        </button>
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => goToPhase(p)}
+              style={{
+                width: phase === p ? '20px' : '7px',
+                borderRadius: '4px',
+                border: 'none',
+                background: phaseOrder.indexOf(phase) >= i ? colors.accent : 'rgba(148,163,184,0.6)',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                padding: '3px 0',
+              }}
+              aria-label={phaseLabels[p]}
+            />
+          ))}
+        </div>
+        <button
+          onClick={() => canGoNext && goToPhase(phaseOrder[currentIndex + 1])}
+          disabled={!canGoNext}
+          style={{
+            padding: '10px 18px',
+            borderRadius: '8px',
+            border: `1px solid ${canGoNext ? colors.accent : 'transparent'}`,
+            background: canGoNext ? `${colors.accent}22` : 'transparent',
+            color: canGoNext ? colors.accent : 'transparent',
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            fontSize: '14px',
+            fontWeight: 600,
+            minWidth: '70px',
+            minHeight: '44px',
+            opacity: isTestActive ? 0.4 : 1,
+          }}
+          aria-label="Next"
+        >
+          Next →
+        </button>
+      </div>
+    );
+  };
 
   // Previous phase
   const prevPhase = useCallback(() => {
@@ -602,23 +656,49 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
             <stop offset="0%" stopColor="#f87171" />
             <stop offset="100%" stopColor="#dc2626" />
           </linearGradient>
+          <linearGradient id="roadGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#374151" />
+            <stop offset="100%" stopColor="#1f2937" />
+          </linearGradient>
+          <filter id="carShadow" x="-20%" y="-20%" width="140%" height="160%">
+            <feDropShadow dx="2" dy="4" stdDeviation="4" floodOpacity="0.4" />
+          </filter>
+          <filter id="wallGlow">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
         </defs>
 
+        {/* Grid lines for reference */}
+        <g id="gridLines" opacity="0.15">
+          <line x1="30" y1={height * 0.25} x2={width - 30} y2={height * 0.25} stroke="#94a3b8" strokeWidth="1" strokeDasharray="4,6" />
+          <line x1="30" y1={height * 0.5} x2={width - 30} y2={height * 0.5} stroke="#94a3b8" strokeWidth="1" strokeDasharray="4,6" />
+          <line x1="30" y1={height * 0.75} x2={width - 30} y2={height * 0.75} stroke="#94a3b8" strokeWidth="1" strokeDasharray="4,6" />
+        </g>
+
         {/* Title */}
-        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+        <text x={width/2} y="22" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">
           Crash Test Simulation
+        </text>
+        {/* Formula */}
+        <text x={width/2} y="38" textAnchor="middle" fill={colors.textMuted} fontSize="11">
+          F = Δp / Δt  |  p = mv
         </text>
 
         {/* Road */}
-        <rect x="30" y={height - 50} width={width - 60} height="30" fill="#374151" rx="4" />
-        <line x1="30" y1={height - 35} x2={width - 30} y2={height - 35} stroke="#fbbf24" strokeWidth="3" strokeDasharray="20 15" />
+        <g id="roadGroup">
+          <rect x="30" y={height - 50} width={width - 60} height="30" fill="url(#roadGrad)" rx="4" />
+          <line x1="30" y1={height - 35} x2={width - 30} y2={height - 35} stroke="#fbbf24" strokeWidth="3" strokeDasharray="20 15" />
+        </g>
 
         {/* Wall */}
-        <rect x={wallX} y={height - 130} width="30" height="100" fill="#6b7280" rx="2" />
-        <text x={wallX + 15} y={height - 140} textAnchor="middle" fill={colors.textMuted} fontSize="10">WALL</text>
+        <g id="wallGroup" filter="url(#wallGlow)">
+          <rect x={wallX} y={height - 130} width="30" height="100" fill="#6b7280" rx="2" />
+          <text x={wallX + 15} y={height - 140} textAnchor="middle" fill={colors.textMuted} fontSize="11">WALL</text>
+        </g>
 
         {/* Car */}
-        <g transform={`translate(${carX}, ${height - 120})`}>
+        <g id="carGroup" transform={`translate(${carX}, ${height - 120})`} filter="url(#carShadow)">
           {/* Car body */}
           <rect
             x={hasCrumpleZone ? crumpleAmount * 0.5 : 0}
@@ -701,12 +781,22 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
         )}
 
         {/* Speed indicator */}
-        <text x="40" y="50" fill="#e2e8f0" fontSize="12">
+        <text x="40" y="60" fill="#e2e8f0" fontSize="12">
           Speed: <tspan fill="#f59e0b" fontWeight="bold">{impactSpeed} mph</tspan>
         </text>
-        <text x="40" y="70" fill="#e2e8f0" fontSize="11">
+        <text x="40" y="76" fill="#e2e8f0" fontSize="11">
           Crumple Zone: <tspan fill={hasCrumpleZone ? '#22c55e' : '#ef4444'} fontWeight="bold">{hasCrumpleZone ? 'ON' : 'OFF'}</tspan>
         </text>
+
+        {/* Background force curve spanning full height */}
+        <path
+          d={`M 30 ${height - 20} Q ${width * 0.25} ${height * 0.08} ${width * 0.5} ${height * 0.45} C ${width * 0.65} ${height * 0.65} ${width * 0.8} ${height * 0.05} ${width - 30} ${height * 0.3}`}
+          fill="none"
+          stroke={hasCrumpleZone ? '#22c55e' : '#ef4444'}
+          strokeWidth="1"
+          opacity="0.12"
+          strokeDasharray="8,5"
+        />
       </svg>
     );
   };
@@ -742,7 +832,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
             <circle cx="40" cy="40" r="8" fill="#1f2937" />
             {/* Velocity arrow */}
             <line x1="55" y1="25" x2="75" y2="25" stroke="#22c55e" strokeWidth="3" markerEnd="url(#arrowhead)" />
-            <text x="85" y="29" fill="#22c55e" fontSize="10">{velocity1}m/s</text>
+            <text x="85" y="29" fill="#22c55e" fontSize="11">{velocity1}m/s</text>
           </g>
         )}
 
@@ -755,7 +845,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
             </text>
             <circle cx="10" cy="40" r="8" fill="#1f2937" />
             <circle cx="40" cy="40" r="8" fill="#1f2937" />
-            <text x="25" y="5" textAnchor="middle" fill="#e2e8f0" fontSize="10">At rest</text>
+            <text x="25" y="5" textAnchor="middle" fill="#e2e8f0" fontSize="11">At rest</text>
           </g>
         )}
 
@@ -770,7 +860,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
             <circle cx="75" cy="43" r="8" fill="#1f2937" />
             {/* Final velocity arrow */}
             <line x1="95" y1="25" x2="115" y2="25" stroke="#22c55e" strokeWidth="2" markerEnd="url(#arrowhead)" />
-            <text x="125" y="29" fill="#22c55e" fontSize="10">{finalVelocity.toFixed(1)}m/s</text>
+            <text x="125" y="29" fill="#22c55e" fontSize="11">{finalVelocity.toFixed(1)}m/s</text>
           </g>
         )}
 
@@ -793,6 +883,15 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
             </text>
           </g>
         )}
+
+        {/* Bottom label to ensure vertical space coverage */}
+        <text x={width/2} y={height - 8} textAnchor="middle" fill={colors.textMuted} fontSize="11">
+          p = {(mass1 * velocity1).toLocaleString()} kg·m/s → preserved
+        </text>
+        {/* Top reference line */}
+        <line x1="30" y1="35" x2={width - 30} y2="35" stroke="#94a3b8" strokeWidth="0.5" opacity="0.3" />
+        {/* Bottom reference line */}
+        <line x1="30" y1={height - 20} x2={width - 30} y2={height - 20} stroke="#94a3b8" strokeWidth="0.5" opacity="0.3" />
       </svg>
     );
   };
@@ -917,7 +1016,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
               <circle cx="45" cy="100" r="10" fill="#374151" />
               <circle cx="85" cy="100" r="10" fill="#374151" />
               <text x="65" y="130" textAnchor="middle" fill="#e2e8f0" fontSize="11">Crumples</text>
-              <text x="65" y="145" textAnchor="middle" fill="#22c55e" fontSize="10">150ms stop</text>
+              <text x="65" y="145" textAnchor="middle" fill="#22c55e" fontSize="11">150ms stop</text>
 
               {/* VS */}
               <text x={isMobile ? 160 : 200} y="85" textAnchor="middle" fill="#e2e8f0" fontSize="18" fontWeight="bold">vs</text>
@@ -928,7 +1027,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
               <circle cx={isMobile ? 235 : 295} cy="100" r="10" fill="#374151" />
               <circle cx={isMobile ? 275 : 335} cy="100" r="10" fill="#374151" />
               <text x={isMobile ? 255 : 315} y="130" textAnchor="middle" fill="#e2e8f0" fontSize="11">Stays rigid</text>
-              <text x={isMobile ? 255 : 315} y="145" textAnchor="middle" fill="#ef4444" fontSize="10">30ms stop</text>
+              <text x={isMobile ? 255 : 315} y="145" textAnchor="middle" fill="#ef4444" fontSize="11">30ms stop</text>
 
               {/* Title */}
               <text x={isMobile ? 160 : 200} y="25" textAnchor="middle" fill="#e2e8f0" fontSize="13" fontWeight="600">Crash Comparison</text>
@@ -993,9 +1092,15 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+      <div style={{
+        flex: 1,
         overflowY: 'auto',
+        padding: '24px',
+        paddingTop: '56px',
+        paddingBottom: '100px',
       }}>
         {renderProgressBar()}
 
@@ -1007,16 +1112,42 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
             Adjust the settings and run crash tests to see how crumple zones affect force.
           </p>
 
-          {/* Real-world relevance */}
+          {/* What the visualization shows */}
           <div style={{
             background: `${colors.accent}11`,
             borderRadius: '8px',
             padding: '12px 16px',
-            marginBottom: '24px',
+            marginBottom: '12px',
             borderLeft: `3px solid ${colors.accent}`,
           }}>
             <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              <strong style={{ color: colors.accent }}>Real-world relevance:</strong> This simulation models how automotive engineers test crumple zone designs. These principles are used in crash test facilities by companies like Volvo and Mercedes-Benz to save thousands of lives annually.
+              <strong style={{ color: colors.accent }}>What this visualization displays:</strong> The simulation shows a car (blue = crumple zone ON, red = OFF) colliding with a wall. The deformation of the front end and the force indicator show how crumple zones extend stopping time to reduce peak force on passengers.
+            </p>
+          </div>
+
+          {/* Key physics terms */}
+          <div style={{
+            background: `${colors.success}11`,
+            borderRadius: '8px',
+            padding: '12px 16px',
+            marginBottom: '12px',
+            borderLeft: `3px solid ${colors.success}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.success }}>Key terms:</strong> <strong>Momentum</strong> (p = mv) is always conserved. <strong>Kinetic energy</strong> (KE = ½mv²) converts to heat, sound, and deformation. <strong>Impulse</strong> (F·Δt) equals the change in momentum — longer Δt means less force F.
+            </p>
+          </div>
+
+          {/* Real-world relevance */}
+          <div style={{
+            background: `${colors.warning}11`,
+            borderRadius: '8px',
+            padding: '12px 16px',
+            marginBottom: '24px',
+            borderLeft: `3px solid ${colors.warning}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.warning }}>Real-world relevance:</strong> This simulation models how automotive engineers test crumple zone designs. These principles are used in crash test facilities by companies like Volvo and Mercedes-Benz to save thousands of lives annually.
             </p>
           </div>
 
@@ -1046,12 +1177,19 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
                 onChange={(e) => setImpactSpeed(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.accent} ${((impactSpeed - 10) / 50) * 100}%, ${colors.border} ${((impactSpeed - 10) / 50) * 100}%)`,
+                  accentColor: colors.accent,
                   cursor: 'pointer',
+                  touchAction: 'none',
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
                 }}
               />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>10 mph (min)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>60 mph (max)</span>
+              </div>
             </div>
 
             {/* Crumple zone toggle */}
@@ -1175,6 +1313,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
             Understand the Physics
           </button>
         </div>
+      </div>
 
         {renderNavDots()}
       </div>
@@ -1331,22 +1470,37 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
             Two cars of equal mass collide and stick together. The first is moving, the second is stationary. What percentage of kinetic energy is lost?
           </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <p style={{ ...typo.body, color: colors.textSecondary }}>
-              Before: Car A (moving at v) + Car B (at rest)
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '8px' }}>
-              After: Both cars stuck together, moving at... what speed?
-            </p>
-            <div style={{ marginTop: '16px', fontSize: '14px', color: colors.accent, fontFamily: 'monospace' }}>
-              Momentum: m*v + m*0 = (2m)*v_final
-            </div>
+          {/* Static SVG diagram of perfectly inelastic collision */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <svg width={isMobile ? 320 : 460} height="180" viewBox={`0 0 ${isMobile ? 320 : 460} 180`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <text x={isMobile ? 160 : 230} y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">Perfectly Inelastic Collision</text>
+
+              {/* Before collision */}
+              <text x="20" y="45" fill={colors.textMuted} fontSize="11">BEFORE:</text>
+              {/* Car A moving */}
+              <rect x="20" y="55" width="60" height="30" rx="4" fill="#3b82f6" />
+              <text x="50" y="74" textAnchor="middle" fill="white" fontSize="11" fontWeight="700">A (mv)</text>
+              {/* Arrow */}
+              <line x1="82" y1="70" x2="110" y2="70" stroke="#22c55e" strokeWidth="2.5" />
+              <polygon points="110,65 120,70 110,75" fill="#22c55e" />
+              <text x="100" y="60" textAnchor="middle" fill="#22c55e" fontSize="11">v →</text>
+              {/* Car B stationary */}
+              <rect x={isMobile ? 200 : 280} y="55" width="60" height="30" rx="4" fill="#f59e0b" />
+              <text x={isMobile ? 230 : 310} y="74" textAnchor="middle" fill="white" fontSize="11" fontWeight="700">B (0)</text>
+              <text x={isMobile ? 230 : 310} y="48" textAnchor="middle" fill={colors.textMuted} fontSize="11">at rest</text>
+
+              {/* After collision */}
+              <text x="20" y="120" fill={colors.textMuted} fontSize="11">AFTER:</text>
+              {/* Combined cars */}
+              <rect x="20" y="130" width="120" height="30" rx="4" fill="#8b5cf6" />
+              <text x="80" y="149" textAnchor="middle" fill="white" fontSize="11" fontWeight="700">A+B (2m·v/2)</text>
+              {/* Slower arrow */}
+              <line x1="142" y1="145" x2="160" y2="145" stroke="#22c55e" strokeWidth="2" />
+              <polygon points="160,141 168,145 160,149" fill="#22c55e" />
+              <text x="155" y="135" textAnchor="middle" fill="#22c55e" fontSize="11">½v →</text>
+
+              <text x={isMobile ? 160 : 230} y="172" textAnchor="middle" fill={colors.accent} fontSize="11">What % of KE is lost?</text>
+            </svg>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1442,11 +1596,19 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
                 onChange={(e) => { setMass1(parseInt(e.target.value)); setTwistProgress(0); }}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
+                  accentColor: '#3b82f6',
                   cursor: 'pointer',
+                  touchAction: 'none',
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
                 }}
               />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>500 kg</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>2000 kg</span>
+              </div>
             </div>
 
             {/* Velocity slider */}
@@ -1464,11 +1626,19 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
                 onChange={(e) => { setVelocity1(parseInt(e.target.value)); setTwistProgress(0); }}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
+                  accentColor: colors.success,
                   cursor: 'pointer',
+                  touchAction: 'none',
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
                 }}
               />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>5 m/s</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>40 m/s</span>
+              </div>
             </div>
 
             {/* Mass 2 slider */}
@@ -1486,11 +1656,19 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
                 onChange={(e) => { setMass2(parseInt(e.target.value)); setTwistProgress(0); }}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
+                  accentColor: '#f59e0b',
                   cursor: 'pointer',
+                  touchAction: 'none',
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
                 }}
               />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>500 kg</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>2000 kg</span>
+              </div>
             </div>
 
             {/* Simulate button */}
@@ -1798,6 +1976,24 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
               ))}
             </div>
 
+            {app.howItWorks && (
+              <div style={{ marginTop: '16px', background: colors.bgSecondary, borderRadius: '8px', padding: '16px' }}>
+                <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '6px', fontWeight: 600 }}>How It Works:</h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{app.howItWorks}</p>
+              </div>
+            )}
+
+            {app.examples && app.examples.length > 0 && (
+              <div style={{ marginTop: '16px' }}>
+                <h4 style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>Examples:</h4>
+                <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                  {app.examples.map((ex: string, i: number) => (
+                    <li key={i} style={{ ...typo.small, color: colors.textSecondary, marginBottom: '4px' }}>{ex}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             <div style={{ marginTop: '16px' }}>
               <h4 style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>Companies:</h4>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -1814,6 +2010,13 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
                 ))}
               </div>
             </div>
+
+            {app.futureImpact && (
+              <div style={{ marginTop: '16px', background: `${colors.success}11`, borderRadius: '8px', padding: '12px 16px', borderLeft: `3px solid ${colors.success}` }}>
+                <h4 style={{ ...typo.small, color: colors.success, marginBottom: '4px', fontWeight: 600 }}>Future Impact:</h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{app.futureImpact}</p>
+              </div>
+            )}
 
             {/* Got It button for current app */}
             <button
@@ -1865,50 +2068,95 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
         }}>
           {renderProgressBar()}
-
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
-            <div style={{
-              fontSize: '80px',
-              marginBottom: '24px',
-            }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '56px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>
               {passed ? '🏆' : '📚'}
             </div>
             <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
               {passed ? 'Excellent!' : 'Keep Learning!'}
             </h2>
-            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '12px 0' }}>
               {testScore} / 10
             </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '24px' }}>
               {passed
                 ? 'You understand inelastic collisions and crash safety physics!'
                 : 'Review the concepts and try again.'}
             </p>
 
-            {passed ? (
+            {/* Answer review - question by question */}
+            <div style={{ textAlign: 'left', marginBottom: '24px' }}>
+              <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>Answer Review</h3>
+              {testQuestions.map((q, i) => {
+                const correctId = q.options.find(o => o.correct)?.id;
+                const isCorrect = testAnswers[i] === correctId;
+                return (
+                  <div key={i} style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '10px',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    marginBottom: '6px',
+                    background: isCorrect ? `${colors.success}11` : `${colors.error}11`,
+                    border: `1px solid ${isCorrect ? colors.success : colors.error}44`,
+                  }}>
+                    <span style={{ fontSize: '16px', flexShrink: 0 }}>{isCorrect ? '✓' : '✗'}</span>
+                    <div>
+                      <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                        Q{i + 1}: {q.question.slice(0, 70)}...
+                      </p>
+                      {!isCorrect && (
+                        <p style={{ ...typo.small, color: colors.success, margin: '4px 0 0' }}>
+                          Correct: {correctId?.toUpperCase()}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {passed ? (
+                <button onClick={() => { playSound('complete'); nextPhase(); }} style={primaryButtonStyle}>
+                  Complete Lesson
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setTestSubmitted(false);
+                    setTestAnswers(Array(10).fill(null));
+                    setCurrentQuestion(0);
+                    setTestScore(0);
+                    goToPhase('hook');
+                  }}
+                  style={primaryButtonStyle}
+                >
+                  Review and Try Again
+                </button>
+              )}
               <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
-                Complete Lesson
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
+                onClick={() => goToPhase('hook')}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                  minHeight: '44px',
                 }}
-                style={primaryButtonStyle}
               >
-                Review and Try Again
+                Return to Dashboard
               </button>
-            )}
+            </div>
+          </div>
           </div>
           {renderNavDots()}
         </div>

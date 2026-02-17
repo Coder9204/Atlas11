@@ -335,8 +335,8 @@ const HumidityESDRenderer: React.FC<HumidityESDRendererProps> = ({ onGameEvent, 
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: 'rgba(148,163,184,0.9)',
-    textMuted: 'rgba(148,163,184,0.7)',
+    textSecondary: '#e2e8f0',
+    textMuted: '#cbd5e1',
     border: '#2a2a3a',
   };
 
@@ -445,12 +445,14 @@ const HumidityESDRenderer: React.FC<HumidityESDRendererProps> = ({ onGameEvent, 
           onClick={() => goToPhase(p)}
           style={{
             width: phase === p ? '24px' : '8px',
-            height: '8px',
+            minHeight: '44px',
             borderRadius: '4px',
             border: 'none',
             background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
             cursor: 'pointer',
             transition: 'all 0.3s ease',
+            padding: '18px 4px',
+            boxSizing: 'border-box' as const,
           }}
           aria-label={phaseNavLabels[p]}
         />
@@ -734,45 +736,36 @@ const HumidityESDRenderer: React.FC<HumidityESDRendererProps> = ({ onGameEvent, 
         </g>
 
         {/* Humidity meter (right side) */}
-        <g transform={`translate(${width - 50}, 20)`}>
-          <rect x="0" y="0" width="28" height={height - 65} fill="#1f2937" rx="4" stroke="#374151" />
-          <rect
-            x="3"
-            y={height - 68 - (displayHumidity / 100) * (height - 75)}
-            width="22"
-            height={(displayHumidity / 100) * (height - 75)}
-            fill={displayEsdRisk.color}
-            rx="2"
-          />
-          {[0, 20, 40, 60, 80, 100].map(val => (
-            <g key={val} transform={`translate(0, ${height - 68 - (val / 100) * (height - 75)})`}>
-              <line x1="0" y1="0" x2="-5" y2="0" stroke="rgba(148,163,184,0.7)" strokeWidth="1" />
-              <text x="-8" y="4" fill="rgba(148,163,184,0.9)" fontSize="11" textAnchor="end">{val}%</text>
+        <rect x={width - 50} y="20" width="28" height={height - 65} fill="#1f2937" rx="4" stroke="#374151" />
+        <rect
+          x={width - 47}
+          y={20 + (height - 65) - (displayHumidity / 100) * (height - 75)}
+          width="22"
+          height={(displayHumidity / 100) * (height - 75)}
+          fill={displayEsdRisk.color}
+          rx="2"
+        />
+        {[0, 20, 40, 60, 80, 100].map(val => {
+          const ty = 20 + (height - 65) - (val / 100) * (height - 75);
+          return (
+            <g key={val}>
+              <line x1={width - 50} y1={ty} x2={width - 55} y2={ty} stroke="#94a3b8" strokeWidth="1" />
+              <text x={width - 58} y={ty + 4} fill="#94a3b8" fontSize="11" textAnchor="end">{val}%</text>
             </g>
-          ))}
-          <text x="14" y={height - 50} fill="rgba(148,163,184,0.7)" fontSize="11" textAnchor="middle">RH</text>
-        </g>
+          );
+        })}
+        <text x={width - 36} y={height - 50} fill="#94a3b8" fontSize="11" textAnchor="middle">RH</text>
 
         {/* Stats bar */}
-        <g transform={`translate(12, ${height - 58})`}>
-          <rect x="0" y="0" width={width - 65} height="48" fill="#0f172a" rx="8" stroke="#334155" />
-          <g transform="translate(16, 13)">
-            <text fill="rgba(148,163,184,0.7)" fontSize="11">HUMIDITY</text>
-            <text y="18" fill={displayEsdRisk.color} fontSize="15" fontWeight="bold">{displayHumidity}% RH</text>
-          </g>
-          <g transform={`translate(${(width - 65) * 0.32}, 13)`}>
-            <text fill="rgba(148,163,184,0.7)" fontSize="11">ESD RISK</text>
-            <text y="18" fill={displayEsdRisk.color} fontSize="14" fontWeight="bold">{displayEsdRisk.level}</text>
-          </g>
-          <g transform={`translate(${(width - 65) * 0.58}, 13)`}>
-            <text fill="rgba(148,163,184,0.7)" fontSize="11">MAX VOLTAGE</text>
-            <text y="18" fill={displayEsdRisk.color} fontSize="14" fontWeight="bold">{(displayEsdRisk.voltage / 1000).toFixed(0)}kV</text>
-          </g>
-          <g transform={`translate(${(width - 65) * 0.82}, 13)`}>
-            <text fill="rgba(148,163,184,0.7)" fontSize="11">DEW PT</text>
-            <text y="18" fill="#60a5fa" fontSize="14" fontWeight="bold">{dewPoint.toFixed(0)}C</text>
-          </g>
-        </g>
+        <rect x="12" y={height - 58} width={width - 65} height="48" fill="#0f172a" rx="8" stroke="#334155" />
+        <text x="28" y={height - 45} fill="#94a3b8" fontSize="11">HUMIDITY</text>
+        <text x="28" y={height - 27} fill={displayEsdRisk.color} fontSize="15" fontWeight="bold">{displayHumidity}% RH</text>
+        <text x={12 + (width - 65) * 0.32} y={height - 45} fill="#94a3b8" fontSize="11">ESD RISK</text>
+        <text x={12 + (width - 65) * 0.32} y={height - 27} fill={displayEsdRisk.color} fontSize="14" fontWeight="bold">{displayEsdRisk.level}</text>
+        <text x={12 + (width - 65) * 0.58} y={height - 45} fill="#94a3b8" fontSize="11">MAX VOLTAGE</text>
+        <text x={12 + (width - 65) * 0.58} y={height - 27} fill={displayEsdRisk.color} fontSize="14" fontWeight="bold">{(displayEsdRisk.voltage / 1000).toFixed(0)}kV</text>
+        <text x={12 + (width - 65) * 0.82} y={height - 45} fill="#94a3b8" fontSize="11">DEW PT</text>
+        <text x={12 + (width - 65) * 0.82} y={height - 27} fill="#60a5fa" fontSize="14" fontWeight="bold">{dewPoint.toFixed(0)}C</text>
       </svg>
     );
   };
@@ -1039,7 +1032,7 @@ const HumidityESDRenderer: React.FC<HumidityESDRendererProps> = ({ onGameEvent, 
           — as humidity falls, voltage rises inversely.
         </p>
         <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '16px' }}>
-          This explains why electronics are damaged in dry climates. Drag the sliders to experiment.
+          The visualization displays how electronics are damaged in dry climates. Drag the sliders to experiment.
         </p>
 
         <div style={{
@@ -1334,6 +1327,21 @@ const HumidityESDRenderer: React.FC<HumidityESDRendererProps> = ({ onGameEvent, 
         <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
           A data center increases humidity to 70% to prevent ESD. But servers have cold heat sinks. What&apos;s the risk?
         </h2>
+
+        {/* Condensation concept SVG */}
+        <svg width="100%" height="160" viewBox="0 0 400 160" preserveAspectRatio="xMidYMid meet"
+          style={{ background: '#1a1a24', borderRadius: '12px', marginBottom: '20px' }}
+          role="img" aria-label="Condensation risk visualization showing humidity and cold surface interaction">
+          <text x="200" y="28" fill="#e2e8f0" fontSize="14" textAnchor="middle" fontWeight="700">Condensation Risk: Humidity + Cold Surface</text>
+          <rect x="40" y="50" width="120" height="60" fill="rgba(59,130,246,0.3)" rx="8" stroke="#3b82f6" strokeWidth="1" />
+          <text x="100" y="76" fill="#93c5fd" fontSize="12" textAnchor="middle" fontWeight="600">70% Humidity</text>
+          <text x="100" y="96" fill="#cbd5e1" fontSize="11" textAnchor="middle">Water vapor in air</text>
+          <rect x="240" y="50" width="120" height="60" fill="rgba(239,68,68,0.3)" rx="8" stroke="#ef4444" strokeWidth="1" />
+          <text x="300" y="76" fill="#fca5a5" fontSize="12" textAnchor="middle" fontWeight="600">Cold Heat Sink</text>
+          <text x="300" y="96" fill="#cbd5e1" fontSize="11" textAnchor="middle">Below dew point</text>
+          <text x="200" y="80" fill="#f59e0b" fontSize="18" textAnchor="middle">→</text>
+          <text x="200" y="140" fill="#fbbf24" fontSize="12" textAnchor="middle" fontWeight="600">= Condensation risk!</text>
+        </svg>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
           {options.map(opt => (

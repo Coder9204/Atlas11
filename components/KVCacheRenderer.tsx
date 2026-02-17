@@ -482,95 +482,191 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
 
   // Attention Pattern Visualization
   const AttentionVisualization = ({ showCache = true }: { showCache?: boolean }) => {
-    const width = isMobile ? 300 : 400;
-    const height = isMobile ? 200 : 250;
-    const tokenSize = 40;
-    const tokens = ['The', 'cat', 'sat', 'on', 'the', 'mat', '.', '→'];
-    const displayTokens = tokens.slice(0, Math.min(tokenCount + 1, tokens.length));
+    const width = isMobile ? 320 : 460;
+    const height = isMobile ? 280 : 340;
+    const padL = 50, padR = 20, padT = 50, padB = 60;
+    const chartW = width - padL - padR;
+    const chartH = height - padT - padB;
+    const tokens = ['The', 'cat', 'sat', 'on', 'the', 'mat', '.'];
+    const displayTokens = tokens.slice(0, Math.min(tokenCount, tokens.length));
+    const numVisible = displayTokens.length;
+    const tokenSpacing = numVisible > 1 ? chartW / (numVisible - 1) : chartW / 2;
+    const queryX = padL + chartW / 2;
+    const queryY = padT + chartH * 0.82;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
-        {/* Query token (new) */}
-        <g transform={`translate(${width / 2}, ${height - 50})`}>
-          <rect
-            x={-tokenSize / 2}
-            y={-15}
-            width={tokenSize}
-            height={30}
-            fill={colors.warning}
-            rx="6"
-          />
-          <text x="0" y="5" fill="white" fontSize="12" fontWeight="600" textAnchor="middle">
-            Q
-          </text>
-          <text x="0" y="35" fill={colors.textMuted} fontSize="10" textAnchor="middle">
-            New Token
-          </text>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', display: 'block' }}>
+        <defs>
+          <linearGradient id="kvCachedGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#10B981" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#059669" stopOpacity="0.7" />
+          </linearGradient>
+          <linearGradient id="kvComputeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#EF4444" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#DC2626" stopOpacity="0.7" />
+          </linearGradient>
+          <linearGradient id="kvQueryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="#D97706" stopOpacity="0.8" />
+          </linearGradient>
+          <linearGradient id="kvBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#1a1a30" />
+            <stop offset="100%" stopColor="#0a0a1a" />
+          </linearGradient>
+          <filter id="kvGlow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+          <filter id="kvGlowStrong">
+            <feGaussianBlur stdDeviation="5" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
+
+        {/* Background */}
+        <rect x="0" y="0" width={width} height={height} fill="url(#kvBgGrad)" rx="12" />
+
+        {/* Grid lines (horizontal) */}
+        <g id="grid-lines" opacity="0.25">
+          {[0, 0.33, 0.66, 1].map((frac, i) => (
+            <line key={i}
+              x1={padL} y1={padT + frac * chartH}
+              x2={padL + chartW} y2={padT + frac * chartH}
+              stroke={colors.border} strokeWidth="1" strokeDasharray="4,4"
+            />
+          ))}
+          {displayTokens.map((_, i) => {
+            const x = padL + i * tokenSpacing;
+            return <line key={i} x1={x} y1={padT} x2={x} y2={padT + chartH} stroke={colors.border} strokeWidth="1" strokeDasharray="3,5" />;
+          })}
         </g>
 
-        {/* Attention lines to cached K/V */}
-        {displayTokens.slice(0, -1).map((_, i) => {
-          const startX = width / 2;
-          const startY = height - 65;
-          const endX = 50 + i * (isMobile ? 35 : 45);
-          const endY = 60;
-          const isCached = showCache && i < generationStep;
-
-          return (
-            <g key={`attention-${i}`}>
-              <line
-                x1={startX}
-                y1={startY}
-                x2={endX}
-                y2={endY}
-                stroke={isCached ? colors.cached : colors.compute}
-                strokeWidth={2}
-                strokeDasharray={isCached ? "none" : "4,4"}
-                opacity={0.6}
-              />
-              <circle
-                cx={endX}
-                cy={endY}
-                r="4"
-                fill={isCached ? colors.cached : colors.compute}
-              />
-            </g>
-          );
-        })}
-
-        {/* Cached K/V tokens */}
-        {displayTokens.slice(0, -1).map((token, i) => {
-          const x = 50 + i * (isMobile ? 35 : 45);
-          const isCached = showCache && i < generationStep;
-
-          return (
-            <g key={`token-${i}`} transform={`translate(${x}, 35)`}>
-              <rect
-                x={-20}
-                y={-15}
-                width={40}
-                height={30}
-                fill={isCached ? colors.cached : colors.bgSecondary}
-                stroke={isCached ? colors.cached : colors.border}
-                strokeWidth={2}
-                rx="6"
-              />
-              <text x="0" y="5" fill={isCached ? 'white' : colors.textMuted} fontSize="10" fontWeight="500" textAnchor="middle">
-                {token}
-              </text>
-              {isCached && (
-                <text x="0" y="-20" fill={colors.cached} fontSize="8" textAnchor="middle">
-                  cached
-                </text>
-              )}
-            </g>
-          );
-        })}
-
-        {/* Label */}
-        <text x={width / 2} y={height - 10} fill={colors.textSecondary} fontSize="11" textAnchor="middle">
-          {showCache ? 'Attention with KV Cache' : 'Attention without Cache (recompute all)'}
+        {/* Y-axis label */}
+        <text x="12" y={padT + chartH / 2} fill={colors.textMuted} fontSize="11" textAnchor="middle"
+          transform={`rotate(-90, 12, ${padT + chartH / 2})`}>
+          Token Layer
         </text>
+
+        {/* X-axis label */}
+        <text x={padL + chartW / 2} y={height - 8} fill={colors.textMuted} fontSize="11" textAnchor="middle">
+          Sequence Position → Time
+        </text>
+
+        {/* Axis tick marks */}
+        <g id="tick-marks">
+          {displayTokens.map((_, i) => (
+            <line key={i}
+              x1={padL + i * tokenSpacing} y1={padT + chartH}
+              x2={padL + i * tokenSpacing} y2={padT + chartH + 6}
+              stroke={colors.textMuted} strokeWidth="1"
+            />
+          ))}
+        </g>
+
+        {/* Attention lines from query to each cached token */}
+        <g id="attention-lines">
+          {displayTokens.map((_, i) => {
+            const endX = padL + i * tokenSpacing;
+            const endY = padT + chartH * 0.2;
+            const isCached = showCache && i < generationStep;
+            const isCurrentToken = i === generationStep - 1 && isGenerating;
+
+            return (
+              <g key={`attn-${i}`}>
+                <line
+                  x1={queryX} y1={queryY - 18}
+                  x2={endX} y2={endY + 18}
+                  stroke={isCached ? '#10B981' : '#EF4444'}
+                  strokeWidth={isCurrentToken ? 3 : isCached ? 2 : 1}
+                  strokeDasharray={isCached ? "none" : "5,5"}
+                  opacity={isCached ? 0.8 : 0.35}
+                  filter={isCurrentToken ? "url(#kvGlow)" : undefined}
+                />
+                <circle
+                  cx={endX} cy={endY + 16}
+                  r={isCached ? 5 : 3}
+                  fill={isCached ? '#10B981' : '#EF4444'}
+                  opacity={isCached ? 0.9 : 0.3}
+                  filter={isCurrentToken ? "url(#kvGlowStrong)" : undefined}
+                />
+              </g>
+            );
+          })}
+        </g>
+
+        {/* Cached/uncached K/V token boxes at top */}
+        <g id="token-boxes">
+          {displayTokens.map((token, i) => {
+            const x = padL + i * tokenSpacing;
+            const y = padT + chartH * 0.2;
+            const isCached = showCache && i < generationStep;
+            const isCurrentToken = i === generationStep - 1 && isGenerating;
+
+            return (
+              <g key={`tok-${i}`} filter={isCurrentToken ? "url(#kvGlowStrong)" : undefined}>
+                <rect x={x - 22} y={y - 16} width="44" height="32" rx="6"
+                  fill={isCached ? 'url(#kvCachedGrad)' : 'url(#kvComputeGrad)'}
+                  stroke={isCurrentToken ? colors.warning : isCached ? '#10B981' : '#EF4444'}
+                  strokeWidth={isCurrentToken ? 2.5 : 1.5}
+                  opacity={isCached ? 1 : 0.4}
+                />
+                <text x={x} y={y + 5} fill="white" fontSize="11" fontWeight="600" textAnchor="middle">
+                  {token}
+                </text>
+              </g>
+            );
+          })}
+        </g>
+
+        {/* Token labels below the boxes (status: cached / compute) */}
+        <g id="token-labels">
+          {displayTokens.map((_, i) => {
+            const x = padL + i * tokenSpacing;
+            const isCached = showCache && i < generationStep;
+            return (
+              <text key={i} x={x} y={padT + chartH * 0.2 + 30}
+                fill={isCached ? '#10B981' : colors.textMuted}
+                fontSize="11" textAnchor="middle" fontWeight={isCached ? 600 : 400}>
+                {isCached ? 'cached' : 'miss'}
+              </text>
+            );
+          })}
+        </g>
+
+        {/* Query box (new token) */}
+        <g id="query-box" filter="url(#kvGlow)">
+          <rect x={queryX - 28} y={queryY - 16} width="56" height="32" rx="8"
+            fill="url(#kvQueryGrad)"
+            stroke={colors.warning}
+            strokeWidth="2"
+          />
+          <text x={queryX} y={queryY + 5} fill="white" fontSize="13" fontWeight="700" textAnchor="middle">Q</text>
+        </g>
+        <text x={queryX} y={queryY + 26} fill={colors.textMuted} fontSize="11" textAnchor="middle">
+          New Token
+        </text>
+
+        {/* Title */}
+        <text x={padL + chartW / 2} y="22" fill={colors.textPrimary} fontSize="13" fontWeight="700" textAnchor="middle">
+          {showCache ? 'KV Cache: Attend without recompute' : 'No Cache: Recompute all K,V'}
+        </text>
+
+        {/* Legend */}
+        <g id="legend">
+          {(() => {
+            const lx = width - 110;
+            const ly = padT + 4;
+            return (
+              <>
+                <rect x={lx} y={ly} width="100" height="50" rx="6" fill="#0f172a" opacity="0.7" />
+                <rect x={lx + 6} y={ly + 8} width="14" height="12" rx="3" fill="#10B981" />
+                <text x={lx + 24} y={ly + 19} fill={colors.textSecondary} fontSize="11">Cached K,V</text>
+                <rect x={lx + 6} y={ly + 26} width="14" height="12" rx="3" fill="#EF4444" opacity="0.5" />
+                <text x={lx + 24} y={ly + 37} fill={colors.textSecondary} fontSize="11">Recompute</text>
+              </>
+            );
+          })()}
+        </g>
       </svg>
     );
   };
@@ -750,8 +846,8 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
             <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
               "Without KV caching, generating 100 tokens would require 100x the computation of generating 1 token. With caching, it's nearly linear."
             </p>
-            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-              - LLM Inference Optimization
+            <p style={{ ...typo.small, color: 'rgba(148, 163, 184, 0.8)', marginTop: '8px' }}>
+              — LLM Inference Optimization
             </p>
           </div>
 
@@ -969,7 +1065,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
               marginBottom: '16px',
             }}>
               <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                <strong style={{ color: colors.memory }}>Key Concept:</strong> KV Cache refers to storing Key (K) and Value (V) projections from attention layers. Without cache, compute = <span style={{ color: colors.error, fontFamily: 'monospace' }}>n²</span> per step (each token attends to all). With cache, compute = <span style={{ color: colors.success, fontFamily: 'monospace' }}>n</span> per step. The formula for savings is: <span style={{ color: colors.accent, fontFamily: 'monospace' }}>savings = (n²-n) / n² × 100%</span>. This relationship between n and compute is calculated using attention complexity theory.
+                <strong style={{ color: colors.memory }}>Key Concept:</strong> KV Cache stores Key (<span style={{ color: '#fbbf24', fontWeight: 700 }}>K</span>) and Value (<span style={{ color: '#22d3ee', fontWeight: 700 }}>V</span>) projections from attention layers. Without cache, compute ∝ <span style={{ color: '#f97316', fontFamily: 'monospace', fontWeight: 700 }}>n²</span> per step. With cache, compute ∝ <span style={{ color: '#86efac', fontFamily: 'monospace', fontWeight: 700 }}>n</span> per step. Savings = (n²−n)/n² × 100%. Attention complexity theory shows <span style={{ color: '#fbbf24', fontWeight: 700 }}>K</span> and <span style={{ color: '#22d3ee', fontWeight: 700 }}>V</span> projections are constant once computed.
               </p>
             </div>
 
@@ -1500,7 +1596,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
               const chartW = svgW - pad.left - pad.right;
               const chartH = svgH - pad.top - pad.bottom;
               const maxCtx = 8192;
-              const maxMem = (maxCtx * 96 * 2 * 128 * 2) / (1024 * 1024); // MB at max layers
+              const maxMem = (maxCtx * numLayers * 2 * 128 * 2) / (1024 * 1024); // MB at current layers - auto-scales
               const pts = Array.from({ length: 20 }, (_, k) => {
                 const ctx = (k / 19) * maxCtx;
                 const mem = (ctx * numLayers * 2 * 128 * 2) / (1024 * 1024);

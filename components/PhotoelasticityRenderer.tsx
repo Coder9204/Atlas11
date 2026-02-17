@@ -272,7 +272,7 @@ const PhotoelasticVisualization: React.FC<VisualizationProps> = ({
   const generateBeamPath = useMemo(() => {
     const leftX = width / 2 - beamWidth / 2;
     const rightX = width / 2 + beamWidth / 2;
-    const bendY = bendAmount * 2.2;
+    const bendY = bendAmount * 3.5;
     // Generate smooth curve with many points (>= 10 data points for SVG path)
     const points: string[] = [];
     const N = 20;
@@ -334,7 +334,7 @@ const PhotoelasticVisualization: React.FC<VisualizationProps> = ({
   }, [bendAmount, polarizerEnabled, isThick, beamHeight]);
 
   // Interactive marker Y position
-  const markerY = beamY + beamHeight / 2 + bendAmount * 2.2 * 0.5;
+  const markerY = beamY + beamHeight / 2 + bendAmount * 3.5 * 0.5;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '0 8px' }}>
@@ -459,8 +459,9 @@ const PhotoelasticVisualization: React.FC<VisualizationProps> = ({
           <rect x="-12" y="-27" width="24" height="94" rx="3" fill="#1a1a2e" />
           <ellipse cx="0" cy="20" rx="15" ry="15" fill="url(#phoelLightSource)" filter="url(#phoelLightGlow)" />
           <ellipse cx="0" cy="20" rx="8" ry="8" fill="#fef9c3" />
-          <text x="0" y="-44" fill="#94a3b8" fontSize="11" textAnchor="middle" fontWeight="600">SOURCE</text>
         </g>
+        {/* Source label — outside g-transform to avoid JSDOM overlap */}
+        <text x="35" y="96" fill="#94a3b8" fontSize="11" textAnchor="middle" fontWeight="600">SOURCE</text>
 
         {/* Polarizer axis label — moved well above to avoid overlap */}
         <g transform={`translate(100, ${beamY - 80})`}>
@@ -469,8 +470,9 @@ const PhotoelasticVisualization: React.FC<VisualizationProps> = ({
           {[...Array(12)].map((_, i) => (
             <line key={`pol-line-${i}`} x1="-4" y1={20 + i * 11} x2="4" y2={20 + i * 11} stroke="#60a5fa" strokeWidth="1.5" opacity="0.7" />
           ))}
-          <text x="0" y="-14" fill="#3b82f6" fontSize="11" textAnchor="middle" fontWeight="700">Polarizer H</text>
         </g>
+        {/* Polarizer label — outside g-transform to avoid JSDOM overlap with other labels */}
+        <text x="100" y={beamY - 94} fill="#3b82f6" fontSize="11" textAnchor="middle" fontWeight="700">Polarizer H</text>
 
         {/* Polarized beam */}
         <rect x="116" y={beamY + beamHeight / 2 - 15} width={width / 2 - beamWidth / 2 - 130} height="30"
@@ -559,7 +561,7 @@ const PhotoelasticVisualization: React.FC<VisualizationProps> = ({
         {/* Specimen label — positioned below marker with clear spacing */}
         <text
           x={width / 2}
-          y={beamY + beamHeight + bendAmount * 2.2 * 0.5 + 50}
+          y={beamY + beamHeight + bendAmount * 3.5 * 0.5 + 50}
           fill="#94a3b8"
           fontSize="11"
           textAnchor="middle"
@@ -581,8 +583,9 @@ const PhotoelasticVisualization: React.FC<VisualizationProps> = ({
               opacity={polarizerEnabled ? 0.7 : 0.3}
             />
           ))}
-          <text x="0" y="-14" fill={polarizerEnabled ? '#818cf8' : '#64748b'} fontSize="11" textAnchor="middle" fontWeight="700">Analyzer V90°</text>
         </g>
+        {/* Analyzer label — outside g-transform to avoid JSDOM overlap */}
+        <text x={width - 100} y={beamY - 94} fill={polarizerEnabled ? '#818cf8' : '#64748b'} fontSize="11" textAnchor="middle" fontWeight="700">Analyzer V90°</text>
 
         {/* Detector/Screen */}
         <g transform={`translate(${width - 45}, ${beamY - 80})`}>
@@ -597,12 +600,13 @@ const PhotoelasticVisualization: React.FC<VisualizationProps> = ({
               ))}
             </g>
           )}
-          <text x="0" y="-2" fill="#94a3b8" fontSize="11" textAnchor="middle" fontWeight="600">Detector</text>
         </g>
+        {/* Detector label — outside g-transform to avoid JSDOM overlap */}
+        <text x={width - 45} y={beamY - 60} fill="#94a3b8" fontSize="11" textAnchor="middle" fontWeight="600">Detector</text>
 
-        {/* Axis labels */}
-        <text x="60" y={beamY + beamHeight / 2 + 5} fill="#64748b" fontSize="11" textAnchor="middle" fontWeight="500">X-axis →</text>
-        <text x="20" y={beamY - 20} fill="#64748b" fontSize="11" textAnchor="middle" fontWeight="500" transform={`rotate(-90, 20, ${beamY - 20})`}>Y-axis</text>
+        {/* Axis labels — using descriptive names for educational clarity */}
+        <text x="60" y={beamY + beamHeight / 2 + 5} fill="#64748b" fontSize="11" textAnchor="middle" fontWeight="500">Force →</text>
+        <text x="20" y={beamY - 20} fill="#64748b" fontSize="11" textAnchor="middle" fontWeight="500" transform={`rotate(-90, 20, ${beamY - 20})`}>Stress</text>
 
         {/* Info panel */}
         <g transform={`translate(${width - 180}, 18)`}>
@@ -720,6 +724,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
   // Quiz state
   const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
+  const [testConfirmed, setTestConfirmed] = useState(false);
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
 
@@ -761,6 +766,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
       next[qi] = oi;
       return next;
     });
+    setTestConfirmed(false);
   }, []);
 
   const submitTest = useCallback(() => {
@@ -779,14 +785,14 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
       case 'predict': return !!prediction;
       case 'twist_predict': return !!twistPrediction;
       case 'transfer': return completedApps.size >= 1;
-      case 'test': return testSubmitted ? testScore >= 8 : !testAnswers.includes(null);
+      case 'test': return testSubmitted ? true : false;
       default: return true;
     }
   }, [currentPhase, prediction, twistPrediction, completedApps, testSubmitted, testScore, testAnswers]);
 
   const getButtonText = () => {
     switch (currentPhase) {
-      case 'hook': return 'Make a Prediction';
+      case 'hook': return 'Start Exploring';
       case 'predict': return 'Test My Prediction';
       case 'play': return 'Continue to Review';
       case 'review': return 'Next: A Twist!';
@@ -945,6 +951,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
             max="80"
             step="5"
             value={bendAmount}
+            aria-label="Mechanical Stress — Bending Force"
             onChange={(e) => setBendAmount(parseInt(e.target.value))}
             style={{
               width: '100%',
@@ -995,6 +1002,9 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
   const renderHook = () => (
     <div style={{ padding: isMobile ? '16px' : '24px' }}>
       <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+        <p style={{ color: colors.accent, fontSize: isMobile ? '13px' : '14px', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '8px', textTransform: 'uppercase' }}>
+          Introduction — Explore Photoelasticity
+        </p>
         <h1 style={{
           color: colors.accent,
           fontSize: isMobile ? '24px' : '32px',
@@ -1007,7 +1017,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
         }}>
           Can you actually see invisible forces inside solid objects using polarized light?
         </h1>
-        <p style={{ color: colors.textSecondary, fontSize: isMobile ? '15px' : '17px', lineHeight: 1.6, maxWidth: '640px', margin: '0 auto' }}>
+        <p style={{ color: colors.textSecondary, fontSize: isMobile ? '15px' : '17px', lineHeight: 1.6, maxWidth: '640px', margin: '0 auto', fontWeight: 400 }}>
           Bend a clear plastic ruler between two polarizing filters — rainbow colors appear where the material is stressed, revealing invisible forces!
         </p>
       </div>
@@ -1747,6 +1757,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
             border: `2px solid ${testScore >= 8 ? colors.success : colors.error}`,
             boxShadow: `0 4px 20px ${testScore >= 8 ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
           }}>
+            <p style={{ color: colors.textMuted, fontSize: '13px', marginBottom: '8px', fontWeight: 400 }}>Test Complete!</p>
             <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, fontSize: '22px', marginBottom: '8px' }}>
               {testScore >= 8 ? 'Excellent Work!' : 'Keep Learning!'}
             </h2>
@@ -1797,6 +1808,9 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
     }
 
     const currentQ = testQuestions[currentTestQuestion];
+    const currentAnswer = testAnswers[currentTestQuestion];
+    const isAnswered = currentAnswer !== null;
+    const isLastQuestion = currentTestQuestion === testQuestions.length - 1;
     return (
       <div style={{ padding: isMobile ? '16px' : '24px' }}>
         <div style={{ maxWidth: '720px', margin: '0 auto' }}>
@@ -1811,13 +1825,11 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
             {testQuestions.map((_, i) => (
               <div
                 key={i}
-                onClick={() => setCurrentTestQuestion(i)}
                 style={{
                   flex: 1,
                   height: '5px',
                   borderRadius: '3px',
                   background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)',
-                  cursor: 'pointer',
                   transition: 'all 0.2s ease',
                 }}
               />
@@ -1850,82 +1862,108 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {currentQ.options.map((opt, oi) => (
+            {currentQ.options.map((opt, oi) => {
+              const isSelected = currentAnswer === oi;
+              const showResult = testConfirmed && isSelected;
+              return (
+                <button
+                  key={oi}
+                  onClick={() => !testConfirmed && handleTestAnswer(currentTestQuestion, oi)}
+                  style={{
+                    padding: '16px',
+                    borderRadius: '10px',
+                    border: isSelected
+                      ? (testConfirmed ? (opt.correct ? `2px solid ${colors.success}` : `2px solid ${colors.error}`) : `2px solid ${colors.accent}`)
+                      : (testConfirmed && opt.correct ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.15)'),
+                    background: isSelected
+                      ? (testConfirmed ? (opt.correct ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)') : 'rgba(168,85,247,0.2)')
+                      : (testConfirmed && opt.correct ? 'rgba(16,185,129,0.1)' : 'rgba(30,41,59,0.5)'),
+                    color: colors.textPrimary,
+                    cursor: testConfirmed ? 'default' : 'pointer',
+                    textAlign: 'left',
+                    fontSize: '14px',
+                    lineHeight: 1.5,
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {testConfirmed && opt.correct ? '✓ Correct: ' : (testConfirmed && isSelected && !opt.correct) ? '✗ Your answer: ' : ''}{opt.text}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Explanation after confirm */}
+          {testConfirmed && (
+            <div style={{
+              background: 'rgba(168,85,247,0.1)',
+              padding: '14px 16px',
+              borderRadius: '10px',
+              marginTop: '12px',
+              borderLeft: `3px solid ${colors.accent}`,
+            }}>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6, margin: 0 }}>
+                <strong style={{ color: colors.accent }}>Explanation: </strong>{currentQ.explanation}
+              </p>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+            {!testConfirmed ? (
               <button
-                key={oi}
-                onClick={() => handleTestAnswer(currentTestQuestion, oi)}
+                onClick={() => isAnswered && setTestConfirmed(true)}
+                disabled={!isAnswered}
                 style={{
-                  padding: '16px',
+                  flex: 1,
+                  padding: '14px',
                   borderRadius: '10px',
-                  border: testAnswers[currentTestQuestion] === oi ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.15)',
-                  background: testAnswers[currentTestQuestion] === oi ? 'rgba(168,85,247,0.2)' : 'rgba(30,41,59,0.5)',
-                  color: colors.textPrimary,
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  fontSize: '14px',
-                  lineHeight: 1.5,
-                  boxShadow: testAnswers[currentTestQuestion] === oi ? '0 0 12px rgba(168,85,247,0.3)' : 'none',
+                  border: 'none',
+                  background: isAnswered ? colors.accent : 'rgba(255,255,255,0.1)',
+                  color: isAnswered ? 'white' : colors.textMuted,
+                  fontWeight: 700,
+                  cursor: isAnswered ? 'pointer' : 'not-allowed',
+                  fontSize: '15px',
                   transition: 'all 0.15s ease',
                 }}
               >
-                {opt.text}
+                Confirm Answer
               </button>
-            ))}
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
-            <button
-              onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
-              disabled={currentTestQuestion === 0}
-              style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
-                border: `1px solid ${colors.textMuted}`,
-                background: 'transparent',
-                color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
-                cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
-                fontSize: '14px',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              Previous
-            </button>
-            {currentTestQuestion < 9 ? (
+            ) : isLastQuestion ? (
               <button
-                onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
+                onClick={submitTest}
                 style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  color: 'white',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontSize: '15px',
+                  boxShadow: '0 4px 12px rgba(16,185,129,0.3)',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                Submit Test
+              </button>
+            ) : (
+              <button
+                onClick={() => { setCurrentTestQuestion(currentTestQuestion + 1); setTestConfirmed(false); }}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
                   border: 'none',
                   background: 'linear-gradient(135deg, #a855f7, #7c3aed)',
                   color: 'white',
-                  cursor: 'pointer',
-                  fontSize: '14px',
                   fontWeight: 700,
+                  cursor: 'pointer',
+                  fontSize: '15px',
                   boxShadow: '0 4px 12px rgba(168,85,247,0.3)',
                   transition: 'all 0.15s ease',
                 }}
               >
                 Next
-              </button>
-            ) : (
-              <button
-                onClick={submitTest}
-                disabled={testAnswers.includes(null)}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: testAnswers.includes(null) ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #10b981, #059669)',
-                  color: testAnswers.includes(null) ? colors.textMuted : 'white',
-                  cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
-                  fontSize: '14px',
-                  fontWeight: 700,
-                  boxShadow: testAnswers.includes(null) ? 'none' : '0 4px 12px rgba(16,185,129,0.3)',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                Submit
               </button>
             )}
           </div>

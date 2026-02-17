@@ -373,7 +373,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
   const findMPP = useCallback(() => {
     let maxPower = 0;
     let mppVoltage = 0;
-    for (let v = 0; v <= 22; v += 0.1) {
+    for (let v = 0; v <= 22; v += 0.5) {
       const i = calculateIV(v);
       const p = v * i;
       if (p > maxPower) {
