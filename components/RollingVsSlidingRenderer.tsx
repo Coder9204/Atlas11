@@ -737,21 +737,28 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
               </div>
             </div>
 
-            <div className="bg-indigo-900/20 border border-indigo-500/30 rounded-lg p-4">
+            <div className="bg-cyan-900/20 border border-cyan-500/30 rounded-lg p-4" style={{ transition: 'all 0.3s ease' }}>
+              <div className="text-sm font-semibold text-cyan-300 mb-2">🔍 Observation Guidance - What to Watch:</div>
+              <p className="text-sm text-slate-300 leading-relaxed">
+                Notice how both objects experience the same applied force, but the cart with wheels moves much more easily. Watch the acceleration values (a = m/s²) update in real-time as you adjust the sliders. The friction force (f) shown above each object demonstrates the huge difference between sliding and rolling.
+              </p>
+            </div>
+
+            <div className="bg-indigo-900/20 border border-indigo-500/30 rounded-lg p-4" style={{ transition: 'all 0.3s ease' }}>
               <div className="text-sm font-semibold text-indigo-300 mb-2">What you're seeing:</div>
               <p className="text-sm text-slate-300 leading-relaxed">
                 With the same applied force ({force} N), the rolling object accelerates {results.rollingAccel > 0 && results.slidingAccel > 0 ? (results.rollingAccel / results.slidingAccel).toFixed(1) + '× faster' : 'much faster'} than the sliding object because rolling friction is dramatically lower. This is why wheels revolutionized transportation!
               </p>
             </div>
 
-            <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4">
+            <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4" style={{ transition: 'all 0.3s ease' }}>
               <div className="text-sm font-semibold text-purple-300 mb-2">Cause & Effect:</div>
               <p className="text-sm text-slate-300 leading-relaxed">
                 Increase the force to see both objects accelerate faster. Change the mass to see how weight affects friction forces. Switch to ice to see how surface properties change both friction types (but rolling stays much lower).
               </p>
             </div>
 
-            <div className="bg-amber-900/20 border border-amber-500/30 rounded-lg p-4">
+            <div className="bg-amber-900/20 border border-amber-500/30 rounded-lg p-4" style={{ transition: 'all 0.3s ease' }}>
               <div className="text-sm font-semibold text-amber-300 mb-2">Why this matters:</div>
               <p className="text-sm text-slate-300 leading-relaxed">
                 Before wheels, ancient civilizations used log rollers to move massive stones. Modern applications include luggage wheels, ball bearings in motors, and low-friction train wheels - all exploiting the dramatic difference between rolling and sliding friction.
@@ -768,72 +775,108 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
 
     return (
       <div className="space-y-6">
-        <svg width="100%" viewBox="0 0 600 350" className="bg-slate-800/50 rounded-xl border border-slate-700">
-          {/* Ground */}
-          <rect x="50" y="280" width="500" height="10" fill="#64748b" />
+        <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-2">
+          <h3 className="text-lg font-bold text-center text-purple-300 mb-2">Static vs Kinetic Friction</h3>
+          <svg width="100%" viewBox="0 0 600 400" className="bg-slate-900/30 rounded-lg" preserveAspectRatio="xMidYMid meet">
+            {/* Grid lines */}
+            <g stroke="#475569" strokeWidth="0.5" opacity="0.3">
+              {[0, 1, 2, 3, 4, 5, 6].map(i => (
+                <line key={`h${i}`} x1="50" y1={80 + i * 40} x2="550" y2={80 + i * 40} />
+              ))}
+              {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => (
+                <line key={`v${i}`} x1={50 + i * 50} y1="80" x2={50 + i * 50} y2="320" />
+              ))}
+            </g>
 
-          {/* Box */}
-          <rect
-            x="250"
-            y="220"
-            width="80"
-            height="60"
-            fill={results.willMove ? '#10b981' : '#ef4444'}
-            stroke={results.willMove ? '#059669' : '#dc2626'}
-            strokeWidth="3"
-            rx="4"
-          />
-          <text x="290" y="255" textAnchor="middle" fill="white" fontSize="18" fontWeight="bold">BOX</text>
+            {/* Y-axis */}
+            <line x1="50" y1="80" x2="50" y2="330" stroke="#94a3b8" strokeWidth="2" />
+            <text x="35" y="85" textAnchor="end" fill="#94a3b8" fontSize="11">High</text>
+            <text x="35" y="205" textAnchor="end" fill="#94a3b8" fontSize="11">Med</text>
+            <text x="35" y="325" textAnchor="end" fill="#94a3b8" fontSize="11">Low</text>
+            <text x="20" y="200" textAnchor="middle" fill="#cbd5e1" fontSize="13" fontWeight="600" transform="rotate(-90 20 200)">
+              Force (N)
+            </text>
 
-          {/* Force arrow */}
-          {twistForce > 0 && (
-            <>
-              <defs>
-                <marker id="arrowhead-force" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-                  <polygon points="0 0, 10 3, 0 6" fill="#f59e0b" />
-                </marker>
-              </defs>
-              <line x1="180" y1="250" x2="245" y2="250" stroke="#f59e0b" strokeWidth="4" markerEnd="url(#arrowhead-force)" />
-              <text x="185" y="235" fill="#f59e0b" fontSize="14" fontWeight="bold">F = {twistForce} N</text>
-            </>
-          )}
+            {/* X-axis */}
+            <line x1="50" y1="330" x2="550" y2="330" stroke="#94a3b8" strokeWidth="2" />
+            <text x="150" y="350" textAnchor="middle" fill="#94a3b8" fontSize="11">At Rest</text>
+            <text x="410" y="350" textAnchor="middle" fill="#94a3b8" fontSize="11">Moving</text>
+            <text x="300" y="370" textAnchor="middle" fill="#cbd5e1" fontSize="13" fontWeight="600">
+              Object State
+            </text>
 
-          {/* Static friction threshold indicator */}
-          <text x="300" y="180" textAnchor="middle" fill="#f59e0b" fontSize="16" fontWeight="bold">
-            Static friction threshold: {results.staticFriction.toFixed(1)} N
-          </text>
-          <text x="300" y="200" textAnchor="middle" fill="#8b5cf6" fontSize="16" fontWeight="bold">
-            Kinetic friction (once moving): {results.kineticFriction.toFixed(1)} N
-          </text>
+            {/* Tick marks */}
+            {[0, 1, 2, 3, 4, 5, 6].map(i => (
+              <line key={`tick${i}`} x1="45" y1={80 + i * 40} x2="50" y2={80 + i * 40} stroke="#94a3b8" strokeWidth="1.5" />
+            ))}
 
-          {/* Status */}
-          <text x="300" y="60" textAnchor="middle" fill={results.willMove ? '#10b981' : '#ef4444'} fontSize="22" fontWeight="bold">
-            {results.willMove ? `MOVING! (a = ${results.acceleration.toFixed(2)} m/s²)` : 'STUCK (not enough force)'}
-          </text>
+            {/* Ground */}
+            <rect x="50" y="280" width="500" height="10" fill="#64748b" />
 
-          {/* Friction force arrows */}
-          {twistForce > 0 && !results.willMove && (
-            <>
-              <line x1="330" y1="250" x2="380" y2="250" stroke="#ef4444" strokeWidth="3" />
-              <text x="385" y="255" fill="#ef4444" fontSize="12" fontWeight="600">Static f = {Math.min(twistForce, results.staticFriction).toFixed(1)} N</text>
-            </>
-          )}
-          {results.willMove && (
-            <>
-              <line x1="330" y1="250" x2="370" y2="250" stroke="#8b5cf6" strokeWidth="3" />
-              <text x="375" y="255" fill="#8b5cf6" fontSize="12" fontWeight="600">Kinetic f = {results.kineticFriction.toFixed(1)} N</text>
-            </>
-          )}
+            {/* Box */}
+            <rect
+              x="250"
+              y="220"
+              width="80"
+              height="60"
+              fill={results.willMove ? '#10b981' : '#ef4444'}
+              stroke={results.willMove ? '#059669' : '#dc2626'}
+              strokeWidth="3"
+              rx="4"
+              style={{ transition: 'fill 0.3s ease, stroke 0.3s ease' }}
+            />
+            <text x="290" y="255" textAnchor="middle" fill="white" fontSize="18" fontWeight="bold">BOX</text>
 
-          {/* Formula reference */}
-          <text x="300" y="330" textAnchor="middle" fill="#94a3b8" fontSize="13">
-            Static μ_s = {results.coeffs.static} | Kinetic μ_k = {results.coeffs.kinetic}
-          </text>
-        </svg>
+            {/* Force arrow */}
+            {twistForce > 0 && (
+              <>
+                <defs>
+                  <marker id="arrowhead-force" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <polygon points="0 0, 10 3, 0 6" fill="#f59e0b" />
+                  </marker>
+                </defs>
+                <line x1="180" y1="250" x2="245" y2="250" stroke="#f59e0b" strokeWidth="4" markerEnd="url(#arrowhead-force)" />
+                <text x="185" y="235" fill="#f59e0b" fontSize="14" fontWeight="bold">F = {twistForce} N</text>
+              </>
+            )}
+
+            {/* Static friction threshold indicator */}
+            <text x="300" y="180" textAnchor="middle" fill="#f59e0b" fontSize="16" fontWeight="bold">
+              Static friction threshold: {results.staticFriction.toFixed(1)} N
+            </text>
+            <text x="300" y="200" textAnchor="middle" fill="#8b5cf6" fontSize="16" fontWeight="bold">
+              Kinetic friction (once moving): {results.kineticFriction.toFixed(1)} N
+            </text>
+
+            {/* Status */}
+            <text x="300" y="60" textAnchor="middle" fill={results.willMove ? '#10b981' : '#ef4444'} fontSize="22" fontWeight="bold">
+              {results.willMove ? `MOVING! (a = ${results.acceleration.toFixed(2)} m/s²)` : 'STUCK (not enough force)'}
+            </text>
+
+            {/* Friction force arrows */}
+            {twistForce > 0 && !results.willMove && (
+              <>
+                <line x1="330" y1="250" x2="380" y2="250" stroke="#ef4444" strokeWidth="3" />
+                <text x="385" y="255" fill="#ef4444" fontSize="12" fontWeight="600">Static f = {Math.min(twistForce, results.staticFriction).toFixed(1)} N</text>
+              </>
+            )}
+            {results.willMove && (
+              <>
+                <line x1="330" y1="250" x2="370" y2="250" stroke="#8b5cf6" strokeWidth="3" />
+                <text x="375" y="255" fill="#8b5cf6" fontSize="12" fontWeight="600">Kinetic f = {results.kineticFriction.toFixed(1)} N</text>
+              </>
+            )}
+
+            {/* Formula reference */}
+            <text x="300" y="390" textAnchor="middle" fill="#94a3b8" fontSize="13">
+              Static μ_s = {results.coeffs.static} | Kinetic μ_k = {results.coeffs.kinetic}
+            </text>
+          </svg>
+        </div>
 
         {showSliders && (
           <div className="space-y-4 bg-slate-800/30 p-6 rounded-xl border border-slate-700">
-            <div>
+            <div className="w-full">
               <label className="block text-sm font-semibold text-slate-300 mb-2">
                 Mass: {twistMass} kg
               </label>
@@ -847,16 +890,19 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
                   setTwistMass(Number(e.target.value));
                   emitEvent('slider_changed', { parameter: 'twist_mass', value: Number(e.target.value) });
                 }}
-                className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer"
                 style={{
+                  width: '100%',
                   touchAction: 'pan-y',
                   WebkitAppearance: 'none',
-                  MozAppearance: 'none'
+                  MozAppearance: 'none',
+                  accentColor: '#a855f7',
+                  transition: 'all 0.2s ease'
                 }}
               />
             </div>
 
-            <div>
+            <div className="w-full">
               <label className="block text-sm font-semibold text-slate-300 mb-2">
                 Applied Force: {twistForce} N
               </label>
@@ -871,11 +917,14 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
                   setHasStartedTwist(true);
                   emitEvent('slider_changed', { parameter: 'twist_force', value: Number(e.target.value) });
                 }}
-                className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer"
                 style={{
+                  width: '100%',
                   touchAction: 'pan-y',
                   WebkitAppearance: 'none',
-                  MozAppearance: 'none'
+                  MozAppearance: 'none',
+                  accentColor: '#a855f7',
+                  transition: 'all 0.2s ease'
                 }}
               />
             </div>
@@ -916,11 +965,29 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
               </div>
             </div>
 
-            <div className="bg-amber-900/20 border border-amber-500/30 rounded-lg p-4">
+            <div className="bg-cyan-900/20 border border-cyan-500/30 rounded-lg p-4" style={{ transition: 'all 0.3s ease' }}>
+              <div className="text-sm font-semibold text-cyan-300 mb-2">🔍 Observation Guidance - What to Watch:</div>
+              <p className="text-sm text-slate-300 leading-relaxed">
+                Slowly increase the applied force using the slider. Watch for the critical moment when the force exceeds the static friction threshold - the box suddenly changes from STUCK (red) to MOVING (green). Notice how the friction type switches from static to kinetic, and the acceleration value appears.
+              </p>
+            </div>
+
+            <div className="bg-amber-900/20 border border-amber-500/30 rounded-lg p-4" style={{ transition: 'all 0.3s ease' }}>
               <div className="text-sm font-semibold text-amber-300 mb-2">Key Discovery:</div>
               <p className="text-sm text-slate-300 leading-relaxed">
                 Static friction (μ_s = {results.coeffs.static}) is {((results.coeffs.static / results.coeffs.kinetic) * 100 - 100).toFixed(0)}% higher than kinetic friction (μ_k = {results.coeffs.kinetic}). That's why it's harder to START pushing a heavy object than to KEEP it moving!
               </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4" style={{ transition: 'all 0.3s ease' }}>
+                <div className="text-xs text-red-300 mb-1">Static Threshold</div>
+                <div className="text-2xl font-bold text-red-400">{results.staticFriction.toFixed(1)} N</div>
+              </div>
+              <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4" style={{ transition: 'all 0.3s ease' }}>
+                <div className="text-xs text-purple-300 mb-1">Kinetic (Moving)</div>
+                <div className="text-2xl font-bold text-purple-400">{results.kineticFriction.toFixed(1)} N</div>
+              </div>
             </div>
           </div>
         )}
@@ -1323,14 +1390,14 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
                     ? 'bg-emerald-500'
                     : 'bg-slate-600'
               }`}
-              style={{ cursor: 'pointer' }}
+              style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
             />
           ))}
         </div>
 
         <div
           className="space-y-4 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-indigo-500 scrollbar-track-slate-800"
-          style={{ maxHeight: '60vh' }}
+          style={{ maxHeight: '60vh', paddingTop: '44px', paddingBottom: '80px', flex: 1, overflowY: 'auto' }}
         >
           <div
             className="rounded-xl p-6 border-2 transition-all duration-300"

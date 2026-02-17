@@ -1054,7 +1054,7 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
               marginBottom: '24px',
             }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <SMVisualization />
+                {SMVisualization}
               </div>
 
               {/* Registers slider - controls register allocation */}
@@ -1204,6 +1204,7 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
               Understand the Tradeoff
             </button>
           </div>
+          {renderNavDots()}
         </NavigationBar>
       </div>
     );
@@ -1486,7 +1487,7 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
               marginBottom: '24px',
             }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <SMVisualization />
+                {SMVisualization}
               </div>
 
               {/* All three sliders with physics labels */}
@@ -1716,13 +1717,37 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
+            style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px' }}
           >
             See Real-World Applications
           </button>
         </div>
 
-        {renderNavDots()}
+        <NavigationBar>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+            <button
+              onClick={() => goToPhase('twist_play')}
+              style={{
+                background: 'transparent',
+                border: `1px solid ${colors.border}`,
+                color: colors.textSecondary,
+                padding: '12px 24px',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                minHeight: '44px',
+              }}
+            >
+              ← Back
+            </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, minHeight: '44px' }}
+            >
+              See Real-World Applications
+            </button>
+          </div>
+          {renderNavDots()}
+        </NavigationBar>
       </div>
     );
   }
@@ -2033,10 +2058,12 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '24px',
+          paddingTop: '48px',
           paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
         }}>
-          <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             {/* Progress */}
             <div style={{
               display: 'flex',
@@ -2252,7 +2279,7 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '16px' }}>
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '100px' }}>
           <button
             onClick={() => goToPhase('hook')}
             style={{
@@ -2262,6 +2289,7 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
               background: 'transparent',
               color: colors.textSecondary,
               cursor: 'pointer',
+              minHeight: '44px',
             }}
           >
             Play Again
@@ -2272,13 +2300,18 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
               ...primaryButtonStyle,
               textDecoration: 'none',
               display: 'inline-block',
+              minHeight: '44px',
             }}
           >
             Return to Dashboard
           </a>
         </div>
 
-        {renderNavDots()}
+        <NavigationBar>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            {renderNavDots()}
+          </div>
+        </NavigationBar>
       </div>
     );
   }

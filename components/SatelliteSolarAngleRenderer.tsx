@@ -327,6 +327,18 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
     small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
   };
 
+  // Slider styles
+  const sliderStyle: React.CSSProperties = {
+    width: '100%',
+    height: '20px',
+    WebkitAppearance: 'none',
+    appearance: 'none',
+    background: `linear-gradient(to right, ${colors.accent}44, ${colors.accent})`,
+    borderRadius: '10px',
+    outline: 'none',
+    touchAction: 'none',
+  };
+
   // Phase navigation
   const phaseOrder: Phase[] = validPhases;
   const phaseLabels: Record<Phase, string> = {
@@ -449,7 +461,7 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
     const rayOffset = (animationFrame * 2) % 20;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         {/* Space background with stars */}
         {Array.from({ length: 30 }).map((_, i) => (
           <circle
@@ -608,6 +620,11 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
         <text x={centerX} y={centerY + earthRadius + 15} fill={colors.textSecondary} fontSize="10" textAnchor="middle">Earth</text>
         <text x={sunX} y={sunY + 30} fill={colors.sun} fontSize="10" textAnchor="middle">Sun</text>
 
+        {/* Angle indicator label */}
+        <text x={width / 2} y={height - 5} fill={colors.textMuted} fontSize="9" textAnchor="middle">
+          Panel Angle: {panelAngle.toFixed(0)}° | Power: {isInEclipse ? 0 : currentPower.toFixed(0)}%
+        </text>
+
         {/* Status indicator */}
         <rect x={width - 100} y={10} width="90" height="24" rx="4" fill={isInEclipse ? colors.error : colors.success} opacity="0.2" />
         <text x={width - 55} y={26} fill={isInEclipse ? colors.error : colors.success} fontSize="11" textAnchor="middle" fontWeight="600">
@@ -644,7 +661,7 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
     const opY = padding.top + plotHeight - (currentPower / 100) * plotHeight;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgSecondary, borderRadius: '8px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgSecondary, borderRadius: '8px' }}>
         {/* Grid */}
         {[0, 0.25, 0.5, 0.75, 1].map(frac => (
           <line
@@ -734,32 +751,88 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
     </div>
   );
 
-  // Navigation dots
-  const renderNavDots = () => (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '8px',
-      padding: '16px 0',
-    }}>
-      {phaseOrder.map((p, i) => (
+  // Bottom Navigation Bar
+  const renderBottomNav = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+    const canGoNext = currentIndex < phaseOrder.length - 1;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgCard,
+        borderTop: `1px solid ${colors.border}`,
+        padding: '16px 24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 50,
+      }}>
         <button
-          key={p}
-          onClick={() => goToPhase(p)}
+          onClick={() => canGoBack && goToPhase(phaseOrder[currentIndex - 1])}
+          disabled={!canGoBack}
           style={{
-            width: phase === p ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
-            border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
+            padding: '12px 24px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.border}`,
+            background: 'transparent',
+            color: canGoBack ? colors.textSecondary : colors.textMuted,
+            cursor: canGoBack ? 'pointer' : 'not-allowed',
+            fontSize: '14px',
+            fontWeight: 600,
+            opacity: canGoBack ? 1 : 0.5,
           }}
-          aria-label={phaseLabels[p]}
-        />
-      ))}
-    </div>
-  );
+        >
+          ← Back
+        </button>
+
+        {/* Navigation dots */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '8px',
+        }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => goToPhase(p)}
+              style={{
+                width: phase === p ? '24px' : '8px',
+                height: '8px',
+                borderRadius: '4px',
+                border: 'none',
+                background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+              }}
+              aria-label={phaseLabels[p]}
+            />
+          ))}
+        </div>
+
+        <button
+          onClick={() => canGoNext && nextPhase()}
+          disabled={!canGoNext}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '8px',
+            border: 'none',
+            background: canGoNext ? colors.accent : colors.border,
+            color: 'white',
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            fontSize: '14px',
+            fontWeight: 600,
+            opacity: canGoNext ? 1 : 0.5,
+          }}
+        >
+          Next →
+        </button>
+      </div>
+    );
+  };
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
@@ -793,6 +866,32 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
         textAlign: 'center',
       }}>
         {renderProgressBar()}
+        <style>{`
+          input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+          }
+          input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: ${colors.accent};
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+          }
+          input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: ${colors.accent};
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+          }
+        `}</style>
 
         <div style={{
           fontSize: '64px',
@@ -839,7 +938,7 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
           Enter Orbit →
         </button>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -948,7 +1047,7 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
           )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1019,9 +1118,7 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
                 onChange={(e) => setPanelAngle(parseFloat(e.target.value))}
                 disabled={sunTrackingEnabled}
                 style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
+                  ...sliderStyle,
                   cursor: sunTrackingEnabled ? 'not-allowed' : 'pointer',
                   opacity: sunTrackingEnabled ? 0.5 : 1,
                 }}
@@ -1041,12 +1138,7 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
                 step="10"
                 value={orbitPosition}
                 onChange={(e) => setOrbitPosition(parseFloat(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
+                style={sliderStyle}
               />
             </div>
 
@@ -1171,7 +1263,7 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1240,7 +1332,7 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
           </button>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1334,7 +1426,7 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
           )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1409,12 +1501,7 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
                 max="90"
                 value={betaAngle}
                 onChange={(e) => setBetaAngle(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
+                style={sliderStyle}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                 <span style={{ ...typo.small, color: colors.textMuted }}>0° (max eclipse)</span>
@@ -1532,7 +1619,7 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1622,7 +1709,7 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
           </button>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1770,7 +1857,7 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1828,7 +1915,7 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
               </button>
             )}
           </div>
-          {renderNavDots()}
+          {renderBottomNav()}
         </div>
       );
     }
@@ -1994,7 +2081,7 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -2083,7 +2170,7 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
           </a>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }

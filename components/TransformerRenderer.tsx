@@ -383,7 +383,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
     const currentIntensity = ac ? Math.abs(Math.sin(animP)) : 0;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="coreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#6b7280" />
@@ -426,8 +426,8 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
         </text>
 
         {/* Axis labels and grid */}
-        <text x="10" y="50" fill={colors.textMuted} fontSize="9">Voltage (V)</text>
-        <text x={width - 30} y={height - 10} fill={colors.textMuted} fontSize="9">Time</text>
+        <text x="10" y="50" fill={colors.textMuted} fontSize="11">Voltage (V)</text>
+        <text x={width - 40} y={height - 10} fill={colors.textMuted} fontSize="11">Time</text>
         <line x1="0" y1={height/2} x2={width} y2={height/2} stroke={colors.border} strokeWidth="0.5" strokeDasharray="4 2" opacity="0.3" />
         <line x1={width/2} y1="40" x2={width/2} y2={height - 70} stroke={colors.border} strokeWidth="0.5" strokeDasharray="4 2" opacity="0.3" />
 
@@ -435,7 +435,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
         <g transform={`translate(${width/2 - 80}, 45)`}>
           <rect x="0" y="0" width="160" height="140" rx="6" fill="url(#coreGrad)" stroke="#4b5563" strokeWidth="3" />
           <rect x="20" y="20" width="120" height="100" rx="4" fill={colors.bgPrimary} />
-          <text x="80" y="-8" textAnchor="middle" fill={colors.textMuted} fontSize="9">Iron Core</text>
+          <text x="80" y="-8" textAnchor="middle" fill={colors.textMuted} fontSize="11">Iron Core</text>
         </g>
 
         {/* Magnetic Flux (only when AC) */}
@@ -443,7 +443,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           <g style={{ opacity: currentIntensity * 0.7 }}>
             <rect x={width/2 - 75} y="55" width="150" height="12" rx="2" fill="url(#fluxGlow)" />
             <rect x={width/2 - 75} y="163" width="150" height="12" rx="2" fill="url(#fluxGlow)" />
-            <text x={width/2} y="115" textAnchor="middle" fill="#60a5fa" fontSize="9" opacity={currentIntensity}>
+            <text x={width/2} y="115" textAnchor="middle" fill="#60a5fa" fontSize="11" opacity={currentIntensity}>
               Magnetic Flux
             </text>
           </g>
@@ -464,8 +464,8 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
               style={{ opacity: ac ? 0.7 + currentIntensity * 0.3 : 0.4 }}
             />
           ))}
-          <text x="0" y="100" textAnchor="middle" fill="#f87171" fontSize="10" fontWeight="600">Primary</text>
-          <text x="0" y="112" textAnchor="middle" fill={colors.textMuted} fontSize="9">{pTurns} turns</text>
+          <text x="0" y="100" textAnchor="middle" fill="#f87171" fontSize="11" fontWeight="600">Primary</text>
+          <text x="0" y="114" textAnchor="middle" fill={colors.textMuted} fontSize="11">{pTurns} turns</text>
         </g>
 
         {/* Secondary Coil */}
@@ -483,18 +483,18 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
               style={{ opacity: ac && vOut > 0 ? 0.7 + currentIntensity * 0.3 : 0.4 }}
             />
           ))}
-          <text x="0" y="100" textAnchor="middle" fill="#4ade80" fontSize="10" fontWeight="600">Secondary</text>
-          <text x="0" y="112" textAnchor="middle" fill={colors.textMuted} fontSize="9">{sTurns} turns</text>
+          <text x="0" y="100" textAnchor="middle" fill="#4ade80" fontSize="11" fontWeight="600">Secondary</text>
+          <text x="0" y="114" textAnchor="middle" fill={colors.textMuted} fontSize="11">{sTurns} turns</text>
         </g>
 
         {/* Input Panel */}
         <g transform="translate(15, 60)">
           <rect x="0" y="0" width="75" height="80" rx="6" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
-          <text x="37" y="15" textAnchor="middle" fill={colors.textMuted} fontSize="9">INPUT</text>
-          <text x="37" y="38" textAnchor="middle" fill="#f87171" fontSize="16" fontWeight="700">{vIn}V</text>
-          <text x="37" y="55" textAnchor="middle" fill={colors.textMuted} fontSize="9">{ac ? 'AC ~' : 'DC ='}</text>
+          <text x="37" y="15" textAnchor="middle" fill={colors.textMuted} fontSize="11">INPUT</text>
+          <text x="37" y="38" textAnchor="middle" fill="#f87171" fontSize="16" fontWeight="700" filter="url(#activeGlow)">{vIn}V</text>
+          <text x="37" y="55" textAnchor="middle" fill={colors.textMuted} fontSize="11">{ac ? 'AC ~' : 'DC ='}</text>
           <rect x="10" y="62" width="55" height="12" rx="3" fill={ac ? '#14532d' : '#450a0a'} />
-          <text x="37" y="72" textAnchor="middle" fill={ac ? '#4ade80' : '#f87171'} fontSize="8" fontWeight="600">
+          <text x="37" y="72" textAnchor="middle" fill={ac ? '#4ade80' : '#f87171'} fontSize="11" fontWeight="600">
             {ac ? 'ACTIVE' : 'DC MODE'}
           </text>
         </g>
@@ -502,15 +502,15 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
         {/* Output Panel */}
         <g transform={`translate(${width - 90}, 60)`}>
           <rect x="0" y="0" width="75" height="80" rx="6" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
-          <text x="37" y="15" textAnchor="middle" fill={colors.textMuted} fontSize="9">OUTPUT</text>
-          <text x="37" y="38" textAnchor="middle" fill={vOut > 0 ? '#4ade80' : '#6b7280'} fontSize="16" fontWeight="700">
+          <text x="37" y="15" textAnchor="middle" fill={colors.textMuted} fontSize="11">OUTPUT</text>
+          <text x="37" y="38" textAnchor="middle" fill={vOut > 0 ? '#4ade80' : '#6b7280'} fontSize="16" fontWeight="700" filter={vOut > 0 ? "url(#activeGlow)" : undefined}>
             {vOut.toFixed(0)}V
           </text>
-          <text x="37" y="55" textAnchor="middle" fill={colors.textMuted} fontSize="9">
+          <text x="37" y="55" textAnchor="middle" fill={colors.textMuted} fontSize="11">
             {vOut > 0 ? `${(inputCurrent / ratio).toFixed(2)}A` : 'No output'}
           </text>
           <rect x="10" y="62" width="55" height="12" rx="3" fill={vOut > 0 ? '#14532d' : '#450a0a'} />
-          <text x="37" y="72" textAnchor="middle" fill={vOut > 0 ? '#4ade80' : '#f87171'} fontSize="8" fontWeight="600">
+          <text x="37" y="72" textAnchor="middle" fill={vOut > 0 ? '#4ade80' : '#f87171'} fontSize="11" fontWeight="600">
             {vOut > 0 ? 'ACTIVE' : 'NO OUTPUT'}
           </text>
         </g>
@@ -518,7 +518,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
         {/* Waveforms */}
         <g transform={`translate(15, ${height - 65})`}>
           <rect x="0" y="0" width="75" height="40" rx="4" fill={colors.bgPrimary} stroke={colors.border} strokeWidth="1" />
-          <text x="37" y="10" textAnchor="middle" fill={colors.textMuted} fontSize="7">Input Wave</text>
+          <text x="37" y="12" textAnchor="middle" fill={colors.textMuted} fontSize="11">Input Wave</text>
           {ac ? (
             <path
               d={`M 8 25 ${[...Array(10)].map((_, i) => `L ${8 + i * 6} ${25 + Math.sin(animP + i * 0.8) * 8}`).join(' ')}`}
@@ -533,7 +533,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
 
         <g transform={`translate(${width - 90}, ${height - 65})`}>
           <rect x="0" y="0" width="75" height="40" rx="4" fill={colors.bgPrimary} stroke={colors.border} strokeWidth="1" />
-          <text x="37" y="10" textAnchor="middle" fill={colors.textMuted} fontSize="7">Output Wave</text>
+          <text x="37" y="12" textAnchor="middle" fill={colors.textMuted} fontSize="11">Output Wave</text>
           {ac && vOut > 0 ? (
             <path
               d={`M 8 25 ${[...Array(10)].map((_, i) => `L ${8 + i * 6} ${25 + Math.sin(animP + i * 0.8) * 8 * Math.min(ratio, 1.5)}`).join(' ')}`}
@@ -549,8 +549,8 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
         {/* Transformer Type Badge */}
         <g transform={`translate(${width/2 - 50}, ${height - 55})`}>
           <rect x="0" y="0" width="100" height="30" rx="6" fill={colors.bgSecondary} stroke={ratio > 1 ? '#22c55e' : ratio < 1 ? '#f97316' : '#3b82f6'} strokeWidth="2" />
-          <text x="50" y="12" textAnchor="middle" fill={colors.textMuted} fontSize="8">Type</text>
-          <text x="50" y="24" textAnchor="middle" fill={ratio > 1 ? '#4ade80' : ratio < 1 ? '#fb923c' : '#60a5fa'} fontSize="10" fontWeight="700">
+          <text x="50" y="14" textAnchor="middle" fill={colors.textMuted} fontSize="11">Type</text>
+          <text x="50" y="26" textAnchor="middle" fill={ratio > 1 ? '#4ade80' : ratio < 1 ? '#fb923c' : '#60a5fa'} fontSize="11" fontWeight="700">
             {ratio > 1 ? 'STEP-UP' : ratio < 1 ? 'STEP-DOWN' : 'ISOLATION'}
           </text>
         </g>
@@ -622,11 +622,109 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+    minHeight: '44px',
+  };
+
+  // Bottom navigation bar
+  const renderBottomNav = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+    const canGoNext = currentIndex < phaseOrder.length - 1;
+
+    if (phase === 'hook' || phase === 'mastery') return null;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgSecondary,
+        borderTop: `1px solid ${colors.border}`,
+        padding: '12px 24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        gap: '12px',
+        zIndex: 50,
+      }}>
+        {canGoBack ? (
+          <button
+            onClick={() => goToPhase(phaseOrder[currentIndex - 1])}
+            style={{
+              flex: 1,
+              padding: '12px 20px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.border}`,
+              background: colors.bgCard,
+              color: colors.textSecondary,
+              cursor: 'pointer',
+              fontSize: '15px',
+              fontWeight: 600,
+              minHeight: '44px',
+            }}
+          >
+            ← Back
+          </button>
+        ) : <div style={{ flex: 1 }} />}
+        {canGoNext && (
+          <button
+            onClick={() => nextPhase()}
+            style={{
+              flex: 1,
+              padding: '12px 20px',
+              borderRadius: '8px',
+              border: 'none',
+              background: `linear-gradient(135deg, ${colors.accent}, #D97706)`,
+              color: 'white',
+              cursor: 'pointer',
+              fontSize: '15px',
+              fontWeight: 600,
+              minHeight: '44px',
+            }}
+          >
+            Next →
+          </button>
+        )}
+      </div>
+    );
   };
 
   // ---------------------------------------------------------------------------
   // PHASE RENDERS
   // ---------------------------------------------------------------------------
+
+  // Global styles for sliders
+  const sliderStyles = `
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: linear-gradient(90deg, ${colors.border}, ${colors.accent});
+      outline: none;
+      touch-action: pan-y;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: ${colors.accent};
+      cursor: pointer;
+      box-shadow: 0 2px 8px ${colors.accentGlow};
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: ${colors.accent};
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 2px 8px ${colors.accentGlow};
+    }
+  `;
 
   // HOOK PHASE
   if (phase === 'hook') {
@@ -641,6 +739,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
         padding: '24px',
         textAlign: 'center',
       }}>
+        <style>{sliderStyles}</style>
         {renderProgressBar()}
 
         <div style={{
@@ -735,34 +834,65 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
             A transformer has two coils wound around an iron core. If the secondary coil has TWICE as many turns as the primary, what happens to the output voltage?
           </h2>
 
-          {/* Simple diagram */}
+          {/* Static SVG diagram */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
             marginBottom: '24px',
             textAlign: 'center',
+            display: 'flex',
+            justifyContent: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '32px', color: '#f87171' }}>Primary</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>100 turns</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>--&gt;</div>
-              <div style={{
-                background: '#374151',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.border}`,
-              }}>
-                <div style={{ fontSize: '24px', color: colors.textMuted }}>Iron Core</div>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>--&gt;</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '32px', color: '#4ade80' }}>Secondary</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>200 turns</p>
-              </div>
-            </div>
+            <svg width={isMobile ? 340 : 480} height={isMobile ? 200 : 240} viewBox="0 0 480 240" preserveAspectRatio="xMidYMid meet">
+              <defs>
+                <linearGradient id="predictCoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#6b7280" />
+                  <stop offset="50%" stopColor="#374151" />
+                  <stop offset="100%" stopColor="#1f2937" />
+                </linearGradient>
+              </defs>
+
+              {/* Title */}
+              <text x="240" y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+                Transformer with 100 → 200 Turns
+              </text>
+
+              {/* Axes labels */}
+              <text x="10" y="50" fill={colors.textMuted} fontSize="11">Turns</text>
+              <text x="450" y="230" fill={colors.textMuted} fontSize="11">Ratio</text>
+
+              {/* Iron Core */}
+              <rect x="190" y="80" width="100" height="100" rx="6" fill="url(#predictCoreGrad)" stroke="#4b5563" strokeWidth="2" />
+              <rect x="205" y="95" width="70" height="70" rx="4" fill={colors.bgPrimary} />
+              <text x="240" y="70" textAnchor="middle" fill={colors.textMuted} fontSize="11">Iron Core</text>
+
+              {/* Primary Coil */}
+              <g transform="translate(210, 100)">
+                {[...Array(6)].map((_, i) => (
+                  <ellipse key={i} cx="0" cy={i * 10} rx="14" ry="5" fill="none" stroke="#f87171" strokeWidth="3" />
+                ))}
+                <text x="0" y="75" textAnchor="middle" fill="#f87171" fontSize="12" fontWeight="600">Primary</text>
+                <text x="0" y="88" textAnchor="middle" fill={colors.textMuted} fontSize="11">100 turns</text>
+              </g>
+
+              {/* Secondary Coil */}
+              <g transform="translate(270, 100)">
+                {[...Array(8)].map((_, i) => (
+                  <ellipse key={i} cx="0" cy={i * 8} rx="14" ry="4" fill="none" stroke="#4ade80" strokeWidth="2.5" />
+                ))}
+                <text x="0" y="75" textAnchor="middle" fill="#4ade80" fontSize="12" fontWeight="600">Secondary</text>
+                <text x="0" y="88" textAnchor="middle" fill={colors.textMuted} fontSize="11">200 turns</text>
+              </g>
+
+              {/* Input/Output labels */}
+              <text x="120" y="135" textAnchor="middle" fill={colors.textSecondary} fontSize="12">V₁ →</text>
+              <text x="360" y="135" textAnchor="middle" fill={colors.textSecondary} fontSize="12">→ V₂ = ?</text>
+
+              {/* Ratio indicator */}
+              <rect x="180" y="205" width="120" height="25" rx="6" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
+              <text x="240" y="222" textAnchor="middle" fill={colors.accent} fontSize="13" fontWeight="700">Ratio: 2:1</text>
+            </svg>
           </div>
 
           {/* Options */}
@@ -813,6 +943,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           </div>
         </div>
 
+        {renderBottomNav()}
         {renderNavDots()}
       </div>
     );
@@ -992,10 +1123,26 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
               textAlign: 'center',
             }}>
               <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                More secondary turns = higher output voltage! This is a step-up transformer.
+                ✓ More secondary turns = higher output voltage! This is a step-up transformer.
               </p>
             </div>
           )}
+
+          {/* Why it matters */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '8px' }}>
+              💡 Why This Matters
+            </h3>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              Power grids use step-up transformers to send electricity at 400,000V across continents with minimal losses, then step-down transformers bring it to 120V for your home. Without transformers, modern civilization wouldn't exist!
+            </p>
+          </div>
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
@@ -1006,6 +1153,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           </div>
         </div>
 
+        {renderBottomNav()}
         {renderNavDots()}
       </div>
     );
@@ -1615,6 +1763,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
               Take the Knowledge Test
             </button>
           )}
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1630,11 +1779,20 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
         }}>
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            paddingTop: '44px',
+            paddingBottom: '80px',
+            paddingLeft: '24px',
+            paddingRight: '24px',
+          }}>
+            <div style={{ maxWidth: '600px', margin: '16px auto 0', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1674,6 +1832,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
                 Review and Try Again
               </button>
             )}
+            </div>
           </div>
           {renderNavDots()}
         </div>
@@ -1686,11 +1845,20 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '16px auto 0' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1838,6 +2006,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
                 Submit Test
               </button>
             )}
+          </div>
           </div>
         </div>
 

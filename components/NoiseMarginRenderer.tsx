@@ -874,6 +874,19 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
             </div>
           </div>
 
+          {/* Observation guidance */}
+          <div style={{
+            background: `${colors.accent}22`,
+            border: `1px solid ${colors.accent}44`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              <strong>What to watch:</strong> Adjust the input voltage to see how it moves between HIGH, LOW, and FORBIDDEN zones. Add noise to simulate real-world interference—notice how signals stay valid as long as noise stays within the margin.
+            </p>
+          </div>
+
           {/* Main visualization */}
           <div style={{
             background: colors.bgCard,
@@ -982,7 +995,7 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
                 padding: '16px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: colors.logicHigh }}>{nmh.toFixed(2)}V</div>
+                <div style={{ ...typo.h3, color: colors.logicHigh }}>{isFinite(nmh) ? nmh.toFixed(2) : '0.00'}V</div>
                 <div style={{ ...typo.small, color: colors.textMuted }}>NMH (High Margin)</div>
               </div>
               <div style={{
@@ -991,7 +1004,7 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
                 padding: '16px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: colors.logicLow }}>{nml.toFixed(2)}V</div>
+                <div style={{ ...typo.h3, color: colors.logicLow }}>{isFinite(nml) ? nml.toFixed(2) : '0.00'}V</div>
                 <div style={{ ...typo.small, color: colors.textMuted }}>NML (Low Margin)</div>
               </div>
               <div style={{
@@ -1322,7 +1335,7 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
                 padding: '12px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: colors.vddColor }}>{twistVdd.toFixed(1)}V</div>
+                <div style={{ ...typo.h3, color: colors.vddColor }}>{isFinite(twistVdd) ? twistVdd.toFixed(1) : '0.0'}V</div>
                 <div style={{ ...typo.small, color: colors.textMuted }}>VDD</div>
               </div>
               <div style={{
@@ -1331,7 +1344,7 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
                 padding: '12px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: twistNmh < 0.3 ? colors.error : colors.success }}>{twistNmh.toFixed(2)}V</div>
+                <div style={{ ...typo.h3, color: twistNmh < 0.3 ? colors.error : colors.success }}>{isFinite(twistNmh) ? twistNmh.toFixed(2) : '0.00'}V</div>
                 <div style={{ ...typo.small, color: colors.textMuted }}>NMH</div>
               </div>
               <div style={{
@@ -1340,7 +1353,7 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
                 padding: '12px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: twistNml < 0.3 ? colors.error : colors.success }}>{twistNml.toFixed(2)}V</div>
+                <div style={{ ...typo.h3, color: twistNml < 0.3 ? colors.error : colors.success }}>{isFinite(twistNml) ? twistNml.toFixed(2) : '0.00'}V</div>
                 <div style={{ ...typo.small, color: colors.textMuted }}>NML</div>
               </div>
               <div style={{
@@ -1349,7 +1362,7 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
                 padding: '12px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: colors.forbidden }}>{(twistVih - twistVil).toFixed(2)}V</div>
+                <div style={{ ...typo.h3, color: colors.forbidden }}>{isFinite(twistVih - twistVil) ? (twistVih - twistVil).toFixed(2) : '0.00'}V</div>
                 <div style={{ ...typo.small, color: colors.textMuted }}>Forbidden</div>
               </div>
             </div>
@@ -1398,7 +1411,7 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
                   }}>
                     <div style={{ color: colors.textPrimary, fontWeight: 600, fontSize: '14px' }}>{item.label}</div>
                     <div style={{ color: itemNmh < 0.3 ? colors.error : colors.success, fontWeight: 700, fontSize: '18px', marginTop: '4px' }}>
-                      {itemNmh.toFixed(2)}V
+                      {isFinite(itemNmh) ? itemNmh.toFixed(2) : '0.00'}V
                     </div>
                     <div style={{ color: colors.textMuted, fontSize: '11px' }}>NMH</div>
                   </div>

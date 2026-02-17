@@ -273,6 +273,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     { id: 'precess', label: 'The top slowly wobbles in circles instead of falling' },
     { id: 'stable', label: 'The top stays perfectly upright without wobbling' },
     { id: 'faster', label: 'The spin makes it fall faster' },
+    { id: 'levitate', label: 'The top levitates and floats in the air' },
   ];
 
   const twistPredictions = [
@@ -280,6 +281,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     { id: 'faster_fall', label: 'It falls over more quickly' },
     { id: 'slower_fall', label: 'It takes longer to fall' },
     { id: 'no_precess', label: 'It stops precessing and just spins' },
+    { id: 'reverse', label: 'It precesses in the opposite direction' },
   ];
 
   const transferApplications = [
@@ -1147,7 +1149,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction →', false)}
+        {renderBottomBar(false, true, 'Next: Make a Prediction →', false)}
       </div>
     );
   }
@@ -1425,6 +1427,33 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
           </div>
 
           {renderVisualization(true)}
+
+          {/* Formula display */}
+          <div style={{
+            background: 'rgba(59, 130, 246, 0.1)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
+          }}>
+            <h4 style={{ color: colors.spin, marginBottom: '8px', fontSize: '14px' }}>⚡ Key Formula:</h4>
+            <div style={{
+              background: 'rgba(15, 23, 42, 0.6)',
+              padding: '12px',
+              borderRadius: '8px',
+              fontFamily: 'monospace',
+              fontSize: '16px',
+              color: colors.textPrimary,
+              textAlign: 'center',
+              marginBottom: '8px',
+            }}>
+              Ω<sub>prec</sub> = mgh / (Iω<sub>spin</sub>)
+            </div>
+            <p style={{ color: colors.textSecondary, fontSize: '12px', margin: 0 }}>
+              Precession rate is inversely proportional to spin rate
+            </p>
+          </div>
+
           {renderControls()}
 
           <div style={{
@@ -1439,6 +1468,27 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               Below a critical spin rate, the gyroscopic effect can't overcome gravity's
               torque. Also notice: slower spin = faster precession (they're inversely related)!
             </p>
+          </div>
+
+          {/* Before/After comparison */}
+          <div style={{
+            background: 'rgba(168, 85, 247, 0.1)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            border: '1px solid rgba(168, 85, 247, 0.3)',
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: '12px' }}>📊 Comparison:</h4>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <div style={{ flex: '1', minWidth: '140px', background: 'rgba(239, 68, 68, 0.2)', padding: '12px', borderRadius: '8px' }}>
+                <div style={{ color: colors.error, fontWeight: 'bold', fontSize: '12px', marginBottom: '4px' }}>Slow Spin</div>
+                <div style={{ color: colors.textSecondary, fontSize: '11px' }}>Falls quickly</div>
+              </div>
+              <div style={{ flex: '1', minWidth: '140px', background: 'rgba(16, 185, 129, 0.2)', padding: '12px', borderRadius: '8px' }}>
+                <div style={{ color: colors.success, fontWeight: 'bold', fontSize: '12px', marginBottom: '4px' }}>Fast Spin</div>
+                <div style={{ color: colors.textSecondary, fontSize: '11px' }}>Stable & sleeping</div>
+              </div>
+            </div>
           </div>
         </div>
         {renderBottomBar(false, true, 'See the Explanation →', true)}
@@ -1503,79 +1553,152 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
   // TRANSFER PHASE
   if (phase === 'transfer') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavDots('transfer')}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               🌍 Real-World Applications
             </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-              Gyroscopic effects are everywhere in technology
+            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
+              How engineers apply gyroscopic physics in industry
             </p>
             <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
+              Explore 4 real-world examples from companies like NASA, SpaceX, and more
             </p>
           </div>
 
-          {transferApplications.map((app, index) => (
+          {realWorldApps.map((app, index) => (
             <div
               key={index}
               style={{
                 background: colors.bgCard,
                 margin: '16px',
-                padding: '16px',
+                padding: '20px',
                 borderRadius: '12px',
                 border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+                transition: 'all 0.3s ease',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                <div>
+                  <div style={{ fontSize: '32px', marginBottom: '8px' }}>{app.icon}</div>
+                  <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '4px' }}>{app.title}</h3>
+                  <p style={{ color: app.color, fontSize: '12px', fontStyle: 'italic' }}>{app.tagline}</p>
+                </div>
                 {transferCompleted.has(index) && (
-                  <span style={{ color: colors.success }}>✓</span>
+                  <span style={{ color: colors.success, fontSize: '24px' }}>✓</span>
                 )}
               </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>
+
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px', lineHeight: 1.6 }}>
                 {app.description}
               </p>
+
               <div style={{
-                background: 'rgba(168, 85, 247, 0.1)',
+                background: `${app.color}22`,
                 padding: '12px',
                 borderRadius: '8px',
-                marginBottom: '8px',
+                marginBottom: '12px',
+                borderLeft: `3px solid ${app.color}`,
               }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>
-                  💭 {app.question}
+                <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>
+                  🔗 Connection to Sleeping Top:
+                </p>
+                <p style={{ color: colors.textSecondary, fontSize: '12px', lineHeight: 1.5 }}>
+                  {app.connection}
                 </p>
               </div>
+
               {!transferCompleted.has(index) ? (
                 <button
                   onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
                   style={{
-                    padding: '8px 16px',
+                    padding: '10px 20px',
                     borderRadius: '6px',
-                    border: `1px solid ${colors.accent}`,
+                    border: `1px solid ${app.color}`,
                     background: 'transparent',
-                    color: colors.accent,
+                    color: app.color,
                     cursor: 'pointer',
-                    fontSize: '13px',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    transition: 'all 0.3s ease',
                   }}
                 >
-                  Reveal Answer
+                  Learn How It Works →
                 </button>
               ) : (
-                <div style={{
-                  background: 'rgba(16, 185, 129, 0.1)',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  borderLeft: `3px solid ${colors.success}`,
-                }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
+                <>
+                  <div style={{
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    padding: '14px',
+                    borderRadius: '8px',
+                    borderLeft: `3px solid ${colors.success}`,
+                    marginBottom: '12px',
+                  }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 'bold', marginBottom: '6px' }}>
+                      ⚙️ How It Works:
+                    </p>
+                    <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6 }}>{app.howItWorks}</p>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                    {app.stats.map((stat, i) => (
+                      <div key={i} style={{
+                        flex: '1',
+                        minWidth: '120px',
+                        background: 'rgba(255,255,255,0.05)',
+                        padding: '10px',
+                        borderRadius: '6px',
+                        textAlign: 'center',
+                      }}>
+                        <div style={{ fontSize: '18px', marginBottom: '4px' }}>{stat.icon}</div>
+                        <div style={{ color: app.color, fontWeight: 'bold', fontSize: '16px', marginBottom: '2px' }}>{stat.value}</div>
+                        <div style={{ color: colors.textMuted, fontSize: '10px' }}>{stat.label}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{
+                    background: 'rgba(168, 85, 247, 0.1)',
+                    padding: '10px',
+                    borderRadius: '6px',
+                    marginBottom: '8px',
+                  }}>
+                    <p style={{ color: colors.textMuted, fontSize: '11px', marginBottom: '4px' }}>INDUSTRY EXAMPLES:</p>
+                    <p style={{ color: colors.textSecondary, fontSize: '12px' }}>
+                      {app.companies.join(' • ')}
+                    </p>
+                  </div>
+
+                  <div style={{
+                    background: `${app.color}11`,
+                    padding: '10px',
+                    borderRadius: '6px',
+                  }}>
+                    <p style={{ color: colors.textMuted, fontSize: '11px', marginBottom: '4px' }}>FUTURE IMPACT:</p>
+                    <p style={{ color: colors.textSecondary, fontSize: '12px', lineHeight: 1.5 }}>
+                      {app.futureImpact}
+                    </p>
+                  </div>
+                </>
               )}
             </div>
           ))}
+
+          <div style={{
+            background: 'rgba(168, 85, 247, 0.15)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            border: '1px solid rgba(168, 85, 247, 0.3)',
+          }}>
+            <p style={{ color: colors.textPrimary, fontSize: '13px', textAlign: 'center' }}>
+              <strong>Progress:</strong> {transferCompleted.size} of {realWorldApps.length} applications explored
+            </p>
+          </div>
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test →')}
+        {renderBottomBar(transferCompleted.size < realWorldApps.length, transferCompleted.size >= realWorldApps.length, 'Take the Test →', true)}
       </div>
     );
   }
@@ -1584,7 +1707,8 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+          {renderNavDots('test')}
           <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1592,6 +1716,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               padding: '24px',
               borderRadius: '12px',
               textAlign: 'center',
+              transition: 'all 0.3s ease',
             }}>
               <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
                 {testScore >= 8 ? '🎉 Excellent!' : '📚 Keep Learning!'}
@@ -1644,7 +1769,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery →' : 'Review & Retry')}
+          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery →' : 'Review & Retry', true)}
         </div>
       );
     }
@@ -1652,7 +1777,8 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     const currentQ = testQuestions[currentTestQuestion];
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavDots('test')}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -1681,6 +1807,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
                       ? colors.textMuted
                       : 'rgba(255,255,255,0.1)',
                     cursor: 'pointer',
+                    transition: 'all 0.3s ease',
                   }}
                 />
               ))}
@@ -1715,6 +1842,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
+                    transition: 'all 0.3s ease',
                   }}
                 >
                   {opt.text}
@@ -1778,7 +1906,8 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderNavDots('mastery')}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
@@ -1821,7 +1950,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
 
           {renderVisualization(true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game →')}
+        {renderBottomBar(false, true, 'Complete Game →', true)}
       </div>
     );
   }

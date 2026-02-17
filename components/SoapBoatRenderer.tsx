@@ -186,6 +186,7 @@ export default function SoapBoatRenderer({
   const [testAnswers, setTestAnswers] = useState<Record<number, number>>({});
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
+  const [activeApp, setActiveApp] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const navigationLockRef = useRef(false);
   const lastClickRef = useRef(0);
@@ -932,11 +933,40 @@ export default function SoapBoatRenderer({
 
         return (
           <div className="flex flex-col items-center" style={{ gap: '20px' }}>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#1e293b' }}>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#f8fafc', fontWeight: 700 }}>
               Soap Boat Experiment
             </h2>
-            <p style={{ color: '#64748b', marginBottom: '1rem', textAlign: 'center' }}>
-              Adjust parameters and click the soap bottle to run the experiment!
+            <p style={{ color: '#cbd5e1', marginBottom: '0.5rem', textAlign: 'center', lineHeight: 1.6 }}>
+              <strong>This simulation shows</strong> how a surface tension gradient propels a boat.
+              When soap reduces surface tension behind the boat, the higher tension in front creates
+              a net force that pulls the boat forward - the <strong>Marangoni effect</strong>.
+            </p>
+            <p style={{ color: '#94a3b8', marginBottom: '1rem', textAlign: 'center', fontSize: '0.9rem', lineHeight: 1.5 }}>
+              <strong>Why this matters:</strong> This same principle powers lung surfactants that save premature infants,
+              cleaning products that remove grease, and biomimetic water-walking robots.
+            </p>
+
+            {/* Formula display */}
+            <div style={{
+              background: 'rgba(59, 130, 246, 0.15)',
+              border: '1px solid rgba(59, 130, 246, 0.3)',
+              borderRadius: 12,
+              padding: '12px',
+              marginBottom: '1rem',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '4px', fontWeight: 600 }}>Driving Force</div>
+              <div style={{ fontSize: '1.1rem', color: '#60a5fa', fontWeight: 700, fontFamily: 'monospace', letterSpacing: '0.05em' }}>
+                F = Δγ × L
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px', lineHeight: 1.4 }}>
+                Force = (surface tension difference) × (boat width)
+              </div>
+            </div>
+
+            <p style={{ color: '#94a3b8', marginBottom: '1rem', textAlign: 'center', fontSize: '0.9rem', lineHeight: 1.5 }}>
+              <strong>How sliders affect motion:</strong> Higher soap concentration creates a bigger tension difference (more force).
+              Warmer water lowers base tension. Lighter boats accelerate faster for the same force.
             </p>
 
             {/* Interactive Controls Panel */}
@@ -972,10 +1002,15 @@ export default function SoapBoatRenderer({
                       min="10"
                       max="100"
                       value={soapConcentration}
+                      onInput={(e) => setSoapConcentration(parseInt((e.target as HTMLInputElement).value))}
                       onChange={(e) => setSoapConcentration(parseInt(e.target.value))}
                       disabled={soapAdded}
                       style={{ width: '100%', accentColor: '#a855f7', touchAction: 'pan-y' }}
                     />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#64748b' }}>
+                      <span>Weak (10%)</span>
+                      <span>Strong (100%)</span>
+                    </div>
                   </div>
 
                   {/* Water Temperature Slider */}
@@ -989,6 +1024,7 @@ export default function SoapBoatRenderer({
                       min="5"
                       max="60"
                       value={waterTemperature}
+                      onInput={(e) => setWaterTemperature(parseInt((e.target as HTMLInputElement).value))}
                       onChange={(e) => setWaterTemperature(parseInt(e.target.value))}
                       disabled={soapAdded}
                       style={{ width: '100%', accentColor: '#3b82f6', touchAction: 'pan-y' }}
@@ -1010,10 +1046,15 @@ export default function SoapBoatRenderer({
                       min="1"
                       max="15"
                       value={boatMass}
+                      onInput={(e) => setBoatMass(parseInt((e.target as HTMLInputElement).value))}
                       onChange={(e) => setBoatMass(parseInt(e.target.value))}
                       disabled={soapAdded}
                       style={{ width: '100%', accentColor: '#22c55e', touchAction: 'pan-y' }}
                     />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#64748b' }}>
+                      <span>Light (1g)</span>
+                      <span>Heavy (15g)</span>
+                    </div>
                   </div>
 
                   {/* Real-time Physics Display */}
@@ -1044,7 +1085,7 @@ export default function SoapBoatRenderer({
               )}
             </div>
 
-            <svg viewBox="0 0 400 250" style={{ width: '100%', maxWidth: 450, marginBottom: '1rem' }}>
+            <svg viewBox="0 0 400 300" style={{ width: '100%', maxWidth: 450, marginBottom: '1rem' }}>
               <defs>
                 {/* Container gradient (tank walls) */}
                 <linearGradient id="soapPlayContainerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -1145,6 +1186,14 @@ export default function SoapBoatRenderer({
                 </filter>
               </defs>
 
+              {/* Axis labels */}
+              <text x="200" y="245" fontSize="11" fill="#94a3b8" textAnchor="middle" fontWeight="600">Position →</text>
+              <text x="5" y="155" fontSize="10" fill="#94a3b8" textAnchor="start" transform="rotate(-90, 5, 155)" fontWeight="600">Boat</text>
+
+              {/* Distance markers */}
+              <text x="30" y="235" fontSize="9" fill="#64748b" textAnchor="middle">Start</text>
+              <text x="370" y="235" fontSize="9" fill="#64748b" textAnchor="middle">End</text>
+
               {/* Container with gradient */}
               <rect x="10" y="80" width="380" height="150" fill="url(#soapPlayContainerGrad)" rx="10" />
               {/* Inner water body */}
@@ -1236,9 +1285,11 @@ export default function SoapBoatRenderer({
                   {/* Front arrow (pull) */}
                   <line x1={boatPosition + 68} y1="100" x2={boatPosition + 90} y2="100" stroke="#4ade80" strokeWidth="2.5" />
                   <polygon points={`${boatPosition + 90},100 ${boatPosition + 82},96 ${boatPosition + 82},104`} fill="#4ade80" />
+                  <text x={boatPosition + 95} y="103" fontSize="9" fill="#4ade80" fontWeight="600">γ₁</text>
                   {/* Back arrow (pull) */}
                   <line x1={boatPosition - 8} y1="100" x2={boatPosition - 30} y2="100" stroke="#4ade80" strokeWidth="2.5" />
                   <polygon points={`${boatPosition - 30},100 ${boatPosition - 22},96 ${boatPosition - 22},104`} fill="#4ade80" />
+                  <text x={boatPosition - 40} y="103" fontSize="9" fill="#4ade80" fontWeight="600">γ₁</text>
                 </g>
               )}
 
@@ -1258,6 +1309,7 @@ export default function SoapBoatRenderer({
                     points={`${boatPosition + 105},100 ${boatPosition + 95},94 ${boatPosition + 95},106`}
                     fill="#22c55e"
                   />
+                  <text x={boatPosition + 110} y="103" fontSize="9" fill="#22c55e" fontWeight="600">γ₁ (HIGH)</text>
 
                   {/* Weak back pull */}
                   <line
@@ -1269,6 +1321,7 @@ export default function SoapBoatRenderer({
                     strokeWidth="2"
                     strokeDasharray="4,3"
                   />
+                  <text x={boatPosition - 65} y="103" fontSize="9" fill="#fbbf24" fontWeight="600">γ₂ (LOW)</text>
                 </g>
               )}
 
@@ -1289,8 +1342,13 @@ export default function SoapBoatRenderer({
                   <rect x="15" y="5" width="20" height="18" fill="url(#soapPlayCapGrad)" rx="4" />
                   {/* Cap highlight */}
                   <rect x="17" y="7" width="5" height="12" fill="#a78bfa" opacity="0.3" rx="2" />
+                  {/* Label */}
+                  {!soapAdded && <text x="25" y="75" fontSize="8" fill="#cbd5e1" textAnchor="middle" fontWeight="600">SOAP</text>}
                 </g>
               )}
+
+              {/* Boat label */}
+              <text x={boatPosition + 30} y="72" fontSize="9" fill="#fbbf24" textAnchor="middle" fontWeight="600">Boat</text>
             </svg>
 
             {/* Labels and status moved outside SVG */}
@@ -1434,9 +1492,32 @@ export default function SoapBoatRenderer({
       case 'review':
         return (
           <div className="flex flex-col items-center" style={{ gap: '16px' }}>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#1e293b' }}>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#f8fafc', fontWeight: 700 }}>
               The Physics of Surface Tension
             </h2>
+
+            {/* Connect to prediction */}
+            {prediction && (
+              <div style={{
+                background: prediction === 'b' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(251, 191, 36, 0.15)',
+                border: `1px solid ${prediction === 'b' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(251, 191, 36, 0.3)'}`,
+                borderRadius: 12,
+                padding: '12px',
+                marginBottom: '16px',
+                textAlign: 'center'
+              }}>
+                <p style={{ color: '#cbd5e1', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                  {prediction === 'b'
+                    ? '✓ You correctly predicted the boat would move forward!'
+                    : `You predicted: ${prediction === 'a' ? 'backward movement' : prediction === 'c' ? 'sideways' : 'no movement'}. Let's explore why it actually moves forward.`}
+                </p>
+              </div>
+            )}
+
+            <p style={{ color: '#94a3b8', marginBottom: '1rem', textAlign: 'center', lineHeight: 1.6 }}>
+              <strong>Why does the boat move forward?</strong> The answer lies in the <em>imbalance</em> of forces.
+              Surface tension pulls equally in all directions... until soap disrupts it.
+            </p>
 
             <div style={{
               background: 'linear-gradient(135deg, #eff6ff, #dbeafe)',
@@ -2157,77 +2238,195 @@ export default function SoapBoatRenderer({
       // TRANSFER
       // ───────────────────────────────────────────────────
       case 'transfer':
+        const app = realWorldApps[activeApp];
+
         return (
-          <div className="flex flex-col items-center" style={{ gap: '20px' }}>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#1e293b' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#f8fafc', fontWeight: 700, textAlign: 'center' }}>
               Surface Tension in the Real World
             </h2>
-            <p style={{ color: '#64748b', marginBottom: '1.5rem', textAlign: 'center' }}>
-              Explore each application to unlock the test
+            <p style={{ color: '#94a3b8', marginBottom: '1rem', textAlign: 'center', fontSize: '0.9rem' }}>
+              Application {activeApp + 1} of {realWorldApps.length}
             </p>
 
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
-              gap: '1rem',
-              width: '100%',
-              maxWidth: 600,
-              marginBottom: '1.5rem'
-            }}>
-              {applications.map((app, index) => (
-                <div
-                  key={index}
-                  onPointerDown={() => {
-                    setCompletedApps(prev => new Set([...prev, index]));
-                    playSound('click');
-                  }}
-                  style={{
-                    background: completedApps.has(index)
-                      ? 'linear-gradient(135deg, #dcfce7, #bbf7d0)'
-                      : 'white',
-                    borderRadius: 12,
-                    padding: '1rem',
-                    cursor: 'pointer',
-                    border: `2px solid ${completedApps.has(index) ? '#22c55e' : '#e2e8f0'}`,
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{app.icon}</div>
-                  <h3 style={{ color: '#1e293b', fontSize: '1rem', marginBottom: '0.25rem' }}>
-                    {app.title}
-                    {completedApps.has(index) && ' ✓'}
-                  </h3>
-                  <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
-                    {app.description}
-                  </p>
-                  {completedApps.has(index) && (
-                    <p style={{ color: '#1e293b', fontSize: '0.8rem', fontStyle: 'italic' }}>
-                      {app.detail}
-                    </p>
-                  )}
-                </div>
-              ))}
+            {/* Tab navigation */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap', justifyContent: 'center', overflowX: 'auto' }}>
+              {realWorldApps.map((a, i) => {
+                const completed = completedApps.has(i);
+                return (
+                  <button
+                    key={i}
+                    onClick={() => setActiveApp(i)}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '8px',
+                      fontWeight: 500,
+                      fontSize: '0.85rem',
+                      transition: 'all 0.2s ease-out',
+                      border: completed ? `1px solid ${colors.success}` : '1px solid rgba(71, 85, 105, 0.5)',
+                      background: activeApp === i ? colors.secondary : completed ? `${colors.success}33` : colors.bgCardLight,
+                      color: activeApp === i ? colors.textPrimary : completed ? colors.success : '#e2e8f0',
+                      cursor: 'pointer',
+                      minHeight: 44
+                    }}
+                  >
+                    {completed ? '✓' : a.icon} {a.short ? a.short.substring(0, 20) : a.title.substring(0, 20)}
+                  </button>
+                );
+              })}
             </div>
 
-            <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1rem' }}>
-              {completedApps.size} / {applications.length} applications explored
+            {/* App content - scrollable */}
+            <div style={{
+              background: 'rgba(30, 41, 59, 0.5)',
+              borderRadius: 16,
+              padding: '20px',
+              border: '1px solid rgba(71, 85, 105, 0.5)',
+              maxHeight: '400px',
+              overflowY: 'auto'
+            }}>
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                <div style={{ fontSize: '2.5rem' }}>{app.icon}</div>
+                <div>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#f8fafc', marginBottom: '4px' }}>{app.title}</h3>
+                  <p style={{ fontSize: '0.85rem', color: app.color, fontWeight: 600 }}>{app.tagline}</p>
+                </div>
+              </div>
+
+              {/* Description */}
+              <p style={{ color: '#cbd5e1', marginBottom: '16px', lineHeight: 1.6 }}>{app.description}</p>
+
+              {/* Connection */}
+              <div style={{
+                background: 'rgba(59, 130, 246, 0.1)',
+                borderLeft: '3px solid #3b82f6',
+                padding: '12px',
+                borderRadius: '4px',
+                marginBottom: '16px'
+              }}>
+                <p style={{ fontSize: '0.9rem', color: '#cbd5e1', lineHeight: 1.5 }}>
+                  <strong style={{ color: '#60a5fa' }}>Connection:</strong> {app.connection}
+                </p>
+              </div>
+
+              {/* How it works */}
+              <div style={{ marginBottom: '16px' }}>
+                <h4 style={{ color: '#e2e8f0', fontSize: '1rem', fontWeight: 600, marginBottom: '8px' }}>How It Works</h4>
+                <p style={{ color: '#94a3b8', fontSize: '0.9rem', lineHeight: 1.6 }}>{app.howItWorks}</p>
+              </div>
+
+              {/* Stats */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                marginBottom: '16px'
+              }}>
+                {app.stats.map((stat, i) => (
+                  <div key={i} style={{
+                    background: 'rgba(15, 23, 42, 0.5)',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ fontSize: '1.5rem', marginBottom: '4px' }}>{stat.icon}</div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#60a5fa', marginBottom: '4px' }}>{stat.value}</div>
+                    <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Examples */}
+              <div style={{ marginBottom: '16px' }}>
+                <h4 style={{ color: '#e2e8f0', fontSize: '0.95rem', fontWeight: 600, marginBottom: '8px' }}>Examples</h4>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {app.examples.map((ex, i) => (
+                    <span key={i} style={{
+                      background: 'rgba(59, 130, 246, 0.2)',
+                      color: '#93c5fd',
+                      padding: '4px 10px',
+                      borderRadius: '6px',
+                      fontSize: '0.8rem'
+                    }}>{ex}</span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Companies */}
+              <div style={{ marginBottom: '16px' }}>
+                <h4 style={{ color: '#e2e8f0', fontSize: '0.95rem', fontWeight: 600, marginBottom: '8px' }}>Key Players</h4>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {app.companies.map((company, i) => (
+                    <span key={i} style={{
+                      background: 'rgba(168, 85, 247, 0.2)',
+                      color: '#d8b4fe',
+                      padding: '4px 10px',
+                      borderRadius: '6px',
+                      fontSize: '0.8rem',
+                      fontWeight: 600
+                    }}>{company}</span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Future Impact */}
+              <div style={{
+                background: 'rgba(16, 185, 129, 0.1)',
+                borderRadius: '8px',
+                padding: '12px',
+                borderLeft: '3px solid #10b981'
+              }}>
+                <h4 style={{ color: '#6ee7b7', fontSize: '0.9rem', fontWeight: 600, marginBottom: '6px' }}>Future Impact</h4>
+                <p style={{ color: '#94a3b8', fontSize: '0.85rem', lineHeight: 1.5 }}>{app.futureImpact}</p>
+              </div>
+            </div>
+
+            {/* Got It button */}
+            <button
+              onClick={() => {
+                setCompletedApps(prev => new Set([...prev, activeApp]));
+                playSound('click');
+                if (activeApp < realWorldApps.length - 1) {
+                  setActiveApp(activeApp + 1);
+                }
+              }}
+              style={{
+                padding: '12px 24px',
+                fontSize: '1rem',
+                fontWeight: 600,
+                background: completedApps.has(activeApp) ? 'rgba(34, 197, 94, 0.2)' : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                color: 'white',
+                border: completedApps.has(activeApp) ? '1px solid #22c55e' : 'none',
+                borderRadius: 12,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease-out',
+                minHeight: 44
+              }}
+            >
+              {completedApps.has(activeApp) ? '✓ Got It!' : 'Got It'}
+            </button>
+
+            <p style={{ color: '#94a3b8', fontSize: '0.9rem', textAlign: 'center' }}>
+              {completedApps.size} / {realWorldApps.length} applications explored
             </p>
 
-            {completedApps.size >= applications.length && (
+            {completedApps.size >= realWorldApps.length && (
               <button
-                onPointerDown={() => goToPhase('test')}
+                onClick={() => goToPhase('test')}
                 style={{
-                  padding: '1rem 2.5rem',
+                  padding: '14px 28px',
                   fontSize: '1.1rem',
                   background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
                   color: 'white',
                   border: 'none',
                   borderRadius: 12,
                   cursor: 'pointer',
-                  fontWeight: 600
+                  fontWeight: 600,
+                  minHeight: 44
                 }}
               >
-                Take the Test
+                Take the Mastery Test →
               </button>
             )}
           </div>
@@ -2567,7 +2766,7 @@ export default function SoapBoatRenderer({
         top: 4,
         left: 0,
         right: 0,
-        zIndex: 50,
+        zIndex: 100,
         background: 'rgba(15, 23, 42, 0.8)',
         backdropFilter: 'blur(12px)',
         borderBottom: '1px solid rgba(71, 85, 105, 0.5)'
@@ -2634,7 +2833,7 @@ export default function SoapBoatRenderer({
         bottom: 0,
         left: 0,
         right: 0,
-        zIndex: 50,
+        zIndex: 100,
         background: 'rgba(15, 23, 42, 0.8)',
         backdropFilter: 'blur(12px)',
         borderTop: '1px solid rgba(71, 85, 105, 0.5)',

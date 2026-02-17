@@ -698,6 +698,34 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
         padding: spacing.lg,
         border: `1px solid ${colors.border}`,
       }}>
+        {/* Title */}
+        <div style={{
+          ...typography.h3,
+          color: colors.textPrimary,
+          marginBottom: spacing.md,
+          fontWeight: 600,
+          textAlign: 'center'
+        }}>
+          Light Scattering Visualization
+        </div>
+
+        {/* Formula Display */}
+        <div style={{
+          background: colors.brandGlow,
+          borderRadius: radius.sm,
+          padding: `${spacing.sm}px ${spacing.md}px`,
+          marginBottom: spacing.md,
+          border: `1px solid ${colors.brand}40`,
+          textAlign: 'center'
+        }}>
+          <span style={{ ...typography.bodySmall, color: colors.textSecondary, marginRight: spacing.xs }}>
+            Rayleigh Scattering:
+          </span>
+          <span style={{ ...typography.body, color: colors.brand, fontWeight: 700 }}>
+            I ∝ 1/λ⁴
+          </span>
+        </div>
+
         {/* Labels outside SVG using typo system */}
         <div style={{
           display: 'flex',
@@ -1096,6 +1124,14 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
           <text x="220" y="20" fill={throughColor} fontSize="11" fontWeight="600">
             Transmitted
           </text>
+
+          {/* Axis Labels */}
+          <text x="150" y="195" fill="#94a3b8" fontSize="12" fontWeight="600" textAnchor="middle">
+            Particle Size →
+          </text>
+          <text x="8" y="100" fill="#94a3b8" fontSize="12" fontWeight="600" textAnchor="middle" transform="rotate(-90, 8, 100)">
+            Scattering Intensity
+          </text>
         </svg>
 
         {/* Color Spectrum Legend - Outside SVG using typo system */}
@@ -1231,91 +1267,83 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
   // ============================================================================
   if (phase === 'hook') {
     return (
-      <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.bg, position: 'relative', fontFamily: typography.fontFamily }}>
         {/* Premium background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-sky-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-sky-500/3 rounded-full blur-3xl" />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #1E293B 0%, #0a1628 50%, #1E293B 100%)', zIndex: 0 }} />
+        <div style={{ position: 'absolute', top: 0, left: '25%', width: 384, height: 384, background: 'rgba(56, 189, 248, 0.05)', borderRadius: '50%', filter: 'blur(96px)', zIndex: 0 }} />
+        <div style={{ position: 'absolute', bottom: 0, right: '25%', width: 384, height: 384, background: 'rgba(249, 115, 22, 0.05)', borderRadius: '50%', filter: 'blur(96px)', zIndex: 0 }} />
 
         <ProgressBar />
 
-        <div className="relative pt-16 pb-12">
-          <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+        <div style={{ flex: 1, position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', paddingTop: 64, paddingBottom: 100 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 600, padding: isMobile ? 24 : 48, textAlign: 'center' }}>
             {/* Premium badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-sky-500/10 border border-sky-500/20 rounded-full mb-8">
-              <span className="w-2 h-2 bg-sky-400 rounded-full animate-pulse" />
-              <span className="text-sm font-medium text-sky-400 tracking-wide">PHYSICS EXPLORATION</span>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', borderRadius: 9999, marginBottom: 32 }}>
+              <span style={{ width: 8, height: 8, background: '#38BDF8', borderRadius: '50%', animation: 'pulse 2s infinite' }} />
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#38BDF8', letterSpacing: '0.05em', textTransform: 'uppercase' }}>PHYSICS EXPLORATION</span>
             </div>
 
             {/* Main title with gradient */}
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-sky-100 to-orange-200 bg-clip-text text-transparent">
+            <h1 style={{ fontSize: isMobile ? 36 : 48, fontWeight: 700, marginBottom: 16, background: 'linear-gradient(90deg, #FFFFFF 0%, #E0F2FE 50%, #FED7AA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', lineHeight: 1.1 }}>
               Why is the Sky Blue?
             </h1>
 
-            <p className="text-lg text-slate-400 max-w-md mb-10">
+            <p style={{ fontSize: 18, color: '#94A3B8', maxWidth: 448, marginBottom: 40, lineHeight: 1.6 }}>
               Discover the physics of light scattering
             </p>
 
             {/* Premium card with graphic */}
-            <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20 backdrop-blur-xl">
-              <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 via-transparent to-orange-500/5 rounded-3xl" />
+            <div style={{ position: 'relative', background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.8) 100%)', borderRadius: 24, padding: 32, maxWidth: 576, width: '100%', border: '1px solid rgba(51, 65, 85, 0.5)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', backdropFilter: 'blur(12px)' }}>
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.05) 0%, transparent 50%, rgba(249, 115, 22, 0.05) 100%)', borderRadius: 24, pointerEvents: 'none' }} />
 
-              <div className="relative">
+              <div style={{ position: 'relative' }}>
                 {/* Sky/Cloud Illustration */}
-                <div className="w-full h-36 rounded-xl bg-gradient-to-b from-sky-300 via-sky-400 to-sky-500 mb-6 relative overflow-hidden">
+                <div style={{ width: '100%', height: 144, borderRadius: 12, background: 'linear-gradient(180deg, #7DD3FC 0%, #38BDF8 50%, #0EA5E9 100%)', marginBottom: 24, position: 'relative', overflow: 'hidden' }}>
                   {/* Sun */}
-                  <div className="absolute top-4 right-8 w-12 h-12 rounded-full bg-gradient-radial from-yellow-200 to-amber-400" style={{ boxShadow: '0 0 40px #FBBF24' }} />
+                  <div style={{ position: 'absolute', top: 16, right: 32, width: 48, height: 48, borderRadius: '50%', background: 'radial-gradient(circle, #FEF3C7 0%, #FCD34D 100%)', boxShadow: '0 0 40px #FBBF24' }} />
                   {/* Clouds */}
-                  <div className="absolute top-8 left-6 w-20 h-10 rounded-full bg-white" style={{ boxShadow: '30px 10px 0 #FFFFFF, 60px 0 0 #F8FAFC' }} />
-                  <div className="absolute top-20 left-36 w-16 h-8 rounded-full bg-white" style={{ boxShadow: '25px 5px 0 #FFFFFF' }} />
+                  <div style={{ position: 'absolute', top: 32, left: 24, width: 80, height: 40, borderRadius: '50%', background: '#FFFFFF', boxShadow: '30px 10px 0 #FFFFFF, 60px 0 0 #F8FAFC' }} />
+                  <div style={{ position: 'absolute', top: 80, left: 144, width: 64, height: 32, borderRadius: '50%', background: '#FFFFFF', boxShadow: '25px 5px 0 #FFFFFF' }} />
                 </div>
 
-                <p className="text-xl text-white/90 font-medium leading-relaxed mb-6">
+                <p style={{ fontSize: 18, color: 'rgba(255, 255, 255, 0.9)', fontWeight: 500, lineHeight: 1.6, marginBottom: 24 }}>
                   And why are clouds white? The answer involves how light interacts with particles of different sizes.
                 </p>
 
                 {/* Visual comparison */}
-                <div className="flex justify-center gap-8 mb-4">
-                  <div className="text-center">
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-sky-300 to-sky-500 mx-auto mb-2" />
-                    <div className="text-sm text-sky-400">Sky = Blue</div>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 32, marginBottom: 16 }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'linear-gradient(135deg, #7DD3FC 0%, #0EA5E9 100%)', margin: '0 auto 8px' }} />
+                    <div style={{ fontSize: 14, color: '#38BDF8', fontWeight: 500 }}>Sky = Blue</div>
                   </div>
-                  <div className="text-center">
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-white to-gray-200 mx-auto mb-2 border-2 border-slate-600" />
-                    <div className="text-sm text-slate-400">Clouds = White</div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'linear-gradient(135deg, #FFFFFF 0%, #E2E8F0 100%)', margin: '0 auto 8px', border: '2px solid #475569' }} />
+                    <div style={{ fontSize: 14, color: '#94A3B8', fontWeight: 500 }}>Clouds = White</div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Premium CTA button */}
-            <button
-              onClick={() => goToPhase('predict')}
-              className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-sky-500 to-indigo-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-sky-500/25 hover:scale-[1.02] active:scale-[0.98]"
-              style={{ zIndex: 10 }}
-            >
-              <span className="relative z-10 flex items-center gap-3">
-                Discover Why
-                <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </span>
-            </button>
-
             {/* Feature hints */}
-            <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
-              <div className="flex items-center gap-2">
-                <span className="text-sky-400">✦</span>
+            <div style={{ marginTop: 48, display: 'flex', alignItems: 'center', gap: 32, fontSize: 14, color: '#64748B' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ color: '#38BDF8' }}>✦</span>
                 Interactive Lab
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-orange-400">✦</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ color: '#FB923C' }}>✦</span>
                 10 Phases
               </div>
             </div>
           </div>
         </div>
+
+        <BottomNav>
+          <div style={{ width: 80 }} />
+          <Button onClick={goNext}>
+            Begin →
+          </Button>
+        </BottomNav>
       </div>
     );
   }
@@ -1446,19 +1474,18 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
                 </button>
               ))}
             </div>
-
-            {/* Navigation */}
-            <div style={{ display: 'flex', gap: spacing.md }}>
-              <Button onClick={goBack} variant="ghost">← Back</Button>
-              <Button
-                onClick={() => goToPhase('play')}
-                disabled={prediction === null}
-              >
-                Test It Out →
-              </Button>
-            </div>
           </div>
         </div>
+
+        <BottomNav>
+          <Button onClick={goBack} variant="ghost">← Back</Button>
+          <Button
+            onClick={() => goToPhase('play')}
+            disabled={prediction === null}
+          >
+            Test It Out →
+          </Button>
+        </BottomNav>
       </div>
     );
   }
@@ -1533,7 +1560,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
                   justifyContent: 'space-between',
                   marginBottom: spacing.sm,
                 }}>
-                  <span style={{ ...typography.caption, color: colors.textSecondary }}>PARTICLE SIZE</span>
+                  <span style={{ ...typography.caption, color: colors.textSecondary, fontWeight: 600 }}>PARTICLE SIZE</span>
                   <span style={{ ...typography.h3, color: colors.textPrimary }}>
                     {particleSize < 1 ? 'Tiny (Molecules)' : particleSize < 5 ? 'Small (Aerosols)' : 'Large (Droplets)'}
                   </span>
@@ -1555,9 +1582,8 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
                   }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: spacing.xs }}>
-                  <span style={{ ...typography.caption, color: colors.sky }}>Rayleigh</span>
-                  <span style={{ ...typography.caption, color: colors.textTertiary }}>→</span>
-                  <span style={{ ...typography.caption, color: colors.white }}>Mie</span>
+                  <span style={{ ...typography.caption, color: colors.sky, fontWeight: 600 }}>0.1 nm (Rayleigh)</span>
+                  <span style={{ ...typography.caption, color: colors.white, fontWeight: 600 }}>10 μm (Mie)</span>
                 </div>
               </div>
 
@@ -1573,7 +1599,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
                   justifyContent: 'space-between',
                   marginBottom: spacing.sm,
                 }}>
-                  <span style={{ ...typography.caption, color: colors.textSecondary }}>CONCENTRATION</span>
+                  <span style={{ ...typography.caption, color: colors.textSecondary, fontWeight: 600 }}>CONCENTRATION</span>
                   <span style={{ ...typography.h3, color: colors.textPrimary }}>{concentration}%</span>
                 </div>
                 <input
@@ -1592,8 +1618,8 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
                   }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: spacing.xs }}>
-                  <span style={{ ...typography.caption, color: colors.textTertiary }}>Few particles</span>
-                  <span style={{ ...typography.caption, color: colors.textTertiary }}>Many particles</span>
+                  <span style={{ ...typography.caption, color: colors.textTertiary, fontWeight: 600 }}>10% (min)</span>
+                  <span style={{ ...typography.caption, color: colors.textTertiary, fontWeight: 600 }}>100% (max)</span>
                 </div>
               </div>
             </div>
@@ -1857,16 +1883,15 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
                 </div>
               </div>
             </div>
-
-            {/* Navigation */}
-            <div style={{ display: 'flex', gap: spacing.md }}>
-              <Button onClick={goBack} variant="ghost">← Back</Button>
-              <Button onClick={goNext}>
-                Try a Twist →
-              </Button>
-            </div>
           </div>
         </div>
+
+        <BottomNav>
+          <Button onClick={goBack} variant="ghost">← Back</Button>
+          <Button onClick={goNext}>
+            Try a Twist →
+          </Button>
+        </BottomNav>
       </div>
     );
   }
@@ -2040,19 +2065,18 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
                 </button>
               ))}
             </div>
-
-            {/* Navigation */}
-            <div style={{ display: 'flex', gap: spacing.md }}>
-              <Button onClick={goBack} variant="ghost">← Back</Button>
-              <Button
-                onClick={goNext}
-                disabled={twistPrediction === null}
-              >
-                Explore →
-              </Button>
-            </div>
           </div>
         </div>
+
+        <BottomNav>
+          <Button onClick={goBack} variant="ghost">← Back</Button>
+          <Button
+            onClick={goNext}
+            disabled={twistPrediction === null}
+          >
+            Explore →
+          </Button>
+        </BottomNav>
       </div>
     );
   }
@@ -2181,16 +2205,15 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
                 As path length increases, the <strong style={{ color: colors.textPrimary }}>through view</strong> shifts from white → yellow → orange → red. Blue gets completely scattered away before reaching you!
               </p>
             </div>
-
-            {/* Navigation */}
-            <div style={{ display: 'flex', gap: spacing.md }}>
-              <Button onClick={goBack} variant="ghost">← Back</Button>
-              <Button onClick={goNext}>
-                See the Insight →
-              </Button>
-            </div>
           </div>
         </div>
+
+        <BottomNav>
+          <Button onClick={goBack} variant="ghost">← Back</Button>
+          <Button onClick={goNext}>
+            See the Insight →
+          </Button>
+        </BottomNav>
       </div>
     );
   }

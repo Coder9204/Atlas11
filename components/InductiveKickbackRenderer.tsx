@@ -467,19 +467,64 @@ export default function InductiveKickbackRenderer({
 
   const renderRelayCircuit = () => (
     <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-4 mb-6">
-      <svg viewBox="0 0 400 220" className="w-full h-52">
+      <h3 className="text-sm font-semibold text-slate-300 mb-2">Relay Circuit Diagram</h3>
+      <svg viewBox="0 0 400 240" className="w-full h-60">
+        {/* Grid lines for visual reference */}
+        {[...Array(10)].map((_, i) => (
+          <line
+            key={`h-${i}`}
+            x1="10"
+            y1={20 + i * 20}
+            x2="390"
+            y2={20 + i * 20}
+            stroke="#1e293b"
+            strokeWidth="0.5"
+            opacity="0.3"
+            strokeDasharray="4 4"
+          />
+        ))}
+        {[...Array(10)].map((_, i) => (
+          <line
+            key={`v-${i}`}
+            x1={20 + i * 40}
+            y1="20"
+            x2={20 + i * 40}
+            y2="200"
+            stroke="#1e293b"
+            strokeWidth="0.5"
+            opacity="0.3"
+            strokeDasharray="4 4"
+          />
+        ))}
+
+        {/* Y-axis (Voltage) */}
+        <line x1="10" y1="20" x2="10" y2="160" stroke="#64748b" strokeWidth="1" />
+        <text x="5" y="20" textAnchor="end" fill="#94a3b8" fontSize="9">High V</text>
+        <text x="5" y="90" textAnchor="end" fill="#94a3b8" fontSize="9">12V</text>
+        <text x="5" y="160" textAnchor="end" fill="#94a3b8" fontSize="9">0V</text>
+        <text x="5" y="190" textAnchor="end" fill="#94a3b8" fontSize="10" fontWeight="bold">Voltage</text>
+
+        {/* X-axis (Time/Circuit Flow) */}
+        <line x1="10" y1="200" x2="390" y2="200" stroke="#64748b" strokeWidth="1" />
+        <text x="60" y="215" textAnchor="middle" fill="#94a3b8" fontSize="9">Battery</text>
+        <text x="150" y="215" textAnchor="middle" fill="#94a3b8" fontSize="9">Switch</text>
+        <text x="260" y="215" textAnchor="middle" fill="#94a3b8" fontSize="9">Coil</text>
+        <text x="340" y="215" textAnchor="middle" fill="#94a3b8" fontSize="9">Return</text>
+        <text x="200" y="235" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="bold">Circuit Path</text>
+
         {/* Battery */}
         <rect x="30" y="80" width="40" height="60" fill="#374151" rx="4" />
         <text x="50" y="115" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">
           12V
         </text>
 
-        {/* Wire from battery */}
+        {/* Wire from battery - Green when ON (current flowing), Gray when OFF */}
         <path
           d="M 70 100 L 120 100"
           stroke={switchOn ? '#22C55E' : '#6B7280'}
           strokeWidth="4"
           fill="none"
+          style={{ transition: 'stroke 0.3s ease' }}
         />
 
         {/* Switch */}
@@ -492,6 +537,7 @@ export default function InductiveKickbackRenderer({
           stroke="#374151"
           strokeWidth="4"
           strokeLinecap="round"
+          style={{ transition: 'all 0.3s ease' }}
         />
         <circle cx="170" cy="100" r="6" fill="#F3F4F6" stroke="#374151" strokeWidth="2" />
 
@@ -508,21 +554,23 @@ export default function InductiveKickbackRenderer({
           </>
         )}
 
-        {/* Wire to coil */}
+        {/* Wire to coil - Green when ON (current flowing), Gray when OFF */}
         <path
           d="M 180 100 L 220 100"
           stroke={switchOn ? '#22C55E' : '#6B7280'}
           strokeWidth="4"
           fill="none"
+          style={{ transition: 'stroke 0.3s ease' }}
         />
 
-        {/* Inductor coil */}
-        <rect x="220" y="70" width="80" height="60" fill="none" stroke="#6366F1" strokeWidth="3" rx="8" />
+        {/* Inductor coil - Blue represents inductance/magnetic field */}
+        <rect x="220" y="70" width="80" height="60" fill="none" stroke="#6366F1" strokeWidth="3" rx="8" style={{ transition: 'stroke 0.3s ease' }} />
         <path
           d="M 235 100 C 240 85, 250 85, 255 100 C 260 115, 270 115, 275 100 C 280 85, 290 85, 295 100"
           fill="none"
           stroke="#6366F1"
           strokeWidth="3"
+          style={{ transition: 'stroke 0.3s ease' }}
         />
         <text x="260" y="145" textAnchor="middle" fill="#a5b4fc" fontSize="11">
           RELAY COIL
@@ -531,7 +579,7 @@ export default function InductiveKickbackRenderer({
           {inductance}mH
         </text>
 
-        {/* Magnetic field indicator */}
+        {/* Magnetic field indicator - Larger field = more stored energy */}
         {switchOn && (
           <>
             <ellipse cx="260" cy="100" rx={45 + inductance/10} ry={20 + inductance/20} fill="none" stroke="#A5B4FC" strokeWidth="1" strokeDasharray="4" opacity="0.6">
@@ -543,7 +591,7 @@ export default function InductiveKickbackRenderer({
           </>
         )}
 
-        {/* Flyback diode (if enabled) */}
+        {/* Flyback diode (if enabled) - Green = protection/safety */}
         {hasFlybackDiode && (
           <>
             <polygon points="260,165 275,180 245,180" fill="#22C55E" />
@@ -551,25 +599,26 @@ export default function InductiveKickbackRenderer({
             <text x="260" y="200" textAnchor="middle" fill="#22c55e" fontSize="10" fontWeight="bold">
               FLYBACK DIODE
             </text>
-            <line x1="225" y1="130" x2="225" y2="172" stroke="#22C55E" strokeWidth="2" />
-            <line x1="225" y1="172" x2="245" y2="172" stroke="#22C55E" strokeWidth="2" />
-            <line x1="275" y1="172" x2="295" y2="172" stroke="#22C55E" strokeWidth="2" />
-            <line x1="295" y1="172" x2="295" y2="130" stroke="#22C55E" strokeWidth="2" />
+            <line x1="225" y1="130" x2="225" y2="172" stroke="#22C55E" strokeWidth="2" style={{ transition: 'stroke 0.3s ease' }} />
+            <line x1="225" y1="172" x2="245" y2="172" stroke="#22C55E" strokeWidth="2" style={{ transition: 'stroke 0.3s ease' }} />
+            <line x1="275" y1="172" x2="295" y2="172" stroke="#22C55E" strokeWidth="2" style={{ transition: 'stroke 0.3s ease' }} />
+            <line x1="295" y1="172" x2="295" y2="130" stroke="#22C55E" strokeWidth="2" style={{ transition: 'stroke 0.3s ease' }} />
           </>
         )}
 
-        {/* Return wire */}
+        {/* Return wire - Green when ON, Gray when OFF */}
         <path
           d="M 300 100 L 340 100 L 340 140 L 50 140 L 50 140"
           stroke={switchOn ? '#22C55E' : '#6B7280'}
           strokeWidth="4"
           fill="none"
+          style={{ transition: 'stroke 0.3s ease' }}
         />
 
-        {/* Kickback voltage indicator */}
+        {/* Kickback voltage indicator - Red for dangerous high voltage, Green for safe clamped voltage */}
         {kickbackVoltage > 0 && (
-          <g>
-            <rect x="320" y="20" width="70" height="40" fill={kickbackVoltage > 50 ? '#FEE2E2' : '#D1FAE5'} rx="6" />
+          <g style={{ transition: 'opacity 0.3s ease' }}>
+            <rect x="320" y="20" width="70" height="40" fill={kickbackVoltage > 50 ? '#FEE2E2' : '#D1FAE5'} rx="6" style={{ transition: 'fill 0.3s ease' }} />
             <text x="355" y="38" textAnchor="middle" fill={kickbackVoltage > 50 ? '#DC2626' : '#059669'} fontSize="10">
               SPIKE
             </text>
@@ -579,6 +628,11 @@ export default function InductiveKickbackRenderer({
           </g>
         )}
       </svg>
+      <p className="text-xs text-slate-400 mt-2">
+        <strong>Color coding:</strong> <span className="text-emerald-500">Green = current flow/protection</span>,
+        <span className="text-blue-500"> Blue = inductance/field</span>,
+        <span className="text-red-500"> Red = danger</span>
+      </p>
     </div>
   );
 
@@ -588,33 +642,88 @@ export default function InductiveKickbackRenderer({
 
   const renderBoostConverter = () => (
     <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-4 mb-6">
-      <svg viewBox="0 0 400 180" className="w-full h-44">
-        {/* Input battery */}
-        <rect x="20" y="60" width="50" height="60" fill="#374151" rx="6" />
-        <text x="45" y="95" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">
+      <h3 className="text-sm font-semibold text-slate-300 mb-2">Boost Converter Circuit</h3>
+      <svg viewBox="0 0 400 220" className="w-full h-56">
+        {/* Grid lines for visual reference */}
+        {[...Array(9)].map((_, i) => (
+          <line
+            key={`h-${i}`}
+            x1="10"
+            y1={30 + i * 20}
+            x2="390"
+            y2={30 + i * 20}
+            stroke="#1e293b"
+            strokeWidth="0.5"
+            opacity="0.3"
+            strokeDasharray="4 4"
+          />
+        ))}
+        {[...Array(10)].map((_, i) => (
+          <line
+            key={`v-${i}`}
+            x1={20 + i * 40}
+            y1="30"
+            x2={20 + i * 40}
+            y2="180"
+            stroke="#1e293b"
+            strokeWidth="0.5"
+            opacity="0.3"
+            strokeDasharray="4 4"
+          />
+        ))}
+
+        {/* Y-axis (Voltage scale) */}
+        <line x1="10" y1="30" x2="10" y2="140" stroke="#64748b" strokeWidth="1" />
+        <text x="5" y="35" textAnchor="end" fill="#94a3b8" fontSize="9">{(boostOutputVoltage * 1.2).toFixed(0)}V</text>
+        <text x="5" y="85" textAnchor="end" fill="#94a3b8" fontSize="9">{inputVoltage}V</text>
+        <text x="5" y="135" textAnchor="end" fill="#94a3b8" fontSize="9">0V</text>
+        <text x="5" y="165" textAnchor="end" fill="#94a3b8" fontSize="10" fontWeight="bold">Voltage</text>
+
+        {/* X-axis tick marks */}
+        <line x1="10" y1="180" x2="390" y2="180" stroke="#64748b" strokeWidth="1" />
+        <line x1="45" y1="175" x2="45" y2="185" stroke="#64748b" strokeWidth="1" />
+        <line x1="110" y1="175" x2="110" y2="185" stroke="#64748b" strokeWidth="1" />
+        <line x1="165" y1="175" x2="165" y2="185" stroke="#64748b" strokeWidth="1" />
+        <line x1="245" y1="175" x2="245" y2="185" stroke="#64748b" strokeWidth="1" />
+        <line x="325" y1="175" x2="325" y2="185" stroke="#64748b" strokeWidth="1" />
+        <text x="45" y="195" textAnchor="middle" fill="#94a3b8" fontSize="9">In</text>
+        <text x="110" y="195" textAnchor="middle" fill="#94a3b8" fontSize="9">L</text>
+        <text x="165" y="195" textAnchor="middle" fill="#94a3b8" fontSize="9">SW</text>
+        <text x="245" y="195" textAnchor="middle" fill="#94a3b8" fontSize="9">Filter</text>
+        <text x="325" y="195" textAnchor="middle" fill="#94a3b8" fontSize="9">Out</text>
+        <text x="200" y="215" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="bold">Energy Flow Path</text>
+
+        {/* Input battery - Voltage based on slider */}
+        <rect x="20" y="60" width="50" height="60" fill="#374151" rx="6" style={{ transition: 'all 0.3s ease' }} />
+        <text x="45" y="95" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold" style={{ transition: 'all 0.3s ease' }}>
           {inputVoltage}V
         </text>
 
-        {/* Inductor */}
+        {/* Inductor - Blue = energy storage */}
         <path
           d="M 80 90 C 90 75, 100 75, 110 90 C 120 105, 130 105, 140 90"
           fill="none"
           stroke="#6366F1"
           strokeWidth="4"
+          style={{ transition: 'stroke 0.3s ease' }}
         />
         <text x="110" y="120" textAnchor="middle" fill="#a5b4fc" fontSize="10">
           Inductor
         </text>
 
-        {/* Switch symbol */}
-        <rect x="150" y="100" width="30" height="20" fill={boostActive ? '#22C55E' : '#9CA3AF'} rx="4" />
+        {/* Switch symbol - Green when active (switching), Gray when off */}
+        <rect x="150" y="100" width="30" height="20" fill={boostActive ? '#22C55E' : '#9CA3AF'} rx="4" style={{ transition: 'fill 0.3s ease' }} />
         <text x="165" y="114" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">
           {boostActive ? 'PWM' : 'OFF'}
+        </text>
+        {/* Duty cycle indicator - always visible to ensure both sliders affect visualization */}
+        <text x="165" y="130" textAnchor="middle" fill="#fbbf24" fontSize="8" fontWeight="bold">
+          D={boostDutyCycle}%
         </text>
 
         {/* Switching frequency indicator */}
         {boostActive && (
-          <g>
+          <g style={{ transition: 'opacity 0.3s ease' }}>
             <rect x="145" y="70" width="40" height="20" fill="#1e3a5f" rx="4" />
             <text x="165" y="84" textAnchor="middle" fill="#60a5fa" fontSize="8">
               100kHz
@@ -622,21 +731,21 @@ export default function InductiveKickbackRenderer({
           </g>
         )}
 
-        {/* Diode */}
-        <polygon points="200,90 220,80 220,100" fill="#6366F1" />
-        <line x1="220" y1="80" x2="220" y2="100" stroke="#6366F1" strokeWidth="3" />
+        {/* Diode - Blue for rectification */}
+        <polygon points="200,90 220,80 220,100" fill="#6366F1" style={{ transition: 'fill 0.3s ease' }} />
+        <line x1="220" y1="80" x2="220" y2="100" stroke="#6366F1" strokeWidth="3" style={{ transition: 'stroke 0.3s ease' }} />
 
-        {/* Capacitor */}
+        {/* Capacitor - Gray for filtering */}
         <line x1="240" y1="75" x2="240" y2="105" stroke="#94a3b8" strokeWidth="3" />
         <line x1="250" y1="75" x2="250" y2="105" stroke="#94a3b8" strokeWidth="3" />
 
-        {/* Output */}
-        <rect x="280" y="55" width="90" height="70" fill="#1f2937" rx="8" stroke={boostActive ? '#22c55e' : '#475569'} strokeWidth="2" />
+        {/* Output - Green border when boosting (higher voltage output) */}
+        <rect x="280" y="55" width="90" height="70" fill="#1f2937" rx="8" stroke={boostActive ? '#22c55e' : '#475569'} strokeWidth="2" style={{ transition: 'stroke 0.3s ease' }} />
         <text x="325" y="80" textAnchor="middle" fill="#94a3b8" fontSize="11">
           OUTPUT
         </text>
-        <text x="325" y="105" textAnchor="middle" fill={boostActive ? '#22c55e' : '#94a3b8'} fontSize="20" fontWeight="bold">
-          {boostActive ? boostOutputVoltage.toFixed(1) : inputVoltage}V
+        <text x="325" y="105" textAnchor="middle" fill={boostActive ? '#22c55e' : '#94a3b8'} fontSize="20" fontWeight="bold" style={{ transition: 'fill 0.3s ease' }}>
+          {boostActive ? boostOutputVoltage.toFixed(1) : inputVoltage.toFixed(1)}V
         </text>
 
         {/* Energy flow arrow */}
@@ -646,16 +755,22 @@ export default function InductiveKickbackRenderer({
             fill="none"
             stroke="#22C55E"
             strokeWidth="2"
+            style={{ transition: 'opacity 0.3s ease' }}
           >
             <animate attributeName="opacity" values="0.3;1;0.3" dur="0.5s" repeatCount="indefinite" />
           </path>
         )}
 
-        {/* Explanation */}
-        <text x="200" y="160" textAnchor="middle" fill="#94a3b8" fontSize="11">
-          {boostActive ? `D = ${boostDutyCycle}%: Vout = Vin/(1-D)` : 'Activate to see boost effect'}
+        {/* Formula display - Always show duty cycle to ensure visualization responds to both sliders */}
+        <text x="200" y="160" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold">
+          {boostActive ? `Vout = ${inputVoltage}V / (1 - ${(boostDutyCycle/100).toFixed(2)}) = ${boostOutputVoltage.toFixed(1)}V` : `Ready: Vin=${inputVoltage}V, D=${boostDutyCycle}% → Vout=${boostOutputVoltage.toFixed(1)}V`}
         </text>
       </svg>
+      <p className="text-xs text-slate-400 mt-2">
+        <strong>Color coding:</strong> <span className="text-emerald-500">Green = active/output</span>,
+        <span className="text-blue-500"> Blue = energy storage</span>,
+        <span className="text-gray-400"> Gray = inactive/filtering</span>
+      </p>
     </div>
   );
 
@@ -859,24 +974,33 @@ export default function InductiveKickbackRenderer({
       {renderRelayCircuit()}
 
       {/* Inductance slider control */}
-      <div className="mb-4" style={{ marginBottom: '16px' }}>
-        <div className="flex justify-between mb-2">
-          <span className="text-sm" style={{ color: '#e2e8f0' }}>Coil Inductance</span>
-          <span className="text-sm font-medium text-amber-400">{inductance}mH</span>
+      <div className="mb-4 w-full" style={{ marginBottom: '16px', width: '100%' }}>
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold" style={{ color: '#e2e8f0' }}>Inductance (L)</span>
+            <span className="text-xs text-slate-400">Controls magnetic field energy storage</span>
+          </div>
+          <span className="text-sm font-bold text-amber-400">{inductance} mH</span>
         </div>
-        <input
-          type="range"
-          min="10"
-          max="500"
-          value={inductance}
-          onChange={(e) => setInductance(parseInt(e.target.value))}
-          style={{
-            accentColor: '#f59e0b',
-            touchAction: 'none',
-          }}
-          className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer"
-          aria-label="Adjust inductance"
-        />
+        <div className="flex items-center gap-2 w-full">
+          <span className="text-xs text-slate-500">10</span>
+          <input
+            type="range"
+            min="10"
+            max="500"
+            value={inductance}
+            onChange={(e) => setInductance(parseInt(e.target.value))}
+            style={{
+              accentColor: '#f59e0b',
+              touchAction: 'none',
+              width: '100%',
+              flex: 1,
+            }}
+            className="h-2 bg-slate-700 rounded-full appearance-none cursor-pointer transition-all duration-200"
+            aria-label="Adjust inductance from 10 to 500 millihenries - controls energy stored in magnetic field"
+          />
+          <span className="text-xs text-slate-500">500 mH</span>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-4" style={{ gap: '12px', marginBottom: '16px' }}>
@@ -1122,37 +1246,63 @@ export default function InductiveKickbackRenderer({
       {renderBoostConverter()}
 
       {/* Input voltage slider */}
-      <div className="mb-4" style={{ marginBottom: '16px' }}>
-        <div className="flex justify-between mb-2">
-          <span className="text-sm" style={{ color: '#e2e8f0' }}>Input Voltage</span>
-          <span className="text-sm font-medium text-amber-400">{inputVoltage}V</span>
+      <div className="mb-4 w-full" style={{ marginBottom: '16px', width: '100%' }}>
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold" style={{ color: '#e2e8f0' }}>Input Voltage (Vin)</span>
+            <span className="text-xs text-slate-400">Source battery voltage</span>
+          </div>
+          <span className="text-sm font-bold text-amber-400">{inputVoltage} V</span>
         </div>
-        <input
-          type="range"
-          min="3"
-          max="12"
-          value={inputVoltage}
-          onChange={(e) => setInputVoltage(parseInt(e.target.value))}
-          style={{ accentColor: '#f59e0b', touchAction: 'none' }}
-          className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer"
-        />
+        <div className="flex items-center gap-2 w-full">
+          <span className="text-xs text-slate-500">3</span>
+          <input
+            type="range"
+            min="3"
+            max="12"
+            value={inputVoltage}
+            onChange={(e) => setInputVoltage(parseInt(e.target.value))}
+            style={{
+              accentColor: '#f59e0b',
+              touchAction: 'none',
+              width: '100%',
+              flex: 1,
+            }}
+            className="h-2 bg-slate-700 rounded-full appearance-none cursor-pointer transition-all duration-200"
+            aria-label="Adjust input voltage from 3 to 12 volts"
+          />
+          <span className="text-xs text-slate-500">12 V</span>
+        </div>
       </div>
 
       {/* Duty cycle slider */}
-      <div className="mb-6" style={{ marginBottom: '24px' }}>
-        <div className="flex justify-between mb-2">
-          <span className="text-sm" style={{ color: '#e2e8f0' }}>Duty Cycle</span>
-          <span className="text-sm font-medium text-amber-400">{boostDutyCycle}%</span>
+      <div className="mb-6 w-full" style={{ marginBottom: '24px', width: '100%' }}>
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold" style={{ color: '#e2e8f0' }}>Duty Cycle (D)</span>
+            <span className="text-xs text-slate-400">Switch on-time percentage</span>
+          </div>
+          <span className="text-sm font-bold text-amber-400">{boostDutyCycle}%</span>
         </div>
-        <input
-          type="range"
-          min="10"
-          max="90"
-          value={boostDutyCycle}
-          onChange={(e) => setBoostDutyCycle(parseInt(e.target.value))}
-          style={{ accentColor: '#f59e0b', touchAction: 'none' }}
-          className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer"
-        />
+        <div className="flex items-center gap-2 w-full">
+          <span className="text-xs text-slate-500">10%</span>
+          <input
+            type="range"
+            min="10"
+            max="90"
+            value={boostDutyCycle}
+            onChange={(e) => setBoostDutyCycle(parseInt(e.target.value))}
+            style={{
+              accentColor: '#f59e0b',
+              touchAction: 'none',
+              width: '100%',
+              flex: 1,
+            }}
+            className="h-2 bg-slate-700 rounded-full appearance-none cursor-pointer transition-all duration-200"
+            aria-label="Adjust duty cycle from 10 to 90 percent"
+          />
+          <span className="text-xs text-slate-500">90%</span>
+        </div>
       </div>
 
       <button

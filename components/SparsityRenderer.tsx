@@ -840,44 +840,128 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
   );
 
   // Navigation bar component
-  const renderNavBar = () => (
-    <nav style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      height: '60px',
-      background: colors.bgSecondary,
-      zIndex: 1000,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '0 20px',
-      borderBottom: `1px solid ${colors.border}`,
-    }}>
-      <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>
-        Sparsity in Neural Networks
-      </div>
-      <div style={{ ...typo.small, color: colors.textSecondary }}>
-        {phaseLabels[phase]}
-      </div>
+  const renderNavBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+    const canGoNext = currentIndex < phaseOrder.length - 1;
+
+    return (
+      <nav style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '60px',
+        background: colors.bgSecondary,
+        zIndex: 1000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 20px',
+        borderBottom: `1px solid ${colors.border}`,
+      }}>
+        <button
+          onClick={() => canGoBack && goToPhase(phaseOrder[currentIndex - 1])}
+          disabled={!canGoBack}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: canGoBack ? colors.textPrimary : colors.border,
+            cursor: canGoBack ? 'pointer' : 'not-allowed',
+            fontSize: '18px',
+            padding: '8px',
+            minWidth: '44px',
+            minHeight: '44px',
+          }}
+          aria-label="Go back"
+        >
+          ←
+        </button>
+        <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>
+          Sparsity in Neural Networks
+        </div>
+        <div style={{ ...typo.small, color: colors.textSecondary }}>
+          {phaseLabels[phase]}
+        </div>
+        <div style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: '4px',
+          background: colors.bgPrimary,
+        }}>
+          <div style={{
+            height: '100%',
+            width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+            background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+            transition: 'width 0.3s ease',
+          }} />
+        </div>
+      </nav>
+    );
+  };
+
+  // Bottom navigation bar with Back and Next buttons
+  const renderBottomBar = (canProceed: boolean = true, nextText: string = 'Next →') => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+    const canGoNext = currentIndex < phaseOrder.length - 1 && canProceed;
+
+    return (
       <div style={{
-        position: 'absolute',
+        position: 'fixed',
         bottom: 0,
         left: 0,
         right: 0,
-        height: '4px',
-        background: colors.bgPrimary,
+        height: '72px',
+        background: colors.bgSecondary,
+        borderTop: `1px solid ${colors.border}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 20px',
+        zIndex: 1000,
       }}>
-        <div style={{
-          height: '100%',
-          width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
-          background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
-          transition: 'width 0.3s ease',
-        }} />
+        <button
+          onClick={() => canGoBack && goToPhase(phaseOrder[currentIndex - 1])}
+          disabled={!canGoBack}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '10px',
+            border: `1px solid ${colors.border}`,
+            background: 'transparent',
+            color: canGoBack ? colors.textPrimary : colors.border,
+            cursor: canGoBack ? 'pointer' : 'not-allowed',
+            fontSize: '16px',
+            fontWeight: 600,
+            minWidth: '100px',
+            minHeight: '44px',
+          }}
+        >
+          ← Back
+        </button>
+        <button
+          onClick={() => canGoNext && nextPhase()}
+          disabled={!canGoNext}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '10px',
+            border: 'none',
+            background: canGoNext ? `linear-gradient(135deg, ${colors.accent}, #7C3AED)` : colors.border,
+            color: 'white',
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            fontSize: '16px',
+            fontWeight: 600,
+            minWidth: '100px',
+            minHeight: '44px',
+          }}
+        >
+          {nextText}
+        </button>
       </div>
-    </nav>
-  );
+    );
+  };
 
   // Navigation dots
   const renderNavDots = () => {
@@ -935,6 +1019,32 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
     transition: 'all 0.2s ease',
     minHeight: '44px',
   };
+
+  // Slider CSS styles for cross-browser compatibility
+  const sliderStyles = `
+    .sparsity-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      touch-action: none;
+    }
+    .sparsity-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: ${colors.accent};
+      cursor: pointer;
+    }
+    .sparsity-slider::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: ${colors.accent};
+      cursor: pointer;
+      border: none;
+    }
+  `;
 
   // ─────────────────────────────────────────────────────────────────────────────
   // PHASE RENDERS
@@ -995,14 +1105,8 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
           </p>
         </div>
 
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Discover Sparsity →
-        </button>
-
         {renderNavDots()}
+        {renderBottomBar(true, 'Discover Sparsity →')}
       </div>
     );
   }
@@ -1042,7 +1146,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
             A neural network weight matrix is 75% zeros. What happens to computation time?
           </h2>
 
-          {/* Simple diagram */}
+          {/* SVG diagram */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -1050,43 +1154,80 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(4, 1fr)',
-                  gap: '4px',
-                  marginBottom: '8px',
-                }}>
-                  {[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1].map((v, i) => (
-                    <div key={i} style={{
-                      width: '24px',
-                      height: '24px',
-                      borderRadius: '4px',
-                      background: v ? colors.accent : colors.zero,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: v ? 'white' : colors.textMuted,
-                      fontSize: '10px',
-                    }}>
-                      {v || '0'}
-                    </div>
-                  ))}
-                </div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>75% Sparse Matrix</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>×</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🔢</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Input Vector</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>=</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>❓</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Computation Time?</p>
-              </div>
-            </div>
+            <svg
+              width="100%"
+              height="auto"
+              viewBox="0 0 400 200"
+              style={{ maxWidth: '400px' }}
+              preserveAspectRatio="xMidYMid meet"
+            >
+              <defs>
+                <linearGradient id="predict-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor={colors.zero} />
+                  <stop offset="100%" stopColor={colors.accent} />
+                </linearGradient>
+              </defs>
+
+              {/* Matrix */}
+              <g transform="translate(20, 50)">
+                <text x="40" y="-10" textAnchor="middle" fill={colors.textSecondary} fontSize="12px">
+                  75% Sparse Matrix
+                </text>
+                {[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1].map((v, i) => {
+                  const row = Math.floor(i / 4);
+                  const col = i % 4;
+                  return (
+                    <rect
+                      key={i}
+                      x={col * 20}
+                      y={row * 20}
+                      width="18"
+                      height="18"
+                      fill={v ? colors.accent : colors.zero}
+                      rx="3"
+                    />
+                  );
+                })}
+              </g>
+
+              {/* Multiplication symbol */}
+              <text x="140" y="110" textAnchor="middle" fill={colors.textMuted} fontSize="24px">
+                ×
+              </text>
+
+              {/* Input vector */}
+              <g transform="translate(180, 50)">
+                <text x="20" y="-10" textAnchor="middle" fill={colors.textSecondary} fontSize="12px">
+                  Input Vector
+                </text>
+                {[1, 2, 3, 4].map((v, i) => (
+                  <rect
+                    key={i}
+                    x="0"
+                    y={i * 20}
+                    width="40"
+                    height="18"
+                    fill="url(#predict-gradient)"
+                    rx="3"
+                  />
+                ))}
+              </g>
+
+              {/* Equals symbol */}
+              <text x="260" y="110" textAnchor="middle" fill={colors.textMuted} fontSize="24px">
+                =
+              </text>
+
+              {/* Question mark */}
+              <g transform="translate(300, 80)">
+                <text x="30" y="25" textAnchor="middle" fill={colors.accent} fontSize="48px">
+                  ?
+                </text>
+                <text x="30" y="50" textAnchor="middle" fill={colors.textSecondary} fontSize="12px">
+                  Time?
+                </text>
+              </g>
+            </svg>
           </div>
 
           {/* Options */}
@@ -1126,17 +1267,10 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
             ))}
           </div>
 
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test My Prediction →
-            </button>
-          )}
         </div>
 
         {renderNavDots()}
+        {renderBottomBar(!!prediction, 'Test My Prediction →')}
       </div>
     );
   }
@@ -1187,6 +1321,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
                 <span style={{ ...typo.small, color: colors.textSecondary }}>Sparsity Level</span>
                 <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{sparsityLevel}% zeros</span>
               </div>
+              <style>{sliderStyles}</style>
               <input
                 type="range"
                 min="0"
@@ -1194,9 +1329,10 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
                 step="5"
                 value={sparsityLevel}
                 onChange={(e) => setSparsityLevel(parseInt(e.target.value))}
+                className="sparsity-slider"
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   background: `linear-gradient(to right, ${colors.accent} ${sparsityLevel}%, ${colors.border} ${sparsityLevel}%)`,
                   cursor: 'pointer',
@@ -1221,9 +1357,10 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
                 step="2"
                 value={matrixSize}
                 onChange={(e) => setMatrixSize(parseInt(e.target.value))}
+                className="sparsity-slider"
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
                 }}
@@ -1625,9 +1762,10 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
                   step="5"
                   value={sparsityLevel}
                   onChange={(e) => setSparsityLevel(parseInt(e.target.value))}
+                  className="sparsity-slider"
                   style={{
                     width: '100%',
-                    height: '8px',
+                    height: '20px',
                     borderRadius: '4px',
                     cursor: 'pointer',
                   }}

@@ -732,7 +732,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
       <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
         {renderProgressBar()}
 
-        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.xl }}>
+        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.lg }}>
           <h2 style={{
             fontSize: isMobile ? '22px' : '28px',
             fontWeight: 700,
@@ -741,10 +741,52 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
           }}>
             🤔 Make Your Prediction
           </h2>
-          <p style={{ color: premiumDesign.colors.text.secondary }}>
+          <p style={{ color: premiumDesign.colors.text.secondary, marginBottom: premiumDesign.spacing.lg }}>
             How does distance affect the time it takes to hear an echo?
           </p>
         </div>
+
+        {/* Static SVG visualization for predict phase */}
+        <svg width="100%" height="240" viewBox="0 0 600 240" style={{ marginBottom: premiumDesign.spacing.lg }}>
+          <defs>
+            <linearGradient id="predictSoundGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={premiumDesign.colors.sound} stopOpacity="0.8" />
+              <stop offset="100%" stopColor={premiumDesign.colors.echo} stopOpacity="0.8" />
+            </linearGradient>
+            <filter id="predictGlow">
+              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Person */}
+          <circle cx="80" cy="120" r="20" fill={premiumDesign.colors.primary} opacity="0.8" />
+          <rect x="70" y="140" width="20" height="40" fill={premiumDesign.colors.primary} opacity="0.7" rx="5" />
+          <text x="80" y="200" textAnchor="middle" fill={premiumDesign.colors.text.secondary} fontSize="14">Person</text>
+
+          {/* Sound waves going out */}
+          <circle cx="80" cy="120" r="30" fill="none" stroke="url(#predictSoundGradient)" strokeWidth="2" opacity="0.6" />
+          <circle cx="80" cy="120" r="50" fill="none" stroke="url(#predictSoundGradient)" strokeWidth="2" opacity="0.4" />
+          <circle cx="80" cy="120" r="70" fill="none" stroke="url(#predictSoundGradient)" strokeWidth="2" opacity="0.2" />
+
+          {/* Near wall */}
+          <rect x="200" y="60" width="20" height="120" fill={premiumDesign.colors.secondary} opacity="0.7" rx="3" />
+          <text x="210" y="50" textAnchor="middle" fill={premiumDesign.colors.text.secondary} fontSize="12">Near</text>
+          <line x1="80" y1="30" x2="210" y2="30" stroke={premiumDesign.colors.text.muted} strokeWidth="1" strokeDasharray="4" />
+          <text x="145" y="25" textAnchor="middle" fill={premiumDesign.colors.text.muted} fontSize="11">distance</text>
+
+          {/* Far wall */}
+          <rect x="450" y="40" width="20" height="160" fill={premiumDesign.colors.accent} opacity="0.7" rx="3" />
+          <text x="460" y="30" textAnchor="middle" fill={premiumDesign.colors.text.secondary} fontSize="12">Far</text>
+          <line x1="80" y1="220" x2="460" y2="220" stroke={premiumDesign.colors.text.muted} strokeWidth="1" strokeDasharray="4" />
+          <text x="270" y="235" textAnchor="middle" fill={premiumDesign.colors.text.muted} fontSize="11">longer distance</text>
+
+          {/* Question marks */}
+          <text x="300" y="120" textAnchor="middle" fill={premiumDesign.colors.primary} fontSize="36" opacity="0.5">?</text>
+        </svg>
 
         <div style={{
           display: 'grid',
@@ -1333,7 +1375,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
       <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
         {renderProgressBar()}
 
-        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.xl }}>
+        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.lg }}>
           <h2 style={{
             fontSize: isMobile ? '22px' : '28px',
             fontWeight: 700,
@@ -1342,10 +1384,47 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
           }}>
             🌊 The Twist: Sound in Water
           </h2>
-          <p style={{ color: premiumDesign.colors.text.secondary }}>
+          <p style={{ color: premiumDesign.colors.text.secondary, marginBottom: premiumDesign.spacing.lg }}>
             Does sound travel faster in air or water?
           </p>
         </div>
+
+        {/* Static SVG visualization for twist_predict phase */}
+        <svg width="100%" height="260" viewBox="0 0 600 260" style={{ marginBottom: premiumDesign.spacing.lg }}>
+          <defs>
+            <linearGradient id="twistAirGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.6" />
+            </linearGradient>
+            <linearGradient id="twistWaterGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#0891b2" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.8" />
+            </linearGradient>
+          </defs>
+
+          {/* Air section */}
+          <rect x="50" y="30" width="200" height="100" fill="url(#twistAirGradient)" opacity="0.2" rx="8" />
+          <text x="150" y="20" textAnchor="middle" fill={premiumDesign.colors.text.primary} fontSize="16" fontWeight="600">Air</text>
+          <text x="150" y="80" textAnchor="middle" fill={premiumDesign.colors.text.secondary} fontSize="32" opacity="0.6">💨</text>
+          <text x="150" y="110" textAnchor="middle" fill={premiumDesign.colors.text.muted} fontSize="13">Speed = ?</text>
+
+          {/* Water section */}
+          <rect x="350" y="30" width="200" height="100" fill="url(#twistWaterGradient)" opacity="0.3" rx="8" />
+          <text x="450" y="20" textAnchor="middle" fill={premiumDesign.colors.text.primary} fontSize="16" fontWeight="600">Water</text>
+          <text x="450" y="80" textAnchor="middle" fill={premiumDesign.colors.text.secondary} fontSize="32" opacity="0.7">🌊</text>
+          <text x="450" y="110" textAnchor="middle" fill={premiumDesign.colors.text.muted} fontSize="13">Speed = ?</text>
+
+          {/* VS */}
+          <text x="300" y="85" textAnchor="middle" fill={premiumDesign.colors.primary} fontSize="24" fontWeight="700">VS</text>
+
+          {/* Sound waves */}
+          <path d="M 100 160 Q 120 150 140 160 T 180 160" stroke={premiumDesign.colors.sound} strokeWidth="3" fill="none" opacity="0.6" />
+          <path d="M 420 160 Q 440 150 460 160 T 500 160" stroke={premiumDesign.colors.echo} strokeWidth="3" fill="none" opacity="0.6" />
+
+          {/* Question */}
+          <text x="300" y="200" textAnchor="middle" fill={premiumDesign.colors.text.secondary} fontSize="14">Which medium allows sound to travel faster?</text>
+          <text x="300" y="240" textAnchor="middle" fill={premiumDesign.colors.primary} fontSize="48" opacity="0.4">?</text>
+        </svg>
 
         <div style={{
           display: 'grid',
@@ -1913,28 +1992,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
   }
 
   function renderTransferPhase() {
-    const applications = [
-      {
-        title: "🦇 Bat Echolocation",
-        description: "Bats emit ultrasonic clicks (20-200 kHz) and listen for echoes. They can detect insects as small as mosquitoes and navigate complex cave systems in complete darkness. Their brains process echoes in milliseconds to build a 'sound picture' of their environment!",
-        fact: "Some bats can detect a wire just 0.06mm thick - thinner than a human hair - using echolocation alone!",
-      },
-      {
-        title: "🚢 Submarine Sonar",
-        description: "Sonar (SOund NAvigation and Ranging) uses the same principle underwater. Active sonar sends out pings and measures echo times. Since sound travels 4x faster in water, sonar provides quick, accurate readings of ocean depth and submarine positions.",
-        fact: "The deepest sonar reading ever taken was 10,994 meters at the Challenger Deep - deeper than Mount Everest is tall!",
-      },
-      {
-        title: "🏥 Medical Ultrasound",
-        description: "Ultrasound machines send high-frequency sound into the body and measure echoes from tissues and organs. Different tissues reflect sound differently, creating detailed images of babies, hearts, and internal organs - all without radiation!",
-        fact: "Medical ultrasound uses frequencies of 2-18 MHz - so high that it's 1000x above human hearing range!",
-      },
-      {
-        title: "🚗 Parking Sensors",
-        description: "Car parking sensors use ultrasonic echo timing to measure distance to obstacles. They beep faster as you get closer - converting time-of-flight measurements into audible warnings that help you park safely!",
-        fact: "Modern parking sensors can detect objects just 20cm away with accuracy of ±2cm - all using simple echo timing!",
-      },
-    ];
+    const applications = realWorldApps;
 
     return (
       <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
@@ -2003,10 +2061,23 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
           <h3 style={{
             fontSize: '22px',
             color: premiumDesign.colors.text.primary,
-            marginBottom: premiumDesign.spacing.md,
+            marginBottom: premiumDesign.spacing.sm,
+            display: 'flex',
+            alignItems: 'center',
+            gap: premiumDesign.spacing.sm,
           }}>
+            <span style={{ fontSize: '28px' }}>{applications[activeApp].icon}</span>
             {applications[activeApp].title}
           </h3>
+
+          <p style={{
+            color: premiumDesign.colors.text.muted,
+            fontSize: '14px',
+            marginBottom: premiumDesign.spacing.md,
+            fontStyle: 'italic',
+          }}>
+            {applications[activeApp].tagline}
+          </p>
 
           <p style={{
             color: premiumDesign.colors.text.secondary,
@@ -2022,14 +2093,108 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
             borderRadius: premiumDesign.radius.lg,
             padding: premiumDesign.spacing.lg,
             border: '1px solid rgba(6, 182, 212, 0.3)',
+            marginBottom: premiumDesign.spacing.lg,
           }}>
-            <p style={{ margin: 0, color: premiumDesign.colors.primary, fontWeight: 600 }}>
-              💡 Fun Fact
+            <p style={{ margin: 0, color: premiumDesign.colors.primary, fontWeight: 600, marginBottom: premiumDesign.spacing.sm }}>
+              🔗 Connection to Your Experiment
             </p>
-            <p style={{ margin: `${premiumDesign.spacing.sm}px 0 0`, color: premiumDesign.colors.text.secondary }}>
-              {applications[activeApp].fact}
+            <p style={{ margin: 0, color: premiumDesign.colors.text.secondary, fontSize: '15px', lineHeight: 1.6 }}>
+              {applications[activeApp].connection}
             </p>
           </div>
+
+          {applications[activeApp].howItWorks && (
+            <div style={{ marginBottom: premiumDesign.spacing.lg }}>
+              <p style={{ color: premiumDesign.colors.text.primary, fontWeight: 600, marginBottom: premiumDesign.spacing.sm }}>
+                How It Works
+              </p>
+              <p style={{ color: premiumDesign.colors.text.secondary, fontSize: '15px', lineHeight: 1.6 }}>
+                {applications[activeApp].howItWorks}
+              </p>
+            </div>
+          )}
+
+          {applications[activeApp].stats && (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+              gap: premiumDesign.spacing.md,
+              marginBottom: premiumDesign.spacing.lg,
+            }}>
+              {applications[activeApp].stats.map((stat: { value: string; label: string; icon: string }, idx: number) => (
+                <div
+                  key={idx}
+                  style={{
+                    background: premiumDesign.colors.background.tertiary,
+                    borderRadius: premiumDesign.radius.lg,
+                    padding: premiumDesign.spacing.md,
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    textAlign: 'center',
+                  }}
+                >
+                  <div style={{ fontSize: '24px', marginBottom: premiumDesign.spacing.xs }}>{stat.icon}</div>
+                  <div style={{ color: premiumDesign.colors.primary, fontWeight: 700, fontSize: '18px', marginBottom: 4 }}>
+                    {stat.value}
+                  </div>
+                  <div style={{ color: premiumDesign.colors.text.muted, fontSize: '12px' }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {applications[activeApp].examples && (
+            <div style={{ marginBottom: premiumDesign.spacing.lg }}>
+              <p style={{ color: premiumDesign.colors.text.primary, fontWeight: 600, marginBottom: premiumDesign.spacing.sm }}>
+                Real-World Examples
+              </p>
+              <ul style={{ margin: 0, paddingLeft: '20px', color: premiumDesign.colors.text.secondary, fontSize: '15px', lineHeight: 1.8 }}>
+                {applications[activeApp].examples.map((ex: string, idx: number) => (
+                  <li key={idx}>{ex}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {applications[activeApp].companies && applications[activeApp].companies.length > 0 && (
+            <div style={{ marginBottom: premiumDesign.spacing.lg }}>
+              <p style={{ color: premiumDesign.colors.text.primary, fontWeight: 600, marginBottom: premiumDesign.spacing.sm }}>
+                Industry Leaders
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: premiumDesign.spacing.xs }}>
+                {applications[activeApp].companies.map((company: string, idx: number) => (
+                  <span
+                    key={idx}
+                    style={{
+                      padding: '6px 12px',
+                      background: premiumDesign.colors.background.tertiary,
+                      borderRadius: premiumDesign.radius.sm,
+                      fontSize: '13px',
+                      color: premiumDesign.colors.text.secondary,
+                      border: '1px solid rgba(255,255,255,0.1)',
+                    }}
+                  >
+                    {company}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {applications[activeApp].futureImpact && (
+            <div style={{
+              background: 'rgba(139, 92, 246, 0.1)',
+              borderRadius: premiumDesign.radius.lg,
+              padding: premiumDesign.spacing.lg,
+              border: '1px solid rgba(139, 92, 246, 0.3)',
+            }}>
+              <p style={{ margin: 0, color: premiumDesign.colors.secondary, fontWeight: 600, marginBottom: premiumDesign.spacing.sm }}>
+                🚀 Future Impact
+              </p>
+              <p style={{ margin: 0, color: premiumDesign.colors.text.secondary, fontSize: '15px', lineHeight: 1.6 }}>
+                {applications[activeApp].futureImpact}
+              </p>
+            </div>
+          )}
 
           {!completedApps.has(activeApp) && (
             <button
@@ -2046,18 +2211,20 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
                 fontWeight: 600,
                 cursor: 'pointer',
                 zIndex: 10,
+                minHeight: '44px',
               }}
               onClick={(e) => {
                 e.preventDefault();
                 const newCompleted = new Set(completedApps);
                 newCompleted.add(activeApp);
                 setCompletedApps(newCompleted);
+                emitEvent('app_explored', { app: applications[activeApp].title, appIndex: activeApp });
                 if (activeApp < applications.length - 1) {
                   setActiveApp(activeApp + 1);
                 }
               }}
             >
-              ✓ Mark as Read
+              Got It! ✓
             </button>
           )}
 
@@ -2204,11 +2371,21 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
           border: '1px solid rgba(255,255,255,0.1)',
           marginBottom: premiumDesign.spacing.lg,
         }}>
+          <p style={{
+            fontSize: isMobile ? '14px' : '16px',
+            color: premiumDesign.colors.text.secondary,
+            marginBottom: premiumDesign.spacing.lg,
+            lineHeight: 1.6,
+            fontStyle: 'italic',
+          }}>
+            {question.scenario}
+          </p>
           <h3 style={{
             fontSize: isMobile ? '18px' : '20px',
             color: premiumDesign.colors.text.primary,
             marginBottom: premiumDesign.spacing.xl,
             lineHeight: 1.5,
+            fontWeight: 600,
           }}>
             {question.question}
           </h3>
@@ -2259,7 +2436,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
                     color: premiumDesign.colors.text.primary,
                     fontSize: '15px',
                   }}>
-                    {option.text}
+                    {option.label}
                   </span>
                 </button>
               );
@@ -2493,6 +2670,93 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
           {phase === 'transfer' && renderTransferPhase()}
           {phase === 'test' && renderTestPhase()}
           {phase === 'mastery' && renderMasteryPhase()}
+        </div>
+      </div>
+
+      {/* Bottom Navigation Bar */}
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
+        background: 'rgba(15, 23, 42, 0.95)',
+        backdropFilter: 'blur(12px)',
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        padding: '16px',
+        boxShadow: '0 -4px 24px rgba(0,0,0,0.3)',
+      }}>
+        <div style={{
+          maxWidth: '1024px',
+          margin: '0 auto',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              goBack();
+              playSound('click');
+            }}
+            disabled={phaseOrder.indexOf(phase) === 0}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '12px',
+              border: '1px solid rgba(255,255,255,0.1)',
+              background: premiumDesign.colors.background.tertiary,
+              color: premiumDesign.colors.text.primary,
+              fontSize: '15px',
+              fontWeight: 600,
+              cursor: phaseOrder.indexOf(phase) === 0 ? 'not-allowed' : 'pointer',
+              opacity: phaseOrder.indexOf(phase) === 0 ? 0.4 : 1,
+              transition: 'all 0.3s ease',
+              fontFamily: premiumDesign.typography.fontFamily,
+              minHeight: '44px',
+            }}
+          >
+            ← Back
+          </button>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              goNext();
+              playSound('click');
+            }}
+            disabled={
+              phase === 'test' ||
+              (phase === 'predict' && !prediction) ||
+              (phase === 'twist_predict' && !twistPrediction) ||
+              (phase === 'transfer' && completedApps.size < realWorldApps.length)
+            }
+            style={{
+              padding: '12px 24px',
+              borderRadius: '12px',
+              border: 'none',
+              background: premiumDesign.colors.gradient.primary,
+              color: 'white',
+              fontSize: '15px',
+              fontWeight: 600,
+              cursor: (
+                phase === 'test' ||
+                (phase === 'predict' && !prediction) ||
+                (phase === 'twist_predict' && !twistPrediction) ||
+                (phase === 'transfer' && completedApps.size < realWorldApps.length)
+              ) ? 'not-allowed' : 'pointer',
+              opacity: (
+                phase === 'test' ||
+                (phase === 'predict' && !prediction) ||
+                (phase === 'twist_predict' && !twistPrediction) ||
+                (phase === 'transfer' && completedApps.size < realWorldApps.length)
+              ) ? 0.4 : 1,
+              transition: 'all 0.3s ease',
+              fontFamily: premiumDesign.typography.fontFamily,
+              boxShadow: premiumDesign.shadows.glow(premiumDesign.colors.primary),
+              minHeight: '44px',
+            }}
+          >
+            Next →
+          </button>
         </div>
       </div>
     </div>

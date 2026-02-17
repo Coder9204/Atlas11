@@ -588,7 +588,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
       {/* PCIe Lanes */}
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <span style={{ ...typo.small, color: colors.textSecondary }}>PCIe Lanes (Parallel Data Channels)</span>
+          <span style={{ ...typo.small, color: colors.textSecondary }}>Lane Count (Bandwidth Channels)</span>
           <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>x{numLanes}</span>
         </div>
         <input
@@ -608,7 +608,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
       {/* Number of GPUs */}
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <span style={{ ...typo.small, color: colors.textSecondary }}>Number of GPUs (Parallel Workers)</span>
+          <span style={{ ...typo.small, color: colors.textSecondary }}>GPU Count (Processing Power)</span>
           <span style={{ ...typo.small, color: colors.gpu, fontWeight: 600 }}>{numGPUs}</span>
         </div>
         <input
@@ -1049,11 +1049,20 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: '1',
+          overflowY: 'auto',
+          paddingTop: '44px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+          paddingBottom: '80px',
+        }}>
+        <div style={{ maxWidth: '700px', margin: '16px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Physics of PCIe Bandwidth
           </h2>
@@ -1121,6 +1130,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
           >
             Explore the Twist
           </button>
+        </div>
         </div>
 
         {renderNavDots()}
@@ -1241,9 +1251,23 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Communication Overhead Lab
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             See how gradient synchronization affects multi-GPU scaling.
           </p>
+
+          {/* Observation Guidance */}
+          <div style={{
+            background: `${colors.warning}11`,
+            border: `1px solid ${colors.warning}33`,
+            borderRadius: '12px',
+            padding: '14px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0, fontWeight: 500 }}>
+              Watch how adding more GPUs increases communication overhead. Try NVLink to reduce the bottleneck!
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1251,6 +1275,22 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
             padding: '24px',
             marginBottom: '24px',
           }}>
+            {/* Formula */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.small, color: colors.textMuted, margin: '0 0 4px 0' }}>
+                Efficiency Formula:
+              </p>
+              <p style={{ ...typo.body, color: colors.warning, margin: 0, fontFamily: 'monospace', fontWeight: 600 }}>
+                Efficiency = 1 / (1 + Overhead) where Overhead = (N-1) × 0.15
+              </p>
+            </div>
+
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
               <PCIeVisualization />
             </div>
@@ -1318,11 +1358,20 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: '1',
+          overflowY: 'auto',
+          paddingTop: '44px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+          paddingBottom: '80px',
+        }}>
+        <div style={{ maxWidth: '700px', margin: '16px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Defeating the Communication Bottleneck
           </h2>
@@ -1396,6 +1445,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
             See Real-World Applications
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -1411,11 +1461,20 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: '1',
+          overflowY: 'auto',
+          paddingTop: '44px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+          paddingBottom: '80px',
+        }}>
+        <div style={{ maxWidth: '800px', margin: '16px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
@@ -1534,6 +1593,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
             </button>
           )}
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -1548,11 +1608,20 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
         }}>
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{
+            flex: '1',
+            overflowY: 'auto',
+            paddingTop: '44px',
+            paddingLeft: '24px',
+            paddingRight: '24px',
+            paddingBottom: '80px',
+          }}>
+          <div style={{ maxWidth: '600px', margin: '16px auto 0', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1621,6 +1690,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
                 Review and Try Again
               </button>
             )}
+          </div>
           </div>
           {renderNavDots()}
         </div>

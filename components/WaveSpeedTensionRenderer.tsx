@@ -693,7 +693,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     // INTRO
     if (phase === 'intro') {
       return (
-        <div className="flex flex-col flex-1 overflow-y-auto" style={{ paddingTop: '44px', paddingBottom: '80px' }}>
+        <div className="flex flex-col flex-1" style={{ overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', flex: 1 }}>
           <div className="flex flex-col items-center justify-center px-6 py-8" style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 className="text-3xl font-black text-white mb-6 text-center">Understanding Wave Speed</h2>
             <div className="space-y-6 w-full">
@@ -747,7 +747,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
       ];
 
       return (
-        <div className="flex flex-col flex-1 overflow-y-auto" style={{ paddingTop: '44px', paddingBottom: '80px' }}>
+        <div className="flex flex-col flex-1" style={{ overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', flex: 1 }}>
           <div className="flex flex-col px-6 py-8">
             <div className="max-w-xl mx-auto w-full">
               <p className="text-xs font-bold text-amber-400 mb-2 uppercase tracking-widest">Predict</p>
@@ -812,7 +812,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     // LAB (play)
     if (phase === 'play') {
       return (
-        <div className="flex flex-col flex-1 overflow-auto" style={{ paddingTop: '44px', paddingBottom: '80px' }}>
+        <div className="flex flex-col flex-1" style={{ overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', flex: 1 }}>
           <div className="flex-1 flex flex-col items-center justify-center p-4 min-h-64">
             <div className="w-full max-w-3xl mb-6">
               {renderRopeVisualization(linearDensity)}
@@ -974,60 +974,62 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
       ];
 
       return (
-        <div className="flex flex-col min-h-[80vh] px-6 py-8">
-          <div className="max-w-xl mx-auto w-full">
-            <p className="text-xs font-bold text-violet-400 mb-2 uppercase tracking-widest">New Variable</p>
-            <h2 className="text-2xl md:text-3xl font-black text-white mb-2">
-              What About Rope Mass?
-            </h2>
-            <p className="text-slate-400 mb-6">
-              Now keep tension the same, but use a HEAVIER rope (more mass per meter). How does this affect wave speed?
-            </p>
+        <div className="flex flex-col flex-1 overflow-y-auto" style={{ paddingTop: '44px', paddingBottom: '80px' }}>
+          <div className="flex flex-col px-6 py-8">
+            <div className="max-w-xl mx-auto w-full">
+              <p className="text-xs font-bold text-violet-400 mb-2 uppercase tracking-widest">New Variable</p>
+              <h2 className="text-2xl md:text-3xl font-black text-white mb-2">
+                What About Rope Mass?
+              </h2>
+              <p className="text-slate-400 mb-6">
+                Now keep tension the same, but use a HEAVIER rope (more mass per meter). How does this affect wave speed?
+              </p>
 
-            <div className="flex flex-col gap-3 mb-8">
-              {options.map((opt) => (
+              <div className="flex flex-col gap-3 mb-8">
+                {options.map((opt) => (
+                  <button
+                    key={opt.id}
+                    onClick={() => {
+                      setTwistPrediction(opt.id);
+                      emitEvent('twist_prediction_made', { prediction: opt.id });
+                    }}
+                    className={`flex items-center gap-4 p-5 rounded-xl border-2 text-left transition-all duration-300 ${
+                      twistPrediction === opt.id
+                        ? 'border-violet-500 bg-violet-500/10 text-white'
+                        : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600'
+                    }`}
+                    style={{ zIndex: 10, minHeight: '44px' }}
+                  >
+                    <span className="text-2xl">{opt.icon}</span>
+                    <div>
+                      <p className="font-bold">{opt.label}</p>
+                      <p className="text-sm text-slate-400">{opt.desc}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              <div className="p-5 rounded-xl bg-slate-800/50 border border-slate-700/50 mb-6">
+                <p className="text-xs font-bold text-amber-400 mb-2">💡 THINK ABOUT IT</p>
+                <p className="text-sm text-slate-400">
+                  Imagine pushing a heavy cart vs. a light cart. Which responds faster to the same force?
+                </p>
+              </div>
+
+              <div className="flex justify-end">
                 <button
-                  key={opt.id}
-                  onClick={() => {
-                    setTwistPrediction(opt.id);
-                    emitEvent('twist_prediction_made', { prediction: opt.id });
-                  }}
-                  className={`flex items-center gap-4 p-5 rounded-xl border-2 text-left transition-all ${
-                    twistPrediction === opt.id
-                      ? 'border-violet-500 bg-violet-500/10 text-white'
-                      : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600'
+                  onClick={() => { if (twistPrediction) goToPhase('twist_play'); }}
+                  disabled={!twistPrediction}
+                  className={`px-8 py-3 rounded-xl font-bold transition-all duration-300 ${
+                    twistPrediction
+                      ? 'bg-gradient-to-r from-violet-500 to-violet-600 text-white shadow-lg shadow-violet-500/30'
+                      : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                   }`}
                   style={{ zIndex: 10, minHeight: '44px' }}
                 >
-                  <span className="text-2xl">{opt.icon}</span>
-                  <div>
-                    <p className="font-bold">{opt.label}</p>
-                    <p className="text-sm text-slate-400">{opt.desc}</p>
-                  </div>
+                  Test Your Prediction
                 </button>
-              ))}
-            </div>
-
-            <div className="p-5 rounded-xl bg-slate-800/50 border border-slate-700/50 mb-6">
-              <p className="text-xs font-bold text-amber-400 mb-2">💡 THINK ABOUT IT</p>
-              <p className="text-sm text-slate-400">
-                Imagine pushing a heavy cart vs. a light cart. Which responds faster to the same force?
-              </p>
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                onClick={() => { if (twistPrediction) goToPhase('twist_play'); }}
-                disabled={!twistPrediction}
-                className={`px-8 py-3 rounded-xl font-bold transition-all ${
-                  twistPrediction
-                    ? 'bg-gradient-to-r from-violet-500 to-violet-600 text-white shadow-lg shadow-violet-500/30'
-                    : 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                }`}
-                style={{ zIndex: 10, minHeight: '44px' }}
-              >
-                Test Your Prediction
-              </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1135,50 +1137,52 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     // TWIST REVIEW
     if (phase === 'twist_review') {
       return (
-        <div className="flex flex-col min-h-[80vh] px-6 py-8">
-          <div className="max-w-xl mx-auto w-full">
-            <p className="text-xs font-bold text-emerald-400 mb-2 uppercase tracking-widest">Deep Insight</p>
-            <h2 className="text-2xl md:text-3xl font-black text-white mb-2">
-              The Complete Picture
-            </h2>
-            <p className="text-slate-400 mb-6">
-              {twistPrediction === 'slower'
-                ? '✅ Correct! More mass means more inertia, making the rope respond slower.'
-                : 'More mass per length actually DECREASES wave speed!'}
-            </p>
-
-            <div className="p-8 rounded-2xl bg-gradient-to-br from-amber-500/10 to-slate-800 border border-amber-500/20 text-center mb-8">
-              <p className="text-xs font-bold text-amber-400 mb-4 uppercase tracking-widest">Wave Speed on a String</p>
-              <p className="text-3xl font-serif text-white mb-4">
-                v = sqrt(<span className="text-amber-400">T</span> / <span className="text-yellow-400">u</span>)
+        <div className="flex flex-col flex-1 overflow-y-auto" style={{ paddingTop: '44px', paddingBottom: '80px' }}>
+          <div className="flex flex-col px-6 py-8">
+            <div className="max-w-xl mx-auto w-full">
+              <p className="text-xs font-bold text-emerald-400 mb-2 uppercase tracking-widest">Deep Insight</p>
+              <h2 className="text-2xl md:text-3xl font-black text-white mb-2">
+                The Complete Picture
+              </h2>
+              <p className="text-slate-400 mb-6">
+                {twistPrediction === 'slower'
+                  ? '✅ Correct! More mass means more inertia, making the rope respond slower.'
+                  : 'More mass per length actually DECREASES wave speed!'}
               </p>
-              <div className="flex justify-center gap-8 mt-4">
-                <div>
-                  <p className="text-lg text-amber-400 font-bold">↑ T</p>
-                  <p className="text-xs text-slate-400">Faster</p>
-                </div>
-                <div>
-                  <p className="text-lg text-yellow-400 font-bold">↑ u</p>
-                  <p className="text-xs text-slate-400">Slower</p>
+
+              <div className="p-8 rounded-2xl bg-gradient-to-br from-amber-500/10 to-slate-800 border border-amber-500/20 text-center mb-8 transition-all duration-300">
+                <p className="text-xs font-bold text-amber-400 mb-4 uppercase tracking-widest">Wave Speed on a String</p>
+                <p className="text-3xl font-serif text-white mb-4">
+                  v = sqrt(<span className="text-amber-400">T</span> / <span className="text-yellow-400">u</span>)
+                </p>
+                <div className="flex justify-center gap-8 mt-4">
+                  <div>
+                    <p className="text-lg text-amber-400 font-bold">↑ T</p>
+                    <p className="text-xs text-slate-400">Faster</p>
+                  </div>
+                  <div>
+                    <p className="text-lg text-yellow-400 font-bold">↑ u</p>
+                    <p className="text-xs text-slate-400">Slower</p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="p-5 rounded-xl bg-slate-800/50 border border-slate-700/50 mb-8">
-              <p className="text-xs font-bold text-emerald-400 mb-2">🎓 KEY INSIGHT</p>
-              <p className="text-sm text-slate-300 leading-relaxed">
-                Wave speed is the balance between restoring force (tension pulling the rope back) and inertia (mass resisting motion). This formula applies to guitar strings, bridge cables, and even seismic waves!
-              </p>
-            </div>
+              <div className="p-5 rounded-xl bg-slate-800/50 border border-slate-700/50 mb-8">
+                <p className="text-xs font-bold text-emerald-400 mb-2">🎓 KEY INSIGHT</p>
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  Wave speed is the balance between restoring force (tension pulling the rope back) and inertia (mass resisting motion). This formula applies to guitar strings, bridge cables, and even seismic waves!
+                </p>
+              </div>
 
-            <div className="flex justify-end">
-              <button
-                onClick={() => goToPhase('transfer')}
-                className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold shadow-lg shadow-amber-500/30"
-                style={{ zIndex: 10, minHeight: '44px' }}
-              >
-                Real-World Applications
-              </button>
+              <div className="flex justify-end">
+                <button
+                  onClick={() => goToPhase('transfer')}
+                  className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold shadow-lg shadow-amber-500/30"
+                  style={{ zIndex: 10, minHeight: '44px' }}
+                >
+                  Real-World Applications
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1341,7 +1345,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
         const passed = percentage >= 70;
 
         return (
-          <div className="flex flex-col items-center justify-center min-h-[80vh] px-6 text-center">
+          <div className="flex flex-col flex-1 overflow-y-auto items-center justify-center px-6 text-center" style={{ paddingTop: '44px', paddingBottom: '80px' }}>
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-500 to-emerald-500 flex items-center justify-center mb-6 shadow-2xl shadow-amber-500/30">
               <span className="text-5xl">{passed ? '🏆' : '📚'}</span>
             </div>
@@ -1383,102 +1387,104 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
       const selected = testAnswers[testIndex];
 
       return (
-        <div className="flex flex-col min-h-[80vh] px-6 py-8">
-          <div className="max-w-xl mx-auto w-full flex-1">
-            <div className="flex justify-between items-center mb-6">
-              <span className="text-sm text-slate-500 font-semibold">
-                Question {testIndex + 1} of {testQuestions.length}
-              </span>
-              <div className="flex gap-1.5">
-                {testQuestions.map((_, i) => (
-                  <div
+        <div className="flex flex-col flex-1 overflow-y-auto" style={{ paddingTop: '44px', paddingBottom: '80px' }}>
+          <div className="flex flex-col px-6 py-8 flex-1">
+            <div className="max-w-xl mx-auto w-full flex-1">
+              <div className="flex justify-between items-center mb-6">
+                <span className="text-sm text-slate-500 font-semibold">
+                  Question {testIndex + 1} of {testQuestions.length}
+                </span>
+                <div className="flex gap-1.5">
+                  {testQuestions.map((_, i) => (
+                    <div
+                      key={i}
+                      className={`w-2.5 h-2.5 rounded-full ${
+                        testAnswers[i] !== null ? 'bg-emerald-500' : i === testIndex ? 'bg-amber-400' : 'bg-slate-700'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-5 rounded-xl bg-slate-800/50 border border-slate-700/50 mb-6">
+                <p className="text-xs font-bold text-amber-400 mb-2">📋 SCENARIO</p>
+                <p className="text-sm text-slate-300">{q.scenario}</p>
+              </div>
+
+              <h3 className="text-xl font-bold text-white mb-6">
+                {q.question}
+              </h3>
+
+              <div className="flex flex-col gap-3 mb-6">
+                {q.options.map((opt, i) => (
+                  <button
                     key={i}
-                    className={`w-2.5 h-2.5 rounded-full ${
-                      testAnswers[i] !== null ? 'bg-emerald-500' : i === testIndex ? 'bg-amber-400' : 'bg-slate-700'
+                    onClick={() => {
+                      const newAnswers = [...testAnswers];
+                      newAnswers[testIndex] = i;
+                      setTestAnswers(newAnswers);
+                    }}
+                    className={`p-5 rounded-xl border-2 text-left transition-all duration-300 ${
+                      selected === i
+                        ? 'border-amber-500 bg-amber-500/10 text-white'
+                        : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600'
                     }`}
-                  />
+                    style={{ zIndex: 10, minHeight: '44px' }}
+                  >
+                    {opt.text}
+                  </button>
                 ))}
               </div>
             </div>
 
-            <div className="p-5 rounded-xl bg-slate-800/50 border border-slate-700/50 mb-6">
-              <p className="text-xs font-bold text-amber-400 mb-2">📋 SCENARIO</p>
-              <p className="text-sm text-slate-300">{q.scenario}</p>
-            </div>
+            <div className="flex justify-between gap-4 pt-4 border-t border-slate-800">
+              <button
+                onClick={() => { if (testIndex > 0) setTestIndex(testIndex - 1); }}
+                disabled={testIndex === 0}
+                className={`px-6 py-3 rounded-xl font-bold transition-all ${
+                  testIndex === 0 ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                }`}
+                style={{ zIndex: 10, minHeight: '44px' }}
+              >
+                Previous
+              </button>
 
-            <h3 className="text-xl font-bold text-white mb-6">
-              {q.question}
-            </h3>
-
-            <div className="flex flex-col gap-3 mb-6">
-              {q.options.map((opt, i) => (
+              {testIndex < testQuestions.length - 1 ? (
                 <button
-                  key={i}
-                  onClick={() => {
-                    const newAnswers = [...testAnswers];
-                    newAnswers[testIndex] = i;
-                    setTestAnswers(newAnswers);
-                  }}
-                  className={`p-5 rounded-xl border-2 text-left transition-all ${
-                    selected === i
-                      ? 'border-amber-500 bg-amber-500/10 text-white'
-                      : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600'
+                  onClick={() => { if (selected !== null) setTestIndex(testIndex + 1); }}
+                  disabled={selected === null}
+                  className={`px-6 py-3 rounded-xl font-bold transition-all ${
+                    selected !== null
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white'
+                      : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                   }`}
-                  style={{ zIndex: 10, minHeight: '44px' }}
+                  style={{ zIndex: 10 }}
                 >
-                  {opt.text}
+                  Next →
                 </button>
-              ))}
+              ) : (
+                <button
+                  onClick={() => {
+                    if (testAnswers.every(a => a !== null)) {
+                      setTestSubmitted(true);
+                      emitEvent('test_completed', {
+                        score: testAnswers.reduce((acc, ans, i) => acc + (testQuestions[i].options[ans as number]?.correct ? 1 : 0), 0),
+                        total: testQuestions.length
+                      });
+                    }
+                  }}
+                  disabled={!testAnswers.every(a => a !== null)}
+                  className={`px-6 py-3 rounded-xl font-bold transition-all ${
+                    testAnswers.every(a => a !== null)
+                      ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white'
+                      : 'bg-slate-800 text-slate-600 cursor-not-allowed'
+                  }`}
+                  style={{ zIndex: 10 }}
+                >
+                  Submit Test
+                </button>
+              )}
             </div>
-          </div>
-
-          <div className="flex justify-between gap-4 pt-4 border-t border-slate-800">
-            <button
-              onClick={() => { if (testIndex > 0) setTestIndex(testIndex - 1); }}
-              disabled={testIndex === 0}
-              className={`px-6 py-3 rounded-xl font-bold transition-all ${
-                testIndex === 0 ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-              }`}
-              style={{ zIndex: 10, minHeight: '44px' }}
-            >
-              Previous
-            </button>
-
-            {testIndex < testQuestions.length - 1 ? (
-              <button
-                onClick={() => { if (selected !== null) setTestIndex(testIndex + 1); }}
-                disabled={selected === null}
-                className={`px-6 py-3 rounded-xl font-bold transition-all ${
-                  selected !== null
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white'
-                    : 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                }`}
-                style={{ zIndex: 10 }}
-              >
-                Next →
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  if (testAnswers.every(a => a !== null)) {
-                    setTestSubmitted(true);
-                    emitEvent('test_completed', {
-                      score: testAnswers.reduce((acc, ans, i) => acc + (testQuestions[i].options[ans as number]?.correct ? 1 : 0), 0),
-                      total: testQuestions.length
-                    });
-                  }
-                }}
-                disabled={!testAnswers.every(a => a !== null)}
-                className={`px-6 py-3 rounded-xl font-bold transition-all ${
-                  testAnswers.every(a => a !== null)
-                    ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white'
-                    : 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                }`}
-                style={{ zIndex: 10 }}
-              >
-                Submit Test
-              </button>
-            )}
           </div>
         </div>
       );
@@ -1575,7 +1581,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
                 title={phaseLabels[p]}
-                style={{ zIndex: 10, minHeight: '44px', minWidth: '44px' }}
+                style={{ zIndex: 10, minHeight: '44px', minWidth: '44px', cursor: 'pointer' }}
               />
             ))}
           </div>

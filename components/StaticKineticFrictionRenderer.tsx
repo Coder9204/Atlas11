@@ -452,7 +452,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
     const blockX = 50 + blockPosition * 2;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="surfaceGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor={surfaceProperties[surface].color} />
@@ -476,7 +476,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
         <rect x="20" y={surfaceY} width={width - 40} height="20" rx="4" fill="url(#surfaceGrad)" />
 
         {/* Surface label */}
-        <text x={width - 30} y={surfaceY + 35} textAnchor="end" fill={colors.textMuted} fontSize="10">
+        <text x={width - 30} y={surfaceY + 35} textAnchor="end" fill={colors.textMuted} fontSize="11">
           μs = {surfaceProperties[surface].staticCoef} | μk = {surfaceProperties[surface].kineticCoef}
         </text>
 
@@ -495,7 +495,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
             y={surfaceY - blockHeight/2 + 4}
             textAnchor="middle"
             fill="white"
-            fontSize="12"
+            fontSize="13"
             fontWeight="600"
           >
             {blockWeight}N
@@ -522,7 +522,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
               x={blockX + blockWidth + 20 + Math.min(appliedForce * 6, 80)}
               y={surfaceY - blockHeight/2 + 4}
               fill={colors.success}
-              fontSize="12"
+              fontSize="13"
               fontWeight="600"
             >
               F = {appliedForce.toFixed(1)}N
@@ -551,7 +551,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
               y={surfaceY - blockHeight/2 + 4}
               textAnchor="end"
               fill={hasSlipped ? colors.kineticFriction : colors.staticFriction}
-              fontSize="12"
+              fontSize="13"
               fontWeight="600"
             >
               f = {hasSlipped ? kineticFriction.toFixed(1) : Math.min(appliedForce, staticFrictionMax).toFixed(1)}N
@@ -572,9 +572,9 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
             stroke={colors.staticFriction}
             strokeWidth="1"
             strokeDasharray="4,4"
-            opacity="0.6"
+            opacity="0.3"
           />
-          <text x={width - 65} y={50 - (staticFrictionMax / 10) * 45 - 3} textAnchor="end" fill={colors.staticFriction} fontSize="8">fs max</text>
+          <text x={width - 65} y={50 - (staticFrictionMax / 10) * 45 - 5} textAnchor="end" fill={colors.staticFriction} fontSize="11">fs max</text>
 
           {/* Kinetic friction threshold line */}
           <line
@@ -585,9 +585,9 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
             stroke={colors.kineticFriction}
             strokeWidth="1"
             strokeDasharray="4,4"
-            opacity="0.6"
+            opacity="0.3"
           />
-          <text x={width - 65} y={50 - (kineticFriction / 10) * 45 - 3} textAnchor="end" fill={colors.kineticFriction} fontSize="8">fk</text>
+          <text x={width - 65} y={50 - (kineticFriction / 10) * 45 - 5} textAnchor="end" fill={colors.kineticFriction} fontSize="11">fk</text>
 
           {/* Force trace */}
           {forceHistory.length > 1 && (
@@ -615,7 +615,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
                 y={50 - (peakForce / 10) * 45 - 10}
                 textAnchor="middle"
                 fill={colors.staticFriction}
-                fontSize="10"
+                fontSize="11"
                 fontWeight="600"
               >
                 SLIP!
@@ -664,7 +664,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
             height: '8px',
             borderRadius: '4px',
             border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : 'rgba(148,163,184,0.7)',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
           }}
@@ -1507,11 +1507,20 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
@@ -1630,6 +1639,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
             </button>
           )}
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -1644,11 +1654,20 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
         }}>
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            paddingTop: '48px',
+            paddingBottom: '100px',
+            paddingLeft: '24px',
+            paddingRight: '24px',
+          }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1689,6 +1708,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
               </button>
             )}
           </div>
+          </div>
           {renderNavDots()}
         </div>
       );
@@ -1700,11 +1720,20 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1853,6 +1882,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
               </button>
             )}
           </div>
+        </div>
         </div>
 
         {renderNavDots()}

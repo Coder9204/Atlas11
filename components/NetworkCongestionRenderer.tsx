@@ -488,11 +488,31 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+          <filter id="queueHighlight">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+            <feMerge>
+              <feMergeNode in="coloredBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
+
+        {/* Grid lines for reference */}
+        <line x1="80" y1={height/2 - 40} x2={width - 100} y2={height/2 - 40} stroke={colors.border} strokeDasharray="2,2" strokeOpacity="0.5" />
+        <line x1="80" y1={height/2} x2={width - 100} y2={height/2} stroke={colors.border} strokeDasharray="2,2" strokeOpacity="0.5" />
+        <line x1="80" y1={height/2 + 40} x2={width - 100} y2={height/2 + 40} stroke={colors.border} strokeDasharray="2,2" strokeOpacity="0.5" />
+
+        {/* Axis labels */}
+        <text x="40" y={height/2} fill={colors.textSecondary} fontSize="10" textAnchor="middle" transform={`rotate(-90 40 ${height/2})`}>
+          Queue Depth
+        </text>
+        <text x={width/2} y={height - 45} fill={colors.textSecondary} fontSize="10" textAnchor="middle">
+          Flow Direction
+        </text>
 
         {/* Incoming arrow */}
         <text x="20" y="30" fill={colors.textSecondary} fontSize="12">Incoming</text>
-        <line x1="20" y1="height/2" x2="60" y2={height/2} stroke={colors.packet} strokeWidth="2" markerEnd="url(#arrow)" />
+        <line x1={20} y1={height/2} x2={60} y2={height/2} stroke={colors.packet} strokeWidth="2" />
         <polygon points={`60,${height/2-5} 70,${height/2} 60,${height/2+5}`} fill={colors.packet} />
 
         {/* Queue box */}
@@ -509,19 +529,26 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
         <text x="85" y={height/2 - 50} fill={colors.textSecondary} fontSize="11">Queue ({queueDepth} packets)</text>
 
         {/* Packets in queue */}
-        {queuedPackets.slice(0, maxQueueDisplay).map((packet, i) => (
-          <rect
-            key={packet.id}
-            x={90 + i * 18}
-            y={height/2 - 15}
-            width={14}
-            height={30}
-            fill={colors.packet}
-            rx="3"
-            filter="url(#packetGlow)"
-            opacity={0.8 + Math.sin(animationFrame * 0.2 + i) * 0.2}
-          />
-        ))}
+        {queuedPackets.slice(0, maxQueueDisplay).map((packet, i) => {
+          const xPos = 90 + i * 18;
+          const yPos = height/2 - 15;
+          const isLatest = i === queuedPackets.length - 1;
+          return (
+            <rect
+              key={packet.id}
+              x={isFinite(xPos) ? xPos : 90}
+              y={isFinite(yPos) ? yPos : height/2 - 15}
+              width={14}
+              height={30}
+              fill={colors.packet}
+              rx="3"
+              filter={isLatest ? "url(#queueHighlight)" : "url(#packetGlow)"}
+              opacity={isLatest ? 1 : 0.8 + Math.sin(animationFrame * 0.2 + i) * 0.2}
+              strokeWidth={isLatest ? "2" : "0"}
+              stroke={isLatest ? colors.warning : "none"}
+            />
+          );
+        })}
         {queuedPackets.length > maxQueueDisplay && (
           <text x={90 + maxQueueDisplay * 18 + 10} y={height/2 + 5} fill={colors.textMuted} fontSize="12">
             +{queuedPackets.length - maxQueueDisplay}
@@ -546,16 +573,29 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
         <polygon points={`${width - 20},${height/2-5} ${width - 10},${height/2} ${width - 20},${height/2+5}`} fill={colors.success} />
         <text x={width - 25} y="30" fill={colors.textSecondary} fontSize="12" textAnchor="end">Processed</text>
 
-        {/* Utilization bar */}
+        {/* Utilization bar with tick marks */}
         <rect x="80" y={height - 35} width={width - 180} height="10" rx="5" fill={colors.bgSecondary} />
         <rect
           x="80"
           y={height - 35}
-          width={(width - 180) * utilization}
+          width={(width - 180) * Math.min(utilization, 1)}
           height="10"
           rx="5"
           fill={utilizationStatus.color}
         />
+        {/* Tick marks on utilization bar */}
+        {[0, 0.25, 0.5, 0.75, 1].map(frac => (
+          <line
+            key={frac}
+            x1={80 + (width - 180) * frac}
+            y1={height - 35}
+            x2={80 + (width - 180) * frac}
+            y2={height - 25}
+            stroke={colors.textMuted}
+            strokeWidth="1"
+            opacity="0.5"
+          />
+        ))}
         <text x="85" y={height - 10} fill={colors.textSecondary} fontSize="10">
           Utilization: {(utilization * 100).toFixed(0)}%
         </text>
@@ -1270,11 +1310,20 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1334,6 +1383,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
               Compare Packet Sizes
             </button>
           )}
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1565,11 +1615,20 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Complete Picture: Latency, Jitter & Tail Latency
           </h2>
@@ -1627,6 +1686,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
           >
             See Real-World Applications
           </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1846,11 +1906,20 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1999,6 +2068,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
               </button>
             )}
           </div>
+        </div>
         </div>
 
         {renderNavDots()}

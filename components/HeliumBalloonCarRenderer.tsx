@@ -666,7 +666,7 @@ export default function HeliumBalloonCarRenderer({
   // PHASE: HOOK
   // ============================================================================
   const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] px-6 py-12 text-center">
+    <div className="flex flex-col items-center justify-center px-6 text-center" style={{ overflowY: 'auto', flex: 1, paddingTop: '44px', paddingBottom: '80px' }}>
       {/* Premium badge */}
       <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-full mb-8">
         <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
@@ -761,7 +761,7 @@ export default function HeliumBalloonCarRenderer({
     ];
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] px-6 py-8" style={{ overflowY: 'auto' }}>
+      <div className="flex flex-col items-center justify-center px-6" style={{ overflowY: 'auto', flex: 1, paddingTop: '44px', paddingBottom: '80px' }}>
         <div className="max-w-xl w-full">
           {/* Header */}
           <div className="text-center mb-8" style={{ marginBottom: '16px' }}>
@@ -899,11 +899,11 @@ export default function HeliumBalloonCarRenderer({
           <div className={`grid gap-4 mb-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
             <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50" style={{ width: '100%' }}>
               <div className="flex justify-between mb-2">
-                <span className="text-sm font-semibold text-emerald-400">Car Acceleration (controls magnitude of inertial force)</span>
+                <span className="text-sm font-semibold text-emerald-400">Acceleration (inertial force)</span>
                 <span className="text-lg font-bold text-white">{carAcceleration.toFixed(1)} m/s²</span>
               </div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs text-slate-400">1 m/s²</span>
+                <span className="text-xs text-slate-400">1</span>
                 <div style={{ flex: 1 }}>
                   <input
                     type="range"
@@ -916,16 +916,16 @@ export default function HeliumBalloonCarRenderer({
                     style={{ width: '100%' }}
                   />
                 </div>
-                <span className="text-xs text-slate-400">15 m/s²</span>
+                <span className="text-xs text-slate-400">15</span>
               </div>
             </div>
             <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50" style={{ width: '100%' }}>
               <div className="flex justify-between mb-2">
-                <span className="text-sm font-semibold text-purple-400">Balloon Buoyancy (relative density difference)</span>
+                <span className="text-sm font-semibold text-purple-400">Buoyancy (density ratio)</span>
                 <span className="text-lg font-bold text-white">{balloonBuoyancy.toFixed(1)}x</span>
               </div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs text-slate-400">0.2x</span>
+                <span className="text-xs text-slate-400">0.2</span>
                 <div style={{ flex: 1 }}>
                   <input
                     type="range"
@@ -938,7 +938,7 @@ export default function HeliumBalloonCarRenderer({
                     style={{ width: '100%' }}
                   />
                 </div>
-                <span className="text-xs text-slate-400">2.0x</span>
+                <span className="text-xs text-slate-400">2.0</span>
               </div>
             </div>
           </div>
@@ -1187,7 +1187,7 @@ export default function HeliumBalloonCarRenderer({
     const userPredictionText = prediction !== null ? predictionLabels[prediction] : 'unknown';
 
     return (
-      <div className="flex flex-col items-center px-6 py-8" style={{ overflowY: 'auto' }}>
+      <div className="flex flex-col items-center px-6" style={{ overflowY: 'auto', flex: 1, paddingTop: '44px', paddingBottom: '80px' }}>
         <div className="max-w-xl w-full">
           {/* Result */}
           <div className="text-center mb-8">
@@ -1273,7 +1273,7 @@ export default function HeliumBalloonCarRenderer({
     ];
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] px-6 py-8">
+      <div className="flex flex-col items-center justify-center px-6" style={{ overflowY: 'auto', flex: 1, paddingTop: '44px', paddingBottom: '80px' }}>
         <div className="max-w-xl w-full">
           {/* Header */}
           <div className="text-center mb-8">
@@ -1361,7 +1361,7 @@ export default function HeliumBalloonCarRenderer({
     };
 
     return (
-      <div className="flex flex-col items-center px-6 py-8">
+      <div className="flex flex-col items-center px-6" style={{ overflowY: 'auto', flex: 1, paddingTop: '44px', paddingBottom: '80px' }}>
         <div className="max-w-2xl w-full">
           {/* Header */}
           <div className="text-center mb-6">
@@ -1406,8 +1406,34 @@ export default function HeliumBalloonCarRenderer({
 
           {/* Visualization */}
           <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50 mb-4">
+            <h3 className="text-sm font-semibold text-white mb-2 text-center">Multi-Scenario Comparison</h3>
             <svg viewBox="0 0 450 200" style={{ width: '100%' }}>
               {renderSvgDefs()}
+
+              {/* Grid lines */}
+              <g opacity="0.1">
+                {[0, 40, 80, 120, 160].map(y => (
+                  <line key={`twist-grid-h-${y}`} x1="0" y1={y} x2="450" y2={y} stroke="#94a3b8" strokeWidth="0.5" strokeDasharray="2,2" />
+                ))}
+                {[0, 75, 150, 225, 300, 375, 450].map(x => (
+                  <line key={`twist-grid-v-${x}`} x1={x} y1="0" x2={x} y2="200" stroke="#94a3b8" strokeWidth="0.5" strokeDasharray="2,2" />
+                ))}
+              </g>
+
+              {/* Y-axis */}
+              <line x1="10" y1="5" x2="10" y2="160" stroke="#e2e8f0" strokeWidth="1.5" />
+              <text x="2" y="10" fill="#e2e8f0" fontSize="8" fontWeight="600">Tilt</text>
+              <line x1="7" y1="40" x2="13" y2="40" stroke="#e2e8f0" strokeWidth="1" />
+              <line x1="7" y1="80" x2="13" y2="80" stroke="#e2e8f0" strokeWidth="1" />
+              <line x1="7" y1="120" x2="13" y2="120" stroke="#e2e8f0" strokeWidth="1" />
+              <line x1="7" y1="160" x2="13" y2="160" stroke="#e2e8f0" strokeWidth="1" />
+
+              {/* X-axis */}
+              <line x1="10" y1="160" x2="440" y2="160" stroke="#e2e8f0" strokeWidth="1.5" />
+              <text x="410" y="156" fill="#e2e8f0" fontSize="8" fontWeight="600">Scenarios →</text>
+              <line x1="110" y1="157" x2="110" y2="163" stroke="#e2e8f0" strokeWidth="1" />
+              <line x1="225" y1="157" x2="225" y2="163" stroke="#e2e8f0" strokeWidth="1" />
+              <line x1="340" y1="157" x2="340" y2="163" stroke="#e2e8f0" strokeWidth="1" />
 
               {/* Car interior */}
               <rect x="25" y="20" width="400" height="140" fill="url(#hbcCarRoof)" rx="12" stroke="#475569" />
@@ -1466,6 +1492,10 @@ export default function HeliumBalloonCarRenderer({
                 </text>
               </g>
             </svg>
+            {/* Formula display */}
+            <div className="mt-2 text-center bg-slate-900/60 rounded-lg p-2">
+              <span className="text-xs font-mono text-amber-400">θ_tilt ∝ a × (ρ_medium - ρ_object) / ρ_medium</span>
+            </div>
           </div>
 
           {/* Status labels */}
@@ -1540,7 +1570,7 @@ export default function HeliumBalloonCarRenderer({
     const userWasRight = twistPrediction === 1;
 
     return (
-      <div className="flex flex-col items-center px-6 py-8">
+      <div className="flex flex-col items-center px-6" style={{ overflowY: 'auto', flex: 1, paddingTop: '44px', paddingBottom: '80px' }}>
         <div className="max-w-xl w-full">
           {/* Result */}
           <div className="text-center mb-8">
@@ -1621,7 +1651,7 @@ export default function HeliumBalloonCarRenderer({
     const allRead = completedApps.size >= applications.length;
 
     return (
-      <div className="flex flex-col items-center px-6 py-8" style={{ overflowY: 'auto' }}>
+      <div className="flex flex-col items-center px-6" style={{ overflowY: 'auto', flex: 1, paddingTop: '44px', paddingBottom: '80px' }}>
         <div className="max-w-2xl w-full" style={{ padding: '16px', gap: '16px', display: 'flex', flexDirection: 'column' }}>
           {/* Progress indicator */}
           <div className="flex items-center justify-center gap-3 mb-4" style={{ marginBottom: '16px' }}>
@@ -1782,7 +1812,7 @@ export default function HeliumBalloonCarRenderer({
     if (testSubmitted) {
       const passed = totalCorrect >= 7;
       return (
-        <div className="flex flex-col items-center justify-center min-h-[500px] px-6 py-8">
+        <div className="flex flex-col items-center justify-center px-6" style={{ overflowY: 'auto', flex: 1, paddingTop: '44px', paddingBottom: '80px' }}>
           <div className="text-center max-w-md">
             <div className="text-7xl mb-4">{passed ? 'Excellent!' : 'Keep Learning!'}</div>
             <h2 className="text-2xl font-bold text-white mb-2">
@@ -1818,7 +1848,7 @@ export default function HeliumBalloonCarRenderer({
     }
 
     return (
-      <div className="flex flex-col items-center px-6 py-8" style={{ overflowY: 'auto' }}>
+      <div className="flex flex-col items-center px-6" style={{ overflowY: 'auto', flex: 1, paddingTop: '44px', paddingBottom: '80px' }}>
         <div className="max-w-xl w-full" style={{ padding: '16px', gap: '16px', display: 'flex', flexDirection: 'column' }}>
           {/* Question Header */}
           <div className="flex justify-between items-center mb-4" style={{ marginBottom: '16px' }}>
@@ -1960,7 +1990,7 @@ export default function HeliumBalloonCarRenderer({
   // PHASE: MASTERY
   // ============================================================================
   const renderMastery = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] px-6 py-12 text-center">
+    <div className="flex flex-col items-center justify-center px-6 text-center" style={{ overflowY: 'auto', flex: 1, paddingTop: '44px', paddingBottom: '80px' }}>
       <div className="max-w-md">
         {/* Trophy */}
         <div className="w-28 h-28 rounded-full bg-gradient-to-br from-purple-500/30 to-blue-500/30 flex items-center justify-center mx-auto mb-8 text-6xl">
@@ -2079,7 +2109,7 @@ export default function HeliumBalloonCarRenderer({
       </div>
 
       {/* Main content */}
-      <div className="relative pt-20 pb-12">{renderPhase()}</div>
+      <div className="relative flex flex-col" style={{ paddingTop: '80px', minHeight: 'calc(100dvh - 80px)' }}>{renderPhase()}</div>
     </div>
   );
 }

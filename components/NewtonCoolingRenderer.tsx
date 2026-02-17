@@ -601,146 +601,28 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
             fill={coffeeColor}
           />
 
-        {/* Lid if enabled */}
-        {hasLid && (
-          <g>
+          {/* Lid indicator on cup */}
+          {hasLid && (
             <ellipse
-              cx={isMobile ? 140 : 180}
-              cy={isMobile ? 75 : 85}
-              rx={isMobile ? 60 : 80}
-              ry={isMobile ? 10 : 12}
+              cx="12"
+              cy="0"
+              rx="12"
+              ry="2"
               fill="#64748b"
             />
-            <rect
-              x={isMobile ? 130 : 170}
-              y={isMobile ? 55 : 60}
-              width={isMobile ? 20 : 20}
-              height={isMobile ? 20 : 25}
-              rx="4"
-              fill="#475569"
-            />
-          </g>
-        )}
+          )}
 
-        {/* Steam wisps (when no lid and hot) */}
-        {!hasLid && steamIntensity > 0.1 && [0, 1, 2].map(i => (
-          <path
-            key={i}
-            d={isMobile
-              ? `M${120 + i * 20},${70} Q${125 + i * 20},${40} ${115 + i * 20},${20}`
-              : `M${150 + i * 30},${80} Q${160 + i * 30},${40} ${145 + i * 30},${10}`
-            }
-            fill="none"
-            stroke="white"
-            strokeWidth="2"
-            opacity={steamIntensity * (0.4 - i * 0.1)}
-          >
-            <animate
-              attributeName="d"
-              values={isMobile
-                ? `M${120 + i * 20},70 Q${125 + i * 20},40 ${115 + i * 20},20;M${120 + i * 20},70 Q${115 + i * 20},35 ${130 + i * 20},15;M${120 + i * 20},70 Q${125 + i * 20},40 ${115 + i * 20},20`
-                : `M${150 + i * 30},80 Q${160 + i * 30},40 ${145 + i * 30},10;M${150 + i * 30},80 Q${140 + i * 30},35 ${165 + i * 30},5;M${150 + i * 30},80 Q${160 + i * 30},40 ${145 + i * 30},10`
-              }
-              dur={`${2 + i * 0.3}s`}
-              repeatCount="indefinite"
-            />
-          </path>
-        ))}
-
-        {/* Stirring indicator */}
-        {isStirring && (
-          <g>
-            <ellipse
-              cx={isMobile ? 140 : 180}
-              cy={isMobile ? 90 : 100}
-              rx={isMobile ? 25 : 35}
-              ry={isMobile ? 6 : 8}
+          {/* Steam wisps (when hot and no lid) */}
+          {!hasLid && steamIntensity > 0.1 && (
+            <path
+              d="M8,0 Q6,-5 8,-8"
               fill="none"
-              stroke="#fbbf24"
-              strokeWidth="2"
-              opacity="0.7"
-            >
-              <animateTransform
-                attributeName="transform"
-                type="rotate"
-                from={isMobile ? "0 140 90" : "0 180 100"}
-                to={isMobile ? "360 140 90" : "360 180 100"}
-                dur="0.5s"
-                repeatCount="indefinite"
-              />
-            </ellipse>
-          </g>
-        )}
-
-        {/* Cup handle */}
-        <path
-          d={isMobile
-            ? "M200 100 Q240 100 240 130 Q240 160 200 160"
-            : "M260 110 Q310 110 310 150 Q310 190 260 190"
-          }
-          fill="none"
-          stroke="#E5E5E5"
-          strokeWidth="10"
-          strokeLinecap="round"
-        />
-
-        {/* Temperature display */}
-        <rect
-          x={isMobile ? 10 : 15}
-          y={isMobile ? 40 : 45}
-          width={isMobile ? 65 : 80}
-          height={isMobile ? 50 : 60}
-          rx="8"
-          fill="rgba(0,0,0,0.6)"
-        />
-        <text
-          x={isMobile ? 42 : 55}
-          y={isMobile ? 65 : 80}
-          textAnchor="middle"
-          fill={currentTemp > 70 ? colors.error : currentTemp > 50 ? colors.success : '#3b82f6'}
-          fontSize={isMobile ? '16' : '20'}
-          fontWeight="700"
-        >
-          {currentTemp.toFixed(1)}C
-        </text>
-        <text
-          x={isMobile ? 42 : 55}
-          y={isMobile ? 82 : 98}
-          textAnchor="middle"
-          fill={colors.textMuted}
-          fontSize="10"
-        >
-          {currentTemp > 70 ? 'Too Hot' : currentTemp > 50 ? 'Perfect!' : 'Too Cold'}
-        </text>
-
-        {/* Time display */}
-        <rect
-          x={isMobile ? 205 : 265}
-          y={isMobile ? 40 : 45}
-          width={isMobile ? 65 : 80}
-          height={isMobile ? 50 : 60}
-          rx="8"
-          fill="rgba(0,0,0,0.6)"
-        />
-        <text
-          x={isMobile ? 237 : 305}
-          y={isMobile ? 65 : 80}
-          textAnchor="middle"
-          fill={colors.accent}
-          fontSize={isMobile ? '16' : '20'}
-          fontWeight="700"
-        >
-          {elapsedTime.toFixed(0)}m
-        </text>
-        <text
-          x={isMobile ? 237 : 305}
-          y={isMobile ? 82 : 98}
-          textAnchor="middle"
-          fill={colors.textMuted}
-          fontSize="10"
-        >
-          Elapsed
-        </text>
+              stroke="white"
+              strokeWidth="1"
+              opacity={steamIntensity * 0.5}
+            />
+          )}
+        </g>
       </svg>
     );
   };
@@ -822,15 +704,8 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
       { id: 'c', text: 'Slower at first, then faster as it gets colder' },
     ];
 
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+    return renderWithScrollContainer(
+      <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -919,23 +794,38 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
             </button>
           )}
         </div>
-
-        {renderNavDots()}
-      </div>
     );
   }
 
+  // Main container wrapper
+  const renderWithScrollContainer = (content: React.ReactNode) => (
+    <div style={{
+      minHeight: '100vh',
+      background: colors.bgPrimary,
+      display: 'flex',
+      flexDirection: 'column',
+    }}>
+      {renderProgressBar()}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        paddingTop: '48px',
+        paddingBottom: '80px',
+      }}>
+        {content}
+      </div>
+      {renderNavDots()}
+    </div>
+  );
+
   // PLAY PHASE - Interactive Coffee Cooling Simulator
   if (phase === 'play') {
-    return (
+    return renderWithScrollContainer(
       <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
+        maxWidth: '800px',
+        margin: '0 auto',
         padding: '24px',
       }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Coffee Cooling Lab
           </h2>
@@ -1062,23 +952,13 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
             Understand the Physics
           </button>
         </div>
-
-        {renderNavDots()}
-      </div>
     );
   }
 
   // REVIEW PHASE
   if (phase === 'review') {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+    return renderWithScrollContainer(
+      <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Physics of Cooling
           </h2>
@@ -1141,9 +1021,6 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
             Discover What Affects Cooling
           </button>
         </div>
-
-        {renderNavDots()}
-      </div>
     );
   }
 
@@ -1155,15 +1032,8 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
       { id: 'c', text: 'Both would slow cooling - leave it alone' },
     ];
 
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+    return renderWithScrollContainer(
+      <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1246,23 +1116,13 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
             </button>
           )}
         </div>
-
-        {renderNavDots()}
-      </div>
     );
   }
 
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+    return renderWithScrollContainer(
+      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Lid & Stirring Lab
           </h2>
@@ -1393,23 +1253,13 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
             Understand the Effects
           </button>
         </div>
-
-        {renderNavDots()}
-      </div>
     );
   }
 
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+    return renderWithScrollContainer(
+      <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             What Affects Cooling Rate
           </h2>
@@ -1468,9 +1318,6 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
             See Real-World Applications
           </button>
         </div>
-
-        {renderNavDots()}
-      </div>
     );
   }
 
@@ -1479,15 +1326,8 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
 
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+    return renderWithScrollContainer(
+      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
@@ -1606,9 +1446,6 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
             </button>
           )}
         </div>
-
-        {renderNavDots()}
-      </div>
     );
   }
 
@@ -1616,15 +1453,8 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
   if (phase === 'test') {
     if (testSubmitted) {
       const passed = testScore >= 7;
-      return (
-        <div style={{
-          minHeight: '100vh',
-          background: colors.bgPrimary,
-          padding: '24px',
-        }}>
-          {renderProgressBar()}
-
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+      return renderWithScrollContainer(
+        <div style={{ maxWidth: '600px', margin: '0 auto', padding: '24px', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1665,22 +1495,13 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
               </button>
             )}
           </div>
-          {renderNavDots()}
-        </div>
       );
     }
 
     const question = testQuestions[currentQuestion];
 
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+    return renderWithScrollContainer(
+      <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1830,9 +1651,6 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
             )}
           </div>
         </div>
-
-        {renderNavDots()}
-      </div>
     );
   }
 

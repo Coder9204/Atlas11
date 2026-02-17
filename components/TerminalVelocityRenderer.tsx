@@ -142,11 +142,19 @@ const colors = {
   gravity: '#ef4444',
 };
 
-const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
-  onGameEvent,
-  gamePhase = 'hook',
-}) => {
-  const phase = gamePhase as 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
+
+  const [currentPhase, setCurrentPhase] = useState<Phase>(getInitialPhase());
+  const phase = currentPhase;
 
   // Event emitter helper
   const emitEvent = useCallback((
@@ -168,6 +176,13 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
   useEffect(() => {
     emitEvent('phase_changed', { phase });
   }, [phase, emitEvent]);
+
+  // Sync external gamePhase prop changes
+  useEffect(() => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      setCurrentPhase(gamePhase as Phase);
+    }
+  }, [gamePhase]);
   // Simulation state
   const [numFilters, setNumFilters] = useState(1);
   const [airDensity, setAirDensity] = useState(1.2); // kg/m^3
@@ -964,6 +979,25 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
               v (m/s)
             </text>
 
+            {/* Baseline reference marker (v=0 starting point) */}
+            <circle
+              cx="35"
+              cy={graphHeight - 15}
+              r="4"
+              fill="#94a3b8"
+              stroke="#64748b"
+              strokeWidth="1.5"
+            />
+            <text
+              x="42"
+              y={graphHeight - 10}
+              fill="#94a3b8"
+              fontSize="8"
+              fontWeight="bold"
+            >
+              Start
+            </text>
+
             {/* Terminal velocity reference line */}
             <line
               x1="35"
@@ -1256,53 +1290,140 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
     </div>
   );
 
-  const handlePhaseComplete = () => {
-    emitEvent('button_clicked', { action: 'phase_complete', phase });
-    playSound('transition');
+  // Navigation handlers
+  const handleNext = () => {
+    const phaseIndex = validPhases.indexOf(phase);
+    if (phaseIndex < validPhases.length - 1) {
+      const nextPhase = validPhases[phaseIndex + 1];
+      setCurrentPhase(nextPhase);
+      emitEvent('button_clicked', { action: 'next', from: phase, to: nextPhase });
+      playSound('transition');
+    }
   };
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
+  const handleBack = () => {
+    const phaseIndex = validPhases.indexOf(phase);
+    if (phaseIndex > 0) {
+      const prevPhase = validPhases[phaseIndex - 1];
+      setCurrentPhase(prevPhase);
+      emitEvent('button_clicked', { action: 'back', from: phase, to: prevPhase });
+      playSound('click');
+    }
+  };
+
+  const handleDotClick = (targetPhase: Phase) => {
+    setCurrentPhase(targetPhase);
+    emitEvent('button_clicked', { action: 'navigate_dot', from: phase, to: targetPhase });
+    playSound('click');
+  };
+
+  const renderNavigationDots = () => (
     <div style={{
       position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: `1px solid rgba(255,255,255,0.1)`,
+      top: '12px',
+      left: '50%',
+      transform: 'translateX(-50%)',
       display: 'flex',
-      justifyContent: 'flex-end',
+      gap: '8px',
       zIndex: 1000,
+      background: 'rgba(15, 23, 42, 0.9)',
+      padding: '8px 16px',
+      borderRadius: '20px',
+      backdropFilter: 'blur(10px)',
     }}>
-      <button
-        onClick={handlePhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-        }}
-      >
-        {buttonText}
-      </button>
+      {validPhases.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => handleDotClick(p)}
+          title={p.replace('_', ' ')}
+          style={{
+            width: '10px',
+            height: '10px',
+            borderRadius: '50%',
+            border: 'none',
+            background: p === phase ? colors.accent : 'rgba(148, 163, 184, 0.4)',
+            cursor: 'pointer',
+            padding: 0,
+            transition: 'all 0.2s ease',
+          }}
+          aria-label={`Go to ${p} phase`}
+        />
+      ))}
     </div>
   );
+
+  const handlePhaseComplete = () => {
+    handleNext();
+  };
+
+  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => {
+    const phaseIndex = validPhases.indexOf(phase);
+    const canGoBack = phaseIndex > 0;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: '16px 24px',
+        background: colors.bgDark,
+        borderTop: `1px solid rgba(255,255,255,0.1)`,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 1000,
+        minHeight: '72px',
+      }}>
+        {canGoBack ? (
+          <button
+            onClick={handleBack}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.textMuted}`,
+              background: 'transparent',
+              color: colors.textPrimary,
+              fontWeight: 500,
+              cursor: 'pointer',
+              fontSize: '16px',
+            }}
+          >
+            Back
+          </button>
+        ) : <div />}
+
+        <button
+          onClick={handlePhaseComplete}
+          disabled={disabled && !canProceed}
+          style={{
+            padding: '12px 32px',
+            borderRadius: '8px',
+            border: 'none',
+            background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
+            color: canProceed ? 'white' : colors.textMuted,
+            fontWeight: 'bold',
+            cursor: canProceed ? 'pointer' : 'not-allowed',
+            fontSize: '16px',
+          }}
+        >
+          {buttonText}
+        </button>
+      </div>
+    );
+  };
 
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, minHeight: '100dvh' }}>
+        {renderNavigationDots()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '44px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px', fontWeight: 'bold' }}>
               Terminal Velocity
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', fontWeight: 400 }}>
               Stacking filters: double fall speed or not?
             </p>
           </div>
@@ -1680,6 +1801,96 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
             <p style={{ color: colors.textPrimary }}>
               The crumpled filter falls much faster - shape (cross-sectional area) dominates!
             </p>
+          </div>
+
+          {/* Visual diagram showing shape effect */}
+          <div style={{ display: 'flex', justifyContent: 'center', margin: '16px' }}>
+            <svg width="100%" height="320" viewBox="0 0 600 320" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: '600px' }}>
+              <defs>
+                <linearGradient id="twistReviewBg" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#1e3a5f" />
+                  <stop offset="100%" stopColor="#0f172a" />
+                </linearGradient>
+                <radialGradient id="crumpledGrad" cx="35%" cy="35%" r="65%">
+                  <stop offset="0%" stopColor="#fef3c7" />
+                  <stop offset="60%" stopColor="#d4a574" />
+                  <stop offset="100%" stopColor="#78350f" />
+                </radialGradient>
+              </defs>
+              <rect width="600" height="320" fill="url(#twistReviewBg)" rx="12" />
+
+              {/* Title */}
+              <text x="300" y="30" fill="#f59e0b" fontSize="18" fontWeight="bold" textAnchor="middle">
+                Shape Controls Terminal Velocity
+              </text>
+
+              {/* Flat Filter */}
+              <g transform="translate(150, 120)">
+                <text x="0" y="-45" fill="#f8fafc" fontSize="14" fontWeight="bold" textAnchor="middle">Flat Filter</text>
+                <ellipse cx="0" cy="0" rx="40" ry="10" fill="#d4a574" stroke="#92400e" strokeWidth="2" />
+                <text x="0" y="30" fill="#94a3b8" fontSize="11" textAnchor="middle">Area = A</text>
+                <text x="0" y="45" fill="#94a3b8" fontSize="11" textAnchor="middle">Cd = 1.2</text>
+
+                {/* Air resistance visualization */}
+                <path d="M -50,-25 L -50,-15" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
+                <path d="M -35,-25 L -35,-15" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
+                <path d="M -20,-25 L -20,-15" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
+                <path d="M 20,-25 L 20,-15" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
+                <path d="M 35,-25 L 35,-15" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
+                <path d="M 50,-25 L 50,-15" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
+                <text x="0" y="-35" fill="#60a5fa" fontSize="10" textAnchor="middle">Large drag</text>
+
+                <text x="0" y="75" fill="#10b981" fontSize="13" fontWeight="bold" textAnchor="middle">vt = v₀</text>
+                <text x="0" y="92" fill="#94a3b8" fontSize="10" textAnchor="middle">(Slow)</text>
+              </g>
+
+              {/* Crumpled Filter */}
+              <g transform="translate(450, 120)">
+                <text x="0" y="-45" fill="#f8fafc" fontSize="14" fontWeight="bold" textAnchor="middle">Crumpled</text>
+                <circle cx="0" cy="0" r="18" fill="url(#crumpledGrad)" stroke="#92400e" strokeWidth="2" />
+                <path d="M-8,-6 Q-2,-10 8,-5" stroke="#92400e" fill="none" strokeWidth="1.5" opacity="0.6" />
+                <path d="M-6,3 Q2,8 7,2" stroke="#92400e" fill="none" strokeWidth="1.5" opacity="0.6" />
+                <text x="0" y="30" fill="#94a3b8" fontSize="11" textAnchor="middle">Area ≈ A/4</text>
+                <text x="0" y="45" fill="#94a3b8" fontSize="11" textAnchor="middle">Cd = 0.47</text>
+
+                {/* Less air resistance */}
+                <path d="M -12,-25 L -12,-22" stroke="#60a5fa" strokeWidth="1.5" opacity="0.4" />
+                <path d="M 0,-25 L 0,-22" stroke="#60a5fa" strokeWidth="1.5" opacity="0.4" />
+                <path d="M 12,-25 L 12,-22" stroke="#60a5fa" strokeWidth="1.5" opacity="0.4" />
+                <text x="0" y="-35" fill="#60a5fa" fontSize="10" textAnchor="middle">Small drag</text>
+
+                <text x="0" y="75" fill="#f59e0b" fontSize="13" fontWeight="bold" textAnchor="middle">vt ≈ 2.5·v₀</text>
+                <text x="0" y="92" fill="#94a3b8" fontSize="10" textAnchor="middle">(Much faster!)</text>
+              </g>
+
+              {/* Downward arrows */}
+              <g>
+                <path d="M 150,180 L 150,210" stroke="#ef4444" strokeWidth="3" markerEnd="url(#twistArrowSlow)" />
+                <path d="M 450,180 L 450,235" stroke="#f59e0b" strokeWidth="4" markerEnd="url(#twistArrowFast)" />
+              </g>
+
+              {/* Arrow markers */}
+              <defs>
+                <marker id="twistArrowSlow" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+                  <polygon points="0,0 10,5 0,10" fill="#ef4444" />
+                </marker>
+                <marker id="twistArrowFast" markerWidth="12" markerHeight="12" refX="6" refY="6" orient="auto">
+                  <polygon points="0,0 12,6 0,12" fill="#f59e0b" />
+                </marker>
+              </defs>
+
+              {/* Formula explanation */}
+              <rect x="50" y="250" width="500" height="55" fill="rgba(15, 23, 42, 0.8)" rx="8" />
+              <text x="300" y="270" fill="#a855f7" fontSize="13" fontWeight="bold" textAnchor="middle">
+                vt = √(2mg / ρACd)
+              </text>
+              <text x="300" y="288" fill="#94a3b8" fontSize="11" textAnchor="middle">
+                vt ∝ 1/√A  and  vt ∝ 1/√Cd
+              </text>
+              <text x="300" y="303" fill="#f59e0b" fontSize="10" textAnchor="middle">
+                Smaller area + lower Cd = Much higher terminal velocity!
+              </text>
+            </svg>
           </div>
 
           <div style={{

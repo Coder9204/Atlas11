@@ -634,10 +634,10 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
                 markerEnd="url(#retroArrowYellow)"
               />
 
-              {/* Interactive point at mirror hit */}
+              {/* Interactive point at mirror hit - moves with angle */}
               <circle
                 cx={mirrorHitX}
-                cy={mirrorHitY}
+                cy={mirrorHitY + sourceAngle * 0.5}
                 r="8"
                 fill="#fbbf24"
                 opacity="0.6"
@@ -678,9 +678,9 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
               <text x={mirrorHitX - 5} y={mirrorHitY - 25} fill="#f59e0b" fontSize="11">r</text>
 
               {/* Miss indicator */}
-              <g transform={`translate(${mirrorHitX + 80 * Math.cos(mirrorReflectRad)}, ${mirrorHitY - 80 * Math.sin(mirrorReflectRad) - 15})`}>
-                <rect x="-45" y="-10" width="90" height="20" rx="4" fill="rgba(239, 68, 68, 0.2)" stroke="#ef4444" strokeWidth="1" />
-                <text x="0" y="4" textAnchor="middle" fill="#ef4444" fontSize="11" fontWeight="bold">MISSES OBSERVER</text>
+              <g transform={`translate(${mirrorHitX + 140 * Math.cos(mirrorReflectRad)}, ${mirrorHitY - 140 * Math.sin(mirrorReflectRad) + 30})`}>
+                <rect x="-40" y="-10" width="80" height="18" rx="4" fill="rgba(239, 68, 68, 0.2)" stroke="#ef4444" strokeWidth="1" />
+                <text x="0" y="3" textAnchor="middle" fill="#ef4444" fontSize="9" fontWeight="bold">MISS</text>
               </g>
 
               {/* Physics note */}
@@ -737,10 +737,10 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
                 markerEnd="url(#retroArrowYellow)"
               />
 
-              {/* Interactive point at retro hit */}
+              {/* Interactive point at retro hit - moves with angle */}
               <circle
                 cx={retroHitX}
-                cy={retroHitY}
+                cy={retroHitY + sourceAngle * 0.5}
                 r="9"
                 fill="#10b981"
                 opacity="0.6"
@@ -774,16 +774,35 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
               />
 
               {/* Success indicator */}
-              <g transform={`translate(${(retroHitX + lightSourceX + 35) / 2}, ${(retroHitY + lightSourceY + 25) / 2 - 20})`}>
-                <rect x="-55" y="-12" width="110" height="24" rx="6" fill="rgba(16, 185, 129, 0.3)" stroke="#10b981" strokeWidth="1" />
-                <text x="0" y="4" textAnchor="middle" fill="#10b981" fontSize="11" fontWeight="bold">RETURNS TO SOURCE</text>
+              <g transform={`translate(${(retroHitX + lightSourceX + 35) / 2 - 80}, ${(retroHitY + lightSourceY + 25) / 2 + 40})`}>
+                <rect x="-45" y="-10" width="90" height="18" rx="6" fill="rgba(16, 185, 129, 0.3)" stroke="#10b981" strokeWidth="1" />
+                <text x="0" y="3" textAnchor="middle" fill="#10b981" fontSize="9" fontWeight="bold">RETURN</text>
               </g>
 
               {/* Physics note */}
-              <text x={retroX + 60} y={retroY + 65} textAnchor="middle" fill="#64748b" fontSize="11">3 perpendicular reflections</text>
-              <text x={retroX + 60} y={retroY + 77} textAnchor="middle" fill="#64748b" fontSize="11">reverse all direction components</text>
+              <text x={retroX + 60} y={retroY + 64} textAnchor="middle" fill="#64748b" fontSize="9">3 reflections</text>
+              <text x={retroX + 60} y={retroY + 74} textAnchor="middle" fill="#64748b" fontSize="8">reverse dir</text>
             </g>
           )}
+
+          {/* === PHYSICS EQUATIONS === */}
+          <g transform={`translate(${width - 90}, 200)`}>
+            <rect x="-60" y="-5" width="120" height="55" rx="4" fill="rgba(15, 23, 42, 0.95)" stroke="#334155" strokeWidth="1" />
+            <text x="0" y="10" textAnchor="middle" fill="#fbbf24" fontSize="9" fontWeight="bold">Mirror:</text>
+            <text x="0" y="23" textAnchor="middle" fill="#94a3b8" fontSize="8">θᵢ = θᵣ</text>
+            <text x="0" y="36" textAnchor="middle" fill="#10b981" fontSize="9" fontWeight="bold">Retro:</text>
+            <text x="0" y="48" textAnchor="middle" fill="#94a3b8" fontSize="8">r⃗ₒᵤₜ = -r⃗ᵢₙ</text>
+          </g>
+
+          {/* === CALCULATED VALUES === */}
+          <g transform={`translate(25, 200)`}>
+            <rect x="-5" y="-5" width="120" height="65" rx="4" fill="rgba(15, 23, 42, 0.95)" stroke="#334155" strokeWidth="1" />
+            <text x="5" y="9" fill="#fbbf24" fontSize="9" fontWeight="bold">Values:</text>
+            <text x="5" y="22" fill="#94a3b8" fontSize="8">In: {sourceAngle}°</text>
+            <text x="5" y="34" fill="#94a3b8" fontSize="8">Out: {Math.abs(mirrorReflectAngle)}°</text>
+            <text x="5" y="46" fill="#10b981" fontSize="8">Retro:</text>
+            <text x="5" y="57" fill="#10b981" fontSize="8">returns</text>
+          </g>
 
           {/* === LEGEND === */}
           <g transform={`translate(20, ${height - 70})`}>
@@ -798,8 +817,8 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
 
           {/* === INFO BAR === */}
           <g transform={`translate(${width / 2}, ${height - 15})`}>
-            <text x="0" y="0" textAnchor="middle" fill="#64748b" fontSize="11">
-              Source angle: {sourceAngle}° | Mirror: angle in = angle out | Retroreflector: always returns to source
+            <text x="0" y="0" textAnchor="middle" fill="#64748b" fontSize="10">
+              Angle: {sourceAngle}° | Mirror law | Retro returns
             </text>
           </g>
 
@@ -807,7 +826,9 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
           {showMirror && showRetro && (
             <g>
               <line x1={width / 2} y1="60" x2={width / 2} y2={height - 90} stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
-              <text x={width / 2} y="55" textAnchor="middle" fill="#475569" fontSize="11" fontWeight="bold">COMPARISON</text>
+              <rect x={width / 2 - 70} y="42" width="140" height="25" rx="4" fill="rgba(100, 116, 139, 0.3)" stroke="#475569" strokeWidth="1" />
+              <text x={width / 2} y="55" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="bold">⇅ COMPARISON ⇅</text>
+              <text x={width / 2} y="65" textAnchor="middle" fill="#94a3b8" fontSize="9">Before vs After</text>
             </g>
           )}
         </svg>
@@ -876,6 +897,10 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
             accentColor: '#3b82f6'
           }}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+          <span style={{ color: colors.textMuted, fontSize: '12px' }}>10°</span>
+          <span style={{ color: colors.textMuted, fontSize: '12px' }}>70°</span>
+        </div>
       </div>
       <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
         <label style={{ color: colors.textSecondary, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
@@ -1041,6 +1066,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '12px', fontWeight: '700', lineHeight: 1.5 }}>{wasCorrect ? 'Correct!' : 'Not Quite!'}</h3>
             <p style={{ color: colors.textPrimary, lineHeight: 1.7 }}>The retroreflector always sends light back toward its source because the three perpendicular reflections reverse all direction components!</p>
           </div>
+          {renderVisualization(false)}
           <div style={{ background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95))', margin: '16px 0', padding: '24px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
             <h3 style={{ color: colors.accent, marginBottom: '16px', fontWeight: '700', lineHeight: 1.5 }}>The Physics of Retroreflection</h3>
             <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8 }}>
@@ -1130,6 +1156,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '12px', fontWeight: '700', lineHeight: 1.5 }}>{wasCorrect ? 'Correct!' : 'Not Quite!'}</h3>
             <p style={{ color: colors.textPrimary, lineHeight: 1.7 }}>The retroreflector appears much brighter from the driver's position because it returns light directly to the source!</p>
           </div>
+          {renderVisualization(false)}
           <div style={{ background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95))', margin: '16px 0', padding: '24px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
             <h3 style={{ color: colors.warning, marginBottom: '16px', fontWeight: '700', lineHeight: 1.5 }}>Why Road Signs Work</h3>
             <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8 }}>
@@ -1207,7 +1234,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
     if (testSubmitted) {
       return (
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '100px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
-          <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', padding: '0 16px', width: '100%' }}>
+          <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', padding: '0 16px', width: '100%', paddingBottom: '80px' }}>
             <div style={{ background: testScore >= 8 ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(16, 185, 129, 0.2))' : 'linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(239, 68, 68, 0.2))', margin: '16px 0', padding: '24px', borderRadius: '12px', textAlign: 'center', boxShadow: '0 8px 24px rgba(0,0,0,0.3)' }}>
               <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, fontWeight: '700', lineHeight: 1.5 }}>{testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}</h2>
               <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: '800' }}>{testScore} / 10</p>
@@ -1232,7 +1259,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '100px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
-        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', padding: '0 16px', width: '100%' }}>
+        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', padding: '0 16px', width: '100%', paddingBottom: '80px' }}>
           <div style={{ padding: '16px 0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary, fontWeight: '700', fontSize: '24px', lineHeight: 1.5 }}>Knowledge Test</h2>
@@ -1360,8 +1387,8 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '100px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
       <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
         <div style={{ padding: '24px', textAlign: 'center', maxWidth: '900px', margin: '0 auto' }}>
-          <h1 style={{ color: colors.error, fontSize: '36px', marginBottom: '12px', fontWeight: '800', lineHeight: 1.4 }}>Invalid Phase</h1>
-          <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', lineHeight: 1.7 }}>Please select a valid game phase</p>
+          <h1 style={{ color: colors.error, fontSize: '36px', marginBottom: '12px', fontWeight: '800', lineHeight: 1.4 }}>Invalid Phase Configuration</h1>
+          <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', lineHeight: 1.7 }}>Please select a valid game phase to continue. This component requires a phase prop to render properly.</p>
         </div>
       </div>
       {renderBottomBar(false, true, 'Continue')}

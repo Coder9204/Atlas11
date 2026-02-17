@@ -1105,9 +1105,9 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
 
         {/* ========== AXES AND GRID ========== */}
         {/* X-axis labels */}
-        <text x="30" y="415" fontSize="10" fill="#94a3b8" textAnchor="start">Source</text>
-        <text x="350" y="415" fontSize="10" fill="#94a3b8" textAnchor="middle">X-Position (mm)</text>
-        <text x="680" y="415" fontSize="10" fill="#94a3b8" textAnchor="end">Detector</text>
+        <text x="30" y="395" fontSize="10" fill="#94a3b8" textAnchor="start">Source</text>
+        <text x="350" y="395" fontSize="10" fill="#94a3b8" textAnchor="middle">X-Position (mm)</text>
+        <text x="680" y="395" fontSize="10" fill="#94a3b8" textAnchor="end">Detector</text>
 
         {/* Y-axis labels */}
         <text x="15" y="50" fontSize="10" fill="#94a3b8" textAnchor="middle" transform="rotate(-90 15 50)">Vertical Height (mm)</text>
@@ -1116,7 +1116,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
         {/* Tick marks on axes */}
         {[0, 1, 2, 3, 4, 5, 6].map((i) => (
           <g key={`tick-${i}`}>
-            <line x1={30 + i * 110} y1="395" x2={30 + i * 110} y2="400" stroke="#64748b" strokeWidth="1" />
+            <line x1={30 + i * 110} y1="375" x2={30 + i * 110} y2="380" stroke="#64748b" strokeWidth="1" />
             <line x1="25" y1={40 + i * 53} x2="30" y2={40 + i * 53} stroke="#64748b" strokeWidth="1" />
           </g>
         ))}
@@ -2402,7 +2402,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
 
   return (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0a0f1a' }}>
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '140px' }}>
+      <div role="main" style={{ flex: 1, overflowY: 'auto', paddingBottom: '140px' }}>
         {renderPhaseContent()}
       </div>
       {renderNavigationBar(canProceed(), getNextButtonLabel())}

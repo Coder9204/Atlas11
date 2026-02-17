@@ -873,70 +873,59 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
             showMicrostructure
           )}
 
-          {/* Premium Contact Angle Meter - Top Right */}
-          <g transform="translate(282, 8)">
-            {/* Meter background with gradient border */}
+          {/* Combined Status Display - Single box to avoid overlap */}
+          <g transform="translate(8, 8)">
             <rect
               x={0}
               y={0}
-              width={110}
-              height={60}
+              width={384}
+              height={70}
               rx={10}
-              fill="rgba(0, 0, 0, 0.7)"
-              stroke={contactAngle > 150 ? colors.success : contactAngle > 90 ? colors.warning : colors.error}
+              fill="rgba(0, 0, 0, 0.75)"
+              stroke="rgba(100, 116, 139, 0.5)"
               strokeWidth="1.5"
             />
-            {/* Label */}
-            <text x={55} y={16} fill={colors.textMuted} fontSize={11} textAnchor="middle" fontWeight="500">
+
+            {/* Left Section: Surface State */}
+            <text x={10} y={18} fill={colors.textMuted} fontSize={10} fontWeight="500">
+              SURFACE STATE
+            </text>
+            <text x={10} y={38} fill={stateInfo.color} fontSize={11} fontWeight="bold">
+              {stateInfo.text}
+            </text>
+            <text x={10} y={56} fill={colors.textMuted} fontSize={10}>
+              {hasDetergent ? 'Air collapsed' : contactAngle > 150 ? 'Air trapped' : 'Partial wet'}
+            </text>
+
+            {/* Center Section: Contact Angle */}
+            <text x={192} y={18} fill={colors.textMuted} fontSize={10} textAnchor="middle" fontWeight="500">
               CONTACT ANGLE
             </text>
-            {/* Value */}
             <text
-              x={55}
-              y={40}
+              x={192}
+              y={46}
               fill={contactAngle > 150 ? colors.success : contactAngle > 90 ? colors.warning : colors.error}
-              fontSize={22}
+              fontSize={24}
               fontWeight="bold"
               textAnchor="middle"
             >
               {contactAngle.toFixed(0)}°
             </text>
-            {/* Classification */}
-            <text x={55} y={55} fill={colors.textMuted} fontSize={11} textAnchor="middle">
+            <text x={192} y={62} fill={colors.textMuted} fontSize={10} textAnchor="middle">
               {contactAngle > 150 ? 'Superhydrophobic' : contactAngle > 90 ? 'Hydrophobic' : 'Hydrophilic'}
             </text>
-          </g>
 
-          {/* Premium State Indicator - Top Left */}
-          <g transform="translate(8, 8)">
-            <rect
-              x={0}
-              y={0}
-              width={110}
-              height={60}
-              rx={10}
-              fill="rgba(0, 0, 0, 0.7)"
-              stroke={stateInfo.color}
-              strokeWidth="1.5"
-            />
-            <text x={55} y={16} fill={colors.textMuted} fontSize={11} textAnchor="middle" fontWeight="500">
-              SURFACE STATE
+            {/* Right Section: Water Behavior */}
+            <text x={374} y={18} fill={colors.textMuted} fontSize={10} textAnchor="end" fontWeight="500">
+              BEHAVIOR
             </text>
-            <text x={55} y={35} fill={stateInfo.color} fontSize={11} fontWeight="bold" textAnchor="middle">
-              {stateInfo.text}
+            <text x={374} y={40} fill={interactive && contactAngle > 150 && !hasDetergent ? colors.success : colors.textMuted} fontSize={12} fontWeight="bold" textAnchor="end">
+              {interactive && contactAngle > 150 && !hasDetergent ? 'ROLLING' : hasDetergent ? 'WETTING' : contactAngle > 90 ? 'BEADING' : 'SPREADING'}
             </text>
-            <text x={55} y={52} fill={colors.textMuted} fontSize={11} textAnchor="middle">
-              {hasDetergent ? 'Air collapsed' : contactAngle > 150 ? 'Air trapped' : 'Partial wet'}
+            <text x={374} y={58} fill={colors.textMuted} fontSize={10} textAnchor="end">
+              {surfaceChemistry === 'superhydrophobic' ? 'Superhydrophobic' : surfaceChemistry === 'hydrophobic' ? 'Hydrophobic' : 'Hydrophilic'}
             </text>
           </g>
-
-          {/* Water behavior indicator - Positioned between the two top boxes */}
-          {interactive && contactAngle > 150 && !hasDetergent && (
-            <g transform="translate(145, 80)">
-              <rect x={0} y={0} width={100} height={28} rx={6} fill="rgba(16, 185, 129, 0.2)" stroke={colors.success} strokeWidth="1" />
-              <text x={50} y={19} fill={colors.success} fontSize={11} textAnchor="middle" fontWeight="600">ROLLING</text>
-            </g>
-          )}
 
           {/* Young's equation - REMOVED to avoid overlap, explained in text instead */}
 

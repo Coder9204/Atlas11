@@ -231,24 +231,24 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
 
   const transferApplications = [
     {
-      title: 'High-Frequency Trading',
-      description: 'Stock traders pay millions for microseconds of advantage. Why does physical location matter so much?',
-      answer: 'At 200,000 km/s in fiber, each 100km adds 0.5ms of latency. Firms build data centers feet away from exchanges. Microwave towers (faster than fiber!) connect Chicago to NYC. Even a 1ms advantage can mean millions in profit.',
+      title: 'High-Frequency Trading Industry Application',
+      description: 'Financial trading companies and engineers face a real-world challenge: Stock traders pay millions for microseconds of advantage. Why does physical location matter so much in this industry?',
+      answer: 'At 200,000 km/s in fiber, each 100km adds 0.5ms of latency. Trading firms build data centers feet away from exchanges. Engineers design microwave towers (faster than fiber!) to connect Chicago to NYC. Companies like Citadel and Jump Trading know even a 1ms advantage can mean millions in profit. This is a real engineering problem where physics creates business value.',
     },
     {
-      title: 'Online Gaming',
-      description: 'Gamers obsess over "ping" times. Why do players in Australia struggle with US servers?',
-      answer: 'Sydney to LA is ~12,500km by fiber = 62.5ms one-way minimum at light speed. Add router hops and processing: 150-200ms RTT is typical. Thats 6-7 frames at 30fps - noticeable input lag that affects competitive play.',
+      title: 'Online Gaming Industry Example',
+      description: 'Game developers and network engineers must solve a real-world problem: Gamers obsess over "ping" times. Why do players in Australia struggle with US servers in competitive gaming applications?',
+      answer: 'Sydney to LA is ~12,500km by fiber = 62.5ms one-way minimum at light speed. Add router hops and processing: 150-200ms RTT is typical for real-world conditions. Thats 6-7 frames at 30fps - noticeable input lag that affects competitive play. Companies like Riot Games and Valve place regional servers to solve this physics constraint. Engineers cannot eliminate distance, so they bring servers closer.',
     },
     {
-      title: 'Content Delivery Networks',
-      description: 'CDNs like Cloudflare have servers in 300+ cities. Why not just use one big data center?',
-      answer: 'A user 5000km away has 50ms+ propagation delay. CDNs cache content at "edge" locations close to users, often within 50km. This reduces latency from 100+ ms to under 10ms, making websites feel instant.',
+      title: 'Content Delivery Network (CDN) Engineering',
+      description: 'Cloud infrastructure engineers at companies like Cloudflare face a real-world design challenge: CDNs have servers in 300+ cities worldwide. Why not just use one big centralized data center? What engineering principles guide this architecture?',
+      answer: 'A user 5000km away has 50ms+ propagation delay due to light speed physics. Network engineers cache content at "edge" locations close to users, often within 50km. This real-world application reduces latency from 100+ ms to under 10ms, making websites feel instant. Companies like Akamai, Cloudflare, and Fastly employ thousands of engineers to build and maintain these distributed systems.',
     },
     {
-      title: 'Mars Communication',
-      description: 'Mars rovers cant be controlled in real-time. Why is there such a long delay?',
-      answer: 'Mars is 55-400 million km from Earth. At light speed, thats 3-22 MINUTES one-way! Round-trip communication takes 6-44 minutes. Rovers must operate autonomously because real-time control is physically impossible.',
+      title: 'Space Communication Engineering Example',
+      description: 'NASA engineers and space mission designers face a fundamental real-world constraint: Mars rovers cant be controlled in real-time. Why is there such a long delay in interplanetary applications?',
+      answer: 'Mars is 55-400 million km from Earth depending on orbital positions. At light speed, thats 3-22 MINUTES one-way! Round-trip communication takes 6-44 minutes in real-world conditions. Rovers must operate autonomously because real-time control is physically impossible. Engineers at JPL and NASA design autonomous navigation systems to work within these physics constraints. This is a clear example of how the speed of light limits what technology can achieve.',
     },
   ];
 
@@ -1245,7 +1245,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1299,7 +1299,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
+        {renderBottomBar(false, true, 'Next: A Twist!', true)}
       </div>
     );
   }
@@ -1308,7 +1308,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1351,6 +1351,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
                     textAlign: 'left',
                     fontSize: '14px',
                     WebkitTapHighlightColor: 'transparent',
+                    minHeight: '44px',
                   }}
                 >
                   {p.label}
@@ -1359,7 +1360,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
+        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction', true)}
       </div>
     );
   }
@@ -1434,7 +1435,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1476,7 +1477,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
+        {renderBottomBar(false, true, 'Apply This Knowledge', true)}
       </div>
     );
   }
@@ -1573,7 +1574,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
             </div>
           ))}
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
+        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test', true)}
       </div>
     );
   }
@@ -1583,7 +1584,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
     if (testSubmitted) {
       return (
         <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
             <div style={{
               background: testScore >= 7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1614,7 +1615,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 7, testScore >= 7 ? 'Complete Mastery' : 'Review and Retry')}
+          {renderBottomBar(false, testScore >= 7, testScore >= 7 ? 'Complete Mastery' : 'Review and Retry', true)}
         </div>
       );
     }
@@ -1622,7 +1623,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -1671,6 +1672,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
                     textAlign: 'left',
                     fontSize: '14px',
                     WebkitTapHighlightColor: 'transparent',
+                    minHeight: '44px',
                   }}
                 >
                   {opt.text}
@@ -1736,7 +1738,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>-</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
@@ -1769,7 +1771,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
 
           {renderVisualization(true)}
         </div>
-        {renderBottomBar(false, true, 'Complete')}
+        {renderBottomBar(false, true, 'Complete', true)}
       </div>
     );
   }
@@ -1777,7 +1779,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
   // Default fallback - render hook phase for unrecognized phases
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
         <div style={{ padding: '24px', textAlign: 'center' }}>
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>📡</div>
           <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
@@ -1803,7 +1805,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
           </div>
         </div>
       </div>
-      {renderBottomBar(false, true, 'Make a Prediction')}
+      {renderBottomBar(false, true, 'Make a Prediction', true)}
     </div>
   );
 };

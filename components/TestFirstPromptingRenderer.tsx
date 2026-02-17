@@ -811,13 +811,23 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
 
     return (
       <div style={{
+        display: 'flex',
+        flexDirection: 'column',
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -834,7 +844,7 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
             When prompting an LLM to write code, what happens if you write tests BEFORE the implementation?
           </h2>
 
-          {/* Simple diagram */}
+          {/* SVG diagram */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -842,27 +852,38 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '36px', marginBottom: '8px' }}>Tests</div>
-                <p style={{ ...typo.small, color: colors.testPass }}>Pass/Fail Criteria</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>+</div>
-              <div style={{
-                background: colors.code + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.code}`,
-              }}>
-                <div style={{ fontSize: '24px', color: colors.code }}>LLM</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Code Generator</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>=</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '36px', marginBottom: '8px' }}>???</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Quality Outcome</p>
-              </div>
-            </div>
+            <svg width={isMobile ? 340 : 480} height={isMobile ? 180 : 200} style={{ margin: '0 auto' }} viewBox={`0 0 ${isMobile ? 340 : 480} ${isMobile ? 180 : 200}`} preserveAspectRatio="xMidYMid meet">
+              {/* Tests box */}
+              <rect x="10" y="60" width="100" height="80" rx="8" fill={`${colors.testPass}22`} stroke={colors.testPass} strokeWidth="2" />
+              <text x="60" y="95" textAnchor="middle" fill={colors.testPass} fontSize="14" fontWeight="600">Tests</text>
+              <text x="60" y="115" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Pass/Fail</text>
+              <text x="60" y="128" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Criteria</text>
+
+              {/* Arrow */}
+              <line x1="115" y1="100" x2="145" y2="100" stroke={colors.textMuted} strokeWidth="2" />
+              <polygon points="145,100 140,96 140,104" fill={colors.textMuted} />
+              <text x="130" y="95" textAnchor="middle" fill={colors.textMuted} fontSize="16">+</text>
+
+              {/* LLM box */}
+              <rect x="150" y="60" width="100" height="80" rx="8" fill={`${colors.code}22`} stroke={colors.code} strokeWidth="2" />
+              <text x="200" y="95" textAnchor="middle" fill={colors.code} fontSize="14" fontWeight="600">LLM</text>
+              <text x="200" y="115" textAnchor="middle" fill={colors.textPrimary} fontSize="10">Code</text>
+              <text x="200" y="128" textAnchor="middle" fill={colors.textPrimary} fontSize="10">Generator</text>
+
+              {/* Arrow */}
+              <line x1="255" y1="100" x2="285" y2="100" stroke={colors.textMuted} strokeWidth="2" />
+              <polygon points="285,100 280,96 280,104" fill={colors.textMuted} />
+              <text x="270" y="95" textAnchor="middle" fill={colors.textMuted} fontSize="16">=</text>
+
+              {/* Question mark box */}
+              <rect x="290" y="60" width="100" height="80" rx="8" fill={`${colors.textMuted}22`} stroke={colors.textMuted} strokeWidth="2" />
+              <text x="340" y="105" textAnchor="middle" fill={colors.textMuted} fontSize="32">???</text>
+              <text x="340" y="133" textAnchor="middle" fill={colors.textMuted} fontSize="10">Outcome</text>
+
+              {/* Grid lines for reference */}
+              <line x1="0" y1="60" x2={isMobile ? 340 : 480} y2="60" stroke={colors.border} strokeWidth="0.5" opacity="0.3" />
+              <line x1="0" y1="140" x2={isMobile ? 340 : 480} y2="140" stroke={colors.border} strokeWidth="0.5" opacity="0.3" />
+            </svg>
           </div>
 
           {/* Options */}
@@ -902,14 +923,15 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
             ))}
           </div>
 
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test My Prediction
-            </button>
-          )}
+            {prediction && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Test My Prediction
+              </button>
+            )}
+          </div>
         </div>
 
         {renderNavDots()}
@@ -921,13 +943,23 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{
+        display: 'flex',
+        flexDirection: 'column',
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             TDD Simulator
           </h2>
@@ -989,6 +1021,27 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
               >
                 Code-First
               </button>
+            </div>
+
+            {/* Iteration control slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Current Iteration</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{iteration} / 5</span>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="5"
+                value={iteration}
+                onChange={(e) => setIteration(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              />
             </div>
 
             {/* Controls */}
@@ -1056,12 +1109,13 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
             </p>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Principle
-          </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand the Principle
+            </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1073,13 +1127,23 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
   if (phase === 'review') {
     return (
       <div style={{
+        display: 'flex',
+        flexDirection: 'column',
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Why Test-First Works
           </h2>
@@ -1140,12 +1204,13 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
             </p>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Discover Property Testing
-          </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Discover Property Testing
+            </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1163,13 +1228,23 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
 
     return (
       <div style={{
+        display: 'flex',
+        flexDirection: 'column',
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1243,14 +1318,15 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
             ))}
           </div>
 
-          {twistPrediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              See Property Testing in Action
-            </button>
-          )}
+            {twistPrediction && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                See Property Testing in Action
+              </button>
+            )}
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1262,13 +1338,23 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{
+        display: 'flex',
+        flexDirection: 'column',
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Property-Based Testing
           </h2>
@@ -1385,12 +1471,13 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
             </p>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Power
-          </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand the Power
+            </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1402,13 +1489,23 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
   if (phase === 'twist_review') {
     return (
       <div style={{
+        display: 'flex',
+        flexDirection: 'column',
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Complete Test-First Strategy
           </h2>
@@ -1475,12 +1572,13 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
             </div>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            See Real-World Applications
-          </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              See Real-World Applications
+            </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1495,24 +1593,35 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
 
     return (
       <div style={{
+        display: 'flex',
+        flexDirection: 'column',
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
+        {/* Scrollable content container */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
 
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
+            {/* App selector */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '12px',
+              marginBottom: '24px',
+            }}>
             {realWorldApps.map((a, i) => (
               <button
                 key={i}
@@ -1611,14 +1720,15 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
             </div>
           </div>
 
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
+            {allAppsCompleted && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Take the Knowledge Test
+              </button>
+            )}
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1632,13 +1742,23 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
       const passed = testScore >= 7;
       return (
         <div style={{
+          display: 'flex',
+          flexDirection: 'column',
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          overflow: 'hidden',
         }}>
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            paddingTop: '64px',
+            paddingBottom: '100px',
+            paddingLeft: '24px',
+            paddingRight: '24px',
+          }}>
+            <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1677,7 +1797,8 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
               >
                 Review and Try Again
               </button>
-            )}
+              )}
+            </div>
           </div>
           {renderNavDots()}
         </div>
@@ -1688,13 +1809,23 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
 
     return (
       <div style={{
+        display: 'flex',
+        flexDirection: 'column',
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1842,6 +1973,7 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
                 Submit Test
               </button>
             )}
+          </div>
           </div>
         </div>
 

@@ -400,21 +400,21 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
     return (
       <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         {/* Pressure gauge at inlet */}
-        <g transform="translate(20, 30)">
+        <g transform="translate(30, 30)">
           <circle cx="0" cy="0" r="18" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
           <text x="0" y="5" fill={colors.textPrimary} fontSize="10" textAnchor="middle" fontWeight="600">
             {(pressureData.totalDrop + 30).toFixed(1)}
           </text>
-          <text x="0" y="35" fill={colors.textMuted} fontSize="9" textAnchor="middle">PSI in</text>
+          <text x="0" y="38" fill={colors.textMuted} fontSize="9" textAnchor="middle">PSI in</text>
         </g>
 
         {/* Pressure gauge at outlet */}
-        <g transform={`translate(${width - 20}, 30)`}>
+        <g transform={`translate(${width - 30}, 30)`}>
           <circle cx="0" cy="0" r="18" fill={colors.bgSecondary} stroke={colors.success} strokeWidth="2" />
           <text x="0" y="5" fill={colors.textPrimary} fontSize="10" textAnchor="middle" fontWeight="600">
             30.0
           </text>
-          <text x="0" y="35" fill={colors.textMuted} fontSize="9" textAnchor="middle">PSI out</text>
+          <text x="0" y="38" fill={colors.textMuted} fontSize="9" textAnchor="middle">PSI out</text>
         </g>
 
         {/* Pipe body with gradient */}
@@ -668,11 +668,13 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -697,29 +699,36 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>💧</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>50 GPM</p>
-                <p style={{ ...typo.small, color: colors.accent }}>1 PSI drop</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-              <div style={{
-                background: colors.accent + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.accent}`,
-              }}>
-                <div style={{ fontSize: '32px' }}>🔧</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Same Pipe</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>💧💧</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>100 GPM</p>
-                <p style={{ ...typo.small, color: colors.warning }}>? PSI drop</p>
-              </div>
-            </div>
+            {/* Static SVG diagram */}
+            <svg width={isMobile ? 340 : 500} height={200} style={{ margin: '0 auto', display: 'block' }}>
+              {/* Scenario 1: 50 GPM */}
+              <g transform="translate(40, 50)">
+                <rect x="0" y="0" width="60" height="30" rx="4" fill={colors.accent} opacity="0.3" stroke={colors.accent} strokeWidth="2" />
+                <text x="30" y="20" fill={colors.textPrimary} fontSize="12" textAnchor="middle" fontWeight="600">Pipe</text>
+                <text x="30" y="50" fill={colors.textMuted} fontSize="10" textAnchor="middle">50 GPM</text>
+                <text x="30" y="65" fill={colors.accent} fontSize="10" textAnchor="middle">1 PSI drop</text>
+              </g>
+
+              {/* Arrow */}
+              <g transform={`translate(${isMobile ? 180 : 240}, 65)`}>
+                <line x1="0" y1="0" x2="40" y2="0" stroke={colors.textMuted} strokeWidth="2" />
+                <polygon points="40,0 32,4 32,-4" fill={colors.textMuted} />
+              </g>
+
+              {/* Scenario 2: 100 GPM */}
+              <g transform={`translate(${isMobile ? 240 : 300}, 50)`}>
+                <rect x="0" y="0" width="60" height="30" rx="4" fill={colors.accent} opacity="0.3" stroke={colors.accent} strokeWidth="2" />
+                <text x="30" y="20" fill={colors.textPrimary} fontSize="12" textAnchor="middle" fontWeight="600">Pipe</text>
+                <text x="30" y="50" fill={colors.textMuted} fontSize="10" textAnchor="middle">100 GPM</text>
+                <text x="30" y="65" fill={colors.warning} fontSize="10" textAnchor="middle">? PSI drop</text>
+              </g>
+
+              {/* Question mark */}
+              <g transform={`translate(${isMobile ? 210 : 270}, 120)`}>
+                <circle cx="0" cy="0" r="15" fill={colors.warning} opacity="0.2" stroke={colors.warning} strokeWidth="2" />
+                <text x="0" y="6" fill={colors.warning} fontSize="18" textAnchor="middle" fontWeight="700">?</text>
+              </g>
+            </svg>
           </div>
 
           {/* Options */}
@@ -759,14 +768,15 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
             ))}
           </div>
 
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test My Prediction →
-            </button>
-          )}
+            {prediction && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Test My Prediction →
+              </button>
+            )}
+          </div>
         </div>
 
         {renderNavDots()}
@@ -847,9 +857,11 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
                 onChange={(e) => setPipeDiameter(parseFloat(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  accentColor: colors.accent,
+                  touchAction: 'pan-y',
                 }}
               />
             </div>
@@ -869,9 +881,11 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
                 onChange={(e) => setFlowRate(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  accentColor: colors.accent,
+                  touchAction: 'pan-y',
                 }}
               />
             </div>
@@ -1060,11 +1074,13 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1158,14 +1174,15 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
             ))}
           </div>
 
-          {twistPrediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              See Filter Effects →
-            </button>
-          )}
+            {twistPrediction && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                See Filter Effects →
+              </button>
+            )}
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1484,22 +1501,24 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
 
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
+            {/* App selector */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '12px',
+              marginBottom: '24px',
+            }}>
             {realWorldApps.map((a, i) => (
               <button
                 key={i}
@@ -1598,14 +1617,15 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
             </div>
           </div>
 
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test →
-            </button>
-          )}
+            {allAppsCompleted && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Take the Knowledge Test →
+              </button>
+            )}
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1621,11 +1641,13 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
         }}>
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+            <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center', padding: '0 24px' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1664,7 +1686,8 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
               >
                 Review & Try Again
               </button>
-            )}
+              )}
+            </div>
           </div>
           {renderNavDots()}
         </div>
@@ -1677,11 +1700,13 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1829,6 +1854,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
                 Submit Test
               </button>
             )}
+          </div>
           </div>
         </div>
 

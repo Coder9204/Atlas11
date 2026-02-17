@@ -696,6 +696,56 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
     </div>
   );
 
+  // Bottom navigation bar with Back/Next
+  const renderBottomNav = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        gap: '16px',
+        padding: '16px 0',
+        marginTop: '24px',
+      }}>
+        {currentIndex > 0 ? (
+          <button
+            onClick={() => goToPhase(phaseOrder[currentIndex - 1])}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+              minHeight: '44px',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            ← Back
+          </button>
+        ) : <div />}
+        {currentIndex < phaseOrder.length - 1 && (
+          <button
+            onClick={() => nextPhase()}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: 'none',
+              background: colors.accent,
+              color: 'white',
+              cursor: 'pointer',
+              minHeight: '44px',
+              fontWeight: 600,
+              transition: 'all 0.2s ease',
+            }}
+          >
+            Next →
+          </button>
+        )}
+      </div>
+    );
+  };
+
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, #7C3AED)`,
@@ -774,6 +824,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
           Investigate the Mystery
         </button>
 
+        {renderBottomNav()}
         {renderNavDots()}
       </div>
     );
@@ -900,6 +951,8 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
               Test My Prediction
             </button>
           )}
+
+          {renderBottomNav()}
         </div>
 
         {renderNavDots()}
@@ -1030,6 +1083,8 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
           >
             Understand the Physics
           </button>
+
+          {renderBottomNav()}
         </div>
         </div>
 
@@ -1140,6 +1195,8 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
           >
             But Wait - What About Negative Values?
           </button>
+
+          {renderBottomNav()}
         </div>
         </div>
 
@@ -1261,6 +1318,8 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
               Discover Auxetic Materials
             </button>
           )}
+
+          {renderBottomNav()}
         </div>
 
         {renderNavDots()}
@@ -1353,6 +1412,8 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
           >
             Learn About Auxetic Applications
           </button>
+
+          {renderBottomNav()}
         </div>
         </div>
 
@@ -1463,6 +1524,8 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
           >
             See Real-World Applications
           </button>
+
+          {renderBottomNav()}
         </div>
         </div>
 
@@ -1612,6 +1675,9 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
               Take the Knowledge Test
             </button>
           )}
+
+          {renderBottomNav()}
+        </div>
         </div>
 
         {renderNavDots()}
@@ -1627,11 +1693,14 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}>
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1671,6 +1740,9 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
                 Review and Try Again
               </button>
             )}
+
+            {renderBottomNav()}
+          </div>
           </div>
           {renderNavDots()}
         </div>
@@ -1683,11 +1755,14 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1836,6 +1911,9 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
               </button>
             )}
           </div>
+
+          {renderBottomNav()}
+        </div>
         </div>
 
         {renderNavDots()}
@@ -1927,6 +2005,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
           </a>
         </div>
 
+        {renderBottomNav()}
         {renderNavDots()}
       </div>
     );

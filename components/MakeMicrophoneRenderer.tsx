@@ -454,8 +454,15 @@ export default function MakeMicrophoneRenderer({
     const diaphragmOffset = getDiaphragmPosition();
     const voltage = getOutputVoltage();
 
+    // Use color to represent voltage amplitude
+    const voltageColor = Math.abs(voltage) > 0.5
+      ? '#22C55E'  // Green for high signal
+      : Math.abs(voltage) > 0.3
+      ? '#F59E0B'  // Orange for medium
+      : '#6B7280'; // Gray for low
+
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px', transition: 'all 0.15s ease' }} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
         {/* Title */}
         <text x={width/2} y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
           {micType === 'dynamic' ? 'Dynamic Microphone' : 'Condenser Microphone'}
@@ -577,14 +584,15 @@ export default function MakeMicrophoneRenderer({
           {/* Time axis label */}
           <text x="50" y="78" textAnchor="middle" fill="#6B7280" fontSize="8">Time</text>
 
-          {/* Waveform display */}
+          {/* Waveform display - use voltage color for semantic meaning */}
           <path
             d={`M 10 50 ${Array.from({ length: 16 }, (_, i) =>
-              `L ${10 + i * 5} ${50 - Math.sin((soundWavePhase + i * 0.5) * soundFrequency) * voltage * 25}`
+              `L ${10 + i * 5} ${50 - Math.sin((soundWavePhase + i * 0.5) * soundFrequency) * voltage * 30}`
             ).join(' ')}`}
             fill="none"
-            stroke={colors.accent}
-            strokeWidth="2"
+            stroke={voltageColor}
+            strokeWidth="2.5"
+            filter={Math.abs(voltage) > 0.5 ? 'url(#diaphragmGlow)' : ''}
           />
 
           {/* Voltage readout */}
@@ -802,105 +810,113 @@ export default function MakeMicrophoneRenderer({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        paddingTop: '48px',
-        paddingBottom: '100px',
-        padding: '48px 24px 100px 24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
-          <div style={{
-            background: `${colors.accent}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.accent}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              Make Your Prediction
-            </p>
-          </div>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <div style={{
+              background: `${colors.accent}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.accent}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                Make Your Prediction
+              </p>
+            </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            A dynamic microphone uses a coil attached to a diaphragm, placed in a magnetic field. What principle allows it to generate electricity from sound?
-          </h2>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              A dynamic microphone uses a coil attached to a diaphragm, placed in a magnetic field. What principle allows it to generate electricity from sound?
+            </h2>
 
-          {/* Simple diagram */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>Sound</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Pressure Waves</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>-&gt;</div>
-              <div style={{
-                background: colors.accent + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.accent}`,
-              }}>
-                <div style={{ fontSize: '24px', color: colors.accent }}>Diaphragm + Coil</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>in Magnetic Field</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>-&gt;</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>???</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Electrical Signal</p>
+            {/* Simple diagram */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '48px' }}>🔊</div>
+                  <p style={{ ...typo.small, color: colors.textMuted }}>Pressure Waves</p>
+                </div>
+                <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
+                <div style={{
+                  background: colors.accent + '33',
+                  padding: '20px 30px',
+                  borderRadius: '8px',
+                  border: `2px solid ${colors.accent}`,
+                }}>
+                  <div style={{ fontSize: '24px', color: colors.accent }}>Diaphragm + Coil</div>
+                  <p style={{ ...typo.small, color: colors.textPrimary }}>in Magnetic Field</p>
+                </div>
+                <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '48px' }}>⚡</div>
+                  <p style={{ ...typo.small, color: colors.textMuted }}>Electrical Signal</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                  style={{
+                    background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                    color: prediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {prediction && (
               <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setPrediction(opt.id); }}
-                style={{
-                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
               >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
+                Test My Prediction
               </button>
-            ))}
+            )}
           </div>
-
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test My Prediction
-            </button>
-          )}
         </div>
 
         {renderNavDots()}
@@ -960,10 +976,10 @@ export default function MakeMicrophoneRenderer({
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ ...typo.small, color: colors.textSecondary }}>Sound Frequency (pitch)</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{soundFrequency}x</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{(soundFrequency * 220).toFixed(0)} Hz</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted, minWidth: '40px' }}>1x</span>
+                  <span style={{ ...typo.small, color: colors.textMuted, minWidth: '50px' }}>220 Hz</span>
                   <input
                     type="range"
                     min="1"
@@ -980,7 +996,7 @@ export default function MakeMicrophoneRenderer({
                       accentColor: '#3b82f6'
                     } as React.CSSProperties}
                   />
-                  <span style={{ ...typo.small, color: colors.textMuted, minWidth: '40px', textAlign: 'right' }}>4x</span>
+                  <span style={{ ...typo.small, color: colors.textMuted, minWidth: '50px', textAlign: 'right' }}>880 Hz</span>
                 </div>
               </div>
 
@@ -1050,6 +1066,28 @@ export default function MakeMicrophoneRenderer({
                   </button>
                 </div>
               </div>
+
+              {/* Comparison display - before/after relationship */}
+              <div style={{
+                display: 'flex',
+                gap: '16px',
+                marginBottom: '16px',
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+              }}>
+                <div style={{ flex: 1, textAlign: 'center' }}>
+                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Sound Input</div>
+                  <div style={{ ...typo.h3, color: colors.accent }}>{(soundAmplitude * 100).toFixed(0)} dB SPL</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{(soundFrequency * 220).toFixed(0)} Hz</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', color: colors.textMuted }}>→</div>
+                <div style={{ flex: 1, textAlign: 'center' }}>
+                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Electric Output</div>
+                  <div style={{ ...typo.h3, color: '#22C55E' }}>{(Math.abs(getOutputVoltage()) * 10).toFixed(1)} mV</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{micType === 'dynamic' ? '80% sens' : '120% sens'}</div>
+                </div>
+              </div>
             </div>
 
             {/* Discovery prompt */}
@@ -1116,16 +1154,24 @@ export default function MakeMicrophoneRenderer({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        paddingTop: '48px',
-        paddingBottom: '100px',
-        padding: '48px 24px 100px 24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            How Microphones Work
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              How Microphones Work
+            </h2>
 
           <div style={{
             background: `${colors.accent}11`,
@@ -1179,12 +1225,13 @@ export default function MakeMicrophoneRenderer({
             ))}
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={primaryButtonStyle}
-          >
-            Now for a Twist...
-          </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Now for a Twist...
+            </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1204,13 +1251,20 @@ export default function MakeMicrophoneRenderer({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        paddingTop: '48px',
-        paddingBottom: '100px',
-        padding: '48px 24px 100px 24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1262,14 +1316,15 @@ export default function MakeMicrophoneRenderer({
             ))}
           </div>
 
-          {twistPrediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              See It In Action
-            </button>
-          )}
+            {twistPrediction && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                See It In Action
+              </button>
+            )}
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1386,13 +1441,20 @@ export default function MakeMicrophoneRenderer({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        paddingTop: '48px',
-        paddingBottom: '100px',
-        padding: '48px 24px 100px 24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Transducer Reciprocity
           </h2>
@@ -1459,12 +1521,13 @@ export default function MakeMicrophoneRenderer({
             </div>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={primaryButtonStyle}
-          >
-            See Real-World Applications
-          </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              See Real-World Applications
+            </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1627,49 +1690,58 @@ export default function MakeMicrophoneRenderer({
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          padding: '48px 24px 100px 24px',
+          display: 'flex',
+          flexDirection: 'column',
         }}>
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '20px auto 0', textAlign: 'center' }}>
-            <div style={{ fontSize: '80px', marginBottom: '24px' }}>
-              {passed ? 'Trophy' : 'Book'}
-            </div>
-            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
-              {passed ? 'Excellent!' : 'Keep Learning!'}
-            </h2>
-            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
-              {testScore} / 10
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
-              {passed
-                ? 'You understand microphone physics and transducers!'
-                : 'Review the concepts and try again.'}
-            </p>
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            paddingTop: '64px',
+            paddingBottom: '100px',
+            paddingLeft: '24px',
+            paddingRight: '24px',
+          }}>
 
-            {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
-                Complete Lesson
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
-                }}
-                style={primaryButtonStyle}
-              >
-                Review and Try Again
-              </button>
-            )}
+            <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+              <div style={{ fontSize: '80px', marginBottom: '24px' }}>
+                {passed ? '🏆' : '📖'}
+              </div>
+              <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+                {passed ? 'Excellent!' : 'Keep Learning!'}
+              </h2>
+              <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+                {testScore} / 10
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+                {passed
+                  ? 'You understand microphone physics and transducers!'
+                  : 'Review the concepts and try again.'}
+              </p>
+
+              {passed ? (
+                <button
+                  onClick={() => { playSound('complete'); nextPhase(); }}
+                  style={primaryButtonStyle}
+                >
+                  Complete Lesson
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setTestSubmitted(false);
+                    setTestAnswers(Array(10).fill(null));
+                    setCurrentQuestion(0);
+                    setTestScore(0);
+                    goToPhase('hook');
+                  }}
+                  style={primaryButtonStyle}
+                >
+                  Review and Try Again
+                </button>
+              )}
+            </div>
           </div>
           {renderNavDots()}
         </div>
@@ -1682,13 +1754,20 @@ export default function MakeMicrophoneRenderer({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        paddingTop: '48px',
-        paddingBottom: '100px',
-        padding: '48px 24px 100px 24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1844,6 +1923,7 @@ export default function MakeMicrophoneRenderer({
             )}
           </div>
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -1866,7 +1946,7 @@ export default function MakeMicrophoneRenderer({
         {renderProgressBar()}
 
         <div style={{ fontSize: '100px', marginBottom: '24px' }}>
-          Trophy
+          🏆
         </div>
 
         <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
@@ -1896,7 +1976,7 @@ export default function MakeMicrophoneRenderer({
               'Piezoelectric and electromagnetic effects work both directions',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                <span style={{ color: colors.success, marginTop: '2px' }}>Checkmark</span>
+                <span style={{ color: colors.success, marginTop: '2px' }}>✓</span>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
               </div>
             ))}

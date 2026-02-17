@@ -101,14 +101,38 @@ const colors = {
 };
 
 const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
-  gamePhase = 'hook',
+  gamePhase,
   onPhaseComplete,
   onBack,
   onGameEvent,
 }) => {
-  // Validate and default to hook if invalid
-  const validPhases = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-  const phase = (validPhases.includes(gamePhase || '') ? gamePhase : 'hook') as 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  // Internal phase management
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const [internalPhase, setInternalPhase] = useState<Phase>('hook');
+
+  // Use external phase if provided, otherwise use internal
+  const phase = (gamePhase && validPhases.includes(gamePhase as Phase) ? gamePhase : internalPhase) as Phase;
+
+  // Sync internal phase from external gamePhase prop
+  useEffect(() => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase) && gamePhase !== internalPhase) {
+      setInternalPhase(gamePhase as Phase);
+    }
+  }, [gamePhase, internalPhase]);
+
+  // Function to advance to next phase
+  const goToPhase = useCallback((newPhase: Phase) => {
+    setInternalPhase(newPhase);
+    if (onPhaseComplete) {
+      const phaseIndex = validPhases.indexOf(newPhase);
+      onPhaseComplete(phaseIndex);
+    }
+    if (onGameEvent) {
+      onGameEvent({ type: 'phase_change', data: { phase: newPhase } });
+    }
+  }, [onPhaseComplete, onGameEvent]);
+
   // Simulation state
   const [rampAngle, setRampAngle] = useState(30);
   const [objectMass, setObjectMass] = useState(1);
@@ -319,7 +343,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
       ],
     },
     {
-      question: 'For a solid cylinder rolling without slipping, what fraction of its kinetic energy is rotational?',
+      question: 'A solid cylinder rolls down a ramp without slipping. At the bottom, it has both translational (forward motion) and rotational (spinning) kinetic energy. What fraction of its total kinetic energy is rotational?',
       options: [
         { text: 'All of it (100%)', correct: false },
         { text: 'Half of it (50%)', correct: false },
@@ -903,6 +927,14 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
             </g>
           )}
 
+          {/* Mass display */}
+          <g transform={`translate(${width - 100}, ${showTwist ? 42 : 15})`}>
+            <rect x={0} y={0} width={85} height={18} rx={4} fill="rgba(148, 163, 184, 0.2)" stroke={colors.textMuted} strokeWidth={1} />
+            <text x={42} y={13} fill={colors.textMuted} fontSize={9} textAnchor="middle" fontWeight="bold">
+              Mass: {objectMass.toFixed(1)} kg
+            </text>
+          </g>
+
           {/* Axis labels */}
           <text x={width / 2} y={height - 8} fill={colors.textMuted} fontSize={11} textAnchor="middle">
             Distance (horizontal)
@@ -1053,20 +1085,21 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
     </div>
   );
 
-  const phases = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-  const currentPhaseIndex = phases.indexOf(phase);
+  const currentPhaseIndex = validPhases.indexOf(phase);
   const canGoBack = currentPhaseIndex > 0;
-  const canGoNext = true; // Will be overridden by specific phase logic
 
   const handleBack = () => {
+    if (currentPhaseIndex > 0) {
+      goToPhase(validPhases[currentPhaseIndex - 1]);
+    }
     if (onBack) {
       onBack();
     }
   };
 
   const handleNext = () => {
-    if (onPhaseComplete) {
-      onPhaseComplete(currentPhaseIndex);
+    if (currentPhaseIndex < validPhases.length - 1) {
+      goToPhase(validPhases[currentPhaseIndex + 1]);
     }
   };
 
@@ -1086,7 +1119,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
     }}>
       {/* Progress dots */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
-        {phases.map((p, i) => (
+        {validPhases.map((p, i) => (
           <div
             key={p}
             aria-label={`${p} phase`}
@@ -1146,7 +1179,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
@@ -1166,12 +1199,12 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
               borderRadius: '12px',
               marginBottom: '16px',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6, fontWeight: 'normal' }}>
                 A solid cylinder and a hollow hoop have the same mass and radius.
                 Release them together at the top of a ramp. Which one reaches
                 the bottom first?
               </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px', fontWeight: 400 }}>
                 The answer reveals a fundamental truth about rotational energy!
               </p>
             </div>
@@ -1635,8 +1668,15 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
                   Reveal Answer
                 </button>
               ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                <div>
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '8px' }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                  </div>
+                  <button
+                    style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', background: colors.success, color: 'white', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
+                  >
+                    Got It
+                  </button>
                 </div>
               )}
             </div>
@@ -1663,7 +1703,9 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
               <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
                 {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
               </h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
+              <div style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>
+                Score: {testScore} / 10
+              </div>
               <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
                 {testScore >= 8 ? 'You\'ve mastered rolling motion and rotational inertia!' : 'Review the material and try again.'}
               </p>
@@ -1732,7 +1774,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered rolling motion and rotational inertia</p>
           </div>

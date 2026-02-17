@@ -520,7 +520,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
 
         {/* Formula (if enabled) */}
         {showFormula && (
-          <g transform={`translate(${width - padding.right - 100}, ${height - padding.bottom - 20})`}>
+          <g transform={`translate(${width - padding.right - 85}, ${padding.top + 10})`}>
             <text fill={colors.textSecondary} fontSize="11" fontFamily="monospace">
               <tspan x="0" y="0">P = V × I</tspan>
             </text>
@@ -576,6 +576,67 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
       ))}
     </div>
   );
+
+  // Bottom navigation bar
+  const renderBottomNav = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+    const canGoNext = currentIndex < phaseOrder.length - 1;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgCard,
+        borderTop: `1px solid ${colors.border}`,
+        padding: '12px 24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 50,
+      }}>
+        <button
+          onClick={() => canGoBack && goToPhase(phaseOrder[currentIndex - 1])}
+          disabled={!canGoBack}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.border}`,
+            background: canGoBack ? 'transparent' : colors.bgSecondary,
+            color: canGoBack ? colors.textPrimary : colors.textMuted,
+            cursor: canGoBack ? 'pointer' : 'not-allowed',
+            fontSize: '14px',
+            fontWeight: 600,
+            opacity: canGoBack ? 1 : 0.5,
+          }}
+        >
+          ← Back
+        </button>
+        <div style={{ ...typo.small, color: colors.textMuted }}>
+          {phaseLabels[phase]}
+        </div>
+        <button
+          onClick={() => canGoNext && nextPhase()}
+          disabled={!canGoNext}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '8px',
+            border: 'none',
+            background: canGoNext ? colors.accent : colors.bgSecondary,
+            color: 'white',
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            fontSize: '14px',
+            fontWeight: 600,
+            opacity: canGoNext ? 1 : 0.5,
+          }}
+        >
+          Next →
+        </button>
+      </div>
+    );
+  };
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
@@ -656,6 +717,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
         </button>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -693,7 +755,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
             A solar panel is rated at 100W. As you change the load resistance, how does power output behave?
           </h2>
 
-          {/* Simple diagram */}
+          {/* Simple diagram with SVG visualization */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -701,6 +763,47 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
             marginBottom: '24px',
             textAlign: 'center',
           }}>
+            {/* SVG showing generic I-V curve concept */}
+            <svg width={isMobile ? 320 : 400} height={isMobile ? 180 : 220} style={{ marginBottom: '16px' }}>
+              <defs>
+                <linearGradient id="predictGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#F59E0B" stopOpacity="0.3" />
+                </linearGradient>
+              </defs>
+
+              {/* Background */}
+              <rect x="0" y="0" width="100%" height="100%" fill={colors.bgSecondary} rx="8" />
+
+              {/* Grid */}
+              {[0.25, 0.5, 0.75].map(frac => (
+                <g key={`grid-${frac}`}>
+                  <line x1="40" y1={30 + frac * 140} x2={isMobile ? 280 : 360} y2={30 + frac * 140} stroke={colors.border} strokeDasharray="3,3" />
+                  <line x1={40 + frac * (isMobile ? 240 : 320)} y1="30" x2={40 + frac * (isMobile ? 240 : 320)} y2="170" stroke={colors.border} strokeDasharray="3,3" />
+                </g>
+              ))}
+
+              {/* Axes */}
+              <line x1="40" y1="170" x2={isMobile ? 280 : 360} y2="170" stroke={colors.textSecondary} strokeWidth="2" />
+              <line x1="40" y1="30" x2="40" y2="170" stroke={colors.textSecondary} strokeWidth="2" />
+
+              {/* Generic I-V curve */}
+              <path
+                d={`M 40 50 Q ${isMobile ? 160 : 200} 50, ${isMobile ? 280 : 360} 170`}
+                fill="none"
+                stroke="#3B82F6"
+                strokeWidth="3"
+              />
+
+              {/* Question mark at peak */}
+              <circle cx={isMobile ? 160 : 200} cy="80" r="25" fill={colors.accent} opacity="0.2" />
+              <text x={isMobile ? 160 : 200} y="90" fontSize="32" fill={colors.accent} textAnchor="middle">?</text>
+
+              {/* Labels */}
+              <text x={(isMobile ? 280 : 360) / 2 + 40} y="195" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Voltage</text>
+              <text x="20" y="110" fill={colors.textSecondary} fontSize="12" textAnchor="middle" transform={`rotate(-90, 20, 110)`}>Current</text>
+            </svg>
+
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '48px' }}>☀️</div>
@@ -772,6 +875,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -809,10 +913,26 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
               border: `1px solid ${colors.accent}33`,
               borderRadius: '12px',
               padding: '12px 16px',
-              marginBottom: '24px',
+              marginBottom: '16px',
             }}>
               <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
                 💡 <strong>Watch for:</strong> The power value peaks at a specific voltage—not at the maximum voltage!
+              </p>
+            </div>
+
+            {/* What you're seeing */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <h4 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px', fontWeight: 600 }}>
+                What you're seeing:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                The blue I-V curve shows how current changes with voltage. The orange dashed line shows power (V×I). As you adjust voltage, the operating point (glowing circle) moves along the curve. Your goal: find where power is maximum.
               </p>
             </div>
 
@@ -843,11 +963,14 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
                   disabled={mpptEnabled}
                   style={{
                     width: '100%',
-                    height: '8px',
-                    borderRadius: '4px',
+                    height: '24px',
+                    borderRadius: '12px',
                     background: `linear-gradient(to right, ${colors.accent} ${(operatingVoltage / 22) * 100}%, ${colors.border} ${(operatingVoltage / 22) * 100}%)`,
                     cursor: mpptEnabled ? 'not-allowed' : 'pointer',
                     opacity: mpptEnabled ? 0.5 : 1,
+                    WebkitAppearance: 'none',
+                    appearance: 'none',
+                    touchAction: 'none',
                   }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -961,6 +1084,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1021,6 +1145,21 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
             </p>
           </div>
 
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <h4 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+              Why This Matters
+            </h4>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              Real solar systems face constantly changing conditions. Without MPPT, panels operate at a fixed point determined by the battery or load voltage—often far from optimal. MPPT controllers actively track the sweet spot as conditions change, extracting 20-30% more energy from the same hardware.
+            </p>
+          </div>
+
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
@@ -1030,6 +1169,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1066,6 +1206,40 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
             On a hot summer day (45°C panel temperature), what happens to the I-V curve?
           </h2>
+
+          {/* Simple temperature visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <svg width={isMobile ? 300 : 360} height={isMobile ? 160 : 180}>
+              <rect x="0" y="0" width="100%" height="100%" fill={colors.bgSecondary} rx="8" />
+
+              {/* Cold curve (blue) */}
+              <path
+                d={`M 40 ${isMobile ? 80 : 90} Q ${isMobile ? 150 : 180} ${isMobile ? 60 : 70}, ${isMobile ? 260 : 320} ${isMobile ? 140 : 160}`}
+                fill="none"
+                stroke="#3B82F6"
+                strokeWidth="2"
+                opacity="0.5"
+              />
+              <text x={isMobile ? 150 : 180} y={isMobile ? 50 : 60} fontSize="11" fill="#3B82F6" textAnchor="middle">25°C</text>
+
+              {/* Hot curve (red) - shifted left */}
+              <path
+                d={`M 40 ${isMobile ? 80 : 90} Q ${isMobile ? 120 : 140} ${isMobile ? 60 : 70}, ${isMobile ? 220 : 280} ${isMobile ? 140 : 160}`}
+                fill="none"
+                stroke="#EF4444"
+                strokeWidth="3"
+              />
+              <text x={isMobile ? 120 : 140} y={isMobile ? 50 : 60} fontSize="11" fill="#EF4444" textAnchor="middle">45°C?</text>
+
+              <text x={isMobile ? 150 : 180} y={isMobile ? 155 : 175} fontSize="12" fill={colors.textSecondary} textAnchor="middle">Voltage →</text>
+            </svg>
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
@@ -1113,6 +1287,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1187,9 +1362,12 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
                   onChange={(e) => setTemperature(parseInt(e.target.value))}
                   style={{
                     width: '100%',
-                    height: '8px',
-                    borderRadius: '4px',
+                    height: '24px',
+                    borderRadius: '12px',
                     cursor: 'pointer',
+                    WebkitAppearance: 'none',
+                    appearance: 'none',
+                    touchAction: 'none',
                   }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1213,9 +1391,12 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
                   onChange={(e) => setIrradiance(parseInt(e.target.value))}
                   style={{
                     width: '100%',
-                    height: '8px',
-                    borderRadius: '4px',
+                    height: '24px',
+                    borderRadius: '12px',
                     cursor: 'pointer',
+                    WebkitAppearance: 'none',
+                    appearance: 'none',
+                    touchAction: 'none',
                   }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1261,6 +1442,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1339,6 +1521,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1487,6 +1670,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1545,6 +1729,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
             )}
           </div>
           {renderNavDots()}
+          {renderBottomNav()}
         </div>
       );
     }
@@ -1711,6 +1896,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1800,6 +1986,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }

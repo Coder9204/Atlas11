@@ -172,10 +172,7 @@ interface StaticElectricityRendererProps {
 
 export default function StaticElectricityRenderer({ onGameEvent, gamePhase, onPhaseComplete }: StaticElectricityRendererProps) {
   // Core State
-  const [phase, setPhase] = useState<Phase>(() => {
-    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) return gamePhase as Phase;
-    return 'hook';
-  });
+  const [phase, setPhase] = useState<Phase>('hook');
   const [isMobile, setIsMobile] = useState(false);
 
   // Hook phase
@@ -790,6 +787,55 @@ export default function StaticElectricityRenderer({ onGameEvent, gamePhase, onPh
           </p>
         </div>
 
+        {/* Static SVG Diagram */}
+        <div style={{
+          background: premiumDesign.colors.background.card,
+          borderRadius: premiumDesign.radius.xl,
+          padding: premiumDesign.spacing.lg,
+          border: '1px solid rgba(255,255,255,0.1)',
+          maxWidth: 400,
+          margin: '0 auto',
+          marginBottom: premiumDesign.spacing.xl,
+        }}>
+          <svg viewBox="0 0 300 200" style={{ width: '100%', height: 'auto' }}>
+            <defs>
+              <radialGradient id="predictBalloon" cx="30%" cy="30%" r="70%">
+                <stop offset="0%" stopColor="#FF8888" />
+                <stop offset="100%" stopColor="#EF4444" />
+              </radialGradient>
+            </defs>
+
+            <rect width="300" height="200" fill="#0a0f1a" rx="8" />
+
+            {/* Hair/Head */}
+            <ellipse cx="80" cy="120" rx="30" ry="35" fill="#FFD7B5" />
+            {/* Hair strands */}
+            <line x1="60" y1="90" x2="55" y2="75" stroke="#8B4513" strokeWidth="2" strokeLinecap="round" />
+            <line x1="70" y1="88" x2="68" y2="70" stroke="#8B4513" strokeWidth="2" strokeLinecap="round" />
+            <line x1="80" y1="87" x2="80" y2="68" stroke="#8B4513" strokeWidth="2" strokeLinecap="round" />
+            <line x1="90" y1="88" x2="92" y2="70" stroke="#8B4513" strokeWidth="2" strokeLinecap="round" />
+            <line x1="100" y1="90" x2="105" y2="75" stroke="#8B4513" strokeWidth="2" strokeLinecap="round" />
+
+            {/* Balloon */}
+            <circle cx="220" cy="100" r="45" fill="url(#predictBalloon)" />
+            <line x1="220" y1="145" x2="220" y2="165" stroke="#666" strokeWidth="2" />
+
+            {/* Arrow indicating rubbing */}
+            <path d="M 140 100 Q 180 80 200 95" stroke="#F59E0B" strokeWidth="3" fill="none" markerEnd="url(#arrowPredictOrange)" />
+            <defs>
+              <marker id="arrowPredictOrange" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L8,3 z" fill="#F59E0B" />
+              </marker>
+            </defs>
+
+            {/* Labels */}
+            <text x="80" y="170" fill="#e2e8f0" fontSize="12" textAnchor="middle">Hair</text>
+            <text x="220" y="180" fill="#e2e8f0" fontSize="12" textAnchor="middle">Balloon</text>
+            <text x="150" y="60" fill="#F59E0B" fontSize="14" fontWeight="600" textAnchor="middle">Rub together</text>
+            <text x="150" y="185" fill="#cbd5e1" fontSize="11" textAnchor="middle">What happens?</text>
+          </svg>
+        </div>
+
         <div style={{
           display: 'flex',
           flexDirection: 'column',
@@ -853,8 +899,35 @@ export default function StaticElectricityRenderer({ onGameEvent, gamePhase, onPh
           }}>
             🎈 Balloon & Hair Experiment
           </h2>
-          <p style={{ color: premiumDesign.colors.text.secondary }}>
-            Rub the balloon on the hair to build up static charge
+          <p style={{ color: premiumDesign.colors.text.secondary, marginBottom: premiumDesign.spacing.sm }}>
+            This visualization shows how triboelectric charging works when materials rub together
+          </p>
+          <p style={{ color: premiumDesign.colors.text.muted, fontSize: '14px' }}>
+            <strong>Key Terms:</strong> Triboelectric effect (charge transfer through friction), Electron (negative particle), Induction (redistribution of charge in neutral objects)
+          </p>
+        </div>
+
+        <div style={{
+          background: 'rgba(245, 158, 11, 0.1)',
+          borderRadius: premiumDesign.radius.lg,
+          padding: premiumDesign.spacing.md,
+          border: '1px solid rgba(245, 158, 11, 0.3)',
+          marginBottom: premiumDesign.spacing.lg,
+        }}>
+          <p style={{ color: premiumDesign.colors.text.secondary, fontSize: '14px', margin: 0 }}>
+            <strong>What you're seeing:</strong> When you increase rubbing intensity, electrons transfer from hair to balloon. The balloon gains negative charge (blue symbols) while hair becomes positively charged. Like charges repel, causing hair strands to push apart.
+          </p>
+        </div>
+
+        <div style={{
+          background: 'rgba(59, 130, 246, 0.1)',
+          borderRadius: premiumDesign.radius.lg,
+          padding: premiumDesign.spacing.md,
+          border: '1px solid rgba(59, 130, 246, 0.3)',
+          marginBottom: premiumDesign.spacing.lg,
+        }}>
+          <p style={{ color: premiumDesign.colors.text.secondary, fontSize: '14px', margin: 0 }}>
+            <strong>Why this matters:</strong> Static electricity powers many real-world technologies including laser printers (toner adhesion), air purifiers (particle collection), and electrostatic painting (efficient coating). Understanding charge transfer helps prevent ESD damage to electronics worth billions annually.
           </p>
         </div>
 
@@ -1253,6 +1326,55 @@ export default function StaticElectricityRenderer({ onGameEvent, gamePhase, onPh
               padding: premiumDesign.spacing.lg,
               border: '1px solid rgba(255,255,255,0.1)',
             }}>
+              <label style={{
+                display: 'block',
+                marginBottom: premiumDesign.spacing.md,
+                color: premiumDesign.colors.text.primary,
+                fontWeight: 600,
+              }}>
+                Rubbing Intensity
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="10"
+                value={Math.abs(balloonCharge)}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value);
+                  setBalloonCharge(-value);
+                  setRubCount(value);
+                  if (value > 0) {
+                    const newHair = Array.from({ length: 12 }, (_, i) => ({
+                      angle: 80 + (i - 6) * 8 + (Math.random() - 0.5) * value * 2,
+                      length: 40 + value * 5,
+                    }));
+                    setHairStrands(newHair);
+                  } else {
+                    initHair();
+                  }
+                }}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: 'linear-gradient(to right, #475569, #3b82f6)',
+                  outline: 'none',
+                  accentColor: premiumDesign.colors.primary,
+                  cursor: 'pointer',
+                  marginBottom: premiumDesign.spacing.md,
+                }}
+              />
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontSize: '12px',
+                color: premiumDesign.colors.text.muted,
+                marginBottom: premiumDesign.spacing.lg,
+              }}>
+                <span>No rubbing</span>
+                <span>Max rubbing</span>
+              </div>
+
               <button
                 style={{
                   width: '100%',
@@ -1487,6 +1609,35 @@ export default function StaticElectricityRenderer({ onGameEvent, gamePhase, onPh
           }}>
             If you place a positive charge near a negative charge, what will happen?
           </p>
+        </div>
+
+        {/* Static SVG Diagram for Twist */}
+        <div style={{
+          background: premiumDesign.colors.background.card,
+          borderRadius: premiumDesign.radius.xl,
+          padding: premiumDesign.spacing.lg,
+          border: '1px solid rgba(255,255,255,0.1)',
+          maxWidth: 400,
+          margin: '0 auto',
+          marginBottom: premiumDesign.spacing.xl,
+        }}>
+          <svg viewBox="0 0 300 150" style={{ width: '100%', height: 'auto' }}>
+            <rect width="300" height="150" fill="#0a0f1a" rx="8" />
+
+            {/* Positive charge */}
+            <circle cx="80" cy="75" r="30" fill="#EF4444" opacity="0.8" />
+            <text x="80" y="85" fill="white" fontSize="24" fontWeight="bold" textAnchor="middle">+</text>
+            <text x="80" y="125" fill="#e2e8f0" fontSize="11" textAnchor="middle">Positive</text>
+
+            {/* Negative charge */}
+            <circle cx="220" cy="75" r="30" fill="#3B82F6" opacity="0.8" />
+            <text x="220" y="82" fill="white" fontSize="24" fontWeight="bold" textAnchor="middle">−</text>
+            <text x="220" y="125" fill="#e2e8f0" fontSize="11" textAnchor="middle">Negative</text>
+
+            {/* Question mark in middle */}
+            <text x="150" y="45" fill="#F59E0B" fontSize="32" fontWeight="bold" textAnchor="middle">?</text>
+            <text x="150" y="100" fill="#cbd5e1" fontSize="11" textAnchor="middle">What happens?</text>
+          </svg>
         </div>
 
         <div style={{
@@ -2106,66 +2257,71 @@ export default function StaticElectricityRenderer({ onGameEvent, gamePhase, onPh
       <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
         {renderProgressBar()}
 
-        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.xl }}>
-          <h2 style={{
-            fontSize: isMobile ? '22px' : '28px',
-            fontWeight: 700,
-            color: premiumDesign.colors.text.primary,
-            marginBottom: premiumDesign.spacing.sm,
-          }}>
-            🌍 Static Electricity in Action
-          </h2>
-          <p style={{ color: premiumDesign.colors.text.secondary }}>
-            Explore all {applications.length} applications to unlock the quiz
-          </p>
-        </div>
-
-        {/* Tab Navigation */}
         <div style={{
-          display: 'flex',
-          gap: premiumDesign.spacing.sm,
-          marginBottom: premiumDesign.spacing.lg,
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-        }}>
-          {applications.map((app, index) => (
-            <button
-              key={index}
-              style={{
-                padding: `${premiumDesign.spacing.sm}px ${premiumDesign.spacing.md}px`,
-                borderRadius: premiumDesign.radius.full,
-                border: activeApp === index
-                  ? `2px solid ${premiumDesign.colors.accent}`
-                  : '2px solid rgba(255,255,255,0.1)',
-                background: activeApp === index
-                  ? 'rgba(245, 158, 11, 0.2)'
-                  : completedApps.has(index)
-                    ? 'rgba(16, 185, 129, 0.2)'
-                    : premiumDesign.colors.background.tertiary,
-                color: premiumDesign.colors.text.primary,
-                cursor: 'pointer',
-                fontSize: '14px',
-                transition: 'all 0.3s ease',
-                zIndex: 10,
-              }}
-              onClick={(e) => {
-                e.preventDefault();
-                setActiveApp(index);
-              }}
-            >
-              {completedApps.has(index) && '✓ '}{app.title.split(' ')[0]}
-            </button>
-          ))}
-        </div>
-
-        {/* Application Content */}
-        <div style={{
-          background: premiumDesign.colors.background.card,
-          borderRadius: premiumDesign.radius.xl,
-          padding: premiumDesign.spacing.xl,
-          border: '1px solid rgba(255,255,255,0.1)',
           flex: 1,
+          overflowY: 'auto',
+          paddingTop: '44px',
+          paddingBottom: '80px',
         }}>
+          <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.xl }}>
+            <h2 style={{
+              fontSize: isMobile ? '22px' : '28px',
+              fontWeight: 700,
+              color: premiumDesign.colors.text.primary,
+              marginBottom: premiumDesign.spacing.sm,
+            }}>
+              🌍 Static Electricity in Action
+            </h2>
+            <p style={{ color: premiumDesign.colors.text.secondary }}>
+              Explore all {applications.length} applications to unlock the quiz
+            </p>
+          </div>
+
+          {/* Tab Navigation */}
+          <div style={{
+            display: 'flex',
+            gap: premiumDesign.spacing.sm,
+            marginBottom: premiumDesign.spacing.lg,
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+          }}>
+            {applications.map((app, index) => (
+              <button
+                key={index}
+                style={{
+                  padding: `${premiumDesign.spacing.sm}px ${premiumDesign.spacing.md}px`,
+                  borderRadius: premiumDesign.radius.full,
+                  border: activeApp === index
+                    ? `2px solid ${premiumDesign.colors.accent}`
+                    : '2px solid rgba(255,255,255,0.1)',
+                  background: activeApp === index
+                    ? 'rgba(245, 158, 11, 0.2)'
+                    : completedApps.has(index)
+                      ? 'rgba(16, 185, 129, 0.2)'
+                      : premiumDesign.colors.background.tertiary,
+                  color: premiumDesign.colors.text.primary,
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  transition: 'all 0.3s ease',
+                  zIndex: 10,
+                }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setActiveApp(index);
+                }}
+              >
+                {completedApps.has(index) && '✓ '}{app.title.split(' ')[0]}
+              </button>
+            ))}
+          </div>
+
+          {/* Application Content */}
+          <div style={{
+            background: premiumDesign.colors.background.card,
+            borderRadius: premiumDesign.radius.xl,
+            padding: premiumDesign.spacing.xl,
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}>
           <h3 style={{
             fontSize: '22px',
             color: premiumDesign.colors.text.primary,
@@ -2232,12 +2388,13 @@ export default function StaticElectricityRenderer({ onGameEvent, gamePhase, onPh
           </button>
         </div>
 
-        <div style={{
-          textAlign: 'center',
-          marginTop: premiumDesign.spacing.lg,
-          color: premiumDesign.colors.text.muted,
-        }}>
-          {completedApps.size} of {applications.length} applications explored
+          <div style={{
+            textAlign: 'center',
+            marginTop: premiumDesign.spacing.lg,
+            color: premiumDesign.colors.text.muted,
+          }}>
+            {completedApps.size} of {applications.length} applications explored
+          </div>
         </div>
 
         {renderBottomBar(
@@ -2402,7 +2559,7 @@ export default function StaticElectricityRenderer({ onGameEvent, gamePhase, onPh
                   }}
                   disabled={showExplanation}
                 >
-                  {option.text}
+                  {option.label}
                 </button>
               );
             })}
@@ -2555,6 +2712,7 @@ export default function StaticElectricityRenderer({ onGameEvent, gamePhase, onPh
               <button
                 key={p}
                 onClick={() => goToPhase(p)}
+                style={{ cursor: 'pointer' }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-indigo-400 w-6 shadow-lg shadow-indigo-400/30'

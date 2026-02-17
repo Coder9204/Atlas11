@@ -583,6 +583,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                Wave Propagation Through {medium === 'solid' ? 'Solid Rock' : 'Liquid Medium'}
             </h3>
             <svg viewBox="0 0 600 240" style={{ width: '100%', height: '100%', maxHeight: '240px' }} preserveAspectRatio="xMidYMid meet">
+               <title>Wave Propagation Through {medium === 'solid' ? 'Solid Rock' : 'Liquid Medium'}</title>
                <defs>
                   {/* ========== PREMIUM GRADIENT DEFINITIONS ========== */}
 
@@ -1078,6 +1079,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
+            minHeight: '100vh',
             background: '#0a0f1a',
             fontFamily: design.font.sans,
             position: 'relative',
@@ -1260,11 +1262,12 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
+            minHeight: '100vh',
             background: design.colors.bgPrimary,
             fontFamily: design.font.sans,
          }}>
             {renderProgressBar()}
-            <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? '24px 20px' : '32px 24px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '24px 20px' : '32px 24px', paddingBottom: '80px', paddingTop: '44px' }}>
                <p style={{
                   fontSize: '12px',
                   fontWeight: 700,
@@ -1566,11 +1569,12 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
+            minHeight: '100vh',
             background: design.colors.bgPrimary,
             fontFamily: design.font.sans,
          }}>
             {renderProgressBar()}
-            <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? '24px 20px' : '32px 24px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '24px 20px' : '32px 24px', paddingBottom: '80px', paddingTop: '44px' }}>
                <p style={{
                   fontSize: '12px',
                   fontWeight: 700,
@@ -1681,11 +1685,12 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
+            minHeight: '100vh',
             background: design.colors.bgPrimary,
             fontFamily: design.font.sans,
          }}>
             {renderProgressBar()}
-            <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? '24px 20px' : '32px 24px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '24px 20px' : '32px 24px', paddingBottom: '80px', paddingTop: '44px' }}>
                <p style={{
                   fontSize: '12px',
                   fontWeight: 700,
@@ -1785,6 +1790,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
+            minHeight: '100vh',
             background: design.colors.bgPrimary,
             fontFamily: design.font.sans,
          }}>
@@ -1795,11 +1801,75 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   flex: 1,
                   padding: '16px',
                   display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
                   minHeight: '280px',
+                  overflowY: 'auto',
+                  paddingBottom: '80px',
+                  paddingTop: '44px'
                }}>
                   {renderWaveVisualization()}
+
+                  {/* Comparison: Solid vs Liquid behavior */}
+                  <div style={{
+                     marginTop: '20px',
+                     padding: '16px',
+                     borderRadius: design.radius.lg,
+                     background: design.colors.bgSecondary,
+                     border: `1px solid ${design.colors.border}`,
+                     maxWidth: '500px',
+                     width: '100%'
+                  }}>
+                     <div style={{
+                        fontSize: typo.small,
+                        fontWeight: 700,
+                        color: design.colors.textTertiary,
+                        marginBottom: '12px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
+                     }}>
+                        Medium Comparison
+                     </div>
+                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div style={{
+                           padding: '12px',
+                           borderRadius: design.radius.md,
+                           background: medium === 'solid' ? `${design.colors.solid}15` : design.colors.bgTertiary,
+                           border: `2px solid ${medium === 'solid' ? design.colors.solid : design.colors.border}`
+                        }}>
+                           <div style={{
+                              fontSize: typo.body,
+                              fontWeight: 700,
+                              color: design.colors.textPrimary,
+                              marginBottom: '4px'
+                           }}>
+                              Solid Rock
+                           </div>
+                           <div style={{ fontSize: typo.small, color: design.colors.textSecondary }}>
+                              Both P & S waves propagate
+                           </div>
+                        </div>
+                        <div style={{
+                           padding: '12px',
+                           borderRadius: design.radius.md,
+                           background: medium === 'liquid' ? `${design.colors.liquid}15` : design.colors.bgTertiary,
+                           border: `2px solid ${medium === 'liquid' ? design.colors.liquid : design.colors.border}`
+                        }}>
+                           <div style={{
+                              fontSize: typo.body,
+                              fontWeight: 700,
+                              color: design.colors.liquid,
+                              marginBottom: '4px'
+                           }}>
+                              Liquid
+                           </div>
+                           <div style={{ fontSize: typo.small, color: design.colors.textSecondary }}>
+                              Only P-waves • S-waves blocked
+                           </div>
+                        </div>
+                     </div>
+                  </div>
                </div>
 
                {/* Controls */}
@@ -1954,11 +2024,12 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
+            minHeight: '100vh',
             background: design.colors.bgPrimary,
             fontFamily: design.font.sans,
          }}>
             {renderProgressBar()}
-            <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? '24px 20px' : '32px 24px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '24px 20px' : '32px 24px', paddingBottom: '80px', paddingTop: '44px' }}>
                <p style={{
                   fontSize: '12px',
                   fontWeight: 700,
@@ -2102,6 +2173,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
+            minHeight: '100vh',
             background: design.colors.bgPrimary,
             fontFamily: design.font.sans,
          }}>
@@ -2157,8 +2229,8 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   ))}
                </div>
 
-               {/* Content area */}
-               <div style={{ flex: 1, overflow: 'auto', padding: '24px' }}>
+               {/* Content area - scrollable with proper padding */}
+               <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '80px', paddingTop: '44px' }}>
                   {/* App header */}
                   <div style={{
                      display: 'flex',
@@ -2357,11 +2429,12 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
+            minHeight: '100vh',
             background: design.colors.bgPrimary,
             fontFamily: design.font.sans,
          }}>
             {renderProgressBar()}
-            <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? '20px' : '24px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '20px' : '24px', paddingBottom: '80px', paddingTop: '44px' }}>
                {/* Question header */}
                <div style={{
                   display: 'flex',
@@ -2537,6 +2610,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
+            minHeight: '100vh',
             background: `linear-gradient(180deg, ${design.colors.bgPrimary} 0%, #0a0a12 100%)`,
             fontFamily: design.font.sans,
             position: 'relative',

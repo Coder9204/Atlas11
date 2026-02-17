@@ -986,6 +986,9 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
         <div style={{ padding: isMobile ? '16px' : '24px' }}>
           {renderProgressBar()}
           {renderSectionHeader("🎮", "Siphon Simulator", "Control the height difference")}
+          <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px', lineHeight: 1.6 }}>
+            This visualization demonstrates how a siphon transfers water from a higher source tank to a lower destination tank. The interactive diagram shows the water level, tube configuration, and real-time flow animation based on the height difference you control with the sliders below.
+          </p>
         </div>
 
         <div style={{
@@ -1283,6 +1286,47 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
               </p>
             </div>
           )}
+
+          {/* Observation guidance */}
+          <div style={{
+            marginTop: '16px',
+            padding: '16px',
+            background: `${colors.primary}10`,
+            borderRadius: '12px',
+            border: `1px solid ${colors.primary}30`
+          }}>
+            <p style={{ color: colors.primary, fontSize: '14px', fontWeight: '600', margin: '0 0 8px 0' }}>
+              👁️ What to Watch For:
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0, lineHeight: 1.5 }}>
+              Adjust the source and destination heights. Observe how the height difference (Δh) controls flow rate. Prime the siphon to see water transfer in action. Notice the animated particle moving through the tube — its speed represents flow velocity!
+            </p>
+          </div>
+
+          {/* Before/After comparison */}
+          <div style={{
+            marginTop: '16px',
+            padding: '16px',
+            background: colors.background,
+            borderRadius: '12px',
+            border: `1px solid ${canFlow ? colors.success : colors.accent}30`
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: '600', margin: '0 0 8px 0' }}>
+              📊 Before vs Current:
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '8px' }}>
+              <div>
+                <p style={{ color: colors.textSecondary, fontSize: '12px', margin: '0 0 4px 0' }}>Initial state:</p>
+                <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0 }}>Δh = +50, Water = 100%</p>
+              </div>
+              <div>
+                <p style={{ color: colors.textSecondary, fontSize: '12px', margin: '0 0 4px 0' }}>Current state:</p>
+                <p style={{ color: canFlow ? colors.success : colors.accent, fontSize: '13px', margin: 0 }}>
+                  Δh = {heightDiff > 0 ? '+' : ''}{heightDiff}, Water = {waterLevel.toFixed(0)}%
+                </p>
+              </div>
+            </div>
+          </div>
 
           {/* Physics note */}
           <div style={{
@@ -2169,56 +2213,72 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
 
   // Transfer Phase
   const renderTransfer = () => (
-    <div style={{ padding: isMobile ? '16px' : '24px' }}>
-      {renderProgressBar()}
-      {renderSectionHeader("🌍", "Siphons in Action", "Ancient to modern applications")}
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      minHeight: '100vh',
+      paddingTop: '48px',
+      paddingBottom: '100px'
+    }}>
+      <div style={{ padding: isMobile ? '16px' : '24px' }}>
+        {renderProgressBar()}
+        {renderSectionHeader("🌍", "Siphons in Action", "Ancient to modern applications")}
+      </div>
 
       <div style={{
-        background: colors.card,
-        borderRadius: '16px',
-        padding: '20px',
-        marginBottom: '20px'
+        flex: 1,
+        overflowY: 'auto',
+        paddingLeft: isMobile ? '16px' : '24px',
+        paddingRight: isMobile ? '16px' : '24px',
+        paddingBottom: '80px',
+        paddingTop: '44px'
       }}>
-        {/* App navigation */}
         <div style={{
-          display: 'flex',
-          gap: '8px',
-          marginBottom: '20px',
-          overflowX: 'auto',
-          paddingBottom: '8px'
+          background: colors.card,
+          borderRadius: '16px',
+          padding: '20px',
+          marginBottom: '20px'
         }}>
-          {applications.map((app, i) => (
-            <button
-              key={i}
-              onPointerDown={() => {
-                if (completedApps.has(i)) {
-                  setActiveApp(i);
-                  playSound('click');
-                }
-              }}
-              style={{
-                padding: '10px 16px',
-                background: activeApp === i ? app.color : completedApps.has(i) ? colors.background : '#1a1a1a',
-                color: activeApp === i ? '#fff' : completedApps.has(i) ? app.color : '#444',
-                border: `2px solid ${completedApps.has(i) ? app.color : '#333'}`,
-                borderRadius: '10px',
-                cursor: completedApps.has(i) ? 'pointer' : 'not-allowed',
-                whiteSpace: 'nowrap',
-                fontSize: '14px',
-                fontWeight: activeApp === i ? '600' : '400',
-                opacity: completedApps.has(i) ? 1 : 0.5
-              }}
-            >
-              {app.icon} {app.short}
-            </button>
-          ))}
-        </div>
+          {/* App navigation */}
+          <div style={{
+            display: 'flex',
+            gap: '8px',
+            marginBottom: '20px',
+            overflowX: 'auto',
+            paddingBottom: '8px'
+          }}>
+            {applications.map((app, i) => (
+              <button
+                key={i}
+                onPointerDown={() => {
+                  if (completedApps.has(i)) {
+                    setActiveApp(i);
+                    playSound('click');
+                  }
+                }}
+                style={{
+                  padding: '10px 16px',
+                  background: activeApp === i ? app.color : completedApps.has(i) ? colors.background : '#1a1a1a',
+                  color: activeApp === i ? '#fff' : completedApps.has(i) ? app.color : '#444',
+                  border: `2px solid ${completedApps.has(i) ? app.color : '#333'}`,
+                  borderRadius: '10px',
+                  cursor: completedApps.has(i) ? 'pointer' : 'not-allowed',
+                  whiteSpace: 'nowrap',
+                  fontSize: '14px',
+                  fontWeight: activeApp === i ? '600' : '400',
+                  opacity: completedApps.has(i) ? 1 : 0.5
+                }}
+              >
+                {app.icon} {app.short}
+              </button>
+            ))}
+          </div>
 
-        {/* Active application content */}
-        {(() => {
-          const app = applications[activeApp];
-          return (
-            <div>
+          {/* Active application content */}
+          {(() => {
+            const app = applications[activeApp];
+            return (
+              <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
                 <span style={{ fontSize: '36px' }}>{app.icon}</span>
                 <div>
@@ -2292,34 +2352,35 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
           );
         })()}
 
-        {/* Next app button */}
-        {activeApp < applications.length - 1 && (
-          <button
-            onPointerDown={() => {
-              const next = activeApp + 1;
-              setCompletedApps(prev => new Set([...prev, next]));
-              setActiveApp(next);
-              playSound('transition');
-            }}
-            style={{
-              marginTop: '20px',
-              padding: '12px 24px',
-              width: '100%',
-              background: `linear-gradient(135deg, ${applications[activeApp + 1].color}, ${colors.secondary})`,
-              color: '#fff',
-              border: 'none',
-              borderRadius: '10px',
-              cursor: 'pointer',
-              fontSize: '15px',
-              fontWeight: '600'
-            }}
-          >
-            Next: {applications[activeApp + 1].icon} {applications[activeApp + 1].title} →
-          </button>
-        )}
-      </div>
+          {/* Next app button */}
+          {activeApp < applications.length - 1 && (
+            <button
+              onPointerDown={() => {
+                const next = activeApp + 1;
+                setCompletedApps(prev => new Set([...prev, next]));
+                setActiveApp(next);
+                playSound('transition');
+              }}
+              style={{
+                marginTop: '20px',
+                padding: '12px 24px',
+                width: '100%',
+                background: `linear-gradient(135deg, ${applications[activeApp + 1].color}, ${colors.secondary})`,
+                color: '#fff',
+                border: 'none',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                fontSize: '15px',
+                fontWeight: '600'
+              }}
+            >
+              Next: {applications[activeApp + 1].icon} {applications[activeApp + 1].title} →
+            </button>
+          )}
+        </div>
 
-      {completedApps.size === applications.length && renderBottomBar(() => onPhaseComplete?.())}
+        {completedApps.size === applications.length && renderBottomBar(() => onPhaseComplete?.())}
+      </div>
     </div>
   );
 
@@ -2635,7 +2696,8 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
                 tabIndex={0}
                 aria-label={phaseLabels[p]}
                 title={phaseLabels[p]}
-                className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                style={{ cursor: 'pointer' }}
+                className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
                     : currentPhaseIndex > i

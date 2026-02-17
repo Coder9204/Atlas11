@@ -54,7 +54,7 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 // -----------------------------------------------------------------------------
 const testQuestions = [
   {
-    scenario: "You're in your house and hear a loud BANG from the pipes every time someone quickly turns off the kitchen faucet. The plumber says it's 'water hammer'.",
+    scenario: "You're in your house and hear a loud BANG from the pipes every time someone quickly turns off the kitchen faucet. The plumber says it's 'water hammer'. The noise is so loud it wakes you up at night when the washing machine fill valve closes. You've noticed small leaks starting to appear at pipe joints, and you're worried about potential damage. The plumber explains this is a common problem in homes with modern quick-closing valves and recommends installing arrestors.",
     question: "What is actually causing this loud banging noise?",
     options: [
       { id: 'a', label: "Air bubbles collapsing in the pipes" },
@@ -65,7 +65,7 @@ const testQuestions = [
     explanation: "When flowing water is suddenly stopped, its kinetic energy converts to a pressure wave (the Joukowsky equation: ΔP = ρcΔv). This pressure spike travels through the pipes at the speed of sound in water (~1400 m/s), causing the banging noise."
   },
   {
-    scenario: "A hydroelectric power plant needs to perform an emergency turbine shutdown. Engineers are concerned about water hammer in the 500-meter penstock (pipe) that feeds water to the turbine.",
+    scenario: "A hydroelectric power plant needs to perform an emergency turbine shutdown due to grid instability. Engineers are concerned about water hammer in the 500-meter penstock (pipe) that feeds water to the turbine. The penstock is made of steel and carries water at high velocity from the reservoir. Previous incidents at similar facilities have resulted in penstock ruptures costing millions in repairs and lost generation capacity. The control room team must decide how to safely shut down the turbine.",
     question: "According to the Joukowsky equation (ΔP = ρcΔv), if the water velocity is 5 m/s, what pressure rise would occur with instant valve closure?",
     options: [
       { id: 'a', label: "About 7 bar (700 kPa)" },
@@ -76,7 +76,7 @@ const testQuestions = [
     explanation: "Using ΔP = ρcΔv = 1000 kg/m³ × 1400 m/s × 5 m/s = 7,000,000 Pa = 70 bar. This enormous pressure spike is why hydroelectric plants use surge tanks and slow-closing valves."
   },
   {
-    scenario: "A naval engineer is designing a ballast system for a large cargo ship. The system involves pumping seawater through long pipes to different tanks to maintain stability.",
+    scenario: "A naval engineer is designing a ballast system for a large cargo ship that will operate in rough seas. The system involves pumping seawater through long pipes to different tanks to maintain stability during loading, unloading, and transit. The pipes run hundreds of meters through the ship's hull, and valves must operate quickly during emergency ballasting. The engineer needs to calculate wave propagation speeds to properly size surge protection equipment and prevent catastrophic pipe failures.",
     question: "At what speed does a water hammer pressure wave travel through the ship's pipes?",
     options: [
       { id: 'a', label: "At the speed of the water flow (typically 2-5 m/s)" },
@@ -174,9 +174,9 @@ const realWorldApps = [
     title: 'Home Plumbing Systems',
     short: 'Protecting pipes from burst damage',
     tagline: 'Why pipes bang when you turn off faucets',
-    description: 'Water hammer causes the loud banging sound in home plumbing when valves close quickly. The sudden pressure surge can exceed 10x normal operating pressure, damaging pipes, joints, and fixtures over time.',
-    connection: 'When flowing water is suddenly stopped by closing a valve, the momentum of the water converts to a pressure wave that travels through the pipes at the speed of sound in water (~1400 m/s). This is the Joukowsky equation in action.',
-    howItWorks: 'Air chambers or water hammer arrestors provide a cushion for the pressure wave. When the valve closes, the pressure wave compresses air in the chamber instead of slamming against the closed valve, gradually dissipating the energy.',
+    description: 'Water hammer causes the loud banging sound in home plumbing when valves close quickly. The sudden pressure surge can exceed 10x normal operating pressure, damaging pipes, joints, and fixtures over time. Every time a washing machine fill valve snaps shut or a dishwasher solenoid activates, kinetic energy from flowing water converts instantly into a pressure wave. This wave travels at 1,400 m/s (faster than the speed of sound in air), creating vibrations and noise throughout the entire plumbing system. Over years of repeated hammer events, pipe joints weaken, fittings crack, and water heaters develop leaks.',
+    connection: 'When flowing water is suddenly stopped by closing a valve, the momentum of the water converts to a pressure wave that travels through the pipes at the speed of sound in water (~1400 m/s). This is the Joukowsky equation in action. The pressure rise (ΔP) equals density (ρ) × sound speed (c) × velocity change (Δv). For typical home water velocity of 2 m/s, instant closure creates a 28 bar (406 psi) pressure spike – far exceeding the 3-5 bar normal operating pressure.',
+    howItWorks: 'Air chambers or water hammer arrestors provide a cushion for the pressure wave. When the valve closes, the pressure wave compresses air in the chamber instead of slamming against the closed valve, gradually dissipating the energy. Modern sealed arrestors maintain their air cushion indefinitely, unlike old-style air chambers that become waterlogged. The compressible air absorbs the shock, converting the sudden pressure spike into a gradual pressure increase that dissipates harmlessly.',
     stats: [
       { value: '500psi', label: 'Peak pressure possible', icon: '💥' },
       { value: '$3,000', label: 'Avg. pipe repair cost', icon: '💰' },
@@ -513,6 +513,64 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
     </div>
   );
 
+  // Bottom navigation bar
+  const renderBottomNav = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+    const canGoNext = currentIndex < phaseOrder.length - 1;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgCard,
+        borderTop: `1px solid ${colors.border}`,
+        padding: '16px 24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 50,
+      }}>
+        {canGoBack ? (
+          <button
+            onClick={() => goToPhase(phaseOrder[currentIndex - 1])}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+              fontSize: '16px',
+            }}
+          >
+            ← Back
+          </button>
+        ) : <div />}
+
+        {canGoNext && (
+          <button
+            onClick={() => goToPhase(phaseOrder[currentIndex + 1])}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: 'none',
+              background: colors.accent,
+              color: 'white',
+              cursor: 'pointer',
+              fontSize: '16px',
+              fontWeight: 600,
+            }}
+          >
+            Next →
+          </button>
+        )}
+      </div>
+    );
+  };
+
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, #0284C7)`,
@@ -592,6 +650,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
         </button>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -652,11 +711,11 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
 
               {/* Valve */}
               <rect x="300" y="30" width="30" height="60" rx="3" fill="#ef4444" />
-              <text x="315" y="65" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">?</text>
+              <text x="315" y="65" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">?</text>
 
               {/* Labels */}
               <text x="150" y="100" textAnchor="middle" fill="#94a3b8" fontSize="12">Water flowing at 3 m/s</text>
-              <text x="315" y="105" textAnchor="middle" fill="#f87171" fontSize="10">Valve closes instantly!</text>
+              <text x="315" y="105" textAnchor="middle" fill="#f87171" fontSize="11">Valve closes instantly!</text>
             </svg>
           </div>
 
@@ -708,6 +767,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -739,9 +799,28 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Water Hammer Simulator
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '12px' }}>
             Close the valve to see what happens to the pressure!
           </p>
+
+          {/* Educational explanation */}
+          <div style={{
+            background: `${colors.accent}11`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}33`,
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
+              <strong style={{ color: colors.accent }}>What you're seeing:</strong> Water flowing through a pipe. When you close the valve instantly, the moving water's kinetic energy converts to a pressure wave.
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
+              <strong style={{ color: colors.warning }}>Cause and effect:</strong> Higher flow velocity = more kinetic energy = larger pressure spike when stopped suddenly.
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.success }}>Why it matters:</strong> In real systems, water hammer can burst pipes, damage pumps, and cause catastrophic failures. Engineers must design valves to close slowly to prevent this dangerous pressure surge.
+            </p>
+          </div>
 
           {/* Main visualization */}
           <div style={{
@@ -751,6 +830,33 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
             marginBottom: '24px',
           }}>
             <svg viewBox="0 0 500 280" style={{ width: '100%', marginBottom: '20px' }}>
+              <defs>
+                <linearGradient id="pipeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#64748b" />
+                  <stop offset="50%" stopColor="#475569" />
+                  <stop offset="100%" stopColor="#334155" />
+                </linearGradient>
+                <linearGradient id="waterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#60a5fa" />
+                  <stop offset="100%" stopColor="#3b82f6" />
+                </linearGradient>
+                <linearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#fbbf24" />
+                  <stop offset="50%" stopColor="#f59e0b" />
+                  <stop offset="100%" stopColor="#fbbf24" />
+                </linearGradient>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                  <feMerge>
+                    <feMergeNode in="coloredBlur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+                <filter id="shadow">
+                  <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.3" />
+                </filter>
+              </defs>
+
               {/* Background */}
               <rect width="500" height="280" fill="#0a1628" rx="8" />
 
@@ -765,9 +871,9 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
               )}
 
               {/* Pipe */}
-              <rect x="30" y="80" width="350" height="60" rx="6" fill="#64748b" />
+              <rect x="30" y="80" width="350" height="60" rx="6" fill="url(#pipeGradient)" filter="url(#shadow)" />
               <rect x="38" y="88" width="334" height="44" fill="#1e293b" />
-              <rect x="42" y="92" width="326" height="36" fill={!valveOpen && wavePosition > 0 ? "#ef4444" : "#3b82f6"} opacity="0.7" />
+              <rect x="42" y="92" width="326" height="36" fill={!valveOpen && wavePosition > 0 ? "#ef4444" : "url(#waterGradient)"} opacity="0.7" />
 
               {/* Pressure wave visualization */}
               {!valveOpen && wavePosition > 0 && (
@@ -776,14 +882,15 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
                   cy="110"
                   rx="15"
                   ry="25"
-                  fill="#fbbf24"
+                  fill="url(#waveGradient)"
                   opacity={0.8 - wavePosition / 150}
+                  filter="url(#glow)"
                 />
               )}
 
               {/* Water particles when valve is open */}
               {valveOpen && [0, 1, 2, 3, 4].map(i => (
-                <circle key={i} cx={60 + i * 60} cy="110" r="8" fill="#60a5fa" opacity="0.8">
+                <circle key={i} cx={60 + i * 60} cy="110" r="8" fill="url(#waterGradient)" opacity="0.8" filter="url(#glow)">
                   <animate attributeName="cx" values={`${60 + i * 60};${120 + i * 60}`} dur="0.5s" repeatCount="indefinite" />
                 </circle>
               ))}
@@ -812,7 +919,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
                   return (
                     <g key={i}>
                       <line x1={Math.cos(rad) * 32} y1={Math.sin(rad) * 32} x2={Math.cos(rad) * 40} y2={Math.sin(rad) * 40} stroke="#f8fafc" strokeWidth="2" />
-                      <text x={Math.cos(rad) * 24} y={Math.sin(rad) * 24 + 4} fill="#f8fafc" fontSize="9" textAnchor="middle">{i * 12}</text>
+                      <text x={Math.cos(rad) * 24} y={Math.sin(rad) * 24 + 4} fill="#f8fafc" fontSize="11" textAnchor="middle">{i * 12}</text>
                     </g>
                   );
                 })}
@@ -826,7 +933,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
                   );
                 })()}
                 <circle cx="0" cy="0" r="6" fill="#ef4444" />
-                <text x="0" y="55" textAnchor="middle" fill="#94a3b8" fontSize="9">PRESSURE (bar)</text>
+                <text x="0" y="55" textAnchor="middle" fill="#94a3b8" fontSize="11">PRESSURE (bar)</text>
               </g>
 
               {/* Pressure bar */}
@@ -855,8 +962,38 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
                   setFlowVelocity(parseFloat(e.target.value));
                   if (!valveOpen) resetSimulation();
                 }}
-                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                style={{
+                  width: '100%',
+                  height: '20px',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  appearance: 'none',
+                  WebkitAppearance: 'none',
+                  background: `linear-gradient(to right, ${colors.accent} 0%, ${colors.accent} ${((flowVelocity - 1) / 5) * 100}%, ${colors.border} ${((flowVelocity - 1) / 5) * 100}%, ${colors.border} 100%)`,
+                  outline: 'none',
+                  touchAction: 'none',
+                }}
               />
+              <style>{`
+                input[type="range"]::-webkit-slider-thumb {
+                  appearance: none;
+                  width: 20px;
+                  height: 20px;
+                  border-radius: 50%;
+                  background: ${colors.accent};
+                  cursor: pointer;
+                  box-shadow: 0 0 10px ${colors.accentGlow};
+                }
+                input[type="range"]::-moz-range-thumb {
+                  width: 20px;
+                  height: 20px;
+                  border-radius: 50%;
+                  background: ${colors.accent};
+                  cursor: pointer;
+                  border: none;
+                  box-shadow: 0 0 10px ${colors.accentGlow};
+                }
+              `}</style>
             </div>
 
             {/* Action buttons */}
@@ -988,6 +1125,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1003,9 +1141,25 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
         {renderProgressBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
             The Physics of Water Hammer
           </h2>
+
+          {prediction && (
+            <div style={{
+              background: prediction === 'c' ? `${colors.success}11` : `${colors.warning}11`,
+              border: `1px solid ${prediction === 'c' ? colors.success : colors.warning}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                {prediction === 'c' ? '✓ Your prediction was correct!' : 'Your prediction: pressure would not rise dramatically.'} {' '}
+                Let's understand why pressure <strong style={{ color: colors.error }}>rises dramatically</strong> when water flow is suddenly stopped.
+              </p>
+            </div>
+          )}
 
           <div style={{
             background: colors.bgCard,
@@ -1084,6 +1238,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1134,7 +1289,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
                 <rect x="25" y="30" width="120" height="25" fill="#3b82f6" opacity="0.5" />
                 <rect x="145" y="20" width="20" height="45" fill="#ef4444" rx="2" />
                 <text x="95" y="80" textAnchor="middle" fill="#f8fafc" fontSize="11" fontWeight="bold">Instant Close</text>
-                <text x="95" y="95" textAnchor="middle" fill="#f87171" fontSize="10">t = 10 ms</text>
+                <text x="95" y="95" textAnchor="middle" fill="#f87171" fontSize="11">t = 10 ms</text>
               </g>
 
               {/* Slow closure */}
@@ -1143,7 +1298,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
                 <rect x="25" y="30" width="120" height="25" fill="#3b82f6" opacity="0.5" />
                 <rect x="145" y="30" width="20" height="25" fill="#22c55e" rx="2" />
                 <text x="95" y="80" textAnchor="middle" fill="#f8fafc" fontSize="11" fontWeight="bold">Slow Close</text>
-                <text x="95" y="95" textAnchor="middle" fill="#4ade80" fontSize="10">t = 500 ms</text>
+                <text x="95" y="95" textAnchor="middle" fill="#4ade80" fontSize="11">t = 500 ms</text>
               </g>
             </svg>
             <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginTop: '16px' }}>
@@ -1197,6 +1352,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1248,7 +1404,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
               {[0, 1, 2, 3, 4, 5].map(i => (
                 <g key={i}>
                   <line x1="50" y1={20 + i * 26} x2="380" y2={20 + i * 26} stroke="#334155" />
-                  <text x="45" y={25 + i * 26} textAnchor="end" fill="#64748b" fontSize="9">{50 - i * 10}</text>
+                  <text x="45" y={25 + i * 26} textAnchor="end" fill="#64748b" fontSize="11">{50 - i * 10}</text>
                 </g>
               ))}
 
@@ -1267,7 +1423,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
                 y="165"
                 textAnchor="middle"
                 fill={colors.accent}
-                fontSize="9"
+                fontSize="11"
               >
                 Tc = {(criticalTime * 1000).toFixed(0)}ms
               </text>
@@ -1284,7 +1440,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
                 />
               )}
 
-              <text x="215" y="175" textAnchor="middle" fill="#64748b" fontSize="10">Time</text>
+              <text x="215" y="175" textAnchor="middle" fill="#64748b" fontSize="11">Time</text>
             </svg>
 
             {/* Stats grid */}
@@ -1340,8 +1496,38 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
                 step="0.01"
                 value={closureTime}
                 onChange={(e) => setClosureTime(parseFloat(e.target.value))}
-                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                style={{
+                  width: '100%',
+                  height: '20px',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  appearance: 'none',
+                  WebkitAppearance: 'none',
+                  background: `linear-gradient(to right, ${colors.warning} 0%, ${colors.warning} ${((closureTime - 0.01) / 0.29) * 100}%, ${colors.border} ${((closureTime - 0.01) / 0.29) * 100}%, ${colors.border} 100%)`,
+                  outline: 'none',
+                  touchAction: 'none',
+                }}
               />
+              <style>{`
+                input[type="range"]::-webkit-slider-thumb {
+                  appearance: none;
+                  width: 20px;
+                  height: 20px;
+                  border-radius: 50%;
+                  background: ${colors.warning};
+                  cursor: pointer;
+                  box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+                }
+                input[type="range"]::-moz-range-thumb {
+                  width: 20px;
+                  height: 20px;
+                  border-radius: 50%;
+                  background: ${colors.warning};
+                  cursor: pointer;
+                  border: none;
+                  box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+                }
+              `}</style>
             </div>
 
             {/* Simulate button */}
@@ -1402,6 +1588,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1506,6 +1693,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1533,9 +1721,12 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
           paddingRight: '24px',
         }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length}
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1640,20 +1831,44 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
                 </div>
               ))}
             </div>
+
+            {/* Got It button for current app */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+
+                // Move to next app if not at the end
+                if (selectedApp < realWorldApps.length - 1) {
+                  setSelectedApp(selectedApp + 1);
+                }
+              }}
+              style={{
+                ...primaryButtonStyle,
+                width: '100%',
+                marginTop: '16px',
+                opacity: completedApps[selectedApp] ? 0.6 : 1,
+              }}
+            >
+              {completedApps[selectedApp] ? '✓ Got It' : 'Got It'}
+            </button>
           </div>
 
           {allAppsCompleted && (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
+              style={{ ...primaryButtonStyle, width: '100%', marginTop: '24px' }}
             >
-              Take the Knowledge Test
+              Continue to Knowledge Test
             </button>
           )}
         </div>
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1878,6 +2093,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1981,6 +2197,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }

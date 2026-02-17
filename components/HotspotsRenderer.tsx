@@ -850,46 +850,59 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
           </g>
 
           {/* Power vs Shading chart */}
-          <g transform="translate(260, 225)">
-            <rect x={0} y={0} width={240} height={135} fill="url(#hotPanelGlass)" rx={10}
+          <g transform="translate(260, 190)">
+            <rect x={0} y={0} width={240} height={185} fill="url(#hotPanelGlass)" rx={10}
               stroke="rgba(100,116,139,0.3)" strokeWidth="1" />
 
             {/* Chart header accent line */}
             <rect x={10} y={8} width={50} height={3} rx={1.5} fill={colors.accent} />
 
+            {/* Y-axis label */}
+            <text x={12} y={75} fill={colors.textSecondary} fontSize="10" fontWeight="600">
+              Power
+            </text>
+            <text x={15} y={85} fill={colors.textSecondary} fontSize="10" fontWeight="600">
+              (W)
+            </text>
+
+            {/* X-axis label */}
+            <text x={95} y={177} fill={colors.textSecondary} fontSize="10" fontWeight="600" textAnchor="middle">
+              Shading Level (%)
+            </text>
+
             {/* Axes with better styling */}
-            <line x1={40} y1={115} x2={215} y2={115} stroke="#475569" strokeWidth={1.5} />
-            <line x1={40} y1={30} x2={40} y2={115} stroke="#475569" strokeWidth={1.5} />
+            <line x1={40} y1={155} x2={215} y2={155} stroke="#475569" strokeWidth={1.5} />
+            <line x1={40} y1={30} x2={40} y2={155} stroke="#475569" strokeWidth={1.5} />
 
             {/* Grid lines */}
             {[0.25, 0.5, 0.75].map((pct, i) => (
-              <line key={`gridH${i}`} x1={40} y1={115 - pct * 85} x2={215} y2={115 - pct * 85}
+              <line key={`gridH${i}`} x1={40} y1={155 - pct * 125} x2={215} y2={155 - pct * 125}
                 stroke="rgba(100,116,139,0.2)" strokeWidth="1" strokeDasharray="3,3" />
             ))}
             {[0.25, 0.5, 0.75].map((pct, i) => (
-              <line key={`gridV${i}`} x1={40 + pct * 175} y1={30} x2={40 + pct * 175} y2={115}
+              <line key={`gridV${i}`} x1={40 + pct * 175} y1={30} x2={40 + pct * 175} y2={155}
                 stroke="rgba(100,116,139,0.2)" strokeWidth="1" strokeDasharray="3,3" />
             ))}
 
             {/* Filled area under curve */}
             <path
-              d={`M 40,115 ${[...Array(20)].map((_, i) => {
+              d={`M 40,155 ${[...Array(20)].map((_, i) => {
                 const shade = (i / 19) * 100;
                 const power = stringCurrent * Math.min((11 * 0.6), (stringCurrent * shade / 100) * 2);
                 const x = 40 + i * 9.2;
-                const y = 115 - (power / 80) * 85;
+                const y = 155 - (power / 80) * 125;
                 return `L ${x},${Math.max(30, y)}`;
-              }).join(' ')} L 215,115 Z`}
+              }).join(' ')} L 215,155 Z`}
               fill={bypassDiodeEnabled ? 'rgba(34,197,94,0.2)' : 'url(#hotChartGradient)'}
             />
 
             {/* Curve line */}
             <path
-              d={`M 40,115 ${[...Array(20)].map((_, i) => {
+              d={`M 40,155 ${[...Array(20)].map((_, i) => {
                 const shade = (i / 19) * 100;
                 const power = stringCurrent * Math.min((11 * 0.6), (stringCurrent * shade / 100) * 2);
                 const x = 40 + i * 9.2;
-                const y = 115 - (power / 80) * 85;
+                const y = 155 - (power / 80) * 125;
                 return `L ${x},${Math.max(30, y)}`;
               }).join(' ')}`}
               fill="none"
@@ -901,7 +914,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
             {/* Current position marker */}
             <circle
               cx={40 + (shadingLevel / 100) * 175}
-              cy={Math.max(30, 115 - (output.heatPower / 80) * 85)}
+              cy={Math.max(30, 155 - (output.heatPower / 80) * 125)}
               r={7}
               fill={colors.accent}
               stroke="#1e293b"
@@ -910,7 +923,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
             />
 
             {showBypass && output.bypassActive && (
-              <g transform="translate(127, 45)">
+              <g transform="translate(127, 50)">
                 <rect x={-45} y={-12} width={90} height={20} rx={10} fill="rgba(34,197,94,0.2)" />
               </g>
             )}
@@ -1024,6 +1037,38 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
             borderRadius: '4px'
           }} />
           <span>150C+</span>
+        </div>
+
+        {/* Hotspot Power Formula */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginTop: '8px',
+          padding: '12px 16px',
+          background: 'rgba(245, 158, 11, 0.15)',
+          borderRadius: '8px',
+          maxWidth: '560px',
+          marginLeft: 'auto',
+          marginRight: 'auto',
+          gap: '4px',
+        }}>
+          <span style={{
+            fontSize: typo.label,
+            color: colors.textSecondary,
+            fontWeight: 600,
+          }}>
+            Hotspot Power Formula:
+          </span>
+          <span style={{
+            fontSize: typo.bodyLarge,
+            color: colors.accent,
+            fontWeight: 700,
+            fontFamily: 'monospace',
+          }}>
+            P = I × V
+          </span>
         </div>
 
         {interactive && (
@@ -1279,7 +1324,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '44px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Can a Solar Cell Become a Heater?
@@ -1288,8 +1333,6 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
               The dangerous physics of hotspots
             </p>
           </div>
-
-          {renderVisualization(true)}
 
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{
@@ -1313,9 +1356,42 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
               padding: '16px',
               borderRadius: '8px',
               borderLeft: `3px solid ${colors.hot}`,
+              marginBottom: '16px',
             }}>
               <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
                 Shade one cell and watch the thermal camera view - things get hot!
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              padding: '16px',
+              borderRadius: '12px',
+              marginBottom: '16px',
+            }}>
+              <h3 style={{ color: colors.accent, fontSize: '18px', marginBottom: '12px' }}>
+                The Problem
+              </h3>
+              <p style={{ color: colors.textPrimary, fontSize: '14px', lineHeight: 1.6 }}>
+                In a series-connected string of solar cells, all cells must carry the same current.
+                When one cell gets shaded, it can't generate as much current as the others. But if
+                the string is forced to carry current, the shaded cell goes into reverse bias and
+                starts dissipating power as heat instead of generating electricity.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              padding: '16px',
+              borderRadius: '12px',
+            }}>
+              <h3 style={{ color: colors.accent, fontSize: '18px', marginBottom: '12px' }}>
+                Why It Matters
+              </h3>
+              <p style={{ color: colors.textPrimary, fontSize: '14px', lineHeight: 1.6 }}>
+                Hotspots can reach temperatures exceeding 150°C, causing permanent damage to solar
+                panels through cell cracking, encapsulant melting, and even fires. Understanding
+                this phenomenon is critical for anyone working with photovoltaic systems.
               </p>
             </div>
           </div>
@@ -1644,7 +1720,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
               Real-World Applications
             </h2>
             <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-              Hotspot management is critical for solar reliability
+              How engineers and companies in the solar industry apply hotspot physics to real-world photovoltaic systems
             </p>
           </div>
 
@@ -1747,10 +1823,13 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
               const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
               return (
                 <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <span style={{ fontSize: '20px' }}>{isCorrect ? '✓' : '✗'}</span>
+                    <p style={{ color: colors.textPrimary, fontWeight: 'bold', flex: 1 }}>{qIndex + 1}. {q.question}</p>
+                  </div>
                   {q.options.map((opt, oIndex) => (
                     <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
+                      {opt.correct ? '✓ ' : userAnswer === oIndex ? '✗ ' : ''}{opt.text}
                     </div>
                   ))}
                 </div>

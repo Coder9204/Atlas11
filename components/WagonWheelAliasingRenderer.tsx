@@ -351,8 +351,8 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
 
   const renderVisualization = (interactive: boolean) => {
     const width = 700;
-    const height = 500;
-    const wheelRadius = 75;
+    const height = 580;
+    const wheelRadius = 70;
     const apparentSpeed = getApparentSpeed();
 
     // Calculate apparent angle based on sampled frames
@@ -538,20 +538,20 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
           <rect width={width} height={height} fill="url(#wwaGridPattern)" />
 
           {/* Title area */}
-          <text x={width / 2} y={25} textAnchor="middle" fill={colors.accent} fontSize={16} fontWeight="bold" filter="url(#wwaTextGlow)">
+          <text x={width / 2} y={22} textAnchor="middle" fill={colors.accent} fontSize={15} fontWeight="bold" filter="url(#wwaTextGlow)">
             Wagon Wheel Aliasing
           </text>
 
           {/* Formula display */}
-          <g transform={`translate(${width / 2}, 55)`}>
-            <rect x={-200} y={0} width={400} height={26} rx={6} fill="rgba(30, 41, 59, 0.9)" stroke="#475569" strokeWidth={1} />
-            <text x={0} y={17} textAnchor="middle" fill={colors.textPrimary} fontSize={10} fontFamily="monospace">
-              apparent_angle = (true_rotation / frame_rate) mod spoke_spacing
+          <g transform={`translate(${width / 2}, 40)`}>
+            <rect x={-210} y={0} width={420} height={24} rx={6} fill="rgba(30, 41, 59, 0.9)" stroke="#475569" strokeWidth={1} />
+            <text x={0} y={15} textAnchor="middle" fill={colors.textPrimary} fontSize={9} fontFamily="monospace">
+              apparent = (true_speed / frame_rate) mod spoke_spacing
             </text>
           </g>
 
           {/* === TRUE WHEEL SECTION (Left) === */}
-          <g transform={`translate(160, 180)`}>
+          <g transform={`translate(150, 155)`}>
             {/* Section label */}
             <text x={0} y={-wheelRadius - 20} textAnchor="middle" fill={colors.textPrimary} fontSize={11} fontWeight="bold">
               TRUE WHEEL
@@ -626,7 +626,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
           </g>
 
           {/* === CAMERA / SAMPLING VISUALIZATION (Center) === */}
-          <g transform={`translate(${width / 2}, 180)`}>
+          <g transform={`translate(${width / 2}, 155)`}>
             {/* Camera body */}
             <rect x={-25} y={-60} width={50} height={35} rx={6} fill="url(#wwaCameraBody)" stroke="#4b5563" strokeWidth={1.5} />
             <rect x={-20} y={-55} width={40} height={25} rx={4} fill="#0f172a" />
@@ -643,28 +643,28 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
             </circle>
 
             {/* Frame rate display panel */}
-            <rect x={-50} y={-15} width={100} height={40} rx={6} fill="rgba(30, 41, 59, 0.9)" stroke="#475569" strokeWidth={1} />
-            <text x={0} y={0} textAnchor="middle" fill={colors.accent} fontSize={10} fontWeight="bold">
-              FRAME RATE
+            <rect x={-48} y={30} width={96} height={36} rx={6} fill="rgba(30, 41, 59, 0.9)" stroke="#475569" strokeWidth={1} />
+            <text x={0} y={46} textAnchor="middle" fill={colors.accent} fontSize={9} fontWeight="bold">
+              FRAME
             </text>
-            <text x={0} y={18} textAnchor="middle" fill={colors.textPrimary} fontSize={15} fontWeight="bold">
+            <text x={0} y={60} textAnchor="middle" fill={colors.textPrimary} fontSize={14} fontWeight="bold">
               {frameRate} fps
             </text>
 
             {/* Sampling timeline visualization */}
-            <g transform="translate(0, 70)">
-              <rect x={-60} y={-8} width={120} height={38} rx={4} fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth={1} />
-              <text x={0} y={4} textAnchor="middle" fill={colors.textMuted} fontSize={9}>
-                SAMPLES/SEC
+            <g transform="translate(0, 100)">
+              <rect x={-58} y={0} width={116} height={32} rx={4} fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth={1} />
+              <text x={0} y={11} textAnchor="middle" fill={colors.textMuted} fontSize={8}>
+                SAMPLES
               </text>
               {/* Sampling ticks */}
               {Array.from({ length: Math.min(frameRate / 4, 12) }).map((_, i) => (
                 <rect
                   key={i}
-                  x={-55 + i * (110 / Math.min(frameRate / 4, 12))}
-                  y={13}
+                  x={-54 + i * (108 / Math.min(frameRate / 4, 12))}
+                  y={16}
                   width={3}
-                  height={12}
+                  height={10}
                   fill={colors.accent}
                   opacity={0.7 + (i % 2) * 0.3}
                 />
@@ -680,7 +680,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
           </g>
 
           {/* === SAMPLED/APPARENT WHEEL (Right) === */}
-          <g transform={`translate(540, 180)`}>
+          <g transform={`translate(550, 155)`}>
             {/* Section label */}
             <text x={0} y={-wheelRadius - 20} textAnchor="middle" fill={colors.textPrimary} fontSize={11} fontWeight="bold">
               SAMPLED WHEEL
@@ -794,38 +794,38 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
           </g>
 
           {/* === SPEED COMPARISON CHART === */}
-          <g transform={`translate(100, 330)`}>
-            <text x={0} y={-10} fill={colors.textMuted} fontSize={11} fontWeight="bold">Speed Comparison</text>
+          <g transform={`translate(80, 360)`}>
+            <text x={120} y={-12} textAnchor="middle" fill={colors.textMuted} fontSize={10} fontWeight="bold">Speed Comparison</text>
 
             {/* Y-axis */}
-            <line x1={0} y1={0} x2={0} y2={120} stroke={colors.textMuted} strokeWidth={1} />
-            <text x={-8} y={5} textAnchor="end" fill={colors.textMuted} fontSize={9}>15</text>
-            <text x={-8} y={65} textAnchor="end" fill={colors.textMuted} fontSize={9}>7.5</text>
-            <text x={-8} y={125} textAnchor="end" fill={colors.textMuted} fontSize={9}>0</text>
-            <text x={-35} y={65} textAnchor="middle" fill={colors.textMuted} fontSize={9} transform={`rotate(-90, -35, 65)`}>r/s</text>
+            <line x1={0} y1={0} x2={0} y2={110} stroke={colors.textMuted} strokeWidth={1} />
+            <text x={-10} y={5} textAnchor="end" fill={colors.textMuted} fontSize={8}>15</text>
+            <text x={-10} y={60} textAnchor="end" fill={colors.textMuted} fontSize={8}>7.5</text>
+            <text x={-10} y={115} textAnchor="end" fill={colors.textMuted} fontSize={8}>0</text>
+            <text x={-30} y={60} textAnchor="middle" fill={colors.textMuted} fontSize={8} transform={`rotate(-90, -30, 60)`}>r/s</text>
 
             {/* X-axis */}
-            <line x1={0} y1={120} x2={500} y2={120} stroke={colors.textMuted} strokeWidth={1} />
+            <line x1={0} y1={110} x2={240} y2={110} stroke={colors.textMuted} strokeWidth={1} />
 
             {/* True speed bar */}
-            <rect x={50} y={120 - (rotationSpeed / 15) * 120} width={80} height={(rotationSpeed / 15) * 120} fill={colors.success} opacity={0.7} />
-            <text x={90} y={135} textAnchor="middle" fill={colors.textPrimary} fontSize={10}>True</text>
+            <rect x={30} y={110 - (rotationSpeed / 15) * 110} width={70} height={(rotationSpeed / 15) * 110} fill={colors.success} opacity={0.7} />
+            <text x={65} y={125} textAnchor="middle" fill={colors.textPrimary} fontSize={9}>True</text>
 
             {/* Apparent speed bar (can be negative) */}
             {apparentSpeed >= 0 ? (
-              <rect x={170} y={120 - (Math.abs(apparentSpeed) / 15) * 120} width={80} height={(Math.abs(apparentSpeed) / 15) * 120} fill={colors.error} opacity={0.7} />
+              <rect x={140} y={110 - (Math.abs(apparentSpeed) / 15) * 110} width={70} height={(Math.abs(apparentSpeed) / 15) * 110} fill={colors.error} opacity={0.7} />
             ) : (
               <>
-                <rect x={170} y={120} width={80} height={Math.min((Math.abs(apparentSpeed) / 15) * 120, 120)} fill={colors.warning} opacity={0.7} />
-                <text x={210} y={145} textAnchor="middle" fill={colors.warning} fontSize={9}>← backward</text>
+                <rect x={140} y={110} width={70} height={Math.min((Math.abs(apparentSpeed) / 15) * 110, 110)} fill={colors.warning} opacity={0.7} />
+                <text x={175} y={133} textAnchor="middle" fill={colors.warning} fontSize={7.5}>backward</text>
               </>
             )}
-            <text x={210} y={135} textAnchor="middle" fill={colors.textPrimary} fontSize={10}>Apparent</text>
+            <text x={175} y={125} textAnchor="middle" fill={colors.textPrimary} fontSize={9}>Sampled</text>
 
             {/* Interactive marker on apparent speed bar */}
             <circle
-              cx={210}
-              cy={apparentSpeed >= 0 ? 120 - (Math.abs(apparentSpeed) / 15) * 120 : 120}
+              cx={175}
+              cy={apparentSpeed >= 0 ? 110 - (Math.abs(apparentSpeed) / 15) * 110 : 110}
               r={6}
               fill={colors.accent}
               stroke="white"
@@ -835,33 +835,33 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
           </g>
 
           {/* === BOTTOM INFO PANEL === */}
-          <g transform={`translate(${width / 2}, ${height - 35})`}>
-            <rect x={-300} y={-35} width={600} height={70} rx={8} fill="rgba(30, 41, 59, 0.95)" stroke="#475569" strokeWidth={1} />
+          <g transform={`translate(480, 500)`}>
+            <rect x={-180} y={0} width={360} height={65} rx={8} fill="rgba(30, 41, 59, 0.95)" stroke="#475569" strokeWidth={1} />
 
             {/* Left info: Spoke spacing */}
-            <g transform="translate(-200, -10)">
-              <text x={0} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={10}>SPOKE</text>
-              <text x={0} y={12} textAnchor="middle" fill={colors.textMuted} fontSize={10}>SPACING</text>
-              <text x={0} y={30} textAnchor="middle" fill={colors.textSecondary} fontSize={13} fontWeight="bold">{(360 / numSpokes).toFixed(0)}deg</text>
+            <g transform="translate(-110, 15)">
+              <text x={0} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={8.5}>SPOKE</text>
+              <text x={0} y={11} textAnchor="middle" fill={colors.textMuted} fontSize={8.5}>SPACING</text>
+              <text x={0} y={30} textAnchor="middle" fill={colors.textSecondary} fontSize={12} fontWeight="bold">{(360 / numSpokes).toFixed(0)}°</text>
             </g>
 
             {/* Center info: Movement per frame */}
-            <g transform="translate(0, -10)">
-              <text x={0} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={10}>MOVEMENT</text>
-              <text x={0} y={12} textAnchor="middle" fill={colors.textMuted} fontSize={10}>PER FRAME</text>
-              <text x={0} y={30} textAnchor="middle" fill={colors.accent} fontSize={13} fontWeight="bold">{((rotationSpeed * 360) / frameRate).toFixed(1)}deg</text>
+            <g transform="translate(0, 15)">
+              <text x={0} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={8.5}>MOVE</text>
+              <text x={0} y={11} textAnchor="middle" fill={colors.textMuted} fontSize={8.5}>/FRAME</text>
+              <text x={0} y={30} textAnchor="middle" fill={colors.accent} fontSize={12} fontWeight="bold">{((rotationSpeed * 360) / frameRate).toFixed(1)}°</text>
             </g>
 
             {/* Right info: Aliased movement */}
-            <g transform="translate(200, -10)">
-              <text x={0} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={10}>ALIASED</text>
-              <text x={0} y={12} textAnchor="middle" fill={colors.textMuted} fontSize={10}>SHIFT</text>
+            <g transform="translate(110, 15)">
+              <text x={0} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={8.5}>ALIAS</text>
+              <text x={0} y={11} textAnchor="middle" fill={colors.textMuted} fontSize={8.5}>SHIFT</text>
               <text
                 x={0}
                 y={30}
                 textAnchor="middle"
                 fill={motionDirection === 'forward' ? colors.success : motionDirection === 'backward' ? colors.error : colors.warning}
-                fontSize={13}
+                fontSize={12}
                 fontWeight="bold"
               >
                 {(() => {
@@ -871,7 +871,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
                   if (apparentPerFrame > spokeSpacing / 2) {
                     apparentPerFrame = apparentPerFrame - spokeSpacing;
                   }
-                  return `${apparentPerFrame >= 0 ? '+' : ''}${apparentPerFrame.toFixed(1)}deg`;
+                  return `${apparentPerFrame >= 0 ? '+' : ''}${apparentPerFrame.toFixed(1)}°`;
                 })()}
               </text>
             </g>

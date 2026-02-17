@@ -280,12 +280,16 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
   // Perform read operation
   const performRead = useCallback(() => {
     const stability = calculateStability();
+
+    // Synchronous visual feedback
     setWordLineActive(true);
     setIsReading(true);
 
     // Simulate read disturb probability
     const random = Math.random() * 100;
-    if (random < stability.readDisturbProb) {
+    const willDisturb = random < stability.readDisturbProb;
+
+    if (willDisturb) {
       setTimeout(() => {
         setStoredBit(prev => 1 - prev); // Flip bit!
         setReadDisturbOccurred(true);
@@ -854,20 +858,85 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
           <rect x={15} y={235} width={370} height={140} fill="url(#sramMetricsBg)" rx={10} stroke="#334155" strokeWidth={1} />
 
           {/* Grid lines for reference */}
-          <line x1={15} y1={260} x2={385} y2={260} stroke="#334155" strokeWidth={0.5} strokeDasharray="2,2" opacity={0.3} />
-          <line x1={15} y1={300} x2={385} y2={300} stroke="#334155" strokeWidth={0.5} strokeDasharray="2,2" opacity={0.3} />
-          <line x1={15} y1={340} x2={385} y2={340} stroke="#334155" strokeWidth={0.5} strokeDasharray="2,2" opacity={0.3} />
+          <line x1={80} y1={260} x2={370} y2={260} stroke="#334155" strokeWidth={0.5} strokeDasharray="2,2" opacity={0.3} />
+          <line x1={80} y1={285} x2={370} y2={285} stroke="#334155" strokeWidth={0.5} strokeDasharray="2,2" opacity={0.3} />
+          <line x1={80} y1={310} x2={370} y2={310} stroke="#334155" strokeWidth={0.5} strokeDasharray="2,2" opacity={0.3} />
+          <line x1={80} y1={335} x2={370} y2={335} stroke="#334155" strokeWidth={0.5} strokeDasharray="2,2" opacity={0.3} />
+          <line x1={80} y1={360} x2={370} y2={360} stroke="#334155" strokeWidth={0.5} strokeDasharray="2,2" opacity={0.3} />
 
-          {/* Y-axis labels */}
-          <text x={25} y={250} fill={colors.textMuted} fontSize="10" fontFamily="monospace">Metrics</text>
-          <text x={25} y={270} fill={colors.textSecondary} fontSize="9" fontFamily="monospace">SNM</text>
-          <text x={25} y={310} fill={colors.textSecondary} fontSize="9" fontFamily="monospace">Margins</text>
-          <text x={25} y={350} fill={colors.textSecondary} fontSize="9" fontFamily="monospace">Risk</text>
+          {/* Y-axis */}
+          <line x1={80} y1={245} x2={80} y2={365} stroke={colors.textMuted} strokeWidth={1.5} />
+          <text x={25} y={250} fill={colors.textMuted} fontSize="11" fontWeight="bold">Voltage (V)</text>
 
-          {/* X-axis tick marks */}
-          <line x1={100} y1={370} x2={100} y2={375} stroke={colors.textMuted} strokeWidth={1} />
-          <line x1={200} y1={370} x2={200} y2={375} stroke={colors.textMuted} strokeWidth={1} />
-          <line x1={300} y1={370} x2={300} y2={375} stroke={colors.textMuted} strokeWidth={1} />
+          {/* Y-axis tick labels */}
+          <text x={72} y={248} fill={colors.textSecondary} fontSize="10" textAnchor="end">1.0</text>
+          <text x={72} y={288} fill={colors.textSecondary} fontSize="10" textAnchor="end">0.75</text>
+          <text x={72} y={313} fill={colors.textSecondary} fontSize="10" textAnchor="end">0.5</text>
+          <text x={72} y={338} fill={colors.textSecondary} fontSize="10" textAnchor="end">0.25</text>
+          <text x={72} y={363} fill={colors.textSecondary} fontSize="10" textAnchor="end">0.0</text>
+
+          {/* X-axis */}
+          <line x1={80} y1={360} x2={370} y2={360} stroke={colors.textMuted} strokeWidth={1.5} />
+          <text x={225} y={373} fill={colors.textMuted} fontSize="11" fontWeight="bold" textAnchor="middle">Cell State</text>
+
+          {/* X-axis tick marks and labels */}
+          <line x1={130} y1={360} x2={130} y2={365} stroke={colors.textMuted} strokeWidth={1} />
+          <text x={130} y={375} fill={colors.textSecondary} fontSize="9" textAnchor="middle">Q</text>
+          <line x1={225} y1={360} x2={225} y2={365} stroke={colors.textMuted} strokeWidth={1} />
+          <text x={225} y={375} fill={colors.textSecondary} fontSize="9" textAnchor="middle">SNM</text>
+          <line x1={320} y1={360} x2={320} y2={365} stroke={colors.textMuted} strokeWidth={1} />
+          <text x={320} y={375} fill={colors.textSecondary} fontSize="9" textAnchor="middle">Q̄</text>
+
+          {/* Dynamic voltage visualization curve - changes with supply voltage */}
+          <path
+            d={`M 90 ${360 - supplyVoltage * 100}
+                Q 130 ${360 - supplyVoltage * 80}, 180 ${360 - output.snm * 200}
+                T 270 ${360 - supplyVoltage * 70}
+                Q 320 ${360 - supplyVoltage * 85}, 360 ${360 - supplyVoltage * 95}`}
+            fill="none"
+            stroke={output.isStable ? colors.high : colors.error}
+            strokeWidth="3"
+            opacity={0.8}
+          />
+
+          {/* Reference baseline at nominal voltage */}
+          <line x1={90} y1={260} x2={360} y2={260} stroke={colors.success} strokeWidth={1.5} strokeDasharray="4,4" opacity={0.4} />
+          <circle cx={90} cy={260} r={3} fill={colors.success} opacity={0.6} />
+
+          {/* Interactive point showing current stability - moves with sliders */}
+          <circle
+            cx={225}
+            cy={360 - output.snm * 200}
+            r={6}
+            fill={colors.accent}
+            filter="url(#sramNodeGlow)"
+          />
+          <circle
+            cx={225}
+            cy={360 - output.snm * 200}
+            r={10}
+            fill="none"
+            stroke={colors.accent}
+            strokeWidth={2}
+            opacity={0.5}
+          >
+            <animate attributeName="r" values="10;14;10" dur="2s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.5;0.2;0.5" dur="2s" repeatCount="indefinite" />
+          </circle>
+
+          {/* Additional dynamic indicators based on cell ratio */}
+          <rect
+            x={100}
+            y={360 - cellRatio * 40}
+            width={50}
+            height={cellRatio * 40}
+            fill={colors.transistor}
+            opacity={0.3}
+            rx={4}
+          />
+          <text x={125} y={320} fill={colors.textPrimary} fontSize="10" textAnchor="middle" fontWeight="bold">
+            β={cellRatio.toFixed(1)}
+          </text>
         </svg>
 
         {/* Labels moved outside SVG using typo system */}
@@ -1408,7 +1477,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
             </ul>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
+        {renderBottomBar(true, true, 'Continue to Review')}
       </div>
     );
   }
@@ -1444,6 +1513,35 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.accent, marginBottom: '12px' }}>How 6T SRAM Works</h3>
+
+            {/* Simple diagram showing cross-coupled inverters */}
+            <svg width="100%" height="120" viewBox="0 0 300 120" style={{ marginBottom: '16px' }}>
+              <rect width="300" height="120" fill="#1e293b" rx="8" />
+              <text x="150" y="20" fill={colors.accent} fontSize="12" textAnchor="middle" fontWeight="bold">Cross-Coupled Bistable Storage</text>
+
+              {/* Left inverter */}
+              <circle cx="80" cy="60" r="20" fill="none" stroke={colors.high} strokeWidth="2" />
+              <text x="80" y="65" fill={colors.high} fontSize="12" textAnchor="middle" fontWeight="bold">INV1</text>
+
+              {/* Right inverter */}
+              <circle cx="220" cy="60" r="20" fill="none" stroke={colors.low} strokeWidth="2" />
+              <text x="220" y="65" fill={colors.low} fontSize="12" textAnchor="middle" fontWeight="bold">INV2</text>
+
+              {/* Cross-coupling arrows */}
+              <path d="M 100 55 Q 150 40, 200 55" fill="none" stroke={colors.accent} strokeWidth="2" markerEnd="url(#arrowhead)" />
+              <path d="M 200 65 Q 150 80, 100 65" fill="none" stroke={colors.accent} strokeWidth="2" markerEnd="url(#arrowhead)" />
+
+              <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                  <polygon points="0 0, 10 3, 0 6" fill={colors.accent} />
+                </marker>
+              </defs>
+
+              {/* Labels */}
+              <text x="150" y="35" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Feedback Loop</text>
+              <text x="150" y="95" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Creates Bistable States</text>
+            </svg>
+
             <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Cross-Coupled Inverters:</strong> Each inverter
@@ -1467,7 +1565,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
+        {renderBottomBar(true, true, 'Next: A Twist!')}
       </div>
     );
   }
@@ -1534,6 +1632,8 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
 
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
+    const output = calculateStability();
+
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
@@ -1542,6 +1642,9 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Inducing Read Disturb</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
               Lower voltage and increase variation to see instability
+            </p>
+            <p style={{ color: colors.accent, fontSize: '13px', marginTop: '8px', fontWeight: 'bold' }}>
+              Read Disturb Risk: {output.readDisturbProb.toFixed(1)}% | SNM: {(output.snm * 1000).toFixed(0)}mV
             </p>
           </div>
 
@@ -1563,7 +1666,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
+        {renderBottomBar(true, true, 'See the Explanation')}
       </div>
     );
   }
@@ -1599,6 +1702,36 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.warning, marginBottom: '12px' }}>The Design Dilemma</h3>
+
+            {/* SNM vs Voltage diagram */}
+            <svg width="100%" height="140" viewBox="0 0 300 140" style={{ marginBottom: '16px' }}>
+              <rect width="300" height="140" fill="#1e293b" rx="8" />
+              <text x="150" y="20" fill={colors.warning} fontSize="12" textAnchor="middle" fontWeight="bold">Stability Decreases with Lower Voltage</text>
+
+              {/* Axes */}
+              <line x1="40" y1="110" x2="260" y2="110" stroke={colors.textMuted} strokeWidth="1" />
+              <line x1="40" y1="110" x2="40" y2="40" stroke={colors.textMuted} strokeWidth="1" />
+
+              {/* Curve showing SNM degradation */}
+              <path d="M 50 50 Q 100 55, 150 75 Q 200 95, 250 105" fill="none" stroke={colors.error} strokeWidth="2.5" />
+
+              {/* Reference baseline */}
+              <line x1="40" y1="50" x2="260" y2="50" stroke={colors.success} strokeWidth="1" strokeDasharray="3,3" opacity="0.5" />
+              <circle cx="50" cy="50" r="4" fill={colors.success} />
+
+              {/* Interactive point */}
+              <circle cx={150 + supplyVoltage * 50} cy={75 - supplyVoltage * 20} r="5" fill={colors.accent} filter="url(#sramNodeGlow)" />
+
+              {/* Labels */}
+              <text x="150" y="130" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Supply Voltage →</text>
+              <text x="25" y="75" fill={colors.textSecondary} fontSize="10" transform="rotate(-90 25 75)">SNM →</text>
+
+              {/* Grid lines */}
+              <line x1="40" y1="65" x2="260" y2="65" stroke={colors.border} strokeWidth="0.5" strokeDasharray="2,2" opacity="0.3" />
+              <line x1="40" y1="80" x2="260" y2="80" stroke={colors.border} strokeWidth="0.5" strokeDasharray="2,2" opacity="0.3" />
+              <line x1="40" y1="95" x2="260" y2="95" stroke={colors.border} strokeWidth="0.5" strokeDasharray="2,2" opacity="0.3" />
+            </svg>
+
             <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Read vs Write Conflict:</strong> To prevent
@@ -1618,7 +1751,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
+        {renderBottomBar(true, true, 'Apply This Knowledge')}
       </div>
     );
   }
@@ -1714,7 +1847,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 7, testScore >= 7 ? 'Complete Mastery' : 'Review & Retry')}
+          {renderBottomBar(true, testScore >= 7, testScore >= 7 ? 'Complete Mastery' : 'Review & Retry')}
         </div>
       );
     }
@@ -1725,10 +1858,13 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px', WebkitOverflowScrolling: 'touch' }}>
           <div style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
               <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
             </div>
+            <p style={{ color: colors.textMuted, fontSize: '13px', marginBottom: '16px', lineHeight: 1.5 }}>
+              Test your understanding of SRAM cell stability, read disturb, static noise margin, and the design tradeoffs between read and write operations. Answer all questions to see your score.
+            </p>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
                 <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
@@ -1790,7 +1926,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
           </div>
           {renderVisualization(true)}
         </div>
-        {renderBottomBar(false, true, 'Complete')}
+        {renderBottomBar(true, true, 'Complete')}
       </div>
     );
   }

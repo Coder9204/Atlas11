@@ -564,6 +564,67 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
     </div>
   );
 
+  // Bottom navigation bar
+  const renderBottomNav = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const hasBack = currentIndex > 0;
+    const hasNext = currentIndex < phaseOrder.length - 1;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgCard,
+        borderTop: `1px solid ${colors.border}`,
+        padding: '16px 24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 50,
+      }}>
+        {hasBack ? (
+          <button
+            onClick={() => goToPhase(phaseOrder[currentIndex - 1])}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+              fontSize: '16px',
+              fontWeight: 600,
+            }}
+          >
+            Back
+          </button>
+        ) : <div />}
+
+        {renderBottomNav()}
+
+        {hasNext ? (
+          <button
+            onClick={nextPhase}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: 'none',
+              background: colors.accent,
+              color: 'white',
+              cursor: 'pointer',
+              fontSize: '16px',
+              fontWeight: 600,
+            }}
+          >
+            Next
+          </button>
+        ) : <div />}
+      </div>
+    );
+  };
+
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
@@ -661,7 +722,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
           Learn the Magic of ECC
         </button>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -700,7 +761,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
             If a single bit randomly flips in memory, how can a computer detect AND fix the error?
           </h2>
 
-          {/* Visual demonstration */}
+          {/* SVG Static visualization */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -708,77 +769,101 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
-              <div style={{
-                padding: '12px 20px',
-                background: colors.bitOne,
-                borderRadius: '8px',
-                fontSize: '24px',
-                fontWeight: 700,
-                color: 'white'
-              }}>1</div>
-              <div style={{
-                padding: '12px 20px',
-                background: colors.bitZero,
-                borderRadius: '8px',
-                fontSize: '24px',
-                fontWeight: 700,
-                color: 'white'
-              }}>0</div>
-              <div style={{
-                padding: '12px 20px',
-                background: colors.bitOne,
-                borderRadius: '8px',
-                fontSize: '24px',
-                fontWeight: 700,
-                color: 'white'
-              }}>1</div>
-              <div style={{
-                padding: '12px 20px',
-                background: colors.bitOne,
-                borderRadius: '8px',
-                fontSize: '24px',
-                fontWeight: 700,
-                color: 'white'
-              }}>1</div>
-            </div>
-            <div style={{ fontSize: '24px', margin: '12px 0' }}>Cosmic Ray Strike!</div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-              <div style={{
-                padding: '12px 20px',
-                background: colors.bitOne,
-                borderRadius: '8px',
-                fontSize: '24px',
-                fontWeight: 700,
-                color: 'white'
-              }}>1</div>
-              <div style={{
-                padding: '12px 20px',
-                background: colors.error,
-                borderRadius: '8px',
-                fontSize: '24px',
-                fontWeight: 700,
-                color: 'white',
-                boxShadow: `0 0 12px ${colors.error}`
-              }}>1</div>
-              <div style={{
-                padding: '12px 20px',
-                background: colors.bitOne,
-                borderRadius: '8px',
-                fontSize: '24px',
-                fontWeight: 700,
-                color: 'white'
-              }}>1</div>
-              <div style={{
-                padding: '12px 20px',
-                background: colors.bitOne,
-                borderRadius: '8px',
-                fontSize: '24px',
-                fontWeight: 700,
-                color: 'white'
-              }}>1</div>
-            </div>
-            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '12px' }}>
+            <svg width="100%" height="300" viewBox="0 0 500 300" style={{ maxWidth: '500px', margin: '0 auto', display: 'block' }}>
+              <defs>
+                <linearGradient id="errorGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor={colors.error} stopOpacity="0.8" />
+                  <stop offset="100%" stopColor={colors.error} stopOpacity="0.3" />
+                </linearGradient>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                  <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {/* Background */}
+              <rect x="0" y="0" width="500" height="300" fill={colors.bgSecondary} rx="12" />
+
+              {/* Grid lines */}
+              {[0, 1, 2, 3, 4, 5, 6].map(i => (
+                <line key={`h-${i}`} x1="0" y1={50 * i} x2="500" y2={50 * i} stroke={colors.border} strokeWidth="1" opacity="0.2" />
+              ))}
+              {[0, 1, 2, 3, 4, 5].map(i => (
+                <line key={`v-${i}`} x1={100 * i} y1="0" x2={100 * i} y2="300" stroke={colors.border} strokeWidth="1" opacity="0.2" />
+              ))}
+
+              {/* Title */}
+              <text x="250" y="30" fill={colors.textPrimary} fontSize="16" fontWeight="bold" textAnchor="middle">
+                Bit Error Scenario
+              </text>
+
+              {/* Original data */}
+              <text x="120" y="70" fill={colors.textMuted} fontSize="12" textAnchor="middle">Before</text>
+              <g transform="translate(50, 80)">
+                {[1, 0, 1, 1].map((bit, i) => (
+                  <g key={`before-${i}`}>
+                    <rect x={i * 40} y="0" width="35" height="50" fill={bit === 1 ? colors.bitOne : colors.bitZero} rx="6" />
+                    <text x={i * 40 + 17} y="32" fill="white" fontSize="20" fontWeight="bold" textAnchor="middle">{bit}</text>
+                  </g>
+                ))}
+              </g>
+
+              {/* Cosmic ray arrow */}
+              <defs>
+                <marker id="arrowRed" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                  <polygon points="0 0, 10 3, 0 6" fill={colors.error} />
+                </marker>
+              </defs>
+              <path
+                d="M 90 160 Q 90 180, 90 200"
+                stroke={colors.error}
+                strokeWidth="3"
+                fill="none"
+                markerEnd="url(#arrowRed)"
+                filter="url(#glow)"
+              />
+              <text x="120" y="180" fill={colors.error} fontSize="11" fontWeight="bold">Cosmic Ray!</text>
+
+              {/* After data */}
+              <text x="120" y="220" fill={colors.textMuted} fontSize="12" textAnchor="middle">After</text>
+              <g transform="translate(50, 230)">
+                {[1, 1, 1, 1].map((bit, i) => (
+                  <g key={`after-${i}`}>
+                    <rect
+                      x={i * 40}
+                      y="0"
+                      width="35"
+                      height="50"
+                      fill={i === 1 ? 'url(#errorGradient)' : (bit === 1 ? colors.bitOne : colors.bitZero)}
+                      rx="6"
+                      stroke={i === 1 ? colors.error : 'none'}
+                      strokeWidth={i === 1 ? '2' : '0'}
+                      filter={i === 1 ? 'url(#glow)' : ''}
+                    />
+                    <text x={i * 40 + 17} y="32" fill="white" fontSize="20" fontWeight="bold" textAnchor="middle">{bit}</text>
+                  </g>
+                ))}
+              </g>
+
+              {/* Question mark */}
+              <g transform="translate(300, 80)">
+                <circle cx="60" cy="100" r="50" fill={`${colors.warning}22`} stroke={colors.warning} strokeWidth="3" />
+                <text x="60" y="120" fill={colors.warning} fontSize="48" fontWeight="bold" textAnchor="middle">?</text>
+              </g>
+
+              {/* Labels */}
+              <text x="360" y="200" fill={colors.textSecondary} fontSize="11" textAnchor="middle">How to detect</text>
+              <text x="360" y="215" fill={colors.textSecondary} fontSize="11" textAnchor="middle">& correct?</text>
+
+              {/* Axis labels */}
+              <text x="10" y="150" fill={colors.textMuted} fontSize="10" textAnchor="start">Time</text>
+              <text x="250" y="290" fill={colors.textMuted} fontSize="10" textAnchor="middle">Bit Position</text>
+            </svg>
+
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '16px' }}>
               The second bit flipped from 0 to 1. How can the computer know?
             </p>
           </div>
@@ -830,7 +915,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
           )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -868,6 +953,92 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
             padding: '24px',
             marginBottom: '24px',
           }}>
+            {/* SVG Visualization of Error Detection Process */}
+            <div style={{ marginBottom: '24px' }}>
+              <h3 style={{ ...typo.small, color: colors.accent, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                Error Detection Flow
+              </h3>
+              <svg width="100%" height="200" viewBox="0 0 600 200" style={{ maxWidth: '600px', margin: '0 auto', display: 'block' }}>
+                {/* Background */}
+                <rect x="0" y="0" width="600" height="200" fill={colors.bgSecondary} rx="8" />
+
+                {/* Grid lines */}
+                {[0, 1, 2, 3, 4].map(i => (
+                  <line key={`grid-h-${i}`} x1="0" y1={40 * i} x2="600" y2={40 * i} stroke={colors.border} strokeWidth="1" opacity="0.3" />
+                ))}
+
+                {/* Data flow arrow */}
+                <defs>
+                  <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <polygon points="0 0, 10 3, 0 6" fill={colors.accent} />
+                  </marker>
+                </defs>
+                <line x1="50" y1="100" x2="550" y2="100" stroke={colors.accent} strokeWidth="2" markerEnd="url(#arrowhead)" opacity="0.5" />
+
+                {/* Original data visualization */}
+                <text x="80" y="30" fill={colors.textMuted} fontSize="12" textAnchor="middle">Original</text>
+                {dataBits.map((bit, i) => (
+                  <g key={`orig-${i}`}>
+                    <rect x={50 + i * 30} y="40" width="25" height="40" fill={bit === 1 ? colors.bitOne : colors.bitZero} rx="4" />
+                    <text x={62 + i * 30} y="65" fill="white" fontSize="16" fontWeight="bold" textAnchor="middle">{bit}</text>
+                  </g>
+                ))}
+
+                {/* Encoded with parity */}
+                <text x="300" y="30" fill={colors.textMuted} fontSize="12" textAnchor="middle">Encoded (7 bits)</text>
+                {receivedCodeword.map((bit, i) => {
+                  const isParity = i === 0 || i === 1 || i === 3;
+                  const isError = (errorPosition === i) || (secondErrorPosition === i);
+                  return (
+                    <g key={`enc-${i}`}>
+                      <rect
+                        x={220 + i * 25}
+                        y="40"
+                        width="22"
+                        height="40"
+                        fill={isError ? colors.error : (isParity ? colors.parity : (bit === 1 ? colors.bitOne : colors.bitZero))}
+                        rx="3"
+                        stroke={isError ? colors.error : 'none'}
+                        strokeWidth={isError ? '2' : '0'}
+                      />
+                      <text x={231 + i * 25} y="65" fill="white" fontSize="14" fontWeight="bold" textAnchor="middle">{bit}</text>
+                    </g>
+                  );
+                })}
+
+                {/* Syndrome indicator */}
+                <text x="520" y="30" fill={colors.textMuted} fontSize="12" textAnchor="middle">Status</text>
+                <circle cx="520" cy="60" r="25" fill={hasError ? colors.error : colors.success} opacity="0.2" />
+                <circle cx="520" cy="60" r="25" fill="none" stroke={hasError ? colors.error : colors.success} strokeWidth="2" />
+                <text x="520" y="67" fill={hasError ? colors.error : colors.success} fontSize="16" fontWeight="bold" textAnchor="middle">
+                  {hasError ? '!' : '✓'}
+                </text>
+
+                {/* Labels */}
+                <text x="80" y="100" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Data</text>
+                <text x="300" y="100" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Transmission</text>
+                <text x="520" y="100" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Check</text>
+
+                {/* Syndrome display */}
+                {hasError && (
+                  <g>
+                    <rect x="450" y="120" width="140" height="60" fill={`${colors.error}11`} stroke={colors.error} strokeWidth="1" rx="6" />
+                    <text x="520" y="140" fill={colors.error} fontSize="12" textAnchor="middle" fontWeight="bold">Syndrome: {syndrome}</text>
+                    <text x="520" y="158" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Error at pos {syndrome}</text>
+                    <text x="520" y="172" fill={colors.textMuted} fontSize="9" textAnchor="middle">
+                      {canCorrect ? 'Correctable' : 'Cannot correct'}
+                    </text>
+                  </g>
+                )}
+                {!hasError && (
+                  <g>
+                    <rect x="450" y="120" width="140" height="40" fill={`${colors.success}11`} stroke={colors.success} strokeWidth="1" rx="6" />
+                    <text x="520" y="145" fill={colors.success} fontSize="12" textAnchor="middle" fontWeight="bold">No Errors</text>
+                  </g>
+                )}
+              </svg>
+            </div>
+
             {/* Original Data */}
             <div style={{ marginBottom: '24px' }}>
               <h3 style={{ ...typo.small, color: colors.textMuted, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
@@ -1039,7 +1210,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1146,7 +1317,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
           </button>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1286,7 +1457,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
           )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1324,6 +1495,71 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
             padding: '24px',
             marginBottom: '24px',
           }}>
+            {/* SVG Visualization of Double Error */}
+            <div style={{ marginBottom: '24px' }}>
+              <h3 style={{ ...typo.small, color: colors.warning, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                Double Error Detection Limit
+              </h3>
+              <svg width="100%" height="180" viewBox="0 0 600 180" style={{ maxWidth: '600px', margin: '0 auto', display: 'block' }}>
+                {/* Background */}
+                <rect x="0" y="0" width="600" height="180" fill={colors.bgSecondary} rx="8" />
+
+                {/* Grid */}
+                {[0, 1, 2, 3, 4].map(i => (
+                  <line key={`grid-${i}`} x1="0" y1={36 * i} x2="600" y2={36 * i} stroke={colors.border} strokeWidth="1" opacity="0.3" />
+                ))}
+
+                {/* Error count visualization */}
+                <text x="300" y="25" fill={colors.textMuted} fontSize="12" textAnchor="middle">Error Capacity</text>
+                <rect x="150" y="40" width="300" height="40" fill={colors.bgPrimary} stroke={colors.border} strokeWidth="2" rx="6" />
+
+                {/* Fill based on error count */}
+                <rect
+                  x="150"
+                  y="40"
+                  width={Math.min(errorCount / 2, 1) * 300}
+                  height="40"
+                  fill={errorCount === 0 ? colors.success : errorCount === 1 ? colors.warning : colors.error}
+                  opacity="0.6"
+                  rx="6"
+                />
+
+                {/* Labels */}
+                <text x="220" y="65" fill={colors.textPrimary} fontSize="14" fontWeight="bold" textAnchor="middle">
+                  {errorCount === 0 ? 'No Errors' : errorCount === 1 ? 'Single Error (OK)' : 'Double Error (LIMIT)'}
+                </text>
+
+                {/* Codeword bits */}
+                <text x="300" y="110" fill={colors.textMuted} fontSize="11" textAnchor="middle">7-bit Codeword</text>
+                {receivedCodeword.map((bit, i) => {
+                  const isParity = i === 0 || i === 1 || i === 3;
+                  const isError = (errorPosition === i) || (secondErrorPosition === i);
+                  return (
+                    <g key={`vis-${i}`}>
+                      <rect
+                        x={190 + i * 30}
+                        y="120"
+                        width="25"
+                        height="45"
+                        fill={isError ? colors.error : (isParity ? colors.parity : (bit === 1 ? colors.bitOne : colors.bitZero))}
+                        rx="4"
+                        stroke={isError ? colors.error : colors.border}
+                        strokeWidth="2"
+                      />
+                      <text x={202 + i * 30} y="147" fill="white" fontSize="16" fontWeight="bold" textAnchor="middle">{bit}</text>
+                    </g>
+                  );
+                })}
+
+                {/* Status message */}
+                {errorCount === 2 && (
+                  <text x="300" y="175" fill={colors.error} fontSize="11" textAnchor="middle" fontWeight="bold">
+                    SECDED can detect but not correct this!
+                  </text>
+                )}
+              </svg>
+            </div>
+
             {/* Encoded Codeword */}
             <div style={{ marginBottom: '24px' }}>
               <h3 style={{ ...typo.small, color: colors.textMuted, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
@@ -1462,7 +1698,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1556,7 +1792,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
           </button>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1755,7 +1991,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1814,7 +2050,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
               </button>
             )}
           </div>
-          {renderNavDots()}
+          {renderBottomNav()}
         </div>
       );
     }
@@ -1981,7 +2217,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -2070,7 +2306,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
           </a>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }

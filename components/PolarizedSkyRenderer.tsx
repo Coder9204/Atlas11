@@ -409,7 +409,7 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
     const polarizerRad = (polarizerAngle * Math.PI) / 180;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
         <defs>
           <radialGradient id="skyGrad" cx="50%" cy="30%" r="70%">
             <stop offset="0%" stopColor="#1e40af" />
@@ -480,7 +480,7 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
         {/* Sun */}
         <circle cx={sunX} cy={sunY} r={18} fill="url(#sunGrad)" filter="url(#glowFilter)" />
         <circle cx={sunX - 4} cy={sunY - 4} r={6} fill="#ffffff" opacity="0.8" />
-        <text x={sunX} y={sunY + 32} textAnchor="middle" fill={colors.sun} fontSize="10" fontWeight="600">
+        <text x={sunX} y={sunY + 32} textAnchor="middle" fill={colors.sun} fontSize="11" fontWeight="600">
           SUN
         </text>
 
@@ -511,10 +511,10 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
         {/* Axis labels - X and Y when axes are shown */}
         {showAxes && (
           <>
-            <text x={centerX} y={height - 8} textAnchor="middle" fill={colors.textMuted} fontSize="10" fontWeight="500">
+            <text x={centerX} y={height - 8} textAnchor="middle" fill={colors.textMuted} fontSize="11" fontWeight="500">
               X-Axis (Azimuth)
             </text>
-            <text x="12" y={centerY} textAnchor="middle" fill={colors.textMuted} fontSize="10" fontWeight="500" transform={`rotate(-90 12 ${centerY})`}>
+            <text x="12" y={centerY} textAnchor="middle" fill={colors.textMuted} fontSize="11" fontWeight="500" transform={`rotate(-90 12 ${centerY})`}>
               Y-Axis (Elevation)
             </text>
           </>
@@ -546,7 +546,7 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
             strokeWidth="3"
             strokeLinecap="round"
           />
-          <text x="35" y="50" textAnchor="middle" fill={colors.warning} fontSize="10" fontWeight="600">
+          <text x="35" y="50" textAnchor="middle" fill={colors.warning} fontSize="11" fontWeight="600">
             {polarizerAngle}deg
           </text>
         </g>
@@ -731,27 +731,42 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>☀️</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Sun</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>-&gt;</div>
-              <div style={{
-                background: colors.sky + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.sky}`,
-              }}>
-                <div style={{ fontSize: '24px', color: colors.sky }}>Air Molecules</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Rayleigh Scattering</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>-&gt;</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>👁️</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Observer</p>
-              </div>
-            </div>
+            {/* Static SVG graphic showing polarization concept */}
+            <svg width="400" height="200" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: '100%', marginBottom: '16px' }}>
+              {/* Sky circle */}
+              <circle cx="200" cy="100" r="80" fill="#3b82f6" opacity="0.2" stroke="#3b82f6" strokeWidth="2" />
+
+              {/* Sun */}
+              <circle cx="120" cy="100" r="20" fill="#fcd34d" />
+              <text x="120" y="135" textAnchor="middle" fill={colors.textPrimary} fontSize="11">Sun</text>
+
+              {/* Scattering molecule */}
+              <circle cx="200" cy="100" r="8" fill="#60a5fa" />
+              <text x="200" y="85" textAnchor="middle" fill={colors.textPrimary} fontSize="11">Air Molecule</text>
+
+              {/* Observer */}
+              <circle cx="280" cy="100" r="15" fill={colors.accent} opacity="0.3" stroke={colors.accent} strokeWidth="2" />
+              <text x="280" y="100" textAnchor="middle" fill={colors.textPrimary} fontSize="18">👁️</text>
+              <text x="280" y="135" textAnchor="middle" fill={colors.textPrimary} fontSize="11">Observer</text>
+
+              {/* Light ray from sun */}
+              <line x1="140" y1="100" x2="190" y2="100" stroke="#fcd34d" strokeWidth="3" markerEnd="url(#arrowYellow)" />
+
+              {/* Scattered light */}
+              <line x1="208" y1="100" x2="265" y2="100" stroke="#60a5fa" strokeWidth="3" markerEnd="url(#arrowBlue)" />
+
+              {/* Polarization annotation */}
+              <text x="235" y="90" textAnchor="middle" fill={colors.success} fontSize="12" fontWeight="600">Polarized?</text>
+
+              <defs>
+                <marker id="arrowYellow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+                  <path d="M0,0 L0,6 L9,3 z" fill="#fcd34d" />
+                </marker>
+                <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+                  <path d="M0,0 L0,6 L9,3 z" fill="#60a5fa" />
+                </marker>
+              </defs>
+            </svg>
           </div>
 
           {/* Options */}
@@ -947,7 +962,18 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
                 max="360"
                 value={sunAzimuth}
                 onChange={(e) => setSunAzimuth(parseInt(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
+                className="custom-slider"
+                style={{
+                  width: '100%',
+                  cursor: 'pointer',
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
+                  height: '6px',
+                  borderRadius: '3px',
+                  background: colors.border,
+                  outline: 'none',
+                  touchAction: 'none',
+                }}
               />
             </div>
 
@@ -963,7 +989,18 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
                 max="90"
                 value={sunElevation}
                 onChange={(e) => setSunElevation(parseInt(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
+                className="custom-slider"
+                style={{
+                  width: '100%',
+                  cursor: 'pointer',
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
+                  height: '6px',
+                  borderRadius: '3px',
+                  background: colors.border,
+                  outline: 'none',
+                  touchAction: 'none',
+                }}
               />
             </div>
 
@@ -979,7 +1016,18 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
                 max="180"
                 value={polarizerAngle}
                 onChange={(e) => setPolarizerAngle(parseInt(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
+                className="custom-slider"
+                style={{
+                  width: '100%',
+                  cursor: 'pointer',
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
+                  height: '6px',
+                  borderRadius: '3px',
+                  background: colors.border,
+                  outline: 'none',
+                  touchAction: 'none',
+                }}
               />
             </div>
 
@@ -1046,12 +1094,8 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
 
   // REVIEW PHASE
   if (phase === 'review') {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+    const reviewContent = (
+      <>
         {renderProgressBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
@@ -1130,6 +1174,20 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
         </div>
 
         {renderNavDots()}
+      </>
+    );
+
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px' }}>
+          <div style={{
+            minHeight: '100vh',
+            background: colors.bgPrimary,
+            padding: '24px',
+          }}>
+            {reviewContent}
+          </div>
+        </div>
       </div>
     );
   }
@@ -1142,12 +1200,8 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
       { id: 'c', text: 'Haze has no effect on polarization' },
     ];
 
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+    const twistPredictContent = (
+      <>
         {renderProgressBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
@@ -1174,20 +1228,31 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <p style={{ ...typo.body, color: colors.textSecondary }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
               Rayleigh scattering works with tiny air molecules. But haze contains larger particles like dust, pollution, and water droplets...
             </p>
-            <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center', gap: '24px' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '36px' }}>🏔️</div>
-                <p style={{ ...typo.small, color: colors.success }}>Clear Mountain</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted, alignSelf: 'center' }}>vs</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '36px' }}>🏭</div>
-                <p style={{ ...typo.small, color: colors.error }}>Hazy City</p>
-              </div>
-            </div>
+
+            {/* Static SVG showing particle size comparison */}
+            <svg width="400" height="150" viewBox="0 0 400 150" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: '100%', marginBottom: '12px' }}>
+              {/* Clear sky - small particles */}
+              <g transform="translate(100, 75)">
+                <circle cx="0" cy="0" r="40" fill={colors.success} opacity="0.1" stroke={colors.success} strokeWidth="2" />
+                <circle cx="-10" cy="-5" r="3" fill={colors.sky} />
+                <circle cx="5" cy="8" r="3" fill={colors.sky} />
+                <circle cx="8" cy="-8" r="3" fill={colors.sky} />
+                <text x="0" y="60" textAnchor="middle" fill={colors.success} fontSize="12" fontWeight="600">Clear (Small)</text>
+                <text x="0" y="75" textAnchor="middle" fill={colors.textMuted} fontSize="11">High Polarization</text>
+              </g>
+
+              {/* Hazy sky - large particles */}
+              <g transform="translate(300, 75)">
+                <circle cx="0" cy="0" r="40" fill={colors.error} opacity="0.1" stroke={colors.error} strokeWidth="2" />
+                <circle cx="-8" cy="-3" r="8" fill="#94a3b8" />
+                <circle cx="10" cy="5" r="10" fill="#94a3b8" />
+                <text x="0" y="60" textAnchor="middle" fill={colors.error} fontSize="12" fontWeight="600">Hazy (Large)</text>
+                <text x="0" y="75" textAnchor="middle" fill={colors.textMuted} fontSize="11">Low Polarization</text>
+              </g>
+            </svg>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1236,18 +1301,31 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
         </div>
 
         {renderNavDots()}
+      </>
+    );
+
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px' }}>
+          <div style={{
+            minHeight: '100vh',
+            background: colors.bgPrimary,
+            padding: '24px',
+          }}>
+            {twistPredictContent}
+          </div>
+        </div>
       </div>
     );
   }
 
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+    const maxClearPol = 75;
+    const currentMaxPol = Math.round(75 * (1 - twistHazeLevel / 100));
+
+    const twistPlayContent = (
+      <>
         {renderProgressBar()}
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
@@ -1282,7 +1360,18 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
                 max="100"
                 value={twistHazeLevel}
                 onChange={(e) => setTwistHazeLevel(parseInt(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
+                className="custom-slider"
+                style={{
+                  width: '100%',
+                  cursor: 'pointer',
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
+                  height: '6px',
+                  borderRadius: '3px',
+                  background: colors.border,
+                  outline: 'none',
+                  touchAction: 'none',
+                }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                 <span style={{ ...typo.small, color: colors.success }}>Clear Mountain</span>
@@ -1290,33 +1379,46 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
               </div>
             </div>
 
-            {/* Comparison stats */}
+            {/* Comparison stats - Before/After Display */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '12px',
+              background: `${colors.sky}11`,
+              border: `1px solid ${colors.sky}33`,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '12px',
             }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-                border: `1px solid ${colors.success}33`,
-              }}>
-                <div style={{ ...typo.h3, color: colors.success }}>75%</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Clear Sky Max Polarization</div>
+              <div style={{ ...typo.small, color: colors.sky, fontWeight: 600, marginBottom: '8px', textAlign: 'center' }}>
+                Before/After Comparison
               </div>
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-                border: `1px solid ${twistHazeLevel < 30 ? colors.success : twistHazeLevel < 60 ? colors.warning : colors.error}33`,
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '12px',
               }}>
-                <div style={{ ...typo.h3, color: twistHazeLevel < 30 ? colors.success : twistHazeLevel < 60 ? colors.warning : colors.error }}>
-                  {Math.round(75 * (1 - twistHazeLevel / 100))}%
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                  border: `1px solid ${colors.success}33`,
+                }}>
+                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>BEFORE (Clear)</div>
+                  <div style={{ ...typo.h3, color: colors.success }}>{maxClearPol}%</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Max Polarization</div>
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Current Max Polarization</div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                  border: `1px solid ${twistHazeLevel < 30 ? colors.success : twistHazeLevel < 60 ? colors.warning : colors.error}33`,
+                }}>
+                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>AFTER (Hazy)</div>
+                  <div style={{ ...typo.h3, color: twistHazeLevel < 30 ? colors.success : twistHazeLevel < 60 ? colors.warning : colors.error }}>
+                    {currentMaxPol}%
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Max Polarization</div>
+                </div>
               </div>
             </div>
           </div>
@@ -1345,18 +1447,28 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
         </div>
 
         {renderNavDots()}
+      </>
+    );
+
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px' }}>
+          <div style={{
+            minHeight: '100vh',
+            background: colors.bgPrimary,
+            padding: '24px',
+          }}>
+            {twistPlayContent}
+          </div>
+        </div>
       </div>
     );
   }
 
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+    const twistReviewContent = (
+      <>
         {renderProgressBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
@@ -1420,6 +1532,20 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
         </div>
 
         {renderNavDots()}
+      </>
+    );
+
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px' }}>
+          <div style={{
+            minHeight: '100vh',
+            background: colors.bgPrimary,
+            padding: '24px',
+          }}>
+            {twistReviewContent}
+          </div>
+        </div>
       </div>
     );
   }
@@ -1429,12 +1555,8 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
 
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+    const transferContent = (
+      <>
         {renderProgressBar()}
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
@@ -1558,6 +1680,20 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
         </div>
 
         {renderNavDots()}
+      </>
+    );
+
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px' }}>
+          <div style={{
+            minHeight: '100vh',
+            background: colors.bgPrimary,
+            padding: '24px',
+          }}>
+            {transferContent}
+          </div>
+        </div>
       </div>
     );
   }
@@ -1566,12 +1702,8 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
   if (phase === 'test') {
     if (testSubmitted) {
       const passed = testScore >= 7;
-      return (
-        <div style={{
-          minHeight: '100vh',
-          background: colors.bgPrimary,
-          padding: '24px',
-        }}>
+      const testResultsContent = (
+        <>
           {renderProgressBar()}
 
           <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
@@ -1616,18 +1748,28 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
             )}
           </div>
           {renderNavDots()}
+        </>
+      );
+
+      return (
+        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px' }}>
+            <div style={{
+              minHeight: '100vh',
+              background: colors.bgPrimary,
+              padding: '24px',
+            }}>
+              {testResultsContent}
+            </div>
+          </div>
         </div>
       );
     }
 
     const question = testQuestions[currentQuestion];
 
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+    const testQuestionContent = (
+      <>
         {renderProgressBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
@@ -1782,23 +1924,28 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
         </div>
 
         {renderNavDots()}
+      </>
+    );
+
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px' }}>
+          <div style={{
+            minHeight: '100vh',
+            background: colors.bgPrimary,
+            padding: '24px',
+          }}>
+            {testQuestionContent}
+          </div>
+        </div>
       </div>
     );
   }
 
   // MASTERY PHASE
   if (phase === 'mastery') {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
-      }}>
+    const masteryContent = (
+      <>
         {renderProgressBar()}
 
         <div style={{
@@ -1871,6 +2018,25 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
         </div>
 
         {renderNavDots()}
+      </>
+    );
+
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px' }}>
+          <div style={{
+            minHeight: '100vh',
+            background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+            textAlign: 'center',
+          }}>
+            {masteryContent}
+          </div>
+        </div>
       </div>
     );
   }

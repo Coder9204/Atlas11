@@ -411,7 +411,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
     const bulgeAngle = moonAngle;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <title>Tidal Forces Visualization - Differential Gravity</title>
         <defs>
           <radialGradient id="earthGrad" cx="35%" cy="35%" r="65%">
@@ -641,7 +641,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
     const moonFacingAngle = isTidallyLocked ? moonAngle + Math.PI : moonRotation;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <title>Tidal Locking Visualization</title>
         <defs>
           <radialGradient id="earthGrad2" cx="35%" cy="35%" r="65%">
@@ -906,11 +906,20 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -935,26 +944,40 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '36px' }}>🌙</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Moon</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>←pulls</div>
-              <div style={{
-                background: colors.accent + '33',
-                padding: '20px 30px',
-                borderRadius: '50%',
-                border: `2px solid ${colors.accent}`,
-              }}>
-                <div style={{ fontSize: '36px' }}>🌍</div>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>???</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '36px' }}>🌊</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Far side bulge</p>
-              </div>
-            </div>
+            <svg width={isMobile ? 340 : 480} height={isMobile ? 180 : 200} viewBox={`0 0 ${isMobile ? 340 : 480} ${isMobile ? 180 : 200}`} style={{ margin: '0 auto', display: 'block' }}>
+              <title>Two Tidal Bulges Diagram</title>
+              <defs>
+                <radialGradient id="earthGradPredict" cx="35%" cy="35%" r="65%">
+                  <stop offset="0%" stopColor="#60a5fa" />
+                  <stop offset="50%" stopColor="#3b82f6" />
+                  <stop offset="100%" stopColor="#1e3a5f" />
+                </radialGradient>
+              </defs>
+              {/* Moon */}
+              <circle cx={isMobile ? 50 : 70} cy={isMobile ? 90 : 100} r={isMobile ? 15 : 18} fill="#9ca3af" />
+              <text x={isMobile ? 50 : 70} y={isMobile ? 125 : 135} textAnchor="middle" fill="#9ca3af" fontSize="10">Moon</text>
+
+              {/* Arrow */}
+              <line x1={isMobile ? 70 : 95} y1={isMobile ? 90 : 100} x2={isMobile ? 130 : 160} y2={isMobile ? 90 : 100} stroke="#06B6D4" strokeWidth="2" markerEnd="url(#arrowCyan)" />
+              <defs>
+                <marker id="arrowCyan" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                  <polygon points="0 0, 10 3.5, 0 7" fill="#06B6D4" />
+                </marker>
+              </defs>
+              <text x={isMobile ? 100 : 130} y={isMobile ? 80 : 90} textAnchor="middle" fill="#06B6D4" fontSize="9">pulls</text>
+
+              {/* Earth with bulges */}
+              <ellipse cx={isMobile ? 170 : 240} cy={isMobile ? 90 : 100} rx={isMobile ? 50 : 60} ry={isMobile ? 35 : 40} fill="url(#earthGradPredict)" />
+              <text x={isMobile ? 170 : 240} y={isMobile ? 125 : 140} textAnchor="middle" fill="#60a5fa" fontSize="10">Earth</text>
+
+              {/* Bulge labels */}
+              <text x={isMobile ? 125 : 185} y={isMobile ? 95 : 105} textAnchor="middle" fill="#7dd3fc" fontSize="9" fontWeight="600">HIGH</text>
+              <text x={isMobile ? 215 : 295} y={isMobile ? 95 : 105} textAnchor="middle" fill="#7dd3fc" fontSize="9" fontWeight="600">HIGH</text>
+
+              {/* Question mark */}
+              <text x={isMobile ? 260 : 340} y={isMobile ? 95 : 105} textAnchor="middle" fill="#F59E0B" fontSize="24" fontWeight="700">?</text>
+              <text x={isMobile ? 260 : 340} y={isMobile ? 125 : 135} textAnchor="middle" fill="#F59E0B" fontSize="9">Why?</text>
+            </svg>
           </div>
 
           {/* Options */}
@@ -1002,6 +1025,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
               Test My Prediction
             </button>
           )}
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1045,6 +1069,32 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
               <TidalVisualization />
+            </div>
+
+            {/* Moon position slider */}
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ ...typo.small, color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+                Moon Position (angle): {(moonAngle * 180 / Math.PI).toFixed(0)}°
+              </label>
+              <input
+                type="range"
+                min="0"
+                max={Math.PI * 2}
+                step="0.1"
+                value={moonAngle}
+                onChange={(e) => {
+                  playSound('click');
+                  setMoonAngle(parseFloat(e.target.value));
+                }}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: `linear-gradient(90deg, ${colors.accent} 0%, ${colors.ocean} 100%)`,
+                  outline: 'none',
+                  cursor: 'pointer',
+                }}
+              />
             </div>
 
             {/* Control buttons */}
@@ -1138,6 +1188,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
           >
             Understand the Physics
           </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1151,11 +1202,20 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Physics of Tidal Forces
           </h2>
@@ -1233,6 +1293,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
           >
             Discover Another Effect
           </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1252,11 +1313,20 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1331,6 +1401,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
               See the Effect
             </button>
           )}
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1344,11 +1415,20 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Tidal Locking Simulator
           </h2>
@@ -1364,6 +1444,35 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
               <TidalLockingVisualization />
+            </div>
+
+            {/* Orbital position slider */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ ...typo.small, color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+                Orbital Position: {(moonAngle * 180 / Math.PI).toFixed(0)}°
+              </label>
+              <input
+                type="range"
+                min="0"
+                max={Math.PI * 2}
+                step="0.1"
+                value={moonAngle}
+                onChange={(e) => {
+                  playSound('click');
+                  setMoonAngle(parseFloat(e.target.value));
+                  if (isTidallyLocked) {
+                    setMoonRotation(parseFloat(e.target.value));
+                  }
+                }}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: `linear-gradient(90deg, ${colors.accent} 0%, ${colors.success} 100%)`,
+                  outline: 'none',
+                  cursor: 'pointer',
+                }}
+              />
             </div>
 
             {/* Toggle buttons */}
@@ -1428,6 +1537,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
           >
             Understand the Process
           </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1441,11 +1551,20 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             How Tidal Locking Works
           </h2>
@@ -1529,6 +1648,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
           >
             See Real-World Applications
           </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1545,14 +1665,26 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length}
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1657,6 +1789,25 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
                 </div>
               ))}
             </div>
+
+            {/* Got It button for current app */}
+            {!completedApps[selectedApp] && (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  ...primaryButtonStyle,
+                  width: '100%',
+                  marginTop: '16px',
+                }}
+              >
+                Got It - Continue
+              </button>
+            )}
           </div>
 
           {allAppsCompleted && (
@@ -1667,6 +1818,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
               Take the Knowledge Test
             </button>
           )}
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1738,11 +1890,20 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1890,6 +2051,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
                 Submit Test
               </button>
             )}
+          </div>
           </div>
         </div>
 

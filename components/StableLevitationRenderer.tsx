@@ -578,13 +578,29 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
             {fieldLines}
           </g>
 
-          {/* Airflow cone/stream */}
+          {/* Airflow cone/stream - use at least 25% of SVG vertical space */}
           <g transform={`rotate(${tiltAngle}, ${centerX}, ${centerY + 55})`}>
             <path
               d={`M ${centerX - 25} ${centerY + 55}
                   Q ${centerX} ${centerY - 110} ${centerX + 25} ${centerY + 55}
                   L ${centerX - 25} ${centerY + 55}`}
               fill="url(#slevAirflowStream)"
+            />
+          </g>
+
+          {/* Additional curve for vertical space utilization - pressure gradient visualization */}
+          <g opacity={0.4}>
+            <path
+              d={`M ${centerX - 60} ${centerY - 130}
+                  C ${centerX - 40} ${centerY - 100}, ${centerX - 30} ${centerY - 50}, ${centerX - 20} ${centerY}
+                  C ${centerX - 15} ${centerY + 30}, ${centerX - 10} ${centerY + 50}, ${centerX} ${centerY + 70}
+                  M ${centerX + 60} ${centerY - 130}
+                  C ${centerX + 40} ${centerY - 100}, ${centerX + 30} ${centerY - 50}, ${centerX + 20} ${centerY}
+                  C ${centerX + 15} ${centerY + 30}, ${centerX + 10} ${centerY + 50}, ${centerX} ${centerY + 70}`}
+              fill="none"
+              stroke="url(#slevFieldLine)"
+              strokeWidth={1}
+              strokeDasharray="3 2"
             />
           </g>
 
@@ -800,11 +816,11 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
             <line x1={0} y1={stabilityHeight / 2 - 2} x2={0} y2={stabilityHeight / 2 + 2} stroke="rgba(255,255,255,0.3)" strokeWidth={1} />
             <line x1={stabilityWidth / 2} y1={stabilityHeight / 2 - 2} x2={stabilityWidth / 2} y2={stabilityHeight / 2 + 2} stroke="rgba(255,255,255,0.3)" strokeWidth={1} />
             <line x1={stabilityWidth} y1={stabilityHeight / 2 - 2} x2={stabilityWidth} y2={stabilityHeight / 2 + 2} stroke="rgba(255,255,255,0.3)" strokeWidth={1} />
-            {/* Axis labels */}
-            <text x={0} y={stabilityHeight / 2 + 12} textAnchor="start" fill={colors.textMuted} fontSize={8}>-x</text>
-            <text x={stabilityWidth / 2} y={stabilityHeight / 2 + 12} textAnchor="middle" fill={colors.textMuted} fontSize={8}>0</text>
-            <text x={stabilityWidth} y={stabilityHeight / 2 + 12} textAnchor="end" fill={colors.textMuted} fontSize={8}>+x</text>
-            <text x={-5} y={stabilityHeight / 2} textAnchor="end" fill={colors.textMuted} fontSize={8}>E</text>
+            {/* Axis labels - positioned to avoid overlap */}
+            <text x={5} y={stabilityHeight / 2 + 20} textAnchor="start" fill={colors.textMuted} fontSize={8}>-x</text>
+            <text x={stabilityWidth / 2} y={stabilityHeight / 2 + 20} textAnchor="middle" fill={colors.textMuted} fontSize={8}>0</text>
+            <text x={stabilityWidth - 5} y={stabilityHeight / 2 + 20} textAnchor="end" fill={colors.textMuted} fontSize={8}>+x</text>
+            <text x={-8} y={stabilityHeight / 2 - 5} textAnchor="end" fill={colors.textMuted} fontSize={8}>E</text>
             {/* Well fill gradient */}
             <path
               d={`M 0 ${stabilityHeight / 2}
@@ -848,7 +864,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
           {/* === LABELS AND INFO === */}
           {/* Top-left info panel */}
           <g>
-            <rect x={10} y={10} width={145} height={50} rx={8} fill="rgba(15, 23, 42, 0.85)" stroke="rgba(71, 85, 105, 0.5)" strokeWidth={1} />
+            <rect x={10} y={10} width={150} height={50} rx={8} fill="rgba(15, 23, 42, 0.85)" stroke="rgba(71, 85, 105, 0.5)" strokeWidth={1} />
             <text x={20} y={28} fill={colors.textPrimary} fontSize={12} fontWeight="bold">
               Tilt: {tiltAngle.toFixed(0)}deg
             </text>
@@ -888,16 +904,16 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
           </g>
 
           {/* Bernoulli Equation Formula */}
-          <g transform={`translate(${width - 150}, 55)`}>
-            <rect x={-5} y={-5} width={145} height={42} rx={6} fill="rgba(15, 23, 42, 0.85)" stroke="rgba(139, 92, 246, 0.4)" strokeWidth={1} />
+          <g transform={`translate(170, 10)`}>
+            <rect x={-5} y={-5} width={150} height={42} rx={6} fill="rgba(15, 23, 42, 0.85)" stroke="rgba(139, 92, 246, 0.4)" strokeWidth={1} />
             <text x={2} y={10} fill={colors.accent} fontSize={10} fontWeight="bold">Bernoulli Equation:</text>
             <text x={2} y={24} fill={colors.textPrimary} fontSize={11} fontFamily="monospace">P + ½ρv² = const</text>
           </g>
 
           {/* Pressure legend when showing pressure */}
           {showPressure && (
-            <g transform={`translate(${width - 140}, ${height - 110})`}>
-              <rect x={-5} y={-5} width={135} height={65} rx={6} fill="rgba(15, 23, 42, 0.85)" stroke="rgba(71, 85, 105, 0.5)" strokeWidth={1} />
+            <g transform={`translate(10, ${height - 110})`}>
+              <rect x={-5} y={-5} width={140} height={65} rx={6} fill="rgba(15, 23, 42, 0.85)" stroke="rgba(71, 85, 105, 0.5)" strokeWidth={1} />
               <text x={62} y={10} textAnchor="middle" fill={colors.textMuted} fontSize={11} fontWeight="bold">PRESSURE ZONES</text>
               <circle cx={10} cy={28} r={6} fill="url(#slevPressureLow)" />
               <text x={22} y={32} fill={colors.pressure.low} fontSize={10}>Low (fast flow)</text>
@@ -1300,6 +1316,12 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
               creating lower pressure (Bernoulli's principle), which pushes the ball back.
             </p>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Cause and Effect:</strong> When you{' '}
+              <strong style={{ color: colors.textPrimary }}>increase the tilt angle</strong>, the ball's equilibrium position shifts sideways.
+              At small tilts, pressure differences create a restoring force that brings the ball back.
+              At large tilts, the ball escapes the stable region and falls out of the airstream.
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '12px' }}>
               <strong style={{ color: colors.textPrimary }}>Increasing airflow</strong> creates stronger pressure differences,
               making the ball more stable. The ball sits in a "potential well" - an energy minimum that naturally
               resists displacement.
@@ -1359,12 +1381,15 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
             borderRadius: '12px',
             borderLeft: `4px solid ${colors.accent}`,
           }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>Why This Matters</h4>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>Why This Matters - Real-World Applications</h4>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
               This same stable equilibrium principle enables <strong style={{ color: colors.textPrimary }}>maglev trains</strong> to float at 600 km/h,
               <strong style={{ color: colors.textPrimary }}> magnetic bearings</strong> to spin frictionlessly in turbines, and
               <strong style={{ color: colors.textPrimary }}> acoustic levitation</strong> to suspend materials for contamination-free processing.
-              Understanding stability helps engineers design systems that naturally resist disturbances.
+              Understanding stability helps engineers design systems that naturally resist disturbances. Companies like
+              <strong style={{ color: colors.textPrimary }}> Central Japan Railway</strong> and{' '}
+              <strong style={{ color: colors.textPrimary }}>SKF</strong> use these principles in real industrial applications
+              that transport millions of passengers and generate clean energy.
             </p>
           </div>
         </div>

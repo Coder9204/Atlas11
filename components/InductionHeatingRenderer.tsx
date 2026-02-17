@@ -268,6 +268,8 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
   const [frequency, setFrequency] = useState(25); // kHz
   const [fieldPhase, setFieldPhase] = useState(0);
   const [isHeating, setIsHeating] = useState(false);
+  const [sliderJustChanged, setSliderJustChanged] = useState(false);
+  const [materialJustChanged, setMaterialJustChanged] = useState(false);
 
   // Twist phase - material comparison
   const [twistMaterial, setTwistMaterial] = useState<'steel' | 'aluminum' | 'glass'>('steel');
@@ -514,13 +516,13 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
           {/* Pan shadow */}
           <ellipse cx="3" cy="65" rx="70" ry="14" fill="#000000" opacity="0.3" />
 
-          {/* Pan bottom with temperature color */}
+          {/* Pan bottom with temperature color - blue=cold, yellow/orange/red=hot */}
           <ellipse
             cx="0"
             cy="62"
             rx="68"
             ry="12"
-            fill={temp > 200 ? '#ef4444' : temp > 100 ? '#f97316' : temp > 50 ? '#fbbf24' : '#4b5563'}
+            fill={temp > 200 ? '#ef4444' : temp > 100 ? '#f97316' : temp > 50 ? '#fbbf24' : temp > 35 ? '#6b7280' : '#3b82f6'}
             filter={temp > 100 ? 'url(#glowFilter)' : undefined}
           />
 
@@ -598,7 +600,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
             x="40"
             y="40"
             textAnchor="middle"
-            fill={temp > 200 ? '#ef4444' : temp > 100 ? '#f97316' : temp > 50 ? '#fbbf24' : '#9ca3af'}
+            fill={temp > 200 ? '#ef4444' : temp > 100 ? '#f97316' : temp > 50 ? '#fbbf24' : temp > 35 ? '#9ca3af' : '#3b82f6'}
             fontSize="16"
             fontWeight="bold"
           >
@@ -840,12 +842,19 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
-        overflowY: 'auto',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '80px 24px 24px', flex: 1 }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress indicator for predict phase */}
           <div style={{
             display: 'flex',
@@ -933,6 +942,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
           )}
 
           {renderNavDots()}
+          </div>
         </div>
       </div>
     );
@@ -946,12 +956,19 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
-        overflowY: 'auto',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '80px 24px 24px', flex: 1 }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Induction Heating Lab
           </h2>
@@ -982,7 +999,13 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
                 {(['steel', 'aluminum', 'glass', 'copper'] as const).map(mat => (
                   <button
                     key={mat}
-                    onClick={() => { playSound('click'); setPanMaterial(mat); setTemperature(25); }}
+                    onClick={() => {
+                      playSound('click');
+                      setPanMaterial(mat);
+                      setTemperature(25);
+                      setMaterialJustChanged(true);
+                      setTimeout(() => setMaterialJustChanged(false), 100);
+                    }}
                     style={{
                       padding: '10px',
                       borderRadius: '8px',
@@ -992,6 +1015,9 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
                       cursor: 'pointer',
                       fontWeight: 600,
                       textTransform: 'capitalize',
+                      filter: panMaterial === mat ? `drop-shadow(0 0 6px ${colors.accentGlow})` : 'none',
+                      transform: (panMaterial === mat && materialJustChanged) ? 'scale(1.05)' : 'scale(1)',
+                      transition: 'all 0.1s ease',
                     }}
                   >
                     {mat}
@@ -1001,17 +1027,30 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
             </div>
 
             {/* Frequency slider */}
-            <div style={{ marginBottom: '20px' }}>
+            <div style={{ marginBottom: '20px', position: 'relative' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>Frequency</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{frequency} kHz</span>
+                <span style={{
+                  ...typo.small,
+                  color: colors.accent,
+                  fontWeight: 600,
+                  transform: sliderJustChanged ? 'scale(1.2)' : 'scale(1)',
+                  transition: 'transform 0.1s ease',
+                  filter: sliderJustChanged ? `drop-shadow(0 0 8px ${colors.accent})` : 'none',
+                }}>
+                  {frequency} kHz
+                </span>
               </div>
               <input
                 type="range"
                 min="10"
                 max="50"
                 value={frequency}
-                onChange={(e) => setFrequency(parseInt(e.target.value))}
+                onChange={(e) => {
+                  setFrequency(parseInt(e.target.value));
+                  setSliderJustChanged(true);
+                  setTimeout(() => setSliderJustChanged(false), 100);
+                }}
                 style={{
                   width: '100%',
                   height: '8px',
@@ -1020,8 +1059,8 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Lower frequency</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Higher frequency</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>10 kHz (Lower frequency)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>50 kHz (Higher frequency)</span>
               </div>
             </div>
 
@@ -1059,7 +1098,12 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
                 padding: '16px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: temperature > 100 ? colors.error : colors.accent }}>{temperature.toFixed(0)}°C</div>
+                <div style={{
+                  ...typo.h3,
+                  color: temperature > 200 ? '#ef4444' : temperature > 100 ? colors.accent : temperature > 50 ? colors.warning : temperature > 35 ? colors.textMuted : '#3b82f6'
+                }}>
+                  {temperature.toFixed(0)}°C
+                </div>
                 <div style={{ ...typo.small, color: colors.textMuted }}>Temperature</div>
               </div>
               <div style={{
@@ -1124,6 +1168,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
           >
             Understand the Physics
           </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1139,12 +1184,19 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
-        overflowY: 'auto',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '80px 24px 24px', flex: 1 }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Physics of Induction Heating
           </h2>
@@ -1203,6 +1255,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
           >
             Discover the Material Effect
           </button>
+          </div>
         </div>
 
         {renderNavDots()}
@@ -1362,7 +1415,12 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
               {(['steel', 'aluminum', 'glass'] as const).map(mat => (
                 <button
                   key={mat}
-                  onClick={() => { playSound('click'); setTwistMaterial(mat); }}
+                  onClick={() => {
+                    playSound('click');
+                    setTwistMaterial(mat);
+                    setMaterialJustChanged(true);
+                    setTimeout(() => setMaterialJustChanged(false), 100);
+                  }}
                   style={{
                     padding: '12px 24px',
                     borderRadius: '8px',
@@ -1372,6 +1430,9 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
                     cursor: 'pointer',
                     fontWeight: 600,
                     textTransform: 'capitalize',
+                    filter: twistMaterial === mat ? `drop-shadow(0 0 6px ${materialProps[mat].color}44)` : 'none',
+                    transform: (twistMaterial === mat && materialJustChanged) ? 'scale(1.05)' : 'scale(1)',
+                    transition: 'all 0.1s ease',
                   }}
                 >
                   {mat}

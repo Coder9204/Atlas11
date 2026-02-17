@@ -476,10 +476,10 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
         />
 
         {/* Y-axis label */}
-        <text x={centerX - 8} y={size * 0.12} textAnchor="end" fill={colors.textMuted} fontSize={size * 0.028}>Y</text>
+        <text x={centerX - 8} y={size * 0.12} textAnchor="end" fill={colors.textMuted} fontSize={size * 0.028}>Position Y</text>
 
         {/* X-axis label */}
-        <text x={size * 0.92} y={centerY + 4} fill={colors.textMuted} fontSize={size * 0.028}>X</text>
+        <text x={size * 0.92} y={centerY + 4} fill={colors.textMuted} fontSize={size * 0.028}>Position X</text>
 
         {/* Earth */}
         <circle cx={centerX} cy={centerY} r={earthRadius * 1.2} fill={colors.earth} opacity="0.2" filter="url(#tidlGlow)" />
@@ -672,12 +672,20 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -743,17 +751,29 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
             ))}
           </div>
 
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test My Prediction
-            </button>
-          )}
+            {prediction && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Test My Prediction
+              </button>
+            )}
+          </div>
         </div>
 
-        {renderNavDots()}
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '16px 24px',
+          background: colors.bgPrimary,
+          borderTop: `1px solid ${colors.border}`,
+          zIndex: 10,
+        }}>
+          {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -798,21 +818,20 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
               padding: '24px',
               marginBottom: '24px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+              <div style={{ marginBottom: '16px' }}>
                 <MoonSystemVisualization size={isMobile ? 280 : 360} locked={isTidallyLocked} showBulge={showTidalBulge} />
-              </div>
-
-              {/* Formula */}
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                marginBottom: '16px',
-                textAlign: 'center',
-              }}>
-                <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-                  <strong>Tidal Locking Condition:</strong> T<sub>rotation</sub> = T<sub>orbital</sub>
-                </p>
+                {/* Formula positioned near the graphic */}
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '10px',
+                  marginTop: '12px',
+                  textAlign: 'center',
+                }}>
+                  <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                    <strong>Tidal Locking:</strong> ω<sub>rotation</sub> = ω<sub>orbital</sub>
+                  </p>
+                </div>
               </div>
 
               {/* Real-time calculated values */}
@@ -975,12 +994,20 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Physics of Tidal Locking
           </h2>
@@ -1041,15 +1068,27 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
             </p>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Discover a Surprising Twist
-          </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Discover a Surprising Twist
+            </button>
+          </div>
         </div>
 
-        {renderNavDots()}
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '16px 24px',
+          background: colors.bgPrimary,
+          borderTop: `1px solid ${colors.border}`,
+          zIndex: 10,
+        }}>
+          {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -1066,12 +1105,20 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1138,17 +1185,29 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
             ))}
           </div>
 
-          {twistPrediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Explore the Effect
-            </button>
-          )}
+            {twistPrediction && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Explore the Effect
+              </button>
+            )}
+          </div>
         </div>
 
-        {renderNavDots()}
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '16px 24px',
+          background: colors.bgPrimary,
+          borderTop: `1px solid ${colors.border}`,
+          zIndex: 10,
+        }}>
+          {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -1156,118 +1215,188 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     const lockingTime = calculateLockingTime();
+    const tidalForceStrength = Math.pow(50 / tidalDistance, 3).toFixed(2);
+    const dissipationRate = ((100 - bodyRigidity) / 100).toFixed(2);
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Tidal Locking Explorer
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-            See how distance and body composition affect the time to tidal locking
-          </p>
-          <p style={{ ...typo.small, color: colors.warning, textAlign: 'center', marginBottom: '24px' }}>
-            Observe: Adjust the sliders to see how dramatically distance affects locking time (scales with distance to the 6th power!).
-          </p>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            {/* Distance slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Distance from Planet</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                  {tidalDistance < 30 ? 'Very Close' : tidalDistance < 70 ? 'Moderate' : 'Far'}
-                </span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                value={tidalDistance}
-                onChange={(e) => setTidalDistance(parseInt(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Close (strong tides)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Far (weak tides)</span>
-              </div>
-            </div>
-
-            {/* Rigidity slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Body Rigidity</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>
-                  {bodyRigidity < 30 ? 'Icy/Fluid' : bodyRigidity < 70 ? 'Rocky' : 'Very Rigid'}
-                </span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={bodyRigidity}
-                onChange={(e) => setBodyRigidity(parseInt(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Icy (more friction)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Rigid (less friction)</span>
-              </div>
-            </div>
-
-            {/* Result display */}
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '12px',
-              padding: '20px',
-              textAlign: 'center',
-            }}>
-              <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>
-                Estimated Time to Tidal Locking
-              </div>
-              <div style={{ ...typo.h2, color: colors.accent }}>
-                {lockingTime} years
-              </div>
-              <div style={{ ...typo.small, color: colors.textSecondary, marginTop: '8px' }}>
-                Locking time scales with distance^6
-              </div>
-            </div>
-          </div>
-
-          {/* Key insight */}
-          <div style={{
-            background: `${colors.warning}22`,
-            border: `1px solid ${colors.warning}`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-          }}>
-            <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
-              <strong>Key Discovery:</strong> Earth's day is lengthening by 1.4 milliseconds per century, and the Moon is receding at 3.8 cm/year. In billions of years, Earth will be tidally locked to the Moon!
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Tidal Locking Explorer
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+              See how distance and body composition affect the time to tidal locking
             </p>
-          </div>
+            <p style={{ ...typo.small, color: colors.warning, textAlign: 'center', marginBottom: '24px' }}>
+              Observe: Adjust the sliders to see how dramatically distance affects locking time (scales with distance to the 6th power!).
+            </p>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Discovery
-          </button>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              {/* Formula */}
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                marginBottom: '16px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                  <strong>Tidal Locking Time:</strong> T ∝ a<sup>6</sup> / (M<sub>planet</sub> × Q)
+                </p>
+              </div>
+
+              {/* Real-time calculated values */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '12px',
+                marginBottom: '20px',
+              }}>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>
+                    Tidal Force Strength
+                  </div>
+                  <div style={{ ...typo.h3, color: colors.accent }}>
+                    {tidalForceStrength}x
+                  </div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>
+                    Dissipation Rate
+                  </div>
+                  <div style={{ ...typo.h3, color: colors.warning }}>
+                    {dissipationRate}
+                  </div>
+                </div>
+              </div>
+
+              {/* Distance slider */}
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Distance from Planet (a)</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                    {tidalDistance < 30 ? 'Very Close' : tidalDistance < 70 ? 'Moderate' : 'Far'}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="10"
+                  max="100"
+                  value={tidalDistance}
+                  onChange={(e) => setTidalDistance(parseInt(e.target.value))}
+                  style={{ width: '100%', cursor: 'pointer', touchAction: 'none' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>10 (strong tides)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>100 (weak tides)</span>
+                </div>
+              </div>
+
+              {/* Rigidity slider */}
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Body Rigidity (Q factor)</span>
+                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>
+                    {bodyRigidity < 30 ? 'Icy/Fluid' : bodyRigidity < 70 ? 'Rocky' : 'Very Rigid'}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={bodyRigidity}
+                  onChange={(e) => setBodyRigidity(parseInt(e.target.value))}
+                  style={{ width: '100%', cursor: 'pointer', touchAction: 'none' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>0 (more friction)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>100 (less friction)</span>
+                </div>
+              </div>
+
+              {/* Result display */}
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '20px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>
+                  Estimated Time to Tidal Locking
+                </div>
+                <div style={{ ...typo.h2, color: colors.accent }}>
+                  {lockingTime} years
+                </div>
+                <div style={{ ...typo.small, color: colors.textSecondary, marginTop: '8px' }}>
+                  Distance: {tidalDistance} | Rigidity: {bodyRigidity}
+                </div>
+              </div>
+            </div>
+
+            {/* Key insight */}
+            <div style={{
+              background: `${colors.warning}22`,
+              border: `1px solid ${colors.warning}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
+                <strong>Key Discovery:</strong> Earth's day is lengthening by 1.4 milliseconds per century, and the Moon is receding at 3.8 cm/year. In billions of years, Earth will be tidally locked to the Moon!
+              </p>
+            </div>
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand the Discovery
+            </button>
+          </div>
         </div>
 
-        {renderNavDots()}
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '16px 24px',
+          background: colors.bgPrimary,
+          borderTop: `1px solid ${colors.border}`,
+          zIndex: 10,
+        }}>
+          {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -1278,12 +1407,20 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Tidal Locking Throughout the Cosmos
           </h2>
@@ -1350,15 +1487,27 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
             </div>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            See Real-World Applications
-          </button>
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              See Real-World Applications
+            </button>
+          </div>
         </div>
 
-        {renderNavDots()}
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '16px 24px',
+          background: colors.bgPrimary,
+          borderTop: `1px solid ${colors.border}`,
+          zIndex: 10,
+        }}>
+          {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -1372,12 +1521,20 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
@@ -1508,17 +1665,29 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
             {selectedApp < realWorldApps.length - 1 ? 'Next Application' : 'Got It'}
           </button>
 
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
+            {allAppsCompleted && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Take the Knowledge Test
+              </button>
+            )}
+          </div>
         </div>
 
-        {renderNavDots()}
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '16px 24px',
+          background: colors.bgPrimary,
+          borderTop: `1px solid ${colors.border}`,
+          zIndex: 10,
+        }}>
+          {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -1531,12 +1700,23 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
-          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
         }}>
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            paddingTop: '60px',
+            paddingBottom: '100px',
+            paddingLeft: '24px',
+            paddingRight: '24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1576,8 +1756,21 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
                 Review and Try Again
               </button>
             )}
+            </div>
           </div>
-          {renderNavDots()}
+
+          <div style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: '16px 24px',
+            background: colors.bgPrimary,
+            borderTop: `1px solid ${colors.border}`,
+            zIndex: 10,
+          }}>
+            {renderNavDots()}
+          </div>
         </div>
       );
     }
@@ -1588,12 +1781,20 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1742,9 +1943,21 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
               </button>
             )}
           </div>
+          </div>
         </div>
 
-        {renderNavDots()}
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '16px 24px',
+          background: colors.bgPrimary,
+          borderTop: `1px solid ${colors.border}`,
+          zIndex: 10,
+        }}>
+          {renderNavDots()}
+        </div>
       </div>
     );
   }
