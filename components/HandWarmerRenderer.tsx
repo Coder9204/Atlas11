@@ -202,8 +202,8 @@ const realWorldApps = [
     howItWorks: 'Disposable warmers use porous pouches that control oxygen diffusion rate, regulating heat output. Salt catalysts and activated carbon optimize reaction kinetics. Reusable warmers are reset by boiling, allowing hundreds of uses.',
     stats: [
       { value: '$450M', label: 'US market size', icon: '💰' },
-      { value: '12 hrs', label: 'Max duration', icon: '⏱️' },
-      { value: '-40F', label: 'Extreme cold use', icon: '❄️' }
+      { value: '100%', label: 'Reusable resets', icon: '♻️' },
+      { value: '30W', label: 'Heat output', icon: '⚡' }
     ],
     examples: ['Toe warmers for skiing', 'Hand warmers for ice fishing', 'Body warmers for hunting', 'Emergency survival kits'],
     companies: ['HotHands', 'Grabber', 'Zippo', 'Heat Factory'],
@@ -449,12 +449,12 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
     hook: 'Introduction',
     predict: 'Predict',
     play: 'Experiment',
-    review: 'Understanding',
-    twist_predict: 'New Variable',
-    twist_play: 'Comparison',
-    twist_review: 'Deep Insight',
-    transfer: 'Real World',
-    test: 'Knowledge Test',
+    review: 'Review',
+    twist_predict: 'Explore Variable',
+    twist_play: 'Explore Experiment',
+    twist_review: 'Explore Review',
+    transfer: 'Transfer Apply',
+    test: 'Quiz Test',
     mastery: 'Mastery'
   };
 
@@ -582,16 +582,29 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
           key={p}
           onClick={() => goToPhase(p)}
           style={{
+            width: phase === p ? '32px' : '12px',
+            minHeight: '44px',
+            borderRadius: '6px',
+            border: 'none',
+            background: 'transparent',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '0',
+          }}
+          aria-label={phaseLabels[p]}
+        >
+          <span style={{
+            display: 'block',
             width: phase === p ? '24px' : '8px',
             height: '8px',
             borderRadius: '4px',
-            border: 'none',
             background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
             transition: 'all 0.3s ease',
-          }}
-          aria-label={phaseLabels[p]}
-        />
+          }} />
+        </button>
       ))}
     </div>
   );
@@ -624,7 +637,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
             borderRadius: '10px',
             border: `1px solid ${colors.border}`,
             background: 'transparent',
-            color: canGoBack ? colors.textSecondary : colors.textMuted,
+            color: canGoBack ? 'rgba(148, 163, 184, 0.7)' : 'rgba(107, 114, 128, 0.5)',
             cursor: canGoBack ? 'pointer' : 'not-allowed',
             fontWeight: 600,
             minHeight: '44px',
@@ -674,7 +687,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
   const renderSlider = (label: string, value: number, setValue: (v: number) => void, min: number, max: number, unit: string, color: string) => (
     <div style={{ marginBottom: '16px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-        <span style={{ ...typo.small, color: colors.textSecondary }}>{label}</span>
+        <span style={{ ...typo.small, color: 'rgba(148, 163, 184, 0.7)' }}>{label}</span>
         <span style={{ ...typo.small, color, fontWeight: 600 }}>{value}{unit}</span>
       </div>
       <input
@@ -683,145 +696,155 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
         max={max}
         value={value}
         onChange={(e) => setValue(parseInt(e.target.value))}
-        disabled={isReacting}
         style={{
           width: '100%',
-          height: '8px',
+          height: '20px',
           borderRadius: '4px',
-          background: `linear-gradient(to right, ${color} ${((value - min) / (max - min)) * 100}%, ${colors.border} ${((value - min) / (max - min)) * 100}%)`,
-          cursor: isReacting ? 'not-allowed' : 'pointer',
+          cursor: 'pointer',
           appearance: 'none',
           WebkitAppearance: 'none',
+          accentColor: '#3b82f6',
+          touchAction: 'pan-y',
         }}
       />
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+        <span style={{ fontSize: '11px', color: '#cbd5e1' }}>{min}{unit}</span>
+        <span style={{ fontSize: '11px', color: '#cbd5e1' }}>{max}{unit}</span>
+      </div>
     </div>
   );
 
-  // Hand Warmer SVG Visualization
+  // Hand Warmer SVG Visualization - shows temperature vs time chart and warmer state
   const WarmerVisualization = () => {
-    const width = isMobile ? 320 : 400;
-    const height = isMobile ? 220 : 260;
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 300 : 360;
     const isLiquid = warmerState === 'liquid';
     const isCrystallizing = warmerState === 'crystallizing';
     const isSolid = warmerState === 'solid';
+    // Mass affects energy released (latent heat = mass * 264 kJ/kg)
+    const massKg = ironPowder / 1000;
+    const energyKJ = (massKg * 264).toFixed(2);
+    // Salt affects max temperature
+    const maxTempDisplay = Math.round(20 + (saltConcentration / 100) * 34);
+    // Chart area dimensions
+    const chartX = 70;
+    const chartY = 30;
+    const chartW = width - 95;
+    const chartH = height - 120;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', display: 'block' }}>
         <defs>
           <radialGradient id="liquidGrad" cx="40%" cy="35%" r="65%">
             <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.95" />
-            <stop offset="50%" stopColor="#0ea5e9" stopOpacity="0.9" />
             <stop offset="100%" stopColor="#0c4a6e" stopOpacity="0.8" />
           </radialGradient>
           <radialGradient id="crystalGrad" cx="50%" cy="50%" r="60%">
             <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.95" />
-            <stop offset="50%" stopColor="#fcd34d" stopOpacity="0.85" />
             <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.75" />
           </radialGradient>
           <radialGradient id="solidGrad" cx="45%" cy="40%" r="60%">
             <stop offset="0%" stopColor="#e2e8f0" stopOpacity="0.9" />
-            <stop offset="50%" stopColor="#cbd5e1" stopOpacity="0.85" />
             <stop offset="100%" stopColor="#64748b" stopOpacity="0.75" />
           </radialGradient>
           <linearGradient id="heatWaveGrad" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#ef4444" stopOpacity="0.9" />
-            <stop offset="50%" stopColor="#f97316" stopOpacity="0.5" />
             <stop offset="100%" stopColor="#fef3c7" stopOpacity="0" />
           </linearGradient>
           <filter id="glowFilter">
             <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
         </defs>
 
-        {/* Warmer pouch shadow */}
-        <ellipse cx={width / 2 + 5} cy={height / 2 + 5} rx="130" ry="80" fill="#000" opacity="0.3" />
+        {/* Chart background */}
+        <rect x={chartX} y={chartY} width={chartW} height={chartH} fill={colors.bgSecondary} rx="4" />
 
-        {/* Warmer pouch outer */}
-        <ellipse cx={width / 2} cy={height / 2} rx="130" ry="80" fill="#475569" stroke="#334155" strokeWidth="2" />
+        {/* Grid layer */}
+        <g opacity="0.4">
+          {[0, 1, 2, 3, 4].map(i => {
+            const y = chartY + chartH - (i / 4) * chartH;
+            return <line key={`hg${i}`} x1={chartX} y1={y} x2={chartX + chartW} y2={y} stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />;
+          })}
+          {[0, 1, 2, 3].map(i => {
+            const x = chartX + (i / 3) * chartW;
+            return <line key={`vg${i}`} x1={x} y1={chartY} x2={x} y2={chartY + chartH} stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />;
+          })}
+        </g>
 
-        {/* Warmer pouch inner content */}
-        <ellipse
-          cx={width / 2}
-          cy={height / 2}
-          rx="120"
-          ry="70"
-          fill={isLiquid ? 'url(#liquidGrad)' : isCrystallizing ? 'url(#crystalGrad)' : 'url(#solidGrad)'}
-        />
+        {/* Axes layer */}
+        <g>
+          <line x1={chartX} y1={chartY} x2={chartX} y2={chartY + chartH} stroke="#94a3b8" strokeWidth="1.5" />
+          <line x1={chartX} y1={chartY + chartH} x2={chartX + chartW} y2={chartY + chartH} stroke="#94a3b8" strokeWidth="1.5" />
+        </g>
 
-        {/* Liquid shimmer */}
+        {/* Axis labels */}
+        <text x="10" y={chartY + chartH / 2} textAnchor="middle" fill="#94a3b8" fontSize="11" transform={`rotate(-90, 10, ${chartY + chartH / 2})`}>Temp (°C)</text>
+        <text x={chartX + chartW / 2} y={height - 8} textAnchor="middle" fill="#94a3b8" fontSize="11">Time</text>
+
+        {/* Y axis tick labels */}
+        <g>
+          <text x={chartX - 5} y={chartY + 11} textAnchor="end" fill="#94a3b8" fontSize="11">{maxTempDisplay}C</text>
+          <text x={chartX - 5} y={chartY + chartH / 2 + 4} textAnchor="end" fill="#94a3b8" fontSize="11">{Math.round((20 + maxTempDisplay) / 2)}C</text>
+          <text x={chartX - 5} y={chartY + chartH} textAnchor="end" fill="#94a3b8" fontSize="11">20C</text>
+        </g>
+
+        {/* Temperature curve based on state */}
         {isLiquid && (
-          <ellipse
-            cx={width / 2 - 20 + Math.sin(animationFrame / 20) * 10}
-            cy={height / 2 - 15}
-            rx="50"
-            ry="25"
-            fill="rgba(255,255,255,0.15)"
+          <polyline
+            points={`${chartX},${chartY + chartH - (0 / (maxTempDisplay - 20)) * chartH} ${chartX + chartW * 0.3},${chartY + chartH - (0 / (maxTempDisplay - 20)) * chartH}`}
+            fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round"
+          />
+        )}
+        {isCrystallizing && (
+          <polyline
+            points={`${chartX},${chartY + chartH} ${chartX + chartW * 0.2},${chartY + chartH} ${chartX + chartW * 0.3},${chartY + chartH - ((maxTempDisplay - 20) / (maxTempDisplay - 20)) * chartH} ${chartX + chartW * 0.6},${chartY + chartH - ((maxTempDisplay - 20) / (maxTempDisplay - 20)) * chartH} ${chartX + chartW * 0.7},${chartY + chartH - ((crystalProgress / 100) * (maxTempDisplay - 20) / (maxTempDisplay - 20)) * chartH}`}
+            fill="none" stroke="#f97316" strokeWidth="2.5" strokeLinecap="round"
+          />
+        )}
+        {isSolid && (
+          <polyline
+            points={`${chartX},${chartY + chartH} ${chartX + chartW * 0.15},${chartY + chartH} ${chartX + chartW * 0.25},${chartY + 5} ${chartX + chartW * 0.55},${chartY + 5} ${chartX + chartW},${chartY + chartH - 20}`}
+            fill="none" stroke="#f97316" strokeWidth="2.5" strokeLinecap="round"
           />
         )}
 
-        {/* Crystal points */}
-        {(isCrystallizing || isSolid) && crystalPoints.map((point, i) => (
-          <polygon
-            key={i}
-            points={`0,${-point.size} ${point.size * 0.866},${-point.size / 2} ${point.size * 0.866},${point.size / 2} 0,${point.size} ${-point.size * 0.866},${point.size / 2} ${-point.size * 0.866},${-point.size / 2}`}
-            transform={`translate(${point.x}, ${point.y})`}
-            fill="rgba(255,255,255,0.8)"
-            stroke="#94a3b8"
-            strokeWidth="0.5"
-          />
-        ))}
+        {/* Phase change plateau label */}
+        {isSolid && <text x={chartX + chartW * 0.3} y={chartY - 4} fill="#f59e0b" fontSize="11" textAnchor="middle">Phase change plateau</text>}
 
-        {/* Metal disc */}
-        <g transform={`translate(${width / 2}, ${height / 2 - 10})`} style={{ cursor: isLiquid ? 'pointer' : 'default' }} onClick={isLiquid ? activateWarmer : undefined}>
-          <circle r="18" fill="#64748b" stroke={discClicked ? '#f59e0b' : '#94a3b8'} strokeWidth={discClicked ? 3 : 2} filter="url(#glowFilter)" />
-          <circle r="12" fill="none" stroke="#94a3b8" strokeWidth="1" opacity="0.6" />
-          <circle r="6" fill="#94a3b8" />
-          <circle r="3" fill="#cbd5e1" />
+        {/* Warmer mini visualization */}
+        <g transform={`translate(${chartX + chartW - 60}, ${chartY + 10})`}>
+          <ellipse cx="0" cy="0" rx={15 + ironPowder / 10} ry={10 + ironPowder / 15}
+            fill={isLiquid ? 'url(#liquidGrad)' : isCrystallizing ? 'url(#crystalGrad)' : 'url(#solidGrad)'}
+            stroke="#475569" strokeWidth="1.5" />
+          <circle cx="0" cy="0" r={4} fill="#64748b" stroke={discClicked ? '#f59e0b' : '#94a3b8'} strokeWidth="1.5" filter="url(#glowFilter)" style={{ cursor: isLiquid ? 'pointer' : 'default' }} onClick={isLiquid ? activateWarmer : undefined} />
         </g>
 
-        {/* Heat waves when warm */}
+        {/* Formula */}
+        <text x={chartX + chartW / 2} y={chartY + chartH + 22} textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="bold">E = m × Lf = {ironPowder}g × 264 kJ/kg = {energyKJ} kJ</text>
+
+        {/* Temperature display */}
+        <text x={chartX + 6} y={chartY + chartH + 40} fill={getTempColor(temperature)} fontSize="12" fontWeight="bold">T = {temperature.toFixed(0)}°C</text>
+
+        {/* State label */}
+        <text x={chartX + chartW} y={chartY + chartH + 40} textAnchor="end" fill={isLiquid ? '#38bdf8' : isCrystallizing ? '#f59e0b' : '#e2e8f0'} fontSize="11">
+          {isLiquid ? 'Supercooled Liquid' : isCrystallizing ? `Crystallizing ${crystalProgress.toFixed(0)}%` : 'Crystal (Solid)'}
+        </text>
+
+        {/* Heat waves */}
         {temperature > 30 && (
           <g filter="url(#glowFilter)">
-            {[0, 1, 2, 3].map(i => {
-              const offset = (animationFrame + i * 20) % 50;
-              const baseX = width / 2 - 45 + i * 30;
+            {[0, 1, 2].map(i => {
+              const offset = (animationFrame + i * 20) % 40;
+              const baseX = chartX + chartW - 100 + i * 20;
               return (
-                <path
-                  key={i}
-                  d={`M ${baseX} ${height / 2 - 50 - offset}
-                      Q ${baseX + 6} ${height / 2 - 58 - offset} ${baseX} ${height / 2 - 66 - offset}
-                      Q ${baseX - 6} ${height / 2 - 74 - offset} ${baseX} ${height / 2 - 82 - offset}`}
-                  fill="none"
-                  stroke="url(#heatWaveGrad)"
-                  strokeWidth="2.5"
-                  opacity={(50 - offset) / 50}
-                  strokeLinecap="round"
-                />
+                <path key={i}
+                  d={`M ${baseX} ${chartY + 30 - offset} Q ${baseX + 5} ${chartY + 22 - offset} ${baseX} ${chartY + 14 - offset}`}
+                  fill="none" stroke="#ef4444" strokeWidth="2" opacity={(40 - offset) / 40} strokeLinecap="round" />
               );
             })}
           </g>
         )}
-
-        {/* Temperature indicator */}
-        <g transform={`translate(${width - 45}, ${height / 2})`}>
-          <rect x="-12" y="-50" width="24" height="100" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" rx="4" />
-          <rect x="-8" y={40 - Math.min(80, (temperature - 15) * 2)} width="16" height={Math.min(80, (temperature - 15) * 2)} fill={getTempColor(temperature)} rx="2" />
-          <circle cx="0" cy="50" r="10" fill={getTempColor(temperature)} />
-        </g>
-
-        {/* Temperature text */}
-        <text x={width - 45} y={height / 2 + 80} textAnchor="middle" fill={getTempColor(temperature)} fontSize="16" fontWeight="bold">
-          {temperature.toFixed(0)}C
-        </text>
-
-        {/* Status text */}
-        <text x={width / 2} y={height - 15} textAnchor="middle" fill={colors.textSecondary} fontSize="12">
-          {isLiquid ? 'Supercooled Liquid (Click disc to activate)' : isCrystallizing ? `Crystallizing... ${crystalProgress.toFixed(0)}%` : 'Crystallized - Releasing Heat'}
-        </text>
       </svg>
     );
   };
@@ -935,13 +958,22 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        paddingBottom: '80px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+        }}>
 
         <div style={{ fontSize: '64px', marginBottom: '24px', animation: 'pulse 2s infinite' }}>
           🧤🔥
@@ -978,6 +1010,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
         >
           Discover Phase Change Energy
         </button>
+        </div>
 
         {renderBottomNav()}
       </div>
@@ -996,10 +1029,11 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
     const predictHeight = isMobile ? 180 : 200;
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px', paddingBottom: '80px' }}>
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0', overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -1097,6 +1131,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
             </button>
           )}
         </div>
+        </div>
 
         {renderBottomNav()}
       </div>
@@ -1106,10 +1141,11 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px', paddingBottom: '80px' }}>
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderNavBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0', overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Phase Change Hand Warmer Lab
           </h2>
@@ -1127,7 +1163,13 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
               <WarmerVisualization />
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+            {/* Sliders for physics parameters */}
+            <div style={{ marginTop: '16px' }}>
+              <h4 style={{ ...typo.small, color: '#e2e8f0', marginBottom: '8px', fontWeight: 600 }}>Adjust Parameters</h4>
+              {renderSlider('Warmer Mass (g)', ironPowder, setIronPowder, 20, 150, 'g', colors.accent)}
+              {renderSlider('Salt Catalyst (%)', saltConcentration, setSaltConcentration, 0, 100, '%', colors.warning)}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '16px' }}>
               {warmerState === 'liquid' && (
                 <button
                   onClick={activateWarmer}
@@ -1150,11 +1192,41 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
                     color: colors.textSecondary,
                     cursor: 'pointer',
                     fontWeight: 600,
+                    minHeight: '44px',
                   }}
                 >
                   Boil to Reset (Reusable)
                 </button>
               )}
+            </div>
+          </div>
+
+          {/* Legend panel */}
+          <div style={{
+            background: colors.bgCard,
+            border: `1px solid ${colors.border}`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>Legend</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '16px', height: '16px', background: '#38bdf8', borderRadius: '4px' }} />
+                <span style={{ ...typo.small, color: '#e2e8f0' }}>Supercooled Liquid</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '16px', height: '16px', background: '#fcd34d', borderRadius: '4px' }} />
+                <span style={{ ...typo.small, color: '#e2e8f0' }}>Crystallizing</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '16px', height: '16px', background: '#cbd5e1', borderRadius: '4px' }} />
+                <span style={{ ...typo.small, color: '#e2e8f0' }}>Solid Crystal</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '16px', height: '16px', background: '#ef4444', borderRadius: '4px' }} />
+                <span style={{ ...typo.small, color: '#e2e8f0' }}>Heat Released</span>
+              </div>
             </div>
           </div>
 
@@ -1195,6 +1267,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
             Understand the Science
           </button>
         </div>
+        </div>
 
         {renderBottomNav()}
       </div>
@@ -1214,10 +1287,11 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
     const reviewHeight = isMobile ? 150 : 180;
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px', paddingBottom: '80px' }}>
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0', overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           {userPrediction && (
             <div style={{
               background: wasCorrect ? `${colors.success}22` : `${colors.warning}22`,
@@ -1227,13 +1301,13 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
               marginBottom: '24px',
             }}>
               <p style={{ ...typo.small, color: wasCorrect ? colors.success : colors.warning, margin: 0 }}>
-                {wasCorrect ? '✓ Your prediction was correct!' : '○ Your prediction:'} {userPrediction}
+                {wasCorrect ? 'You predicted correctly!' : 'You predicted:'} {userPrediction}. As you observed in the experiment, the heat comes from latent energy stored in the supercooled liquid.
               </p>
             </div>
           )}
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            The Physics of Phase Change
+            What You Observed in the Experiment
           </h2>
 
           {/* Review SVG visualization */}
@@ -1245,13 +1319,28 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
                   <stop offset="100%" stopColor="#f97316" />
                 </linearGradient>
               </defs>
-              {/* Energy diagram */}
-              <text x={reviewWidth / 2} y="25" textAnchor="middle" fill="#e2e8f0" fontSize="14" fontWeight="bold">Latent Heat Release</text>
-              <rect x="50" y="40" width={reviewWidth - 100} height="30" fill="url(#reviewEnergyGrad)" rx="4" />
-              <text x="50" y="90" fill="#3b82f6" fontSize="11">Liquid (20C)</text>
-              <text x={reviewWidth - 120} y="90" fill="#f97316" fontSize="11">Solid (54C)</text>
-              <text x={reviewWidth / 2} y="115" textAnchor="middle" fill="#e2e8f0" fontSize="12">Energy = 264 kJ/kg</text>
-              <text x={reviewWidth / 2} y="135" textAnchor="middle" fill="#e2e8f0" fontSize="10">Phase change releases stored thermal energy</text>
+              {/* Grid lines */}
+              <line x1="50" y1="20" x2="50" y2={reviewHeight - 20} stroke="#2a2a3a" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              <line x1={reviewWidth / 2} y1="20" x2={reviewWidth / 2} y2={reviewHeight - 20} stroke="#2a2a3a" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              <line x1={reviewWidth - 50} y1="20" x2={reviewWidth - 50} y2={reviewHeight - 20} stroke="#2a2a3a" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              <line x1="40" y1="55" x2={reviewWidth - 10} y2="55" stroke="#2a2a3a" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              <line x1="40" y1="90" x2={reviewWidth - 10} y2="90" stroke="#2a2a3a" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              {/* Axes */}
+              <line x1="50" y1="20" x2="50" y2={reviewHeight - 25} stroke="#94a3b8" strokeWidth="1.5" />
+              <line x1="50" y1={reviewHeight - 25} x2={reviewWidth - 10} y2={reviewHeight - 25} stroke="#94a3b8" strokeWidth="1.5" />
+              {/* Axis labels */}
+              <text x="14" y={reviewHeight / 2} textAnchor="middle" fill="#94a3b8" fontSize="10" transform={`rotate(-90, 14, ${reviewHeight/2})`}>Temp (C)</text>
+              <text x={reviewWidth / 2} y={reviewHeight - 8} textAnchor="middle" fill="#94a3b8" fontSize="10">Time</text>
+              {/* Temperature curve */}
+              <polyline
+                points={`55,${reviewHeight - 30} 70,${reviewHeight - 30} 100,${reviewHeight - 70} 130,${reviewHeight - 70} 130,${reviewHeight - 70} 160,${reviewHeight - 40} ${reviewWidth - 20},${reviewHeight - 30}`}
+                fill="none" stroke="#f97316" strokeWidth="2" />
+              {/* Formula */}
+              <text x={reviewWidth / 2} y="18" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="bold">E = m × Lf = 264 kJ/kg</text>
+              {/* Labels */}
+              <text x="58" y={reviewHeight - 35} fill="#3b82f6" fontSize="10">20C</text>
+              <text x="130" y={reviewHeight - 72} fill="#f97316" fontSize="10">54C</text>
+              <text x="102" y={reviewHeight - 60} fill="#e2e8f0" fontSize="9">Phase change</text>
             </svg>
           </div>
 
@@ -1263,16 +1352,16 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
           }}>
             <div style={{ ...typo.body, color: '#e2e8f0' }}>
               <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Latent Heat of Fusion</strong> - Energy stored/released during phase change without temperature change.
+                <strong style={{ color: colors.textPrimary }}>Latent Heat of Fusion</strong> - The key principle that explains the warmer. Energy is stored in the liquid's molecular structure. The formula: E = m × Lf = 264 kJ/kg shows exactly how much thermal energy is released.
               </p>
               <p style={{ marginBottom: '16px' }}>
-                <span style={{ color: colors.accent }}>Crystallization (liquid to solid)</span>: Releases energy as molecules lock into ordered crystal structure.
+                <span style={{ color: colors.accent }}>Crystallization (liquid to solid)</span>: Releases energy because molecules lock into an ordered crystal structure, releasing their stored potential energy as heat.
               </p>
               <p style={{ marginBottom: '16px' }}>
-                <span style={{ color: '#3b82f6' }}>Melting (solid to liquid)</span>: Absorbs energy to break molecular bonds. This is why boiling resets the warmer.
+                <span style={{ color: '#3b82f6' }}>Melting (solid to liquid)</span>: Absorbs energy to break molecular bonds. This is why boiling resets the warmer - it demonstrates the reversible nature of phase change.
               </p>
               <p>
-                <strong style={{ color: colors.warning }}>Supercooling</strong>: Without a nucleation site, the liquid can't "find" how to start crystallizing, even below its freezing point.
+                <strong style={{ color: colors.warning }}>Supercooling</strong>: Without a nucleation site, the liquid can't crystallize due to the lack of a seed crystal. This insight explains why the disc click triggers the reaction.
               </p>
             </div>
           </div>
@@ -1305,6 +1394,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
             Explore the Comparison
           </button>
         </div>
+        </div>
 
         {renderBottomNav()}
       </div>
@@ -1323,10 +1413,11 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
     const twistPredictHeight = isMobile ? 150 : 180;
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px', paddingBottom: '80px' }}>
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0', overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1400,6 +1491,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
             </button>
           )}
         </div>
+        </div>
 
         {renderBottomNav()}
       </div>
@@ -1409,10 +1501,11 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderNavBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Iron Oxidation vs Phase Change
           </h2>
@@ -1457,36 +1550,52 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
             padding: '24px',
             marginBottom: '24px',
           }}>
-            {/* Visualization */}
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '12px',
-              padding: '20px',
-              marginBottom: '16px',
-              textAlign: 'center',
-            }}>
-              <div style={{ fontSize: '48px', marginBottom: '8px' }}>
-                {warmerType === 'phase' ? '💧' : '⚙️'}
-              </div>
-              <div style={{ ...typo.h2, color: getTempColor(twistTemperature), marginBottom: '4px' }}>
-                {twistTemperature.toFixed(1)}C
-              </div>
-              <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '12px' }}>
-                Energy: {energyRemaining.toFixed(0)}%
-              </div>
-              <div style={{
-                height: '8px',
-                background: colors.border,
-                borderRadius: '4px',
-                overflow: 'hidden',
-              }}>
-                <div style={{
-                  height: '100%',
-                  width: `${energyRemaining}%`,
-                  background: energyRemaining > 50 ? colors.success : energyRemaining > 20 ? colors.warning : colors.error,
-                  transition: 'width 0.1s',
-                }} />
-              </div>
+            {/* SVG Visualization */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+              <svg width="480" height="200" viewBox="0 0 480 200" style={{ background: colors.bgSecondary, borderRadius: '12px' }}>
+                <defs>
+                  <linearGradient id="tempBarGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#ef4444" />
+                    <stop offset="100%" stopColor="#3b82f6" />
+                  </linearGradient>
+                </defs>
+                {/* Grid lines */}
+                <g opacity="0.3">
+                  <line x1="60" y1="20" x2="60" y2="160" stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+                  <line x1="180" y1="20" x2="180" y2="160" stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+                  <line x1="300" y1="20" x2="300" y2="160" stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+                  <line x1="420" y1="20" x2="420" y2="160" stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+                  <line x1="40" y1="60" x2="460" y2="60" stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+                  <line x1="40" y1="110" x2="460" y2="110" stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+                </g>
+                {/* Y Axis */}
+                <line x1="40" y1="20" x2="40" y2="170" stroke="#94a3b8" strokeWidth="1.5" />
+                {/* X Axis */}
+                <line x1="40" y1="170" x2="460" y2="170" stroke="#94a3b8" strokeWidth="1.5" />
+                {/* Axis labels */}
+                <text x="16" y="100" textAnchor="middle" fill="#94a3b8" fontSize="11" transform="rotate(-90, 16, 100)">Temp °C</text>
+                <text x="250" y="190" textAnchor="middle" fill="#94a3b8" fontSize="11">Time →</text>
+                {/* Temperature bar - phase warmer */}
+                <rect x="70" y={170 - Math.min(140, (twistTemperature - 20) * 4)} width="60" height={Math.min(140, (twistTemperature - 20) * 4)}
+                  fill={warmerType === 'phase' ? '#3b82f6' : '#2a2a3a'} rx="4" />
+                {/* Temperature bar - chemical warmer */}
+                <rect x="160" y={170 - Math.min(140, (twistTemperature - 20) * 3)} width="60" height={Math.min(140, (twistTemperature - 20) * 3)}
+                  fill={warmerType === 'chemical' ? '#f97316' : '#2a2a3a'} rx="4" />
+                {/* Energy remaining bar */}
+                <rect x="280" y={20 + (1 - energyRemaining / 100) * 140} width="60" height={energyRemaining * 1.4}
+                  fill={energyRemaining > 50 ? '#10b981' : energyRemaining > 20 ? '#f59e0b' : '#ef4444'} rx="4" />
+                {/* Labels */}
+                <text x="100" y="185" textAnchor="middle" fill="#e2e8f0" fontSize="11">Phase</text>
+                <text x="190" y="185" textAnchor="middle" fill="#e2e8f0" fontSize="11">Chemical</text>
+                <text x="310" y="185" textAnchor="middle" fill="#e2e8f0" fontSize="11">Energy %</text>
+                {/* Temperature values */}
+                <text x="100" y={165 - Math.min(140, (twistTemperature - 20) * 4)} textAnchor="middle" fill={getTempColor(twistTemperature)} fontSize="11" fontWeight="bold">{twistTemperature.toFixed(0)}°C</text>
+                {/* Energy value */}
+                <text x="310" y={15 + (1 - energyRemaining / 100) * 140} textAnchor="middle" fill="#10b981" fontSize="11" fontWeight="bold">{energyRemaining.toFixed(0)}%</text>
+                {/* Formula */}
+                <text x="400" y="50" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="bold">E = m × Lf</text>
+                <text x="400" y="68" textAnchor="middle" fill="#94a3b8" fontSize="11">{warmerType === 'phase' ? '264 kJ/kg' : '~100 kJ/kg'}</text>
+              </svg>
             </div>
 
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
@@ -1565,8 +1674,9 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
             Understand the Difference
           </button>
         </div>
+        </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1574,10 +1684,11 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Why Chemical Warmers Last Longer
           </h2>
@@ -1652,8 +1763,9 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
             See Real-World Applications
           </button>
         </div>
+        </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1664,10 +1776,11 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
     const allAppsCompleted = completedApps.every(c => c);
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderNavBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
@@ -1761,6 +1874,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1774,6 +1888,33 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
                   <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
                 </div>
               ))}
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '8px',
+            }}>
+              <h4 style={{ ...typo.small, color: '#3b82f6', marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: 'rgba(148, 163, 184, 0.7)', margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '12px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.success, marginBottom: '6px', fontWeight: 600 }}>
+                Future Impact:
+              </h4>
+              <p style={{ ...typo.small, color: 'rgba(148, 163, 184, 0.7)', margin: 0 }}>
+                {app.futureImpact}
+              </p>
             </div>
           </div>
 
@@ -1798,8 +1939,9 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
             </button>
           )}
         </div>
+        </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1809,10 +1951,11 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
     if (testSubmitted) {
       const passed = testScore >= 7;
       return (
-        <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
+        <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {renderNavBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>
               {passed ? '🎉' : '📚'}
             </div>
@@ -1850,7 +1993,9 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
               </button>
             )}
           </div>
-          {renderNavDots()}
+          </div>
+
+          {renderBottomNav()}
         </div>
       );
     }
@@ -1858,10 +2003,11 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
     const question = testQuestions[currentQuestion];
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -2011,8 +2157,9 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
             )}
           </div>
         </div>
+        </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -2025,12 +2172,22 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+        }}>
 
         <div style={{ fontSize: '100px', marginBottom: '24px', animation: 'bounce 1s infinite' }}>
           🏆
@@ -2097,7 +2254,9 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
           </a>
         </div>
 
-        {renderNavDots()}
+        </div>
+
+        {renderBottomNav()}
       </div>
     );
   }

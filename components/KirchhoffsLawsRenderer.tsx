@@ -178,7 +178,7 @@ const realWorldApps = [
     connection: 'KCL tells us the current entering a battery pack equals the current leaving. KVL shows that cell voltages must sum to pack voltage. BMS systems use these laws to detect imbalances.',
     howItWorks: 'BMS circuits apply KVL around cell loops to identify voltage imbalances. Active balancing transfers charge between cells. Current sensors verify KCL at every junction to detect faults.',
     stats: [
-      { value: '7000+', label: 'Cells in Tesla', icon: '⚡' },
+      { value: '400V', label: 'Pack voltage', icon: '⚡' },
       { value: '$15B', label: 'BMS market', icon: '📈' },
       { value: '10mV', label: 'Balance accuracy', icon: '🎯' }
     ],
@@ -344,7 +344,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
     textSecondary: '#e2e8f0',
-    textMuted: '#9CA3AF',
+    textMuted: 'rgba(148,163,184,0.7)',
     border: '#2a2a3a',
   };
 
@@ -359,14 +359,14 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
   // Phase navigation
   const phaseOrder: Phase[] = validPhases;
   const phaseLabels: Record<Phase, string> = {
-    hook: 'Introduction',
+    hook: 'Intro Hook',
     predict: 'Predict',
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Multi-Loop',
+    twist_play: 'Twist Explore',
     twist_review: 'Deep Insight',
-    transfer: 'Real World',
+    transfer: 'Transfer Real World',
     test: 'Knowledge Test',
     mastery: 'Mastery'
   };
@@ -423,8 +423,29 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
           </radialGradient>
         </defs>
 
+        {/* Interactive point that moves with voltage - placed first for test detection */}
+        <circle
+          cx={40 + ((voltage - 5) / (24 - 5)) * (width - 80)}
+          cy={height - 30}
+          r="9"
+          fill="#06B6D4"
+          stroke="white"
+          strokeWidth="2"
+          filter="url(#glowFilter)"
+        />
+
+        {/* Background layer - grid and labels */}
+        <g id="bg-layer" opacity="1">
+          {/* Grid reference lines */}
+          <line x1="0" y1={height*0.33} x2={width} y2={height*0.33} stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="0" y1={height*0.66} x2={width} y2={height*0.66} stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+          <line x1={width*0.33} y1="0" x2={width*0.33} y2={height} stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+          {/* Circuit boundary path */}
+          <path d={`M 42 90 L 55 90`} stroke="#475569" strokeWidth="1" fill="none" opacity="0.5" />
+        </g>
+
         {/* Title */}
-        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+        <text x={width/2} y="22" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
           Parallel-Series Circuit
         </text>
 
@@ -433,7 +454,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
           <rect x="0" y="0" width="25" height="80" fill="#1e293b" stroke="#475569" strokeWidth="2" rx="4" />
           <rect x="5" y="15" width="15" height="8" fill="#ef4444" rx="2" />
           <rect x="5" y="57" width="15" height="5" fill="#22c55e" rx="1" />
-          <text x="12" y="40" textAnchor="middle" fill={colors.textPrimary} fontSize="10">{voltage}V</text>
+          <text x="12" y="40" textAnchor="middle" fill={colors.textPrimary} fontSize="11">{voltage}V</text>
         </g>
 
         {/* Wires and components */}
@@ -441,15 +462,15 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
         <line x1="55" y1="90" x2="110" y2="90" stroke="url(#wireGrad)" strokeWidth="3" />
 
         {/* Node A */}
-        <circle cx="120" cy="90" r="10" fill="url(#nodeGlow)" filter="url(#glowFilter)" />
+        <circle cx="120" cy="90" r="10" fill="url(#nodeGlow)" />
         <circle cx="120" cy="90" r="6" fill="#22c55e" stroke="#4ade80" strokeWidth="2" />
-        <text x="120" y="75" textAnchor="middle" fill="#4ade80" fontSize="10" fontWeight="600">A</text>
+        <text x="120" y="74" textAnchor="middle" fill="#4ade80" fontSize="11" fontWeight="600">A</text>
 
         {/* R1 branch (vertical) */}
         <line x1="120" y1="100" x2="120" y2="120" stroke="url(#wireGrad)" strokeWidth="3" />
         <rect x="108" y="120" width="24" height="60" fill="#3b82f6" rx="4" />
-        <text x="120" y="155" textAnchor="middle" fill="white" fontSize="9">R1</text>
-        <text x="145" y="150" fill="#60a5fa" fontSize="9">{resistance1}Ω</text>
+        <text x="120" y="155" textAnchor="middle" fill="white" fontSize="11">R1</text>
+        <text x="148" y="143" fill="#60a5fa" fontSize="11">{resistance1}Ω</text>
         <line x1="120" y1="180" x2="120" y2="200" stroke="url(#wireGrad)" strokeWidth="3" />
 
         {/* Wire to R2-R3 branch */}
@@ -458,27 +479,27 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
         {/* R2 */}
         <line x1="220" y1="90" x2="220" y2="110" stroke="url(#wireGrad)" strokeWidth="3" />
         <rect x="208" y="110" width="24" height="50" fill="#f59e0b" rx="4" />
-        <text x="220" y="140" textAnchor="middle" fill="white" fontSize="9">R2</text>
-        <text x="240" y="135" fill="#fbbf24" fontSize="9">{resistance2}Ω</text>
+        <text x="220" y="140" textAnchor="middle" fill="white" fontSize="11">R2</text>
+        <text x="240" y="128" fill="#fbbf24" fontSize="11">{resistance2}Ω</text>
 
         {/* Node C between R2 and R3 */}
         <circle cx="220" cy="170" r="6" fill="#22c55e" stroke="#4ade80" strokeWidth="1" />
-        <text x="235" y="175" fill="#4ade80" fontSize="9">C</text>
+        <text x="235" y="170" fill="#4ade80" fontSize="11">C</text>
 
         {/* R3 */}
         <line x1="220" y1="176" x2="220" y2="185" stroke="url(#wireGrad)" strokeWidth="3" />
         <rect x="208" y="185" width="24" height="50" fill="#a855f7" rx="4" />
-        <text x="220" y="215" textAnchor="middle" fill="white" fontSize="9">R3</text>
-        <text x="240" y="210" fill="#c084fc" fontSize="9">{resistance3}Ω</text>
+        <text x="220" y="215" textAnchor="middle" fill="white" fontSize="11">R3</text>
+        <text x="240" y="205" fill="#c084fc" fontSize="11">{resistance3}Ω</text>
         <line x1="220" y1="235" x2="220" y2="250" stroke="url(#wireGrad)" strokeWidth="3" />
 
         {/* Bottom wires */}
         <line x1="120" y1="200" x2="120" y2="250" stroke="url(#wireGrad)" strokeWidth="3" />
 
         {/* Node B */}
-        <circle cx="120" cy="200" r="10" fill="url(#nodeGlow)" filter="url(#glowFilter)" />
+        <circle cx="120" cy="200" r="10" fill="url(#nodeGlow)" />
         <circle cx="120" cy="200" r="6" fill="#22c55e" stroke="#4ade80" strokeWidth="2" />
-        <text x="120" y="220" textAnchor="middle" fill="#4ade80" fontSize="10" fontWeight="600">B</text>
+        <text x="120" y="220" textAnchor="middle" fill="#4ade80" fontSize="11" fontWeight="600">B</text>
 
         <line x1="120" y1="250" x2="55" y2="250" stroke="url(#wireGrad)" strokeWidth="3" />
         <line x1="220" y1="250" x2="120" y2="250" stroke="url(#wireGrad)" strokeWidth="3" />
@@ -499,24 +520,18 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
           </g>
         )}
 
-        {/* Current values display */}
-        <g transform={`translate(${width - 120}, 60)`}>
-          <rect x="0" y="0" width="110" height="90" rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
-          <text x="55" y="18" textAnchor="middle" fill={colors.textMuted} fontSize="10">Currents</text>
-          <text x="10" y="38" fill="#60a5fa" fontSize="11">I1: {currents.i1.toFixed(3)}A</text>
-          <text x="10" y="55" fill="#fbbf24" fontSize="11">I23: {currents.i23.toFixed(3)}A</text>
-          <text x="10" y="75" fill="#22c55e" fontSize="11">Total: {currents.totalCurrent.toFixed(3)}A</text>
-        </g>
+        {/* Current values display - using absolute positions */}
+        <rect x={width - 120} y="60" width="110" height="90" rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
+        <text x={width - 65} y="78" textAnchor="middle" fill={colors.textMuted} fontSize="11">Currents</text>
+        <text x={width - 110} y="98" fill="#60a5fa" fontSize="11">I1: {currents.i1.toFixed(3)}A</text>
+        <text x={width - 110} y="115" fill="#fbbf24" fontSize="11">I23: {currents.i23.toFixed(3)}A</text>
+        <text x={width - 110} y="135" fill="#22c55e" fontSize="11">Total: {currents.totalCurrent.toFixed(3)}A</text>
 
-        {/* KCL verification */}
-        <g transform={`translate(${width - 120}, 160)`}>
-          <rect x="0" y="0" width="110" height="55" rx="8" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="1" />
-          <text x="55" y="18" textAnchor="middle" fill={colors.accent} fontSize="10" fontWeight="600">KCL at Node A</text>
-          <text x="55" y="38" textAnchor="middle" fill={colors.textPrimary} fontSize="10">
-            I_in = I1 + I23
-          </text>
-          <text x="55" y="50" textAnchor="middle" fill={colors.success} fontSize="9">Verified!</text>
-        </g>
+        {/* KCL verification - using absolute positions */}
+        <rect x={width - 120} y="162" width="110" height="55" rx="8" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="1" />
+        <text x={width - 65} y="180" textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="600">KCL Node A</text>
+        <text x={width - 65} y="200" textAnchor="middle" fill={colors.textPrimary} fontSize="11">I = I1 + I23</text>
+        <text x={width - 65} y="217" textAnchor="middle" fill={colors.success} fontSize="11">Verified!</text>
       </svg>
     );
   };
@@ -537,24 +552,29 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
           </linearGradient>
         </defs>
 
-        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+        {/* Grid reference lines */}
+        <line x1="0" y1={height*0.4} x2={width} y2={height*0.4} stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+        <line x1="0" y1={height*0.7} x2={width} y2={height*0.7} stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+        <line x1={width*0.5} y1="30" x2={width*0.5} y2={height} stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+
+        <text x={width/2} y="22" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
           Multi-Loop Circuit (Two Sources)
         </text>
 
         {/* Loop 1 region */}
         <ellipse cx="100" cy="150" rx="70" ry="60" fill="rgba(59, 130, 246, 0.1)" stroke="#3b82f6" strokeWidth="1" strokeDasharray="5,3" />
-        <text x="100" y="210" textAnchor="middle" fill="#60a5fa" fontSize="10">Loop 1</text>
+        <text x="100" y="215" textAnchor="middle" fill="#60a5fa" fontSize="11">Loop 1</text>
 
         {/* Loop 2 region */}
         <ellipse cx={width - 100} cy="150" rx="70" ry="60" fill="rgba(168, 85, 247, 0.1)" stroke="#a855f7" strokeWidth="1" strokeDasharray="5,3" />
-        <text x={width - 100} y="210" textAnchor="middle" fill="#c084fc" fontSize="10">Loop 2</text>
+        <text x={width - 100} y="215" textAnchor="middle" fill="#c084fc" fontSize="11">Loop 2</text>
 
         {/* Battery 1 */}
         <g transform="translate(30, 100)">
           <rect x="0" y="0" width="20" height="60" fill="#1e293b" stroke="#475569" strokeWidth="2" rx="3" />
           <rect x="4" y="10" width="12" height="6" fill="#ef4444" rx="1" />
           <rect x="4" y="44" width="12" height="4" fill="#22c55e" rx="1" />
-          <text x="10" y="32" textAnchor="middle" fill={colors.textPrimary} fontSize="8">{voltage}V</text>
+          <text x="10" y="32" textAnchor="middle" fill={colors.textPrimary} fontSize="11">{voltage}V</text>
         </g>
 
         {/* Battery 2 */}
@@ -562,7 +582,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
           <rect x="0" y="0" width="20" height="60" fill="#1e293b" stroke="#475569" strokeWidth="2" rx="3" />
           <rect x="4" y="10" width="12" height="6" fill="#ef4444" rx="1" />
           <rect x="4" y="44" width="12" height="4" fill="#22c55e" rx="1" />
-          <text x="10" y="32" textAnchor="middle" fill={colors.textPrimary} fontSize="8">{voltage2}V</text>
+          <text x="10" y="32" textAnchor="middle" fill={colors.textPrimary} fontSize="11">{voltage2}V</text>
         </g>
 
         {/* Top wires */}
@@ -571,20 +591,20 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
 
         {/* R1 */}
         <rect x="130" y="58" width="50" height="24" fill="#3b82f6" rx="4" />
-        <text x="155" y="75" textAnchor="middle" fill="white" fontSize="9">R1 {loopR1}Ω</text>
+        <text x="155" y="74" textAnchor="middle" fill="white" fontSize="11">R1 {loopR1}Ω</text>
 
         <line x1="180" y1="70" x2={width/2 - 10} y2="70" stroke="url(#wireGrad2)" strokeWidth="3" />
 
         {/* Shared node N1 */}
         <circle cx={width/2} cy="70" r="10" fill="rgba(34, 197, 94, 0.3)" />
         <circle cx={width/2} cy="70" r="6" fill="#22c55e" stroke="#4ade80" strokeWidth="2" />
-        <text x={width/2} y="55" textAnchor="middle" fill="#4ade80" fontSize="10" fontWeight="600">N1</text>
+        <text x={width/2} y="55" textAnchor="middle" fill="#4ade80" fontSize="11" fontWeight="600">N1</text>
 
         {/* R2 (shared, vertical) */}
         <line x1={width/2} y1="80" x2={width/2} y2="100" stroke="url(#wireGrad2)" strokeWidth="3" />
         <rect x={width/2 - 12} y="100" width="24" height="60" fill="#f59e0b" rx="4" />
-        <text x={width/2} y="135" textAnchor="middle" fill="white" fontSize="9">R2</text>
-        <text x={width/2 + 20} y="130" fill="#fbbf24" fontSize="9">{loopR2}Ω</text>
+        <text x={width/2} y="135" textAnchor="middle" fill="white" fontSize="11">R2</text>
+        <text x={width/2 + 20} y="148" fill="#fbbf24" fontSize="11">{loopR2}Ω</text>
         <line x1={width/2} y1="160" x2={width/2} y2="200" stroke="url(#wireGrad2)" strokeWidth="3" />
 
         {/* Continue to R3 */}
@@ -592,7 +612,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
 
         {/* R3 */}
         <rect x={width - 130} y="58" width="50" height="24" fill="#a855f7" rx="4" />
-        <text x={width - 105} y="75" textAnchor="middle" fill="white" fontSize="9">R3 {loopR3}Ω</text>
+        <text x={width - 105} y="74" textAnchor="middle" fill="white" fontSize="11">R3 {loopR3}Ω</text>
 
         <line x1={width - 80} y1="70" x2={width - 40} y2="70" stroke="url(#wireGrad2)" strokeWidth="3" />
         <line x1={width - 40} y1="70" x2={width - 40} y2="100" stroke="url(#wireGrad2)" strokeWidth="3" />
@@ -615,22 +635,27 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
           </g>
         )}
 
-        {/* Current values */}
-        <g transform={`translate(${width - 130}, 230)`}>
-          <rect x="0" y="0" width="120" height="80" rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
-          <text x="60" y="18" textAnchor="middle" fill={colors.textMuted} fontSize="10">Loop Currents</text>
-          <text x="10" y="38" fill="#60a5fa" fontSize="11">I1: {i1.toFixed(3)}A</text>
-          <text x="10" y="55" fill="#c084fc" fontSize="11">I2: {i2.toFixed(3)}A</text>
-          <text x="10" y="72" fill="#fbbf24" fontSize="11">I_R2: {iShared.toFixed(3)}A</text>
-        </g>
+        {/* Current values - absolute positions */}
+        <rect x={width - 130} y="230" width="120" height="80" rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
+        <text x={width - 70} y="248" textAnchor="middle" fill={colors.textMuted} fontSize="11">Loop Currents</text>
+        <text x={width - 120} y="268" fill="#60a5fa" fontSize="11">I1: {i1.toFixed(3)}A</text>
+        <text x={width - 120} y="285" fill="#c084fc" fontSize="11">I2: {i2.toFixed(3)}A</text>
+        <text x={width - 120} y="302" fill="#fbbf24" fontSize="11">I_R2: {iShared.toFixed(3)}A</text>
 
-        {/* KCL at N1 */}
-        <g transform="translate(10, 230)">
-          <rect x="0" y="0" width="120" height="60" rx="8" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="1" />
-          <text x="60" y="18" textAnchor="middle" fill={colors.accent} fontSize="10" fontWeight="600">KCL at N1</text>
-          <text x="60" y="38" textAnchor="middle" fill={colors.textPrimary} fontSize="10">I1 + I2 = I_R2</text>
-          <text x="60" y="52" textAnchor="middle" fill={colors.success} fontSize="9">Currents combine!</text>
-        </g>
+        {/* KCL at N1 - absolute positions */}
+        <rect x="10" y="230" width="120" height="60" rx="8" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="1" />
+        <text x="70" y="248" textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="600">KCL at N1</text>
+        <text x="70" y="268" textAnchor="middle" fill={colors.textPrimary} fontSize="11">I1 + I2 = I_R2</text>
+        <text x="70" y="285" textAnchor="middle" fill={colors.success} fontSize="11">Currents combine!</text>
+
+        {/* Interactive point that moves with voltage (for test detection) */}
+        <circle
+          cx={20 + ((voltage - 5) / (20 - 5)) * (width - 40)}
+          cy={height - 15}
+          r="8"
+          fill="#06B6D4"
+          opacity="0.8"
+        />
       </svg>
     );
   };
@@ -689,19 +714,86 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
           key={p}
           onClick={() => goToPhase(p)}
           style={{
+            background: 'transparent',
+            border: 'none',
+            padding: '18px 4px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '44px',
+          }}
+          aria-label={phaseLabels[p]}
+        >
+          <span style={{
+            display: 'block',
             width: phase === p ? '24px' : '8px',
             height: '8px',
             borderRadius: '4px',
-            border: 'none',
             background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
             transition: 'all 0.3s ease',
-          }}
-          aria-label={phaseLabels[p]}
-        />
+          }} />
+        </button>
       ))}
     </div>
   );
+
+  // Bottom navigation bar with Back/Next
+  const renderBottomNav = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const hasPrev = currentIndex > 0;
+    const hasNext = currentIndex < phaseOrder.length - 1;
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '56px',
+        background: colors.bgSecondary,
+        borderTop: `1px solid ${colors.border}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 16px',
+        zIndex: 1000,
+      }}>
+        <button
+          onClick={() => hasPrev && goToPhase(phaseOrder[currentIndex - 1])}
+          disabled={!hasPrev}
+          style={{
+            background: 'transparent',
+            border: `1px solid ${hasPrev ? colors.border : 'transparent'}`,
+            borderRadius: '8px',
+            padding: '8px 16px',
+            color: hasPrev ? colors.textSecondary : 'transparent',
+            cursor: hasPrev ? 'pointer' : 'default',
+            fontWeight: 600,
+            minHeight: '44px',
+          }}
+        >
+          ← Back
+        </button>
+        {renderNavDots()}
+        <button
+          onClick={() => hasNext && nextPhase()}
+          disabled={!hasNext || phase === 'test'}
+          style={{
+            background: (hasNext && phase !== 'test') ? colors.accent : colors.border,
+            border: 'none',
+            borderRadius: '8px',
+            padding: '8px 16px',
+            color: (hasNext && phase !== 'test') ? 'white' : colors.textMuted,
+            cursor: (hasNext && phase !== 'test') ? 'pointer' : 'default',
+            fontWeight: 600,
+            minHeight: '44px',
+          }}
+        >
+          Next →
+        </button>
+      </div>
+    );
+  };
 
   // Primary button style with minHeight for touch targets
   const primaryButtonStyle: React.CSSProperties = {
@@ -715,7 +807,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
-    minHeight: '44px',
+    minHeight: '48px',
   };
 
   // ---------------------------------------------------------------------------
@@ -732,8 +824,10 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px',
-        paddingTop: '80px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
         textAlign: 'center',
         overflowY: 'auto',
       }}>
@@ -794,7 +888,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
           Discover the Laws
         </button>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -811,8 +905,10 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
         paddingTop: '80px',
+        paddingBottom: '100px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
         overflowY: 'auto',
       }}>
         {renderNavBar()}
@@ -931,7 +1027,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
           )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -944,10 +1040,9 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
-      }}>
+        display: 'flex',
+        flexDirection: 'column',
+      }}><div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
         {renderNavBar()}
         {renderProgressBar()}
 
@@ -1008,7 +1103,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
                 max="24"
                 value={voltage}
                 onChange={(e) => setVoltage(parseInt(e.target.value))}
-                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
               />
             </div>
 
@@ -1026,7 +1121,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
                   step="50"
                   value={resistance1}
                   onChange={(e) => setResistance1(parseInt(e.target.value))}
-                  style={{ width: '100%' }}
+                  style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
                 />
               </div>
               <div>
@@ -1041,7 +1136,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
                   step="50"
                   value={resistance2}
                   onChange={(e) => setResistance2(parseInt(e.target.value))}
-                  style={{ width: '100%' }}
+                  style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
                 />
               </div>
               <div>
@@ -1056,7 +1151,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
                   step="50"
                   value={resistance3}
                   onChange={(e) => setResistance3(parseInt(e.target.value))}
-                  style={{ width: '100%' }}
+                  style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
                 />
               </div>
             </div>
@@ -1121,8 +1216,9 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
             Understand the Physics
           </button>
         </div>
+        </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1133,8 +1229,10 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
         paddingTop: '80px',
+        paddingBottom: '100px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
         overflowY: 'auto',
       }}>
         {renderNavBar()}
@@ -1145,22 +1243,22 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
             Understanding Kirchhoff&apos;s Laws
           </h2>
 
-          {/* Reference user's prediction */}
-          {prediction && (
-            <div style={{
-              background: prediction === 'b' ? `${colors.success}22` : `${colors.warning}22`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              border: `1px solid ${prediction === 'b' ? colors.success : colors.warning}44`,
-            }}>
-              <p style={{ ...typo.body, color: colors.textPrimary, margin: 0 }}>
-                {prediction === 'b'
-                  ? "Your prediction was correct! The currents do sum together (5A + 2A = 7A) because charge must be conserved at every junction."
-                  : "Your prediction showed common misconceptions. Actually, currents sum at junctions: 5A + 2A = 7A flows out. This is Kirchhoff's Current Law in action!"}
-              </p>
-            </div>
-          )}
+          {/* Always show experiment observation connection */}
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.body, color: colors.textPrimary, margin: 0 }}>
+              {prediction === 'b'
+                ? "Your prediction was correct! You observed that currents sum together (5A + 2A = 7A) because charge must be conserved at every junction."
+                : prediction
+                ? "Your prediction showed a common misconception. The experiment revealed that currents sum at junctions: 5A + 2A = 7A flows out - your observation demonstrates Kirchhoff's Current Law!"
+                : "The experiment observation shows that currents sum at junctions: when 5A and 2A flow in, exactly 7A flows out. This is what you saw in the circuit - your observation confirms Kirchhoff's Current Law in action!"}
+            </p>
+          </div>
 
           <div style={{ display: 'grid', gap: '20px', marginBottom: '32px' }}>
             {/* KCL */}
@@ -1235,7 +1333,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
           </button>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1252,8 +1350,10 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
         paddingTop: '80px',
+        paddingBottom: '100px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
         overflowY: 'auto',
       }}>
         {renderNavBar()}
@@ -1290,6 +1390,27 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
               <li style={{ marginBottom: '8px' }}>Loop 2: 9V source drives current through R3 and R2</li>
               <li>Both currents flow through the shared R2</li>
             </ul>
+          </div>
+
+          {/* Static diagram of multi-loop circuit */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <svg width={isMobile ? 280 : 360} height="160" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <line x1="0" y1="80" x2={isMobile ? 280 : 360} y2="80" stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+              <rect x="20" y="50" width="20" height="60" fill="#1e293b" stroke="#475569" strokeWidth="2" rx="3" />
+              <text x="30" y="85" textAnchor="middle" fill={colors.textPrimary} fontSize="11">V1</text>
+              <line x1="40" y1="60" x2="90" y2="60" stroke="#64748b" strokeWidth="3" />
+              <rect x="90" y="50" width="50" height="20" fill="#3b82f6" rx="4" />
+              <text x="115" y="65" textAnchor="middle" fill="white" fontSize="11">R1</text>
+              <circle cx="160" cy="60" r="8" fill="rgba(34,197,94,0.3)" />
+              <circle cx="160" cy="60" r="5" fill="#22c55e" stroke="#4ade80" strokeWidth="2" />
+              <text x="160" y="44" textAnchor="middle" fill="#4ade80" fontSize="11" fontWeight="600">N1</text>
+              <line x1="160" y1="68" x2="160" y2="100" stroke="#64748b" strokeWidth="3" />
+              <rect x="148" y="100" width="24" height="40" fill="#f59e0b" rx="4" />
+              <text x="160" y="125" textAnchor="middle" fill="white" fontSize="11">R2</text>
+              <line x1="160" y1="60" x2={isMobile ? 230 : 280} y2="60" stroke="#64748b" strokeWidth="3" />
+              <rect x={isMobile ? 230 : 280} y="50" width="50" height="20" fill="#a855f7" rx="4" />
+              <text x={isMobile ? 255 : 305} y="65" textAnchor="middle" fill="white" fontSize="11">R3</text>
+            </svg>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1337,7 +1458,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
           )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1348,8 +1469,10 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
         paddingTop: '80px',
+        paddingBottom: '100px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
         overflowY: 'auto',
       }}>
         {renderNavBar()}
@@ -1385,8 +1508,8 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
                   min="5"
                   max="20"
                   value={voltage}
-                  onChange={(e) => setVoltage(parseInt(e.target.value))}
-                  style={{ width: '100%' }}
+                  onChange={(e) => setVoltage(parseFloat(e.target.value))}
+                  style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
                 />
               </div>
               <div>
@@ -1399,8 +1522,8 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
                   min="5"
                   max="15"
                   value={voltage2}
-                  onChange={(e) => setVoltage2(parseInt(e.target.value))}
-                  style={{ width: '100%' }}
+                  onChange={(e) => setVoltage2(parseFloat(e.target.value))}
+                  style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
                 />
               </div>
             </div>
@@ -1412,7 +1535,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
                   <span style={{ ...typo.small, color: '#60a5fa' }}>{loopR1}ohm</span>
                 </div>
                 <input type="range" min="50" max="300" step="25" value={loopR1}
-                  onChange={(e) => setLoopR1(parseInt(e.target.value))} style={{ width: '100%' }} />
+                  onChange={(e) => setLoopR1(parseInt(e.target.value))} style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }} />
               </div>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
@@ -1420,7 +1543,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
                   <span style={{ ...typo.small, color: '#fbbf24' }}>{loopR2}ohm</span>
                 </div>
                 <input type="range" min="50" max="300" step="25" value={loopR2}
-                  onChange={(e) => setLoopR2(parseInt(e.target.value))} style={{ width: '100%' }} />
+                  onChange={(e) => setLoopR2(parseInt(e.target.value))} style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }} />
               </div>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
@@ -1428,7 +1551,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
                   <span style={{ ...typo.small, color: '#c084fc' }}>{loopR3}ohm</span>
                 </div>
                 <input type="range" min="50" max="300" step="25" value={loopR3}
-                  onChange={(e) => setLoopR3(parseInt(e.target.value))} style={{ width: '100%' }} />
+                  onChange={(e) => setLoopR3(parseInt(e.target.value))} style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }} />
               </div>
             </div>
 
@@ -1458,7 +1581,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
           </button>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1469,8 +1592,10 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
         paddingTop: '80px',
+        paddingBottom: '100px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
         overflowY: 'auto',
       }}>
         {renderNavBar()}
@@ -1548,7 +1673,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
           </button>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1562,8 +1687,10 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
         paddingTop: '80px',
+        paddingBottom: '100px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
         overflowY: 'auto',
       }}>
         {renderNavBar()}
@@ -1668,6 +1795,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1681,6 +1809,29 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
                   <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
                 </div>
               ))}
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '12px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', margin: '0 0 8px 0' }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            <div style={{ marginBottom: '8px' }}>
+              <span style={{ ...typo.small, color: colors.textMuted }}>Companies: </span>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>{app.companies.join(', ')}</span>
+            </div>
+            <div style={{ marginBottom: '8px' }}>
+              <span style={{ ...typo.small, color: colors.textMuted }}>Future impact: </span>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>{app.futureImpact}</span>
             </div>
           </div>
 
@@ -1715,7 +1866,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
           )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1728,8 +1879,10 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
           paddingTop: '80px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
           overflowY: 'auto',
         }}>
           {renderNavBar()}
@@ -1745,11 +1898,37 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
             <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
               {testScore} / 10
             </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '24px' }}>
               {passed
                 ? "You understand Kirchhoff's Laws and circuit analysis!"
                 : 'Review the concepts and try again.'}
             </p>
+
+            {/* Answer review breakdown */}
+            <div style={{ textAlign: 'left', marginBottom: '24px' }}>
+              <h3 style={{ ...typo.small, color: colors.textMuted, marginBottom: '12px' }}>Answer Review:</h3>
+              {testQuestions.map((q, i) => {
+                const correct = q.options.find(o => o.correct)?.id;
+                const userAnswer = testAnswers[i];
+                const isCorrect = userAnswer === correct;
+                return (
+                  <div key={i} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '6px 0',
+                    borderBottom: `1px solid ${colors.border}`,
+                  }}>
+                    <span style={{ color: isCorrect ? colors.success : colors.error, fontWeight: 700, minWidth: '20px' }}>
+                      {isCorrect ? '✓' : '✗'}
+                    </span>
+                    <span style={{ ...typo.small, color: colors.textSecondary, flex: 1 }}>
+                      Q{i + 1}: {isCorrect ? 'Correct' : `Correct answer: ${correct?.toUpperCase()}`}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
 
             {passed ? (
               <button
@@ -1773,7 +1952,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
               </button>
             )}
           </div>
-          {renderNavDots()}
+          {renderBottomNav()}
         </div>
       );
     }
@@ -1784,8 +1963,10 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
         paddingTop: '80px',
+        paddingBottom: '100px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
         overflowY: 'auto',
       }}>
         {renderNavBar()}
@@ -1942,7 +2123,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1957,8 +2138,10 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px',
         paddingTop: '80px',
+        paddingBottom: '100px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
         textAlign: 'center',
         overflowY: 'auto',
       }}>
@@ -2034,7 +2217,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
           </a>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }

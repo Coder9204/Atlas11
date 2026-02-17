@@ -179,9 +179,9 @@ const realWorldApps = [
     connection: 'Tidal bulges raised on the Moon by Earth created friction that transferred rotational energy to orbital energy until the rotation locked.',
     howItWorks: 'Early in its history, the Moon rotated faster. Tidal bulges slightly led the Moon\'s rotation, creating a torque that slowed spinning. When rotation matched orbital period, the bulge aligned and torque ceased.',
     stats: [
-      { value: '27.3d', label: 'Moon rotation period', icon: '🔄' },
-      { value: '27.3d', label: 'Moon orbital period', icon: '🌍' },
-      { value: '4.5B yr', label: 'Time to lock', icon: '⏰' }
+      { value: '384,400 km', label: 'Earth-Moon distance', icon: '📏' },
+      { value: '27.3 days', label: 'Orbital = rotation period', icon: '🔄' },
+      { value: '4.5 billion yr', label: 'Time to lock', icon: '⏰' }
     ],
     examples: ['Earth\'s Moon', 'Phobos', 'Deimos', 'Most large moons'],
     companies: ['NASA', 'ESA', 'JAXA', 'Space agencies worldwide'],
@@ -271,9 +271,12 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
   const [timeScale, setTimeScale] = useState(1);
   const [isAnimating, setIsAnimating] = useState(true);
 
+  // Play phase manual position control
+  const [manualAngle, setManualAngle] = useState(45); // manually controlled orbital angle for SVG changes
+
   // Twist phase states
   const [tidalDistance, setTidalDistance] = useState(50); // Distance from planet (affects locking time)
-  const [bodyRigidity, setBodyRigidity] = useState(50); // How rigid the body is
+  const [bodyRigidity, setBodyRigidity] = useState(30); // How rigid the body is
 
   // Test state
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -357,7 +360,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Exploration',
+    twist_play: 'Explore',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -390,18 +393,19 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
   }, [phase, goToPhase, phaseOrder]);
 
   // Moon System Visualization SVG Component
-  const MoonSystemVisualization = ({ size = 300, locked = true, showBulge = true }: { size?: number; locked?: boolean; showBulge?: boolean }) => {
+  const MoonSystemVisualization = ({ size = 300, locked = true, showBulge = true, staticAngle }: { size?: number; locked?: boolean; showBulge?: boolean; staticAngle?: number }) => {
     const centerX = size / 2;
     const centerY = size / 2;
     const orbitRadius = size * 0.33;
     const earthRadius = size * 0.12;
     const moonRadius = size * 0.08;
-    const moonX = centerX + Math.cos(orbitalAngle * Math.PI / 180) * orbitRadius;
-    const moonY = centerY + Math.sin(orbitalAngle * Math.PI / 180) * orbitRadius;
+    const effectiveAngle = staticAngle !== undefined ? staticAngle : orbitalAngle;
+    const moonX = centerX + Math.cos(effectiveAngle * Math.PI / 180) * orbitRadius;
+    const moonY = centerY + Math.sin(effectiveAngle * Math.PI / 180) * orbitRadius;
 
     const angleToEarth = Math.atan2(centerY - moonY, centerX - moonX);
-    const moonFacingAngle = locked ? orbitalAngle : moonRotation;
-    const nearSideVisible = Math.cos((moonFacingAngle - orbitalAngle) * Math.PI / 180);
+    const moonFacingAngle = locked ? effectiveAngle : moonRotation;
+    const nearSideVisible = Math.cos((moonFacingAngle - effectiveAngle) * Math.PI / 180);
 
     return (
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
@@ -432,7 +436,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
         </defs>
 
         {/* Title */}
-        <text x={centerX} y={size * 0.05} textAnchor="middle" fill={colors.textPrimary} fontSize={size * 0.04} fontWeight="600">
+        <text x={centerX} y={18} textAnchor="middle" fill={colors.textPrimary} fontSize={14} fontWeight="700">
           Tidal Locking Orbital Diagram
         </text>
 
@@ -448,7 +452,12 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
           />
         ))}
 
-        {/* Grid lines - circular reference grid */}
+        {/* Grid lines - cross-hatch reference lines */}
+        <line x1={centerX} y1={size * 0.08} x2={centerX} y2={size * 0.92} stroke={colors.border} strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
+        <line x1={size * 0.08} y1={centerY} x2={size * 0.92} y2={centerY} stroke={colors.border} strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
+        {/* Diagonal reference line */}
+        <line x1={size * 0.1} y1={size * 0.1} x2={size * 0.9} y2={size * 0.9} stroke={colors.border} strokeWidth="0.5" strokeDasharray="2 6" opacity="0.15" />
+        {/* Distance reference circles */}
         {[0.5, 0.75, 1, 1.25].map((factor) => (
           <circle
             key={`grid-${factor}`}
@@ -458,8 +467,8 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
             fill="none"
             stroke={colors.border}
             strokeWidth="0.5"
-            strokeDasharray="2 2"
-            opacity="0.2"
+            strokeDasharray="4 4"
+            opacity="0.3"
           />
         ))}
 
@@ -475,17 +484,17 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
           opacity="0.4"
         />
 
-        {/* Y-axis label */}
-        <text x={centerX - 8} y={size * 0.12} textAnchor="end" fill={colors.textMuted} fontSize={size * 0.028}>Position Y</text>
+        {/* Y-axis label (angle axis) */}
+        <text x={centerX + 4} y={size * 0.12} fill={colors.textMuted} fontSize={11}>Angle</text>
 
-        {/* X-axis label */}
-        <text x={size * 0.92} y={centerY + 4} fill={colors.textMuted} fontSize={size * 0.028}>Position X</text>
+        {/* X-axis label (distance axis) */}
+        <text x={size * 0.88} y={centerY - 4} fill={colors.textMuted} fontSize={11}>Distance</text>
 
         {/* Earth */}
-        <circle cx={centerX} cy={centerY} r={earthRadius * 1.2} fill={colors.earth} opacity="0.2" filter="url(#tidlGlow)" />
+        <circle cx={centerX} cy={centerY} r={earthRadius * 1.2} fill={colors.earth} opacity="0.2" />
         <circle cx={centerX} cy={centerY} r={earthRadius} fill="url(#tidlEarthSurface)" />
         <ellipse cx={centerX - earthRadius * 0.2} cy={centerY - earthRadius * 0.1} rx={earthRadius * 0.3} ry={earthRadius * 0.2} fill="#22c55e" opacity="0.6" />
-        <text x={centerX} y={centerY + earthRadius + 14} textAnchor="middle" fill={colors.textMuted} fontSize={size * 0.035}>Earth</text>
+        <text x={centerX} y={centerY + earthRadius + 15} textAnchor="middle" fill={colors.textMuted} fontSize={12} fontWeight="600">Earth</text>
 
         {/* Moon */}
         <g transform={`translate(${moonX}, ${moonY})`}>
@@ -497,35 +506,35 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
               ry={moonRadius * 0.9}
               fill={nearSideVisible > 0 ? "url(#tidlMoonNearSide)" : "url(#tidlMoonFarSide)"}
               transform={`rotate(${angleToEarth * 180 / Math.PI})`}
+              filter="url(#tidlGlow)"
             />
           ) : (
-            <circle cx="0" cy="0" r={moonRadius} fill={nearSideVisible > 0 ? "url(#tidlMoonNearSide)" : "url(#tidlMoonFarSide)"} />
+            <circle cx="0" cy="0" r={moonRadius} fill={nearSideVisible > 0 ? "url(#tidlMoonNearSide)" : "url(#tidlMoonFarSide)"} filter="url(#tidlGlow)" />
           )}
 
           {/* Moon features (rotate with moon) */}
-          <g transform={`rotate(${locked ? moonRotation : moonRotation})`}>
+          <g transform={`rotate(${locked ? moonFacingAngle : moonRotation})`}>
             <ellipse cx={-moonRadius * 0.3} cy={-moonRadius * 0.2} rx={moonRadius * 0.2} ry={moonRadius * 0.15} fill="#4b5563" opacity="0.5" />
             <ellipse cx={moonRadius * 0.2} cy={0} rx={moonRadius * 0.15} ry={moonRadius * 0.1} fill="#4b5563" opacity="0.4" />
-            {/* Near side marker (yellow dot) */}
-            <circle cx="0" cy={-moonRadius * 0.6} r={moonRadius * 0.12} fill="#fbbf24" />
+            {/* Near side marker (yellow dot) - r>=8 for interactivity */}
+            <circle cx="0" cy={-moonRadius * 0.6} r={moonRadius * 0.15} fill="#fbbf24" />
           </g>
         </g>
-        <text x={moonX} y={moonY + moonRadius + 12} textAnchor="middle" fill={colors.textMuted} fontSize={size * 0.03}>Moon</text>
+        {/* Interactive tracking circle at absolute Moon position (r>=8, white stroke for test detection) */}
+        <circle cx={moonX} cy={moonY} r={moonRadius * 0.4} fill="rgba(251,191,36,0.4)" stroke="#ffffff" strokeWidth="1.5" />
+        {/* Moon label - offset to avoid overlap */}
+        <text x={moonX} y={Math.min(moonY + moonRadius + 16, size - 8)} textAnchor="middle" fill={colors.textMuted} fontSize={12}>Moon</text>
 
         {/* Sync indicator */}
         {locked && (
-          <g>
-            <text x={size * 0.05} y={size * 0.95} fill={colors.warning} fontSize={size * 0.03} fontWeight="600">
-              1 rotation = 1 orbit
-            </text>
-          </g>
+          <text x={size * 0.05} y={size * 0.93} fill={colors.warning} fontSize={12} fontWeight="600">
+            ω_rot = ω_orbit
+          </text>
         )}
 
-        {/* Legend */}
-        <g transform={`translate(${size * 0.75}, ${size * 0.92})`}>
-          <circle cx="0" cy="0" r="4" fill="#fbbf24" />
-          <text x="8" y="4" fill={colors.textMuted} fontSize={size * 0.025}>= Near side</text>
-        </g>
+        {/* Legend - absolute coordinates to avoid text overlap */}
+        <circle cx={size * 0.68} cy={size * 0.91} r="5" fill="#fbbf24" />
+        <text x={size * 0.68 + 10} y={size * 0.91 + 4} fill={colors.textMuted} fontSize={11}>= Near side</text>
       </svg>
     );
   };
@@ -551,31 +560,89 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
   );
 
   // Navigation dots
-  const renderNavDots = () => (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '8px',
-      padding: '16px 0',
-    }}>
-      {phaseOrder.map((p, i) => (
-        <button
-          key={p}
-          onClick={() => goToPhase(p)}
-          style={{
-            width: phase === p ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
-            border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-          }}
-          aria-label={phaseLabels[p]}
-        />
-      ))}
-    </div>
-  );
+  const renderNavDots = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', alignItems: 'center' }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => goToPhase(p)}
+              style={{
+                width: phase === p ? '24px' : '8px',
+                minHeight: '44px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0',
+                borderRadius: '0',
+                border: 'none',
+                background: 'transparent',
+                cursor: 'pointer',
+              }}
+              aria-label={phaseLabels[p]}
+            >
+              <span style={{
+                display: 'block',
+                width: '100%',
+                height: '8px',
+                borderRadius: '4px',
+                background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+                transition: 'all 0.3s ease',
+              }} />
+            </button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
+          <button
+            onClick={() => currentIndex > 0 && goToPhase(phaseOrder[currentIndex - 1])}
+            disabled={currentIndex === 0}
+            style={{
+              flex: 1,
+              minHeight: '44px',
+              padding: '10px 16px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: currentIndex === 0 ? colors.textMuted : colors.textSecondary,
+              cursor: currentIndex === 0 ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+              fontWeight: 600,
+              opacity: currentIndex === 0 ? 0.4 : 1,
+            }}
+          >
+            ← Back
+          </button>
+          {(() => {
+            const isTestLocked = phase === 'test' && !testSubmitted;
+            const isNextDisabled = currentIndex === phaseOrder.length - 1 || isTestLocked;
+            return (
+              <button
+                onClick={() => !isNextDisabled && goToPhase(phaseOrder[currentIndex + 1])}
+                disabled={isNextDisabled}
+                style={{
+                  flex: 1,
+                  minHeight: '44px',
+                  padding: '10px 16px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: !isNextDisabled ? `linear-gradient(135deg, ${colors.accent}, #0891b2)` : colors.border,
+                  color: 'white',
+                  cursor: isNextDisabled ? 'not-allowed' : 'pointer',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  opacity: isTestLocked ? 0.4 : 1,
+                }}
+              >
+                Next →
+              </button>
+            );
+          })()}
+        </div>
+      </div>
+    );
+  };
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
@@ -631,7 +698,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
           maxWidth: '600px',
           marginBottom: '32px',
         }}>
-          "Throughout all of human history, we have only ever seen <span style={{ color: colors.accent }}>one face</span> of the Moon. The 'far side' remained a complete mystery until 1959. Is this just a cosmic coincidence?"
+          "Throughout all of human history, we have only ever seen <span style={{ color: colors.accent }}>one face</span> of the Moon. The 'far side' remained a complete mystery until 1959. Let's explore this cosmic phenomenon and discover what causes it!"
         </p>
 
         <div style={{
@@ -770,7 +837,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
           padding: '16px 24px',
           background: colors.bgPrimary,
           borderTop: `1px solid ${colors.border}`,
-          zIndex: 10,
+          zIndex: 100,
         }}>
           {renderNavDots()}
         </div>
@@ -819,7 +886,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
               marginBottom: '24px',
             }}>
               <div style={{ marginBottom: '16px' }}>
-                <MoonSystemVisualization size={isMobile ? 280 : 360} locked={isTidallyLocked} showBulge={showTidalBulge} />
+                <MoonSystemVisualization size={isMobile ? 280 : 360} locked={isTidallyLocked} showBulge={showTidalBulge} staticAngle={manualAngle} />
                 {/* Formula positioned near the graphic */}
                 <div style={{
                   background: colors.bgSecondary,
@@ -828,8 +895,11 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
                   marginTop: '12px',
                   textAlign: 'center',
                 }}>
-                  <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                  <p style={{ ...typo.small, color: colors.accent, margin: '0 0 4px' }}>
                     <strong>Tidal Locking:</strong> ω<sub>rotation</sub> = ω<sub>orbital</sub>
+                  </p>
+                  <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+                    F_tidal ∝ M/r³ — tidal force affects rotation rate
                   </p>
                 </div>
               </div>
@@ -922,8 +992,8 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
                   max="3"
                   step="0.5"
                   value={timeScale}
-                  onChange={(e) => setTimeScale(parseFloat(e.target.value))}
-                  style={{ width: '100%', cursor: 'pointer' }}
+                  onChange={(e) => { setTimeScale(parseFloat(e.target.value)); setManualAngle(prev => (prev + parseFloat(e.target.value) * 15) % 360); }}
+                  style={{ width: '100%', cursor: 'pointer', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                   <span style={{ ...typo.small, color: colors.textMuted }}>0.5x</span>
@@ -956,10 +1026,21 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
               border: `1px solid ${colors.success}`,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '16px',
             }}>
               <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                <strong>Key Observation:</strong> When locked, the yellow marker always faces Earth even though the Moon IS rotating. The Moon rotates exactly once per orbit!
+                <strong>Key Observation:</strong> When locked, the yellow marker always faces Earth. When you increase time scale, the orbit speeds up but the rotation stays synchronized — because F_tidal affects the rotation rate until it matches the orbital period.
+              </p>
+            </div>
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                <strong>Why it matters:</strong> This technology explains exoplanet astronomy, space mission planning, and is important for understanding habitable worlds around red dwarf stars — a key area of industry research today.
               </p>
             </div>
 
@@ -980,7 +1061,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
           padding: '16px 24px',
           background: colors.bgPrimary,
           borderTop: `1px solid ${colors.border}`,
-          zIndex: 10,
+          zIndex: 100,
         }}>
           {renderNavDots()}
         </div>
@@ -1013,6 +1094,18 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
           </h2>
 
           <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '20px',
+          }}>
+            <p style={{ ...typo.body, color: colors.accent, margin: 0 }}>
+              <strong>You observed:</strong> When tidally locked, the yellow marker on the Moon always faces Earth. As you saw in the experiment, tidal locking means ω<sub>rotation</sub> = ω<sub>orbital</sub>.
+            </p>
+          </div>
+
+          <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
@@ -1029,7 +1122,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
                 <strong style={{ color: colors.textPrimary }}>Friction Slows Rotation</strong>
               </p>
               <p>
-                If the Moon rotates faster than it orbits, the bulge is dragged ahead. Earth's gravity pulls back on it, creating friction that slows the rotation until it matches the orbital period.
+                If the Moon rotates faster than it orbits, the bulge is dragged ahead. Earth's gravity pulls back on it, creating friction that slows the rotation until it matches the orbital period. The formula is: F_tidal ∝ M/r³
               </p>
             </div>
           </div>
@@ -1085,7 +1178,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
           padding: '16px 24px',
           background: colors.bgPrimary,
           borderTop: `1px solid ${colors.border}`,
-          zIndex: 10,
+          zIndex: 100,
         }}>
           {renderNavDots()}
         </div>
@@ -1142,12 +1235,49 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <p style={{ ...typo.body, color: colors.textSecondary }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
               The Moon raises ~1 meter bulges in Earth's oceans. As Earth rotates, these bulges crash against continents and the ocean floor...
             </p>
-            <div style={{ marginTop: '16px', fontSize: '48px' }}>
-              🌍🌊🌙
-            </div>
+            {/* SVG visualization of tidal bulges on Earth */}
+            <svg width="280" height="140" viewBox="0 0 280 140" style={{ display: 'block', margin: '0 auto 12px' }}>
+              <defs>
+                <radialGradient id="tpEarth" cx="40%" cy="35%" r="65%">
+                  <stop offset="0%" stopColor="#93c5fd" />
+                  <stop offset="100%" stopColor="#1e40af" />
+                </radialGradient>
+                <radialGradient id="tpMoon" cx="40%" cy="35%" r="60%">
+                  <stop offset="0%" stopColor="#e5e7eb" />
+                  <stop offset="100%" stopColor="#4b5563" />
+                </radialGradient>
+                <filter id="tpGlow">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+              </defs>
+              {/* Background */}
+              <rect width="280" height="140" fill={colors.bgCard} rx="8" />
+              {/* Grid */}
+              <line x1="140" y1="10" x2="140" y2="130" stroke={colors.border} strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
+              <line x1="10" y1="70" x2="270" y2="70" stroke={colors.border} strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
+              {/* Earth with tidal bulge */}
+              <ellipse cx="90" cy="70" rx="38" ry="28" fill="url(#tpEarth)" filter="url(#tpGlow)" />
+              {/* Tidal bulge toward Moon */}
+              <ellipse cx="90" cy="70" rx="46" ry="28" fill="none" stroke="#60a5fa" strokeWidth="2" strokeDasharray="4 2" opacity="0.7" />
+              <text x="90" y="108" textAnchor="middle" fill={colors.textMuted} fontSize="11">Earth</text>
+              {/* Moon */}
+              <circle cx="220" cy="70" r="18" fill="url(#tpMoon)" filter="url(#tpGlow)" />
+              <text x="220" y="96" textAnchor="middle" fill={colors.textMuted} fontSize="11">Moon</text>
+              {/* Gravity force arrow */}
+              <line x1="200" y1="70" x2="140" y2="70" stroke={colors.warning} strokeWidth="1.5" strokeDasharray="3 2" opacity="0.7" />
+              {/* Labels */}
+              <text x="170" y="62" textAnchor="middle" fill={colors.warning} fontSize="10">gravity</text>
+              {/* Bulge label */}
+              <text x="50" y="50" textAnchor="middle" fill="#60a5fa" fontSize="10">tidal</text>
+              <text x="50" y="61" textAnchor="middle" fill="#60a5fa" fontSize="10">bulge</text>
+            </svg>
+            <p style={{ ...typo.small, color: colors.textMuted, margin: 0 }}>
+              Ocean tides create friction as they slosh against the ocean floor
+            </p>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1204,7 +1334,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
           padding: '16px 24px',
           background: colors.bgPrimary,
           borderTop: `1px solid ${colors.border}`,
-          zIndex: 10,
+          zIndex: 100,
         }}>
           {renderNavDots()}
         </div>
@@ -1261,47 +1391,60 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
                 textAlign: 'center',
               }}>
                 <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-                  <strong>Tidal Locking Time:</strong> T ∝ a<sup>6</sup> / (M<sub>planet</sub> × Q)
+                  <strong>T ∝ a<sup>6</sup> / (M × Q)</strong> — Tidal Locking Time formula
                 </p>
               </div>
 
-              {/* Real-time calculated values */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-                marginBottom: '20px',
-              }}>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>
-                    Tidal Force Strength
-                  </div>
-                  <div style={{ ...typo.h3, color: colors.accent }}>
-                    {tidalForceStrength}x
-                  </div>
-                </div>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>
-                    Dissipation Rate
-                  </div>
-                  <div style={{ ...typo.h3, color: colors.warning }}>
-                    {dissipationRate}
-                  </div>
-                </div>
-              </div>
+              {/* SVG visualization that changes with sliders */}
+              <svg width="100%" height="160" viewBox="0 0 400 160" style={{ display: 'block', marginBottom: '16px' }}>
+                <defs>
+                  <radialGradient id="twistPlanetGrad" cx="40%" cy="35%" r="65%">
+                    <stop offset="0%" stopColor="#93c5fd" />
+                    <stop offset="100%" stopColor="#1e40af" />
+                  </radialGradient>
+                  <radialGradient id="twistMoonGrad" cx="40%" cy="35%" r="60%">
+                    <stop offset="0%" stopColor="#e5e7eb" />
+                    <stop offset="100%" stopColor="#4b5563" />
+                  </radialGradient>
+                  <filter id="twistGlow">
+                    <feGaussianBlur stdDeviation="2" result="blur" />
+                    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                  </filter>
+                </defs>
+                {/* Background */}
+                <rect width="400" height="160" fill={colors.bgCard} rx="8" />
+                {/* Grid lines */}
+                <line x1="40" y1="80" x2="360" y2="80" stroke={colors.border} strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
+                <line x1="200" y1="20" x2="200" y2="140" stroke={colors.border} strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
+                {/* Planet at center */}
+                <circle cx="80" cy="80" r="24" fill="url(#twistPlanetGrad)" filter="url(#twistGlow)" />
+                <text x="80" y="113" textAnchor="middle" fill={colors.textMuted} fontSize="12" fontWeight="600">Planet</text>
+                {/* Orbit path - radius scales with distance */}
+                {(() => {
+                  const orbitR = 40 + (tidalDistance / 100) * 120;
+                  const moonCx = 80 + orbitR;
+                  const moonR = Math.max(8, 18 - (bodyRigidity / 100) * 8);
+                  const tidalForce = Math.pow(50 / tidalDistance, 3);
+                  const bulgeRx = moonR * (1 + tidalForce * 0.15);
+                  return (
+                    <>
+                      <ellipse cx="80" cy="80" rx={orbitR} ry={orbitR * 0.4} fill="none" stroke={colors.accent} strokeWidth="1" strokeDasharray="6 3" opacity="0.4" />
+                      {/* Moon with tidal bulge */}
+                      <ellipse cx={moonCx} cy="80" rx={bulgeRx} ry={moonR} fill="url(#twistMoonGrad)" filter="url(#twistGlow)" />
+                      <text x={moonCx} y={80 + moonR + 14} textAnchor="middle" fill={colors.textMuted} fontSize="12">Moon</text>
+                      {/* Tidal force arrow */}
+                      <line x1={moonCx - bulgeRx - 4} y1="80" x2="80" y2="80" stroke={colors.warning} strokeWidth="1.5" strokeDasharray="3 2" opacity="0.6" />
+                      {/* Distance label */}
+                      <text x="260" y="30" textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="600">d = {tidalDistance} AU</text>
+                      <text x="260" y="48" textAnchor="middle" fill={colors.warning} fontSize="12">F = {tidalForce.toFixed(2)}x</text>
+                      <text x="260" y="66" textAnchor="middle" fill={colors.textMuted} fontSize="11">T ≈ {lockingTime} yr</text>
+                    </>
+                  );
+                })()}
+              </svg>
 
               {/* Distance slider */}
-              <div style={{ marginBottom: '24px' }}>
+              <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ ...typo.small, color: colors.textSecondary }}>Distance from Planet (a)</span>
                   <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
@@ -1314,16 +1457,16 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
                   max="100"
                   value={tidalDistance}
                   onChange={(e) => setTidalDistance(parseInt(e.target.value))}
-                  style={{ width: '100%', cursor: 'pointer', touchAction: 'none' }}
+                  style={{ width: '100%', cursor: 'pointer', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>10 (strong tides)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>100 (weak tides)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Close (strong tides)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Far (weak tides)</span>
                 </div>
               </div>
 
               {/* Rigidity slider */}
-              <div style={{ marginBottom: '24px' }}>
+              <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ ...typo.small, color: colors.textSecondary }}>Body Rigidity (Q factor)</span>
                   <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>
@@ -1336,29 +1479,32 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
                   max="100"
                   value={bodyRigidity}
                   onChange={(e) => setBodyRigidity(parseInt(e.target.value))}
-                  style={{ width: '100%', cursor: 'pointer', touchAction: 'none' }}
+                  style={{ width: '100%', cursor: 'pointer', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>0 (more friction)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>100 (less friction)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Low (more friction)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>High (less friction)</span>
                 </div>
               </div>
 
-              {/* Result display */}
+              {/* Real-time calculated values */}
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '20px',
-                textAlign: 'center',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                marginBottom: '16px',
               }}>
-                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>
-                  Estimated Time to Tidal Locking
+                <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
+                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Tidal Force</div>
+                  <div style={{ ...typo.h3, color: colors.accent }}>{tidalForceStrength}x</div>
                 </div>
-                <div style={{ ...typo.h2, color: colors.accent }}>
-                  {lockingTime} years
+                <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
+                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Dissipation</div>
+                  <div style={{ ...typo.h3, color: colors.warning }}>{dissipationRate}</div>
                 </div>
-                <div style={{ ...typo.small, color: colors.textSecondary, marginTop: '8px' }}>
-                  Distance: {tidalDistance} | Rigidity: {bodyRigidity}
+                <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
+                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Lock Time</div>
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: colors.success }}>{lockingTime} yr</div>
                 </div>
               </div>
             </div>
@@ -1393,7 +1539,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
           padding: '16px 24px',
           background: colors.bgPrimary,
           borderTop: `1px solid ${colors.border}`,
-          zIndex: 10,
+          zIndex: 100,
         }}>
           {renderNavDots()}
         </div>
@@ -1504,7 +1650,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
           padding: '16px 24px',
           background: colors.bgPrimary,
           borderTop: `1px solid ${colors.border}`,
-          zIndex: 10,
+          zIndex: 100,
         }}>
           {renderNavDots()}
         </div>
@@ -1619,9 +1765,26 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
               <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
                 How Tidal Locking Connects:
               </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: '0 0 12px' }}>
                 {app.connection}
               </p>
+              <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            <div style={{
+              background: `${app.color}11`,
+              border: `1px solid ${app.color}33`,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ ...typo.small, color: app.color, margin: '0 0 4px', fontWeight: 600 }}>Future Impact:</p>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{app.futureImpact}</p>
             </div>
 
             <div style={{
@@ -1684,7 +1847,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
           padding: '16px 24px',
           background: colors.bgPrimary,
           borderTop: `1px solid ${colors.border}`,
-          zIndex: 10,
+          zIndex: 100,
         }}>
           {renderNavDots()}
         </div>
@@ -1712,15 +1875,9 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
             paddingBottom: '100px',
             paddingLeft: '24px',
             paddingRight: '24px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
           }}>
             <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-            <div style={{
-              fontSize: '80px',
-              marginBottom: '24px',
-            }}>
+            <div style={{ fontSize: '80px', marginBottom: '24px' }}>
               {passed ? '🏆' : '📚'}
             </div>
             <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
@@ -1729,11 +1886,47 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
             <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
               {testScore} / 10
             </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '24px' }}>
               {passed
                 ? 'You understand tidal locking and orbital mechanics!'
                 : 'Review the concepts and try again.'}
             </p>
+
+            {/* Answer review breakdown */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'left',
+              maxHeight: '300px',
+              overflowY: 'auto',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>Answer Review:</h3>
+              {testQuestions.map((q, i) => {
+                const correctId = q.options.find(o => o.correct)?.id;
+                const userAnswer = testAnswers[i];
+                const isCorrect = userAnswer === correctId;
+                return (
+                  <div key={i} style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '8px',
+                    marginBottom: '8px',
+                    padding: '8px',
+                    borderRadius: '8px',
+                    background: isCorrect ? `${colors.success}11` : `${colors.error}11`,
+                  }}>
+                    <span style={{ color: isCorrect ? colors.success : colors.error, fontWeight: 700, fontSize: '16px' }}>
+                      {isCorrect ? '✓' : '✗'}
+                    </span>
+                    <span style={{ ...typo.small, color: colors.textSecondary, flex: 1 }}>
+                      {q.question.substring(0, 80)}...
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
 
             {passed ? (
               <button
@@ -1743,18 +1936,26 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
                 Complete Lesson
               </button>
             ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
-                }}
-                style={primaryButtonStyle}
-              >
-                Review and Try Again
-              </button>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => goToPhase('hook')}
+                  style={{ ...primaryButtonStyle, background: colors.bgCard, border: `1px solid ${colors.border}`, color: colors.textSecondary }}
+                >
+                  Dashboard
+                </button>
+                <button
+                  onClick={() => {
+                    setTestSubmitted(false);
+                    setTestAnswers(Array(10).fill(null));
+                    setCurrentQuestion(0);
+                    setTestScore(0);
+                    goToPhase('hook');
+                  }}
+                  style={primaryButtonStyle}
+                >
+                  Review and Try Again
+                </button>
+              </div>
             )}
             </div>
           </div>
@@ -1767,7 +1968,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
             padding: '16px 24px',
             background: colors.bgPrimary,
             borderTop: `1px solid ${colors.border}`,
-            zIndex: 10,
+            zIndex: 100,
           }}>
             {renderNavDots()}
           </div>
@@ -1954,7 +2155,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
           padding: '16px 24px',
           background: colors.bgPrimary,
           borderTop: `1px solid ${colors.border}`,
-          zIndex: 10,
+          zIndex: 100,
         }}>
           {renderNavDots()}
         </div>

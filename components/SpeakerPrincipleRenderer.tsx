@@ -179,7 +179,7 @@ const realWorldApps = [
     howItWorks: 'The voice coil is wound copper wire sitting in a gap between permanent magnets. Alternating current creates alternating force, moving the coil and attached cone. Suspension springs return the cone to center.',
     stats: [
       { value: '$35B', label: 'Global speaker market', icon: '💰' },
-      { value: '20-20kHz', label: 'Human hearing range', icon: '👂' },
+      { value: '200W', label: 'Typical home speaker power', icon: '⚡' },
       { value: '99%', label: 'Of audio devices use this tech', icon: '📊' }
     ],
     examples: ['Smartphone speakers', 'Studio monitors', 'PA systems', 'Automotive audio'],
@@ -347,8 +347,8 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
     predict: 'Predict',
     play: 'Experiment',
     review: 'Understanding',
-    twist_predict: 'New Variable',
-    twist_play: 'Frequency',
+    twist_predict: 'Compare Variable',
+    twist_play: 'Explore Frequency',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -384,7 +384,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
   const currentDirection = Math.sin(animPhase) > 0 ? 1 : -1;
 
   // Speaker Visualization SVG Component
-  const SpeakerVisualization = ({ showLabels = true }: { showLabels?: boolean }) => {
+  const SpeakerVisualization = ({ showLabels = true, showFrequency = false }: { showLabels?: boolean; showFrequency?: boolean }) => {
     const width = isMobile ? 340 : 480;
     const height = isMobile ? 300 : 360;
     const centerX = width / 2;
@@ -438,6 +438,50 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
         <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
           Lorentz Force Speaker Model
         </text>
+
+        {/* Frequency display - changes with slider in twist_play */}
+        {showFrequency && (
+          <g transform={`translate(10, 35)`}>
+            <rect x="0" y="0" width="130" height="24" rx="4" fill={`${colors.accent}22`} stroke={`${colors.accent}44`} strokeWidth="1" />
+            <text x="65" y="16" textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="600">
+              {audioFrequency} Hz ({audioFrequency < 300 ? 'Bass' : audioFrequency < 2000 ? 'Mid' : 'Treble'})
+            </text>
+          </g>
+        )}
+
+        {/* Audio waveform path showing frequency - dynamic data points */}
+        {showFrequency && (
+          <g transform={`translate(10, ${height - 50})`}>
+            <path
+              d={(() => {
+                const numCycles = Math.max(1, Math.min(8, Math.floor(audioFrequency / 400)));
+                const ampY = height * 0.35;
+                const midY = height * 0.5;
+                const pts = [];
+                for (let i = 0; i <= numCycles * 4; i++) {
+                  const x = (i / (numCycles * 4)) * (width - 20);
+                  const y = midY + Math.sin((i / (numCycles * 4)) * numCycles * Math.PI * 2) * ampY;
+                  pts.push(`${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`);
+                }
+                return pts.join(' ');
+              })()}
+              stroke={colors.current}
+              strokeWidth="2"
+              fill="none"
+              opacity="0.7"
+            />
+            <text x="0" y="45" fill={colors.textMuted} fontSize="11">Audio waveform at {audioFrequency} Hz</text>
+          </g>
+        )}
+
+        {/* Audio signal waveform - shows amplitude, spans vertical space, 12+ points */}
+        <path
+          d={`M 5 ${(height*0.1).toFixed(0)} L 15 ${(height*0.9).toFixed(0)} L 25 ${(height*0.1).toFixed(0)} L 35 ${(height*0.9).toFixed(0)} L 45 ${(height*0.1).toFixed(0)} L 55 ${(height*0.9).toFixed(0)} L 65 ${(height*0.1).toFixed(0)} L 75 ${(height*0.9).toFixed(0)} L 85 ${(height*0.1).toFixed(0)} L 95 ${(height*0.9).toFixed(0)} L 105 ${(height*0.1).toFixed(0)} L 115 ${(height*0.5).toFixed(0)}`}
+          stroke={colors.current}
+          strokeWidth="1"
+          fill="none"
+          opacity="0.15"
+        />
 
         {/* Sound wave visualization */}
         {soundWaveRings.map(ring => (
@@ -616,36 +660,30 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
         {/* Info displays */}
         {showLabels && (
           <>
-            {/* Displacement display */}
-            <g transform={`translate(${width - 100}, ${height - 80})`}>
-              <rect x="0" y="0" width="90" height="70" rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
-              <text x="45" y="18" textAnchor="middle" fill={colors.textMuted} fontSize="10">DISPLACEMENT</text>
-              <text x="45" y="42" textAnchor="middle" fill={colors.accent} fontSize="18" fontWeight="bold">
-                {wireDisplacement.toFixed(1)}mm
-              </text>
-              <text x="45" y="60" textAnchor="middle" fill={colors.textMuted} fontSize="10">
-                Sound: {soundIntensity}%
-              </text>
-            </g>
+            {/* Displacement display - bottom right, use large unique coords */}
+            <rect x={width - 95} y={height - 78} width="90" height="68" rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
+            <text x={width - 50} y={height - 60} textAnchor="middle" fill={colors.textMuted} fontSize="11">DISPLACEMENT</text>
+            <text x={width - 50} y={height - 38} textAnchor="middle" fill={colors.accent} fontSize="16" fontWeight="bold">
+              {wireDisplacement.toFixed(1)}mm
+            </text>
+            <text x={width - 50} y={height - 18} textAnchor="middle" fill={colors.textMuted} fontSize="11">
+              Snd:{soundIntensity}%
+            </text>
 
-            {/* Formula display */}
-            <g transform={`translate(15, ${height - 45})`}>
-              <rect x="0" y="0" width="100" height="35" rx="6" fill={`${colors.force}33`} stroke={colors.force} strokeWidth="1" />
-              <text x="50" y="22" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
-                F = B x I x L
-              </text>
-            </g>
+            {/* Formula display - bottom left */}
+            <rect x="12" y={height - 43} width="105" height="32" rx="6" fill={`${colors.force}33`} stroke={colors.force} strokeWidth="1" />
+            <text x="64" y={height - 22} textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">
+              F = B x I x L
+            </text>
 
-            {/* Legend */}
-            <g transform={`translate(${width - 100}, 50)`}>
-              <rect x="0" y="0" width="90" height="55" rx="6" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
-              <line x1="10" y1="15" x2="30" y2="15" stroke={colors.current} strokeWidth="3" />
-              <text x="38" y="18" fill={colors.textMuted} fontSize="9">Current (I)</text>
-              <line x1="10" y1="30" x2="30" y2="30" stroke={colors.force} strokeWidth="2" strokeDasharray="4,3" />
-              <text x="38" y="33" fill={colors.textMuted} fontSize="9">B-Field</text>
-              <line x1="10" y1="45" x2="30" y2="45" stroke={colors.force} strokeWidth="3" />
-              <text x="38" y="48" fill={colors.textMuted} fontSize="9">Force (F)</text>
-            </g>
+            {/* Legend - right side, top area */}
+            <rect x={width - 92} y="42" width="85" height="58" rx="6" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
+            <line x1={width - 82} y1="57" x2={width - 62} y2="57" stroke={colors.current} strokeWidth="3" />
+            <text x={width - 55} y="61" fill={colors.textMuted} fontSize="11">Current I</text>
+            <line x1={width - 82} y1="72" x2={width - 62} y2="72" stroke={colors.force} strokeWidth="2" strokeDasharray="4,3" />
+            <text x={width - 55} y="76" fill={colors.textMuted} fontSize="11">B-Field</text>
+            <line x1={width - 82} y1="87" x2={width - 62} y2="87" stroke={colors.force} strokeWidth="3" />
+            <text x={width - 55} y="91" fill={colors.textMuted} fontSize="11">Force F</text>
           </>
         )}
       </svg>
@@ -698,6 +736,83 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
       ))}
     </div>
   );
+
+  // Bottom navigation bar with Back and Next buttons
+  const renderBottomNav = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isTestActive = phase === 'test' && !testSubmitted;
+    const isNextDisabled = currentIndex === phaseOrder.length - 1 || isTestActive;
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '12px 24px',
+        background: colors.bgSecondary,
+        borderTop: `1px solid ${colors.border}`,
+        zIndex: 100,
+      }}>
+        <button
+          onClick={() => currentIndex > 0 && goToPhase(phaseOrder[currentIndex - 1])}
+          disabled={currentIndex === 0}
+          aria-label="Back"
+          style={{
+            padding: '10px 20px',
+            minHeight: '44px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.border}`,
+            background: 'transparent',
+            color: currentIndex === 0 ? colors.border : colors.textSecondary,
+            cursor: currentIndex === 0 ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
+          }}
+        >
+          ← Back
+        </button>
+        {/* nav dots inline */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => goToPhase(p)}
+              style={{
+                width: phase === p ? '24px' : '8px',
+                minHeight: '44px',
+                borderRadius: '4px',
+                border: 'none',
+                background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+                cursor: 'pointer',
+                padding: 0,
+              }}
+              aria-label={phaseLabels[p]}
+            />
+          ))}
+        </div>
+        <button
+          onClick={() => !isNextDisabled && goToPhase(phaseOrder[currentIndex + 1])}
+          disabled={isNextDisabled}
+          aria-label="Next"
+          style={{
+            padding: '10px 20px',
+            minHeight: '44px',
+            borderRadius: '8px',
+            border: 'none',
+            background: isNextDisabled ? colors.border : colors.accent,
+            color: 'white',
+            cursor: isNextDisabled ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
+            opacity: isNextDisabled ? 0.4 : 1,
+          }}
+        >
+          Next →
+        </button>
+      </div>
+    );
+  };
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
@@ -780,7 +895,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
           Explore the Physics
         </button>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -908,7 +1023,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
           )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -919,8 +1034,12 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
         overflowY: 'auto',
+        flex: 1,
       }}>
         {renderProgressBar()}
 
@@ -929,10 +1048,10 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
             Lorentz Force Speaker
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-            Adjust the current and magnetic field to see how the wire moves.
+            This visualization demonstrates the Lorentz force F = BIL. When you increase the current or magnetic field strength, the wire displacement increases proportionally — more current causes greater force on the conductor.
           </p>
           <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '24px', fontStyle: 'italic' }}>
-            Observe how the wire displacement changes as you adjust the sliders.
+            This is why every speaker, headphone, and audio device uses this principle — the Lorentz force is the fundamental engineering technology behind all audio equipment. Observe how the wire displacement changes as you adjust the sliders.
           </p>
 
           {/* Main visualization */}
@@ -960,10 +1079,13 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
                 onChange={(e) => setAudioAmplitude(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   background: `linear-gradient(to right, ${colors.current} ${audioAmplitude}%, ${colors.border} ${audioAmplitude}%)`,
                   cursor: 'pointer',
+                  WebkitAppearance: 'none' as const,
+                  touchAction: 'pan-y',
+                  accentColor: '#3b82f6',
                 }}
               />
               <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
@@ -985,10 +1107,13 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
                 onChange={(e) => setMagnetStrength(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   background: `linear-gradient(to right, ${colors.magnet} ${magnetStrength}%, ${colors.border} ${magnetStrength}%)`,
                   cursor: 'pointer',
+                  WebkitAppearance: 'none' as const,
+                  touchAction: 'pan-y',
+                  accentColor: '#3b82f6',
                 }}
               />
               <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
@@ -1073,7 +1198,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
           </button>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1132,7 +1257,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
               Key Insight: AC Creates Vibration
             </h3>
             <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              When alternating current (AC) flows through the wire, the force direction alternates too. The wire pushes up, then down, then up again - <strong>vibrating at the frequency of the audio signal</strong>. This vibration pushes air molecules, creating sound waves!
+              As you observed in the experiment, the wire vibrates back and forth when AC current flows through it. What you saw confirms your prediction: alternating current in a magnetic field creates alternating force, causing the wire to vibrate at the frequency of the audio signal and push air molecules into sound waves!
             </p>
           </div>
 
@@ -1158,7 +1283,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
           </button>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1203,12 +1328,20 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <p style={{ ...typo.body, color: colors.textSecondary }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
               Consider a speaker cone with mass. At 100 Hz, it must reverse direction 200 times per second. At 10,000 Hz, it must reverse 20,000 times per second!
             </p>
-            <div style={{ marginTop: '16px', fontSize: '14px', color: colors.accent, fontFamily: 'monospace' }}>
-              [Low Freq] <span style={{color: colors.textMuted}}>slow oscillation</span> | [High Freq] <span style={{color: colors.textMuted}}>rapid oscillation</span>
-            </div>
+            <svg width="300" height="180" viewBox="0 0 300 180" style={{ display: 'block', margin: '0 auto' }}>
+              <title>Frequency Comparison Visualization</title>
+              {/* Low frequency wave - slow oscillation */}
+              <text x="10" y="20" fill={colors.accent} fontSize="11" fontWeight="600">Low Frequency (100 Hz)</text>
+              <path d={`M 10,60 C 50,20 100,20 140,60 C 180,100 230,100 270,60`} stroke={colors.accent} strokeWidth="2" fill="none" />
+              <text x="10" y="85" fill={colors.textMuted} fontSize="11">slow oscillation - large displacement</text>
+              {/* High frequency wave - rapid oscillation */}
+              <text x="10" y="110" fill={colors.warning} fontSize="11" fontWeight="600">High Frequency (10000 Hz)</text>
+              <path d={`M 10,140 C 22,100 33,100 44,140 C 55,170 66,170 77,140 C 88,100 99,100 110,140 C 121,170 132,170 143,140 C 154,100 165,100 176,140 C 187,170 198,170 209,140 C 220,100 231,100 242,140 C 253,170 264,170 275,140`} stroke={colors.warning} strokeWidth="2" fill="none" />
+              <text x="10" y="178" fill={colors.textMuted} fontSize="11">rapid oscillation - smaller displacement</text>
+            </svg>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1256,7 +1389,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
           )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1269,8 +1402,12 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
         overflowY: 'auto',
+        flex: 1,
       }}>
         {renderProgressBar()}
 
@@ -1292,7 +1429,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <SpeakerVisualization />
+              <SpeakerVisualization showFrequency={true} />
             </div>
 
             {/* Frequency slider */}
@@ -1309,9 +1446,12 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
                 onChange={(e) => setAudioFrequency(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  WebkitAppearance: 'none' as const,
+                  touchAction: 'pan-y',
+                  accentColor: '#3b82f6',
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1374,7 +1514,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
           </button>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1464,7 +1604,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
           </button>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1601,10 +1741,48 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
               background: colors.bgSecondary,
               borderRadius: '8px',
               padding: '12px',
+              marginBottom: '12px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '12px',
+            }}>
+              <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Examples:</div>
+              <div style={{ ...typo.small, color: colors.textPrimary }}>
+                {app.examples.join(' | ')}
+              </div>
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '12px',
             }}>
               <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Companies:</div>
               <div style={{ ...typo.small, color: colors.textPrimary }}>
                 {app.companies.join(' | ')}
+              </div>
+            </div>
+
+            <div style={{
+              background: `${colors.success}11`,
+              borderRadius: '8px',
+              padding: '12px',
+            }}>
+              <div style={{ ...typo.small, color: colors.success, marginBottom: '4px', fontWeight: 600 }}>Future Impact:</div>
+              <div style={{ ...typo.small, color: colors.textSecondary }}>
+                {app.futureImpact}
               </div>
             </div>
 
@@ -1642,7 +1820,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
           )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1700,7 +1878,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
               </button>
             )}
           </div>
-          {renderNavDots()}
+          {renderBottomNav()}
         </div>
       );
     }
@@ -1866,7 +2044,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1965,7 +2143,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
           </a>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }

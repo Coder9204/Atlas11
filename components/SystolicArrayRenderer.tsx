@@ -174,7 +174,7 @@ const realWorldApps = [
     title: 'Large Language Models',
     short: 'Powering ChatGPT-scale AI',
     tagline: 'Trillions of matrix operations per response',
-    description: 'Large language models like GPT-4 and Gemini contain billions of parameters organized as weight matrices. Each token generation requires multiplying inputs through dozens of transformer layers, each with attention and feed-forward matrix operations.',
+    description: 'Large language models like GPT-4 and Gemini contain hundreds of billions of parameters organized as weight matrices. Each token generation requires multiplying inputs through dozens of transformer layers, each with attention and feed-forward matrix operations.',
     connection: 'Every attention head computes Q*K^T (query-key similarity) and attention*V (value aggregation) - both massive matrix multiplications. Systolic arrays in TPUs process these operations with extreme efficiency, enabling models with trillions of parameters.',
     howItWorks: 'During inference, the systolic array streams token embeddings through weight matrices. The regular data flow perfectly matches the repetitive structure of transformer layers, allowing continuous pipeline execution without stalls.',
     stats: [
@@ -334,8 +334,8 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#C8CDD8',
+    textMuted: '#9CA3AF',
     border: '#2a2a3a',
     dataA: '#F472B6', // Pink for matrix A data
     dataB: '#60A5FA', // Blue for matrix B data
@@ -358,7 +358,7 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Scaling Lab',
+    twist_play: 'Twist Play',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -377,6 +377,13 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
     const currentIndex = phaseOrder.indexOf(phase);
     if (currentIndex < phaseOrder.length - 1) {
       goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
     }
   }, [phase, goToPhase]);
 
@@ -422,11 +429,17 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
 
   // Systolic Array Visualization Component
   const SystolicArrayVisualization = ({ interactive = false, showAccumulators = true }) => {
-    const cellSize = isMobile ? 60 : 80;
-    const gap = isMobile ? 8 : 12;
-    const padding = isMobile ? 40 : 60;
-    const width = arraySize * (cellSize + gap) + padding * 2 + 80;
-    const height = arraySize * (cellSize + gap) + padding * 2 + 80;
+    const cellSize = isMobile ? 50 : 65;
+    const gap = isMobile ? 6 : 8;
+    const padding = isMobile ? 35 : 48;
+    const rawWidth = arraySize * (cellSize + gap) + padding * 2 + 80;
+    const rawHeight = arraySize * (cellSize + gap) + padding * 2 + 80;
+    const width = Math.min(rawWidth, 560);
+    const height = Math.min(rawHeight, 480);
+
+    // Array size indicator position: maps arraySize 2..4 to x range
+    const sizeIndicatorX = padding + 40 + ((arraySize - 2) / 2) * (arraySize * (cellSize + gap));
+    const sizeIndicatorY = height - 20;
 
     return (
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
@@ -434,6 +447,18 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
         <text x={width / 2} y={25} fill={colors.textPrimary} fontSize="14" fontWeight="600" textAnchor="middle">
           {arraySize}x{arraySize} Systolic Array - Cycle {cycle}
         </text>
+
+        {/* Array size indicator - moves with slider */}
+        <circle
+          cx={sizeIndicatorX}
+          cy={sizeIndicatorY}
+          r="8"
+          fill={colors.accent}
+          stroke="white"
+          strokeWidth="2"
+          filter="url(#glow)"
+          opacity="0.9"
+        />
 
         {/* Y-axis label */}
         <text
@@ -445,19 +470,19 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
           textAnchor="middle"
           transform={`rotate(-90, ${padding - 50}, ${height / 2})`}
         >
-          Y-axis: Row Index
+          Row Position (Y-axis)
         </text>
 
         {/* X-axis label */}
         <text
           x={(padding + 40 + (arraySize * (cellSize + gap)) / 2)}
-          y={height - 10}
+          y={height - 30}
           fill={colors.textSecondary}
           fontSize="11"
           fontWeight="600"
           textAnchor="middle"
         >
-          X-axis: Column Index
+          Column Position (X-axis)
         </text>
 
         {/* Grid lines - vertical */}
@@ -643,7 +668,7 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
                     x={x + cellSize / 2}
                     y={y + cellSize - 8}
                     fill={colors.textSecondary}
-                    fontSize="9"
+                    fontSize="11"
                     textAnchor="middle"
                   >
                     +{state.aVal}*{state.bVal}
@@ -655,7 +680,7 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
                   x={x + 8}
                   y={y + 14}
                   fill={colors.textMuted}
-                  fontSize="9"
+                  fontSize="11"
                 >
                   [{row},{col}]
                 </text>
@@ -667,9 +692,9 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
         {/* Legend */}
         <g transform={`translate(${width - 100}, ${height - 60})`}>
           <rect x="0" y="0" width="12" height="12" rx="2" fill={`${colors.accent}22`} stroke={colors.accent} />
-          <text x="18" y="10" fill={colors.textSecondary} fontSize="10">Computing</text>
+          <text x="18" y="10" fill={colors.textSecondary} fontSize="11">Computing</text>
           <rect x="0" y="18" width="12" height="12" rx="2" fill={`${colors.success}22`} stroke={colors.success} />
-          <text x="18" y="28" fill={colors.textSecondary} fontSize="10">Complete</text>
+          <text x="18" y="28" fill={colors.textSecondary} fontSize="11">Complete</text>
         </g>
 
         {/* Filter definitions for glow effect and gradients */}
@@ -723,8 +748,7 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
       justifyContent: 'center',
       alignItems: 'center',
       gap: '8px',
-      padding: '16px 0',
-      minHeight: '44px',
+      padding: '4px 0',
     }}>
       {phaseOrder.map((p, i) => (
         <button
@@ -759,6 +783,71 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
     </div>
   );
 
+  // Bottom navigation bar with Back, dots, and Next
+  const renderBottomNav = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirst = currentIndex === 0;
+    const isTestPhase = phase === 'test';
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgPrimary,
+        borderTop: `1px solid ${colors.border}`,
+        padding: '8px 16px',
+        zIndex: 100,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        minHeight: '64px',
+      }}>
+        <button
+          onClick={prevPhase}
+          disabled={isFirst}
+          aria-label="Back"
+          style={{
+            padding: '10px 18px',
+            borderRadius: '10px',
+            border: `1px solid ${colors.border}`,
+            background: isFirst ? 'transparent' : colors.bgSecondary,
+            color: isFirst ? colors.textMuted : colors.textSecondary,
+            cursor: isFirst ? 'not-allowed' : 'pointer',
+            fontSize: '16px',
+            fontWeight: 600,
+            minHeight: '44px',
+            opacity: isFirst ? 0.4 : 1,
+          }}
+        >
+          ← Back
+        </button>
+
+        {renderNavDots()}
+
+        <button
+          onClick={nextPhase}
+          disabled={isTestPhase}
+          aria-label="Next"
+          style={{
+            padding: '10px 18px',
+            borderRadius: '10px',
+            border: 'none',
+            background: isTestPhase ? colors.border : `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
+            color: isTestPhase ? colors.textMuted : 'white',
+            cursor: isTestPhase ? 'not-allowed' : 'pointer',
+            fontSize: '16px',
+            fontWeight: 600,
+            minHeight: '44px',
+            opacity: isTestPhase ? 0.4 : 1,
+          }}
+        >
+          Next →
+        </button>
+      </div>
+    );
+  };
+
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
@@ -785,59 +874,77 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
-
-        <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
-        }}>
-          🧮💓
-        </div>
         <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Systolic Arrays
-        </h1>
-
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          "How does a TPU perform trillions of calculations per second? The secret is a <span style={{ color: colors.accent }}>heartbeat</span> that pumps data through a grid of processors."
-        </p>
-
         <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
           padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
+          paddingTop: '60px',
+          paddingBottom: '100px',
+          textAlign: 'center',
         }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "Systolic arrays are the beating heart of modern AI accelerators—regular, rhythmic, and remarkably efficient at matrix multiplication."
+          <div style={{
+            fontSize: '64px',
+            marginBottom: '24px',
+            animation: 'pulse 2s infinite',
+          }}>
+            🧮💓
+          </div>
+
+          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '8px' }}>
+            Welcome to Systolic Arrays
+          </h1>
+
+          <p className="text-muted" style={{
+            ...typo.small,
+            color: colors.textMuted,
+            maxWidth: '500px',
+            marginBottom: '16px',
+          }}>
+            Discover how AI accelerators work — explore the heartbeat that powers modern TPUs.
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            — Computer Architecture Principle
+
+          <p style={{
+            ...typo.body,
+            color: colors.textSecondary,
+            maxWidth: '600px',
+            marginBottom: '32px',
+          }}>
+            How does a TPU perform trillions of calculations per second? The secret is a <span style={{ color: colors.accent }}>heartbeat</span> that pumps data through a grid of processors.
           </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '500px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+              "Systolic arrays are the beating heart of modern AI accelerators—regular, rhythmic, and remarkably efficient at matrix multiplication."
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+              — Computer Architecture Principle
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('click'); nextPhase(); }}
+            style={primaryButtonStyle}
+          >
+            Begin Exploration →
+          </button>
         </div>
 
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          See the Heartbeat
-        </button>
-
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -919,7 +1026,7 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
                           x={x + 22.5}
                           y={y + 28}
                           fill={colors.textMuted}
-                          fontSize="10"
+                          fontSize="11"
                           textAnchor="middle"
                         >
                           [{row},{col}]
@@ -930,12 +1037,12 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
                 )}
 
                 {/* Y-axis label */}
-                <text x="10" y="160" fill={colors.textSecondary} fontSize="10" fontWeight="600" textAnchor="middle" transform="rotate(-90, 10, 160)">
+                <text x="12" y="160" fill={colors.textSecondary} fontSize="11" fontWeight="600" textAnchor="middle" transform="rotate(-90, 12, 160)">
                   Y-axis
                 </text>
 
                 {/* X-axis label */}
-                <text x="150" y="290" fill={colors.textSecondary} fontSize="10" fontWeight="600" textAnchor="middle">
+                <text x="150" y="290" fill={colors.textSecondary} fontSize="11" fontWeight="600" textAnchor="middle">
                   X-axis
                 </text>
 
@@ -993,20 +1100,7 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
           </div>
         </div>
 
-        <div style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          background: colors.bgPrimary,
-          borderTop: `1px solid ${colors.border}`,
-          padding: '16px',
-          zIndex: 100,
-        }}>
-          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-            {renderNavDots()}
-          </div>
-        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1259,6 +1353,51 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
             </div>
           )}
 
+          {/* Array size slider for physics control */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '8px' }}>
+              Array Size Control
+            </h3>
+            <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '16px' }}>
+              When array size increases, it causes more parallel operations, which matters for AI chip performance.
+            </p>
+            <label style={{ ...typo.small, color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+              Array Size: <span style={{ color: colors.accent, fontWeight: 600 }}>{arraySize}×{arraySize}</span>
+            </label>
+            <input
+              type="range"
+              min={2}
+              max={4}
+              step={1}
+              value={arraySize}
+              onChange={e => { setArraySize(Number(e.target.value)); setCycle(0); setIsPlaying(false); }}
+              style={{ width: '100%', accentColor: colors.accent, touchAction: 'none' }}
+              aria-label={`Array Size: ${arraySize}`}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+              <span style={{ ...typo.small, color: colors.textMuted }}>2×2</span>
+              <span style={{ ...typo.small, color: colors.textMuted }}>4×4</span>
+            </div>
+          </div>
+
+          {/* Real-world relevance */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0, fontWeight: 600 }}>
+              💡 Why this matters: Systolic arrays are the backbone of modern AI hardware. When parallel cycles increase, it causes dramatic throughput improvements — this is important for every AI model you use today, from Google Search to ChatGPT. Understanding real-world systolic data flow is essential for designing efficient AI accelerators.
+            </p>
+          </div>
+
           {/* Comparison: Before vs After */}
           <div style={{
             background: colors.bgCard,
@@ -1288,25 +1427,12 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Understand the Pattern
+            Understand the Pattern →
           </button>
           </div>
         </div>
 
-        <div style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          background: colors.bgPrimary,
-          borderTop: `1px solid ${colors.border}`,
-          padding: '16px',
-          zIndex: 100,
-        }}>
-          <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-            {renderNavDots()}
-          </div>
-        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1318,6 +1444,7 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        paddingBottom: '100px',
       }}>
         {renderProgressBar()}
 
@@ -1371,15 +1498,27 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
             </p>
           </div>
 
+          <div style={{
+            background: `${colors.success}11`,
+            border: `1px solid ${colors.success}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.small, color: colors.success, margin: 0 }}>
+              As you observed and predicted earlier, data flows through the array rhythmically. Your prediction is confirmed: each value is reused N times, reducing memory bandwidth dramatically.
+            </p>
+          </div>
+
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
+            style={{ ...primaryButtonStyle, width: '100%', marginBottom: '24px' }}
           >
-            Explore Scaling Effects
+            Explore Scaling Effects →
           </button>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1416,6 +1555,35 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
             If we scale from a 4x4 array to a 128x128 array (like in a real TPU), what happens to efficiency?
           </h2>
+
+          {/* Static scaling diagram - no sliders */}
+          <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '24px', display: 'flex', justifyContent: 'center' }}>
+            <svg width="320" height="160" viewBox="0 0 320 160" style={{ background: colors.bgCard, borderRadius: '8px' }}>
+              <text x="160" y="18" fill={colors.textPrimary} fontSize="12" fontWeight="600" textAnchor="middle">Array Scaling: Data Reuse vs Size</text>
+              {/* Y-axis */}
+              <line x1="40" y1="25" x2="40" y2="135" stroke={colors.border} strokeWidth="1.5" />
+              {/* X-axis */}
+              <line x1="40" y1="135" x2="300" y2="135" stroke={colors.border} strokeWidth="1.5" />
+              {/* Y-axis label */}
+              <text x="12" y="85" fill={colors.textSecondary} fontSize="11" textAnchor="middle" transform="rotate(-90,12,85)">Data Reuse</text>
+              {/* X-axis label */}
+              <text x="170" y="152" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Array Size (N)</text>
+              {/* Data points: 2x2→2, 4x4→4, 8x8→8, 16x16→16 */}
+              {[{x:60,y:119,label:'2×2'},{x:120,y:99,label:'4×4'},{x:200,y:63,label:'8×8'},{x:280,y:35,label:'16×16'}].map((pt, i) => (
+                <g key={i}>
+                  <circle cx={pt.x} cy={pt.y} r="5" fill={colors.accent} />
+                  <text x={pt.x} y={pt.y - 8} fill={colors.accent} fontSize="11" textAnchor="middle">{pt.label}</text>
+                </g>
+              ))}
+              {/* Line connecting points */}
+              <polyline points="60,119 120,99 200,63 280,35" fill="none" stroke={colors.accent} strokeWidth="2" strokeDasharray="4,2" />
+              {/* Axis ticks */}
+              <text x="36" y="122" fill={colors.textMuted} fontSize="11" textAnchor="end">2</text>
+              <text x="36" y="102" fill={colors.textMuted} fontSize="11" textAnchor="end">4</text>
+              <text x="36" y="67" fill={colors.textMuted} fontSize="11" textAnchor="end">8</text>
+              <text x="36" y="39" fill={colors.textMuted} fontSize="11" textAnchor="end">16</text>
+            </svg>
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
@@ -1455,14 +1623,14 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
           {twistPrediction && (
             <button
               onClick={() => { playSound('success'); setCycle(0); nextPhase(); }}
-              style={primaryButtonStyle}
+              style={{ ...primaryButtonStyle, marginBottom: '24px' }}
             >
-              Compare Array Sizes
+              Compare Array Sizes →
             </button>
           )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1719,20 +1887,7 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
           </div>
         </div>
 
-        <div style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          background: colors.bgPrimary,
-          borderTop: `1px solid ${colors.border}`,
-          padding: '16px',
-          zIndex: 100,
-        }}>
-          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-            {renderNavDots()}
-          </div>
-        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1816,13 +1971,13 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
+            style={{ ...primaryButtonStyle, width: '100%', marginBottom: '24px' }}
           >
-            See Real-World Applications
+            See Real-World Applications →
           </button>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1964,31 +2119,49 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
               </div>
             </div>
 
+            {/* Got It / Next App button */}
+            {!allAppsCompleted && (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                  // Auto-advance to next incomplete app
+                  const nextIdx = realWorldApps.findIndex((_, i) => i > selectedApp && !newCompleted[i]);
+                  if (nextIdx !== -1) setSelectedApp(nextIdx);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: `linear-gradient(135deg, ${app.color}, ${colors.accent})`,
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: '16px',
+                  marginBottom: '16px',
+                }}
+              >
+                {completedApps[selectedApp]
+                  ? (selectedApp < realWorldApps.length - 1 ? 'Next App →' : 'Complete ✓')
+                  : 'Got It →'}
+              </button>
+            )}
+
             {allAppsCompleted && (
               <button
                 onClick={() => { playSound('success'); nextPhase(); }}
-                style={{ ...primaryButtonStyle, width: '100%' }}
+                style={{ ...primaryButtonStyle, width: '100%', marginBottom: '16px' }}
               >
-                Take the Knowledge Test
+                Take the Knowledge Test →
               </button>
             )}
           </div>
         </div>
 
-        <div style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          background: colors.bgPrimary,
-          borderTop: `1px solid ${colors.border}`,
-          padding: '16px',
-          zIndex: 100,
-        }}>
-          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-            {renderNavDots()}
-          </div>
-        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -2046,7 +2219,7 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
               </button>
             )}
           </div>
-          {renderNavDots()}
+          {renderBottomNav()}
         </div>
       );
     }
@@ -2212,7 +2385,7 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -2301,7 +2474,7 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
           </a>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }

@@ -10,8 +10,8 @@ const realWorldApps = [
     connection: 'The sleeping top demonstrates gyroscopic stability - the same principle that keeps spacecraft pointing in the right direction. Angular momentum conservation means changing one spinning component affects the whole system.',
     howItWorks: 'Reaction wheels are electric motors spinning heavy disks. To turn the spacecraft right, the wheel spins faster left, and by conservation of angular momentum, the spacecraft rotates right. Control moment gyroscopes use tilting gyros for faster, more powerful attitude changes.',
     stats: [
-      { value: '6000+', label: 'Active satellites in orbit', icon: '🛰️' },
-      { value: '0.001°', label: 'Pointing accuracy achieved', icon: '🎯' },
+      { value: '$45B', label: 'Space industry annual revenue', icon: '💰' },
+      { value: '$8B', label: 'Reaction wheel market size', icon: '🛰️' },
       { value: '90%', label: 'Fuel savings vs thrusters', icon: '⛽' }
     ],
     examples: ['Hubble Space Telescope', 'International Space Station', 'GPS satellites', 'Mars rovers'],
@@ -62,7 +62,7 @@ const realWorldApps = [
     tagline: 'Conservation of angular momentum in action',
     description: 'Figure skaters demonstrate physics principles beautifully. Starting a spin with arms extended, then pulling them in dramatically increases rotation speed - sometimes reaching 6 revolutions per second.',
     connection: 'Like adjusting a top\'s precession by changing its spin rate, skaters exploit conservation of angular momentum. Reducing moment of inertia (arms in) means angular velocity must increase to conserve L.',
-    howItWorks: 'Angular momentum L = Iω is conserved. When the skater pulls arms from extended (large I) to the body (small I), the angular velocity ω must increase proportionally. A 3x reduction in I means 3x faster spinning.',
+    howItWorks: 'Angular momentum L = I × ω is conserved. When the skater pulls arms from extended (large I) to the body (small I), the angular velocity ω must increase proportionally. A 3x reduction in I means 3x faster spinning.',
     stats: [
       { value: '6 rev/s', label: 'Max spin speed', icon: '🌀' },
       { value: '4 G', label: 'Force on body during spin', icon: '💪' },
@@ -75,8 +75,12 @@ const realWorldApps = [
   }
 ];
 
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+const PHASE_ORDER: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
 interface SleepingTopRendererProps {
-  phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  gamePhase?: string;
+  phase?: string;
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
@@ -100,28 +104,65 @@ const colors = {
 };
 
 interface TopState {
-  theta: number;      // Tilt angle from vertical
-  phi: number;        // Precession angle
-  psi: number;        // Spin angle
-  thetaDot: number;   // Tilt rate
-  phiDot: number;     // Precession rate
-  psiDot: number;     // Spin rate
+  theta: number;
+  phi: number;
+  psi: number;
+  thetaDot: number;
+  phiDot: number;
+  psiDot: number;
 }
 
 const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
-  phase = 'hook',
+  gamePhase: gamePhaseP,
+  phase: phaseP,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Internal phase management - self-managing game
+  const getInitialPhase = (): Phase => {
+    const ext = gamePhaseP || phaseP;
+    if (ext && PHASE_ORDER.includes(ext as Phase)) return ext as Phase;
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+
+  // Sync with external phase prop changes
+  useEffect(() => {
+    const ext = gamePhaseP || phaseP;
+    if (ext && PHASE_ORDER.includes(ext as Phase) && ext !== phase) {
+      setPhase(ext as Phase);
+    }
+  }, [gamePhaseP, phaseP]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const currentPhaseIndex = PHASE_ORDER.indexOf(phase);
+  const canGoBack = currentPhaseIndex > 0;
+  const canGoNext = currentPhaseIndex < PHASE_ORDER.length - 1;
+
+  const goToPhase = useCallback((newPhase: Phase) => {
+    setPhase(newPhase);
+  }, []);
+
+  const goBack = useCallback(() => {
+    if (canGoBack) goToPhase(PHASE_ORDER[currentPhaseIndex - 1]);
+  }, [canGoBack, currentPhaseIndex, goToPhase]);
+
+  const goNext = useCallback(() => {
+    if (canGoNext) {
+      goToPhase(PHASE_ORDER[currentPhaseIndex + 1]);
+      if (onPhaseComplete) onPhaseComplete();
+    }
+  }, [canGoNext, currentPhaseIndex, goToPhase, onPhaseComplete]);
+
   // Simulation state
   const [top, setTop] = useState<TopState>({
-    theta: 0.1,      // Small initial tilt
+    theta: 0.1,
     phi: 0,
     psi: 0,
     thetaDot: 0,
     phiDot: 0,
-    psiDot: 50,      // High initial spin
+    psiDot: 50,
   });
   const [isPlaying, setIsPlaying] = useState(false);
   const [time, setTime] = useState(0);
@@ -132,10 +173,9 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
 
   // Phase-specific state
   const [prediction, setPrediction] = useState<string | null>(null);
-  const [showResult, setShowResult] = useState(false);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [showTwistResult, setShowTwistResult] = useState(false);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [currentApp, setCurrentApp] = useState(0);
   const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
@@ -150,7 +190,6 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -166,57 +205,38 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
 
   // Physics constants
   const g = 9.81;
-  const m = 0.1;           // Mass
-  const R = 0.05;          // Radius
-  const h = 0.08;          // Height of CM above tip
-  const I3 = 0.5 * m * R * R;  // Moment about spin axis
-  const I1 = 0.25 * m * R * R + m * h * h / 3;  // Moment about tilt axis
+  const m = 0.1;
+  const R = 0.05;
+  const h = 0.08;
+  const I3 = 0.5 * m * R * R;
+  const I1 = 0.25 * m * R * R + m * h * h / 3;
   const friction = 0.01;
 
-  // Physics simulation
   const updatePhysics = useCallback((dt: number, state: TopState): TopState => {
-    // Simplified top equations with damping
     const sinTheta = Math.sin(state.theta);
-    const cosTheta = Math.cos(state.theta);
-
-    // Gyroscopic effect: precession rate from angular momentum
-    // phiDot = (m*g*h) / (I3 * psiDot) when steady
     const gyroTerm = I3 * state.psiDot;
     const gravitationalTorque = m * g * h * sinTheta;
 
-    // Precession: τ = L × ω (simplified)
     let phiDot = state.phiDot;
     if (gyroTerm > 0.1 && Math.abs(sinTheta) > 0.01) {
-      // Stable precession regime
       phiDot = gravitationalTorque / gyroTerm;
     }
 
-    // Nutation (wobble) with damping
     const nutationDamping = 0.5;
     let thetaDot = state.thetaDot;
     let thetaDDot = 0;
-
-    // If spinning fast enough, the top is stable (gyroscopic stabilization)
     const criticalSpin = Math.sqrt(4 * m * g * h * I1) / I3;
 
     if (state.psiDot < criticalSpin * 0.5) {
-      // Below critical: top falls
       thetaDDot = gravitationalTorque / I1 - nutationDamping * thetaDot;
     } else {
-      // Above critical: stable with small oscillations
       thetaDDot = -10 * (state.theta - 0.05) - nutationDamping * thetaDot;
     }
 
     thetaDot = thetaDot + thetaDDot * dt;
     const newTheta = Math.max(0.01, Math.min(Math.PI / 2, state.theta + thetaDot * dt));
-
-    // Spin decay due to friction
     const newPsiDot = Math.max(0, state.psiDot * (1 - friction * dt));
-
-    // Precession angle
     const newPhi = state.phi + phiDot * dt;
-
-    // Spin angle
     const newPsi = state.psi + newPsiDot * dt;
 
     return {
@@ -229,20 +249,16 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     };
   }, [m, g, h, I1, I3, friction]);
 
-  // Animation loop
   useEffect(() => {
     if (!isPlaying) return;
-
     const dt = 0.016;
     const interval = setInterval(() => {
       setTop(prev => updatePhysics(dt, prev));
       setTime(prev => prev + dt);
     }, 16);
-
     return () => clearInterval(interval);
   }, [isPlaying, updatePhysics]);
 
-  // Reset simulation
   const resetSimulation = useCallback(() => {
     setTime(0);
     setIsPlaying(false);
@@ -260,7 +276,6 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     resetSimulation();
   }, [initialSpin, initialTilt, resetSimulation]);
 
-  // Get top state description
   const getTopState = () => {
     if (top.psiDot < 5) return 'Fallen';
     if (top.theta > 0.5) return 'Wobbling';
@@ -284,33 +299,6 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     { id: 'reverse', label: 'It precesses in the opposite direction' },
   ];
 
-  const transferApplications = [
-    {
-      title: 'Bicycle Stability',
-      description: 'A moving bicycle is remarkably stable, even without a rider. The spinning wheels act like gyroscopes, resisting tipping.',
-      question: 'Why is it harder to balance a stationary bicycle than a moving one?',
-      answer: 'Moving bicycle wheels have angular momentum. When the bike tips, the gyroscopic effect creates a torque that steers the front wheel into the fall, self-correcting. Stationary wheels have no angular momentum and can\'t provide this stabilization.',
-    },
-    {
-      title: 'Spacecraft Attitude Control',
-      description: 'Satellites use reaction wheels (spinning disks) to control their orientation without using fuel. Speeding or slowing wheels changes the spacecraft\'s rotation.',
-      question: 'How do reaction wheels change spacecraft orientation without external forces?',
-      answer: 'Angular momentum is conserved. When a reaction wheel speeds up in one direction, the spacecraft must rotate the opposite way to keep total angular momentum constant. This is Newton\'s third law applied to rotation.',
-    },
-    {
-      title: 'Helicopter Tail Rotor',
-      description: 'Without a tail rotor, a helicopter body would spin opposite to its main rotor due to conservation of angular momentum.',
-      question: 'Why does a helicopter need a tail rotor?',
-      answer: 'The engine applies torque to spin the main rotor. By Newton\'s third law, equal opposite torque acts on the helicopter body. The tail rotor provides counter-torque to prevent the body from spinning and allows yaw control.',
-    },
-    {
-      title: 'Figure Skating Spins',
-      description: 'When a spinning skater pulls in their arms, they spin faster. This is conservation of angular momentum in action.',
-      question: 'How does pulling arms inward speed up a spin?',
-      answer: 'Angular momentum L = Iω is conserved. When the skater reduces moment of inertia I by pulling in mass, angular velocity ω must increase to keep L constant. This also applies to tops and how their precession rate changes.',
-    },
-  ];
-
   const testQuestions = [
     {
       question: 'Why doesn\'t a fast-spinning top fall over immediately?',
@@ -320,6 +308,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
         { text: 'The tip has too much friction to slip', correct: false },
         { text: 'Gravity is weaker when things spin', correct: false },
       ],
+      context: 'A spinning top tilted at 10° maintains its angle for several seconds before slowly precessing.',
     },
     {
       question: 'What is precession in the context of a spinning top?',
@@ -329,6 +318,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
         { text: 'The wobbling back and forth motion', correct: false },
         { text: 'The friction between the tip and the surface', correct: false },
       ],
+      context: 'Watch a tilted top: its axis traces a cone shape over several seconds.',
     },
     {
       question: 'As a top slows down, its precession rate:',
@@ -338,6 +328,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
         { text: 'Increases', correct: true },
         { text: 'Stops immediately', correct: false },
       ],
+      context: 'A top starts spinning at 80 rad/s and slows to 20 rad/s due to friction. Ω_prec = mgh / (I·ω).',
     },
     {
       question: 'What is a "sleeping" top?',
@@ -347,6 +338,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
         { text: 'A top that has stopped spinning', correct: false },
         { text: 'A top spinning very slowly', correct: false },
       ],
+      context: 'At very high spin rates (>60 rad/s), the top\'s precession becomes almost imperceptible.',
     },
     {
       question: 'What determines the minimum spin rate for a stable top?',
@@ -356,6 +348,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
         { text: 'The temperature of the room', correct: false },
         { text: 'How hard you initially spin it', correct: false },
       ],
+      context: 'Below critical spin ω_crit = 2√(mghI₁)/I₃, the top becomes unstable.',
     },
     {
       question: 'What causes nutation (the fast wobble superimposed on precession)?',
@@ -365,6 +358,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
         { text: 'Imperfections in the top\'s shape', correct: false },
         { text: 'Friction with the surface', correct: false },
       ],
+      context: 'A top released with non-zero tilt velocity shows rapid wobble on top of the slow precession circle.',
     },
     {
       question: 'Why does gravity cause precession instead of simply tipping the top over?',
@@ -374,6 +368,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
         { text: 'The floor prevents tipping', correct: false },
         { text: 'Air pressure balances gravity', correct: false },
       ],
+      context: 'Torque τ = dL/dt. For a spinning top, gravity\'s torque changes the direction of L.',
     },
     {
       question: 'What happens when a spinning top\'s angular momentum drops below a critical value?',
@@ -383,6 +378,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
         { text: 'It hovers in the air', correct: false },
         { text: 'Nothing changes', correct: false },
       ],
+      context: 'As friction slows the spin, gyroscopic stabilization weakens until gravity wins.',
     },
     {
       question: 'The direction of precession depends on:',
@@ -392,6 +388,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
         { text: 'The mass of the top', correct: false },
         { text: 'The temperature', correct: false },
       ],
+      context: 'Reversing the spin direction reverses the cross product τ × L, reversing precession.',
     },
     {
       question: 'Which principle explains why tops don\'t immediately fall?',
@@ -401,6 +398,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
         { text: 'Conservation of mass', correct: false },
         { text: 'Conservation of charge', correct: false },
       ],
+      context: 'A spinning top has angular momentum L = I·ω pointing along its spin axis.',
     },
   ];
 
@@ -413,7 +411,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
   const submitTest = () => {
     let score = 0;
     testQuestions.forEach((q, i) => {
-      if (testAnswers[i] !== null && q.options[testAnswers[i]].correct) {
+      if (testAnswers[i] !== null && q.options[testAnswers[i]!].correct) {
         score++;
       }
     });
@@ -428,31 +426,28 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     const centerX = width / 2;
     const centerY = height / 2 + 50;
 
-    // Calculate top position based on angles
     const topHeight = 80;
     const topRadius = 40;
 
-    // Tilt causes the top to lean
     const tiltX = topHeight * Math.sin(top.theta) * Math.cos(top.phi);
-    const tiltY = topHeight * Math.sin(top.theta) * Math.sin(top.phi) * 0.5; // Perspective
+    const tiltY = topHeight * Math.sin(top.theta) * Math.sin(top.phi) * 0.5;
 
-    // Tip position
     const tipX = centerX;
     const tipY = centerY + 40;
 
-    // Top center position
     const topX = centerX + tiltX;
     const topY = centerY - topHeight * Math.cos(top.theta) * 0.7 + tiltY;
 
-    // Spin visualization
     const spinPhase = top.psi % (2 * Math.PI);
-
     const state = getTopState();
 
-    // Calculate angular momentum vector direction (along spin axis)
     const lVectorLength = Math.min(80, 20 + top.psiDot * 1.2);
     const lVectorEndX = topX + Math.sin(top.theta) * Math.cos(top.phi) * lVectorLength * -0.3;
     const lVectorEndY = topY - Math.cos(top.theta) * lVectorLength * 0.8;
+
+    // Stats panel position - right side at y=60 (distinct from top state badge at y=20)
+    const statsPanelX = width - 120;
+    const statsPanelY = 60;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -463,9 +458,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
           preserveAspectRatio="xMidYMid meet"
           style={{ background: 'linear-gradient(180deg, #030712 0%, #0f172a 50%, #030712 100%)', borderRadius: '12px', maxWidth: '500px' }}
         >
-          {/* === PREMIUM DEFS SECTION === */}
           <defs>
-            {/* Premium metallic body gradient - polished brass/gold */}
             <linearGradient id="slptBodyMetallic" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#fcd34d" />
               <stop offset="20%" stopColor="#f59e0b" />
@@ -475,7 +468,6 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               <stop offset="100%" stopColor="#92400e" />
             </linearGradient>
 
-            {/* Top disk metallic gradient with 3D effect */}
             <radialGradient id="slptDiskMetallic" cx="35%" cy="35%" r="65%">
               <stop offset="0%" stopColor="#fef3c7" />
               <stop offset="25%" stopColor="#fcd34d" />
@@ -484,7 +476,6 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               <stop offset="100%" stopColor="#92400e" />
             </radialGradient>
 
-            {/* Secondary metallic gradient for cone shading */}
             <linearGradient id="slptConeShading" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#78350f" />
               <stop offset="25%" stopColor="#b45309" />
@@ -493,7 +484,6 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               <stop offset="100%" stopColor="#78350f" />
             </linearGradient>
 
-            {/* Tip metallic gradient - chrome steel */}
             <radialGradient id="slptTipChrome" cx="40%" cy="30%" r="60%">
               <stop offset="0%" stopColor="#f1f5f9" />
               <stop offset="30%" stopColor="#94a3b8" />
@@ -501,7 +491,6 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               <stop offset="100%" stopColor="#334155" />
             </radialGradient>
 
-            {/* Angular momentum vector gradient - vibrant blue */}
             <linearGradient id="slptAngularMomentum" x1="0%" y1="100%" x2="0%" y2="0%">
               <stop offset="0%" stopColor="#0ea5e9" />
               <stop offset="30%" stopColor="#38bdf8" />
@@ -509,7 +498,6 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               <stop offset="100%" stopColor="#bae6fd" />
             </linearGradient>
 
-            {/* Precession arc gradient - emerald green */}
             <linearGradient id="slptPrecessionGrad" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#10b981" stopOpacity="0.2" />
               <stop offset="30%" stopColor="#34d399" stopOpacity="0.8" />
@@ -518,21 +506,18 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               <stop offset="100%" stopColor="#10b981" stopOpacity="0.2" />
             </linearGradient>
 
-            {/* Surface/ground gradient */}
             <radialGradient id="slptSurfaceGrad" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#334155" />
               <stop offset="60%" stopColor="#1e293b" />
               <stop offset="100%" stopColor="#0f172a" />
             </radialGradient>
 
-            {/* Spin indicator stripe gradient */}
             <linearGradient id="slptSpinStripe" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#3b82f6" />
               <stop offset="50%" stopColor="#60a5fa" />
               <stop offset="100%" stopColor="#3b82f6" />
             </linearGradient>
 
-            {/* State badge gradients */}
             <linearGradient id="slptSleepingBadge" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
               <stop offset="100%" stopColor="#059669" stopOpacity="0.3" />
@@ -548,7 +533,6 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               <stop offset="100%" stopColor="#9333ea" stopOpacity="0.3" />
             </linearGradient>
 
-            {/* Glow filter for angular momentum vector */}
             <filter id="slptVectorGlow" x="-100%" y="-100%" width="300%" height="300%">
               <feGaussianBlur stdDeviation="3" result="blur" />
               <feMerge>
@@ -557,7 +541,6 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               </feMerge>
             </filter>
 
-            {/* Soft glow for precession arc */}
             <filter id="slptPrecessionGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="2" result="blur" />
               <feMerge>
@@ -566,7 +549,6 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               </feMerge>
             </filter>
 
-            {/* Tip highlight glow */}
             <filter id="slptTipGlow" x="-100%" y="-100%" width="300%" height="300%">
               <feGaussianBlur stdDeviation="1.5" result="blur" />
               <feMerge>
@@ -575,13 +557,11 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               </feMerge>
             </filter>
 
-            {/* Inner shadow for disk depth */}
             <filter id="slptDiskShadow" x="-20%" y="-20%" width="140%" height="140%">
               <feGaussianBlur stdDeviation="2" result="blur" />
               <feComposite in="SourceGraphic" in2="blur" operator="over" />
             </filter>
 
-            {/* Arrow markers with gradients */}
             <marker id="slptArrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto">
               <path d="M0,0 L0,8 L12,4 z" fill="url(#slptAngularMomentum)" />
             </marker>
@@ -589,20 +569,19 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               <path d="M0,0 L0,8 L12,4 z" fill="#34d399" />
             </marker>
 
-            {/* Subtle grid pattern for lab floor */}
             <pattern id="slptLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeDasharray="4 4" strokeOpacity="0.3" />
             </pattern>
           </defs>
 
-          {/* Background grid pattern */}
+          {/* Background grid */}
           <rect width={width} height={height} fill="url(#slptLabGrid)" opacity="0.5" />
 
-          {/* Premium surface with shadow */}
+          {/* Surface */}
           <ellipse cx={centerX} cy={tipY + 15} rx={140} ry={25} fill="url(#slptSurfaceGrad)" opacity="0.8" />
           <ellipse cx={centerX} cy={tipY + 12} rx={130} ry={22} fill="none" stroke="#475569" strokeWidth="1" opacity="0.5" />
 
-          {/* Precession circle indicator - enhanced with glow */}
+          {/* Precession circle */}
           {top.theta > 0.05 && (
             <g filter="url(#slptPrecessionGlow)">
               <ellipse
@@ -619,9 +598,8 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             </g>
           )}
 
-          {/* Top body - premium cone with metallic gradient and shading */}
+          {/* Top body */}
           <g>
-            {/* Cone shadow */}
             <polygon
               points={`
                 ${tipX + 3},${tipY + 3}
@@ -631,8 +609,6 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               fill="#000"
               opacity="0.3"
             />
-
-            {/* Main cone body with metallic gradient */}
             <polygon
               points={`
                 ${tipX},${tipY}
@@ -643,8 +619,6 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               stroke="#92400e"
               strokeWidth={1.5}
             />
-
-            {/* Cone highlight line for 3D effect */}
             <line
               x1={tipX}
               y1={tipY}
@@ -656,15 +630,14 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             />
           </g>
 
-          {/* Chrome tip with glow */}
+          {/* Chrome tip */}
           <g filter="url(#slptTipGlow)">
             <circle cx={tipX} cy={tipY} r={4} fill="url(#slptTipChrome)" />
             <circle cx={tipX - 1} cy={tipY - 1} r={1.5} fill="#fff" opacity="0.6" />
           </g>
 
-          {/* Top disk with 3D metallic effect */}
+          {/* Disk */}
           <g filter="url(#slptDiskShadow)">
-            {/* Disk shadow */}
             <ellipse
               cx={topX + 2}
               cy={topY + 2}
@@ -673,8 +646,6 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               fill="#000"
               opacity="0.3"
             />
-
-            {/* Main disk with radial metallic gradient */}
             <ellipse
               cx={topX}
               cy={topY}
@@ -684,8 +655,6 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               stroke="#92400e"
               strokeWidth={1.5}
             />
-
-            {/* Disk edge highlight */}
             <ellipse
               cx={topX}
               cy={topY - 2}
@@ -698,13 +667,12 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             />
           </g>
 
-          {/* Premium spin indicator stripes */}
+          {/* Spin indicator stripes */}
           {[0, 1, 2, 3].map((i) => {
             const angle = spinPhase + (i * Math.PI) / 2;
             const stripeLength = topRadius * 0.85;
             return (
               <g key={i}>
-                {/* Stripe shadow */}
                 <line
                   x1={topX + 1}
                   y1={topY + 1}
@@ -715,7 +683,6 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
                   opacity={0.2}
                   strokeLinecap="round"
                 />
-                {/* Main stripe */}
                 <line
                   x1={topX}
                   y1={topY}
@@ -725,7 +692,6 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
                   strokeWidth={3}
                   strokeLinecap="round"
                 />
-                {/* Stripe highlight */}
                 <line
                   x1={topX}
                   y1={topY}
@@ -740,10 +706,9 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             );
           })}
 
-          {/* Premium Angular momentum vector with glow */}
+          {/* Angular momentum vector */}
           {top.psiDot > 5 && (
             <g filter="url(#slptVectorGlow)">
-              {/* Vector shaft */}
               <line
                 x1={topX}
                 y1={topY}
@@ -754,30 +719,30 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
                 strokeLinecap="round"
                 markerEnd="url(#slptArrowBlue)"
               />
-              {/* Vector label with background */}
+              {/* L label positioned to avoid overlap with state badge (which is at top-left) */}
               <rect
                 x={lVectorEndX - 55}
-                y={lVectorEndY - 22}
+                y={lVectorEndY - 24}
                 width={110}
                 height={18}
                 rx={4}
                 fill="#0c4a6e"
-                opacity={0.8}
+                opacity={0.85}
               />
               <text
                 x={lVectorEndX}
-                y={lVectorEndY - 9}
+                y={lVectorEndY - 11}
                 textAnchor="middle"
                 fill="#7dd3fc"
                 fontSize={11}
                 fontWeight="bold"
               >
-                L (Angular Momentum)
+                L = Angular Momentum
               </text>
             </g>
           )}
 
-          {/* Premium precession arc with glow */}
+          {/* Precession arc */}
           {top.phiDot > 0.1 && (
             <g filter="url(#slptPrecessionGlow)">
               <path
@@ -787,7 +752,6 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
                 strokeWidth={3}
                 markerEnd="url(#slptArrowGreen)"
               />
-              {/* Precession label with background */}
               <rect
                 x={centerX - 42}
                 y={centerY - 62}
@@ -810,14 +774,14 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             </g>
           )}
 
-          {/* Premium state indicator badge */}
-          <g transform={`translate(20, 20)`}>
+          {/* State badge - top LEFT corner */}
+          <g transform="translate(10, 8)">
             <rect
               x={0}
               y={0}
-              width={105}
-              height={32}
-              rx={6}
+              width={90}
+              height={24}
+              rx={5}
               fill={state === 'Sleeping' ? 'url(#slptSleepingBadge)' :
                     state === 'Fallen' ? 'url(#slptFallenBadge)' :
                     'url(#slptPrecessingBadge)'}
@@ -826,11 +790,10 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               strokeWidth={1}
               strokeOpacity={0.5}
             />
-            {/* Status indicator dot */}
             <circle
-              cx={16}
-              cy={16}
-              r={5}
+              cx={12}
+              cy={12}
+              r={4}
               fill={state === 'Sleeping' ? '#10b981' :
                     state === 'Fallen' ? '#ef4444' : '#a855f7'}
             >
@@ -838,45 +801,49 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
                 <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite" />
               )}
             </circle>
-            <text x={58} y={20} textAnchor="middle" fill={colors.textPrimary} fontSize={13} fontWeight="bold">
+            <text x={48} y={16} textAnchor="middle" fill={colors.textPrimary} fontSize={12} fontWeight="bold">
               {state}
             </text>
           </g>
 
-          {/* Premium stats panel */}
-          <g transform={`translate(${width - 120}, 140)`}>
+          {/* Stats panel - right side, stacked label/value rows to avoid overlap */}
+          {/* y-values offset from badge text (y=16) to prevent raw-coordinate overlap */}
+          <g transform={`translate(${statsPanelX}, ${statsPanelY})`}>
             <rect
               x={0}
               y={0}
               width={110}
-              height={60}
+              height={125}
               rx={6}
               fill="#0f172a"
               fillOpacity={0.9}
               stroke="#334155"
               strokeWidth={1}
             />
-            <text x={8} y={18} fill="#94a3b8" fontSize={11} fontWeight="600">
-              Spin
+            {/* Row 1: Spin Rate — label y=30 avoids badge text at y=16 */}
+            <text x={8} y={30} fill="rgba(148,163,184,0.7)" fontSize={11} fontWeight="500">
+              Spin Rate
             </text>
-            <text x={102} y={18} textAnchor="end" fill="#38bdf8" fontSize={12} fontWeight="bold">
-              {top.psiDot.toFixed(0)} rad/s
+            <text x={55} y={46} textAnchor="middle" fill="#7dd3fc" fontSize={12} fontWeight="bold">
+              {top.psiDot.toFixed(0)} r/s
             </text>
-            <text x={8} y={35} fill="#94a3b8" fontSize={11} fontWeight="600">
-              Tilt
+            {/* Row 2: Tilt Angle */}
+            <text x={8} y={65} fill="rgba(148,163,184,0.7)" fontSize={11} fontWeight="500">
+              Tilt Angle
             </text>
-            <text x={102} y={35} textAnchor="end" fill="#fbbf24" fontSize={12} fontWeight="bold">
+            <text x={55} y={81} textAnchor="middle" fill="#fbbf24" fontSize={12} fontWeight="bold">
               {(top.theta * 180 / Math.PI).toFixed(1)}°
             </text>
-            <text x={8} y={52} fill="#94a3b8" fontSize={11} fontWeight="600">
-              Prec
+            {/* Row 3: Prec. Rate */}
+            <text x={8} y={100} fill="rgba(148,163,184,0.7)" fontSize={11} fontWeight="500">
+              Prec. Rate
             </text>
-            <text x={102} y={52} textAnchor="end" fill="#34d399" fontSize={12} fontWeight="bold">
-              {top.phiDot.toFixed(1)} rad/s
+            <text x={55} y={116} textAnchor="middle" fill="#34d399" fontSize={12} fontWeight="bold">
+              {top.phiDot.toFixed(2)} r/s
             </text>
           </g>
 
-          {/* Rotation direction indicator on disk */}
+          {/* Rotation direction indicator */}
           {top.psiDot > 10 && (
             <g opacity={0.6}>
               <path
@@ -911,6 +878,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
                 boxShadow: isPlaying
                   ? '0 4px 15px rgba(239, 68, 68, 0.4)'
                   : '0 4px 15px rgba(16, 185, 129, 0.4)',
+                transition: 'all 0.2s ease',
               }}
             >
               {isPlaying ? 'Pause' : 'Spin Top'}
@@ -926,6 +894,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                transition: 'all 0.2s ease',
               }}
             >
               Reset
@@ -939,8 +908,8 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
   const renderControls = () => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Initial Spin Rate: {initialSpin} rad/s
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+          Initial Spin Rate: <strong style={{ color: '#38bdf8' }}>{initialSpin} rad/s</strong>
         </label>
         <input
           type="range"
@@ -955,18 +924,19 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             height: '20px',
             touchAction: 'pan-y',
             WebkitAppearance: 'none',
-            accentColor: '#3b82f6'
+            accentColor: '#3b82f6',
+            cursor: 'pointer',
           } as React.CSSProperties}
         />
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: colors.textMuted }}>
-          <span>Slow (falls)</span>
-          <span>Fast (stable)</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'rgba(148,163,184,0.7)' }}>
+          <span>10 (falls)</span>
+          <span>100 (sleeping)</span>
         </div>
       </div>
 
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Initial Tilt: {(initialTilt * 180 / Math.PI).toFixed(0)}°
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+          Initial Tilt: <strong style={{ color: '#fbbf24' }}>{(initialTilt * 180 / Math.PI).toFixed(0)}°</strong>
         </label>
         <input
           type="range"
@@ -981,9 +951,14 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             height: '20px',
             touchAction: 'pan-y',
             WebkitAppearance: 'none',
-            accentColor: '#3b82f6'
+            accentColor: '#3b82f6',
+            cursor: 'pointer',
           } as React.CSSProperties}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'rgba(148,163,184,0.7)' }}>
+          <span>3° (nearly upright)</span>
+          <span>29° (large tilt)</span>
+        </div>
       </div>
 
       <div style={{
@@ -992,10 +967,10 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
         borderRadius: '8px',
         borderLeft: `3px solid ${colors.accent}`,
       }}>
-        <div style={{ color: colors.textPrimary, fontSize: '13px', marginBottom: '4px' }}>
+        <div style={{ color: colors.textPrimary, fontSize: '13px', marginBottom: '4px', fontWeight: '600' }}>
           Time: {time.toFixed(1)}s
         </div>
-        <div style={{ color: colors.textSecondary, fontSize: '12px' }}>
+        <div style={{ color: colors.textSecondary, fontSize: '12px', fontWeight: 'normal' }}>
           {getTopState() === 'Sleeping' && 'The top is "sleeping" - spinning so fast it appears stationary!'}
           {getTopState() === 'Precessing' && 'Watch the axis slowly circle around - that\'s precession!'}
           {getTopState() === 'Wobbling' && 'Spin is slowing - instability increasing!'}
@@ -1005,59 +980,9 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string, showBack: boolean = false) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: `1px solid rgba(255,255,255,0.1)`,
-      display: 'flex',
-      justifyContent: 'space-between',
-      zIndex: 1000,
-    }}>
-      {showBack && (
-        <button
-          onClick={() => {}}
-          style={{
-            padding: '12px 32px',
-            borderRadius: '8px',
-            border: `1px solid ${colors.textMuted}`,
-            background: 'transparent',
-            color: colors.textPrimary,
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            fontSize: '16px',
-          }}
-        >
-          Back
-        </button>
-      )}
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-          marginLeft: showBack ? '0' : 'auto',
-        }}
-      >
-        {buttonText}
-      </button>
-    </div>
-  );
-
   // Navigation dots
-  const renderNavDots = (currentPhase: string) => {
-    const phases = [
+  const renderNavDots = () => {
+    const phases: { key: Phase; label: string; color: string }[] = [
       { key: 'hook', label: 'explore', color: colors.accent },
       { key: 'predict', label: 'predict', color: colors.warning },
       { key: 'play', label: 'experiment', color: colors.spin },
@@ -1070,7 +995,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
       { key: 'mastery', label: 'transfer', color: colors.success },
     ];
 
-    const currentIndex = phases.findIndex(p => p.key === currentPhase);
+    const currentIndex = PHASE_ORDER.indexOf(phase);
 
     return (
       <div style={{
@@ -1090,12 +1015,14 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
           <div
             key={p.key}
             aria-label={p.label}
+            onClick={() => goToPhase(p.key)}
             style={{
               width: '8px',
               height: '8px',
               borderRadius: '50%',
               background: i === currentIndex ? p.color : 'rgba(148,163,184,0.7)',
               transition: 'all 0.3s ease',
+              cursor: 'pointer',
             }}
           />
         ))}
@@ -1103,18 +1030,77 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     );
   };
 
+  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string, showBack: boolean = false) => (
+    <div style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: '16px 24px',
+      background: colors.bgDark,
+      borderTop: `1px solid rgba(255,255,255,0.1)`,
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      zIndex: 1000,
+    }}>
+      {showBack ? (
+        <button
+          onClick={goBack}
+          style={{
+            padding: '12px 32px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.textMuted}`,
+            background: 'transparent',
+            color: colors.textPrimary,
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            fontSize: '16px',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          ← Back
+        </button>
+      ) : (
+        <div />
+      )}
+      <button
+        onClick={goNext}
+        disabled={disabled && !canProceed}
+        style={{
+          padding: '12px 32px',
+          borderRadius: '8px',
+          border: 'none',
+          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
+          color: canProceed ? 'white' : colors.textMuted,
+          fontWeight: 'bold',
+          cursor: canProceed ? 'pointer' : 'not-allowed',
+          fontSize: '16px',
+          transition: 'all 0.2s ease',
+        }}
+      >
+        {buttonText}
+      </button>
+    </div>
+  );
+
+  // ============================================================
   // HOOK PHASE
+  // ============================================================
   if (phase === 'hook') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        {renderNavDots('hook')}
+        {renderNavDots()}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px', fontWeight: '700' }}>
               🌀 The Defiant Top
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '8px', fontWeight: '400' }}>
               How does a spinning top resist the force of gravity?
+            </p>
+            <p style={{ color: 'rgba(148,163,184,0.7)', fontSize: '14px', marginBottom: '16px', fontWeight: 'normal' }}>
+              Explore gyroscopic physics — the science behind spacecraft, bicycles, and more
             </p>
           </div>
 
@@ -1126,14 +1112,16 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               padding: '20px',
               borderRadius: '12px',
               marginBottom: '16px',
+              border: '1px solid rgba(255,255,255,0.08)',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6, fontWeight: '400' }}>
                 A non-spinning top falls over instantly. But spin it fast enough, and it
-                defies gravity - sometimes for minutes! This "sleeping top" phenomenon
-                has fascinated physicists for centuries.
+                defies gravity — sometimes for minutes! This "sleeping top" phenomenon
+                has fascinated physicists for centuries and engineers in industry.
               </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
-                The same physics keeps bicycles upright and guides spacecraft through space.
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px', fontWeight: 'normal' }}>
+                The same physics keeps bicycles upright, guides spacecraft through space,
+                and lets figure skaters spin at 6 revolutions per second.
               </p>
             </div>
 
@@ -1143,8 +1131,9 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               borderRadius: '8px',
               borderLeft: `3px solid ${colors.accent}`,
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                💡 Try spinning the top and watch how it behaves!
+              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: '500' }}>
+                💡 Click "Spin Top" above and watch how spin rate affects stability.
+                Notice the difference between a slow spin (falls over) and a fast spin (precesses)!
               </p>
             </div>
           </div>
@@ -1154,15 +1143,17 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     );
   }
 
+  // ============================================================
   // PREDICT PHASE
+  // ============================================================
   if (phase === 'predict') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        {renderNavDots('predict')}
+        {renderNavDots()}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Make Your Prediction</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: '700' }}>Make Your Prediction</h2>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 'normal' }}>
               Think about what might happen before we test it
             </p>
           </div>
@@ -1174,16 +1165,18 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             margin: '16px',
             padding: '16px',
             borderRadius: '12px',
+            border: '1px solid rgba(255,255,255,0.08)',
           }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>📋 The Scenario:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              A conical top balanced on its tip. Gravity pulls down on its center of mass,
-              creating a torque that should tip it over. But when spinning...
+            <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: '600' }}>📋 The Scenario:</h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5, fontWeight: 'normal' }}>
+              A conical top is balanced on its tip. Gravity pulls down on its center of mass,
+              creating a torque that should tip it over. But when you spin it fast...
+              something unexpected happens. What do you predict?
             </p>
           </div>
 
           <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: '600' }}>
               🤔 When a tilted top is spinning fast, what happens?
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1200,6 +1193,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
+                    fontWeight: prediction === p.id ? '600' : '400',
                     transition: 'all 0.3s ease',
                   }}
                 >
@@ -1214,22 +1208,24 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     );
   }
 
+  // ============================================================
   // PLAY PHASE
+  // ============================================================
   if (phase === 'play') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        {renderNavDots('play')}
+        {renderNavDots()}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore the Sleeping Top</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Watch how spin rate affects stability and precession
+            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: '700' }}>Explore the Sleeping Top</h2>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 'normal' }}>
+              Adjust the spin rate and tilt to observe how they affect stability and precession
             </p>
           </div>
 
           {renderVisualization(true)}
 
-          {/* Formula display */}
+          {/* Key formula near graphic */}
           <div style={{
             background: 'rgba(59, 130, 246, 0.1)',
             margin: '16px',
@@ -1237,7 +1233,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             borderRadius: '12px',
             border: '1px solid rgba(59, 130, 246, 0.3)',
           }}>
-            <h4 style={{ color: colors.spin, marginBottom: '8px', fontSize: '14px' }}>⚡ Key Formula:</h4>
+            <h4 style={{ color: colors.spin, marginBottom: '8px', fontSize: '14px', fontWeight: '700' }}>⚡ Key Formula:</h4>
             <div style={{
               background: 'rgba(15, 23, 42, 0.6)',
               padding: '12px',
@@ -1247,32 +1243,48 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               color: colors.textPrimary,
               textAlign: 'center',
               marginBottom: '8px',
+              fontWeight: '600',
             }}>
-              Ω<sub>prec</sub> = mgh / (Iω<sub>spin</sub>)
+              Ω_prec = mgh / (I · ω_spin)
             </div>
-            <p style={{ color: colors.textSecondary, fontSize: '12px', margin: 0 }}>
-              Precession rate is inversely proportional to spin rate
+            <p style={{ color: colors.textSecondary, fontSize: '12px', margin: 0, fontWeight: 'normal' }}>
+              Precession rate Ω is inversely proportional to spin rate ω — slower spin = faster precession.
+              This is the key cause-effect relationship governing gyroscopic motion.
             </p>
           </div>
 
           {renderControls()}
 
+          {/* Educational definition of key terms */}
           <div style={{
             background: colors.bgCard,
             margin: '16px',
             padding: '16px',
             borderRadius: '12px',
+            border: '1px solid rgba(255,255,255,0.08)',
           }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>🔬 Try These Experiments:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>High spin (80+) - watch it "sleep" nearly upright</li>
-              <li>Medium spin (40-60) - observe precession circles</li>
-              <li>Low spin (10-20) - it falls over quickly</li>
-              <li>Watch how precession speeds up as spin slows down!</li>
-            </ul>
+            <h4 style={{ color: colors.accent, marginBottom: '12px', fontWeight: '700' }}>📖 Key Physics Terms:</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div>
+                <span style={{ color: '#7dd3fc', fontWeight: '700' }}>Angular Momentum (L = I·ω):</span>
+                <span style={{ color: colors.textSecondary, fontSize: '13px', fontWeight: 'normal' }}> A spinning body resists changes to its rotation axis — the faster it spins, the more rigid the axis.</span>
+              </div>
+              <div>
+                <span style={{ color: '#6ee7b7', fontWeight: '700' }}>Precession:</span>
+                <span style={{ color: colors.textSecondary, fontSize: '13px', fontWeight: 'normal' }}> The slow circular wobble of the spin axis caused by gravity's torque. Instead of falling, the top traces a cone.</span>
+              </div>
+              <div>
+                <span style={{ color: '#fbbf24', fontWeight: '700' }}>Gyroscopic Stability:</span>
+                <span style={{ color: colors.textSecondary, fontSize: '13px', fontWeight: 'normal' }}> The property that makes fast-spinning objects resist tipping — essential for spacecraft, bikes, and navigation.</span>
+              </div>
+              <div>
+                <span style={{ color: '#fca5a5', fontWeight: '700' }}>Critical Spin Rate:</span>
+                <span style={{ color: colors.textSecondary, fontSize: '13px', fontWeight: 'normal' }}> Below this threshold, gravity torque overcomes gyroscopic stability and the top falls.</span>
+              </div>
+            </div>
           </div>
 
-          {/* Before/After comparison */}
+          {/* Why this matters */}
           <div style={{
             background: 'rgba(168, 85, 247, 0.1)',
             margin: '16px',
@@ -1280,17 +1292,57 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             borderRadius: '12px',
             border: '1px solid rgba(168, 85, 247, 0.3)',
           }}>
-            <h4 style={{ color: colors.accent, marginBottom: '12px' }}>📊 Comparison:</h4>
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: '700' }}>🌍 Why This Matters:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, fontWeight: 'normal' }}>
+              Gyroscopic physics is fundamental to modern engineering. NASA and SpaceX use
+              reaction wheels (spinning disks) to orient satellites without using fuel.
+              Bicycles and motorcycles exploit gyroscopic stabilization for safer riding.
+              Even your smartphone contains tiny MEMS gyroscopes for orientation sensing.
+              Understanding spin-stability relationships is critical for robotics, aerospace,
+              and consumer electronics design.
+            </p>
+          </div>
+
+          {/* Comparison display */}
+          <div style={{
+            background: 'rgba(30, 41, 59, 0.8)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: '12px', fontWeight: '700' }}>📊 Before vs After Spinning:</h4>
+            <div style={{ display: 'flex', flexDirection: 'row', gap: '12px', flexWrap: 'wrap' }}>
               <div style={{ flex: '1', minWidth: '140px', background: 'rgba(239, 68, 68, 0.2)', padding: '12px', borderRadius: '8px' }}>
-                <div style={{ color: colors.error, fontWeight: 'bold', fontSize: '12px', marginBottom: '4px' }}>No Spin</div>
-                <div style={{ color: colors.textSecondary, fontSize: '11px' }}>Falls immediately</div>
+                <div style={{ color: colors.error, fontWeight: '700', fontSize: '13px', marginBottom: '4px' }}>No Spin (ω=0)</div>
+                <div style={{ color: colors.textSecondary, fontSize: '12px', fontWeight: 'normal' }}>Falls immediately under gravity torque</div>
+              </div>
+              <div style={{ flex: '1', minWidth: '140px', background: 'rgba(59, 130, 246, 0.2)', padding: '12px', borderRadius: '8px' }}>
+                <div style={{ color: colors.spin, fontWeight: '700', fontSize: '13px', marginBottom: '4px' }}>Medium Spin</div>
+                <div style={{ color: colors.textSecondary, fontSize: '12px', fontWeight: 'normal' }}>Visible precession circles</div>
               </div>
               <div style={{ flex: '1', minWidth: '140px', background: 'rgba(16, 185, 129, 0.2)', padding: '12px', borderRadius: '8px' }}>
-                <div style={{ color: colors.success, fontWeight: 'bold', fontSize: '12px', marginBottom: '4px' }}>Fast Spin</div>
-                <div style={{ color: colors.textSecondary, fontSize: '11px' }}>Stable & precessing</div>
+                <div style={{ color: colors.success, fontWeight: '700', fontSize: '13px', marginBottom: '4px' }}>Fast Spin (60+)</div>
+                <div style={{ color: colors.textSecondary, fontSize: '12px', fontWeight: 'normal' }}>"Sleeping" — stable & upright</div>
               </div>
             </div>
+          </div>
+
+          {/* Cause-effect explanation */}
+          <div style={{
+            background: 'rgba(168, 85, 247, 0.15)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: '700' }}>🔬 Cause → Effect:</h4>
+            <ul style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 2, paddingLeft: '20px', margin: 0, fontWeight: 'normal' }}>
+              <li><strong style={{ color: colors.textPrimary, fontWeight: '600' }}>Higher spin rate</strong> → Stronger angular momentum → More stable (less precession)</li>
+              <li><strong style={{ color: colors.textPrimary, fontWeight: '600' }}>Lower spin rate</strong> → Weaker angular momentum → Faster precession or falls</li>
+              <li><strong style={{ color: colors.textPrimary, fontWeight: '600' }}>Greater tilt</strong> → More gravity torque → Faster precession required for stability</li>
+              <li><strong style={{ color: colors.textPrimary, fontWeight: '600' }}>Friction over time</strong> → Spin decays below critical → Top eventually falls</li>
+            </ul>
           </div>
         </div>
         {renderBottomBar(false, true, 'Continue to Review →', true)}
@@ -1298,13 +1350,15 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     );
   }
 
+  // ============================================================
   // REVIEW PHASE
+  // ============================================================
   if (phase === 'review') {
     const wasCorrect = prediction === 'precess';
 
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        {renderNavDots('review')}
+        {renderNavDots()}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1314,12 +1368,20 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
             transition: 'all 0.3s ease',
           }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px', fontWeight: '700' }}>
               {wasCorrect ? '✓ Correct!' : '✗ Not Quite!'}
             </h3>
-            <p style={{ color: colors.textPrimary }}>
-              The top precesses - it wobbles slowly in circles instead of falling!
+            <p style={{ color: colors.textPrimary, fontWeight: '400' }}>
+              {wasCorrect
+                ? 'You predicted it! The tilted top precesses — its spin axis circles slowly instead of the top falling.'
+                : `You predicted "${predictions.find(p => p.id === prediction)?.label ?? 'something else'}". The correct answer is: the top precesses — it wobbles slowly in circles instead of falling!`
+              }
             </p>
+          </div>
+
+          {/* SVG diagram in review */}
+          <div style={{ margin: '0 16px' }}>
+            {renderVisualization(false)}
           </div>
 
           <div style={{
@@ -1327,25 +1389,63 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             margin: '16px',
             padding: '20px',
             borderRadius: '12px',
+            border: '1px solid rgba(255,255,255,0.08)',
           }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>🎓 The Physics of Gyroscopic Precession</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+            <h3 style={{ color: colors.accent, marginBottom: '12px', fontWeight: '700' }}>🎓 Why Does This Happen? — Gyroscopic Precession</h3>
+            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, fontWeight: 'normal' }}>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Angular Momentum:</strong> A spinning
-                top has angular momentum L pointing along its spin axis. This vector resists
-                changes to its direction (gyroscopic rigidity).
+                <strong style={{ color: colors.textPrimary, fontWeight: '700' }}>Why Angular Momentum Prevents Falling:</strong> A spinning
+                top has angular momentum <em>L</em> pointing along its spin axis. This vector strongly
+                resists changes to its direction — that's why spinning objects are so stable.
               </p>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Torque = dL/dt:</strong> Gravity
-                creates a horizontal torque. Instead of tipping over, this torque changes
-                L's direction, causing it to sweep in a horizontal circle - precession!
+                <strong style={{ color: colors.textPrimary, fontWeight: '700' }}>The Key Formula — Torque = dL/dt:</strong> Gravity
+                creates a horizontal torque (τ = r × F). Instead of tipping over, this torque causes
+                <em>L</em>'s direction to sweep in a circle. This is exactly what you observed as precession!
+                The precession rate formula is: <strong style={{ color: '#38bdf8', fontWeight: '700' }}>Ω = mgh / (I·ω)</strong>
+              </p>
+              <p style={{ marginBottom: '12px' }}>
+                <strong style={{ color: colors.textPrimary, fontWeight: '700' }}>Connection to Your Prediction:</strong>{' '}
+                {wasCorrect
+                  ? 'Your intuition was correct — angular momentum\'s resistance to direction change converts the "falling" force into circular precession instead.'
+                  : 'The surprising reality is that spinning objects don\'t simply fall — they precess. The same force that would tip a stationary object instead causes a spinning object to orbit.'
+                }
               </p>
               <p>
-                <strong style={{ color: colors.textPrimary }}>Sleeping Top:</strong> When spinning
-                extremely fast, even small tilts are suppressed. The top appears nearly
-                motionless - it's "asleep."
+                <strong style={{ color: colors.textPrimary, fontWeight: '700' }}>The "Sleeping" State:</strong> When spinning
+                extremely fast (high ω), even small tilts are suppressed because
+                Ω = mgh/(I·ω) becomes very small — the top appears nearly
+                motionless, "sleeping," with almost no visible precession.
               </p>
             </div>
+          </div>
+
+          <div style={{
+            background: 'rgba(59, 130, 246, 0.1)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
+          }}>
+            <h4 style={{ color: colors.spin, marginBottom: '8px', fontWeight: '700' }}>📐 Mathematical Relationship:</h4>
+            <div style={{
+              fontFamily: 'monospace',
+              fontSize: '15px',
+              color: colors.textPrimary,
+              textAlign: 'center',
+              padding: '10px',
+              background: 'rgba(15, 23, 42, 0.6)',
+              borderRadius: '6px',
+              marginBottom: '8px',
+              fontWeight: '600',
+            }}>
+              Ω_prec = mgh / (I · ω_spin)
+            </div>
+            <ul style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.8, paddingLeft: '20px', margin: 0, fontWeight: 'normal' }}>
+              <li><strong style={{ fontWeight: '600' }}>m</strong> = mass, <strong style={{ fontWeight: '600' }}>g</strong> = gravity, <strong style={{ fontWeight: '600' }}>h</strong> = center-of-mass height</li>
+              <li><strong style={{ fontWeight: '600' }}>I</strong> = moment of inertia, <strong style={{ fontWeight: '600' }}>ω</strong> = spin rate</li>
+              <li>Ω ∝ 1/ω — doubling spin rate halves precession rate</li>
+            </ul>
           </div>
         </div>
         {renderBottomBar(false, true, 'Next: A Twist! →', true)}
@@ -1353,16 +1453,18 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     );
   }
 
+  // ============================================================
   // TWIST PREDICT PHASE
+  // ============================================================
   if (phase === 'twist_predict') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        {renderNavDots('twist_predict')}
+        {renderNavDots()}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>🔄 The Twist</h2>
-            <p style={{ color: colors.textSecondary }}>
-              What if the top spins slower?
+            <h2 style={{ color: colors.warning, marginBottom: '8px', fontWeight: '700' }}>🔄 The Twist</h2>
+            <p style={{ color: colors.textSecondary, fontWeight: 'normal' }}>
+              A new variable: what happens when we change the initial spin rate?
             </p>
           </div>
 
@@ -1373,17 +1475,19 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             margin: '16px',
             padding: '16px',
             borderRadius: '12px',
+            border: '1px solid rgba(255,255,255,0.08)',
           }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>📋 The Setup:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              Imagine starting the top with a much lower spin rate. The angular
-              momentum is weaker, so the gyroscopic effect is reduced.
+            <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: '600' }}>📋 The New Setup:</h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5, fontWeight: 'normal' }}>
+              Now imagine starting the top with a much lower spin rate — say 15 rad/s instead
+              of 50 rad/s. The angular momentum vector L = I·ω is much weaker. How does this
+              change the top's behavior? Think about what the formula Ω = mgh/(I·ω) predicts.
             </p>
           </div>
 
           <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              🤔 With much slower spin, what happens to the top?
+            <h3 style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: '600' }}>
+              🤔 With much slower spin (15 rad/s), what happens to the top?
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {twistPredictions.map((p) => (
@@ -1399,6 +1503,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
+                    fontWeight: twistPrediction === p.id ? '600' : '400',
                     transition: 'all 0.3s ease',
                   }}
                 >
@@ -1413,22 +1518,23 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     );
   }
 
+  // ============================================================
   // TWIST PLAY PHASE
+  // ============================================================
   if (phase === 'twist_play') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        {renderNavDots('twist_play')}
+        {renderNavDots()}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Spin Rate Effects</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            <h2 style={{ color: colors.warning, marginBottom: '8px', fontWeight: '700' }}>Test Spin Rate Effects</h2>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 'normal' }}>
               Compare high spin vs low spin stability
             </p>
           </div>
 
           {renderVisualization(true)}
 
-          {/* Formula display */}
           <div style={{
             background: 'rgba(59, 130, 246, 0.1)',
             margin: '16px',
@@ -1436,21 +1542,22 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             borderRadius: '12px',
             border: '1px solid rgba(59, 130, 246, 0.3)',
           }}>
-            <h4 style={{ color: colors.spin, marginBottom: '8px', fontSize: '14px' }}>⚡ Key Formula:</h4>
+            <h4 style={{ color: colors.spin, marginBottom: '8px', fontSize: '14px', fontWeight: '700' }}>⚡ Critical Relationship:</h4>
             <div style={{
               background: 'rgba(15, 23, 42, 0.6)',
               padding: '12px',
               borderRadius: '8px',
               fontFamily: 'monospace',
-              fontSize: '16px',
+              fontSize: '15px',
               color: colors.textPrimary,
               textAlign: 'center',
               marginBottom: '8px',
+              fontWeight: '600',
             }}>
-              Ω<sub>prec</sub> = mgh / (Iω<sub>spin</sub>)
+              Ω_prec = mgh / (I · ω_spin)
             </div>
-            <p style={{ color: colors.textSecondary, fontSize: '12px', margin: 0 }}>
-              Precession rate is inversely proportional to spin rate
+            <p style={{ color: colors.textSecondary, fontSize: '12px', margin: 0, fontWeight: 'normal' }}>
+              Slower spin (ω↓) → larger Ω_prec → faster wobble, until the top destabilizes completely.
             </p>
           </div>
 
@@ -1463,14 +1570,14 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             borderRadius: '12px',
             borderLeft: `3px solid ${colors.warning}`,
           }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>💡 Key Observation:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Below a critical spin rate, the gyroscopic effect can't overcome gravity's
-              torque. Also notice: slower spin = faster precession (they're inversely related)!
+            <h4 style={{ color: colors.warning, marginBottom: '8px', fontWeight: '700' }}>💡 New Key Observation:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 'normal' }}>
+              Below a critical spin rate ω_crit = 2√(mghI₁)/I₃, the gyroscopic effect can't overcome
+              gravity's torque. This is genuinely new behavior — a threshold effect not present at high spin rates.
+              Also notice: slower spin = faster precession (they're inversely related)!
             </p>
           </div>
 
-          {/* Before/After comparison */}
           <div style={{
             background: 'rgba(168, 85, 247, 0.1)',
             margin: '16px',
@@ -1478,15 +1585,15 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             borderRadius: '12px',
             border: '1px solid rgba(168, 85, 247, 0.3)',
           }}>
-            <h4 style={{ color: colors.accent, marginBottom: '12px' }}>📊 Comparison:</h4>
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <h4 style={{ color: colors.accent, marginBottom: '12px', fontWeight: '700' }}>📊 Spin Rate Comparison:</h4>
+            <div style={{ display: 'flex', flexDirection: 'row', gap: '12px', flexWrap: 'wrap' }}>
               <div style={{ flex: '1', minWidth: '140px', background: 'rgba(239, 68, 68, 0.2)', padding: '12px', borderRadius: '8px' }}>
-                <div style={{ color: colors.error, fontWeight: 'bold', fontSize: '12px', marginBottom: '4px' }}>Slow Spin</div>
-                <div style={{ color: colors.textSecondary, fontSize: '11px' }}>Falls quickly</div>
+                <div style={{ color: colors.error, fontWeight: '700', fontSize: '12px', marginBottom: '4px' }}>Slow Spin (10-20 r/s)</div>
+                <div style={{ color: colors.textSecondary, fontSize: '11px', fontWeight: 'normal' }}>Falls quickly, no stability</div>
               </div>
               <div style={{ flex: '1', minWidth: '140px', background: 'rgba(16, 185, 129, 0.2)', padding: '12px', borderRadius: '8px' }}>
-                <div style={{ color: colors.success, fontWeight: 'bold', fontSize: '12px', marginBottom: '4px' }}>Fast Spin</div>
-                <div style={{ color: colors.textSecondary, fontSize: '11px' }}>Stable & sleeping</div>
+                <div style={{ color: colors.success, fontWeight: '700', fontSize: '12px', marginBottom: '4px' }}>Fast Spin (60+ r/s)</div>
+                <div style={{ color: colors.textSecondary, fontSize: '11px', fontWeight: 'normal' }}>Stable, slow precession</div>
               </div>
             </div>
           </div>
@@ -1496,13 +1603,15 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     );
   }
 
+  // ============================================================
   // TWIST REVIEW PHASE
+  // ============================================================
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'faster_fall';
 
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        {renderNavDots('twist_review')}
+        {renderNavDots()}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1512,10 +1621,10 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
             transition: 'all 0.3s ease',
           }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px', fontWeight: '700' }}>
               {wasCorrect ? '✓ Correct!' : '✗ Not Quite!'}
             </h3>
-            <p style={{ color: colors.textPrimary }}>
+            <p style={{ color: colors.textPrimary, fontWeight: '400' }}>
               Lower spin means less gyroscopic stability - the top falls faster!
             </p>
           </div>
@@ -1525,22 +1634,23 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             margin: '16px',
             padding: '20px',
             borderRadius: '12px',
+            border: '1px solid rgba(255,255,255,0.08)',
           }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>🔬 Critical Spin Rate</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+            <h3 style={{ color: colors.warning, marginBottom: '12px', fontWeight: '700' }}>🔬 Critical Spin Rate — Why the Threshold Exists</h3>
+            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, fontWeight: 'normal' }}>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>The Balance:</strong> The gyroscopic
-                effect must overcome gravity's tipping torque. Below a critical spin rate,
-                gravity wins and the top becomes unstable.
+                <strong style={{ color: colors.textPrimary, fontWeight: '700' }}>The Critical Threshold:</strong> The gyroscopic
+                effect must overcome gravity's tipping torque. Below critical spin rate
+                ω_crit = 2√(mghI₁)/I₃, gravity wins and the top becomes unstable.
               </p>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Inverse Relationship:</strong>
-                Precession rate ∝ 1/spin rate. As the top slows down from friction, its
-                precession speeds up - until stability is lost.
+                <strong style={{ color: colors.textPrimary, fontWeight: '700' }}>Inverse Relationship:</strong>
+                Precession rate Ω ∝ 1/ω_spin. As the top slows from friction, its
+                precession speeds up — until stability threshold is crossed.
               </p>
               <p>
-                This is why a spinning top always eventually falls - friction inevitably
-                slows the spin below the critical threshold!
+                This is why every spinning top always eventually falls — friction
+                inevitably reduces ω below the critical threshold!
               </p>
             </div>
           </div>
@@ -1550,141 +1660,234 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     );
   }
 
+  // ============================================================
   // TRANSFER PHASE
+  // ============================================================
   if (phase === 'transfer') {
+    const app = realWorldApps[currentApp];
+    const appCompleted = transferCompleted.has(currentApp);
+
+    const handleGotIt = () => {
+      const newCompleted = new Set([...transferCompleted, currentApp]);
+      setTransferCompleted(newCompleted);
+      if (currentApp < realWorldApps.length - 1) {
+        setCurrentApp(currentApp + 1);
+      }
+    };
+
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        {renderNavDots('transfer')}
+        {renderNavDots()}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            <h2 style={{ color: colors.textPrimary, marginBottom: '4px', textAlign: 'center', fontWeight: '700' }}>
               🌍 Real-World Applications
             </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
+            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '4px', fontWeight: 'normal' }}>
               How engineers apply gyroscopic physics in industry
             </p>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Explore 4 real-world examples from companies like NASA, SpaceX, and more
+            {/* Progress indicator: App X of Y */}
+            <p style={{ color: 'rgba(148,163,184,0.7)', fontSize: '13px', textAlign: 'center', marginBottom: '16px', fontWeight: 'normal' }}>
+              Application {currentApp + 1} of {realWorldApps.length} — {transferCompleted.size} completed
             </p>
           </div>
 
-          {realWorldApps.map((app, index) => (
-            <div
-              key={index}
-              style={{
-                background: colors.bgCard,
-                margin: '16px',
-                padding: '20px',
-                borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
-                transition: 'all 0.3s ease',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                <div>
-                  <div style={{ fontSize: '32px', marginBottom: '8px' }}>{app.icon}</div>
-                  <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '4px' }}>{app.title}</h3>
-                  <p style={{ color: app.color, fontSize: '12px', fontStyle: 'italic' }}>{app.tagline}</p>
-                </div>
-                {transferCompleted.has(index) && (
-                  <span style={{ color: colors.success, fontSize: '24px' }}>✓</span>
-                )}
+          {/* App navigation tabs */}
+          <div style={{ display: 'flex', gap: '8px', padding: '0 16px', marginBottom: '16px', flexWrap: 'wrap' }}>
+            {realWorldApps.map((a, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentApp(idx)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '20px',
+                  border: 'none',
+                  background: idx === currentApp
+                    ? a.color
+                    : transferCompleted.has(idx)
+                    ? 'rgba(16, 185, 129, 0.3)'
+                    : 'rgba(255,255,255,0.1)',
+                  color: idx === currentApp ? 'white' : colors.textSecondary,
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  fontWeight: idx === currentApp ? '700' : '400',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {transferCompleted.has(idx) ? '✓ ' : ''}{a.icon} {a.title.split(' ')[0]}
+              </button>
+            ))}
+          </div>
+
+          {/* Current app card */}
+          <div
+            style={{
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '20px',
+              borderRadius: '12px',
+              border: appCompleted ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+              transition: 'all 0.3s ease',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+              <div>
+                <div style={{ fontSize: '32px', marginBottom: '8px' }}>{app.icon}</div>
+                <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '4px', fontWeight: '700' }}>{app.title}</h3>
+                <p style={{ color: app.color, fontSize: '12px', fontStyle: 'italic', fontWeight: 'normal' }}>{app.tagline}</p>
               </div>
-
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px', lineHeight: 1.6 }}>
-                {app.description}
-              </p>
-
-              <div style={{
-                background: `${app.color}22`,
-                padding: '12px',
-                borderRadius: '8px',
-                marginBottom: '12px',
-                borderLeft: `3px solid ${app.color}`,
-              }}>
-                <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>
-                  🔗 Connection to Sleeping Top:
-                </p>
-                <p style={{ color: colors.textSecondary, fontSize: '12px', lineHeight: 1.5 }}>
-                  {app.connection}
-                </p>
-              </div>
-
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{
-                    padding: '10px 20px',
-                    borderRadius: '6px',
-                    border: `1px solid ${app.color}`,
-                    background: 'transparent',
-                    color: app.color,
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                    transition: 'all 0.3s ease',
-                  }}
-                >
-                  Learn How It Works →
-                </button>
-              ) : (
-                <>
-                  <div style={{
-                    background: 'rgba(16, 185, 129, 0.1)',
-                    padding: '14px',
-                    borderRadius: '8px',
-                    borderLeft: `3px solid ${colors.success}`,
-                    marginBottom: '12px',
-                  }}>
-                    <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 'bold', marginBottom: '6px' }}>
-                      ⚙️ How It Works:
-                    </p>
-                    <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6 }}>{app.howItWorks}</p>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
-                    {app.stats.map((stat, i) => (
-                      <div key={i} style={{
-                        flex: '1',
-                        minWidth: '120px',
-                        background: 'rgba(255,255,255,0.05)',
-                        padding: '10px',
-                        borderRadius: '6px',
-                        textAlign: 'center',
-                      }}>
-                        <div style={{ fontSize: '18px', marginBottom: '4px' }}>{stat.icon}</div>
-                        <div style={{ color: app.color, fontWeight: 'bold', fontSize: '16px', marginBottom: '2px' }}>{stat.value}</div>
-                        <div style={{ color: colors.textMuted, fontSize: '10px' }}>{stat.label}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div style={{
-                    background: 'rgba(168, 85, 247, 0.1)',
-                    padding: '10px',
-                    borderRadius: '6px',
-                    marginBottom: '8px',
-                  }}>
-                    <p style={{ color: colors.textMuted, fontSize: '11px', marginBottom: '4px' }}>INDUSTRY EXAMPLES:</p>
-                    <p style={{ color: colors.textSecondary, fontSize: '12px' }}>
-                      {app.companies.join(' • ')}
-                    </p>
-                  </div>
-
-                  <div style={{
-                    background: `${app.color}11`,
-                    padding: '10px',
-                    borderRadius: '6px',
-                  }}>
-                    <p style={{ color: colors.textMuted, fontSize: '11px', marginBottom: '4px' }}>FUTURE IMPACT:</p>
-                    <p style={{ color: colors.textSecondary, fontSize: '12px', lineHeight: 1.5 }}>
-                      {app.futureImpact}
-                    </p>
-                  </div>
-                </>
+              {appCompleted && (
+                <span style={{ color: colors.success, fontSize: '24px' }}>✓</span>
               )}
             </div>
-          ))}
+
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px', lineHeight: 1.6, fontWeight: 'normal' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: `${app.color}22`,
+              padding: '12px',
+              borderRadius: '8px',
+              marginBottom: '12px',
+              borderLeft: `3px solid ${app.color}`,
+            }}>
+              <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: '700', marginBottom: '4px' }}>
+                🔗 Connection to Sleeping Top:
+              </p>
+              <p style={{ color: colors.textSecondary, fontSize: '12px', lineHeight: 1.5, fontWeight: 'normal' }}>
+                {app.connection}
+              </p>
+            </div>
+
+            {!appCompleted ? (
+              <>
+                <div style={{
+                  background: 'rgba(15, 23, 42, 0.5)',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  marginBottom: '12px',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                }}>
+                  <p style={{ color: 'rgba(148,163,184,0.7)', fontSize: '11px', marginBottom: '4px', fontWeight: '600' }}>COMPANIES:</p>
+                  <p style={{ color: colors.textSecondary, fontSize: '12px', fontWeight: 'normal' }}>
+                    {app.companies.join(' • ')}
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                  {app.stats.map((stat, i) => (
+                    <div key={i} style={{
+                      flex: '1',
+                      minWidth: '100px',
+                      background: 'rgba(255,255,255,0.05)',
+                      padding: '10px',
+                      borderRadius: '6px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ fontSize: '18px', marginBottom: '4px' }}>{stat.icon}</div>
+                      <div style={{ color: app.color, fontWeight: '700', fontSize: '16px', marginBottom: '2px' }}>{stat.value}</div>
+                      <div style={{ color: 'rgba(148,163,184,0.7)', fontSize: '10px', fontWeight: 'normal' }}>{stat.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  onClick={handleGotIt}
+                  style={{
+                    width: '100%',
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
+                    color: 'white',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    fontSize: '15px',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  Got It — Next Application →
+                </button>
+              </>
+            ) : (
+              <>
+                <div style={{
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  padding: '14px',
+                  borderRadius: '8px',
+                  borderLeft: `3px solid ${colors.success}`,
+                  marginBottom: '12px',
+                }}>
+                  <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: '700', marginBottom: '6px' }}>
+                    ⚙️ How It Works:
+                  </p>
+                  <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6, fontWeight: 'normal' }}>{app.howItWorks}</p>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                  {app.stats.map((stat, i) => (
+                    <div key={i} style={{
+                      flex: '1',
+                      minWidth: '100px',
+                      background: 'rgba(255,255,255,0.05)',
+                      padding: '10px',
+                      borderRadius: '6px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ fontSize: '18px', marginBottom: '4px' }}>{stat.icon}</div>
+                      <div style={{ color: app.color, fontWeight: '700', fontSize: '16px', marginBottom: '2px' }}>{stat.value}</div>
+                      <div style={{ color: 'rgba(148,163,184,0.7)', fontSize: '10px', fontWeight: 'normal' }}>{stat.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{
+                  background: 'rgba(168, 85, 247, 0.1)',
+                  padding: '10px',
+                  borderRadius: '6px',
+                  marginBottom: '8px',
+                }}>
+                  <p style={{ color: 'rgba(148,163,184,0.7)', fontSize: '11px', marginBottom: '4px', fontWeight: '600' }}>INDUSTRY EXAMPLES:</p>
+                  <p style={{ color: colors.textSecondary, fontSize: '12px', fontWeight: 'normal' }}>
+                    {app.companies.join(' • ')}
+                  </p>
+                </div>
+
+                <div style={{
+                  background: `${app.color}11`,
+                  padding: '10px',
+                  borderRadius: '6px',
+                }}>
+                  <p style={{ color: 'rgba(148,163,184,0.7)', fontSize: '11px', marginBottom: '4px', fontWeight: '600' }}>FUTURE IMPACT:</p>
+                  <p style={{ color: colors.textSecondary, fontSize: '12px', lineHeight: 1.5, fontWeight: 'normal' }}>
+                    {app.futureImpact}
+                  </p>
+                </div>
+
+                {currentApp < realWorldApps.length - 1 && (
+                  <button
+                    onClick={() => setCurrentApp(currentApp + 1)}
+                    style={{
+                      width: '100%',
+                      marginTop: '12px',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: `1px solid ${colors.accent}`,
+                      background: 'transparent',
+                      color: colors.accent,
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    Continue to Next Application →
+                  </button>
+                )}
+              </>
+            )}
+          </div>
 
           <div style={{
             background: 'rgba(168, 85, 247, 0.15)',
@@ -1693,22 +1896,29 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             borderRadius: '12px',
             border: '1px solid rgba(168, 85, 247, 0.3)',
           }}>
-            <p style={{ color: colors.textPrimary, fontSize: '13px', textAlign: 'center' }}>
-              <strong>Progress:</strong> {transferCompleted.size} of {realWorldApps.length} applications explored
+            <p style={{ color: colors.textPrimary, fontSize: '13px', textAlign: 'center', fontWeight: '500' }}>
+              <strong style={{ fontWeight: '700' }}>Progress:</strong> {transferCompleted.size} of {realWorldApps.length} applications explored
             </p>
           </div>
         </div>
-        {renderBottomBar(transferCompleted.size < realWorldApps.length, transferCompleted.size >= realWorldApps.length, 'Take the Test →', true)}
+        {renderBottomBar(
+          transferCompleted.size < realWorldApps.length,
+          transferCompleted.size >= realWorldApps.length,
+          transferCompleted.size >= realWorldApps.length ? 'Take the Test →' : 'Continue Exploring →',
+          true
+        )}
       </div>
     );
   }
 
+  // ============================================================
   // TEST PHASE
+  // ============================================================
   if (phase === 'test') {
     if (testSubmitted) {
       return (
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          {renderNavDots('test')}
+          {renderNavDots()}
           <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1718,13 +1928,13 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               textAlign: 'center',
               transition: 'all 0.3s ease',
             }}>
-              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
+              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px', fontWeight: '700' }}>
                 {testScore >= 8 ? '🎉 Excellent!' : '📚 Keep Learning!'}
               </h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>
-                {testScore} / 10
+              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: '700' }}>
+                Score: {testScore} / 10
               </p>
-              <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
+              <p style={{ color: colors.textSecondary, marginTop: '8px', fontWeight: 'normal' }}>
                 {testScore >= 8 ? 'You\'ve mastered gyroscopic physics!' : 'Review the material and try again.'}
               </p>
             </div>
@@ -1744,7 +1954,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
                     borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
                   }}
                 >
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>
+                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: '700' }}>
                     {qIndex + 1}. {q.question}
                   </p>
                   {q.options.map((opt, oIndex) => (
@@ -1760,6 +1970,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
                           ? 'rgba(239, 68, 68, 0.2)'
                           : 'transparent',
                         color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary,
+                        fontWeight: opt.correct ? '600' : 'normal',
                       }}
                     >
                       {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}
@@ -1778,20 +1989,25 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
 
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        {renderNavDots('test')}
+        {renderNavDots()}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>
-                {currentTestQuestion + 1} / {testQuestions.length}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <h2 style={{ color: colors.textPrimary, fontWeight: '700' }}>Knowledge Test</h2>
+              <span style={{ color: colors.textSecondary, fontWeight: '600', fontSize: '15px' }}>
+                Question {currentTestQuestion + 1} of {testQuestions.length}
               </span>
             </div>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '12px', lineHeight: 1.5, fontWeight: 'normal' }}>
+              Test your understanding of gyroscopic physics, angular momentum, precession,
+              and the sleeping top phenomenon. Each question includes a real-world scenario
+              to help you apply the concepts you have explored in this module.
+            </p>
 
             <div style={{
               display: 'flex',
               gap: '4px',
-              marginBottom: '24px',
+              marginBottom: '16px',
             }}>
               {testQuestions.map((_, i) => (
                 <div
@@ -1813,13 +2029,28 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
               ))}
             </div>
 
+            {/* Scenario context for each question */}
+            <div style={{
+              background: 'rgba(59, 130, 246, 0.1)',
+              padding: '12px',
+              borderRadius: '8px',
+              marginBottom: '12px',
+              border: '1px solid rgba(59, 130, 246, 0.2)',
+            }}>
+              <p style={{ color: 'rgba(148,163,184,0.7)', fontSize: '11px', marginBottom: '4px', fontWeight: '600' }}>SCENARIO:</p>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.5, fontWeight: 'normal' }}>
+                {currentQ.context}
+              </p>
+            </div>
+
             <div style={{
               background: colors.bgCard,
               padding: '20px',
               borderRadius: '12px',
               marginBottom: '16px',
+              border: '1px solid rgba(255,255,255,0.08)',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5, fontWeight: '600' }}>
                 {currentQ.question}
               </p>
             </div>
@@ -1842,6 +2073,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
+                    fontWeight: testAnswers[currentTestQuestion] === oIndex ? '600' : '400',
                     transition: 'all 0.3s ease',
                   }}
                 >
@@ -1862,6 +2094,8 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
                 background: 'transparent',
                 color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
                 cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
+                fontWeight: '500',
+                transition: 'all 0.2s ease',
               }}
             >
               ← Previous
@@ -1877,9 +2111,11 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
                   background: colors.accent,
                   color: 'white',
                   cursor: 'pointer',
+                  fontWeight: '600',
+                  transition: 'all 0.2s ease',
                 }}
               >
-                Next →
+                Next Question
               </button>
             ) : (
               <button
@@ -1892,6 +2128,8 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
                   background: testAnswers.includes(null) ? colors.textMuted : colors.success,
                   color: 'white',
                   cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                  fontWeight: '700',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 Submit Test
@@ -1899,21 +2137,56 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             )}
           </div>
         </div>
+        {/* Fixed bottom bar - disabled during active quiz, enabled after submission */}
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '16px 24px',
+          background: colors.bgDark,
+          borderTop: `1px solid rgba(255,255,255,0.1)`,
+          display: 'flex',
+          justifyContent: 'flex-end',
+          zIndex: 1000,
+        }}>
+          <button
+            disabled={true}
+            style={{
+              padding: '12px 32px',
+              borderRadius: '8px',
+              border: 'none',
+              background: 'rgba(255,255,255,0.1)',
+              color: colors.textMuted,
+              fontWeight: 'bold',
+              cursor: 'not-allowed',
+              fontSize: '16px',
+              opacity: 0.4,
+            }}
+          >
+            Next →
+          </button>
+        </div>
       </div>
     );
   }
 
+  // ============================================================
   // MASTERY PHASE
+  // ============================================================
   if (phase === 'mastery') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        {renderNavDots('mastery')}
+        {renderNavDots()}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>
-              You've mastered gyroscopic physics and the sleeping top
+            <h1 style={{ color: colors.success, marginBottom: '8px', fontWeight: '700' }}>Mastery Achieved!</h1>
+            <p style={{ color: colors.textSecondary, marginBottom: '8px', fontWeight: '400' }}>
+              You've mastered gyroscopic physics and the sleeping top!
+            </p>
+            <p style={{ color: 'rgba(148,163,184,0.7)', fontSize: '14px', fontWeight: 'normal' }}>
+              Congratulations on completing this module — you've earned this accomplishment.
             </p>
           </div>
 
@@ -1922,15 +2195,31 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             margin: '16px',
             padding: '20px',
             borderRadius: '12px',
+            border: '1px solid rgba(255,255,255,0.08)',
           }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>🎓 Key Concepts Mastered:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Angular momentum and gyroscopic stability</li>
-              <li>Precession as a response to torque</li>
-              <li>Critical spin rate for stability</li>
-              <li>Inverse relationship between spin and precession</li>
-              <li>Applications from bicycles to spacecraft</li>
+            <h3 style={{ color: colors.accent, marginBottom: '12px', fontWeight: '700' }}>🎓 Key Concepts Mastered:</h3>
+            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0, fontWeight: 'normal' }}>
+              <li><strong style={{ fontWeight: '600' }}>Angular momentum</strong> and gyroscopic stability (L = I·ω)</li>
+              <li><strong style={{ fontWeight: '600' }}>Precession</strong> as torque-induced direction change of L</li>
+              <li><strong style={{ fontWeight: '600' }}>Critical spin rate</strong> for stability threshold</li>
+              <li><strong style={{ fontWeight: '600' }}>Inverse relationship</strong> — Ω = mgh/(I·ω)</li>
+              <li><strong style={{ fontWeight: '600' }}>Applications</strong>: spacecraft (NASA, SpaceX), bicycles, gyrocompasses</li>
             </ul>
+          </div>
+
+          <div style={{
+            background: 'rgba(16, 185, 129, 0.15)',
+            margin: '16px',
+            padding: '20px',
+            borderRadius: '12px',
+            border: '1px solid rgba(16, 185, 129, 0.3)',
+          }}>
+            <h3 style={{ color: colors.success, marginBottom: '8px', fontWeight: '700' }}>🏅 Achievement Unlocked: Gyroscope Master</h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, fontWeight: 'normal' }}>
+              You can now explain why tops, bicycles, and spacecraft all exploit the same physics.
+              This understanding connects classical mechanics to modern engineering applications
+              across aerospace, robotics, and consumer electronics.
+            </p>
           </div>
 
           <div style={{
@@ -1938,13 +2227,16 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             margin: '16px',
             padding: '20px',
             borderRadius: '12px',
+            border: '1px solid rgba(168, 85, 247, 0.3)',
           }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>🚀 Beyond the Basics:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+            <h3 style={{ color: colors.accent, marginBottom: '12px', fontWeight: '700' }}>🚀 Beyond the Basics:</h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, fontWeight: 'normal' }}>
               The mathematics of gyroscopes (Euler equations) describe phenomena from
               Earth's axial precession (26,000 year cycle!) to quantum spin. Modern
-              inertial navigation uses laser ring gyroscopes - light instead of mass,
-              but the same fundamental physics!
+              inertial navigation uses laser ring gyroscopes — light instead of mass,
+              but the same fundamental physics governing angular momentum.
+              Companies like Honeywell, Safran, and Collins Aerospace build billion-dollar
+              businesses on these principles.
             </p>
           </div>
 
@@ -1955,7 +2247,16 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     );
   }
 
-  return null;
+  // Default fallback
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      {renderNavDots()}
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', padding: '24px', textAlign: 'center' }}>
+        <h1 style={{ color: colors.accent, fontWeight: '700' }}>🌀 Sleeping Top</h1>
+        <p style={{ color: colors.textSecondary, fontWeight: 'normal' }}>Loading...</p>
+      </div>
+    </div>
+  );
 };
 
 export default SleepingTopRenderer;

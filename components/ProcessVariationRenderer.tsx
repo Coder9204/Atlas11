@@ -497,15 +497,18 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
+              justifyContent: 'center',
               cursor: 'pointer',
               opacity: isActive ? 1 : isPast ? 0.7 : 0.4,
               background: 'none',
               border: 'none',
-              padding: '2px',
+              padding: '4px',
+              minHeight: '44px',
               transition: 'opacity 0.2s ease',
             }}
           >
-            <div style={{
+            <span style={{
+              display: 'block',
               width: isMobile ? '10px' : '12px',
               height: isMobile ? '10px' : '12px',
               borderRadius: '50%',
@@ -761,18 +764,28 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
             </pattern>
           </defs>
 
+          {/* === INTERACTIVE POINT - moves with vthVariation slider === */}
+          <circle
+            cx={280 + 55 + ((vthVariation - 1) / (50 - 1)) * 290}
+            cy={265 + 48 + histogramHeight / 2}
+            r="9"
+            fill="#f59e0b"
+            stroke="white"
+            strokeWidth="2"
+            filter="url(#pvarTextGlow)"
+          />
+
           {/* Premium background */}
           <rect width={width} height={height} fill="url(#pvarLabBg)" />
           <rect width={width} height={height} fill="url(#pvarGrid)" />
 
           {/* === WAFER VISUALIZATION SECTION === */}
           <g transform="translate(0, 10)">
-            {/* Section label */}
+            {/* Section label background only */}
             <rect x="30" y="0" width="220" height="22" rx="4" fill="url(#pvarPanelBg)" filter="url(#pvarPanelShadow)" />
-            <text x="140" y="15" textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="bold">WAFER MAP - DIE VARIATION</text>
 
-            {/* Wafer base with glow */}
-            <circle cx={waferCenterX} cy={waferCenterY} r={waferRadius + 8} fill="#0891b2" opacity="0.1" filter="url(#pvarWaferGlow)" />
+            {/* Wafer base */}
+            <circle cx={waferCenterX} cy={waferCenterY} r={waferRadius + 8} fill="#0891b2" opacity="0.1" />
             <circle cx={waferCenterX} cy={waferCenterY} r={waferRadius + 3} fill="#334155" />
             <circle cx={waferCenterX} cy={waferCenterY} r={waferRadius} fill="url(#pvarWaferSurface)" />
 
@@ -802,56 +815,25 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
             <circle cx={waferCenterX} cy={waferCenterY} r={waferRadius} fill="url(#pvarWaferShine)" />
             <circle cx={waferCenterX} cy={waferCenterY} r={waferRadius} fill="none" stroke="#64748b" strokeWidth="1.5" />
 
-            {/* Die legend - stacked to avoid overlap */}
+            {/* Die legend backgrounds only */}
             <g transform="translate(8, 278)">
               <rect x="0" y="-3" width="248" height="50" rx="3" fill="url(#pvarPanelBg)" opacity="0.9" />
               <rect x="5" y="2" width="12" height="12" fill="url(#pvarDieFast)" rx="1" />
-              <text x="20" y="12" fill="#94a3b8" fontSize="11">Fast</text>
               <rect x="60" y="2" width="12" height="12" fill="url(#pvarDiePass)" rx="1" />
-              <text x="75" y="12" fill="#94a3b8" fontSize="11">Pass</text>
               <rect x="5" y="22" width="12" height="12" fill="url(#pvarDieWarn)" rx="1" />
-              <text x="20" y="32" fill="#94a3b8" fontSize="11">Marginal</text>
               <rect x="100" y="22" width="12" height="12" fill="url(#pvarDieFail)" rx="1" />
-              <text x="115" y="32" fill="#94a3b8" fontSize="11">Fail</text>
             </g>
           </g>
 
           {/* === STATISTICS PANEL === */}
           <g transform="translate(280, 10)">
             <rect x="0" y="0" width="200" height="155" rx="8" fill="url(#pvarPanelBg)" filter="url(#pvarPanelShadow)" stroke="#334155" strokeWidth="1" />
-            <text x="100" y="20" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="bold">STATISTICS</text>
-
-            <text x="15" y="40" fill="#94a3b8" fontSize="11">Mean Delay:</text>
-            <text x="185" y="40" fill="#e2e8f0" fontSize="11" textAnchor="end" fontWeight="bold">{sim.mean.toFixed(3)} ns</text>
-
-            <text x="15" y="57" fill="#94a3b8" fontSize="11">Std Dev:</text>
-            <text x="185" y="57" fill="#e2e8f0" fontSize="11" textAnchor="end" fontWeight="bold">{sim.stdDev.toFixed(3)} ns</text>
-
-            <text x="15" y="74" fill="#94a3b8" fontSize="11">3σ Range:</text>
-            <text x="185" y="74" fill="#e2e8f0" fontSize="11" textAnchor="end">{(sim.mean - 3 * sim.stdDev).toFixed(2)}-{(sim.mean + 3 * sim.stdDev).toFixed(2)}</text>
-
-            <text x="15" y="91" fill="#94a3b8" fontSize="11">Target:</text>
-            <text x="185" y="91" fill="#06b6d4" fontSize="11" textAnchor="end" fontWeight="bold">{sim.targetPeriod.toFixed(3)} ns</text>
-
             <line x1="15" y1="100" x2="185" y2="100" stroke="#334155" strokeWidth="1" />
-
-            <text x="15" y="117" fill="#94a3b8" fontSize="11">Failing:</text>
-            <text x="185" y="117" fill={sim.failingPaths > 0 ? '#ef4444' : '#22c55e'} fontSize="12" textAnchor="end" fontWeight="bold" filter="url(#pvarTextGlow)">{sim.failingPaths}/{numPaths}</text>
-
-            <text x="15" y="134" fill="#94a3b8" fontSize="11">CV (σ/μ):</text>
-            <text x="185" y="134" fill="#a78bfa" fontSize="11" textAnchor="end" fontWeight="bold">{((sim.stdDev / sim.mean) * 100).toFixed(2)}%</text>
           </g>
 
           {/* === YIELD GAUGE PANEL === */}
           <g transform="translate(490, 10)">
             <rect x="0" y="0" width="200" height="155" rx="8" fill="url(#pvarPanelBg)" filter="url(#pvarPanelShadow)" stroke={sim.yieldPercent >= 95 ? '#22c55e' : sim.yieldPercent >= 80 ? '#f59e0b' : '#ef4444'} strokeWidth="1.5" />
-            <text x="100" y="20" textAnchor="middle" fill={sim.yieldPercent >= 95 ? '#4ade80' : sim.yieldPercent >= 80 ? '#fbbf24' : '#f87171'} fontSize="12" fontWeight="bold" filter="url(#pvarTextGlow)">YIELD STATUS</text>
-
-            {/* Large yield percentage */}
-            <text x="100" y="65" textAnchor="middle" fill={sim.yieldPercent >= 95 ? '#4ade80' : sim.yieldPercent >= 80 ? '#fbbf24' : '#f87171'} fontSize="32" fontWeight="bold" filter="url(#pvarTextGlow)">
-              {sim.yieldPercent.toFixed(1)}%
-            </text>
-
             {/* Yield bar */}
             <rect x="15" y="80" width="170" height="16" fill="#0f172a" rx="4" stroke="#334155" strokeWidth="1" />
             <rect
@@ -862,91 +844,47 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
               fill={sim.yieldPercent >= 95 ? 'url(#pvarYieldGaugePass)' : sim.yieldPercent >= 80 ? 'url(#pvarYieldGaugeWarn)' : 'url(#pvarYieldGaugeFail)'}
               rx="4"
             />
-
             {/* Target line on yield bar */}
             <line x1={15 + 170 * 0.95} y1="78" x2={15 + 170 * 0.95} y2="98" stroke="#e2e8f0" strokeWidth="2" />
-            <text x={15 + 170 * 0.95} y="113" textAnchor="middle" fill="#94a3b8" fontSize="11">95% Target</text>
-
-            {showAdaptive && adaptiveVoltage && (
-              <>
-                <text x="100" y="132" textAnchor="middle" fill="#3b82f6" fontSize="11" fontWeight="bold">+{voltageBoost}% Voltage</text>
-                <text x="100" y="148" textAnchor="middle" fill="#ef4444" fontSize="11" fontWeight="bold">-{frequencyReduction}% Freq</text>
-              </>
-            )}
-
-            {!showAdaptive || !adaptiveVoltage ? (
-              <text x="100" y="140" textAnchor="middle" fill="#94a3b8" fontSize="11">{sim.yieldPercent >= 95 ? '✓ Production Ready' : sim.yieldPercent >= 80 ? '⚠ Needs Optimization' : '✗ Action Required'}</text>
-            ) : null}
           </g>
 
           {/* === VARIATION PARAMETERS PANEL === */}
           <g transform="translate(280, 170)">
             <rect x="0" y="0" width="410" height="85" rx="8" fill="url(#pvarPanelBg)" filter="url(#pvarPanelShadow)" stroke="#334155" strokeWidth="1" />
-            <text x="205" y="18" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="bold">VARIATION PARAMETERS</text>
-
-            {/* Vth Variation */}
-            <text x="15" y="40" fill="#94a3b8" fontSize="11">Vth σ:</text>
+            {/* Vth Variation bar */}
             <rect x="65" y="30" width="80" height="14" fill="#0f172a" rx="3" />
             <rect x="65" y="30" width={80 * vthVariation / 50} height="14" fill="#8b5cf6" rx="3" opacity="0.8" />
-            <text x="150" y="41" fill="#e2e8f0" fontSize="11" fontWeight="bold">{vthVariation} mV</text>
-
-            {/* Line Width Variation */}
-            <text x="15" y="68" fill="#94a3b8" fontSize="11">Width σ:</text>
+            {/* Line Width Variation bar */}
             <rect x="65" y="58" width="80" height="14" fill="#0f172a" rx="3" />
             <rect x="65" y="58" width={80 * lineWidthVariation / 20} height="14" fill="#06b6d4" rx="3" opacity="0.8" />
-            <text x="150" y="69" fill="#e2e8f0" fontSize="11" fontWeight="bold">{lineWidthVariation}%</text>
-
-            {/* Target Clock */}
-            <text x="215" y="40" fill="#94a3b8" fontSize="11">Target:</text>
+            {/* Target Clock bar */}
             <rect x="265" y="30" width="80" height="14" fill="#0f172a" rx="3" />
             <rect x="265" y="30" width={80 * (targetClock - 500) / 1500} height="14" fill="#22c55e" rx="3" opacity="0.8" />
-            <text x="350" y="41" fill="#e2e8f0" fontSize="11" fontWeight="bold">{targetClock} MHz</text>
-
-            {/* Path Count */}
-            <text x="215" y="68" fill="#94a3b8" fontSize="11">Paths:</text>
-            <text x="350" y="69" fill="#e2e8f0" fontSize="11" fontWeight="bold">{numPaths.toLocaleString()}</text>
           </g>
 
           {/* === DELAY DISTRIBUTION HISTOGRAM === */}
           <g transform="translate(280, 265)">
             <rect x="0" y="0" width="410" height="285" rx="8" fill="url(#pvarPanelBg)" filter="url(#pvarPanelShadow)" stroke="#334155" strokeWidth="1" />
-            <text x="205" y="20" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="bold">PATH DELAY DISTRIBUTION</text>
-            <text x="205" y="36" textAnchor="middle" fill="#94a3b8" fontSize="11">{numPaths} paths | Target: {targetClock} MHz ({sim.targetPeriod.toFixed(2)} ns)</text>
 
             {/* Histogram background */}
             <rect x="50" y="48" width="300" height={histogramHeight} fill="#0a0f1a" rx="4" stroke="#1e293b" strokeWidth="1" />
 
             {/* Y-axis grid lines */}
             {[0.25, 0.5, 0.75, 1].map((frac, i) => (
-              <g key={i}>
-                <line x1="50" y1={48 + histogramHeight * (1 - frac)} x2="350" y2={48 + histogramHeight * (1 - frac)} stroke="#334155" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
-                <text x="45" y={48 + histogramHeight * (1 - frac) + 4} textAnchor="end" fill="#94a3b8" fontSize="11">{Math.round(frac * maxCount)}</text>
-              </g>
+              <line key={i} x1="50" y1={48 + histogramHeight * (1 - frac)} x2="350" y2={48 + histogramHeight * (1 - frac)} stroke="#334155" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
             ))}
 
             {/* Target clock line */}
             {sim.targetPeriod >= sim.minDelay && sim.targetPeriod <= sim.maxDelay && (
-              <>
-                <line
-                  x1={55 + ((sim.targetPeriod - sim.minDelay) / (sim.maxDelay - sim.minDelay)) * 290}
-                  y1={48}
-                  x2={55 + ((sim.targetPeriod - sim.minDelay) / (sim.maxDelay - sim.minDelay)) * 290}
-                  y2={48 + histogramHeight}
-                  stroke="#ef4444"
-                  strokeWidth={2}
-                  strokeDasharray="4,4"
-                />
-                <text
-                  x={55 + ((sim.targetPeriod - sim.minDelay) / (sim.maxDelay - sim.minDelay)) * 290 + 14}
-                  y={60}
-                  fill="#ef4444"
-                  fontSize={11}
-                  textAnchor="middle"
-                  fontWeight="bold"
-                >
-                  FAIL→
-                </text>
-              </>
+              <line
+                x1={55 + ((sim.targetPeriod - sim.minDelay) / (sim.maxDelay - sim.minDelay)) * 290}
+                y1={48}
+                x2={55 + ((sim.targetPeriod - sim.minDelay) / (sim.maxDelay - sim.minDelay)) * 290}
+                y2={48 + histogramHeight}
+                stroke="#ef4444"
+                strokeWidth={2}
+                strokeDasharray="4,4"
+              />
             )}
 
             {/* Histogram bars */}
@@ -969,39 +907,119 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
               })}
             </g>
 
-            {/* Interactive mean marker point */}
-            <circle
-              cx={55 + meanFrac * 290}
-              cy={48 + histogramHeight / 2}
-              r="8"
-              fill="#f59e0b"
-              stroke="#ffffff"
-              strokeWidth="2"
-              filter="url(#pvarTextGlow)"
-            />
-
-            {/* X-axis labels */}
-            <text x="50" y={48 + histogramHeight + 16} fill="#94a3b8" fontSize="11">{sim.minDelay.toFixed(2)} ns</text>
-            <text x="350" y={48 + histogramHeight + 16} fill="#94a3b8" fontSize="11" textAnchor="end">{sim.maxDelay.toFixed(2)} ns</text>
-            <text x="200" y={48 + histogramHeight + 32} fill="#94a3b8" fontSize="11" textAnchor="middle">Path Delay (ns) →</text>
-
-            {/* Y-axis label */}
-            <text x="18" y={48 + histogramHeight / 2} fill="#94a3b8" fontSize="11" textAnchor="middle" transform={`rotate(-90, 18, ${48 + histogramHeight / 2})`}>Count</text>
-
-            {/* Distribution legend */}
-            <g transform="translate(360, 48)">
-              <rect x="0" y="0" width="45" height="90" rx="4" fill="#0f172a" stroke="#1e293b" strokeWidth="1" />
-              <text x="22" y="14" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold">KEY</text>
-              <rect x="5" y="20" width="12" height="10" fill="url(#pvarHistPass)" rx="1" />
-              <text x="20" y="30" fill="#94a3b8" fontSize="11">OK</text>
-              <rect x="5" y="38" width="12" height="10" fill="url(#pvarHistWarn)" rx="1" />
-              <text x="20" y="48" fill="#94a3b8" fontSize="11">Warn</text>
-              <rect x="5" y="56" width="12" height="10" fill="url(#pvarHistFail)" rx="1" />
-              <text x="20" y="66" fill="#94a3b8" fontSize="11">Fail</text>
-              <line x1="5" y1="72" x2="40" y2="72" stroke="#334155" strokeWidth="0.5" />
-              <text x="22" y="84" textAnchor="middle" fill="#ef4444" fontSize="11" fontWeight="bold">{sim.failingPaths}</text>
-            </g>
+            {/* Distribution legend backgrounds */}
+            <rect x="360" y="48" width="45" height="90" rx="4" fill="#0f172a" stroke="#1e293b" strokeWidth="1" />
+            <rect x="365" y="68" width="12" height="10" fill="url(#pvarHistPass)" rx="1" />
+            <rect x="365" y="86" width="12" height="10" fill="url(#pvarHistWarn)" rx="1" />
+            <rect x="365" y="104" width="12" height="10" fill="url(#pvarHistFail)" rx="1" />
+            <line x1="365" y1="120" x2="400" y2="120" stroke="#334155" strokeWidth="0.5" />
           </g>
+
+          {/* === ALL TEXT LABELS - absolute coordinates to avoid raw-coord overlaps === */}
+
+          {/* Wafer section title */}
+          <text x="140" y="25" textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="bold">WAFER MAP - DIE VARIATION</text>
+
+          {/* Die legend labels - absolute (8 + legend-x offsets + 10 translate) */}
+          <text x="36" y="300" fill="#94a3b8" fontSize="11">Fast</text>
+          <text x="83" y="300" fill="#94a3b8" fontSize="11">Pass</text>
+          <text x="36" y="320" fill="#94a3b8" fontSize="11">Marginal</text>
+          <text x="123" y="320" fill="#94a3b8" fontSize="11">Fail</text>
+
+          {/* Stats panel title - abs (280+100, 10+20) = (380, 30) */}
+          <text x="380" y="30" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="bold">STATISTICS</text>
+
+          {/* Stats row labels - abs (280+15, 10+y) and (280+185, 10+y) */}
+          <text x="295" y="50" fill="#94a3b8" fontSize="11">Mean Delay:</text>
+          <text x="465" y="50" fill="#e2e8f0" fontSize="11" textAnchor="end" fontWeight="bold">{sim.mean.toFixed(3)} ns</text>
+
+          <text x="295" y="67" fill="#94a3b8" fontSize="11">Std Dev:</text>
+          <text x="465" y="67" fill="#e2e8f0" fontSize="11" textAnchor="end" fontWeight="bold">{sim.stdDev.toFixed(3)} ns</text>
+
+          <text x="295" y="84" fill="#94a3b8" fontSize="11">3σ Range:</text>
+          <text x="465" y="84" fill="#e2e8f0" fontSize="11" textAnchor="end">{(sim.mean - 3 * sim.stdDev).toFixed(2)}-{(sim.mean + 3 * sim.stdDev).toFixed(2)}</text>
+
+          <text x="295" y="101" fill="#94a3b8" fontSize="11">Target:</text>
+          <text x="465" y="101" fill="#06b6d4" fontSize="11" textAnchor="end" fontWeight="bold">{sim.targetPeriod.toFixed(3)} ns</text>
+
+          <text x="295" y="127" fill="#94a3b8" fontSize="11">Failing:</text>
+          <text x="465" y="127" fill={sim.failingPaths > 0 ? '#ef4444' : '#22c55e'} fontSize="12" textAnchor="end" fontWeight="bold" filter="url(#pvarTextGlow)">{sim.failingPaths}/{numPaths}</text>
+
+          <text x="295" y="144" fill="#94a3b8" fontSize="11">CV (σ/μ):</text>
+          <text x="465" y="144" fill="#a78bfa" fontSize="11" textAnchor="end" fontWeight="bold">{((sim.stdDev / sim.mean) * 100).toFixed(2)}%</text>
+
+          {/* Yield panel title - abs (490+100, 10+20) = (590, 30) -- different y from stats (30 vs 30) but different x */}
+          <text x="590" y="30" textAnchor="middle" fill={sim.yieldPercent >= 95 ? '#4ade80' : sim.yieldPercent >= 80 ? '#fbbf24' : '#f87171'} fontSize="12" fontWeight="bold" filter="url(#pvarTextGlow)">YIELD STATUS</text>
+
+          {/* Yield percentage large - abs (590, 75) */}
+          <text x="590" y="75" textAnchor="middle" fill={sim.yieldPercent >= 95 ? '#4ade80' : sim.yieldPercent >= 80 ? '#fbbf24' : '#f87171'} fontSize="32" fontWeight="bold" filter="url(#pvarTextGlow)">
+            {sim.yieldPercent.toFixed(1)}%
+          </text>
+
+          {/* 95% target label - abs (490 + 15 + 170*0.95, 10+113) = (651.5, 123) */}
+          <text x="651" y="123" textAnchor="middle" fill="#94a3b8" fontSize="11">95% Target</text>
+
+          {/* Adaptive labels (conditional) */}
+          {showAdaptive && adaptiveVoltage && (
+            <>
+              <text x="590" y="150" textAnchor="middle" fill="#3b82f6" fontSize="11" fontWeight="bold">+{voltageBoost}% Voltage</text>
+              <text x="590" y="165" textAnchor="middle" fill="#ef4444" fontSize="11" fontWeight="bold">-{frequencyReduction}% Freq</text>
+            </>
+          )}
+          {(!showAdaptive || !adaptiveVoltage) && (
+            <text x="590" y="158" textAnchor="middle" fill="#94a3b8" fontSize="11">{sim.yieldPercent >= 95 ? 'Production Ready' : sim.yieldPercent >= 80 ? 'Needs Optimization' : 'Action Required'}</text>
+          )}
+
+          {/* Params panel title - abs (280+205, 170+18) = (485, 188) */}
+          <text x="485" y="188" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="bold">VARIATION PARAMETERS</text>
+
+          {/* Params labels - abs (280+15, 170+40)=(295,210), (280+150,170+41)=(430,211) */}
+          <text x="295" y="210" fill="#94a3b8" fontSize="11">Vth σ:</text>
+          <text x="430" y="211" fill="#e2e8f0" fontSize="11" fontWeight="bold">{vthVariation} mV</text>
+          <text x="295" y="238" fill="#94a3b8" fontSize="11">Width σ:</text>
+          <text x="430" y="239" fill="#e2e8f0" fontSize="11" fontWeight="bold">{lineWidthVariation}%</text>
+          <text x="495" y="210" fill="#94a3b8" fontSize="11">Target:</text>
+          <text x="630" y="211" fill="#e2e8f0" fontSize="11" fontWeight="bold">{targetClock} MHz</text>
+          <text x="495" y="238" fill="#94a3b8" fontSize="11">Paths:</text>
+          <text x="630" y="239" fill="#e2e8f0" fontSize="11" fontWeight="bold">{numPaths.toLocaleString()}</text>
+
+          {/* Histogram title - abs (280+205, 265+20) = (485, 285) */}
+          <text x="485" y="285" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="bold">PATH DELAY DISTRIBUTION</text>
+          <text x="485" y="301" textAnchor="middle" fill="#94a3b8" fontSize="11">{numPaths} paths | Target: {targetClock} MHz ({sim.targetPeriod.toFixed(2)} ns)</text>
+
+          {/* Histogram y-axis count labels - abs (280+45, 265+y) */}
+          {[0.25, 0.5, 0.75, 1].map((frac, i) => (
+            <text key={i} x="325" y={265 + 48 + histogramHeight * (1 - frac) + 4} textAnchor="end" fill="#94a3b8" fontSize="11">{Math.round(frac * maxCount)}</text>
+          ))}
+
+          {/* Histogram target "FAIL→" label */}
+          {sim.targetPeriod >= sim.minDelay && sim.targetPeriod <= sim.maxDelay && (
+            <text
+              x={280 + 55 + ((sim.targetPeriod - sim.minDelay) / (sim.maxDelay - sim.minDelay)) * 290 + 14}
+              y={265 + 60}
+              fill="#ef4444"
+              fontSize={11}
+              textAnchor="middle"
+              fontWeight="bold"
+            >
+              FAIL
+            </text>
+          )}
+
+          {/* Histogram x-axis labels - abs */}
+          <text x="330" y={265 + 48 + histogramHeight + 16} fill="#94a3b8" fontSize="11">{sim.minDelay.toFixed(2)} ns</text>
+          <text x="630" y={265 + 48 + histogramHeight + 16} fill="#94a3b8" fontSize="11" textAnchor="end">{sim.maxDelay.toFixed(2)} ns</text>
+          <text x="480" y={265 + 48 + histogramHeight + 32} fill="#94a3b8" fontSize="11" textAnchor="middle">Path Delay (ns)</text>
+
+          {/* Histogram y-axis rotate label */}
+          <text x="282" y={265 + 48 + histogramHeight / 2} fill="#94a3b8" fontSize="11" textAnchor="middle" transform={`rotate(-90, 282, ${265 + 48 + histogramHeight / 2})`}>Count</text>
+
+          {/* Histogram legend KEY label - abs (280+360+22, 265+48+14) = (662, 327) */}
+          <text x="662" y="327" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold">KEY</text>
+          <text x="660" y="343" fill="#94a3b8" fontSize="11">OK</text>
+          <text x="660" y="361" fill="#94a3b8" fontSize="11">Warn</text>
+          <text x="660" y="379" fill="#94a3b8" fontSize="11">Fail</text>
+          <text x="662" y="397" textAnchor="middle" fill="#ef4444" fontSize="11" fontWeight="bold">{sim.failingPaths}</text>
         </svg>
 
         {interactive && (

@@ -437,8 +437,8 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: 'rgba(226,232,240,0.9)',
+    textMuted: 'rgba(200,210,220,0.8)',
     border: '#2a2a3a',
   };
 
@@ -458,9 +458,9 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Turntable Lab',
+    twist_play: 'Explore Turntable',
     twist_review: 'Deep Insight',
-    transfer: 'Real World',
+    transfer: 'Transfer Applications',
     test: 'Knowledge Test',
     mastery: 'Mastery'
   };
@@ -486,6 +486,13 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
     const currentIndex = phaseOrder.indexOf(phase);
     if (currentIndex < phaseOrder.length - 1) {
       goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
     }
   }, [phase, goToPhase, phaseOrder]);
 
@@ -576,22 +583,84 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
     minHeight: '44px',
   };
 
+  // Standard slider style
+  const sliderStyle: React.CSSProperties = {
+    width: '100%',
+    height: '20px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    accentColor: '#3b82f6',
+    touchAction: 'pan-y',
+    WebkitAppearance: 'none',
+  };
+
+  // Bottom navigation bar (Back / Next)
+  const renderBottomNav = (onBack?: () => void, onNext?: () => void, nextLabel?: string, nextDisabled?: boolean) => (
+    <div style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: '64px',
+      background: colors.bgSecondary,
+      borderTop: `1px solid ${colors.border}`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 16px',
+      zIndex: 1000,
+    }}>
+      <button
+        onClick={onBack || prevPhase}
+        style={{
+          padding: '10px 20px',
+          borderRadius: '8px',
+          border: `1px solid ${colors.border}`,
+          background: 'transparent',
+          color: colors.textSecondary,
+          fontWeight: 600,
+          cursor: 'pointer',
+          minHeight: '44px',
+        }}
+      >
+        Back
+      </button>
+      <button
+        onClick={onNext || nextPhase}
+        disabled={nextDisabled}
+        style={{
+          padding: '10px 24px',
+          borderRadius: '8px',
+          border: 'none',
+          background: nextDisabled ? colors.border : colors.accent,
+          color: 'white',
+          fontWeight: 600,
+          cursor: nextDisabled ? 'not-allowed' : 'pointer',
+          minHeight: '44px',
+          opacity: nextDisabled ? 0.5 : 1,
+        }}
+      >
+        {nextLabel || 'Next'}
+      </button>
+    </div>
+  );
+
   // Standing wave SVG visualization
   const renderStandingWaveSVG = (interactive: boolean = false, showLabels: boolean = true) => {
     const svgWidth = 400;
     const svgHeight = 300;
-    const waveAmplitude = 40;
+    const waveAmplitude = 90;
     const numPoints = 100;
 
-    // Generate standing wave pattern
+    // Generate standing wave pattern (space-separated for parser compatibility)
     const generateWavePath = (phase: number, yOffset: number) => {
       let path = '';
       for (let i = 0; i <= numPoints; i++) {
-        const x = (i / numPoints) * svgWidth;
+        const x = ((i / numPoints) * svgWidth).toFixed(1);
         const normalizedX = i / numPoints;
         const standingWaveAmplitude = Math.abs(Math.sin(normalizedX * Math.PI * 3 + animPhase)) * Math.sin(phase);
-        const y = yOffset + standingWaveAmplitude * waveAmplitude;
-        path += (i === 0 ? 'M' : 'L') + `${x},${y}`;
+        const y = (yOffset + standingWaveAmplitude * waveAmplitude).toFixed(1);
+        path += (i === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`);
       }
       return path;
     };
@@ -622,15 +691,37 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
             <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.8" />
             <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.2" />
           </linearGradient>
+          <linearGradient id="svgBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#1a1a2e" />
+            <stop offset="100%" stopColor="#0f0f1a" />
+          </linearGradient>
+          <filter id="waveGlow">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+          <filter id="pointGlow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
         </defs>
 
         {/* Background */}
-        <rect x="0" y="0" width={svgWidth} height={svgHeight} fill={colors.bgCard} rx="8" />
+        <rect x="0" y="0" width={svgWidth} height={svgHeight} fill="url(#svgBgGrad)" rx="8" />
+
+        {/* Grid lines */}
+        <g id="grid" opacity="0.3">
+          {[80, 120, 160, 200, 240].map((y) => (
+            <line key={y} x1="20" y1={y} x2={svgWidth - 20} y2={y} stroke="#4a4a6a" strokeWidth="1" strokeDasharray="4 4" />
+          ))}
+          {[100, 200, 300].map((x) => (
+            <line key={x} x1={x} y1="60" x2={x} y2={svgHeight - 30} stroke="#4a4a6a" strokeWidth="1" strokeDasharray="4 4" />
+          ))}
+        </g>
 
         {/* Microwave cavity walls */}
         <g id="cavity-walls">
           <rect x="20" y="60" width={svgWidth - 40} height="180" fill="none" stroke="#6B7280" strokeWidth="3" rx="4" />
-          <text x="30" y="50" fill={colors.textSecondary} fontSize="12" fontWeight="500">Metal Cavity</text>
+          <text x="30" y="52" fill={colors.textSecondary} fontSize="12" fontWeight="500">Metal Cavity</text>
         </g>
 
         {/* Hot spots (antinodes) and cold spots (nodes) */}
@@ -648,16 +739,16 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
                   fill={isAntinode ? 'url(#hotGradient)' : 'url(#coldGradient)'}
                   opacity="0.5"
                 />
-                {showLabels && (
+                        {showLabels && (
                   <text
                     x={x}
-                    y="250"
+                    y={isAntinode ? 256 : 268}
                     fill={isAntinode ? '#ef4444' : '#3b82f6'}
-                    fontSize="10"
+                    fontSize="11"
                     textAnchor="middle"
                     fontWeight="600"
                   >
-                    {isAntinode ? 'HOT' : 'COLD'}
+                    {isAntinode ? 'Antinode' : 'Node'}
                   </text>
                 )}
               </g>
@@ -666,7 +757,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
         </g>
 
         {/* Standing wave pattern */}
-        <g id="standing-wave">
+        <g id="standing-wave" filter="url(#waveGlow)">
           <path
             d={generateWavePath(1, 150)}
             fill="none"
@@ -682,34 +773,79 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
             opacity="0.5"
             strokeDasharray="5,5"
           />
+          {/* Envelope lines showing standing wave amplitude */}
+          <path
+            d={(() => {
+              let d = '';
+              for (let i = 0; i <= numPoints; i++) {
+                const x = ((i / numPoints) * svgWidth).toFixed(1);
+                const nx = i / numPoints;
+                const amp = Math.abs(Math.sin(nx * Math.PI * 3)) * waveAmplitude;
+                const y = (150 - amp).toFixed(1);
+                d += (i === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`);
+              }
+              return d;
+            })()}
+            fill="none" stroke={colors.accent} strokeWidth="1.2" opacity="0.35" strokeDasharray="3 3"
+          />
+          <path
+            d={(() => {
+              let d = '';
+              for (let i = 0; i <= numPoints; i++) {
+                const x = ((i / numPoints) * svgWidth).toFixed(1);
+                const nx = i / numPoints;
+                const amp = Math.abs(Math.sin(nx * Math.PI * 3)) * waveAmplitude;
+                const y = (150 + amp).toFixed(1);
+                d += (i === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`);
+              }
+              return d;
+            })()}
+            fill="none" stroke={colors.accent} strokeWidth="1.2" opacity="0.35" strokeDasharray="3 3"
+          />
         </g>
 
         {/* Wavelength indicator */}
         <g id="wavelength-marker">
-          <line x1="85" y1="270" x2="200" y2="270" stroke={colors.accent} strokeWidth="2" markerEnd="url(#arrowEnd)" />
-          <line x1="200" y1="270" x2="315" y2="270" stroke={colors.accent} strokeWidth="2" />
-          <text x="200" y="290" fill={colors.accent} fontSize="11" textAnchor="middle" fontWeight="600">
-            lambda/2 = {(wavelength / 2).toFixed(1)} cm
+          <line x1="85" y1="258" x2="200" y2="258" stroke={colors.accent} strokeWidth="1.5" />
+          <line x1="200" y1="258" x2="315" y2="258" stroke={colors.accent} strokeWidth="1.5" />
+          <text x="200" y="273" fill={colors.accent} fontSize="11" textAnchor="middle" fontWeight="600">
+            {'\u03bb'}/2 = {(wavelength / 2).toFixed(1)} cm
           </text>
         </g>
 
         {/* Labels */}
         <g id="labels">
-          <text x={svgWidth / 2} y="25" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="700">
+          <text x={svgWidth / 2} y="22" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="700">
             Standing Wave Pattern
           </text>
           {interactive && (
-            <text x={svgWidth / 2} y="42" fill={colors.textSecondary} fontSize="11" textAnchor="middle">
-              Adjust frequency to change pattern
+            <text x={svgWidth / 2} y="38" fill={colors.textSecondary} fontSize="11" textAnchor="middle">
+              Frequency: {frequency.toFixed(2)} GHz | Wavelength: {wavelength.toFixed(1)} cm
             </text>
           )}
+          {/* Axis labels */}
+          <text x="14" y="155" fill={colors.textMuted} fontSize="11" textAnchor="middle" transform={`rotate(-90, 14, 155)`}>Amplitude</text>
+          <text x={svgWidth / 2} y={svgHeight - 5} fill={colors.textMuted} fontSize="11" textAnchor="middle">Wavelength (position)</text>
         </g>
 
         {/* Food representation in center */}
         <g id="food-item">
           <ellipse cx={svgWidth / 2} cy="150" rx="35" ry="25" fill="#92400E" stroke="#78350F" strokeWidth="2" />
-          <text x={svgWidth / 2} y="155" fill="#FEF3C7" fontSize="10" textAnchor="middle">Food</text>
+          <text x={svgWidth / 2} y="155" fill="#FEF3C7" fontSize="11" textAnchor="middle">Food</text>
         </g>
+
+        {/* Interactive tracking circle */}
+        {interactive && (
+          <circle
+            cx={20 + ((frequency - 2.0) / 1.0) * (svgWidth - 40)}
+            cy={150 + Math.abs(Math.sin(((frequency - 2.0) / 1.0) * Math.PI * 3 + animPhase)) * waveAmplitude}
+            r="9"
+            fill={colors.accent}
+            stroke="white"
+            strokeWidth="2"
+            filter="url(#pointGlow)"
+          />
+        )}
       </svg>
     );
   };
@@ -726,11 +862,9 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        paddingTop: '80px',
-        textAlign: 'center',
+        paddingTop: '60px',
+        paddingBottom: '80px',
+        overflowY: 'auto',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
@@ -777,10 +911,11 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          Investigate the Mystery
+          Start Exploring
         </button>
 
         {renderNavDots()}
+        {renderBottomNav(undefined, nextPhase, 'Next →')}
       </div>
     );
   }
@@ -894,6 +1029,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -904,13 +1040,15 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        paddingTop: '60px',
+        paddingBottom: '80px',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Standing Wave Laboratory
@@ -941,7 +1079,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>Microwave Frequency</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{frequency.toFixed(2)} GHz</span>
+                <span style={{ ...typo.small, color: '#fcd34d', fontWeight: 600 }}>{frequency.toFixed(2)} GHz</span>
               </div>
               <input
                 type="range"
@@ -950,11 +1088,14 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
                 step="0.05"
                 value={frequency}
                 onChange={(e) => setFrequency(parseFloat(e.target.value))}
-                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                style={sliderStyle}
               />
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: '4px 0 0 0' }}>
+                <strong>Effect:</strong> When frequency increases, wavelength decreases because λ = c/f. This causes hot spots (antinodes) to move closer together.
+              </p>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                 <span style={{ ...typo.small, color: colors.textMuted }}>2.0 GHz</span>
-                <span style={{ ...typo.small, color: colors.accent }}>Standard: 2.45 GHz</span>
+                <span style={{ ...typo.small, color: '#fcd34d' }}>Standard: 2.45 GHz</span>
                 <span style={{ ...typo.small, color: colors.textMuted }}>3.0 GHz</span>
               </div>
             </div>
@@ -963,7 +1104,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>Cavity Length</span>
-                <span style={{ ...typo.small, color: '#3b82f6', fontWeight: 600 }}>{cavityLength} cm</span>
+                <span style={{ ...typo.small, color: '#93c5fd', fontWeight: 600 }}>{cavityLength} cm</span>
               </div>
               <input
                 type="range"
@@ -972,15 +1113,18 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
                 step="1"
                 value={cavityLength}
                 onChange={(e) => setCavityLength(parseInt(e.target.value))}
-                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                style={sliderStyle}
               />
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: '4px 0 0 0' }}>
+                <strong>Effect:</strong> Longer cavity → more standing wave modes fit → more hot spots appear inside.
+              </p>
             </div>
 
             {/* Power slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>Power Level</span>
-                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{powerLevel}%</span>
+                <span style={{ ...typo.small, color: '#86efac', fontWeight: 600 }}>{powerLevel}%</span>
               </div>
               <input
                 type="range"
@@ -989,8 +1133,11 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
                 step="10"
                 value={powerLevel}
                 onChange={(e) => setPowerLevel(parseInt(e.target.value))}
-                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                style={sliderStyle}
               />
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: '4px 0 0 0' }}>
+                <strong>Effect:</strong> Higher power → greater wave amplitude → hotter antinodes and stronger temperature contrast.
+              </p>
             </div>
 
             {/* Wavelength display */}
@@ -1136,7 +1283,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <p style={{ ...typo.body, color: colors.accent, margin: 0 }}>
+            <p style={{ ...typo.body, color: '#fcd34d', margin: 0 }}>
               Try cooking with turntable OFF, then ON. Notice how the turntable helps distribute heat evenly!
             </p>
           </div>
@@ -1148,8 +1295,10 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
             Understand the Physics
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1263,6 +1412,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1279,13 +1429,15 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        paddingTop: '60px',
+        paddingBottom: '80px',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.warning}22`,
@@ -1310,9 +1462,42 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ fontSize: '48px', marginBottom: '8px' }}>🔄</div>
-            <p style={{ ...typo.body, color: colors.textSecondary }}>
-              The turntable rotates the food, but the standing wave pattern stays fixed...
+            {/* SVG showing fixed standing wave pattern with rotating food */}
+            <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '400px', height: 'auto' }}>
+              <defs>
+                <linearGradient id="tpBg" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#1a1a2e" /><stop offset="100%" stopColor="#0f0f1a" />
+                </linearGradient>
+                <filter id="tpGlow"><feGaussianBlur stdDeviation="2.5" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+              </defs>
+              <rect x="0" y="0" width="400" height="200" fill="url(#tpBg)" rx="8" />
+              {/* Grid */}
+              <g opacity="0.25">
+                {[60, 100, 140].map(y => <line key={y} x1="20" y1={y} x2="380" y2={y} stroke="#4a4a6a" strokeWidth="1" strokeDasharray="4 4" />)}
+                {[120, 200, 280].map(x => <line key={x} x1={x} y1="20" x2={x} y2="180" stroke="#4a4a6a" strokeWidth="1" strokeDasharray="4 4" />)}
+              </g>
+              {/* Cavity */}
+              <rect x="20" y="20" width="360" height="160" fill="none" stroke="#6B7280" strokeWidth="2" rx="4" />
+              {/* Standing wave hot zones (fixed) */}
+              <rect x="100" y="30" width="60" height="140" fill="rgba(239,68,68,0.25)" rx="4" />
+              <rect x="240" y="30" width="60" height="140" fill="rgba(239,68,68,0.25)" rx="4" />
+              {/* Standing wave path */}
+              <path d="M 20 100 L 60 100 L 80 50 L 120 100 L 160 150 L 200 100 L 240 50 L 280 100 L 320 150 L 360 100 L 380 100" fill="none" stroke={colors.accent} strokeWidth="2.5" opacity="0.8" filter="url(#tpGlow)" />
+              {/* Wavelength axis label */}
+              <text x="200" y="195" fill={colors.textMuted} fontSize="11" textAnchor="middle">Wavelength (position in cavity)</text>
+              {/* Labels */}
+              <text x="130" y="18" fill="#ef4444" fontSize="10" textAnchor="middle">HOT</text>
+              <text x="270" y="18" fill="#ef4444" fontSize="10" textAnchor="middle">HOT</text>
+              {/* Turntable circle (dashed = food moves) */}
+              <circle cx="200" cy="100" r="50" fill="none" stroke="#9ca3af" strokeWidth="1.5" strokeDasharray="8 4" opacity="0.6" />
+              {/* Food item on turntable */}
+              <ellipse cx="200" cy="55" rx="16" ry="12" fill="#92400E" stroke="#78350F" strokeWidth="1.5" filter="url(#tpGlow)" />
+              <text x="200" y="60" fill="#FEF3C7" fontSize="10" textAnchor="middle">Food</text>
+              {/* Amplitude label */}
+              <text x="10" y="100" fill={colors.textMuted} fontSize="10" textAnchor="middle" transform="rotate(-90, 10, 100)">Amplitude</text>
+            </svg>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '8px' }}>
+              The standing wave pattern stays fixed. The turntable rotates the food through the hot spots.
             </p>
           </div>
 
@@ -1374,8 +1559,10 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
             </div>
           )}
         </div>
+        </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1645,6 +1832,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1735,6 +1923,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1743,19 +1932,28 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        paddingTop: '60px',
+        paddingBottom: '80px',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            App {selectedApp + 1} of {realWorldApps.length} — {completedCount} of {realWorldApps.length} explored
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1860,6 +2058,33 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
                 </div>
               ))}
             </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '12px',
+              marginTop: '12px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ ...typo.small, color: colors.warning, fontWeight: 600, marginBottom: '4px' }}>Future Impact:</p>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{app.futureImpact}</p>
+            </div>
+
+            {/* Got It button */}
+            <button
+              onClick={() => {
+                playSound('success');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                if (selectedApp < realWorldApps.length - 1) {
+                  setSelectedApp(selectedApp + 1);
+                }
+              }}
+              style={{ ...primaryButtonStyle, width: '100%', background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)` }}
+            >
+              Got It — Next App
+            </button>
           </div>
 
           {allAppsCompleted && (
@@ -1871,8 +2096,10 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
             </button>
           )}
         </div>
+        </div>
 
         {renderNavDots()}
+        {renderBottomNav(undefined, allAppsCompleted ? nextPhase : undefined, 'Start Test', !allAppsCompleted)}
       </div>
     );
   }
@@ -1885,11 +2112,16 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          paddingTop: '60px',
+          paddingBottom: '80px',
         }}>
+          {renderNavBar()}
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1929,6 +2161,46 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
                 Review and Try Again
               </button>
             )}
+
+            {/* Answer review */}
+            <div style={{ marginTop: '32px', textAlign: 'left' }}>
+              <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>Answer Review</h3>
+              {testQuestions.map((q, i) => {
+                const correct = q.options.find(o => o.correct)?.id;
+                const userAnswer = testAnswers[i];
+                const isCorrect = userAnswer === correct;
+                return (
+                  <div key={i} style={{
+                    background: isCorrect ? `${colors.success}11` : `${colors.error}11`,
+                    border: `1px solid ${isCorrect ? colors.success : colors.error}22`,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    marginBottom: '8px',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '12px',
+                  }}>
+                    <span style={{
+                      fontSize: '16px',
+                      fontWeight: 700,
+                      color: isCorrect ? colors.success : colors.error,
+                      minWidth: '20px',
+                    }}>
+                      {isCorrect ? '✓' : '✗'}
+                    </span>
+                    <div>
+                      <p style={{ ...typo.small, color: colors.textPrimary, margin: '0 0 4px 0', fontWeight: 600 }}>
+                        Q{i + 1}: {q.question.substring(0, 60)}...
+                      </p>
+                      <p style={{ ...typo.small, color: colors.textMuted, margin: 0 }}>
+                        Correct: {q.options.find(o => o.correct)?.label?.substring(0, 50)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
           </div>
           {renderNavDots()}
         </div>
@@ -1941,11 +2213,16 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        paddingTop: '60px',
+        paddingBottom: '80px',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -2065,7 +2342,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
                   fontWeight: 600,
                 }}
               >
-                Next
+                Check Answer
               </button>
             ) : (
               <button
@@ -2095,8 +2372,10 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
             )}
           </div>
         </div>
+        </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -2112,8 +2391,11 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '80px',
+        paddingBottom: '100px',
         textAlign: 'center',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
         <div style={{
@@ -2186,6 +2468,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
         </div>
 
         {renderNavDots()}
+        {renderBottomNav(undefined, undefined, 'Play Again')}
       </div>
     );
   }

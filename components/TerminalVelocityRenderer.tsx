@@ -702,7 +702,7 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
                 x="10"
                 y={39 + i * 45}
                 fill="white"
-                fontSize="10"
+                fontSize="11"
                 fontWeight="bold"
                 textAnchor="end"
                 style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}
@@ -880,241 +880,261 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
             )}
           </g>
 
-          {/* ========== VELOCITY VS TIME GRAPH ========== */}
-          <g transform={`translate(${width - graphWidth - 50}, 30)`} filter="url(#tvelPanelShadow)">
-            {/* Graph background panel */}
-            <rect
-              x="0"
-              y="0"
-              width={graphWidth}
-              height={graphHeight + 10}
-              fill="url(#tvelGraphBgGradient)"
-              rx="12"
-              stroke="#334155"
-              strokeWidth="1"
-            />
-
-            {/* Graph title */}
-            <text
-              x={graphWidth / 2}
-              y="15"
-              fill="#f8fafc"
-              fontSize="12"
-              textAnchor="middle"
-              fontWeight="bold"
-            >
-              Velocity vs Time
-            </text>
-
-            {/* Graph area background */}
-            <rect
-              x="35"
-              y="30"
-              width={graphWidth - 50}
-              height={graphHeight - 45}
-              fill="#020617"
-              rx="4"
-            />
-
-            {/* Grid lines */}
-            {[0.25, 0.5, 0.75].map((frac, i) => (
-              <line
-                key={`hgrid-${i}`}
-                x1="35"
-                y1={30 + (graphHeight - 45) * frac}
-                x2={graphWidth - 15}
-                y2={30 + (graphHeight - 45) * frac}
-                stroke="#1e293b"
-                strokeWidth="1"
-              />
-            ))}
-            {[0.25, 0.5, 0.75].map((frac, i) => (
-              <line
-                key={`vgrid-${i}`}
-                x1={35 + (graphWidth - 50) * frac}
-                y1="30"
-                x2={35 + (graphWidth - 50) * frac}
-                y2={graphHeight - 15}
-                stroke="#1e293b"
-                strokeWidth="1"
-              />
-            ))}
-
-            {/* Axes */}
-            <line
-              x1="35"
-              y1={graphHeight - 15}
-              x2={graphWidth - 15}
-              y2={graphHeight - 15}
-              stroke="#64748b"
-              strokeWidth="2"
-            />
-            <line
-              x1="35"
-              y1="30"
-              x2="35"
-              y2={graphHeight - 15}
-              stroke="#64748b"
-              strokeWidth="2"
-            />
-
-            {/* Axis labels */}
-            <text
-              x={graphWidth / 2 + 10}
-              y={graphHeight + 5}
-              fill="#94a3b8"
-              fontSize="10"
-              textAnchor="middle"
-            >
-              Time (s)
-            </text>
-            <text
-              x="8"
-              y={(graphHeight - 15 + 30) / 2}
-              fill="#94a3b8"
-              fontSize="10"
-              textAnchor="middle"
-              transform={`rotate(-90, 8, ${(graphHeight - 15 + 30) / 2})`}
-            >
-              v (m/s)
-            </text>
-
-            {/* Baseline reference marker (v=0 starting point) */}
-            <circle
-              cx="35"
-              cy={graphHeight - 15}
-              r="4"
-              fill="#94a3b8"
-              stroke="#64748b"
-              strokeWidth="1.5"
-            />
-            <text
-              x="42"
-              y={graphHeight - 10}
-              fill="#94a3b8"
-              fontSize="8"
-              fontWeight="bold"
-            >
-              Start
-            </text>
-
-            {/* Terminal velocity reference line */}
-            <line
-              x1="35"
-              y1={graphHeight - 15 - (terminalVelocity / graphMaxV) * (graphHeight - 45)}
-              x2={graphWidth - 15}
-              y2={graphHeight - 15 - (terminalVelocity / graphMaxV) * (graphHeight - 45)}
-              stroke="url(#tvelTerminalLineGradient)"
-              strokeWidth="2"
-              strokeDasharray="6,3"
-            />
-            <rect
-              x={graphWidth - 35}
-              y={graphHeight - 23 - (terminalVelocity / graphMaxV) * (graphHeight - 45)}
-              width="22"
-              height="14"
-              rx="3"
-              fill="rgba(139, 92, 246, 0.8)"
-            />
-            <text
-              x={graphWidth - 24}
-              y={graphHeight - 13 - (terminalVelocity / graphMaxV) * (graphHeight - 45)}
-              fill="white"
-              fontSize="11"
-              fontWeight="bold"
-              textAnchor="middle"
-            >
-              vt
-            </text>
-
-            {/* Velocity curve with glow */}
-            {velocityHistory.length > 1 && (
-              <g filter="url(#tvelCurveGlow)">
-                <polyline
-                  points={velocityHistory.map((pt) => {
-                    const x = 35 + (pt.t / graphMaxT) * (graphWidth - 50);
-                    const y = graphHeight - 15 - (pt.v / graphMaxV) * (graphHeight - 45);
-                    return `${x},${Math.max(30, Math.min(graphHeight - 15, y))}`;
-                  }).join(' ')}
-                  fill="none"
-                  stroke="url(#tvelVelocityCurveGradient)"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+          {/* ========== VELOCITY VS TIME GRAPH (absolute coords: gX=470, gY=30) ========== */}
+          {(() => {
+            const gX = width - graphWidth - 50; // 470
+            const gY = 30;
+            return (
+              <g filter="url(#tvelPanelShadow)">
+                {/* Graph background panel */}
+                <rect
+                  x={gX}
+                  y={gY}
+                  width={graphWidth}
+                  height={graphHeight + 10}
+                  fill="url(#tvelGraphBgGradient)"
+                  rx="12"
+                  stroke="#334155"
+                  strokeWidth="1"
                 />
+
+                {/* Graph title */}
+                <text
+                  x={gX + graphWidth / 2}
+                  y={gY + 15}
+                  fill="#f8fafc"
+                  fontSize="12"
+                  textAnchor="middle"
+                  fontWeight="bold"
+                >
+                  v-t Graph
+                </text>
+
+                {/* Graph area background */}
+                <rect
+                  x={gX + 35}
+                  y={gY + 30}
+                  width={graphWidth - 50}
+                  height={graphHeight - 45}
+                  fill="#020617"
+                  rx="4"
+                />
+
+                {/* Grid lines */}
+                {[0.25, 0.5, 0.75].map((frac, i) => (
+                  <line
+                    key={`hgrid-${i}`}
+                    x1={gX + 35}
+                    y1={gY + 30 + (graphHeight - 45) * frac}
+                    x2={gX + graphWidth - 15}
+                    y2={gY + 30 + (graphHeight - 45) * frac}
+                    stroke="#1e293b"
+                    strokeWidth="1"
+                  />
+                ))}
+                {[0.25, 0.5, 0.75].map((frac, i) => (
+                  <line
+                    key={`vgrid-${i}`}
+                    x1={gX + 35 + (graphWidth - 50) * frac}
+                    y1={gY + 30}
+                    x2={gX + 35 + (graphWidth - 50) * frac}
+                    y2={gY + graphHeight - 15}
+                    stroke="#1e293b"
+                    strokeWidth="1"
+                  />
+                ))}
+
+                {/* Axes */}
+                <line
+                  x1={gX + 35}
+                  y1={gY + graphHeight - 15}
+                  x2={gX + graphWidth - 15}
+                  y2={gY + graphHeight - 15}
+                  stroke="#64748b"
+                  strokeWidth="2"
+                />
+                <line
+                  x1={gX + 35}
+                  y1={gY + 30}
+                  x2={gX + 35}
+                  y2={gY + graphHeight - 15}
+                  stroke="#64748b"
+                  strokeWidth="2"
+                />
+
+                {/* Axis labels */}
+                <text
+                  x={gX + graphWidth / 2 + 10}
+                  y={gY + graphHeight + 5}
+                  fill="#94a3b8"
+                  fontSize="11"
+                  textAnchor="middle"
+                >
+                  Time (s)
+                </text>
+                <text
+                  x={gX + 8}
+                  y={gY + (graphHeight - 15 + 30) / 2}
+                  fill="#94a3b8"
+                  fontSize="11"
+                  textAnchor="middle"
+                  transform={`rotate(-90, ${gX + 8}, ${gY + (graphHeight - 15 + 30) / 2})`}
+                >
+                  v(m/s)
+                </text>
+
+                {/* Baseline reference marker (v=0 starting point) */}
+                <circle
+                  cx={gX + 35}
+                  cy={gY + graphHeight - 15}
+                  r="4"
+                  fill="#94a3b8"
+                  stroke="#64748b"
+                  strokeWidth="1.5"
+                />
+                <text
+                  x={gX + 42}
+                  y={gY + graphHeight - 10}
+                  fill="#94a3b8"
+                  fontSize="11"
+                  fontWeight="bold"
+                >
+                  Start
+                </text>
+
+                {/* Terminal velocity reference line */}
+                {(() => {
+                  const tvY = gY + graphHeight - 15 - (terminalVelocity / graphMaxV) * (graphHeight - 45);
+                  return (
+                    <>
+                      <line
+                        x1={gX + 35}
+                        y1={tvY}
+                        x2={gX + graphWidth - 15}
+                        y2={tvY}
+                        stroke="url(#tvelTerminalLineGradient)"
+                        strokeWidth="2"
+                        strokeDasharray="6,3"
+                      />
+                      <rect
+                        x={gX + graphWidth - 35}
+                        y={tvY - 8}
+                        width="22"
+                        height="14"
+                        rx="3"
+                        fill="rgba(139, 92, 246, 0.8)"
+                      />
+                      <text
+                        x={gX + graphWidth - 24}
+                        y={tvY + 2}
+                        fill="white"
+                        fontSize="11"
+                        fontWeight="bold"
+                        textAnchor="middle"
+                      >
+                        vt
+                      </text>
+                    </>
+                  );
+                })()}
+
+                {/* Velocity curve with glow */}
+                {velocityHistory.length > 1 && (
+                  <g filter="url(#tvelCurveGlow)">
+                    <polyline
+                      points={velocityHistory.map((pt) => {
+                        const x = gX + 35 + (pt.t / graphMaxT) * (graphWidth - 50);
+                        const y = gY + graphHeight - 15 - (pt.v / graphMaxV) * (graphHeight - 45);
+                        return `${x},${Math.max(gY + 30, Math.min(gY + graphHeight - 15, y))}`;
+                      }).join(' ')}
+                      fill="none"
+                      stroke="url(#tvelVelocityCurveGradient)"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </g>
+                )}
+
+                {/* Y-axis values */}
+                <text x={gX + 30} y={gY + graphHeight - 12} fill="#64748b" fontSize="11" textAnchor="end">0</text>
+                <text x={gX + 30} y={gY + 35} fill="#64748b" fontSize="11" textAnchor="end">{graphMaxV.toFixed(1)}</text>
               </g>
-            )}
+            );
+          })()}
 
-            {/* Y-axis values */}
-            <text x="30" y={graphHeight - 12} fill="#64748b" fontSize="9" textAnchor="end">0</text>
-            <text x="30" y="35" fill="#64748b" fontSize="9" textAnchor="end">{graphMaxV.toFixed(1)}</text>
-            <text x="30" y={(graphHeight - 15 + 30) / 2 + 5} fill="#64748b" fontSize="9" textAnchor="end">
-              {(graphMaxV / 2).toFixed(1)}
-            </text>
-          </g>
+          {/* ========== INFO PANEL (absolute coords: iX=470, iY=195) ========== */}
+          {(() => {
+            const iX = width - graphWidth - 50; // 470
+            const iY = graphHeight + 55; // 195
+            return (
+              <g filter="url(#tvelPanelShadow)">
+                <rect
+                  x={iX}
+                  y={iY}
+                  width={graphWidth}
+                  height="100"
+                  fill="url(#tvelInfoPanelGradient)"
+                  rx="12"
+                  stroke="#334155"
+                  strokeWidth="1"
+                />
 
-          {/* ========== INFO PANEL ========== */}
-          <g transform={`translate(${width - graphWidth - 50}, ${graphHeight + 55})`} filter="url(#tvelPanelShadow)">
-            <rect
-              x="0"
-              y="0"
-              width={graphWidth}
-              height="100"
-              fill="url(#tvelInfoPanelGradient)"
-              rx="12"
-              stroke="#334155"
-              strokeWidth="1"
-            />
+                {/* Panel header */}
+                <rect x={iX} y={iY} width={graphWidth} height="28" rx="12" fill="#1e293b" />
+                <rect x={iX} y={iY + 14} width={graphWidth} height="14" fill="#1e293b" />
+                <text
+                  x={iX + graphWidth / 2}
+                  y={iY + 18}
+                  fill="#f8fafc"
+                  fontSize="11"
+                  textAnchor="middle"
+                  fontWeight="bold"
+                >
+                  {numFilters} Filter{numFilters > 1 ? 's' : ''} | {showCrumple && isCrumpled ? 'Crumpled' : 'Flat'}
+                </text>
 
-            {/* Panel header */}
-            <rect x="0" y="0" width={graphWidth} height="28" rx="12" fill="#1e293b" />
-            <rect x="0" y="14" width={graphWidth} height="14" fill="#1e293b" />
-            <text
-              x={graphWidth / 2}
-              y="18"
-              fill="#f8fafc"
-              fontSize="10"
-              textAnchor="middle"
-              fontWeight="bold"
-            >
-              {numFilters} Filter{numFilters > 1 ? 's' : ''} | {showCrumple && isCrumpled ? 'Crumpled' : 'Flat'}
-            </text>
+                {/* Current velocity */}
+                <text x={iX + 10} y={iY + 46} fill="#94a3b8" fontSize="11">Current:</text>
+                <text x={iX + graphWidth - 10} y={iY + 46} fill="#22c55e" fontSize="11" fontWeight="bold" textAnchor="end">
+                  v={velocity.toFixed(2)}m/s
+                </text>
 
-            {/* Current velocity */}
-            <text x="10" y="46" fill="#94a3b8" fontSize="9">Current:</text>
-            <text x={graphWidth - 10} y="46" fill="#22c55e" fontSize="11" fontWeight="bold" textAnchor="end">
-              v = {velocity.toFixed(2)} m/s
-            </text>
+                {/* Terminal velocity */}
+                <text x={iX + 10} y={iY + 66} fill="#94a3b8" fontSize="11">Terminal:</text>
+                <text x={iX + graphWidth - 10} y={iY + 66} fill="#a855f7" fontSize="11" fontWeight="bold" textAnchor="end">
+                  vt={terminalVelocity.toFixed(2)}m/s
+                </text>
 
-            {/* Terminal velocity */}
-            <text x="10" y="66" fill="#94a3b8" fontSize="9">Terminal:</text>
-            <text x={graphWidth - 10} y="66" fill="#a855f7" fontSize="11" fontWeight="bold" textAnchor="end">
-              vt = {terminalVelocity.toFixed(2)} m/s
-            </text>
+                {/* Time elapsed */}
+                <text x={iX + 10} y={iY + 86} fill="#94a3b8" fontSize="11">Time:</text>
+                <text x={iX + graphWidth - 10} y={iY + 86} fill="#60a5fa" fontSize="11" fontWeight="bold" textAnchor="end">
+                  t={time.toFixed(2)}s
+                </text>
+              </g>
+            );
+          })()}
 
-            {/* Time elapsed */}
-            <text x="10" y="86" fill="#94a3b8" fontSize="9">Time:</text>
-            <text x={graphWidth - 10} y="86" fill="#60a5fa" fontSize="11" fontWeight="bold" textAnchor="end">
-              t = {time.toFixed(2)} s
-            </text>
-          </g>
+          {/* ========== LEGEND (absolute coords: lX=470, lY=352) ========== */}
+          {(() => {
+            const lX = width - graphWidth - 50; // 470
+            const lY = height - 48; // 352
+            return (
+              <g>
+                <rect x={lX} y={lY} width={graphWidth} height="42" fill="url(#tvelInfoPanelGradient)" rx="8" stroke="#334155" strokeWidth="1" />
+                <circle cx={lX + 12} cy={lY + 12} r="4" fill="url(#tvelGravityGradient)" />
+                <text x={lX + 20} y={lY + 15} fill="#f8fafc" fontSize="11">Weight W=mg</text>
+                <circle cx={lX + 12} cy={lY + 30} r="4" fill="url(#tvelDragGradient)" />
+                <text x={lX + 20} y={lY + 33} fill="#f8fafc" fontSize="11">Drag Force ½ρv²CA</text>
+              </g>
+            );
+          })()}
 
-          {/* ========== LEGEND ========== */}
-          <g transform={`translate(${width - graphWidth - 50}, ${height - 48})`}>
-            <rect x="0" y="0" width={graphWidth} height="42" fill="url(#tvelInfoPanelGradient)" rx="8" stroke="#334155" strokeWidth="1" />
-            <circle cx="12" cy="12" r="4" fill="url(#tvelGravityGradient)" />
-            <text x="20" y="15" fill="#f8fafc" fontSize="9">Weight (W = mg)</text>
-            <circle cx="12" cy="30" r="4" fill="url(#tvelDragGradient)" />
-            <text x="20" y="33" fill="#f8fafc" fontSize="9">Drag (Fd = ½ρv²CdA)</text>
-          </g>
-
-          {/* ========== DROP ZONE LABEL ========== */}
-          <g transform="translate(170, 10)">
-            <rect x="-50" y="0" width="100" height="22" rx="6" fill="rgba(15, 23, 42, 0.85)" />
-            <text x="0" y="15" fill="#f8fafc" fontSize="11" fontWeight="bold" textAnchor="middle">
-              Drop Zone
-            </text>
-          </g>
+          {/* ========== DROP ZONE LABEL (absolute coords: 120-220, 10-32) ========== */}
+          <rect x="120" y="10" width="100" height="22" rx="6" fill="rgba(15, 23, 42, 0.85)" />
+          <text x="170" y="25" fill="#f8fafc" fontSize="11" fontWeight="bold" textAnchor="middle">
+            Drop Zone
+          </text>
         </svg>
 
         {interactive && (
@@ -1459,7 +1479,7 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomBar(false, true, 'Next → Make a Prediction')}
       </div>
     );
   }
@@ -1468,7 +1488,8 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
   if (phase === 'predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavigationDots()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '44px' }}>
           {renderVisualization(false)}
 
           <div style={{
@@ -1515,7 +1536,7 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
+        {renderBottomBar(false, true, 'Next → Test My Prediction')}
       </div>
     );
   }
@@ -1524,7 +1545,8 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavigationDots()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '44px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Terminal Velocity</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1574,7 +1596,8 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavigationDots()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '44px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1585,8 +1608,11 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
-            <p style={{ color: colors.textPrimary }}>
-              Doubling mass increases terminal velocity by sqrt(2), about 41% faster - not double!
+            <p style={{ color: colors.textPrimary, marginBottom: '8px' }}>
+              {prediction
+                ? `As you predicted ("${predictions.find(p => p.id === prediction)?.label || prediction}"), doubling mass increases terminal velocity by sqrt(2), about 41% faster - not double!`
+                : 'You observed that doubling mass increases terminal velocity by sqrt(2), about 41% faster - not double!'
+              }
             </p>
           </div>
 
@@ -1689,7 +1715,8 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
   if (phase === 'twist_predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavigationDots()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '44px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1751,7 +1778,8 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
   if (phase === 'twist_play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavigationDots()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '44px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Shape Effects</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1787,7 +1815,8 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavigationDots()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '44px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1838,10 +1867,10 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
                 <path d="M 20,-25 L 20,-15" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
                 <path d="M 35,-25 L 35,-15" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
                 <path d="M 50,-25 L 50,-15" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
-                <text x="0" y="-35" fill="#60a5fa" fontSize="10" textAnchor="middle">Large drag</text>
+                <text x="0" y="-35" fill="#60a5fa" fontSize="11" textAnchor="middle">Large drag</text>
 
                 <text x="0" y="75" fill="#10b981" fontSize="13" fontWeight="bold" textAnchor="middle">vt = v₀</text>
-                <text x="0" y="92" fill="#94a3b8" fontSize="10" textAnchor="middle">(Slow)</text>
+                <text x="0" y="92" fill="#94a3b8" fontSize="11" textAnchor="middle">(Slow)</text>
               </g>
 
               {/* Crumpled Filter */}
@@ -1857,10 +1886,10 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
                 <path d="M -12,-25 L -12,-22" stroke="#60a5fa" strokeWidth="1.5" opacity="0.4" />
                 <path d="M 0,-25 L 0,-22" stroke="#60a5fa" strokeWidth="1.5" opacity="0.4" />
                 <path d="M 12,-25 L 12,-22" stroke="#60a5fa" strokeWidth="1.5" opacity="0.4" />
-                <text x="0" y="-35" fill="#60a5fa" fontSize="10" textAnchor="middle">Small drag</text>
+                <text x="0" y="-35" fill="#60a5fa" fontSize="11" textAnchor="middle">Small drag</text>
 
                 <text x="0" y="75" fill="#f59e0b" fontSize="13" fontWeight="bold" textAnchor="middle">vt ≈ 2.5·v₀</text>
-                <text x="0" y="92" fill="#94a3b8" fontSize="10" textAnchor="middle">(Much faster!)</text>
+                <text x="0" y="92" fill="#94a3b8" fontSize="11" textAnchor="middle">(Much faster!)</text>
               </g>
 
               {/* Downward arrows */}
@@ -1887,7 +1916,7 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
               <text x="300" y="288" fill="#94a3b8" fontSize="11" textAnchor="middle">
                 vt ∝ 1/√A  and  vt ∝ 1/√Cd
               </text>
-              <text x="300" y="303" fill="#f59e0b" fontSize="10" textAnchor="middle">
+              <text x="300" y="303" fill="#f59e0b" fontSize="11" textAnchor="middle">
                 Smaller area + lower Cd = Much higher terminal velocity!
               </text>
             </svg>
@@ -1927,7 +1956,8 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
   if (phase === 'transfer') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavigationDots()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '44px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1968,7 +1998,7 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
                   }}
                   style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
                 >
-                  Reveal Answer
+                  Got It — Reveal Answer
                 </button>
               ) : (
                 <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
@@ -1988,7 +2018,8 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
     if (testSubmitted) {
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          {renderNavigationDots()}
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '44px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -2019,7 +2050,23 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
+          {testScore >= 8
+            ? renderBottomBar(false, true, 'Complete Mastery')
+            : (
+              <div style={{
+                position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 24px',
+                background: colors.bgDark, borderTop: `1px solid rgba(255,255,255,0.1)`,
+                display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, minHeight: '72px',
+              }}>
+                <button
+                  onClick={() => { setTestSubmitted(false); setTestAnswers(new Array(10).fill(null)); setCurrentTestQuestion(0); setTestScore(0); }}
+                  style={{ padding: '12px 32px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}
+                >
+                  Review & Retry
+                </button>
+              </div>
+            )
+          }
         </div>
       );
     }
@@ -2027,11 +2074,20 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavigationDots()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '44px' }}>
           <div style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <span style={{ color: colors.textSecondary, fontWeight: 'bold' }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
+            </div>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', fontWeight: 400, lineHeight: 1.6, marginBottom: '16px' }}>
+              Scenario: A team of aerospace engineers is designing a new parachute system for cargo delivery. They need to apply their understanding of terminal velocity, drag forces, and the relationship between mass, cross-sectional area, and falling speed. Apply your knowledge of how drag force equals gravitational force at terminal velocity, how terminal velocity scales with mass and area, and the real-world implications for parachute design, skydiving safety, and precipitation physics.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <span style={{ color: colors.textMuted, fontSize: '12px' }}>
+                Progress: {testAnswers.filter(a => a !== null).length}/{testQuestions.length} answered
+              </span>
             </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
@@ -2066,9 +2122,10 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
   if (phase === 'mastery') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderNavigationDots()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '44px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered terminal velocity and drag physics</p>
           </div>

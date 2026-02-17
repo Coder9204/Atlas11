@@ -176,6 +176,8 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
    const [hasSentSWaveInLiquid, setHasSentSWaveInLiquid] = useState(false);
    const [guidedMode, setGuidedMode] = useState(true);
    const [isMobile, setIsMobile] = useState(false);
+   // Slider state for wave frequency control
+   const [waveFrequency, setWaveFrequency] = useState(50);
 
    // Test state
    const [testIndex, setTestIndex] = useState(0);
@@ -307,6 +309,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
    // Test questions - 10 comprehensive questions
    const testQuestions = [
       {
+         scenario: 'A seismograph station records an earthquake. The seismograph shows two distinct wave arrivals separated by 8 seconds.',
          question: 'Which seismic wave arrives first at a monitoring station?',
          options: [
             { text: 'S-wave (Secondary)', correct: false },
@@ -317,6 +320,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
          explanation: 'P-waves (Primary waves) travel about 1.7x faster than S-waves through rock, so they always arrive first—hence the name "Primary."'
       },
       {
+         scenario: 'In 1906, geologist Richard Oldham analyzed earthquake records from around the world and noticed a puzzling pattern in the data.',
          question: 'How did scientists discover Earth\'s outer core is liquid?',
          options: [
             { text: 'Temperature measurements', correct: false },
@@ -327,6 +331,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
          explanation: 'S-waves cannot travel through liquids. Scientists found that S-waves disappear on the opposite side of Earth after an earthquake, creating a "shadow zone" that proves the outer core is liquid.'
       },
       {
+         scenario: 'Imagine pushing a slinky from one end along a table. The compression travels forward while the slinky body moves back and forth.',
          question: 'How do particles move in a P-wave?',
          options: [
             { text: 'Perpendicular to wave direction', correct: false },
@@ -337,6 +342,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
          explanation: 'P-waves are compression waves—particles push and pull back and forth parallel to the direction the wave travels, like a slinky being pushed from one end.'
       },
       {
+         scenario: 'A scientist runs an experiment: they create S-waves in solid rock and try to transmit them into a tank of water. The waves disappear at the water boundary.',
          question: 'Why can\'t S-waves travel through liquids?',
          options: [
             { text: 'Liquids are too dense', correct: false },
@@ -347,6 +353,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
          explanation: 'S-waves require the material to "spring back" when displaced sideways (shear). Liquids flow instead of springing back—there\'s no restoring force to propagate the wave.'
       },
       {
+         scenario: 'You are in a building 50 km from an earthquake epicenter. First you feel a brief, sharp jolt. Eight seconds later, stronger shaking begins.',
          question: 'In an earthquake, what causes the first sharp jolt you feel?',
          options: [
             { text: 'S-wave arrival', correct: false },
@@ -357,6 +364,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
          explanation: 'The faster P-wave arrives first as a sharp, quick jolt. The more damaging S-wave arrives seconds later with stronger shaking.'
       },
       {
+         scenario: 'A pregnant patient is receiving an ultrasound scan. The probe emits high-frequency sound waves that pass through the amniotic fluid to image the baby.',
          question: 'Medical ultrasound uses which type of wave principle?',
          options: [
             { text: 'S-waves (shear)', correct: false },
@@ -367,6 +375,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
          explanation: 'Ultrasound uses compression waves (same principle as P-waves) because they can travel through fluids like blood and amniotic fluid.'
       },
       {
+         scenario: 'An oil company sends controlled seismic waves into the ground. Some sensors detect both wave types, but sensors above certain areas only detect P-waves.',
          question: 'How do oil companies use P and S waves together?',
          options: [
             { text: 'Only P-waves are used', correct: false },
@@ -377,6 +386,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
          explanation: 'S-waves are blocked by fluid-filled reservoirs while P-waves pass through. This difference helps locate underground oil and gas deposits.'
       },
       {
+         scenario: 'NASA\'s InSight lander on Mars is recording seismic data. Scientists want to determine if Mars has a liquid core like Earth does.',
          question: 'If you wanted to detect a liquid layer inside another planet, what would you look for?',
          options: [
             { text: 'Higher temperatures', correct: false },
@@ -387,6 +397,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
          explanation: 'Just like on Earth, an S-wave shadow zone would indicate liquid layers—this is how planetary scientists study the interiors of planets and moons.'
       },
       {
+         scenario: 'An earthquake occurs deep in Earth\'s mantle. Seismometers on the surface detect P-waves arriving from unexpected directions, bent by internal layers.',
          question: 'What happens when P-waves enter the liquid outer core?',
          options: [
             { text: 'They stop completely', correct: false },
@@ -397,6 +408,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
          explanation: 'P-waves slow down in liquid (from ~14 km/s to ~8 km/s) and bend (refract) at the boundary. This creates a P-wave shadow zone between 104° and 140° from the epicenter.'
       },
       {
+         scenario: 'A magnitude 6.5 earthquake strikes near a city. Buildings sway violently after an initial sharp knock. Engineers study the wave arrival patterns to understand building damage.',
          question: 'Why do buildings often shake more during S-wave passage than P-wave?',
          options: [
             { text: 'S-waves are always larger', correct: false },
@@ -521,6 +533,18 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
 
    const renderProgressBar = () => {
       const currentIdx = phaseOrder.indexOf(phase);
+      const phaseAriaLabels: Record<Phase, string> = {
+         hook: 'Explore - Introduction',
+         predict: 'Predict - Make Your Guess',
+         play: 'Experiment - Lab Simulation',
+         review: 'Review - What You Learned',
+         twist_predict: 'Explore Twist - New Prediction',
+         twist_play: 'Experiment Twist - Twist Lab',
+         twist_review: 'Review Twist - Key Insight',
+         transfer: 'Transfer - Real World Apply',
+         test: 'Quiz - Knowledge Test',
+         mastery: 'Mastery - Completion',
+      };
       return (
          <div style={{
             display: 'flex',
@@ -531,15 +555,25 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             borderBottom: `1px solid ${design.colors.border}`,
             background: design.colors.bgSecondary,
          }}>
-            {phaseOrder.map((_, i) => (
-               <div
+            <span style={{ fontSize: '13px', fontWeight: 700, color: '#ffffff', marginRight: '8px' }}>
+               P &amp; S Waves
+            </span>
+            {phaseOrder.map((p, i) => (
+               <button
                   key={i}
+                  aria-label={phaseAriaLabels[p]}
+                  title={phaseAriaLabels[p]}
+                  onClick={() => goToPhase(p)}
                   style={{
                      width: i === currentIdx ? '24px' : '8px',
                      height: '8px',
                      borderRadius: design.radius.full,
                      background: i < currentIdx ? design.colors.success : i === currentIdx ? design.colors.primary : design.colors.bgElevated,
                      transition: 'all 0.3s ease',
+                     border: 'none',
+                     padding: 0,
+                     cursor: 'pointer',
+                     flexShrink: 0,
                   }}
                />
             ))}
@@ -569,6 +603,8 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
    const renderWaveVisualization = () => {
       const sWaveBlocked = waveType === 's' && medium === 'liquid';
       const numParticles = 14;
+      // Use waveFrequency slider to scale amplitude (1-100 Hz mapped to 0.5x-2x)
+      const freqScale = 0.5 + (waveFrequency / 100) * 1.5;
 
       return (
          <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -830,14 +866,14 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
 
                   let offsetX = 0, offsetY = 0;
                   if (waveType === 'p') {
-                     // P-wave: compression (parallel motion)
-                     offsetX = intensity * Math.sin(timeRef.current * 12 + i * 0.8) * 14;
+                     // P-wave: compression (parallel motion) - scaled by frequency
+                     offsetX = intensity * Math.sin(timeRef.current * 12 + i * 0.8) * 14 * freqScale;
                   } else if (medium === 'solid') {
-                     // S-wave in solid: shear (perpendicular motion)
-                     offsetY = intensity * Math.sin(timeRef.current * 12 + i * 0.8) * 18;
+                     // S-wave in solid: shear (perpendicular motion) - scaled by frequency
+                     offsetY = intensity * Math.sin(timeRef.current * 12 + i * 0.8) * 18 * freqScale;
                   } else {
                      // S-wave in liquid: rapidly decays
-                     offsetY = intensity * Math.sin(timeRef.current * 12 + i * 0.8) * 18 * Math.exp(-i * 0.5);
+                     offsetY = intensity * Math.sin(timeRef.current * 12 + i * 0.8) * 18 * freqScale * Math.exp(-i * 0.5);
                   }
 
                   const isBlocked = sWaveBlocked && i > 2;
@@ -931,6 +967,17 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   style={{ fontSize: '14px', fontWeight: 700, fill: '#18181b' }}>
                   {waveType === 'p' ? '\u2194' : '\u2195'}
                </text>
+
+               {/* Frequency display box - changes with slider */}
+               <rect x="40" y="170" width="100" height="30" rx="6" fill="#18181b" stroke="#3f3f46" strokeWidth="1" opacity="0.9" />
+               <text x="90" y="182" textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11" fontWeight="600">FREQUENCY</text>
+               <text x="90" y="196" textAnchor="middle" fill="#fafafa" fontSize="12" fontWeight="700">{waveFrequency} Hz</text>
+
+               {/* SVG Legend */}
+               <rect x="150" y="195" width="10" height="10" rx="2" fill="#fb923c" />
+               <text x="165" y="204" fill="rgba(148,163,184,0.7)" fontSize="11" fontWeight="400">P-Wave</text>
+               <rect x="215" y="195" width="10" height="10" rx="2" fill="#a78bfa" />
+               <text x="230" y="204" fill="rgba(148,163,184,0.7)" fontSize="11" fontWeight="400">S-Wave</text>
             </svg>
 
             {/* Labels outside SVG using typo system */}
@@ -1132,7 +1179,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                <h1 style={{
                   fontSize: isMobile ? '32px' : '40px',
                   fontWeight: 800,
-                  color: design.colors.textPrimary,
+                  color: '#ffffff',
                   marginBottom: '16px',
                   letterSpacing: '-0.02em',
                   lineHeight: 1.1,
@@ -1146,6 +1193,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   marginBottom: '12px',
                   maxWidth: '440px',
                   lineHeight: 1.6,
+                  fontWeight: 400,
                }}>
                   How did scientists prove Earth's outer core is{' '}
                   <span style={{ color: design.colors.liquid, fontWeight: 700 }}>liquid</span>
@@ -1154,9 +1202,10 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
 
                <p style={{
                   fontSize: '15px',
-                  color: design.colors.textTertiary,
+                  color: 'rgba(148,163,184,0.7)',
                   marginBottom: '36px',
                   maxWidth: '400px',
+                  fontWeight: 400,
                }}>
                   The answer lies in two types of seismic waves with very different properties...
                </p>
@@ -1290,12 +1339,61 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                <p style={{
                   fontSize: '15px',
                   color: design.colors.textSecondary,
-                  marginBottom: '28px',
+                  marginBottom: '20px',
                   lineHeight: 1.6,
                   maxWidth: '520px',
+                  fontWeight: 400,
                }}>
                   Seismologists detect two distinct wave types after earthquakes. One arrives first (Primary), one arrives second (Secondary). But something strange happens when they hit Earth's liquid outer core...
                </p>
+
+               {/* Static SVG diagram showing the seismic wave scenario */}
+               <div style={{ marginBottom: '24px', borderRadius: '12px', overflow: 'hidden', background: design.colors.bgSecondary, border: `1px solid ${design.colors.border}`, maxWidth: '520px' }}>
+                  <svg viewBox="0 0 520 160" width="100%" style={{ display: 'block' }}>
+                     <defs>
+                        <linearGradient id="predictSolidGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                           <stop offset="0%" stopColor="#52525b" />
+                           <stop offset="100%" stopColor="#27272a" />
+                        </linearGradient>
+                        <linearGradient id="predictLiquidGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                           <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.5" />
+                           <stop offset="100%" stopColor="#0284c7" stopOpacity="0.3" />
+                        </linearGradient>
+                        <filter id="predictGlow">
+                           <feGaussianBlur stdDeviation="2" result="blur" />
+                           <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                        </filter>
+                     </defs>
+                     {/* Background */}
+                     <rect width="520" height="160" fill="#09090b" />
+                     {/* Grid lines */}
+                     {[0,1,2,3].map(i => (
+                        <line key={`hg-${i}`} x1="10" y1={30 + i*35} x2="510" y2={30 + i*35} stroke="#27272a" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+                     ))}
+                     {/* Solid rock layer - left side */}
+                     <rect x="10" y="20" width="220" height="120" rx="8" fill="url(#predictSolidGrad)" stroke="#52525b" strokeWidth="1.5" />
+                     <text x="120" y="38" textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11" fontWeight="600">SOLID ROCK</text>
+                     {/* Liquid core - right side */}
+                     <rect x="280" y="20" width="230" height="120" rx="8" fill="url(#predictLiquidGrad)" stroke="#0ea5e9" strokeWidth="1.5" />
+                     <text x="395" y="38" textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11" fontWeight="600">LIQUID CORE</text>
+                     {/* P-wave arrow - travels through both */}
+                     <line x1="30" y1="75" x2="230" y2="75" stroke="#fb923c" strokeWidth="2.5" strokeDasharray="6 3" />
+                     <polygon points="230,70 245,75 230,80" fill="#fb923c" />
+                     <line x1="285" y1="75" x2="495" y2="75" stroke="#fb923c" strokeWidth="2.5" strokeDasharray="6 3" />
+                     <polygon points="495,70 510,75 495,80" fill="#fb923c" />
+                     <text x="130" y="65" textAnchor="middle" fill="#fb923c" fontSize="11" fontWeight="700">P-Wave ✓</text>
+                     {/* S-wave arrow - blocked at liquid */}
+                     <line x1="30" y1="110" x2="230" y2="110" stroke="#a78bfa" strokeWidth="2.5" strokeDasharray="6 3" />
+                     <polygon points="230,105 245,110 230,115" fill="#a78bfa" />
+                     <text x="130" y="100" textAnchor="middle" fill="#a78bfa" fontSize="11" fontWeight="700">S-Wave ?</text>
+                     {/* Boundary line */}
+                     <line x1="240" y1="15" x2="240" y2="148" stroke="#71717a" strokeWidth="2" strokeDasharray="4 4" />
+                     <text x="242" y="155" fill="rgba(148,163,184,0.7)" fontSize="11" fontWeight="400">Boundary</text>
+                     {/* Question mark on S-wave at liquid */}
+                     <circle cx="390" cy="110" r="18" fill="#2e1065" stroke="#a78bfa" strokeWidth="2" filter="url(#predictGlow)" />
+                     <text x="390" y="117" textAnchor="middle" fill="#a78bfa" fontSize="18" fontWeight="700">?</text>
+                  </svg>
+               </div>
 
                <div style={{ display: 'grid', gap: '12px', maxWidth: '520px' }}>
                   {options.map(opt => (
@@ -1448,6 +1546,41 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   background: design.colors.bgSecondary,
                   borderTop: `1px solid ${design.colors.border}`,
                }}>
+                  {/* Wave Frequency Slider */}
+                  <div style={{ marginBottom: '16px' }}>
+                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                        <label htmlFor="wave-frequency-slider" style={{ fontSize: '14px', fontWeight: 600, color: design.colors.textSecondary }}>
+                           Wave Frequency
+                        </label>
+                        <span style={{ fontSize: '14px', fontWeight: 700, color: design.colors.pWave }}>
+                           {waveFrequency} Hz
+                        </span>
+                     </div>
+                     <div style={{ height: '20px', display: 'flex', alignItems: 'center' }}>
+                        <input
+                           id="wave-frequency-slider"
+                           type="range"
+                           min={1}
+                           max={100}
+                           step={1}
+                           value={waveFrequency}
+                           onChange={(e) => setWaveFrequency(parseInt(e.target.value))}
+                           style={{
+                              width: '100%',
+                              height: '20px',
+                              cursor: 'pointer',
+                              accentColor: '#3b82f6',
+                              touchAction: 'pan-y',
+                              WebkitAppearance: 'none' as const,
+                           }}
+                        />
+                     </div>
+                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
+                        <span style={{ fontSize: '12px', color: design.colors.textTertiary, fontWeight: 400 }}>1 Hz (slow)</span>
+                        <span style={{ fontSize: '12px', color: design.colors.textTertiary, fontWeight: 400 }}>100 Hz (fast)</span>
+                     </div>
+                  </div>
+
                   <p style={{
                      fontSize: '12px',
                      fontWeight: 700,
@@ -1480,7 +1613,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                         }}>
                            P-Wave
                         </div>
-                        <div style={{ fontSize: '11px', color: design.colors.textTertiary }}>Compression</div>
+                        <div style={{ fontSize: '12px', color: design.colors.textTertiary, fontWeight: 400 }}>Compression</div>
                      </button>
                      <button
                         onClick={() => setWaveType('s')}
@@ -1503,7 +1636,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                         }}>
                            S-Wave
                         </div>
-                        <div style={{ fontSize: '11px', color: design.colors.textTertiary }}>Shear</div>
+                        <div style={{ fontSize: '12px', color: design.colors.textTertiary, fontWeight: 400 }}>Shear</div>
                      </button>
                   </div>
 
@@ -1515,6 +1648,18 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                      true
                   )}
 
+                  {/* Cause & Effect explanation */}
+                  <div style={{ marginTop: '12px', padding: '12px 16px', borderRadius: design.radius.md, background: design.colors.bgTertiary, border: `1px solid ${design.colors.border}` }}>
+                     <p style={{ fontSize: '14px', color: '#e2e8f0', fontWeight: 600, marginBottom: '4px' }}>
+                        Cause &amp; Effect:
+                     </p>
+                     <p style={{ fontSize: '14px', color: design.colors.textSecondary, fontWeight: 400 }}>
+                        {waveType === 'p'
+                           ? 'P-waves compress particles parallel to motion. Higher frequency = faster oscillation. They travel through ALL materials.'
+                           : 'S-waves shear particles perpendicular to motion. Higher frequency = faster side-to-side motion. Blocked by liquids!'}
+                     </p>
+                  </div>
+
                   {guidedMode && (
                      <div style={{
                         marginTop: '12px',
@@ -1523,8 +1668,8 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                         background: design.colors.bgTertiary,
                         border: `1px solid ${design.colors.border}`,
                      }}>
-                        <p style={{ fontSize: '13px', color: design.colors.textSecondary }}>
-                           💡 Try both wave types and watch how particles move differently!
+                        <p style={{ fontSize: '14px', color: design.colors.textSecondary, fontWeight: 400 }}>
+                           💡 Adjust the frequency slider and try both wave types!
                         </p>
                      </div>
                   )}
@@ -1716,17 +1861,70 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   marginBottom: '8px',
                   lineHeight: 1.6,
                   maxWidth: '520px',
+                  fontWeight: 400,
                }}>
                   Scientists in the early 1900s noticed something strange: S-waves from earthquakes <em>never arrived</em> on the opposite side of Earth.
                </p>
                <p style={{
                   fontSize: '14px',
                   color: design.colors.textTertiary,
-                  marginBottom: '28px',
+                  marginBottom: '20px',
                   maxWidth: '520px',
+                  fontWeight: 400,
                }}>
                   This "S-wave shadow zone" was the key to discovering what's hidden 2,900 km beneath your feet...
                </p>
+
+               {/* Static SVG: Earth cross-section showing S-wave shadow zone */}
+               <div style={{ marginBottom: '24px', borderRadius: '12px', overflow: 'hidden', background: design.colors.bgSecondary, border: `1px solid ${design.colors.border}`, maxWidth: '520px' }}>
+                  <svg viewBox="0 0 520 170" width="100%" style={{ display: 'block' }}>
+                     <defs>
+                        <radialGradient id="earthGrad" cx="50%" cy="50%" r="50%">
+                           <stop offset="0%" stopColor="#78350f" />
+                           <stop offset="40%" stopColor="#451a03" />
+                           <stop offset="70%" stopColor="#292524" />
+                           <stop offset="100%" stopColor="#1c1917" />
+                        </radialGradient>
+                        <radialGradient id="coreGrad" cx="50%" cy="50%" r="50%">
+                           <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.8" />
+                           <stop offset="100%" stopColor="#0284c7" stopOpacity="0.5" />
+                        </radialGradient>
+                        <filter id="twistGlow">
+                           <feGaussianBlur stdDeviation="3" result="blur" />
+                           <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                        </filter>
+                     </defs>
+                     {/* Background */}
+                     <rect width="520" height="170" fill="#09090b" />
+                     {/* Earth body */}
+                     <circle cx="260" cy="88" r="72" fill="url(#earthGrad)" stroke="#52525b" strokeWidth="1.5" />
+                     {/* Liquid core */}
+                     <circle cx="260" cy="88" r="35" fill="url(#coreGrad)" stroke="#0ea5e9" strokeWidth="1.5" opacity="0.9" />
+                     <text x="260" y="92" textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11" fontWeight="600">LIQUID</text>
+
+                     {/* P-wave path through liquid core (curves through) */}
+                     <path d="M 150 55 Q 200 75 260 88 Q 320 100 380 120" stroke="#fb923c" strokeWidth="2" fill="none" strokeDasharray="6 3" />
+                     <polygon points="378,114 388,120 376,124" fill="#fb923c" />
+                     <text x="140" y="50" fill="#fb923c" fontSize="11" fontWeight="700">P ✓</text>
+
+                     {/* S-wave blocked at core boundary */}
+                     <path d="M 150 125 L 225 115" stroke="#a78bfa" strokeWidth="2" fill="none" strokeDasharray="6 3" />
+                     <circle cx="232" cy="113" r="10" fill="#2e1065" stroke="#a78bfa" strokeWidth="2" filter="url(#twistGlow)" />
+                     <text x="232" y="118" textAnchor="middle" fill="#a78bfa" fontSize="12" fontWeight="700">✕</text>
+                     <text x="140" y="140" fill="#a78bfa" fontSize="11" fontWeight="700">S ✕</text>
+
+                     {/* Shadow zone indicator */}
+                     <path d="M 350 50 Q 420 85 350 130" stroke="#ef4444" strokeWidth="1.5" fill="rgba(239,68,68,0.1)" strokeDasharray="3 2" />
+                     <text x="420" y="85" fill="#ef4444" fontSize="11" fontWeight="700">Shadow</text>
+                     <text x="420" y="98" fill="#ef4444" fontSize="11" fontWeight="700">Zone</text>
+
+                     {/* Seismometer icons */}
+                     <rect x="96" y="78" width="16" height="14" rx="2" fill="#22c55e" opacity="0.8" />
+                     <text x="88" y="66" fill="rgba(148,163,184,0.7)" fontSize="10" fontWeight="400">Station</text>
+                     <rect x="404" y="78" width="16" height="14" rx="2" fill="#ef4444" opacity="0.8" />
+                     <text x="402" y="66" fill="rgba(148,163,184,0.7)" fontSize="10" fontWeight="400">No S</text>
+                  </svg>
+               </div>
 
                <div style={{ display: 'grid', gap: '12px', maxWidth: '520px' }}>
                   {options.map(opt => (
@@ -2165,8 +2363,8 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
 
    // TRANSFER PHASE - GOLD STANDARD with completedApps tracking
    if (phase === 'transfer') {
-      const app = applications[activeApp];
-      const allAppsCompleted = completedApps.size >= applications.length;
+      const app = realWorldApps[activeApp];
+      const allAppsCompleted = completedApps.size >= realWorldApps.length;
 
       return (
          <div style={{
@@ -2188,7 +2386,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   overflowX: 'auto',
                   background: design.colors.bgSecondary,
                }}>
-                  {applications.map((a, i) => (
+                  {realWorldApps.map((a, i) => (
                      <button
                         key={i}
                         onClick={() => setActiveApp(i)}
@@ -2230,13 +2428,13 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                </div>
 
                {/* Content area - scrollable with proper padding */}
-               <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '80px', paddingTop: '44px' }}>
+               <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px', paddingTop: '48px' }}>
                   {/* App header */}
                   <div style={{
                      display: 'flex',
                      alignItems: 'center',
                      gap: '16px',
-                     marginBottom: '24px',
+                     marginBottom: '20px',
                   }}>
                      <div style={{
                         width: '64px',
@@ -2254,7 +2452,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                         <h3 style={{
                            fontSize: '22px',
                            fontWeight: 800,
-                           color: design.colors.textPrimary,
+                           color: '#ffffff',
                            marginBottom: '4px',
                         }}>
                            {app.title}
@@ -2264,9 +2462,28 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                            color: app.color,
                            fontWeight: 600,
                         }}>
-                           {app.stat}
+                           {app.tagline}
                         </p>
                      </div>
+                  </div>
+
+                  {/* Stats row */}
+                  <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                     {app.stats.map((stat, i) => (
+                        <div key={i} style={{
+                           flex: '1',
+                           minWidth: '80px',
+                           padding: '12px',
+                           borderRadius: design.radius.md,
+                           background: design.colors.bgSecondary,
+                           border: `1px solid ${design.colors.border}`,
+                           textAlign: 'center',
+                        }}>
+                           <div style={{ fontSize: '16px', marginBottom: '4px' }}>{stat.icon}</div>
+                           <div style={{ fontSize: '14px', fontWeight: 700, color: app.color, marginBottom: '2px' }}>{stat.value}</div>
+                           <div style={{ fontSize: '11px', color: 'rgba(148,163,184,0.7)', fontWeight: 400 }}>{stat.label}</div>
+                        </div>
+                     ))}
                   </div>
 
                   {/* Description */}
@@ -2274,64 +2491,91 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                      fontSize: '15px',
                      color: design.colors.textSecondary,
                      lineHeight: 1.7,
-                     marginBottom: '24px',
+                     marginBottom: '16px',
+                     fontWeight: 400,
                   }}>
                      {app.description}
                   </p>
 
-                  {/* Details list */}
+                  {/* Connection to physics */}
                   <div style={{
-                     padding: '20px',
+                     padding: '16px',
+                     borderRadius: design.radius.md,
+                     background: `${app.color}10`,
+                     border: `1px solid ${app.color}40`,
+                     marginBottom: '16px',
+                  }}>
+                     <p style={{ fontSize: '12px', fontWeight: 700, color: app.color, marginBottom: '6px', textTransform: 'uppercase' }}>
+                        Physics Connection
+                     </p>
+                     <p style={{ fontSize: '14px', color: design.colors.textSecondary, lineHeight: 1.6, fontWeight: 400 }}>
+                        {app.connection}
+                     </p>
+                  </div>
+
+                  {/* How It Works */}
+                  <div style={{
+                     padding: '16px',
                      borderRadius: design.radius.lg,
                      background: design.colors.bgSecondary,
                      border: `1px solid ${design.colors.border}`,
+                     marginBottom: '16px',
                   }}>
                      <p style={{
                         fontSize: '12px',
                         fontWeight: 700,
                         color: design.colors.textTertiary,
-                        marginBottom: '12px',
+                        marginBottom: '10px',
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
                      }}>
                         How It Works
                      </p>
-                     <div style={{ display: 'grid', gap: '10px' }}>
-                        {app.details.map((detail, i) => (
-                           <div key={i} style={{
-                              display: 'flex',
-                              alignItems: 'flex-start',
-                              gap: '12px',
+                     <p style={{ fontSize: '14px', color: design.colors.textSecondary, lineHeight: 1.6, fontWeight: 400 }}>
+                        {app.howItWorks}
+                     </p>
+                  </div>
+
+                  {/* Examples */}
+                  <div style={{ marginBottom: '16px' }}>
+                     <p style={{ fontSize: '12px', fontWeight: 700, color: design.colors.textTertiary, marginBottom: '8px', textTransform: 'uppercase' }}>
+                        Real Examples
+                     </p>
+                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                        {app.examples.map((ex, i) => (
+                           <span key={i} style={{
+                              padding: '4px 10px',
+                              borderRadius: design.radius.full,
+                              background: design.colors.bgElevated,
+                              border: `1px solid ${design.colors.border}`,
+                              fontSize: '12px',
+                              color: design.colors.textSecondary,
+                              fontWeight: 400,
                            }}>
-                              <div style={{
-                                 width: '24px',
-                                 height: '24px',
-                                 borderRadius: '50%',
-                                 background: `${app.color}20`,
-                                 display: 'flex',
-                                 alignItems: 'center',
-                                 justifyContent: 'center',
-                                 fontSize: '12px',
-                                 fontWeight: 700,
-                                 color: app.color,
-                                 flexShrink: 0,
-                              }}>
-                                 {i + 1}
-                              </div>
-                              <p style={{
-                                 fontSize: '14px',
-                                 color: design.colors.textSecondary,
-                                 lineHeight: 1.5,
-                              }}>
-                                 {detail}
-                              </p>
-                           </div>
+                              {ex}
+                           </span>
                         ))}
                      </div>
                   </div>
 
-                  {/* Next Application button - advances through 4 real world applications */}
-                  {activeApp < applications.length - 1 && (
+                  {/* Future Impact */}
+                  <div style={{
+                     padding: '14px 16px',
+                     borderRadius: design.radius.md,
+                     background: design.colors.bgSecondary,
+                     border: `1px solid ${design.colors.border}`,
+                     marginBottom: '16px',
+                  }}>
+                     <p style={{ fontSize: '12px', fontWeight: 700, color: design.colors.success, marginBottom: '6px', textTransform: 'uppercase' }}>
+                        Future Impact
+                     </p>
+                     <p style={{ fontSize: '14px', color: design.colors.textSecondary, lineHeight: 1.6, fontWeight: 400 }}>
+                        {app.futureImpact}
+                     </p>
+                  </div>
+
+                  {/* Next Application button - advances through real world applications */}
+                  {activeApp < realWorldApps.length - 1 && (
                      <button
                         onClick={() => {
                            const newCompleted = new Set(completedApps);
@@ -2364,7 +2608,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   )}
 
                   {/* Mark last app as complete */}
-                  {activeApp === applications.length - 1 && !completedApps.has(activeApp) && (
+                  {activeApp === realWorldApps.length - 1 && !completedApps.has(activeApp) && (
                      <button
                         onClick={() => {
                            const newCompleted = new Set(completedApps);
@@ -2404,17 +2648,17 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   }}>
                      <p style={{
                         fontSize: '13px',
-                        color: completedApps.size >= applications.length ? design.colors.success : design.colors.textSecondary,
+                        color: completedApps.size >= realWorldApps.length ? design.colors.success : design.colors.textSecondary,
                         fontWeight: 600,
                      }}>
-                        {completedApps.size >= applications.length
+                        {completedApps.size >= realWorldApps.length
                            ? '✓ All applications reviewed! Ready for quiz.'
-                           : `Progress: ${completedApps.size} of ${applications.length} applications reviewed`}
+                           : `Progress: ${completedApps.size} of ${realWorldApps.length} applications reviewed`}
                      </p>
                   </div>
                </div>
             </div>
-            {renderBottomNav('twist_review', 'test', 'Take the Quiz →', !allAppsCompleted)}
+            {renderBottomNav('twist_review', 'test', 'Take the Quiz →', completedApps.size < realWorldApps.length)}
          </div>
       );
    }
@@ -2464,6 +2708,24 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                      </p>
                   </div>
                </div>
+
+               {/* Scenario context */}
+               {'scenario' in q && q.scenario && (
+                  <div style={{
+                     marginBottom: '16px',
+                     padding: '14px 16px',
+                     borderRadius: design.radius.md,
+                     background: design.colors.bgSecondary,
+                     border: `1px solid ${design.colors.border}`,
+                  }}>
+                     <p style={{ fontSize: '12px', fontWeight: 700, color: design.colors.primary, marginBottom: '6px', textTransform: 'uppercase' }}>
+                        Scenario
+                     </p>
+                     <p style={{ fontSize: '14px', color: design.colors.textSecondary, lineHeight: 1.6, fontWeight: 400 }}>
+                        {q.scenario}
+                     </p>
+                  </div>
+               )}
 
                {/* Question */}
                <h3 style={{

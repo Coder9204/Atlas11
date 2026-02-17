@@ -375,7 +375,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Parallel Paths',
+    twist_play: 'Twist Explore',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -439,16 +439,26 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
           key={p}
           onClick={() => goToPhase(p)}
           style={{
+            background: 'transparent',
+            border: 'none',
+            padding: '18px 4px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '44px',
+          }}
+          aria-label={phaseLabels[p]}
+        >
+          <span style={{
+            display: 'block',
             width: phase === p ? '24px' : '8px',
             height: '8px',
             borderRadius: '4px',
-            border: 'none',
             background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
             transition: 'all 0.3s ease',
-          }}
-          aria-label={phaseLabels[p]}
-        />
+          }} />
+        </button>
       ))}
     </div>
   );
@@ -523,33 +533,39 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
           </filter>
         </defs>
 
+        {/* Interactive demand indicator - moves with current demand slider */}
+        <circle
+          cx={30 + 20 + ((currentDemand - 20) / (200 - 20)) * (width - 80)}
+          cy={180 + 15 + Math.min(pdn.droopPercentage, 50) * 0.8}
+          r="8"
+          fill={pdn.droopPercentage > 5 ? colors.error : colors.accent}
+          stroke="white"
+          strokeWidth="2"
+          filter="url(#pdnGlow)"
+        />
+
         {/* Title */}
         <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
-          Power Delivery Network (PDN)
+          PDN Simulator
         </text>
 
-        {/* VRM */}
+        {/* VRM - shapes only */}
         <g transform="translate(30, 50)">
           <rect x="0" y="20" width="50" height="60" fill={colors.bgSecondary} stroke={colors.power} strokeWidth="2" rx="6" />
-          <text x="25" y="45" textAnchor="middle" fill={colors.power} fontSize="10">VRM</text>
-          <text x="25" y="60" textAnchor="middle" fill={colors.textSecondary} fontSize="9">1.0V</text>
           <circle cx="42" cy="72" r="4" fill={isSurging ? colors.error : colors.success}>
             <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />
           </circle>
         </g>
+        {/* VRM labels - absolute positions */}
+        <text x="55" y="95" textAnchor="middle" fill={colors.power} fontSize="11">VRM</text>
+        <text x="55" y="110" textAnchor="middle" fill={colors.textSecondary} fontSize="11">1.0V</text>
 
-        {/* Power path with inductance */}
+        {/* Power path with inductance - shapes only */}
         <g transform="translate(90, 60)">
-          {/* Inductance coils */}
           <path
             d={`M 0 25 C 15 10, 25 10, 40 25 C 55 40, 65 40, 80 25 C 95 10, 105 10, 120 25`}
             stroke={colors.accent} strokeWidth="3" fill="none" strokeLinecap="round"
           />
-          <text x="60" y="55" textAnchor="middle" fill={colors.accent} fontSize="10">
-            L = {pdn.totalInductance.toFixed(0)} pH
-          </text>
-
-          {/* Current flow animation */}
           {isSurging && (
             <circle
               cx={40 + Math.sin(surgePhase * 4) * 40}
@@ -560,85 +576,63 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
             />
           )}
         </g>
+        {/* Power path label - absolute */}
+        <text x="150" y="115" textAnchor="middle" fill={colors.accent} fontSize="11">
+          L = {pdn.totalInductance.toFixed(0)} pH
+        </text>
 
-        {/* Decoupling capacitors */}
+        {/* Decoupling capacitors - shapes only */}
         <g transform="translate(220, 45)">
-          {/* Bulk cap */}
           <rect x="0" y="0" width="25" height="40" fill="url(#pdnCapGrad)" rx="3" />
-          <text x="12" y="50" textAnchor="middle" fill={colors.capacitor} fontSize="8">Bulk</text>
-
-          {/* Ceramic caps */}
           <rect x="35" y="5" width="15" height="30" fill="url(#pdnCapGrad)" rx="2" />
           <rect x="55" y="5" width="15" height="30" fill="url(#pdnCapGrad)" rx="2" />
-          <text x="52" y="50" textAnchor="middle" fill={colors.capacitor} fontSize="8">MLCCs</text>
-
-          <text x="35" y="65" textAnchor="middle" fill={colors.textSecondary} fontSize="9">
-            {decouplingCapacitance} uF
-          </text>
         </g>
+        {/* Cap labels - absolute positions */}
+        <text x="232" y="131" textAnchor="middle" fill={colors.capacitor} fontSize="11">Bulk</text>
+        <text x="272" y="131" textAnchor="middle" fill={colors.capacitor} fontSize="11">MLCCs</text>
+        <text x="255" y="148" textAnchor="middle" fill={colors.textSecondary} fontSize="11">
+          {decouplingCapacitance} uF
+        </text>
 
-        {/* CPU */}
+        {/* CPU - shapes only */}
         <g transform={`translate(${width - 90}, 45)`}>
           <rect x="0" y="0" width="60" height="55" fill={colors.bgSecondary} stroke={colors.ground} strokeWidth="2" rx="6" />
-          <text x="30" y="25" textAnchor="middle" fill={colors.ground} fontSize="10">CPU</text>
-          <text x="30" y="42" textAnchor="middle" fill={colors.textSecondary} fontSize="9">{currentDemand}A</text>
         </g>
+        {/* CPU labels - absolute positions */}
+        <text x={width - 60} y="71" textAnchor="middle" fill={colors.ground} fontSize="11">CPU</text>
+        <text x={width - 60} y="90" textAnchor="middle" fill={colors.textSecondary} fontSize="11">{currentDemand}A</text>
 
         {/* Ground plane */}
         <rect x="30" y="130" width={width - 60} height="6" fill={colors.ground} rx="3" opacity="0.6" />
-        <text x={width/2} y="150" textAnchor="middle" fill={colors.textMuted} fontSize="9">Ground Plane</text>
+        <text x={width/2} y="163" textAnchor="middle" fill={colors.textMuted} fontSize="11">Ground Plane</text>
 
         {/* Voltage waveform */}
-        <g transform="translate(30, 170)">
+        <g transform="translate(30, 175)">
           <rect x="0" y="0" width={width - 60} height="70" fill={colors.bgSecondary} rx="6" />
-
-          {/* Target voltage line */}
           <line x1="10" y1="15" x2={width - 70} y2="15" stroke={colors.success} strokeWidth="1" strokeDasharray="4,4" opacity="0.6" />
-          <text x="15" y="12" fill={colors.success} fontSize="8">1.0V</text>
-
-          {/* Minimum voltage line */}
           <line x1="10" y1="55" x2={width - 70} y2="55" stroke={colors.error} strokeWidth="1" strokeDasharray="4,4" opacity="0.6" />
-          <text x="15" y="63" fill={colors.error} fontSize="8">0.95V</text>
-
-          {/* Voltage droop waveform */}
           <path
             d={`M 40 15 L 80 15 L 85 ${15 + pdn.droopPercentage * 0.8} L 130 ${15 + pdn.droopPercentage * 0.5} L 180 ${15 + pdn.droopPercentage * 0.2} L 230 16 L ${width - 80} 15`}
             stroke={pdn.droopPercentage > 5 ? colors.error : colors.accent}
             strokeWidth="2"
             fill="none"
           />
-
-          {/* Droop indicator */}
           {pdn.droopPercentage > 2 && (
-            <g>
-              <line x1="100" y1="15" x2="100" y2={15 + pdn.droopPercentage * 0.6} stroke={colors.warning} strokeWidth="2" />
-              <text x="105" y={20 + pdn.droopPercentage * 0.3} fill={colors.warning} fontSize="9">
-                -{pdn.inductiveDroop.toFixed(0)}mV
-              </text>
-            </g>
+            <line x1="100" y1="15" x2="100" y2={15 + pdn.droopPercentage * 0.6} stroke={colors.warning} strokeWidth="2" />
           )}
         </g>
+        {/* Waveform labels - absolute positions */}
+        <text x="42" y="186" fill={colors.success} fontSize="11">1.0V</text>
+        <text x="42" y="236" fill={colors.error} fontSize="11">0.95V</text>
+        {pdn.droopPercentage > 2 && (
+          <text x="135" y={190 + pdn.droopPercentage * 0.3} fill={colors.warning} fontSize="11">
+            -{pdn.inductiveDroop.toFixed(0)}mV
+          </text>
+        )}
 
         {/* Stats */}
         <g transform={`translate(30, ${height - 60})`}>
           <rect x="0" y="0" width={width - 60} height="50" fill={colors.bgSecondary} rx="6" />
-
-          <text x="20" y="18" fill={colors.textMuted} fontSize="9">Droop</text>
-          <text x="20" y="35" fill={pdn.droopPercentage > 5 ? colors.error : colors.success} fontSize="14" fontWeight="600">
-            {pdn.droopPercentage.toFixed(1)}%
-          </text>
-
-          <text x={(width - 60) / 3 + 10} y="18" fill={colors.textMuted} fontSize="9">PDN Z</text>
-          <text x={(width - 60) / 3 + 10} y="35" fill={colors.textPrimary} fontSize="14" fontWeight="600">
-            {pdn.pdnImpedance.toFixed(2)}m
-          </text>
-
-          <text x={(width - 60) * 2 / 3 + 10} y="18" fill={colors.textMuted} fontSize="9">Target Z</text>
-          <text x={(width - 60) * 2 / 3 + 10} y="35" fill={colors.accent} fontSize="14" fontWeight="600">
-            {pdn.targetImpedance.toFixed(2)}m
-          </text>
-
-          {/* Status indicator */}
           <circle
             cx={width - 90}
             cy="25"
@@ -648,6 +642,19 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
             <animate attributeName="opacity" values="0.6;1;0.6" dur="1.5s" repeatCount="indefinite" />
           </circle>
         </g>
+        {/* Stats labels - absolute positions */}
+        <text x="50" y={height - 42} fill={colors.textMuted} fontSize="11">Droop</text>
+        <text x="50" y={height - 25} fill={pdn.droopPercentage > 5 ? colors.error : colors.success} fontSize="14" fontWeight="600">
+          {pdn.droopPercentage.toFixed(1)}%
+        </text>
+        <text x={30 + (width - 60) / 3 + 10} y={height - 42} fill={colors.textMuted} fontSize="11">PDN Z</text>
+        <text x={30 + (width - 60) / 3 + 10} y={height - 25} fill={colors.textPrimary} fontSize="14" fontWeight="600">
+          {pdn.pdnImpedance.toFixed(2)}m
+        </text>
+        <text x={30 + (width - 60) * 2 / 3 + 10} y={height - 42} fill={colors.textMuted} fontSize="11">Target Z</text>
+        <text x={30 + (width - 60) * 2 / 3 + 10} y={height - 25} fill={colors.accent} fontSize="14" fontWeight="600">
+          {pdn.targetImpedance.toFixed(2)}m
+        </text>
       </svg>
     );
   };
@@ -690,7 +697,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
             );
           })}
           {numPowerPins > 20 && (
-            <text x={(width - 60) / 2} y="70" textAnchor="middle" fill={colors.textMuted} fontSize="10">
+            <text x={(width - 60) / 2} y="70" textAnchor="middle" fill={colors.textMuted} fontSize="11">
               + {numPowerPins - 20} more pins
             </text>
           )}
@@ -699,21 +706,21 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
         {/* Stats display */}
         <g transform={`translate(30, 150)`}>
           <rect x="0" y="0" width={(width - 60) / 2 - 10} height="60" fill={colors.bgSecondary} rx="8" />
-          <text x={(width - 60) / 4 - 5} y="18" textAnchor="middle" fill={colors.textMuted} fontSize="10">Effective Inductance</text>
+          <text x={(width - 60) / 4 - 5} y="18" textAnchor="middle" fill={colors.textMuted} fontSize="11">Effective Inductance</text>
           <text x={(width - 60) / 4 - 5} y="42" textAnchor="middle" fill={colors.accent} fontSize="20" fontWeight="700">
             {pins.effectiveInductance.toFixed(1)} pH
           </text>
 
           <rect x={(width - 60) / 2 + 10} y="0" width={(width - 60) / 2 - 10} height="60" fill={colors.bgSecondary} rx="8" />
-          <text x={(width - 60) * 3 / 4 + 5} y="18" textAnchor="middle" fill={colors.textMuted} fontSize="10">Voltage Droop</text>
+          <text x={(width - 60) * 3 / 4 + 5} y="18" textAnchor="middle" fill={colors.textMuted} fontSize="11">Voltage Droop</text>
           <text x={(width - 60) * 3 / 4 + 5} y="42" textAnchor="middle" fill={pins.droopPercent > 5 ? colors.error : colors.success} fontSize="20" fontWeight="700">
             {pins.droopPercent.toFixed(1)}%
           </text>
         </g>
 
         {/* Formula */}
-        <text x={width/2} y={height - 15} textAnchor="middle" fill={colors.textMuted} fontSize="10">
-          L_effective = L_pin / N = {pinInductance}pH / {numPowerPins} = {pins.effectiveInductance.toFixed(1)}pH
+        <text x={width/2} y={height - 15} textAnchor="middle" fill={colors.textMuted} fontSize="11">
+          L_eff = L_pin / N = {pinInductance}pH / {numPowerPins} = {pins.effectiveInductance.toFixed(1)}pH
         </text>
       </svg>
     );
@@ -963,7 +970,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
                   step="10"
                   value={currentDemand}
                   onChange={(e) => setCurrentDemand(parseInt(e.target.value))}
-                  style={{ width: '100%', accentColor: colors.accent }}
+                  style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                   <span style={{ ...typo.small, color: colors.textMuted }}>20 A</span>
@@ -984,7 +991,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
                   step="20"
                   value={decouplingCapacitance}
                   onChange={(e) => setDecouplingCapacitance(parseInt(e.target.value))}
-                  style={{ width: '100%', accentColor: colors.accent }}
+                  style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                   <span style={{ ...typo.small, color: colors.textMuted }}>20 uF</span>
@@ -1005,7 +1012,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
                   step="20"
                   value={pathInductance}
                   onChange={(e) => setPathInductance(parseInt(e.target.value))}
-                  style={{ width: '100%', accentColor: colors.accent }}
+                  style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                   <span style={{ ...typo.small, color: colors.textMuted }}>20 pH</span>
@@ -1026,7 +1033,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
                   step="5"
                   value={vrDistance}
                   onChange={(e) => setVrDistance(parseInt(e.target.value))}
-                  style={{ width: '100%', accentColor: colors.accent }}
+                  style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                   <span style={{ ...typo.small, color: colors.textMuted }}>5 mm</span>
@@ -1337,7 +1344,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
                   max="100"
                   value={numPowerPins}
                   onChange={(e) => setNumPowerPins(parseInt(e.target.value))}
-                  style={{ width: '100%', accentColor: colors.accent }}
+                  style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                   <span style={{ ...typo.small, color: colors.textMuted }}>1 pin</span>
@@ -1358,7 +1365,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
                   step="50"
                   value={pinInductance}
                   onChange={(e) => setPinInductance(parseInt(e.target.value))}
-                  style={{ width: '100%', accentColor: colors.accent }}
+                  style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                   <span style={{ ...typo.small, color: colors.textMuted }}>50 pH</span>

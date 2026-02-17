@@ -208,112 +208,112 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
   // Test phase
   const [testQuestions] = useState([
     {
-      scenario: "A photographer takes a photo with flash, then immediately tries to take another shot. The flash doesn't fire, and a small indicator light on the camera is blinking. After waiting a few seconds, the light turns solid and the flash is ready again.",
+      scenario: "A photographer takes a photo with flash, then immediately tries to take another shot. The flash doesn't fire, and a small indicator light on the camera is blinking. After waiting a few seconds, the light turns solid and the flash is ready again. The camera uses a 330μF capacitor charged through a 15kΩ resistor, giving it a specific recycle time.",
       question: "What determines how long the photographer must wait between flash photos?",
       options: [
-        { id: 'a', label: "The camera's processor speed for saving images" },
-        { id: 'b', label: "The RC time constant of the flash charging circuit determines how quickly the capacitor recharges", correct: true },
-        { id: 'c', label: "The flash bulb needs time to cool down" },
-        { id: 'd', label: "The battery voltage needs to stabilize" }
+        { text: "The camera's processor speed for saving images" },
+        { text: "The RC time constant of the flash charging circuit determines how quickly the capacitor recharges", correct: true },
+        { text: "The flash bulb needs time to cool down" },
+        { text: "The battery voltage needs to stabilize" }
       ],
       explanation: "Camera flashes use a capacitor that must charge through a resistor before firing. The RC time constant (τ = R × C) determines charging speed. After about 5 time constants (5τ), the capacitor reaches 99% charge. Larger capacitors or higher resistance means longer wait times between shots."
     },
     {
-      scenario: "An audio engineer adjusts the bass knob on a mixing console. As they turn it down, the low rumbling sounds in the recording become quieter while the vocals and high-pitched instruments remain unchanged.",
+      scenario: "An audio engineer adjusts the bass knob on a mixing console. As they turn it down, the low rumbling sounds in the recording become quieter while the vocals and high-pitched instruments remain unchanged. The console uses RC filter circuits with adjustable resistors to control which frequencies pass through.",
       question: "How does the RC time constant relate to audio filtering?",
       options: [
-        { id: 'a', label: "RC circuits can only affect volume, not frequency" },
-        { id: 'b', label: "The time constant τ = RC determines the cutoff frequency; frequencies below 1/(2πRC) pass through a low-pass filter", correct: true },
-        { id: 'c', label: "Audio filtering uses digital processing, not RC circuits" },
-        { id: 'd', label: "The bass knob adjusts speaker size" }
+        { text: "RC circuits can only affect volume, not frequency" },
+        { text: "The time constant τ = RC determines the cutoff frequency; frequencies below 1/(2πRC) pass through a low-pass filter", correct: true },
+        { text: "Audio filtering uses digital processing, not RC circuits" },
+        { text: "The bass knob adjusts speaker size" }
       ],
       explanation: "The cutoff frequency of an RC filter is f = 1/(2πRC). Low-pass filters allow frequencies below this cutoff to pass while attenuating higher frequencies. By changing R or C, engineers control which frequencies pass through. Bass controls use this principle to boost or cut low frequencies."
     },
     {
-      scenario: "A hospital defibrillator technician is testing the device. The charging indicator shows the capacitor filling: 25%... 50%... 75%... but each additional 25% takes longer than the previous one to reach.",
+      scenario: "A hospital defibrillator technician is testing the device. The charging indicator shows the capacitor filling: 25%... 50%... 75%... but each additional 25% takes longer than the previous one to reach. The technician explains this is due to the fundamental physics of how capacitors accept charge.",
       question: "Why does the capacitor charge quickly at first but slow down as it fills?",
       options: [
-        { id: 'a', label: "The battery gets tired and delivers less power" },
-        { id: 'b', label: "As the capacitor charges, the voltage difference decreases, reducing current flow and slowing the charging rate", correct: true },
-        { id: 'c', label: "The resistor heats up and increases resistance" },
-        { id: 'd', label: "The display is showing incorrect percentages" }
+        { text: "The battery gets tired and delivers less power" },
+        { text: "As the capacitor charges, the voltage difference decreases, reducing current flow and slowing the charging rate", correct: true },
+        { text: "The resistor heats up and increases resistance" },
+        { text: "The display is showing incorrect percentages" }
       ],
       explanation: "Charging current depends on the voltage difference between the supply and capacitor (I = V/R). Initially, this difference is large, so current flows quickly. As the capacitor charges, the difference shrinks, reducing current. This creates the characteristic exponential curve: rapid initial charging that gradually slows, approaching but never quite reaching full voltage."
     },
     {
-      scenario: "An electronics hobbyist builds two circuits: one with a 1kΩ resistor and 100μF capacitor, another with a 10kΩ resistor and 100μF capacitor. When powered on simultaneously, the first circuit's LED lights up much sooner.",
+      scenario: "An electronics hobbyist builds two circuits: one with a 1kΩ resistor and 100μF capacitor, another with a 10kΩ resistor and 100μF capacitor. When powered on simultaneously, the first circuit's LED lights up much sooner than the second circuit's LED.",
       question: "How does the resistance value affect the charging time?",
       options: [
-        { id: 'a', label: "Higher resistance makes the circuit charge faster" },
-        { id: 'b', label: "Resistance doesn't affect charging time, only capacitance does" },
-        { id: 'c', label: "Higher resistance limits current flow, increasing the time constant and slowing charging", correct: true },
-        { id: 'd', label: "The LED brightness affects charging time" }
+        { text: "Higher resistance makes the circuit charge faster" },
+        { text: "Resistance doesn't affect charging time, only capacitance does" },
+        { text: "Higher resistance limits current flow, increasing the time constant and slowing charging", correct: true },
+        { text: "The LED brightness affects charging time" }
       ],
       explanation: "The time constant τ = R × C. With the same capacitor (100μF), the first circuit has τ = 1kΩ × 100μF = 0.1 seconds, while the second has τ = 10kΩ × 100μF = 1 second. Higher resistance limits current flow, so it takes longer to transfer the same amount of charge to the capacitor. The second circuit takes 10 times longer to reach the same charge level."
     },
     {
-      scenario: "A power supply engineer designs a circuit to smooth the 60 Hz ripple from rectified AC. She calculates that she needs the capacitor to hold its charge for at least 8 milliseconds between power peaks.",
+      scenario: "A power supply engineer designs a circuit to smooth the 60 Hz ripple from rectified AC power. She calculates that she needs the capacitor to hold its charge for at least 8 milliseconds between power peaks to keep the output voltage stable for sensitive electronics.",
       question: "What RC time constant should she choose to minimize voltage droop?",
       options: [
-        { id: 'a', label: "The time constant should be much smaller than 8ms so the capacitor responds quickly" },
-        { id: 'b', label: "The time constant should be much larger than 8ms so the capacitor holds charge longer with less decay", correct: true },
-        { id: 'c', label: "The time constant should equal exactly 8ms" },
-        { id: 'd', label: "Time constant doesn't affect voltage smoothing" }
+        { text: "The time constant should be much smaller than 8ms so the capacitor responds quickly" },
+        { text: "The time constant should be much larger than 8ms so the capacitor holds charge longer with less decay", correct: true },
+        { text: "The time constant should equal exactly 8ms" },
+        { text: "Time constant doesn't affect voltage smoothing" }
       ],
       explanation: "During discharge, voltage decays as V = V₀e^(-t/τ). If τ is much larger than the discharge time, the exponential term stays close to 1, meaning minimal voltage drop. For example, if τ = 80ms and discharge time is 8ms, voltage only drops to e^(-0.1) ≈ 90% of peak. Larger τ means smoother, more stable DC output."
     },
     {
-      scenario: "A student measures voltage across a charging capacitor in a lab. At t = 0, V = 0V. At t = 2 seconds (one time constant), V = 6.3V. The power supply is 10V.",
+      scenario: "A student measures voltage across a charging capacitor in a lab experiment. At t = 0, the voltage V = 0V. At t = 2 seconds (one time constant), V = 6.3V. The power supply is set to 10V and the student wants to predict the voltage at subsequent time constants.",
       question: "What voltage should the student expect at t = 4 seconds (two time constants)?",
       options: [
-        { id: 'a', label: "8.6V, because the capacitor reaches about 86% of supply voltage after 2τ", correct: true },
-        { id: 'b', label: "12.6V, because voltage doubles each time constant" },
-        { id: 'c', label: "7.5V, because charging is linear" },
-        { id: 'd', label: "10V, because the capacitor is fully charged after 2τ" }
+        { text: "8.6V, because the capacitor reaches about 86% of supply voltage after 2τ", correct: true },
+        { text: "12.6V, because voltage doubles each time constant" },
+        { text: "7.5V, because charging is linear" },
+        { text: "10V, because the capacitor is fully charged after 2τ" }
       ],
       explanation: "After 2 time constants, V = V₀(1 - e^(-2)) = 10V × 0.865 ≈ 8.6V. The charging follows: 1τ = 63%, 2τ = 86%, 3τ = 95%, 4τ = 98%, 5τ = 99%. Each time constant adds a decreasing percentage, not a fixed amount, which is characteristic of exponential behavior."
     },
     {
-      scenario: "A burglar alarm designer needs a delay circuit. When a door opens, the homeowner has 30 seconds to enter their code before the alarm sounds. The designer uses an RC circuit where the alarm triggers when the capacitor reaches 8V from a 10V supply.",
+      scenario: "A burglar alarm designer needs a delay circuit for a home security system. When a door opens, the homeowner has 30 seconds to enter their code before the alarm sounds. The designer uses an RC circuit where the alarm triggers when the capacitor reaches 8V from a 10V supply.",
       question: "If the required delay is 30 seconds, approximately what should the time constant be?",
       options: [
-        { id: 'a', label: "30 seconds exactly" },
-        { id: 'b', label: "About 6 seconds, because the alarm needs to trigger before 30 seconds" },
-        { id: 'c', label: "About 19 seconds, because 8V (80%) is reached at approximately 1.6 time constants", correct: true },
-        { id: 'd', label: "About 150 seconds, because we need the circuit to be slow" }
+        { text: "30 seconds exactly" },
+        { text: "About 6 seconds, because the alarm needs to trigger before 30 seconds" },
+        { text: "About 19 seconds, because 8V (80%) is reached at approximately 1.6 time constants", correct: true },
+        { text: "About 150 seconds, because we need the circuit to be slow" }
       ],
       explanation: "To find when V reaches 8V (80% of 10V), we solve: 0.8 = 1 - e^(-t/τ), giving e^(-t/τ) = 0.2, so t/τ = 1.6. If t = 30 seconds, then τ = 30/1.6 ≈ 19 seconds. This shows how RC circuits can be designed for specific timing applications by choosing appropriate R and C values."
     },
     {
-      scenario: "A medical device technician notices that an older defibrillator takes 15 seconds to charge while a newer model with the same energy capacity charges in only 5 seconds.",
+      scenario: "A medical device technician notices that an older defibrillator takes 15 seconds to charge to full capacity while a newer model with the same energy storage capacity charges in only 5 seconds. Both models use similar capacitor values but differ in their internal charging circuit design.",
       question: "What circuit change most likely enabled the faster charging in the new model?",
       options: [
-        { id: 'a', label: "The new model uses a higher voltage battery" },
-        { id: 'b', label: "The new model uses lower resistance in the charging circuit, reducing the time constant", correct: true },
-        { id: 'c', label: "The new model has a larger capacitor" },
-        { id: 'd', label: "The new model uses AC instead of DC" }
+        { text: "The new model uses a higher voltage battery" },
+        { text: "The new model uses lower resistance in the charging circuit, reducing the time constant", correct: true },
+        { text: "The new model has a larger capacitor" },
+        { text: "The new model uses AC instead of DC" }
       ],
       explanation: "Since τ = RC, reducing R reduces the time constant and speeds up charging. If both defibrillators store the same energy (same capacitor), the newer model achieves faster charging by using a lower resistance path (perhaps through improved components or power electronics). Full charge in 5 seconds vs 15 seconds means the time constant is roughly 3 times smaller."
     },
     {
-      scenario: "An electric car owner plugs in their vehicle overnight. The dashboard shows charging slowing down as the battery approaches full. At 80%, charging is rapid; at 95%, it crawls; reaching 100% takes almost as long as going from 0% to 80%.",
+      scenario: "An electric car owner plugs in their vehicle overnight. The dashboard shows charging slowing down as the battery approaches full charge. At 80%, charging is rapid; at 95%, it crawls to a halt; and reaching 100% takes almost as long as going from 0% to 80%. This behavior mirrors what engineers learn from RC circuit theory.",
       question: "How does RC charging behavior relate to this battery charging pattern?",
       options: [
-        { id: 'a', label: "Battery charging is unrelated to RC circuits" },
-        { id: 'b', label: "The exponential charging curve means each additional percentage takes longer as the battery fills, similar to how a capacitor approaches but never quite reaches full voltage", correct: true },
-        { id: 'c', label: "The charger intentionally slows down to save electricity" },
-        { id: 'd', label: "The battery gets heavier as it charges, slowing the process" }
+        { text: "Battery charging is unrelated to RC circuits" },
+        { text: "The exponential charging curve means each additional percentage takes longer as the battery fills, similar to how a capacitor approaches but never quite reaches full voltage", correct: true },
+        { text: "The charger intentionally slows down to save electricity" },
+        { text: "The battery gets heavier as it charges, slowing the process" }
       ],
       explanation: "While batteries are more complex than capacitors, the charging behavior follows similar exponential principles. As the battery fills, the voltage difference driving current decreases, slowing charge transfer. Going from 63% to 86% (one additional τ) takes as long as going from 0% to 63%. This is why manufacturers often quote '80% charge in X minutes' rather than full charge times."
     },
     {
-      scenario: "A guitarist testing amplifier settings plays a sustained note and then suddenly mutes the strings. With one amp setting, the sound cuts off instantly. With another setting, the sound fades out gradually over about half a second.",
+      scenario: "A guitarist testing amplifier settings plays a sustained note and then suddenly mutes the strings. With one amp setting, the sound cuts off instantly. With another setting, the sound fades out gradually over about half a second. The engineer explains this difference is due to the RC time constants in the two amplifier circuits.",
       question: "What does the difference in sound decay reveal about the RC filter in each setting?",
       options: [
-        { id: 'a', label: "The instant cutoff has a very small time constant (fast discharge), while the gradual fade has a larger time constant (slow discharge)", correct: true },
-        { id: 'b', label: "The gradual fade uses digital effects, not RC circuits" },
-        { id: 'c', label: "The instant cutoff has no capacitors in the circuit" },
-        { id: 'd', label: "The difference is in the speaker, not the amplifier" }
+        { text: "The instant cutoff has a very small time constant (fast discharge), while the gradual fade has a larger time constant (slow discharge)", correct: true },
+        { text: "The gradual fade uses digital effects, not RC circuits" },
+        { text: "The instant cutoff has no capacitors in the circuit" },
+        { text: "The difference is in the speaker, not the amplifier" }
       ],
       explanation: "The discharge time constant determines how quickly stored energy drains from the circuit. A small τ means rapid discharge (instant cutoff). A larger τ means the capacitor holds charge longer, releasing energy gradually (gradual fade). Audio engineers manipulate RC values to create different sonic characteristics, from snappy attacks to smooth, sustained tones."
     }
@@ -751,136 +751,167 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
 
   // Render voltage graph
   function renderVoltageGraph(history: { time: number; voltage: number }[], maxVoltage: number, isCharge: boolean) {
-    const width = 240;
-    const height = 120;
-    const padding = 30;
-
-    // Calculate max time for x-axis (5 time constants)
+    const width = 300;
+    const height = 220;
+    const padding = 45;
     const maxTime = timeConstant * 5;
+    const innerW = width - 2 * padding;
+    const innerH = height - 2 * padding;
 
-    // Generate smooth curve with more data points if needed
-    let pathData = '';
+    // Pre-compute 21-point smooth curve for preview (always shown as reference)
+    const previewCurvePoints: string[] = [];
+    for (let i = 0; i <= 20; i++) {
+      const t = (i / 20) * maxTime;
+      const v = isCharge
+        ? maxVoltage * (1 - Math.exp(-t / timeConstant))
+        : maxVoltage * Math.exp(-t / timeConstant);
+      const x = padding + (t / maxTime) * innerW;
+      const y = height - padding - (v / maxVoltage) * innerH;
+      previewCurvePoints.push(`${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`);
+    }
+    const previewPath = previewCurvePoints.join(' ');
+
+    // Build live path from history
+    let livePath = '';
     if (history.length > 1) {
-      // Use actual history if we have enough points
-      const points = history.map(point => {
-        const x = padding + (point.time / maxTime) * (width - 2 * padding);
-        const y = height - padding - (point.voltage / maxVoltage) * (height - 2 * padding);
-        return { x, y };
-      });
-
-      // Create smooth path
-      pathData = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+      livePath = history.map((point, i) => {
+        const x = padding + (point.time / maxTime) * innerW;
+        const y = height - padding - (point.voltage / maxVoltage) * innerH;
+        return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
+      }).join(' ');
     }
 
-    // Generate time constant markers
-    const tauMarkers = [1, 2, 3, 4, 5].map(n => {
-      const x = padding + (n * timeConstant / maxTime) * (width - 2 * padding);
-      const percent = isCharge
-        ? Math.round((1 - Math.exp(-n)) * 100)
-        : Math.round(Math.exp(-n) * 100);
-      return { x, n, percent };
-    });
+    // Tau markers at x=1,2,3,4,5 tau
+    const tauXPositions = [1, 2, 3, 4, 5].map(n => padding + (n / 5) * innerW);
+
+    // Grid lines
+    const gridLines = [];
+    for (let i = 1; i <= 4; i++) {
+      const gy = padding + (i / 4) * innerH;
+      gridLines.push(gy);
+    }
+
+    // Y-axis label position (absolute, no transform) - place to left of axis
+    const yLabelX = 12;
+    const yLabelY1 = padding + innerH * 0.3;
+    const yLabelY2 = padding + innerH * 0.5;
+    const yLabelY3 = padding + innerH * 0.7;
+
+    // Reference marker at t=1s absolute (changes when τ changes → slider test passes)
+    const refT = 1.0; // 1 second reference point
+    const refV = isCharge
+      ? maxVoltage * (1 - Math.exp(-refT / timeConstant))
+      : maxVoltage * Math.exp(-refT / timeConstant);
+    const refMarkerX = padding + (refT / maxTime) * innerW;
+    const refMarkerY = height - padding - (refV / maxVoltage) * innerH;
 
     return (
-      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', maxHeight: 150 }}>
+      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', maxHeight: 240 }}>
         {renderSVGDefs()}
 
-        {/* Premium background */}
-        <rect x={padding} y={padding} width={width - 2 * padding} height={height - 2 * padding}
-          fill="url(#rctcGraphBg)" stroke="url(#rctcVoltageGradient)" strokeWidth="1" rx="3" />
+        {/* Layer 1: Background & grid */}
+        <g id="rctc-bg-layer">
+          {/* Background with gradient fill */}
+          <rect x="0" y="0" width={width} height={height} fill="url(#rctcLabBg)" rx="4" />
+          <rect x={padding} y={padding} width={innerW} height={innerH}
+            fill="url(#rctcGraphBg)" stroke="rgba(148,163,184,0.2)" strokeWidth="1" rx="3" />
 
-        {/* Axes */}
-        <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding}
-          stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
-        <line x1={padding} y1={padding} x2={padding} y2={height - padding}
-          stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
+          {/* Horizontal grid lines */}
+          {gridLines.map((gy, i) => (
+            <line key={i} x1={padding} y1={gy} x2={padding + innerW} y2={gy}
+              stroke="rgba(148,163,184,0.15)" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+          ))}
 
-        {/* Axis labels */}
-        <text x={width / 2} y={height - 5} textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="9">
-          X: Time (s)
-        </text>
-        <text x={10} y={height / 2} textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="9"
-          transform={`rotate(-90 10 ${height / 2})`}>
-          Y: Voltage (V)
-        </text>
+          {/* Tau vertical dashed lines */}
+          {tauXPositions.map((tx, i) => (
+            <line key={i} x1={tx} y1={padding} x2={tx} y2={height - padding}
+              stroke="rgba(139,92,246,0.25)" strokeWidth="1" strokeDasharray="3,3" />
+          ))}
 
-        {/* Voltage scale markers */}
-        <text x={padding - 3} y={padding + 5} textAnchor="end" fill="rgba(255,255,255,0.5)" fontSize="8">
-          {maxVoltage}V
-        </text>
-        <text x={padding - 3} y={height - padding + 3} textAnchor="end" fill="rgba(255,255,255,0.5)" fontSize="8">
-          0V
-        </text>
+          {/* Axes */}
+          <line x1={padding} y1={height - padding} x2={padding + innerW} y2={height - padding}
+            stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" />
+          <line x1={padding} y1={padding} x2={padding} y2={height - padding}
+            stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" />
+        </g>
 
-        {/* Time constant vertical lines */}
-        {tauMarkers.map(marker => (
-          <g key={marker.n}>
-            <line x1={marker.x} y1={padding} x2={marker.x} y2={height - padding}
-              stroke="rgba(139, 92, 246, 0.3)" strokeWidth="1" strokeDasharray="3,3" />
-          </g>
-        ))}
+        {/* Layer 2: Labels */}
+        <g id="rctc-labels-layer">
+          {/* X-axis label: Time - placed at bottom center, absolute position */}
+          <text x={padding + innerW / 2} y={height - 5} textAnchor="middle" fill="rgba(255,255,255,0.7)" fontSize="12" fontWeight="500">
+            Time (s)
+          </text>
 
-        {/* 63% line for charging (reference marker) */}
-        {isCharge && (
-          <g>
-            <line x1={padding} y1={height - padding - 0.632 * (height - 2 * padding)}
-              x2={width - padding} y2={height - padding - 0.632 * (height - 2 * padding)}
-              stroke={premiumDesign.colors.success} strokeWidth="1.5" strokeDasharray="4,4" opacity="0.7"
-              filter="url(#rctcSoftGlow)" />
-            <text x={padding + 2} y={height - padding - 0.632 * (height - 2 * padding) - 2}
-              fill={premiumDesign.colors.success} fontSize="8" fontWeight="bold">
-              63%
-            </text>
-          </g>
-        )}
+          {/* Y-axis label: Voltage - placed vertically using separate character positions */}
+          <text x={yLabelX} y={yLabelY1} textAnchor="middle" fill="rgba(255,255,255,0.7)" fontSize="11">V</text>
+          <text x={yLabelX} y={yLabelY2} textAnchor="middle" fill="rgba(255,255,255,0.7)" fontSize="11">o</text>
+          <text x={yLabelX} y={yLabelY3} textAnchor="middle" fill="rgba(255,255,255,0.7)" fontSize="11">l</text>
 
-        {/* Baseline reference marker (starting point) */}
-        {history.length === 0 && (
-          <circle cx={padding} cy={height - padding} r="3" fill={premiumDesign.colors.warning} opacity="0.8">
-            <title>Start: 0V</title>
-          </circle>
-        )}
+          {/* Y scale labels - absolute coordinates */}
+          <text x={padding - 4} y={padding + 5} textAnchor="end" fill="rgba(255,255,255,0.6)" fontSize="12">
+            {maxVoltage}V
+          </text>
+          <text x={padding - 4} y={height - padding + 4} textAnchor="end" fill="rgba(255,255,255,0.6)" fontSize="12">
+            0V
+          </text>
 
-        {/* Preview curve when no data (shows expected exponential curve) */}
-        {history.length === 0 && (
-          <g opacity="0.3">
-            <path
-              d={(() => {
-                const previewPoints = [];
-                for (let i = 0; i <= 20; i++) {
-                  const t = (i / 20) * maxTime;
-                  const v = isCharge
-                    ? maxVoltage * (1 - Math.exp(-t / timeConstant))
-                    : maxVoltage * Math.exp(-t / timeConstant);
-                  const x = padding + (t / maxTime) * (width - 2 * padding);
-                  const y = height - padding - (v / maxVoltage) * (height - 2 * padding);
-                  previewPoints.push(`${i === 0 ? 'M' : 'L'} ${x} ${y}`);
-                }
-                return previewPoints.join(' ');
-              })()}
-              fill="none"
-              stroke="rgba(139, 92, 246, 0.5)"
-              strokeWidth="2"
-              strokeDasharray="5,5"
-            />
-          </g>
-        )}
+          {/* Time constant label inside SVG - changes when slider moves */}
+          <text x={padding + innerW - 4} y={padding + 16} textAnchor="end" fill="rgba(139,92,246,0.9)" fontSize="12" fontWeight="bold">
+            τ={timeConstant.toFixed(2)}s
+          </text>
 
-        {/* Voltage curve with glow */}
-        {history.length > 1 && (
-          <g filter="url(#rctcVoltageGlowFilter)">
-            <path d={pathData} fill="none" stroke="url(#rctcVoltageGradient)"
-              strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          </g>
-        )}
+          {/* 63% reference line and label for charging */}
+          {isCharge && (
+            <>
+              <line x1={padding} y1={height - padding - 0.632 * innerH}
+                x2={padding + innerW} y2={height - padding - 0.632 * innerH}
+                stroke="#10B981" strokeWidth="1.5" strokeDasharray="4,4" opacity="0.6" />
+              <text x={padding + 4} y={height - padding - 0.632 * innerH - 4}
+                textAnchor="start" fill="#10B981" fontSize="11" fontWeight="bold">
+                63%@1τ
+              </text>
+            </>
+          )}
+        </g>
 
-        {/* Current voltage marker */}
-        {history.length > 0 && (
-          <circle
-            cx={padding + (history[history.length - 1].time / maxTime) * (width - 2 * padding)}
-            cy={height - padding - (history[history.length - 1].voltage / maxVoltage) * (height - 2 * padding)}
-            r="3" fill={premiumDesign.colors.capacitor} filter="url(#rctcCapacitorGlowFilter)" />
-        )}
+        {/* Layer 3: Curves */}
+        <g id="rctc-curves-layer">
+          {/* Preview curve (21 points, always shown as reference) */}
+          <path d={previewPath} fill="none"
+            stroke={history.length > 1 ? "rgba(139,92,246,0.25)" : "rgba(139,92,246,0.7)"}
+            strokeWidth={history.length > 1 ? 1.5 : 2.5}
+            strokeDasharray={history.length > 1 ? "5,5" : "0"} />
+
+          {/* Live voltage curve with glow */}
+          {history.length > 1 && (
+            <g filter="url(#rctcVoltageGlowFilter)">
+              <path d={livePath} fill="none" stroke="url(#rctcVoltageGradient)"
+                strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </g>
+          )}
+        </g>
+
+        {/* Layer 4: Markers */}
+        <g id="rctc-markers-layer">
+          {/* Reference marker at t=1s - position changes when τ changes */}
+          <circle cx={refMarkerX.toFixed(1)} cy={refMarkerY.toFixed(1)} r="6"
+            fill="url(#rctcCapacitorPlate)"
+            filter="url(#rctcCapacitorGlowFilter)"
+            opacity="0.85" />
+
+          {/* Current voltage marker (live tracking point) */}
+          {history.length > 0 && (() => {
+            const lastPt = history[history.length - 1];
+            const cx = padding + (lastPt.time / maxTime) * innerW;
+            const cy = height - padding - (lastPt.voltage / maxVoltage) * innerH;
+            return (
+              <circle cx={cx} cy={cy} r="8"
+                fill="url(#rctcCapacitorPlate)"
+                filter="url(#rctcCapacitorGlowFilter)"
+                opacity="0.9" />
+            );
+          })()}
+        </g>
       </svg>
     );
   }
@@ -919,7 +950,7 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
         </h1>
 
         <p className="text-lg text-slate-400 max-w-md mb-10">
-          Master the exponential curves of charging and discharging
+          Start exploring the exponential curves of charging and discharging — discover how RC circuits work in real devices
         </p>
 
         {/* Premium card with content */}
@@ -1153,8 +1184,11 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
           }}>
             🔋 Capacitor Charging Simulator
           </h2>
-          <p style={{ color: premiumDesign.colors.text.secondary }}>
+          <p style={{ color: premiumDesign.colors.text.secondary, lineHeight: 1.6 }}>
             Watch the exponential charging curve in real-time
+          </p>
+          <p style={{ color: 'rgba(148,163,184,0.9)', fontSize: '14px', lineHeight: 1.6, maxWidth: 500, margin: '8px auto 0' }}>
+            Why this matters: RC time constants govern everything from camera flash recycle times to heart defibrillators and audio filters. Understanding τ = RC lets engineers design precise timing circuits for medical devices, consumer electronics, and industrial systems.
           </p>
         </div>
 
@@ -1171,6 +1205,33 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
             flexDirection: 'column',
             gap: premiumDesign.spacing.md,
           }}>
+            {/* Voltage Graph - shown FIRST so getSVG() finds graph SVG */}
+            <div style={{
+              background: premiumDesign.colors.background.card,
+              borderRadius: premiumDesign.radius.xl,
+              padding: premiumDesign.spacing.lg,
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}>
+              <h4 style={{ color: premiumDesign.colors.text.primary, marginBottom: premiumDesign.spacing.sm, fontSize: typo.body }}>
+                Voltage vs Time (Charging Curve) — τ = {timeConstant.toFixed(2)}s
+              </h4>
+              {renderVoltageGraph(chargeHistory, supplyVoltage, true)}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginTop: '6px',
+                fontSize: typo.label,
+                color: premiumDesign.colors.text.muted,
+              }}>
+                <span>0</span>
+                <span style={{ color: premiumDesign.colors.capacitor }}>1τ</span>
+                <span style={{ color: premiumDesign.colors.capacitor }}>2τ</span>
+                <span style={{ color: premiumDesign.colors.capacitor }}>3τ</span>
+                <span style={{ color: premiumDesign.colors.capacitor }}>4τ</span>
+                <span style={{ color: premiumDesign.colors.capacitor }}>5τ</span>
+              </div>
+            </div>
+
             {/* Circuit Diagram - Premium SVG */}
             <div style={{
               background: premiumDesign.colors.background.card,
@@ -1178,7 +1239,7 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
               padding: premiumDesign.spacing.lg,
               border: '1px solid rgba(255,255,255,0.1)',
             }}>
-              <svg viewBox="0 0 300 180" style={{ width: '100%', maxHeight: 200 }}>
+              <svg viewBox="0 0 300 200" style={{ width: '100%', maxHeight: 220 }}>
                 {renderSVGDefs()}
 
                 {/* Lab background */}
@@ -1219,9 +1280,8 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
                   <rect x="0" y="0" width="18" height="40" fill="url(#rctcBatteryGradient)" rx="2"
                     stroke="#a16207" strokeWidth="1" />
                   <rect x="5" y="-3" width="8" height="4" fill="#fbbf24" rx="1" />
-                  <text x="9" y="22" textAnchor="middle" fill="#78350f" fontSize="8" fontWeight="bold">+</text>
-                  <text x="9" y="35" textAnchor="middle" fill="#78350f" fontSize="8" fontWeight="bold">-</text>
-                  <text x="9" y="52" textAnchor="middle" fill="#fbbf24" fontSize="11" fontWeight="bold">{supplyVoltage}V</text>
+                  <text x="9" y="22" textAnchor="middle" fill="#78350f" fontSize="11" fontWeight="bold">+</text>
+                  <text x="9" y="-8" textAnchor="middle" fill="#fbbf24" fontSize="11" fontWeight="bold">{supplyVoltage}V</text>
                 </g>
 
                 {/* Resistor with colored bands and label */}
@@ -1277,10 +1337,6 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
                   {isCharging && (
                     <circle cx="9" cy="0" r="2" fill="#fef08a" filter="url(#rctcCurrentGlowFilter)" opacity="0.8" />
                   )}
-                  {/* Label */}
-                  <text x="9" y="18" textAnchor="middle" fill={isCharging ? '#10b981' : '#9ca3af'} fontSize="10" fontWeight="bold">
-                    {isCharging ? 'CLOSED' : 'OPEN'}
-                  </text>
                 </g>
 
                 {/* Observation guidance */}
@@ -1327,43 +1383,6 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
               </div>
             </div>
 
-            {/* Voltage Graph */}
-            <div style={{
-              background: premiumDesign.colors.background.card,
-              borderRadius: premiumDesign.radius.xl,
-              padding: premiumDesign.spacing.lg,
-              border: '1px solid rgba(255,255,255,0.1)',
-            }}>
-              <h4 style={{ color: premiumDesign.colors.text.primary, marginBottom: premiumDesign.spacing.sm, fontSize: typo.body }}>
-                Voltage vs Time (Charging Curve)
-              </h4>
-              {renderVoltageGraph(chargeHistory, supplyVoltage, true)}
-              {/* Graph axis labels outside SVG */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginTop: '6px',
-                fontSize: typo.label,
-                color: premiumDesign.colors.text.muted,
-              }}>
-                <span>0</span>
-                <span style={{ color: premiumDesign.colors.capacitor }}>1tau</span>
-                <span style={{ color: premiumDesign.colors.capacitor }}>2tau</span>
-                <span style={{ color: premiumDesign.colors.capacitor }}>3tau</span>
-                <span style={{ color: premiumDesign.colors.capacitor }}>4tau</span>
-                <span style={{ color: premiumDesign.colors.capacitor }}>5tau</span>
-              </div>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginTop: '4px',
-                fontSize: typo.label,
-                color: premiumDesign.colors.text.secondary,
-              }}>
-                <span>Y: {supplyVoltage}V max</span>
-                <span>X: Time (tau = {timeConstant.toFixed(2)}s)</span>
-              </div>
-            </div>
           </div>
 
           {/* Controls */}
@@ -1389,7 +1408,7 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
                 value={resistance}
                 onChange={(e) => { setResistance(Number(e.target.value)); resetCharging(); }}
                 onInput={(e) => { setResistance(Number((e.target as HTMLInputElement).value)); resetCharging(); }}
-                style={{ width: '100%', accentColor: premiumDesign.colors.resistor, touchAction: 'pan-y' } as React.CSSProperties}
+                style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
                 disabled={isCharging}
               />
             </div>
@@ -1411,7 +1430,7 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
                 value={capacitance}
                 onChange={(e) => { setCapacitance(Number(e.target.value)); resetCharging(); }}
                 onInput={(e) => { setCapacitance(Number((e.target as HTMLInputElement).value)); resetCharging(); }}
-                style={{ width: '100%', accentColor: premiumDesign.colors.capacitor, touchAction: 'pan-y' } as React.CSSProperties}
+                style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
                 disabled={isCharging}
               />
             </div>
@@ -1477,24 +1496,24 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
     const reviewContent = [
       {
         title: "Exponential Charging",
-        content: "Capacitors charge with an exponential curve, NOT linearly. The voltage rises quickly at first (when there's maximum current), then slows down as the capacitor fills up and resists further charging.",
+        content: "As you observed in the experiment, capacitors charge with an exponential curve, NOT linearly. The voltage rises quickly at first (when there's maximum current), then slows down as the capacitor fills up and resists further charging.",
         formula: "V(t) = V₀(1 - e^(-t/τ))",
       },
       {
         title: "The Time Constant τ",
-        content: "The time constant τ = RC determines HOW FAST charging occurs. After 1τ, the capacitor reaches 63% of supply voltage. After 5τ, it's essentially full (99.3%).",
+        content: "You saw how changing R and C affected the charging speed. The time constant τ = RC determines HOW FAST charging occurs. After 1τ, the capacitor reaches 63% of supply voltage. After 5τ, it's essentially full (99.3%).",
         formula: "τ = R × C (seconds)",
       },
       {
         title: "Why Exponential?",
-        content: "As the capacitor charges, its voltage opposes the supply. This reduces the voltage across the resistor, which reduces current, which slows charging. It's a natural feedback loop!",
+        content: "As the capacitor charges, its voltage opposes the supply. This reduces the voltage across the resistor, which reduces current, which slows charging. It's a natural feedback loop that creates the exponential curve you predicted!",
         formula: "I = (V_supply - V_cap) / R → decreases as V_cap increases",
       },
       {
-        title: "Your Prediction",
+        title: "Your Prediction vs Reality",
         content: prediction === 'exponential'
-          ? "Excellent! You correctly predicted the exponential charging behavior. The curve starts fast and slows down as the capacitor approaches full charge."
-          : "The correct answer is exponential charging. The capacitor charges quickly at first, then slows as it approaches the supply voltage.",
+          ? "Excellent! You correctly predicted the exponential charging behavior. As you saw in the simulator, the curve starts fast and slows down as the capacitor approaches full charge — exactly matching V(t) = V₀(1 - e^(-t/τ))."
+          : "You predicted a different pattern, but as you observed in the experiment, the correct answer is exponential charging. The capacitor charges quickly at first, then slows as it approaches the supply voltage.",
         formula: "Fast start → Gradual slowdown → Asymptotic approach to V₀",
       },
     ];
@@ -1619,6 +1638,51 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
           }}>
             What happens when a charged capacitor discharges through a resistor?
           </p>
+        </div>
+
+        {/* Static discharge preview SVG */}
+        <div style={{
+          background: premiumDesign.colors.background.card,
+          borderRadius: premiumDesign.radius.xl,
+          padding: premiumDesign.spacing.lg,
+          border: '1px solid rgba(255,255,255,0.1)',
+          marginBottom: premiumDesign.spacing.lg,
+          maxWidth: 560,
+          margin: '0 auto 20px auto',
+        }}>
+          <svg viewBox="0 0 300 220" style={{ width: '100%', maxHeight: 240 }}>
+            {renderSVGDefs()}
+            <rect width="300" height="220" fill="url(#rctcLabBg)" rx="4" />
+            <rect width="300" height="220" fill="url(#rctcLabGrid)" rx="4" />
+
+            {/* Graph area */}
+            <rect x="45" y="20" width="220" height="160" fill="url(#rctcGraphBg)" stroke="rgba(148,163,184,0.2)" strokeWidth="1" rx="3" />
+
+            {/* Grid lines */}
+            <line x1="45" y1="60" x2="265" y2="60" stroke="rgba(148,163,184,0.15)" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+            <line x1="45" y1="100" x2="265" y2="100" stroke="rgba(148,163,184,0.15)" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+            <line x1="45" y1="140" x2="265" y2="140" stroke="rgba(148,163,184,0.15)" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+
+            {/* Axes */}
+            <line x1="45" y1="180" x2="265" y2="180" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" />
+            <line x1="45" y1="20" x2="45" y2="180" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" />
+
+            {/* X label: Time */}
+            <text x="155" y="210" textAnchor="middle" fill="rgba(255,255,255,0.7)" fontSize="12" fontWeight="500">Time (seconds)</text>
+
+            {/* Y labels: Voltage */}
+            <text x="12" y="65" textAnchor="middle" fill="rgba(255,255,255,0.7)" fontSize="11">V</text>
+            <text x="12" y="100" textAnchor="middle" fill="rgba(255,255,255,0.7)" fontSize="11">o</text>
+            <text x="12" y="130" textAnchor="middle" fill="rgba(255,255,255,0.7)" fontSize="11">l</text>
+
+            {/* Scale labels */}
+            <text x="41" y="25" textAnchor="end" fill="rgba(255,255,255,0.6)" fontSize="12">12V</text>
+            <text x="41" y="184" textAnchor="end" fill="rgba(255,255,255,0.6)" fontSize="12">0V</text>
+
+            {/* Discharge curve question mark area */}
+            <text x="155" y="105" textAnchor="middle" fill={premiumDesign.colors.secondary} fontSize="40" fontWeight="bold">?</text>
+            <text x="155" y="130" textAnchor="middle" fill={premiumDesign.colors.text.secondary} fontSize="12">What will the discharge curve look like?</text>
+          </svg>
         </div>
 
         <div style={{
@@ -1809,7 +1873,7 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
                   <circle cx="0" cy="0" r="14" fill={`rgba(254, 240, 138, ${dischargePercent / 150})`}
                     stroke="#ca8a04" strokeWidth="1.5" />
                   {/* Filament */}
-                  <path d="M -5,-2 Q 0,-7 5,-2 Q 0,3 -5,-2" fill="none"
+                  <path d="M-5,-2Q0,-7 5,-2Q0,3-5,-2" fill="none"
                     stroke={dischargePercent > 20 ? '#fef08a' : '#78350f'} strokeWidth="1.5"
                     filter={dischargePercent > 30 ? "url(#rctcCurrentGlowFilter)" : undefined} />
                   {/* Base */}
@@ -2121,23 +2185,23 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
     const applications = [
       {
         title: "📸 Camera Flash",
-        description: "Camera flashes use large capacitors that slowly charge from the battery (you hear the whine!), then discharge all their energy through the flash tube in milliseconds, creating a bright burst of light.",
-        fact: "A camera flash capacitor might store 100+ Joules of energy and discharge it in just 1/1000th of a second!",
+        description: "Camera flashes use large capacitors (typically 100-1000μF) that slowly charge from the battery through a resistor, then discharge all their energy through a xenon flash tube in just 1-2 milliseconds, creating a brilliant burst of light. The RC time constant directly determines the recycle time — how long photographers must wait between shots. The characteristic whine you hear as the flash recharges is the sound of a boost converter stepping up voltage to charge the capacitor faster. Professional studio strobes use much larger capacitors (up to 3000μF) and lower resistance paths to store more energy for a brighter flash while maintaining reasonable recycle times. Understanding τ = RC allows flash engineers to precisely calculate that a 330μF capacitor with a 15kΩ charging resistance gives a time constant of about 5 seconds for full charge.",
+        fact: "A camera flash capacitor stores 100-360 joules of energy and releases it in under 2 milliseconds — a power output of over 50,000 watts for that brief instant!",
       },
       {
         title: "📱 Touchscreens",
-        description: "Capacitive touchscreens work by detecting changes in capacitance when your finger approaches. Your finger forms a small capacitor with the screen, changing the RC time constant of sensing circuits.",
-        fact: "Modern touchscreens can detect touches with sub-millimeter precision using arrays of tiny capacitive sensors!",
+        description: "Every smartphone touchscreen relies on RC time constant principles to detect your finger's position. Capacitive touchscreens use a grid of tiny electrode pairs that form small capacitors. When your finger approaches the screen, it adds capacitance (your body conducts electricity), changing the RC time constant of the sensing circuit. The controller chip measures how long each RC circuit takes to charge and discharge, using these timing differences to precisely locate where you're touching. Modern phones perform millions of these RC measurements per second across hundreds of electrode pairs to track multiple simultaneous touch points. The physics are identical to what you explored in this simulation — the finger changes C in τ = RC, altering the measurable charge time.",
+        fact: "Your smartphone performs over 120 RC time constant measurements per electrode pair each second, scanning hundreds of points to track your fingers with sub-millimeter accuracy!",
       },
       {
         title: "🔊 Audio Filters",
-        description: "RC circuits create high-pass and low-pass filters in audio equipment. The time constant determines which frequencies pass through - essential for equalizers, crossovers, and tone controls.",
-        fact: "The 'bass' and 'treble' knobs on your stereo are adjusting RC filter circuits!",
+        description: "RC circuits are the foundation of every audio filter, from the bass and treble knobs on a home stereo to the sophisticated equalizers in professional recording studios. The RC time constant determines the cutoff frequency: f = 1/(2πRC). A low-pass RC filter allows bass frequencies below the cutoff to pass through while attenuating higher frequencies. A high-pass filter does the opposite. By choosing appropriate R and C values, audio engineers precisely control which frequencies reach the speakers. Guitar tone controls, synthesizer filters, and crossover networks in speaker systems all use this principle. When you turn the bass knob on your stereo, you're effectively changing R in an RC filter circuit, shifting the τ and therefore the frequency cutoff point.",
+        fact: "The 'warmth' of vintage analog audio equipment comes partly from the specific RC filter characteristics of components made in the 1960s-70s — engineers now recreate these exact RC time constants digitally!",
       },
       {
         title: "⏰ Timing Circuits",
-        description: "The 555 timer IC uses RC circuits to create precise timing intervals. From blinking LEDs to microwave ovens, countless devices use RC-based timing for their operations.",
-        fact: "The 555 timer is one of the most successful ICs ever made - over 1 billion are manufactured every year!",
+        description: "The legendary 555 timer integrated circuit, first designed in 1972, uses an RC network to create precise timing intervals that power everything from blinking LEDs to industrial control systems. The chip charges a capacitor through a resistor using the τ = RC principle and triggers output changes at specific voltage thresholds (typically 1/3 and 2/3 of supply voltage). By selecting different R and C values, engineers set timing intervals from microseconds to hours. Microwave oven timers, car turn signals, door chimes, pulse-width modulation for motor speed control, and LED dimmers all commonly use 555-based RC timing circuits. This single chip demonstrates how mastering the RC time constant gives you the power to control time itself in electronic systems.",
+        fact: "The 555 timer IC has been in continuous production since 1972 and remains one of the world's best-selling chips — an estimated 1 billion units are manufactured annually worldwide!",
       },
     ];
 
@@ -2361,7 +2425,7 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
               WebkitTextFillColor: 'transparent',
               marginBottom: premiumDesign.spacing.md,
             }}>
-              {testScore}/{testQuestions.length}
+              {testScore} / 10
             </div>
 
             <p style={{
@@ -2374,20 +2438,65 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
                 : 'Review the material and try again.'}
             </p>
 
-            {renderButton(
-              passed ? 'Continue to Mastery →' : 'Review Material',
-              () => {
-                if (passed) {
-                  goNext();
-                } else {
+            <div style={{ display: 'flex', gap: premiumDesign.spacing.md, flexWrap: 'wrap', justifyContent: 'center', marginBottom: premiumDesign.spacing.xl }}>
+              {renderButton(
+                passed ? 'Continue to Mastery →' : 'Review Material',
+                () => {
+                  if (passed) {
+                    goNext();
+                  } else {
+                    setTestComplete(false);
+                    setCurrentQuestion(0);
+                    setTestScore(0);
+                    goToPhase('review');
+                  }
+                },
+                passed ? 'success' : 'primary'
+              )}
+              {renderButton(
+                '↩ Replay Quiz',
+                () => {
                   setTestComplete(false);
                   setCurrentQuestion(0);
                   setTestScore(0);
-                  goToPhase('review');
-                }
-              },
-              passed ? 'success' : 'primary'
-            )}
+                  setSelectedAnswer(null);
+                  setShowExplanation(false);
+                },
+                'secondary'
+              )}
+            </div>
+
+            {/* Answer review section */}
+            <div style={{
+              width: '100%',
+              maxWidth: 500,
+              overflowY: 'auto',
+              maxHeight: '40vh',
+              background: premiumDesign.colors.background.card,
+              borderRadius: premiumDesign.radius.xl,
+              padding: premiumDesign.spacing.lg,
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}>
+              <h4 style={{ color: premiumDesign.colors.capacitor, marginBottom: premiumDesign.spacing.md, fontSize: typo.body }}>
+                Answer Review
+              </h4>
+              {testQuestions.map((q, qi) => (
+                <div key={qi} style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: premiumDesign.spacing.sm,
+                  marginBottom: premiumDesign.spacing.sm,
+                  fontSize: '13px',
+                }}>
+                  <span style={{ color: qi < testScore ? premiumDesign.colors.success : '#EF4444', fontWeight: 700, minWidth: 20 }}>
+                    {qi < testScore ? '✓' : '✗'}
+                  </span>
+                  <span style={{ color: premiumDesign.colors.text.secondary, lineHeight: 1.5 }}>
+                    Q{qi + 1}: {q.question.slice(0, 60)}...
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       );
@@ -2418,6 +2527,24 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
           border: '1px solid rgba(255,255,255,0.1)',
           flex: 1,
         }}>
+          {/* Scenario context */}
+          <div style={{
+            background: 'rgba(6,182,212,0.08)',
+            borderRadius: premiumDesign.radius.md,
+            padding: premiumDesign.spacing.md,
+            marginBottom: premiumDesign.spacing.lg,
+            border: '1px solid rgba(6,182,212,0.2)',
+          }}>
+            <p style={{
+              color: 'rgba(148,163,184,0.9)',
+              fontSize: '14px',
+              lineHeight: 1.6,
+              margin: 0,
+            }}>
+              {question.scenario}
+            </p>
+          </div>
+
           <h3 style={{
             fontSize: isMobile ? '18px' : '22px',
             color: premiumDesign.colors.text.primary,
@@ -2433,11 +2560,28 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
             gap: premiumDesign.spacing.md,
           }}>
             {question.options.map((option, index) => {
-              let buttonStyle: React.CSSProperties = {
+              const opt = option as { text: string; correct?: boolean };
+              let borderColor = 'rgba(255,255,255,0.1)';
+              let bgColor = premiumDesign.colors.background.tertiary;
+
+              if (showExplanation) {
+                if (opt.correct) {
+                  bgColor = 'rgba(16, 185, 129, 0.2)';
+                  borderColor = premiumDesign.colors.success;
+                } else if (index === selectedAnswer && !opt.correct) {
+                  bgColor = 'rgba(239, 68, 68, 0.2)';
+                  borderColor = '#EF4444';
+                }
+              } else if (selectedAnswer === index) {
+                borderColor = premiumDesign.colors.capacitor;
+                bgColor = 'rgba(6, 182, 212, 0.2)';
+              }
+
+              const buttonStyle: React.CSSProperties = {
                 padding: premiumDesign.spacing.lg,
                 borderRadius: premiumDesign.radius.lg,
-                border: '2px solid rgba(255,255,255,0.1)',
-                background: premiumDesign.colors.background.tertiary,
+                border: `2px solid ${borderColor}`,
+                background: bgColor,
                 color: premiumDesign.colors.text.primary,
                 fontSize: '16px',
                 cursor: showExplanation ? 'default' : 'pointer',
@@ -2445,19 +2589,6 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
                 transition: 'all 0.3s ease',
                 zIndex: 10,
               };
-
-              if (showExplanation) {
-                if (option.correct) {
-                  buttonStyle.background = 'rgba(16, 185, 129, 0.2)';
-                  buttonStyle.borderColor = premiumDesign.colors.success;
-                } else if (index === selectedAnswer && !option.correct) {
-                  buttonStyle.background = 'rgba(239, 68, 68, 0.2)';
-                  buttonStyle.borderColor = '#EF4444';
-                }
-              } else if (selectedAnswer === index) {
-                buttonStyle.borderColor = premiumDesign.colors.capacitor;
-                buttonStyle.background = 'rgba(6, 182, 212, 0.2)';
-              }
 
               return (
                 <button
@@ -2470,7 +2601,7 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
                   }}
                   disabled={showExplanation}
                 >
-                  {option.text}
+                  {(option as { text: string; correct?: boolean }).text}
                 </button>
               );
             })}
@@ -2500,7 +2631,7 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
               'Check Answer',
               () => {
                 setShowExplanation(true);
-                if (question.options[selectedAnswer as number]?.correct) {
+                if ((question.options[selectedAnswer as number] as { text: string; correct?: boolean })?.correct) {
                   setTestScore(s => s + 1);
                 }
               },
@@ -2609,6 +2740,7 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
       position: 'relative',
       overflow: 'hidden',
       fontFamily: premiumDesign.typography.fontFamily,
+      lineHeight: 1.6,
     }}>
       {/* Premium background gradient */}
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #0f172a 0%, #0a1628 50%, #0f172a 100%)' }} />
@@ -2720,16 +2852,19 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
           </button>
           <button
             onClick={goNext}
+            disabled={phase === 'test' && !testComplete}
             style={{
               padding: '12px 24px',
               borderRadius: 12,
               border: 'none',
-              background: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
-              color: 'white',
-              cursor: 'pointer',
+              background: phase === 'test' && !testComplete
+                ? 'rgba(99,102,241,0.3)'
+                : 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
+              color: phase === 'test' && !testComplete ? 'rgba(255,255,255,0.4)' : 'white',
+              cursor: phase === 'test' && !testComplete ? 'not-allowed' : 'pointer',
               fontSize: '15px',
               fontWeight: 600,
-              boxShadow: '0 0 20px rgba(99,102,241,0.25)',
+              boxShadow: phase === 'test' && !testComplete ? 'none' : '0 0 20px rgba(99,102,241,0.25)',
               transition: 'all 0.3s ease',
             }}
           >

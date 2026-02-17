@@ -19,7 +19,7 @@ const phaseLabels: Record<Phase, string> = {
   play: 'Experiment',
   review: 'Understanding',
   twist_predict: 'New Variable',
-  twist_play: 'Scale Effects',
+  twist_play: 'Explore Scale',
   twist_review: 'Deep Insight',
   transfer: 'Real World',
   test: 'Knowledge Test',
@@ -94,9 +94,9 @@ const realWorldApps = [
     connection: 'Ring all-reduce and tree topologies directly apply to gradient synchronization. The bandwidth and latency characteristics we explored determine whether training is compute-bound or communication-bound at scale.',
     howItWorks: 'Modern training clusters use hierarchical topologies: NVLink connects GPUs within a node (full mesh), InfiniBand connects nodes in fat-tree configurations, and software implements ring all-reduce for gradient averaging.',
     stats: [
-      { value: '10,000+', label: 'GPUs in cluster', icon: '⚡' },
-      { value: '400Gb/s', label: 'InfiniBand speed', icon: '📈' },
-      { value: '90%', label: 'Scaling efficiency', icon: '🚀' }
+      { value: '90%', label: 'Scaling efficiency achieved', icon: '⚡' },
+      { value: '$10B', label: 'Training cluster cost', icon: '📈' },
+      { value: '400GB/s', label: 'InfiniBand bandwidth', icon: '🚀' }
     ],
     examples: ['OpenAI GPT training infrastructure', 'Google TPU pods', 'NVIDIA DGX SuperPOD', 'Meta Research AI clusters'],
     companies: ['NVIDIA', 'Google', 'Microsoft', 'Meta'],
@@ -546,7 +546,8 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
                                 isFatTree ? 'url(#itopSilverTrace)' :
                                 isTree ? 'url(#itopEmeraldTrace)' :
                                 'url(#itopCopperTrace)';
-          const traceWidth = isFatTree ? 6 : isRing ? 4 : 3;
+          const msgFactor = 1 + (messageSize / 1000) * 2;
+          const traceWidth = (isFatTree ? 6 : isRing ? 4 : 3) * msgFactor;
 
           return (
             <g key={`conn-${i}`}>
@@ -643,19 +644,22 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
           );
         })}
 
-        {/* Stats panel */}
-        <g transform={`translate(12, ${height - 100})`}>
-          <rect x={0} y={0} width={190} height={88} rx={10} fill="rgba(15, 23, 42, 0.95)" stroke="#334155" strokeWidth={1} />
-          <text x={12} y={18} fill={spec.color} fontSize={11} fontWeight="bold">NETWORK METRICS</text>
-          <line x1={12} y1={24} x2={178} y2={24} stroke="#334155" strokeWidth={1} />
-          <text x={12} y={40} fill={colors.textMuted} fontSize={11}>Latency Steps</text>
-          <text x={12} y={56} fill={spec.color} fontSize={16} fontWeight="bold">{latencySteps}</text>
-          <text x={100} y={40} fill={colors.textMuted} fontSize={11}>BW Eff.</text>
-          <text x={100} y={56} fill={bandwidthEfficiency > 80 ? colors.success : colors.warning} fontSize={16} fontWeight="bold">
+        {/* Stats panel - use absolute coordinates */}
+        <g>
+          <rect x={12} y={height - 108} width={196} height={96} rx={10} fill="rgba(15, 23, 42, 0.95)" stroke="#334155" strokeWidth={1} />
+          <text x={24} y={height - 93} fill={spec.color} fontSize={11} fontWeight="bold">METRICS</text>
+          <line x1={24} y1={height - 87} x2={200} y2={height - 87} stroke="#334155" strokeWidth={1} />
+          <text x={24} y={height - 74} fill={colors.textMuted} fontSize={11}>Lat.Steps</text>
+          <text x={120} y={height - 74} fill={colors.textMuted} fontSize={11}>BW%</text>
+          <text x={24} y={height - 58} fill={spec.color} fontSize={13} fontWeight="bold">{latencySteps}</text>
+          <text x={120} y={height - 58} fill={bandwidthEfficiency > 80 ? colors.success : colors.warning} fontSize={13} fontWeight="bold">
             {bandwidthEfficiency}%
           </text>
-          <text x={12} y={78} fill={colors.textMuted} fontSize={11}>
-            Links: {connections.length} | {spec.latency}
+          <text x={24} y={height - 40} fill={colors.textMuted} fontSize={11}>
+            Data Rate: {bandwidthEfficiency}%
+          </text>
+          <text x={24} y={height - 26} fill={colors.textMuted} fontSize={11}>
+            Links:{connections.length} | {spec.latency}
           </text>
         </g>
 
@@ -711,7 +715,7 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
           max={16}
           value={numNodes}
           onChange={(e) => setNumNodes(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
         />
       </div>
 
@@ -726,7 +730,7 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
           step={10}
           value={messageSize}
           onChange={(e) => setMessageSize(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.warning }}
+          style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
         />
       </div>
 
@@ -877,8 +881,10 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px',
         paddingTop: '70px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        paddingBottom: '24px',
         textAlign: 'center',
         overflowY: 'auto' as const,
       }}>
@@ -917,7 +923,7 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
             "Training GPT-4 used thousands of GPUs. Every GPU needs to share its gradients with every other GPU. Without the right network topology, GPUs spend more time waiting than computing."
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+          <p style={{ color: 'rgba(148,163,184,0.7)', fontSize: '13px', marginTop: '8px' }}>
             - The Network IS the Computer
           </p>
         </div>
@@ -1135,11 +1141,12 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        paddingTop: '70px',
-        overflowY: 'auto' as const,
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
+        <div style={{ flex: 1, overflowY: 'auto' as const, paddingTop: '70px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Topology Explorer Lab
@@ -1225,6 +1232,7 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
         </div>
 
         {renderNavDots()}
+        </div>
       </div>
     );
   }

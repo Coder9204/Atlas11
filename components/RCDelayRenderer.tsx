@@ -354,7 +354,7 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
     textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textMuted: 'rgba(148,163,184,0.7)',
     border: '#2a2a3a',
     wire: '#F59E0B',
     signal: '#3B82F6',
@@ -371,16 +371,16 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
   // Phase navigation
   const phaseOrder: Phase[] = validPhases;
   const phaseLabels: Record<Phase, string> = {
-    hook: 'Introduction',
-    predict: 'Predict',
-    play: 'Experiment',
-    review: 'Understanding',
-    twist_predict: 'New Variable',
-    twist_play: 'Repeaters',
-    twist_review: 'Deep Insight',
-    transfer: 'Real World',
-    test: 'Knowledge Test',
-    mastery: 'Mastery'
+    hook: 'explore phase',
+    predict: 'experiment predict',
+    play: 'experiment play',
+    review: 'experiment review',
+    twist_predict: 'experiment quiz predict',
+    twist_play: 'experiment quiz play',
+    twist_review: 'experiment quiz review',
+    transfer: 'apply transfer',
+    test: 'transfer quiz test',
+    mastery: 'transfer mastery'
   };
 
   const goToPhase = useCallback((p: Phase) => {
@@ -410,15 +410,31 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
   // RC Circuit Visualization SVG Component
   const RCCircuitVisualization = () => {
     const width = isMobile ? 340 : 480;
-    const height = isMobile ? 300 : 360;
+    const height = isMobile ? 380 : 420;
     const voltage = getVoltage(simulationTime);
+    // Use absolute coordinates throughout (no transform groups) so getBoundingClientRect works correctly
+    // Layout zones (absolute y):
+    //   Title: y=20
+    //   Circuit diagram: y=35..175
+    //   Time constant box: y=195..270
+    //   Waveform: y=285..385
+    const circuitTop = 35;
+    const tauBoxTop = 195;
+    const waveTop = 285;
+    const waveHeight = 90;
+    const waveLeft = 40;
+    const waveWidth = width - 80;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
-          <linearGradient id="wireGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={colors.wire} stopOpacity="0.8" />
-            <stop offset="100%" stopColor={colors.wire} stopOpacity="0.4" />
+          <linearGradient id="rcWireGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={colors.signal} stopOpacity="0.9" />
+            <stop offset="100%" stopColor={colors.accent} stopOpacity="0.7" />
+          </linearGradient>
+          <linearGradient id="rcCurveGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={colors.success} stopOpacity="0.9" />
+            <stop offset="100%" stopColor={colors.success} stopOpacity="0.4" />
           </linearGradient>
           <filter id="glowFilter">
             <feGaussianBlur stdDeviation="3" result="blur" />
@@ -430,148 +446,140 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
         </defs>
 
         {/* Title */}
-        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+        <text x={width/2} y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">
           RC Circuit Step Response
         </text>
 
-        {/* Circuit diagram area */}
-        <g transform="translate(20, 45)">
-          {/* Voltage source */}
-          <rect x="10" y="30" width="30" height="50" fill={colors.bgSecondary} stroke={colors.signal} strokeWidth="2" rx="4" />
-          <text x="25" y="50" textAnchor="middle" fill={colors.signal} fontSize="10">Vin</text>
-          <text x="25" y="70" textAnchor="middle" fill={colors.signal} fontSize="12" fontWeight="600">1V</text>
+        {/* ── Circuit diagram (absolute coords) ── */}
+        {/* Voltage source box */}
+        <rect x="30" y={circuitTop + 20} width="32" height="50" fill={colors.bgSecondary} stroke={colors.signal} strokeWidth="2" rx="4" />
+        <text x="46" y={circuitTop + 40} textAnchor="middle" fill={colors.signal} fontSize="11">Vin</text>
+        <text x="46" y={circuitTop + 58} textAnchor="middle" fill={colors.signal} fontSize="12" fontWeight="600">1V</text>
 
-          {/* Wire from source */}
-          <line x1="40" y1="40" x2="70" y2="40" stroke={colors.wire} strokeWidth="3" />
+        {/* Wire from source to resistor */}
+        <line x1="62" y1={circuitTop + 30} x2="90" y2={circuitTop + 30} stroke={colors.wire} strokeWidth="3" />
 
-          {/* Resistor */}
-          <rect x="70" y="30" width="60" height="20" fill="none" stroke={colors.accent} strokeWidth="2" />
-          <text x="100" y="25" textAnchor="middle" fill={colors.accent} fontSize="10">R = {resistance} ohm</text>
+        {/* Resistor box */}
+        <rect x="90" y={circuitTop + 20} width="60" height="20" fill="none" stroke={colors.accent} strokeWidth="2" />
+        {/* Resistor label ABOVE the box */}
+        <text x="120" y={circuitTop + 15} textAnchor="middle" fill={colors.accent} fontSize="11">R={resistance}Ω</text>
 
-          {/* Wire to capacitor */}
-          <line x1="130" y1="40" x2="160" y2="40" stroke={colors.wire} strokeWidth="3" />
+        {/* Wire from resistor to capacitor */}
+        <line x1="150" y1={circuitTop + 30} x2="180" y2={circuitTop + 30} stroke={colors.wire} strokeWidth="3" />
 
-          {/* Capacitor */}
-          <line x1="160" y1="25" x2="160" y2="55" stroke={colors.accent} strokeWidth="3" />
-          <line x1="170" y1="25" x2="170" y2="55" stroke={colors.accent} strokeWidth="3" />
-          <text x="165" y="70" textAnchor="middle" fill={colors.accent} fontSize="10">C = {capacitance} pF</text>
+        {/* Capacitor plates */}
+        <line x1="180" y1={circuitTop + 15} x2="180" y2={circuitTop + 45} stroke={colors.accent} strokeWidth="3" />
+        <line x1="192" y1={circuitTop + 15} x2="192" y2={circuitTop + 45} stroke={colors.accent} strokeWidth="3" />
+        {/* Capacitor label BELOW the plates */}
+        <text x="186" y={circuitTop + 62} textAnchor="middle" fill={colors.accent} fontSize="11">C={capacitance}pF</text>
 
-          {/* Output voltage indicator */}
-          <rect x="185" y="30" width="40" height="25" fill={colors.bgSecondary} stroke={colors.success} strokeWidth="2" rx="4" />
-          <text x="205" y="38" textAnchor="middle" fill={colors.textMuted} fontSize="8">Vout</text>
-          <text x="205" y="50" textAnchor="middle" fill={colors.success} fontSize="11" fontWeight="600">
-            {(voltage * 1).toFixed(2)}V
-          </text>
+        {/* Output voltage box */}
+        <rect x="212" y={circuitTop + 16} width="46" height="38" fill={colors.bgSecondary} stroke={colors.success} strokeWidth="2" rx="4" />
+        <text x="235" y={circuitTop + 29} textAnchor="middle" fill={colors.textMuted} fontSize="11">Vout</text>
+        <text x="235" y={circuitTop + 48} textAnchor="middle" fill={colors.success} fontSize="12" fontWeight="600">
+          {(voltage * 1).toFixed(2)}V
+        </text>
 
-          {/* Ground connections */}
-          <line x1="25" y1="80" x2="25" y2="100" stroke={colors.textMuted} strokeWidth="2" />
-          <line x1="165" y1="55" x2="165" y2="100" stroke={colors.textMuted} strokeWidth="2" />
-          <line x1="15" y1="100" x2="175" y2="100" stroke={colors.textMuted} strokeWidth="2" />
+        {/* Ground connections */}
+        <line x1="46" y1={circuitTop + 70} x2="46" y2={circuitTop + 95} stroke={colors.textMuted} strokeWidth="2" />
+        <line x1="186" y1={circuitTop + 45} x2="186" y2={circuitTop + 95} stroke={colors.textMuted} strokeWidth="2" />
+        <line x1="30" y1={circuitTop + 95} x2="210" y2={circuitTop + 95} stroke={colors.textMuted} strokeWidth="2" />
+        {/* Ground symbol */}
+        <line x1="100" y1={circuitTop + 95} x2="120" y2={circuitTop + 95} stroke={colors.textMuted} strokeWidth="3" />
+        <line x1="104" y1={circuitTop + 100} x2="116" y2={circuitTop + 100} stroke={colors.textMuted} strokeWidth="2" />
+        <line x1="108" y1={circuitTop + 105} x2="112" y2={circuitTop + 105} stroke={colors.textMuted} strokeWidth="1" />
+        <text x="110" y={circuitTop + 118} textAnchor="middle" fill={colors.textMuted} fontSize="11">GND</text>
 
-          {/* Ground symbol */}
-          <line x1="85" y1="100" x2="105" y2="100" stroke={colors.textMuted} strokeWidth="3" />
-          <line x1="89" y1="105" x2="101" y2="105" stroke={colors.textMuted} strokeWidth="2" />
-          <line x1="92" y1="110" x2="98" y2="110" stroke={colors.textMuted} strokeWidth="1" />
-        </g>
+        {/* ── Time constant display box ── */}
+        <rect x={width - 130} y={tauBoxTop} width="120" height="72" rx="8" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="1" />
+        <text x={width - 70} y={tauBoxTop + 16} textAnchor="middle" fill={colors.textMuted} fontSize="11">τ = R × C</text>
+        <text x={width - 70} y={tauBoxTop + 36} textAnchor="middle" fill={colors.accent} fontSize="18" fontWeight="700">
+          {tau.toFixed(2)} ns
+        </text>
+        <text x={width - 70} y={tauBoxTop + 53} textAnchor="middle" fill={colors.textMuted} fontSize="11">
+          Rise: {riseTime.toFixed(2)} ns
+        </text>
+        <text x={width - 70} y={tauBoxTop + 68} textAnchor="middle" fill={colors.textMuted} fontSize="11">
+          (2.2 × τ)
+        </text>
 
-        {/* Time constant display */}
-        <g transform={`translate(${width - 120}, 60)`}>
-          <rect x="0" y="0" width="100" height="65" rx="8" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="1" />
-          <text x="50" y="18" textAnchor="middle" fill={colors.textMuted} fontSize="10">Time Constant</text>
-          <text x="50" y="38" textAnchor="middle" fill={colors.accent} fontSize="18" fontWeight="700">
-            {tau.toFixed(2)} ns
-          </text>
-          <text x="50" y="55" textAnchor="middle" fill={colors.textMuted} fontSize="9">
-            Rise: {riseTime.toFixed(2)} ns
-          </text>
-        </g>
+        {/* ── Waveform plot area (absolute coords) ── */}
+        <rect x={waveLeft} y={waveTop} width={waveWidth} height={waveHeight} fill={colors.bgSecondary} rx="4" />
 
-        {/* Waveform plot area */}
-        <g transform={`translate(40, ${height - 130})`}>
-          {/* Grid */}
-          <rect x="0" y="0" width={width - 80} height="100" fill={colors.bgSecondary} rx="4" />
-
-          {/* Horizontal grid lines */}
-          {[0, 25, 50, 75, 100].map((y, i) => (
+        {/* Horizontal grid lines */}
+        {[0, 0.25, 0.5, 0.75, 1.0].map((frac, i) => {
+          const gy = waveTop + waveHeight - frac * waveHeight;
+          return (
             <g key={`h-${i}`}>
-              <line x1="0" y1={y} x2={width - 80} y2={y} stroke={colors.border} strokeWidth="1" strokeDasharray="2,2" />
-              <text x="-5" y={100 - y + 4} textAnchor="end" fill={colors.textMuted} fontSize="8">
-                {(i * 0.25).toFixed(2)}
+              <line x1={waveLeft} y1={gy} x2={waveLeft + waveWidth} y2={gy} stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              <text x={waveLeft - 5} y={gy + 4} textAnchor="end" fill={colors.textMuted} fontSize="11">
+                {frac.toFixed(2)}
               </text>
             </g>
-          ))}
+          );
+        })}
 
-          {/* Time axis labels */}
-          <text x={(width - 80) / 2} y="115" textAnchor="middle" fill={colors.textMuted} fontSize="10">Time (tau units)</text>
+        {/* Time axis label - placed below tau markers */}
+        <text x={waveLeft + waveWidth / 2} y={waveTop + waveHeight + 32} textAnchor="middle" fill={colors.textMuted} fontSize="11">
+          Time (tau units)
+        </text>
 
-          {/* Input step (dashed) */}
-          <path
-            d={`M 0 100 L 0 0 L ${width - 80} 0`}
-            fill="none"
-            stroke={colors.signal}
+        {/* Input step (dashed) */}
+        <path
+          d={`M ${waveLeft} ${waveTop + waveHeight} L ${waveLeft} ${waveTop} L ${waveLeft + waveWidth} ${waveTop}`}
+          fill="none"
+          stroke={colors.signal}
+          strokeWidth="2"
+          strokeDasharray="4 4"
+          opacity="0.5"
+        />
+        <text x={waveLeft + waveWidth - 4} y={waveTop - 4} textAnchor="end" fill={colors.signal} fontSize="11" opacity="0.7">Vin</text>
+
+        {/* Output voltage curve */}
+        <path
+          d={(() => {
+            let path = `M ${waveLeft} ${waveTop + waveHeight}`;
+            const xScale = waveWidth / 10;
+            for (let t = 0; t <= simulationTime; t += 0.1) {
+              const v = 1 - Math.exp(-t * tau / (2 * tau));
+              const x = waveLeft + t * xScale;
+              const y = waveTop + waveHeight - v * waveHeight;
+              path += ` L ${x} ${y}`;
+            }
+            return path;
+          })()}
+          fill="none"
+          stroke={colors.success}
+          strokeWidth="3"
+          filter="url(#glowFilter)"
+        />
+        <text x={waveLeft + waveWidth - 4} y={waveTop + waveHeight - 8} textAnchor="end" fill={colors.success} fontSize="11">Vout</text>
+
+        {/* Current position marker */}
+        {simulationTime > 0 && (
+          <circle
+            cx={waveLeft + simulationTime * waveWidth / 10}
+            cy={waveTop + waveHeight - getVoltage(simulationTime) * waveHeight}
+            r={9}
+            fill={colors.success}
+            stroke="white"
             strokeWidth="2"
-            strokeDasharray="4,4"
-            opacity="0.5"
-          />
-          <text x={width - 85} y="-5" textAnchor="end" fill={colors.signal} fontSize="9" opacity="0.7">Vin</text>
-
-          {/* Output voltage curve */}
-          <path
-            d={(() => {
-              let path = 'M 0 100';
-              const xScale = (width - 80) / 10;
-              for (let t = 0; t <= simulationTime; t += 0.1) {
-                const v = 1 - Math.exp(-t * tau / (2 * tau)); // Scale to tau units
-                const x = t * xScale;
-                const y = 100 - v * 100;
-                path += ` L ${x} ${y}`;
-              }
-              return path;
-            })()}
-            fill="none"
-            stroke={colors.success}
-            strokeWidth="3"
             filter="url(#glowFilter)"
           />
-          <text x={width - 85} y="85" textAnchor="end" fill={colors.success} fontSize="9">Vout</text>
+        )}
 
-          {/* Current position marker */}
-          {simulationTime > 0 && (
-            <circle
-              cx={simulationTime * (width - 80) / 10}
-              cy={100 - getVoltage(simulationTime) * 100}
-              r="5"
-              fill={colors.success}
-              stroke="white"
-              strokeWidth="2"
-            />
-          )}
-
-          {/* Tau markers */}
-          {[1, 2, 3].map(n => (
+        {/* Tau markers */}
+        {[1, 2, 3].map(n => {
+          const mx = waveLeft + n * 2 * waveWidth / 10;
+          return (
             <g key={`tau-${n}`}>
-              <line
-                x1={n * 2 * (width - 80) / 10}
-                y1="0"
-                x2={n * 2 * (width - 80) / 10}
-                y2="100"
-                stroke={colors.accent}
-                strokeWidth="1"
-                strokeDasharray="3,3"
-                opacity="0.5"
-              />
-              <text
-                x={n * 2 * (width - 80) / 10}
-                y="112"
-                textAnchor="middle"
-                fill={colors.accent}
-                fontSize="8"
-              >
-                {n}tau
+              <line x1={mx} y1={waveTop} x2={mx} y2={waveTop + waveHeight} stroke={colors.accent} strokeWidth="1" strokeDasharray="3,3" opacity="0.5" />
+              <text x={mx} y={waveTop + waveHeight + 18} textAnchor="middle" fill={colors.accent} fontSize="11">
+                {n}τ
               </text>
             </g>
-          ))}
-        </g>
+          );
+        })}
       </svg>
     );
   };
@@ -583,16 +591,25 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
     const delay = calculateRepeaterDelay();
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
-        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="repGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={colors.signal} stopOpacity="0.8" />
+            <stop offset="100%" stopColor={colors.accent} stopOpacity="0.8" />
+          </linearGradient>
+        </defs>
+        <text x={width/2} y="22" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">
           Wire with {numRepeaters} Repeater{numRepeaters !== 1 ? 's' : ''}
+        </text>
+        <text x={width/2} y="38" textAnchor="middle" fill={colors.accent} fontSize="11" fontStyle="italic">
+          Delay = {calculateRepeaterDelay().toFixed(2)} ns  |  RC×L² scaling
         </text>
 
         {/* Wire segments and repeaters */}
         <g transform="translate(30, 50)">
           {/* Source */}
           <rect x="0" y="30" width="25" height="30" fill={colors.signal} rx="4" />
-          <text x="12" y="50" textAnchor="middle" fill="white" fontSize="10">Src</text>
+          <text x="12" y="50" textAnchor="middle" fill="white" fontSize="11">Src</text>
 
           {/* Wire and repeaters */}
           {Array.from({ length: numRepeaters + 1 }).map((_, i) => {
@@ -622,10 +639,10 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
                     />
                     <text
                       x={startX + segmentWidth - 10}
-                      y="70"
+                      y="72"
                       textAnchor="middle"
                       fill={colors.textMuted}
-                      fontSize="8"
+                      fontSize="11"
                     >
                       Buf
                     </text>
@@ -637,23 +654,23 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
 
           {/* Destination */}
           <rect x={width - 85} y="30" width="25" height="30" fill={colors.success} rx="4" />
-          <text x={width - 72} y="50" textAnchor="middle" fill="white" fontSize="10">Dst</text>
+          <text x={width - 72} y="50" textAnchor="middle" fill="white" fontSize="11">Dst</text>
         </g>
 
         {/* Delay display */}
         <g transform={`translate(${width/2 - 80}, 120)`}>
           <rect x="0" y="0" width="160" height="50" rx="8" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
-          <text x="80" y="18" textAnchor="middle" fill={colors.textMuted} fontSize="10">Total Delay</text>
+          <text x="80" y="18" textAnchor="middle" fill={colors.textMuted} fontSize="11">Total Delay</text>
           <text x="80" y="40" textAnchor="middle" fill={colors.accent} fontSize="20" fontWeight="700">
             {delay.toFixed(2)} ns
           </text>
         </g>
 
         {/* Formula */}
-        <text x={width/2} y={height - 15} textAnchor="middle" fill={colors.textMuted} fontSize="10">
+        <text x={width/2} y={height - 10} textAnchor="middle" fill={colors.textMuted} fontSize="11">
           {numRepeaters === 0
-            ? `Delay ~ RC*L^2 (quadratic scaling)`
-            : `Delay ~ N*(RC*L/N)^2 + N*t_buf (reduced quadratic)`
+            ? `τ~RC·L² (quadratic scaling)`
+            : `τ~N·(RC·(L/N))² + N·t_buf (linear)`
           }
         </text>
       </svg>
@@ -680,32 +697,104 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
     </div>
   );
 
-  // Navigation dots
-  const renderNavDots = () => (
-    <div style={{
+  // Navigation bar with dots
+  const renderNavBar = () => (
+    <nav aria-label="Game navigation" style={{
+      position: 'fixed',
+      top: '4px',
+      left: 0,
+      right: 0,
+      padding: '10px 24px',
+      background: colors.bgCard,
+      borderBottom: '1px solid rgba(255,255,255,0.1)',
       display: 'flex',
       justifyContent: 'center',
+      alignItems: 'center',
       gap: '8px',
-      padding: '16px 0',
+      zIndex: 1000,
     }}>
       {phaseOrder.map((p, i) => (
         <button
           key={p}
           onClick={() => goToPhase(p)}
-          style={{
-            width: phase === p ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
-            border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-          }}
           aria-label={phaseLabels[p]}
+          style={{
+            width: '10px',
+            height: '10px',
+            borderRadius: '50%',
+            border: 'none',
+            background: phase === p ? colors.accent : phaseOrder.indexOf(phase) > i ? colors.success : 'rgba(148,163,184,0.7)',
+            cursor: 'pointer',
+            padding: 0,
+            transition: 'all 0.2s ease',
+          }}
         />
       ))}
+    </nav>
+  );
+
+  // Bottom bar with Back/Next
+  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
+    <div style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: '12px 24px',
+      background: colors.bgCard,
+      borderTop: '1px solid rgba(255,255,255,0.1)',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      zIndex: 1000,
+    }}>
+      <button
+        onClick={() => {
+          const idx = phaseOrder.indexOf(phase);
+          if (idx > 0) goToPhase(phaseOrder[idx - 1]);
+        }}
+        disabled={phaseOrder.indexOf(phase) === 0}
+        aria-label="Back"
+        style={{
+          padding: '10px 24px',
+          minHeight: '44px',
+          borderRadius: '8px',
+          border: `1px solid ${colors.border}`,
+          background: 'transparent',
+          color: phaseOrder.indexOf(phase) === 0 ? colors.border : colors.textPrimary,
+          fontWeight: 700,
+          cursor: phaseOrder.indexOf(phase) === 0 ? 'not-allowed' : 'pointer',
+          fontSize: '15px',
+        }}
+      >
+        Back
+      </button>
+      <button
+        onClick={() => {
+          const idx = phaseOrder.indexOf(phase);
+          if (idx < phaseOrder.length - 1) goToPhase(phaseOrder[idx + 1]);
+        }}
+        disabled={disabled && !canProceed}
+        aria-label="Next"
+        style={{
+          padding: '10px 28px',
+          minHeight: '44px',
+          borderRadius: '8px',
+          border: 'none',
+          background: canProceed ? `linear-gradient(135deg, ${colors.accent}, #D97706)` : 'rgba(255,255,255,0.1)',
+          color: canProceed ? 'white' : colors.textMuted,
+          fontWeight: 700,
+          cursor: canProceed ? 'pointer' : 'not-allowed',
+          fontSize: '15px',
+        }}
+      >
+        {buttonText}
+      </button>
     </div>
   );
+
+  // Navigation dots (legacy, kept for compatibility)
+  const renderNavDots = () => null;
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
@@ -728,64 +817,59 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
-      }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)` }}>
         {renderProgressBar()}
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ padding: '24px', textAlign: 'center' }}>
+            <div style={{
+              fontSize: '64px',
+              marginBottom: '24px',
+              animation: 'pulse 2s infinite',
+            }}>
+              ⚡🔌
+            </div>
+            <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
-        <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
-        }}>
-          ⚡🔌
+            <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+              RC Delay
+            </h1>
+
+            <p style={{
+              ...typo.body,
+              color: colors.textSecondary,
+              maxWidth: '600px',
+              margin: '0 auto 32px',
+            }}>
+              Are chips limited by <span style={{ color: colors.accent }}>transistor speed</span> or <span style={{ color: colors.signal }}>wire speed</span>? In modern chips, the wires are often the bottleneck.
+            </p>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '32px',
+              maxWidth: '500px',
+              margin: '0 auto 32px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+                "Every wire in a chip acts like an RC circuit. As chips shrink, wires get thinner and more resistive. The signal has to charge the wire's capacitance through its resistance — and that takes time."
+              </p>
+              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+                — Interconnect Design Principles
+              </p>
+            </div>
+
+            <button
+              onClick={() => { playSound('click'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Explore RC Delay
+            </button>
+          </div>
         </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
-
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          RC Delay
-        </h1>
-
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          "Are chips limited by <span style={{ color: colors.accent }}>transistor speed</span> or <span style={{ color: colors.signal }}>wire speed</span>? The answer might surprise you - in modern chips, the wires are often the bottleneck."
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
-        }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "Every wire in a chip acts like an RC circuit. As chips shrink, wires get thinner and more resistive. The signal has to charge the wire's capacitance through its resistance - and that takes time."
-          </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            - Interconnect Design Principles
-          </p>
-        </div>
-
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Explore RC Delay
-        </button>
-
-        {renderNavDots()}
+        {renderBottomBar(false, true, 'Start Learning')}
       </div>
     );
   }
@@ -799,129 +883,137 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
     ];
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.accent}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.accent}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              🤔 Make Your Prediction
-            </p>
-          </div>
-
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            If you double the resistance OR capacitance of a wire, what happens to the signal transition time?
-          </h2>
-
-          {/* Simple diagram */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>Step</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Input Signal</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>-&gt;</div>
-              <div style={{
-                background: colors.accent + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.accent}`,
-              }}>
-                <div style={{ fontSize: '24px', color: colors.accent }}>R + C</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Wire RC</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>-&gt;</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>???</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Output Signal</p>
-              </div>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
+            <div style={{
+              background: `${colors.accent}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.accent}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                🤔 Make Your Prediction — Think before experimenting
+              </p>
             </div>
-          </div>
 
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              If you double the resistance OR capacitance of a wire, what happens to the signal transition time?
+            </h2>
+
+            {/* SVG Graphic showing RC circuit concept */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <svg width={isMobile ? 320 : 440} height={180} viewBox={`0 0 440 180`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+                <defs>
+                  <linearGradient id="predictSigGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor={colors.signal} stopOpacity="0.9" />
+                    <stop offset="100%" stopColor={colors.accent} stopOpacity="0.9" />
+                  </linearGradient>
+                  <filter id="predictGlow">
+                    <feGaussianBlur stdDeviation="2" result="blur" />
+                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                  </filter>
+                </defs>
+                {/* Title */}
+                <text x="220" y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">RC Circuit Signal Delay</text>
+                {/* Input block */}
+                <rect x="20" y="60" width="70" height="60" rx="6" fill={colors.bgSecondary} stroke={colors.signal} strokeWidth="2" />
+                <text x="55" y="86" textAnchor="middle" fill={colors.signal} fontSize="11" fontWeight="600">Vin</text>
+                <text x="55" y="104" textAnchor="middle" fill={colors.signal} fontSize="11">Step 1V</text>
+                {/* Arrow */}
+                <line x1="90" y1="90" x2="120" y2="90" stroke={colors.wire} strokeWidth="3" />
+                <polygon points="118,85 128,90 118,95" fill={colors.wire} />
+                {/* RC block */}
+                <rect x="128" y="55" width="90" height="70" rx="6" fill={`${colors.accent}22`} stroke={colors.accent} strokeWidth="2" />
+                <text x="173" y="80" textAnchor="middle" fill={colors.accent} fontSize="13" fontWeight="700">R × C</text>
+                <text x="173" y="96" textAnchor="middle" fill={colors.accent} fontSize="11">τ = RC</text>
+                <text x="173" y="113" textAnchor="middle" fill={colors.textMuted} fontSize="11">wire delay</text>
+                {/* Arrow */}
+                <line x1="218" y1="90" x2="250" y2="90" stroke={colors.wire} strokeWidth="3" />
+                <polygon points="248,85 258,90 248,95" fill={colors.wire} />
+                {/* Output block */}
+                <rect x="258" y="60" width="70" height="60" rx="6" fill={colors.bgSecondary} stroke={colors.success} strokeWidth="2" />
+                <text x="293" y="86" textAnchor="middle" fill={colors.success} fontSize="11" fontWeight="600">Vout</text>
+                <text x="293" y="104" textAnchor="middle" fill={colors.success} fontSize="11">Delayed</text>
+                {/* Question mark */}
+                <circle cx="370" cy="90" r="28" fill={`${colors.warning}22`} stroke={colors.warning} strokeWidth="2" filter="url(#predictGlow)" />
+                <text x="370" y="97" textAnchor="middle" fill={colors.warning} fontSize="22" fontWeight="700">?</text>
+                {/* Formula */}
+                <text x="220" y="160" textAnchor="middle" fill={colors.textMuted} fontSize="11" fontStyle="italic">τ = R × C determines how fast signals transition</text>
+              </svg>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                  style={{
+                    background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                    color: prediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {prediction && (
               <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setPrediction(opt.id); }}
-                style={{
-                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
               >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
+                Test My Prediction
               </button>
-            ))}
+            )}
           </div>
-
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test My Prediction
-            </button>
-          )}
         </div>
-
-        {renderNavDots()}
+        {renderBottomBar(!prediction, !!prediction, 'Test My Prediction')}
       </div>
     );
   }
 
+
   // PLAY PHASE - Interactive RC Circuit Simulator
   if (phase === 'play') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             RC Circuit Simulator
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust R and C to see how they affect signal rise time.
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
+            Adjust R and C to see how they affect signal rise time. Observe how increasing R or C slows the signal.
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '24px' }}>
+            This matters in real chips — every wire has resistance and capacitance, creating RC delay that limits performance.
           </p>
 
           {/* Main visualization */}
@@ -950,10 +1042,13 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
                 onChange={(e) => setResistance(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   background: `linear-gradient(to right, ${colors.accent} ${((resistance - 10) / 490) * 100}%, ${colors.border} ${((resistance - 10) / 490) * 100}%)`,
                   cursor: 'pointer',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6',
                 }}
               />
             </div>
@@ -972,10 +1067,13 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
                 onChange={(e) => setCapacitance(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   background: `linear-gradient(to right, ${colors.accent} ${((capacitance - 1) / 49) * 100}%, ${colors.border} ${((capacitance - 1) / 49) * 100}%)`,
                   cursor: 'pointer',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6',
                 }}
               />
             </div>
@@ -1079,8 +1177,8 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
             Understand the Physics
           </button>
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomBar(false, true, 'Understand the Physics')}
       </div>
     );
   }
@@ -1088,83 +1186,97 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
   // REVIEW PHASE
   if (phase === 'review') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              The Physics of RC Delay
+            </h2>
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            The Physics of RC Delay
-          </h2>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ ...typo.body, color: colors.textSecondary }}>
-              <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>tau = R * C (Time Constant)</strong>
-              </p>
-              <p style={{ marginBottom: '16px' }}>
-                The time constant tau determines how fast a signal can transition. After <span style={{ color: colors.accent }}>1 tau</span>, voltage reaches 63% of final value. After <span style={{ color: colors.accent }}>3 tau</span>, it reaches 95%.
-              </p>
-              <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>10-90% Rise Time = 2.2 * tau</strong>
-              </p>
-              <p>
-                This is the practical measure of signal transition speed. For a wire with R=100ohm and C=10pF, rise time is <span style={{ color: colors.success }}>2.2ns</span>.
+            {/* Prediction reference - always shown */}
+            <div style={{
+              background: `${colors.signal}22`,
+              border: `1px solid ${colors.signal}44`,
+              borderRadius: '12px',
+              padding: '12px 16px',
+              marginBottom: '20px',
+            }}>
+              <p style={{ ...typo.small, color: colors.signal, margin: 0 }}>
+                {prediction === 'b'
+                  ? '✓ Your prediction was correct! Doubling R or C doubles the time constant, slowing the signal.'
+                  : prediction
+                    ? '✗ Your prediction: doubling R or C actually doubles the RC time constant and slows the signal.'
+                    : 'In your experiment, you observed that increasing R or C slows signal transitions — the RC time constant determines this delay.'}
               </p>
             </div>
-          </div>
 
-          <div style={{
-            background: `${colors.accent}11`,
-            border: `1px solid ${colors.accent}33`,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              Key Insight: Wire Delay Scales with Length Squared
-            </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
-              Both R and C increase linearly with wire length L:
-            </p>
-            <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
-              <li>R = rho * L / A (resistance increases with length)</li>
-              <li>C = epsilon * L * W / d (capacitance increases with length)</li>
-              <li><strong>Delay ~ R*C ~ L^2</strong> (quadratic scaling!)</li>
-            </ul>
-          </div>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ ...typo.body, color: colors.textSecondary }}>
+                <p style={{ marginBottom: '16px' }}>
+                  <strong style={{ color: colors.textPrimary }}>τ = R × C (Time Constant)</strong>
+                </p>
+                <p style={{ marginBottom: '16px' }}>
+                  The time constant τ determines how fast a signal transitions. After <span style={{ color: colors.accent }}>1τ</span>, voltage reaches 63% of final value. After <span style={{ color: colors.accent }}>3τ</span>, it reaches 95%.
+                </p>
+                <p style={{ marginBottom: '16px' }}>
+                  <strong style={{ color: colors.textPrimary }}>10-90% Rise Time = 2.2 × τ</strong>
+                </p>
+                <p>
+                  This is the practical signal transition speed measure. For R=100Ω and C=10pF: rise time = <span style={{ color: colors.success }}>2.2ns</span>.
+                </p>
+              </div>
+            </div>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.error, marginBottom: '12px' }}>
-              The Modern Interconnect Problem
-            </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              As chips shrink, transistors get faster but wires get slower! Thinner wires = higher R. At advanced nodes (7nm, 5nm, 3nm), interconnect delay often exceeds gate delay, making wires the true performance bottleneck.
-            </p>
-          </div>
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '24px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+                Key Insight: Wire Delay Scales with Length Squared
+              </h3>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
+                Both R and C increase linearly with wire length L:
+              </p>
+              <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
+                <li>R = ρ × L / A (resistance ∝ length)</li>
+                <li>C = ε × L × W / d (capacitance ∝ length)</li>
+                <li><strong>Delay ∝ R×C ∝ L²</strong> (quadratic scaling!)</li>
+              </ul>
+            </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Discover the Solution
-          </button>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '24px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.error, marginBottom: '12px' }}>
+                The Modern Interconnect Problem
+              </h3>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                As chips shrink, transistors get faster but wires get slower. Thinner wires = higher R. At advanced nodes (7nm, 5nm, 3nm), interconnect delay often exceeds gate delay — wires are the real bottleneck.
+              </p>
+            </div>
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Discover the Solution
+            </button>
+          </div>
         </div>
-
-        {renderNavDots()}
+        {renderBottomBar(false, true, 'Discover the Solution')}
       </div>
     );
   }
@@ -1178,91 +1290,113 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
     ];
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.warning}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.warning}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              🔄 New Variable: Repeater Buffers
-            </p>
-          </div>
-
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            Engineers insert "repeaters" (buffer stages) along long wires. What happens to total delay?
-          </h2>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <p style={{ ...typo.body, color: colors.textSecondary }}>
-              Instead of one 10mm wire, use 4 repeaters to create 5 segments of 2mm each:
-            </p>
-            <div style={{ marginTop: '16px', fontSize: '14px', color: colors.accent, fontFamily: 'monospace' }}>
-              [Src]---R---C---[Buf]---R---C---[Buf]---R---C---[Buf]---R---C---[Buf]---R---C---[Dst]
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
+            <div style={{
+              background: `${colors.warning}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.warning}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+                🔄 New Variable: Repeater Buffers — predict the effect
+              </p>
             </div>
-          </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              Engineers insert "repeaters" (buffers) along long wires. What happens to total delay?
+            </h2>
+
+            {/* SVG graphic showing repeater concept */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <svg width={isMobile ? 320 : 440} height={160} viewBox="0 0 440 160" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+                <defs>
+                  <linearGradient id="twistPredGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor={colors.signal} stopOpacity="0.8" />
+                    <stop offset="100%" stopColor={colors.success} stopOpacity="0.8" />
+                  </linearGradient>
+                  <filter id="twistGlow">
+                    <feGaussianBlur stdDeviation="2" result="blur" />
+                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                  </filter>
+                </defs>
+                <text x="220" y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">Repeater Buffers on Long Wire</text>
+                {/* Long wire without repeaters */}
+                <text x="10" y="55" fill={colors.textMuted} fontSize="11">Without:</text>
+                <rect x="70" y="40" width="30" height="20" rx="3" fill={colors.signal} />
+                <text x="85" y="55" textAnchor="middle" fill="white" fontSize="11">Src</text>
+                <line x1="100" y1="50" x2="350" y2="50" stroke={colors.wire} strokeWidth="4" />
+                <text x="225" y="43" textAnchor="middle" fill={colors.textMuted} fontSize="11">Long wire — high delay</text>
+                <rect x="350" y="40" width="30" height="20" rx="3" fill={colors.success} />
+                <text x="365" y="55" textAnchor="middle" fill="white" fontSize="11">Dst</text>
+                {/* Wire with repeaters */}
+                <text x="10" y="110" fill={colors.textMuted} fontSize="11">With:</text>
+                <rect x="70" y="95" width="30" height="20" rx="3" fill={colors.signal} />
+                <text x="85" y="110" textAnchor="middle" fill="white" fontSize="11">Src</text>
+                <line x1="100" y1="105" x2="155" y2="105" stroke={colors.wire} strokeWidth="4" />
+                <polygon points="155,97 170,105 155,113" fill={colors.accent} filter="url(#twistGlow)" />
+                <line x1="170" y1="105" x2="225" y2="105" stroke={colors.wire} strokeWidth="4" />
+                <polygon points="225,97 240,105 225,113" fill={colors.accent} filter="url(#twistGlow)" />
+                <line x1="240" y1="105" x2="295" y2="105" stroke={colors.wire} strokeWidth="4" />
+                <polygon points="295,97 310,105 295,113" fill={colors.accent} filter="url(#twistGlow)" />
+                <line x1="310" y1="105" x2="350" y2="105" stroke={colors.wire} strokeWidth="4" />
+                <rect x="350" y="95" width="30" height="20" rx="3" fill={colors.success} />
+                <text x="365" y="110" textAnchor="middle" fill="white" fontSize="11">Dst</text>
+                <text x="215" y="130" textAnchor="middle" fill={colors.accent} fontSize="11">3 Repeater buffers — ?</text>
+                <text x="220" y="150" textAnchor="middle" fill={colors.textMuted} fontSize="11" fontStyle="italic">τ delay = R×C×L²  vs  shorter segments</text>
+              </svg>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                  style={{
+                    background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                    border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                    color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {twistPrediction && (
               <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
-                style={{
-                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
-                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
               >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
-                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
+                See Repeater Effect
               </button>
-            ))}
+            )}
           </div>
-
-          {twistPrediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              See Repeater Effect
-            </button>
-          )}
         </div>
-
-        {renderNavDots()}
+        {renderBottomBar(!twistPrediction, !!twistPrediction, 'See Repeater Effect')}
       </div>
     );
   }
@@ -1270,14 +1404,11 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Repeater Optimization
           </h2>
@@ -1309,9 +1440,12 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
                 onChange={(e) => setChipSize(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6',
                 }}
               />
             </div>
@@ -1330,9 +1464,12 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
                 onChange={(e) => setNumRepeaters(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6',
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1394,8 +1531,8 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
             Understand the Solution
           </button>
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomBar(false, true, 'Understand the Solution')}
       </div>
     );
   }
@@ -1403,14 +1540,11 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Defeating the Wire Bottleneck
           </h2>
@@ -1484,8 +1618,8 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
             See Real-World Applications
           </button>
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomBar(false, true, 'See Real-World Applications')}
       </div>
     );
   }
@@ -1496,17 +1630,17 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
     const allAppsCompleted = completedApps.every(c => c);
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '16px' }}>
+            App {selectedApp + 1} of {realWorldApps.length}
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1588,9 +1722,29 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
               <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
                 How RC Delay Connects:
               </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: '0 0 8px 0' }}>
                 {app.connection}
               </p>
+              <p style={{ ...typo.small, color: colors.textMuted, margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            {/* Examples */}
+            <div style={{ marginBottom: '12px' }}>
+              <p style={{ ...typo.small, color: colors.textMuted, fontWeight: 600, marginBottom: '6px' }}>Real Examples:</p>
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                {app.examples.map((ex: string, i: number) => (
+                  <span key={i} style={{
+                    background: 'rgba(255,255,255,0.05)',
+                    border: `1px solid ${app.color}40`,
+                    borderRadius: '4px',
+                    padding: '3px 8px',
+                    color: colors.textSecondary,
+                    fontSize: '12px',
+                  }}>{ex}</span>
+                ))}
+              </div>
             </div>
 
             <div style={{
@@ -1613,17 +1767,33 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
             </div>
           </div>
 
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
+          {/* Got It / Next App button */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
+            {selectedApp < realWorldApps.length - 1 ? (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                  setSelectedApp(selectedApp + 1);
+                }}
+                style={{ ...primaryButtonStyle }}
+              >
+                Got It — Next App
+              </button>
+            ) : (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle }}
+              >
+                Take the Knowledge Test
+              </button>
+            )}
+          </div>
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomBar(false, true, allAppsCompleted ? 'Take the Test' : 'Next')}
       </div>
     );
   }
@@ -1633,14 +1803,11 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
     if (testSubmitted) {
       const passed = testScore >= 7;
       return (
-        <div style={{
-          minHeight: '100vh',
-          background: colors.bgPrimary,
-          padding: '24px',
-        }}>
+        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderProgressBar()}
-
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          {renderNavBar()}
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', padding: '16px', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1659,29 +1826,48 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
                 : 'Review the concepts and try again.'}
             </p>
 
-            {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
-                Complete Lesson
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
-                }}
-                style={primaryButtonStyle}
-              >
-                Review and Try Again
-              </button>
-            )}
+          {/* Answer review */}
+          {testQuestions.map((q, qi) => {
+            const ans = testAnswers[qi];
+            const correct = q.options.find(o => o.correct);
+            const isCorrect = ans !== null && ans === correct?.id;
+            return (
+              <div key={qi} style={{
+                background: colors.bgCard,
+                borderRadius: '8px',
+                padding: '12px',
+                marginBottom: '8px',
+                borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
+              }}>
+                <p style={{ color: isCorrect ? colors.success : colors.error, fontSize: '13px', fontWeight: 600, margin: '0 0 4px 0' }}>
+                  {isCorrect ? '✓' : '✗'} Q{qi + 1}: {isCorrect ? 'Correct' : `Wrong — ${correct?.label}`}
+                </p>
+                <p style={{ color: colors.textMuted, fontSize: '12px', margin: 0 }}>{q.explanation}</p>
+              </div>
+            );
+          })}
+
+          {passed ? (
+            <button onClick={() => { playSound('complete'); nextPhase(); }} style={{ ...primaryButtonStyle, width: '100%', marginTop: '16px' }}>
+              Complete Lesson
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                setTestSubmitted(false);
+                setTestAnswers(Array(10).fill(null));
+                setCurrentQuestion(0);
+                setTestScore(0);
+                goToPhase('hook');
+              }}
+              style={{ ...primaryButtonStyle, width: '100%', marginTop: '16px' }}
+            >
+              Review and Try Again
+            </button>
+          )}
           </div>
-          {renderNavDots()}
+          </div>
+          {renderBottomBar(false, passed, passed ? 'Complete Lesson' : 'Try Again')}
         </div>
       );
     }
@@ -1689,14 +1875,11 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
     const question = testQuestions[currentQuestion];
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1846,8 +2029,8 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
             )}
           </div>
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomBar(false, false, 'Submit Test')}
       </div>
     );
   }
@@ -1855,18 +2038,11 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
-      }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)` }}>
         {renderProgressBar()}
-
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ padding: '24px', textAlign: 'center' }}>
         <div style={{
           fontSize: '100px',
           marginBottom: '24px',
@@ -1910,7 +2086,7 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '16px' }}>
+        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginTop: '24px' }}>
           <button
             onClick={() => goToPhase('hook')}
             style={{
@@ -1935,8 +2111,9 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
             Return to Dashboard
           </a>
         </div>
-
-        {renderNavDots()}
+        </div>
+        </div>
+        {renderBottomBar(false, true, 'Return to Dashboard')}
       </div>
     );
   }

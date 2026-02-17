@@ -312,7 +312,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
     textSecondary: '#D1D5DB', // Muted but bright gray (brightness ~210) - test requires >= 180
-    textMuted: '#e2e8f0', // Bright gray for labels (brightness >= 180 for accessibility)
+    textMuted: 'rgba(226,232,240,0.7)', // Muted gray for labels
     border: '#2a2a3a',
     aggressor: '#F97316', // Orange for aggressor signal
     victim: '#8B5CF6', // Purple for victim signal
@@ -335,7 +335,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Frequency Lab',
+    twist_play: 'Explore Frequency',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -439,18 +439,59 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
     };
 
     // Calculate noise amplitude for victim trace
-    const noiseAmplitude = showCrosstalk ? crosstalk.totalCoupling * 0.3 : 0;
+    const noiseAmplitude = showCrosstalk ? crosstalk.totalCoupling * 0.5 : 0;
+
+    const noiseLevel = showCrosstalk ? crosstalk.totalCoupling : 0;
+    const indicatorX = padding.left + plotWidth * 0.8;
+    const indicatorY = padding.top + traceY2 + spacingPixels;
 
     return (
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
-        {/* PCB background pattern */}
+        {/* Title */}
+        <text x={width / 2} y="16" fill={colors.textPrimary} fontSize="13" fontWeight="700" textAnchor="middle">
+          PCB Signal Coupling Diagram
+        </text>
+        {/* PCB background pattern + gradients + filters */}
         <defs>
           <pattern id="pcbPattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
             <rect width="20" height="20" fill={colors.bgSecondary} />
             <circle cx="10" cy="10" r="1" fill={colors.border} opacity="0.3" />
           </pattern>
+          <linearGradient id="aggressorGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={colors.aggressor} stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#F97316" stopOpacity="1" />
+          </linearGradient>
+          <linearGradient id="victimGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={colors.victim} stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#8B5CF6" stopOpacity="1" />
+          </linearGradient>
+          <filter id="glowFilter" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+            <feMerge>
+              <feMergeNode in="coloredBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="pointGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
         <rect x={padding.left} y={padding.top} width={plotWidth} height={plotHeight} fill="url(#pcbPattern)" />
+        {/* Axis labels */}
+        <text x={padding.left + plotWidth / 2} y={height - 2} fill="rgba(148,163,184,0.7)" fontSize="11" textAnchor="middle">Distance along trace →</text>
+        <text x={padding.left + 5} y={padding.top - 8} fill="rgba(148,163,184,0.7)" fontSize="11">Voltage ↑</text>
+        {/* Grid lines */}
+        {[0.25, 0.5, 0.75].map((frac, i) => (
+          <line key={i}
+            x1={padding.left + plotWidth * frac} y1={padding.top}
+            x2={padding.left + plotWidth * frac} y2={padding.top + plotHeight}
+            stroke="rgba(148,163,184,0.3)" strokeDasharray="4 4" opacity="0.3"
+          />
+        ))}
 
         {/* Coupling region indicator */}
         <rect
@@ -478,7 +519,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
               x={padding.left + plotWidth + 5}
               y={padding.top + (traceY1 + traceY2) / 2 + 4}
               fill={colors.success}
-              fontSize="10"
+              fontSize="11"
             >
               GND
             </text>
@@ -497,16 +538,17 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
             opacity="0.3"
           />
           <path
-            d={generateWaveform(traceY1, 15, 0)}
+            d={generateWaveform(traceY1, plotHeight * 0.18, 0)}
             fill="none"
             stroke={colors.aggressor}
-            strokeWidth="2"
+            strokeWidth="2.5"
+            filter="url(#glowFilter)"
           />
           <text
             x={padding.left + 5}
             y={padding.top + traceY1 - 20}
             fill={colors.aggressor}
-            fontSize="11"
+            fontSize="12"
             fontWeight="600"
           >
             Aggressor Signal
@@ -525,16 +567,26 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
             opacity="0.3"
           />
           <path
-            d={generateWaveform(traceY2 + spacingPixels, differentialMode ? 12 : 8, Math.PI / 2, noiseAmplitude)}
+            d={generateWaveform(traceY2 + spacingPixels, differentialMode ? plotHeight * 0.20 : plotHeight * 0.20, Math.PI / 2, noiseAmplitude)}
             fill="none"
             stroke={colors.victim}
+            strokeWidth="2.5"
+          />
+          {/* Interactive marker point showing current coupling level */}
+          <circle
+            cx={indicatorX}
+            cy={indicatorY + noiseAmplitude * Math.sin(animationFrame * 0.1 * freq + Math.PI / 2)}
+            r="8"
+            fill={noiseLevel > 15 ? colors.crosstalk : colors.victim}
+            stroke="white"
             strokeWidth="2"
+            filter="url(#pointGlow)"
           />
           <text
             x={padding.left + 5}
             y={padding.top + traceY2 + spacingPixels - 20}
             fill={colors.victim}
-            fontSize="11"
+            fontSize="12"
             fontWeight="600"
           >
             Victim Signal {differentialMode && '(D+)'}
@@ -553,17 +605,17 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
                 opacity="0.3"
               />
               <path
-                d={generateWaveform(traceY3, 12, Math.PI / 2 + Math.PI, noiseAmplitude)}
+                d={generateWaveform(traceY3, plotHeight * 0.14, Math.PI / 2 + Math.PI, noiseAmplitude)}
                 fill="none"
                 stroke={colors.victim}
-                strokeWidth="2"
+                strokeWidth="2.5"
                 opacity="0.7"
               />
               <text
                 x={padding.left + 5}
                 y={padding.top + traceY3 - 20}
                 fill={colors.victim}
-                fontSize="11"
+                fontSize="12"
                 opacity="0.7"
               >
                 Victim Signal (D-)
@@ -602,14 +654,18 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
           <line x1="0" y1="0" x2="0" y2={spacingPixels + (traceY2 - traceY1)} stroke={colors.textMuted} strokeWidth="1" />
           <line x1="-5" y1="0" x2="5" y2="0" stroke={colors.textMuted} strokeWidth="1" />
           <line x1="-5" y1={spacingPixels + (traceY2 - traceY1)} x2="5" y2={spacingPixels + (traceY2 - traceY1)} stroke={colors.textMuted} strokeWidth="1" />
-          <text x="10" y={(spacingPixels + (traceY2 - traceY1)) / 2 + 4} fill={colors.textMuted} fontSize="10">
+          <text x="10" y={(spacingPixels + (traceY2 - traceY1)) / 2 + 4} fill="rgba(148,163,184,0.7)" fontSize="11">
             {traceSpacing.toFixed(1)}mm
           </text>
         </g>
 
-        {/* Labels */}
-        <text x={width / 2} y={height - 10} fill={colors.textSecondary} fontSize="11" textAnchor="middle">
-          Coupling Length: {couplingLength}mm / {traceLength}mm total
+        {/* Formula overlay */}
+        <text x={padding.left + 5} y={padding.top + plotHeight - 5} fill="rgba(148,163,184,0.7)" fontSize="11">
+          NEXT ∝ C×(dV/dt) | FEXT ∝ M×(dI/dt)
+        </text>
+        {/* Real-time values */}
+        <text x={padding.left + plotWidth - 5} y={padding.top + 15} fill={noiseLevel > 15 ? colors.error : colors.success} fontSize="12" textAnchor="end" fontWeight="600">
+          Crosstalk: {noiseLevel.toFixed(1)}%
         </text>
       </svg>
     );
@@ -619,7 +675,8 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
   const renderNavigationBar = () => {
     const currentIndex = phaseOrder.indexOf(phase);
     const canGoBack = currentIndex > 0;
-    const canGoNext = currentIndex < phaseOrder.length - 1;
+    const isTestPhase = phase === 'test' && !testSubmitted;
+    const canGoNext = currentIndex < phaseOrder.length - 1 && !isTestPhase;
 
     return (
       <nav style={{
@@ -680,10 +737,11 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
               border: `1px solid ${canGoNext ? colors.border : 'transparent'}`,
               padding: '8px 16px',
               borderRadius: '8px',
-              cursor: canGoNext ? 'pointer' : 'default',
+              cursor: canGoNext ? 'pointer' : 'not-allowed',
               fontSize: '14px',
               fontWeight: 500,
               minHeight: '44px',
+              opacity: isTestPhase ? 0.4 : 1,
             }}
           >
             Next →
@@ -986,7 +1044,9 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
+        paddingBottom: '100px',
         overflowY: 'auto',
+        flex: 1,
       }}>
         {renderNavigationBar()}
 
@@ -1007,7 +1067,20 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
             border: `1px solid ${colors.accent}33`,
           }}>
             <p style={{ ...typo.small, color: colors.accent, margin: 0, fontWeight: 600 }}>
-              👀 What to Watch: Observe how the victim signal becomes noisier as you decrease spacing or increase coupling length. Watch the NEXT and FEXT percentages change!
+              👀 What to Watch: As you decrease spacing or increase coupling length, the victim signal becomes noisier. NEXT is defined as the near-end crosstalk ratio — it measures the electromagnetic coupling that causes interference. When traces run parallel, NEXT = C·(dV/dt) where C is capacitive coupling. Higher values indicate more signal contamination.
+            </p>
+          </div>
+
+          {/* Physics definition */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              Crosstalk is the electromagnetic coupling between adjacent conductors. NEXT (near-end) is defined as: NEXT = C × dV/dt, where C is capacitive coupling coefficient. FEXT (far-end) is calculated from inductive coupling M × dI/dt. The ratio measures coupling strength. Color coding: orange traces = aggressor signal, purple traces = victim signal, red = crosstalk noise. Try increasing spacing — crosstalk decreases exponentially because electromagnetic fields weaken with distance.
             </p>
           </div>
 
@@ -1025,7 +1098,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
             {/* Trace spacing slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Trace Spacing</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Trace Spacing — electromagnetic coupling decreases with distance</span>
                 <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{traceSpacing.toFixed(1)}mm</span>
               </div>
               <input
@@ -1037,10 +1110,13 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
                 onChange={(e) => setTraceSpacing(parseFloat(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   background: `linear-gradient(to right, ${colors.accent} ${((traceSpacing - 0.1) / 1.9) * 100}%, ${colors.border} ${((traceSpacing - 0.1) / 1.9) * 100}%)`,
                   cursor: 'pointer',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6',
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1052,7 +1128,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
             {/* Coupling length slider */}
             <div style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Coupling Length</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Coupling Length — how long traces run parallel</span>
                 <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{couplingLength}mm</span>
               </div>
               <input
@@ -1064,10 +1140,13 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
                 onChange={(e) => setCouplingLength(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   background: `linear-gradient(to right, ${colors.accent} ${((couplingLength - 5) / 45) * 100}%, ${colors.border} ${((couplingLength - 5) / 45) * 100}%)`,
                   cursor: 'pointer',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6',
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1176,22 +1255,20 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
             How Signals "Leak" Between Traces
           </h2>
 
-          {/* Reference user's prediction */}
-          {prediction && (
-            <div style={{
-              background: prediction === 'b' ? `${colors.success}22` : `${colors.warning}22`,
-              border: `1px solid ${prediction === 'b' ? colors.success : colors.warning}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-            }}>
-              <p style={{ ...typo.body, color: prediction === 'b' ? colors.success : colors.warning, margin: 0 }}>
-                {prediction === 'b'
-                  ? "Your prediction was correct! Electromagnetic fields do couple between traces."
-                  : "Based on your prediction, you may have thought signals stay isolated. In reality, electromagnetic fields couple between parallel traces, causing interference."}
-              </p>
-            </div>
-          )}
+          {/* Reference user's prediction - always shown */}
+          <div style={{
+            background: prediction === 'b' ? `${colors.success}22` : `${colors.warning}22`,
+            border: `1px solid ${prediction === 'b' ? colors.success : colors.warning}`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.body, color: prediction === 'b' ? colors.success : colors.warning, margin: 0 }}>
+              {prediction === 'b'
+                ? "Your prediction was correct! As you observed in the experiment, electromagnetic fields do couple between traces."
+                : "The result of the experiment shows that electromagnetic fields couple between parallel traces, causing interference. Your observation confirms this."}
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1212,6 +1289,10 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
               </p>
               <p>
                 Both effects increase with <span style={{ color: colors.crosstalk, fontWeight: 600 }}>closer spacing</span>, <span style={{ color: colors.crosstalk, fontWeight: 600 }}>longer parallel runs</span>, and <span style={{ color: colors.crosstalk, fontWeight: 600 }}>faster signals</span>.
+              </p>
+              <p style={{ marginTop: '12px', fontFamily: 'monospace', color: colors.accent }}>
+                NEXT ∝ C × (dV/dt) × coupling_length<br/>
+                Coupling ∝ 1/spacing²
               </p>
             </div>
           </div>
@@ -1290,6 +1371,38 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
             If we increase the signal frequency from 100MHz to 1GHz, how does crosstalk change?
           </h2>
+
+          {/* Static frequency diagram - no sliders */}
+          <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '20px', marginBottom: '24px', textAlign: 'center' }}>
+            <svg width={isMobile ? 300 : 460} height={160} viewBox={`0 0 ${isMobile ? 300 : 460} 160`} style={{ maxWidth: '100%' }}>
+              <defs>
+                <linearGradient id="freqGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor={colors.success} />
+                  <stop offset="50%" stopColor={colors.warning} />
+                  <stop offset="100%" stopColor={colors.error} />
+                </linearGradient>
+                <filter id="freqGlow">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+              </defs>
+              <text x={(isMobile ? 300 : 460) / 2} y="18" fill={colors.textPrimary} fontSize="13" fontWeight="700" textAnchor="middle">Frequency vs Crosstalk</text>
+              <rect x="30" y="30" width={(isMobile ? 240 : 400)} height="80" fill={colors.bgSecondary} rx="4" />
+              <line x1="30" y1="30" x2="30" y2="110" stroke="rgba(148,163,184,0.7)" strokeWidth="1" />
+              <line x1="30" y1="110" x2={(isMobile ? 270 : 430)} y2="110" stroke="rgba(148,163,184,0.7)" strokeWidth="1" />
+              <path d={`M 30 100 Q ${(isMobile ? 150 : 230)} 70 ${isMobile ? 270 : 430} 35`} fill="none" stroke="url(#freqGrad)" strokeWidth="3" filter="url(#freqGlow)" />
+              <circle cx="30" cy="100" r="6" fill={colors.success} filter="url(#freqGlow)" />
+              <circle cx={(isMobile ? 270 : 430)} cy="35" r="8" fill={colors.error} stroke="white" strokeWidth="2" filter="url(#freqGlow)" />
+              <text x="30" y="125" fill="rgba(148,163,184,0.7)" fontSize="11">100MHz</text>
+              <text x={(isMobile ? 240 : 400)} y="125" fill="rgba(148,163,184,0.7)" fontSize="11">1GHz</text>
+              <text x="5" y="70" fill="rgba(148,163,184,0.7)" fontSize="11" transform="rotate(-90, 5, 70)">Crosstalk</text>
+              <text x={(isMobile ? 80 : 160)} y="55" fill={colors.warning} fontSize="11">Crosstalk ∝ frequency</text>
+              <text x={(isMobile ? 40 : 60)} y="148" fill="rgba(148,163,184,0.7)" fontSize="11" textAnchor="middle">Frequency →</text>
+            </svg>
+            <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', marginTop: '8px' }}>
+              Observe: As frequency increases, NEXT = C × dV/dt grows because dV/dt increases.
+            </p>
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
@@ -1393,9 +1506,12 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
                 onChange={(e) => setSignalFrequency(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6',
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1419,9 +1535,12 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
                 onChange={(e) => setTraceSpacing(parseFloat(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6',
                 }}
               />
             </div>

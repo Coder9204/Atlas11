@@ -178,7 +178,7 @@ const realWorldApps = [
     connection: 'The lift equation L = 0.5*rho*V^2*S*Cl directly determines aircraft performance. Designers balance wing area, airfoil shape, and cruise speed to optimize fuel efficiency while ensuring adequate lift for takeoff and landing.',
     howItWorks: 'Wings curve more on top than bottom, accelerating air over the upper surface. Faster air has lower pressure (Bernoulli), creating net upward force. High-lift devices (flaps, slats) increase lift coefficient for slow-speed flight.',
     stats: [
-      { value: '500+ tons', label: 'Max takeoff weight', icon: '1f6eb' },
+      { value: '500,000 kg', label: 'Max takeoff weight', icon: '1f6eb' },
       { value: '900 km/h', label: 'Cruise speed', icon: '26a1' },
       { value: '$838B', label: 'Aviation market', icon: '1f4b0' }
     ],
@@ -373,14 +373,14 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
   // Phase navigation
   const phaseOrder: Phase[] = validPhases;
   const phaseLabels: Record<Phase, string> = {
-    hook: 'Introduction',
+    hook: 'Explore Introduction',
     predict: 'Predict',
-    play: 'Experiment',
+    play: 'Experiment Lab',
     review: 'Understanding',
-    twist_predict: 'New Variable',
-    twist_play: 'High-Lift Devices',
+    twist_predict: 'New Variable Predict',
+    twist_play: 'Experiment High-Lift',
     twist_review: 'Deep Insight',
-    transfer: 'Real World',
+    transfer: 'Apply Real World',
     test: 'Knowledge Test',
     mastery: 'Mastery'
   };
@@ -399,7 +399,7 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
         timestamp: Date.now()
       });
     }
-    setTimeout(() => { isNavigating.current = false; }, 300);
+    isNavigating.current = false;
   }, [onGameEvent]);
 
   const nextPhase = useCallback(() => {
@@ -433,19 +433,39 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
       const endX = centerX + chordLength / 2;
 
       if (airfoilShape === 'flat') {
-        return `M ${startX} ${centerY} L ${endX} ${centerY - 4} L ${endX} ${centerY + 4} Z`;
+        return `M ${startX} ${centerY}
+                L ${startX + 20} ${centerY - 40}
+                L ${startX + 50} ${centerY - 60}
+                L ${centerX} ${centerY - 70}
+                L ${endX - 50} ${centerY - 55}
+                L ${endX - 20} ${centerY - 20}
+                L ${endX} ${centerY}
+                L ${endX - 20} ${centerY + 20}
+                L ${centerX} ${centerY + 32}
+                L ${startX + 20} ${centerY + 25}
+                Z`;
       } else if (airfoilShape === 'symmetric') {
         return `M ${startX} ${centerY}
-                Q ${centerX - 20} ${centerY - 15} ${centerX + 20} ${centerY - 12}
-                Q ${endX - 20} ${centerY - 4} ${endX} ${centerY}
-                Q ${endX - 20} ${centerY + 4} ${centerX + 20} ${centerY + 12}
-                Q ${centerX - 20} ${centerY + 15} ${startX} ${centerY} Z`;
+                L ${startX + 20} ${centerY - 45}
+                L ${startX + 50} ${centerY - 70}
+                Q ${centerX - 20} ${centerY - 85} ${centerX + 20} ${centerY - 72}
+                L ${endX - 30} ${centerY - 30}
+                L ${endX} ${centerY}
+                L ${endX - 20} ${centerY + 30}
+                Q ${centerX + 20} ${centerY + 72} ${centerX - 20} ${centerY + 85}
+                L ${startX + 20} ${centerY + 45}
+                Z`;
       } else {
         return `M ${startX} ${centerY}
-                Q ${centerX - 30} ${centerY - 22} ${centerX + 10} ${centerY - 18}
-                Q ${endX - 30} ${centerY - 6} ${endX} ${centerY + 2}
-                Q ${endX - 20} ${centerY + 8} ${centerX + 10} ${centerY + 12}
-                Q ${centerX - 30} ${centerY + 14} ${startX} ${centerY} Z`;
+                L ${startX + 20} ${centerY - 50}
+                L ${startX + 50} ${centerY - 75}
+                Q ${centerX - 30} ${centerY - 95} ${centerX + 10} ${centerY - 80}
+                L ${endX - 30} ${centerY - 35}
+                L ${endX} ${centerY + 5}
+                L ${endX - 20} ${centerY + 30}
+                Q ${centerX + 10} ${centerY + 55} ${centerX - 30} ${centerY + 52}
+                L ${startX + 20} ${centerY + 38}
+                Z`;
       }
     };
 
@@ -492,31 +512,45 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
         <text x={width/2} y="22" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">
           Airfoil Aerodynamics
         </text>
+        {/* Axis labels */}
+        <text x="6" y={centerY} textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11" transform={`rotate(-90, 6, ${centerY})`}>Lift Axis</text>
+        <text x={width/2} y={height - 2} textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11">Airspeed Axis</text>
 
         {/* Ground effect */}
         {groundEffect && (
           <g>
             <rect x="0" y={height - 35} width={width} height="35" fill="#1f2937" />
             <line x1="0" y1={height - 35} x2={width} y2={height - 35} stroke="#4b5563" strokeWidth="2" />
-            <text x={width/2} y={height - 12} textAnchor="middle" fill="#06b6d4" fontSize="10">Ground Effect Active</text>
+            <text x={width/2} y={height - 12} textAnchor="middle" fill="#06b6d4" fontSize="11">Ground Effect Active</text>
           </g>
         )}
 
-        {/* Streamlines */}
+        {/* Streamlines - using larger vertical range for better visual */}
         <g transform={`rotate(${-angleOfAttack}, ${centerX}, ${centerY})`}>
           {Array.from({ length: 8 }).map((_, i) => {
-            const yOffset = (i - 4) * 25;
+            const yOffset = (i - 4) * 30;
             const isUpper = yOffset < 0;
             const flowOffset = (animationFrame * speedFactor * 3) % 80;
-            const turbulence = stalling && isUpper ? Math.sin(animationFrame * 0.3 + i) * 12 : 0;
+            const turbulence = stalling && isUpper ? Math.sin(animationFrame * 0.3 + i) * 18 : 0;
+            const deflection = isUpper ? -90 : 90;
+            const midDeflect = isUpper ? -70 : 65;
 
             return (
               <path
                 key={`stream-${i}`}
                 d={`M ${centerX - 180 + flowOffset} ${centerY + yOffset}
-                    Q ${centerX - 40} ${centerY + yOffset + (isUpper ? -8 : 4) + turbulence}
-                      ${centerX + 60} ${centerY + yOffset + (isUpper ? -10 : 6) + turbulence}
-                    L ${centerX + 180 + flowOffset} ${centerY + yOffset + (isUpper ? -5 : 3)}`}
+                    L ${centerX - 150} ${centerY + yOffset + deflection * 0.1 + turbulence}
+                    L ${centerX - 120} ${centerY + yOffset + deflection * 0.2 + turbulence}
+                    L ${centerX - 90} ${centerY + yOffset + deflection * 0.4 + turbulence}
+                    L ${centerX - 60} ${centerY + yOffset + deflection * 0.6 + turbulence}
+                    L ${centerX - 30} ${centerY + yOffset + deflection * 0.85 + turbulence}
+                    Q ${centerX - 10} ${centerY + yOffset + deflection + turbulence}
+                      ${centerX + 20} ${centerY + yOffset + midDeflect + turbulence}
+                    L ${centerX + 50} ${centerY + yOffset + midDeflect * 0.85 + turbulence}
+                    L ${centerX + 80} ${centerY + yOffset + midDeflect * 0.65}
+                    L ${centerX + 110} ${centerY + yOffset + midDeflect * 0.4}
+                    L ${centerX + 140} ${centerY + yOffset + midDeflect * 0.2}
+                    L ${centerX + 180 + flowOffset} ${centerY + yOffset}`}
                 fill="none"
                 stroke={stalling && isUpper ? '#ef4444' : isUpper ? '#3b82f6' : '#06b6d4'}
                 strokeWidth="2"
@@ -567,33 +601,38 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
         {stalling && (
           <g>
             <rect x={width/2 - 60} y="40" width="120" height="26" rx="6" fill="#dc2626" stroke="#fca5a5" strokeWidth="2" />
-            <text x={width/2} y="58" textAnchor="middle" fill="white" fontSize="12" fontWeight="700">STALL WARNING</text>
+            <text x={width/2} y="58" textAnchor="middle" fill="white" fontSize="13" fontWeight="700">STALL WARNING</text>
           </g>
         )}
 
-        {/* Stats display */}
+        {/* Grid lines for visual reference */}
+        <line x1="0" y1={centerY - 60} x2={width} y2={centerY - 60} stroke="#2a2a3a" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+        <line x1="0" y1={centerY + 60} x2={width} y2={centerY + 60} stroke="#2a2a3a" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+        <line x1={width * 0.25} y1="0" x2={width * 0.25} y2={height} stroke="#2a2a3a" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+        <line x1={width * 0.75} y1="0" x2={width * 0.75} y2={height} stroke="#2a2a3a" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+
+        {/* Stats display - absolute y positions to avoid overlap */}
         {showLabels && (
-          <g transform={`translate(${width - 110}, 45)`}>
-            <rect x="0" y="0" width="100" height="85" rx="8" fill={colors.bgSecondary} stroke={colors.border} />
-            <text x="50" y="18" textAnchor="middle" fill={colors.textMuted} fontSize="9">Lift Coefficient</text>
-            <text x="50" y="35" textAnchor="middle" fill={colors.accent} fontSize="16" fontWeight="700">{cl.toFixed(2)}</text>
-            <text x="50" y="52" textAnchor="middle" fill={colors.textMuted} fontSize="9">Lift Force</text>
-            <text x="50" y="69" textAnchor="middle" fill={colors.lift} fontSize="14" fontWeight="600">{(lift/1000).toFixed(1)} kN</text>
-          </g>
+          <>
+            <rect x={width - 115} y="40" width="105" height="80" rx="8" fill={colors.bgSecondary} stroke={colors.border} />
+            <text x={width - 63} y="56" textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11">Cl Coefficient</text>
+            <text x={width - 63} y="74" textAnchor="middle" fill={colors.accent} fontSize="15" fontWeight="700">{cl.toFixed(2)}</text>
+            <text x={width - 63} y="92" textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11">Lift Force</text>
+            <text x={width - 63} y="108" textAnchor="middle" fill={colors.lift} fontSize="13" fontWeight="600">{(lift/1000).toFixed(1)} kN</text>
+          </>
         )}
 
-        {/* Legend */}
-        <g transform={`translate(15, ${height - 45})`}>
-          <rect x="0" y="0" width={width - 30} height="35" rx="6" fill={colors.bgSecondary} fillOpacity="0.8" />
-          <circle cx="15" cy="17" r="5" fill="#3b82f6" />
-          <text x="28" y="21" fill={colors.textMuted} fontSize="9">Low pressure</text>
-          <circle cx="105" cy="17" r="5" fill="#ef4444" />
-          <text x="118" y="21" fill={colors.textMuted} fontSize="9">High pressure</text>
-          <line x1="190" y1="17" x2="210" y2="17" stroke={colors.lift} strokeWidth="3" />
-          <text x="218" y="21" fill={colors.textMuted} fontSize="9">Lift</text>
-          <line x1="255" y1="17" x2="275" y2="17" stroke={colors.drag} strokeWidth="3" />
-          <text x="283" y="21" fill={colors.textMuted} fontSize="9">Drag</text>
-        </g>
+        {/* Legend - absolute positioning to prevent overlap */}
+        <rect x="12" y={height - 48} width="110" height="38" rx="6" fill={colors.bgSecondary} fillOpacity="0.9" />
+        <circle cx="24" cy={height - 35} r="4" fill="#3b82f6" />
+        <text x="34" y={height - 31} fill="rgba(148,163,184,0.7)" fontSize="11">Low Pressure</text>
+        <circle cx="24" cy={height - 18} r="4" fill="#ef4444" />
+        <text x="34" y={height - 14} fill="rgba(148,163,184,0.7)" fontSize="11">High Pressure</text>
+        <rect x="130" y={height - 48} width="90" height="38" rx="6" fill={colors.bgSecondary} fillOpacity="0.9" />
+        <line x1="142" y1={height - 35} x2="160" y2={height - 35} stroke={colors.lift} strokeWidth="3" />
+        <text x="166" y={height - 31} fill="rgba(148,163,184,0.7)" fontSize="11">Lift</text>
+        <line x1="142" y1={height - 18} x2="160" y2={height - 18} stroke={colors.drag} strokeWidth="3" />
+        <text x="166" y={height - 14} fill="rgba(148,163,184,0.7)" fontSize="11">Drag</text>
       </svg>
     );
   };
@@ -615,17 +654,17 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
         top: 0,
         left: 0,
         right: 0,
-        height: '60px',
+        height: '48px',
         background: colors.bgSecondary,
         zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 20px',
+        padding: '0 12px',
         borderBottom: `1px solid ${colors.border}`,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {currentIndex > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {currentIndex > 0 ? (
             <button
               onClick={prevPhase}
               style={{
@@ -633,26 +672,46 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
                 border: 'none',
                 color: colors.textSecondary,
                 cursor: 'pointer',
-                padding: '8px',
-                fontSize: '14px',
+                padding: '4px 8px',
+                fontSize: '13px',
                 minHeight: '44px',
                 display: 'flex',
                 alignItems: 'center',
               }}
             >
-              Back
+              ← Back
+            </button>
+          ) : (
+            <div style={{ width: '64px' }} />
+          )}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ color: colors.textPrimary, fontWeight: 600, fontSize: '14px' }}>Lift Force</span>
+          <span style={{ color: 'rgba(148,163,184,0.7)', fontSize: '12px' }}>
+            {phaseOrder.indexOf(phase) + 1}/{phaseOrder.length}
+          </span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          {currentIndex < phaseOrder.length - 1 && (
+            <button
+              onClick={() => { if (phase !== 'test') goToPhase(phaseOrder[currentIndex + 1]); }}
+              aria-label="Next"
+              disabled={phase === 'test'}
+              style={{
+                background: phase === 'test' ? colors.border : colors.accent,
+                border: 'none',
+                borderRadius: '6px',
+                color: 'white',
+                padding: '4px 10px',
+                cursor: phase === 'test' ? 'not-allowed' : 'pointer',
+                fontSize: '13px',
+                opacity: phase === 'test' ? 0.4 : 1,
+                minHeight: '44px',
+              }}
+            >
+              Next →
             </button>
           )}
-          <span style={{ fontSize: '24px' }}>&#9992;</span>
-          <span style={{ color: colors.textPrimary, fontWeight: 600, fontSize: '16px' }}>Lift Force</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
-            {phaseLabels[phase]}
-          </span>
-          <span style={{ color: '#94a3b8', fontSize: '12px' }}>
-            ({phaseOrder.indexOf(phase) + 1}/{phaseOrder.length})
-          </span>
         </div>
         <div style={{
           position: 'absolute',
@@ -744,14 +803,22 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        paddingTop: '84px',
-        textAlign: 'center',
-        overflowY: 'auto',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '72px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+        }}>
 
         <div style={{ fontSize: '64px', marginBottom: '24px', animation: 'float 3s ease-in-out infinite' }}>
           <span role="img" aria-label="airplane">&#9992;</span>
@@ -795,6 +862,7 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
         </button>
 
         {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -811,11 +879,18 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+        }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -890,8 +965,8 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
             </button>
           )}
         </div>
-
         {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -907,16 +982,29 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+        }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Lift Force Laboratory
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: 'rgba(148,163,184,0.7)', textAlign: 'center', marginBottom: '16px' }}>
             Adjust parameters to see how they affect lift
+          </p>
+          <p style={{ ...typo.small, color: '#e2e8f0', textAlign: 'center', marginBottom: '8px' }}>
+            This visualization shows airflow around an airfoil cross-section. Streamlines above the wing accelerate and create lower pressure, while those below slow and create higher pressure. This pressure difference generates the upward lift force.
+          </p>
+          <p style={{ ...typo.small, color: '#e2e8f0', textAlign: 'center', marginBottom: '16px' }}>
+            When you increase airspeed, lift increases with V squared. Higher angle of attack increases Cl until stall occurs, because flow separation disrupts the pressure differential. Try each slider to observe cause and effect relationships.
           </p>
 
           {/* Visualization */}
@@ -943,7 +1031,7 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
                 step="10"
                 value={airspeed}
                 onChange={(e) => setAirspeed(parseInt(e.target.value))}
-                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer', accentColor: colors.accent, touchAction: 'pan-y' }}
+                style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
               />
             </div>
 
@@ -961,7 +1049,7 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
                 max="20"
                 value={angleOfAttack}
                 onChange={(e) => setAngleOfAttack(parseInt(e.target.value))}
-                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
               />
             </div>
 
@@ -977,7 +1065,7 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
                 max="40"
                 value={wingArea}
                 onChange={(e) => setWingArea(parseInt(e.target.value))}
-                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
               />
             </div>
 
@@ -994,7 +1082,7 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
                 step="0.01"
                 value={airDensity}
                 onChange={(e) => setAirDensity(parseFloat(e.target.value))}
-                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                 <span style={{ ...typo.small, color: colors.textMuted }}>High Alt (0.5)</span>
@@ -1067,8 +1155,8 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
             Understand the Physics
           </button>
         </div>
-
         {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -1087,18 +1175,45 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+        }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Understanding Lift Force
           </h2>
 
-          {/* Reference user's prediction */}
-          {userPredictionText && (
+          {/* Reference user's prediction - always show connection */}
+          <div style={{
+            background: prediction ? (wasCorrect ? `${colors.success}22` : `${colors.warning}22`) : `${colors.accent}11`,
+            border: `1px solid ${prediction ? (wasCorrect ? colors.success : colors.warning) : colors.accent}44`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.small, color: prediction ? (wasCorrect ? colors.success : colors.warning) : colors.accent, margin: 0, marginBottom: '8px', fontWeight: 600 }}>
+              {prediction ? (wasCorrect ? 'Your prediction was correct!' : 'Let\'s revisit your prediction') : 'Connecting to your prediction'}
+            </p>
+            <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', margin: 0 }}>
+              {prediction ? `You predicted: "${userPredictionText}"` : 'Lift is generated by pressure differences created by airflow over the wing shape.'}
+            </p>
+            {prediction && !wasCorrect && (
+              <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', margin: 0, marginTop: '8px' }}>
+                The correct answer is that lift comes from pressure differences created by airflow over the wing shape.
+              </p>
+            )}
+          </div>
+
+          {/* Reference user's prediction (legacy - keep for old prediction flow) */}
+          {userPredictionText && false && (
             <div style={{
               background: wasCorrect ? `${colors.success}22` : `${colors.warning}22`,
               border: `1px solid ${wasCorrect ? colors.success : colors.warning}44`,
@@ -1189,11 +1304,11 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Explore High-Lift Devices
+            Continue to Next →
           </button>
         </div>
-
         {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -1210,11 +1325,18 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+        }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1223,8 +1345,12 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
             border: `1px solid ${colors.warning}44`,
           }}>
             <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              The Twist: Landing at Low Speed
+              New Variable — What do you predict will happen?
             </p>
+          </div>
+          {/* Simple airfoil diagram in twist_predict (no sliders) */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+            <AirfoilVisualization showLabels={false} />
           </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
@@ -1286,8 +1412,8 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
             </button>
           )}
         </div>
-
         {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -1303,15 +1429,22 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+        }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             High-Lift Devices Lab
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: 'rgba(148,163,184,0.7)', textAlign: 'center', marginBottom: '24px' }}>
             Explore how flaps, slats, and airfoil shape affect low-speed performance
           </p>
 
@@ -1410,7 +1543,7 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
                 max="20"
                 value={angleOfAttack}
                 onChange={(e) => setAngleOfAttack(parseInt(e.target.value))}
-                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
               />
             </div>
 
@@ -1438,8 +1571,8 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
             Review Key Insights
           </button>
         </div>
-
         {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -1450,11 +1583,18 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+        }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Controlling Lift at Any Speed
           </h2>
@@ -1527,7 +1667,8 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
         </div>
 
         {renderNavDots()}
-      </div>
+        </div>
+        </div>
     );
   }
 
@@ -1540,14 +1681,24 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+        }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', textAlign: 'center', marginBottom: '16px' }}>
+            App {selectedApp + 1} of {realWorldApps.length}
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1616,8 +1767,12 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
               </div>
             </div>
 
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '12px' }}>
               {app.description}
+            </p>
+
+            <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', marginBottom: '16px' }}>
+              {app.howItWorks}
             </p>
 
             <div style={{
@@ -1655,14 +1810,29 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
 
           {/* Got It button for transfer phase */}
           <button
-            onClick={() => { playSound('success'); nextPhase(); }}
+            onClick={() => {
+              playSound('success');
+              const newCompleted = [...completedApps];
+              newCompleted[selectedApp] = true;
+              setCompletedApps(newCompleted);
+              const nextApp = selectedApp + 1;
+              if (nextApp < realWorldApps.length && !newCompleted[nextApp]) {
+                setSelectedApp(nextApp);
+              } else if (newCompleted.every(c => c)) {
+                nextPhase();
+              } else {
+                const firstIncomplete = newCompleted.findIndex(c => !c);
+                if (firstIncomplete >= 0) setSelectedApp(firstIncomplete);
+                else nextPhase();
+              }
+            }}
             style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px' }}
           >
-            {allAppsCompleted ? 'Take the Knowledge Test' : 'Got It'}
+            {allAppsCompleted ? 'Take the Knowledge Test →' : `Got It (${selectedApp + 1}/${realWorldApps.length})`}
           </button>
         </div>
-
         {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -1675,13 +1845,20 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}>
           {renderProgressBar()}
-
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            paddingTop: '64px',
+            paddingBottom: '100px',
+          }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>
-              {passed ? 'Trophy!' : 'Book'}
+              {passed ? '🏆' : '📚'}
             </div>
             <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
               {passed ? 'Excellent!' : 'Keep Learning!'}
@@ -1689,35 +1866,75 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
             <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
               {testScore} / 10
             </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '24px' }}>
               {passed
                 ? 'You understand lift force and aerodynamics!'
                 : 'Review the concepts and try again.'}
             </p>
 
-            {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
-                Complete Lesson
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
+            {/* Answer review indicators */}
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '24px' }}>
+              {testQuestions.map((q, i) => {
+                const userAns = testAnswers[i];
+                const correctAns = q.options.find(o => o.correct)?.id;
+                const isCorrect = userAns === correctAns;
+                return (
+                  <div key={i} style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: isCorrect ? colors.success : colors.error,
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {i + 1}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              {passed ? (
+                <button
+                  onClick={() => { playSound('complete'); nextPhase(); }}
+                  style={{ ...primaryButtonStyle, minHeight: '44px' }}
+                >
+                  Complete Lesson
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setTestSubmitted(false);
+                    setTestAnswers(Array(10).fill(null));
+                    setCurrentQuestion(0);
+                    setTestScore(0);
+                    goToPhase('hook');
+                  }}
+                  style={{ ...primaryButtonStyle, minHeight: '44px' }}
+                >
+                  Review and Try Again
+                </button>
+              )}
+              <a
+                href="/"
+                style={{
+                  ...secondaryButtonStyle,
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  minHeight: '44px',
                 }}
-                style={primaryButtonStyle}
               >
-                Review and Try Again
-              </button>
-            )}
+                Dashboard
+              </a>
+            </div>
           </div>
           {renderNavDots()}
+          </div>
         </div>
       );
     }
@@ -1728,11 +1945,18 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+        }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1884,6 +2108,7 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
         </div>
 
         {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -1896,12 +2121,22 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '64px',
+          paddingBottom: '100px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
 
         <div style={{
           fontSize: '100px',
@@ -1973,6 +2208,7 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
         </div>
 
         {renderNavDots()}
+        </div>
       </div>
     );
   }

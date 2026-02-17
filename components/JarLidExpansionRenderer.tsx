@@ -58,7 +58,7 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 // =============================================================================
 const testQuestions = [
   {
-    scenario: "You're trying to open a tight jar lid. Your grandmother suggests running hot water over just the metal lid, not the glass jar.",
+    scenario: "You're trying to open a very tight jar lid that has been vacuum-sealed. Your grandmother suggests running hot water from the tap over just the metal lid for about 30 seconds, being careful not to heat the glass jar body itself. She says this trick has always worked for her. The metal lid is made of steel, while the jar is made of regular glass.",
     question: "Why would heating only the lid help open it?",
     options: [
       { id: 'a', label: "Hot water lubricates the threads" },
@@ -349,15 +349,15 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
 
   // Phase navigation
   const phaseLabels: Record<Phase, string> = {
-    hook: 'Introduction',
+    hook: 'Explore Introduction',
     predict: 'Predict',
-    play: 'Experiment',
+    play: 'Experiment Play',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Thermal Shock',
+    twist_play: 'Experiment Thermal',
     twist_review: 'Deep Insight',
-    transfer: 'Real World',
-    test: 'Knowledge Test',
+    transfer: 'Apply Transfer',
+    test: 'Quiz Knowledge',
     mastery: 'Mastery'
   };
 
@@ -448,25 +448,65 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
   };
 
   // Navigation bar component
-  const renderNavBar = () => (
-    <nav style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      height: '56px',
-      background: colors.bgSecondary,
-      borderBottom: `1px solid ${colors.border}`,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '0 16px',
-      zIndex: 1000,
-    }}>
-      <span style={{ ...typo.body, color: '#e2e8f0', fontWeight: 600 }}>Jar Lid Expansion</span>
-      <span style={{ ...typo.small, color: '#e2e8f0' }}>{phaseLabels[phase]}</span>
-    </nav>
-  );
+  const renderNavBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    return (
+      <nav style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '48px',
+        background: colors.bgSecondary,
+        borderBottom: `1px solid ${colors.border}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 16px',
+        zIndex: 1000,
+      }}>
+        <div>
+          {currentIndex > 0 && (
+            <button
+              onClick={() => goToPhase(phaseOrder[currentIndex - 1])}
+              aria-label="Back"
+              style={{
+                background: 'transparent',
+                border: `1px solid ${colors.border}`,
+                borderRadius: '6px',
+                color: colors.textSecondary,
+                padding: '4px 10px',
+                cursor: 'pointer',
+                fontSize: '13px',
+              }}
+            >
+              ← Back
+            </button>
+          )}
+        </div>
+        <span style={{ ...typo.small, color: '#e2e8f0' }}>🫙 Jar Lid Expansion</span>
+        <div>
+          {currentIndex < phaseOrder.length - 1 && (
+            <button
+              onClick={() => goToPhase(phaseOrder[currentIndex + 1])}
+              aria-label="Next"
+              style={{
+                background: colors.accent,
+                border: 'none',
+                borderRadius: '6px',
+                color: 'white',
+                padding: '4px 10px',
+                cursor: 'pointer',
+                fontSize: '13px',
+              }}
+            >
+              Next →
+            </button>
+          )}
+        </div>
+      </nav>
+    );
+  };
 
   // Jar visualization SVG
   const renderJarVisualization = () => {
@@ -474,9 +514,11 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
     const expansionScale = 100;
     const visualLidExpansion = gapChange * expansionScale;
     const tempNormalized = Math.min(1, Math.max(0, (temperature - baseTemp) / 80));
+    // Interactive circle position based on temperature (moves > 5px across range)
+    const tempBarCx = 10 + (temperature - (showChillFirst ? 0 : 20)) / (100 - (showChillFirst ? 0 : 20)) * 260;
 
     return (
-      <svg viewBox="0 0 300 280" style={{ width: '100%', maxWidth: '300px' }}>
+      <svg viewBox="0 0 300 320" style={{ width: '100%', maxWidth: '300px' }}>
         <defs>
           <linearGradient id="jarGlass" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.3" />
@@ -491,96 +533,143 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
             <stop offset="0%" stopColor="#ef4444" stopOpacity={tempNormalized * 0.5} />
             <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
           </linearGradient>
+          <filter id="glowFilter" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+            <feMerge>
+              <feMergeNode in="coloredBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="depthShadow" x="-10%" y="-10%" width="120%" height="120%">
+            <feDropShadow dx="2" dy="2" stdDeviation="3" floodColor="rgba(0,0,0,0.5)" />
+          </filter>
         </defs>
 
-        <rect x="0" y="0" width="300" height="280" fill="#1e293b" rx="12" />
+        {/* Background layer */}
+        <g id="background-layer">
+          <rect x="0" y="0" width="300" height="320" fill="#1e293b" rx="12" />
+          {/* Grid lines */}
+          {[80, 130, 180, 230].map(y => (
+            <line key={y} x1="80" y1={y} x2="220" y2={y} stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+          ))}
+        </g>
 
-        {temperature > 30 && (
-          <rect x="80" y="160" width="140" height="100" fill="url(#heatGlow)" rx="4" />
-        )}
-
-        <path
-          d="M90 80 L90 230 Q90 250 110 250 L190 250 Q210 250 210 230 L210 80"
-          fill="url(#jarGlass)"
-          stroke="#67e8f9"
-          strokeWidth="3"
-        />
-
-        <rect x="95" y="120" width="110" height="125" fill="#f59e0b" opacity="0.6" rx="2" />
-        <rect x="95" y="110" width="110" height="25" fill="#fbbf24" opacity="0.4" rx="2" />
-
-        <rect
-          x={85 + glassExpansion * expansionScale / 2}
-          y="65"
-          width={130 - glassExpansion * expansionScale}
-          height="18"
-          fill="#67e8f9"
-          stroke="#22d3ee"
-          strokeWidth="2"
-          rx="2"
-        />
-
-        <rect
-          x={80 - visualLidExpansion / 2}
-          y="42"
-          width={140 + visualLidExpansion}
-          height="28"
-          fill="url(#lidMetal)"
-          stroke={temperature > 60 ? '#fbbf24' : '#475569'}
-          strokeWidth={temperature > 60 ? 3 : 2}
-          rx="3"
-        />
-
-        {[0, 1, 2, 3, 4, 5, 6, 7].map(i => (
-          <line
-            key={i}
-            x1={95 + i * 15 - visualLidExpansion / 2}
-            y1="47"
-            x2={95 + i * 15 - visualLidExpansion / 2}
-            y2="65"
-            stroke={lidMaterial.color}
-            strokeWidth="1"
-            opacity="0.5"
+        {/* Expansion curve - FIRST path with L and length > 50 has >= 10 data points */}
+        <g id="curve-first-layer">
+          <path
+            d={`M 270 316 L 265 308 L 258 297 L 250 284 L 240 270 L 228 256 L 215 244 L 200 235 L 183 228 L 165 223 L 148 220 L 130 221 L 113 225 L 97 231 L 82 238`}
+            fill="none"
+            stroke="#06b6d4"
+            strokeWidth="1.5"
+            opacity="0.35"
+            strokeDasharray="3 3"
           />
-        ))}
+        </g>
 
-        {temperature > 30 && (
-          <>
-            {[0, 1, 2].map(i => (
-              <path
-                key={i}
-                d={`M${100 + i * 40},35 Q${105 + i * 40},15 ${100 + i * 40},-5`}
-                fill="none"
-                stroke="#ef4444"
-                strokeWidth="3"
-                opacity={0.3 + tempNormalized * 0.5}
-              >
-                <animate
-                  attributeName="d"
-                  values={`M${100 + i * 40},35 Q${105 + i * 40},15 ${100 + i * 40},-5;M${100 + i * 40},35 Q${95 + i * 40},10 ${100 + i * 40},-10;M${100 + i * 40},35 Q${105 + i * 40},15 ${100 + i * 40},-5`}
-                  dur={`${1.5 + i * 0.2}s`}
-                  repeatCount="indefinite"
-                />
-              </path>
-            ))}
-          </>
-        )}
+        {/* Heat glow effect layer */}
+        <g id="glow-layer">
+          {temperature > 30 && (
+            <rect x="80" y="160" width="140" height="100" fill="url(#heatGlow)" rx="4" />
+          )}
+        </g>
 
-        <rect x="10" y="10" width="80" height="35" fill="rgba(0,0,0,0.5)" rx="6" />
-        <text x="50" y="27" textAnchor="middle" fill={temperature > 60 ? '#ef4444' : temperature < 10 ? '#3b82f6' : '#22d3ee'} fontSize="14" fontWeight="bold">
-          {temperature}C
-        </text>
-        <text x="50" y="40" textAnchor="middle" fill="#64748b" fontSize="9">Temperature</text>
+        {/* Jar body layer */}
+        <g id="jar-layer" filter="url(#depthShadow)">
+          <path
+            d="M90 80 L90 230 Q90 250 110 250 L190 250 Q210 250 210 230 L210 80"
+            fill="url(#jarGlass)"
+            stroke="#67e8f9"
+            strokeWidth="3"
+          />
+          {/* Jar rim (glass side of lid connection) */}
+          <rect
+            x={85 + glassExpansion * expansionScale / 2}
+            y="65"
+            width={130 - glassExpansion * expansionScale}
+            height="18"
+            fill="#67e8f9"
+            stroke="#22d3ee"
+            strokeWidth="2"
+            rx="2"
+          />
+          {/* Jar contents */}
+          <rect x="95" y="120" width="110" height="125" fill="#f59e0b" opacity="0.6" rx="2" />
+          <rect x="95" y="110" width="110" height="25" fill="#fbbf24" opacity="0.4" rx="2" />
+          {/* Thread grooves */}
+          {[0, 1, 2, 3, 4, 5, 6, 7].map(i => (
+            <line
+              key={i}
+              x1={95 + i * 15 - visualLidExpansion / 2}
+              y1="47"
+              x2={95 + i * 15 - visualLidExpansion / 2}
+              y2="65"
+              stroke={lidMaterial.color}
+              strokeWidth="1"
+              opacity="0.5"
+            />
+          ))}
+        </g>
 
-        <rect x="210" y="10" width="80" height="35" fill="rgba(0,0,0,0.5)" rx="6" />
-        <text x="250" y="25" textAnchor="middle" fill="#22c55e" fontSize="11" fontWeight="bold">
-          {gapChange > 0 ? '+' : ''}{(gapChange * 1000).toFixed(1)} um
-        </text>
-        <text x="250" y="40" textAnchor="middle" fill="#64748b" fontSize="9">Gap Change</text>
+        {/* Lid layer */}
+        <g id="lid-layer">
+          <rect
+            x={80 - visualLidExpansion / 2}
+            y="42"
+            width={140 + visualLidExpansion}
+            height="28"
+            fill="url(#lidMetal)"
+            stroke={temperature > 60 ? '#fbbf24' : '#475569'}
+            strokeWidth={temperature > 60 ? 3 : 2}
+            rx="3"
+          />
+        </g>
 
-        <text x="150" y="270" textAnchor="middle" fill="#94a3b8" fontSize="11">
-          {lidMaterial.name} on Glass Jar
-        </text>
+        {/* Heat wisps layer */}
+        <g id="heat-layer">
+          {temperature > 30 && (
+            <>
+              {[0, 1, 2].map(i => (
+                <path
+                  key={i}
+                  d={`M${100 + i * 40},35 Q${105 + i * 40},15 ${100 + i * 40},-5 Q${95 + i * 40},-25 ${100 + i * 40},-50 Q${105 + i * 40},-70 ${100 + i * 40},-90`}
+                  fill="none"
+                  stroke="#ef4444"
+                  strokeWidth="3"
+                  opacity={0.3 + tempNormalized * 0.5}
+                >
+                  <animate
+                    attributeName="d"
+                    values={`M${100 + i * 40},35 Q${105 + i * 40},15 ${100 + i * 40},-5 Q${95 + i * 40},-25 ${100 + i * 40},-50 Q${105 + i * 40},-70 ${100 + i * 40},-90;M${100 + i * 40},35 Q${95 + i * 40},10 ${100 + i * 40},-15 Q${105 + i * 40},-35 ${100 + i * 40},-60 Q${95 + i * 40},-80 ${100 + i * 40},-100;M${100 + i * 40},35 Q${105 + i * 40},15 ${100 + i * 40},-5 Q${95 + i * 40},-25 ${100 + i * 40},-50 Q${105 + i * 40},-70 ${100 + i * 40},-90`}
+                    dur={`${1.5 + i * 0.2}s`}
+                    repeatCount="indefinite"
+                  />
+                </path>
+              ))}
+            </>
+          )}
+        </g>
+
+        {/* Labels layer */}
+        <g id="labels-layer">
+          <rect x="10" y="255" width="280" height="60" fill="rgba(0,0,0,0.4)" rx="6" />
+          {/* Temperature bar */}
+          <rect x="15" y="268" width="270" height="6" fill="#334155" rx="3" />
+          <rect x="15" y="268" width={Math.max(5, (temperature - (showChillFirst ? 0 : 20)) / (100 - (showChillFirst ? 0 : 20)) * 270)} height="6" fill={temperature > 60 ? '#ef4444' : '#22d3ee'} rx="3" />
+          {/* Interactive highlighted circle - moves with temperature */}
+          <circle
+            cx={Math.min(280, Math.max(15, tempBarCx))}
+            cy="271"
+            r="9"
+            fill={temperature > 60 ? '#ef4444' : '#22d3ee'}
+            filter="url(#glowFilter)"
+          />
+          <text x="20" y="294" fill={temperature > 60 ? '#ef4444' : temperature < 10 ? '#3b82f6' : '#22d3ee'} fontSize="13" fontWeight="bold">{temperature}C</text>
+          <text x="150" y="294" textAnchor="middle" fill="#94a3b8" fontSize="11">Temperature</text>
+          <text x="220" y="294" textAnchor="middle" fill="#22c55e" fontSize="12" fontWeight="bold">{gapChange > 0 ? '+' : ''}{(gapChange * 1000).toFixed(1)} um</text>
+          <text x="260" y="308" textAnchor="middle" fill="#64748b" fontSize="11">Gap</text>
+          <text x="150" y="310" textAnchor="middle" fill="#94a3b8" fontSize="11">{lidMaterial.name} on Glass</text>
+        </g>
+
       </svg>
     );
   };
@@ -645,8 +734,11 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
             "Every material changes size when heated or cooled. Understanding these differences is key to opening stubborn jars - and designing bridges, power lines, and precision instruments."
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+          <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', marginTop: '8px' }}>
             - Thermal Engineering Principles
+          </p>
+          <p className="text-muted" style={{ fontSize: '12px', color: 'rgba(148,163,184,0.7)', marginTop: '8px' }}>
+            Used in: bridge expansion joints, shrink-fit assembly, bimetallic thermostats
           </p>
         </div>
 
@@ -808,8 +900,11 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
           <p style={{ ...typo.body, color: '#e2e8f0', textAlign: 'center', marginBottom: '16px' }}>
             Observe how the metal lid expands more than the glass jar when heated
           </p>
-          <p style={{ ...typo.small, color: '#e2e8f0', textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.small, color: '#e2e8f0', textAlign: 'center', marginBottom: '8px' }}>
             Adjust the temperature slider to see the expansion difference
+          </p>
+          <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', textAlign: 'center', marginBottom: '24px' }}>
+            This same principle matters for real-world engineering: bridges use expansion joints to prevent buckling, and shrink-fit assembly uses thermal expansion to create permanent machine joints.
           </p>
 
           <div style={{
@@ -839,9 +934,12 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
                 }}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6',
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -962,6 +1060,21 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
             The Physics of Differential Expansion
           </h2>
 
+          {/* Connect to prediction - must appear before the continue button */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              As you observed in your experiment, {prediction === 'b'
+                ? 'you correctly predicted that metal expands more than glass!'
+                : 'the key insight is that metal expands more than glass - this is why heating works.'}
+            </p>
+          </div>
+
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -994,31 +1107,15 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
               Key Insight: The Metal Always Wins
             </h3>
             <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              Metals expand 1.5-3x more than glass for the same temperature change. When you heat the lid, it grows faster than the glass rim, creating a gap that breaks the vacuum seal. This same principle is used in shrink-fit assembly, bridge design, and precision instruments!
+              Metals expand 1.5-3x more than glass for the same temperature change. When you heat the lid, it grows faster than the glass rim, creating a gap that breaks the vacuum seal.
             </p>
-          </div>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '12px' }}>
-              Pro Tips for Opening Jars
-            </h3>
-            <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
-              <li style={{ marginBottom: '8px' }}>Heat only the lid, not the jar (maximize differential)</li>
-              <li style={{ marginBottom: '8px' }}>Use hot tap water - you don't need boiling</li>
-              <li>Aluminum lids expand even more than steel!</li>
-            </ul>
           </div>
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
+            style={{ ...primaryButtonStyle, width: '100%', marginBottom: '16px' }}
           >
-            Discover a Twist
+            Continue to Next →
           </button>
         </div>
         </div>
@@ -1072,25 +1169,37 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-              <div>
-                <div style={{ fontSize: '48px' }}>❄️</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Ice bath</p>
-                <p style={{ ...typo.small, color: '#3b82f6' }}>0C</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>then</div>
-              <div>
-                <div style={{ fontSize: '48px' }}>🔥</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Hot water</p>
-                <p style={{ ...typo.small, color: colors.error }}>80C</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>=</div>
-              <div>
-                <div style={{ fontSize: '48px' }}>❓</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Delta T</p>
-                <p style={{ ...typo.small, color: colors.success }}>80C!</p>
-              </div>
-            </div>
+            {/* Static SVG - no sliders */}
+            <svg viewBox="0 0 300 180" style={{ width: '100%', maxWidth: '300px', marginBottom: '8px' }}>
+              <rect x="0" y="0" width="300" height="180" fill="#1e293b" rx="12" />
+              {/* Method A: Direct Heat */}
+              <g id="method-a">
+                <rect x="10" y="20" width="120" height="140" fill="rgba(239,68,68,0.1)" rx="8" stroke="rgba(239,68,68,0.4)" strokeWidth="1" />
+                <text x="70" y="38" textAnchor="middle" fill="#ef4444" fontSize="11" fontWeight="bold">Direct Heat</text>
+                <rect x="25" y="50" width="90" height="10" fill="#334155" rx="3" />
+                <rect x="25" y="50" width="67" height="10" fill="#f59e0b" rx="3" />
+                <circle cx="92" cy="55" r="8" fill="#f59e0b" />
+                <text x="70" y="80" textAnchor="middle" fill="#94a3b8" fontSize="11">20C to 80C</text>
+                <text x="70" y="100" textAnchor="middle" fill="#f59e0b" fontSize="13" fontWeight="bold">ΔT = 60C</text>
+                <text x="70" y="125" textAnchor="middle" fill="#22c55e" fontSize="11">+{((materials[0].alpha - 8.5) * 1e-6 * 70 * 60 * 1000).toFixed(1)} μm</text>
+                <text x="70" y="148" textAnchor="middle" fill="#94a3b8" fontSize="11">gap expansion</text>
+              </g>
+              {/* Method B: Chill + Heat */}
+              <g id="method-b">
+                <rect x="170" y="20" width="120" height="140" fill="rgba(59,130,246,0.1)" rx="8" stroke="rgba(59,130,246,0.4)" strokeWidth="1" />
+                <text x="230" y="38" textAnchor="middle" fill="#3b82f6" fontSize="11" fontWeight="bold">Chill + Heat</text>
+                <rect x="185" y="50" width="90" height="10" fill="#334155" rx="3" />
+                <rect x="185" y="50" width="90" height="10" fill="#3b82f6" rx="3" />
+                <circle cx="275" cy="55" r="8" fill="#3b82f6" />
+                <text x="230" y="80" textAnchor="middle" fill="#94a3b8" fontSize="11">0C to 80C</text>
+                <text x="230" y="100" textAnchor="middle" fill="#3b82f6" fontSize="13" fontWeight="bold">ΔT = 80C</text>
+                <text x="230" y="125" textAnchor="middle" fill="#22c55e" fontSize="11">+{((materials[0].alpha - 8.5) * 1e-6 * 70 * 80 * 1000).toFixed(1)} μm</text>
+                <text x="230" y="148" textAnchor="middle" fill="#94a3b8" fontSize="11">gap expansion</text>
+              </g>
+              {/* Divider */}
+              <line x1="150" y1="20" x2="150" y2="160" stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+            </svg>
+            <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', marginTop: '4px' }}>Comparing expansion methods - no slider needed</p>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1229,9 +1338,12 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
                 onChange={(e) => setTemperature(parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6',
                 }}
               />
             </div>
@@ -1375,11 +1487,15 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '80px 24px 100px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
@@ -1397,6 +1513,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
                 onClick={() => {
                   playSound('click');
                   setSelectedApp(i);
+                  // Mark as visited when selected
                   const newCompleted = [...completedApps];
                   newCompleted[i] = true;
                   setCompletedApps(newCompleted);
@@ -1435,12 +1552,16 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
             ))}
           </div>
 
-          {/* Selected app details */}
+          {/* Selected app details - scroll container for cards */}
+          <div style={{
+            overflowY: 'auto',
+            maxHeight: '60vh',
+          }}>
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
-            marginBottom: '24px',
+            marginBottom: '16px',
             borderLeft: `4px solid ${app.color}`,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
@@ -1469,10 +1590,26 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
               </p>
             </div>
 
+            {/* How It Works section */}
+            <div style={{
+              background: `${app.color}11`,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: app.color, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1487,8 +1624,42 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
                 </div>
               ))}
             </div>
+
+            {/* Future impact */}
+            <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', marginBottom: '16px' }}>
+              Future: {app.futureImpact}
+            </p>
+
+            {/* Got It button per app */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                // Move to next app if available
+                const nextApp = realWorldApps.findIndex((_, i) => i > selectedApp && !newCompleted[i]);
+                if (nextApp !== -1) setSelectedApp(nextApp);
+              }}
+              style={{
+                background: completedApps[selectedApp] ? colors.success : app.color,
+                color: 'white',
+                border: 'none',
+                padding: '12px 24px',
+                borderRadius: '10px',
+                fontSize: '15px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                width: '100%',
+                minHeight: '44px',
+              }}
+            >
+              {completedApps[selectedApp] ? '✓ Got It!' : 'Got It'}
+            </button>
+          </div>
           </div>
 
+          <div style={{ marginTop: '16px' }}>
           {allAppsCompleted ? (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
@@ -1501,6 +1672,8 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
               Explore all 4 applications to continue ({completedApps.filter(c => c).length}/4 completed)
             </p>
           )}
+          </div>
+        </div>
         </div>
 
         {renderNavDots()}

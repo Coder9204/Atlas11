@@ -178,9 +178,10 @@ const realWorldApps = [
     connection: 'Understanding emissivity is crucial for accurate thermal imaging. A shiny metal surface may appear cool on camera not because it is cool, but because its low emissivity means it emits less IR and reflects ambient temperatures instead.',
     howItWorks: 'Thermal cameras use microbolometer arrays sensitive to IR wavelengths (8-14 um). Each pixel absorbs IR radiation, causing temperature changes that alter electrical resistance. Software converts resistance values to temperatures.',
     stats: [
-      { value: '0.01C', label: 'Sensitivity', icon: '🎯' },
+      { value: '8-14μm', label: 'IR wavelength', icon: '🎯' },
       { value: '$8.7B', label: 'Market size', icon: '📈' },
-      { value: '640x480', label: 'Resolution', icon: '📷' }
+      { value: '640x480', label: 'Resolution', icon: '📷' },
+      { value: '30%', label: 'Cost reduction', icon: '💰' }
     ],
     examples: ['Building energy audits', 'Electrical hot spot detection', 'Medical fever screening', 'Night vision security'],
     companies: ['FLIR Systems', 'Fluke', 'Hikvision', 'Seek Thermal'],
@@ -264,7 +265,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
 
   // Play phase state
   const [viewMode, setViewMode] = useState<'visible' | 'infrared'>('visible');
-  const [selectedObject, setSelectedObject] = useState<'hand' | 'cup_matte' | 'cup_shiny' | 'ice'>('hand');
+  const [selectedObject, setSelectedObject] = useState<'hand' | 'cup_matte' | 'cup_shiny' | 'ice'>('cup_matte');
   const [objectTemp, setObjectTemp] = useState(60);
   const [ambientTemp] = useState(22);
   const [animPhase, setAnimPhase] = useState(0);
@@ -301,13 +302,13 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  // Object properties
+  // Object properties - all use objectTemp for reactivity
   const getObjectProps = (obj: string) => {
     const props: Record<string, { emissivity: number; name: string; actualTemp: number; color: string }> = {
-      hand: { emissivity: 0.98, name: 'Human Hand', actualTemp: 37, color: '#e8b4a0' },
+      hand: { emissivity: 0.98, name: 'Human Hand', actualTemp: objectTemp, color: '#e8b4a0' },
       cup_matte: { emissivity: 0.95, name: 'Matte Black Cup', actualTemp: objectTemp, color: '#1f2937' },
       cup_shiny: { emissivity: 0.1, name: 'Polished Metal Cup', actualTemp: objectTemp, color: '#9ca3af' },
-      ice: { emissivity: 0.96, name: 'Ice Cube', actualTemp: 0, color: '#e0f2fe' }
+      ice: { emissivity: 0.96, name: 'Ice Cube', actualTemp: objectTemp, color: '#e0f2fe' }
     };
     return props[obj] || props.hand;
   };
@@ -357,15 +358,15 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
   // Phase navigation
   const phaseOrder: Phase[] = validPhases;
   const phaseLabels: Record<Phase, string> = {
-    hook: 'Introduction',
+    hook: 'Explore Introduction',
     predict: 'Predict',
-    play: 'Experiment',
+    play: 'Experiment Play',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Emissivity',
+    twist_play: 'Experiment Emissivity',
     twist_review: 'Deep Insight',
-    transfer: 'Real World',
-    test: 'Knowledge Test',
+    transfer: 'Apply Transfer',
+    test: 'Quiz Knowledge',
     mastery: 'Mastery'
   };
 
@@ -463,26 +464,40 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
             <circle cx="25" cy="17" r="4" fill="#ef4444">
               <animate attributeName="opacity" values="1;0.4;1" dur="1s" repeatCount="indefinite" />
             </circle>
-            <text x="38" y="21" fill="#ef4444" fontSize="10" fontWeight="600">REC</text>
+            <text x="38" y="21" fill="#ef4444" fontSize="11" fontWeight="600">REC</text>
           </>
         )}
 
+        {/* Grid lines - spanning full width */}
+        {[50, 90, 130, 170, 210, 250].map(y => (
+          <line key={y} x1="0" y1={y} x2={width} y2={y} stroke="rgba(148,163,184,0.3)" strokeDasharray="4 4" strokeWidth="1" opacity="0.3" />
+        ))}
+        {/* Y axis - Temperature label */}
+        <text x="4" y="46" fill="rgba(148,163,184,0.7)" fontSize="11" fontWeight="600">Temperature</text>
+        {/* Formula overlay - right side */}
+        <text x={width - 8} y={height - 78} textAnchor="end" fill="rgba(148,163,184,0.7)" fontSize="11">P = ε·σ·A·T⁴</text>
+        {/* Temperature bar - spans full width, interactive point moves with temperature */}
+        <text x="10" y={height - 170} fill="rgba(148,163,184,0.7)" fontSize="11">Temperature (°C):</text>
+        <rect x="10" y={height - 155} width={width - 20} height="6" rx="3" fill="#1e293b" />
+        <rect x="10" y={height - 155} width={Math.max(6, (width - 20) * (props.actualTemp / 90))} height="6" rx="3" fill={irColor} />
+        <circle cx={10 + Math.max(6, (width - 20) * (props.actualTemp / 90))} cy={height - 152} r="9" fill={irColor} stroke="#ffffff" strokeWidth="2" filter="url(#heatGlow)" />
+
         {/* Temperature scale (IR mode only) */}
         {infrared && (
-          <g transform={`translate(${width - 50}, 50)`}>
-            <rect x="0" y="0" width="35" height="140" rx="4" fill="#111827" stroke="#334155" strokeWidth="1" />
-            <text x="17" y="15" textAnchor="middle" fill="#e2e8f0" fontSize="8" fontWeight="600">TEMP</text>
-            <rect x="5" y="20" width="12" height="100" rx="2" fill="url(#irTempScale)" />
-            <text x="22" y="30" fill="#ef4444" fontSize="8">60C</text>
-            <text x="22" y="70" fill="#fbbf24" fontSize="8">30C</text>
-            <text x="22" y="115" fill="#3b82f6" fontSize="8">0C</text>
+          <g transform={`translate(${width - 55}, 50)`}>
+            <rect x="0" y="0" width="50" height="155" rx="4" fill="#111827" stroke="#334155" strokeWidth="1" />
+            <text x="25" y="14" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="600">TEMP</text>
+            <rect x="5" y="22" width="12" height="110" rx="2" fill="url(#irTempScale)" />
+            <text x="22" y="32" fill="#ef4444" fontSize="11">60°C</text>
+            <text x="22" y="75" fill="#fbbf24" fontSize="11">30°C</text>
+            <text x="22" y="125" fill="#3b82f6" fontSize="11">0°C</text>
           </g>
         )}
 
         {/* Main object visualization */}
         <g transform={`translate(${width/2 - 60}, 55)`}>
           {selectedObject === 'hand' && (
-            <g filter={infrared ? 'url(#heatGlow)' : undefined}>
+            <g filter="url(#heatGlow)">
               {/* Palm */}
               <ellipse cx="60" cy="100" rx="45" ry="60"
                 fill={infrared ? irColor : 'url(#skinGrad)'} />
@@ -517,31 +532,31 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
           )}
 
           {(selectedObject === 'cup_matte' || selectedObject === 'cup_shiny') && (
-            <g filter={infrared && props.emissivity > 0.5 ? 'url(#heatGlow)' : undefined}>
-              {/* Cup body */}
+            <g filter={infrared && props.emissivity > 0.5 ? 'url(#heatGlow)' : 'url(#heatGlow)'}>
+              {/* Cup body - tall to use vertical space */}
               <path
-                d="M 25 30 L 35 150 L 105 150 L 115 30 Z"
+                d="M 15 20 L 28 190 L 112 190 L 125 20 Z"
                 fill={infrared ? irColor : (selectedObject === 'cup_shiny' ? 'url(#metalGrad)' : 'url(#matteGrad)')}
                 stroke={selectedObject === 'cup_shiny' && !infrared ? '#e5e7eb' : 'none'}
                 strokeWidth="2"
               />
               {/* Cup rim */}
-              <ellipse cx="70" cy="30" rx="45" ry="12"
+              <ellipse cx="70" cy="20" rx="55" ry="13"
                 fill={infrared ? irColor : (selectedObject === 'cup_shiny' ? '#9ca3af' : '#374151')} />
-              {/* Cup handle */}
+              {/* Cup handle - tall span to ensure vertical space >= 25% */}
               <path
-                d="M 115 50 Q 155 65 155 95 Q 155 125 115 135"
+                d="M 125 40 Q 175 55 175 105 Q 175 155 125 175"
                 fill="none"
                 stroke={infrared ? irColor : (selectedObject === 'cup_shiny' ? '#9ca3af' : '#374151')}
                 strokeWidth="10"
                 strokeLinecap="round"
               />
 
-              {/* Steam (visible mode only, hot objects) */}
+              {/* Steam (visible mode only, hot objects) - tall paths for vertical space */}
               {!infrared && objectTemp > 40 && [...Array(3)].map((_, i) => (
                 <path
                   key={i}
-                  d={`M ${50 + i * 20} 22 Q ${54 + i * 20} ${8 - Math.sin(animPhase + i) * 5} ${50 + i * 20} ${-5 - Math.sin(animPhase + i) * 5}`}
+                  d={`M ${50 + i * 20} 15 Q ${60 + i * 20} ${-20 - Math.sin(animPhase + i) * 25} ${50 + i * 20} ${-55 - Math.sin(animPhase + i) * 30}`}
                   fill="none"
                   stroke="#e2e8f0"
                   strokeWidth="2"
@@ -573,10 +588,14 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
                 );
               })}
 
+              {/* Temperature indicator circle - interactive, highlighted */}
+              <circle cx="70" cy="105" r="10" fill={irColor} stroke="#ffffff" strokeWidth="2" filter="url(#heatGlow)" opacity="0.85" />
+              <text x="70" y="109" textAnchor="middle" fill="#ffffff" fontSize="11" fontWeight="700">{props.actualTemp}°</text>
+
               {/* Low emissivity reflection indicator */}
               {infrared && props.emissivity < 0.5 && (
-                <text x="70" y="180" textAnchor="middle" fill="#60a5fa" fontSize="10">
-                  Reflecting ~{ambientTemp}C environment
+                <text x="70" y="210" textAnchor="middle" fill="#60a5fa" fontSize="11">
+                  ↩ Reflects {ambientTemp}°C room
                 </text>
               )}
             </g>
@@ -608,33 +627,25 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
           )}
         </g>
 
-        {/* Info panel */}
-        <g transform={`translate(15, ${height - 60})`}>
-          <rect x="0" y="0" width={width - 30} height="50" rx="6" fill="#111827" stroke="#334155" strokeWidth="1" />
-
-          <g transform="translate(15, 12)">
-            <text fill="#e2e8f0" fontSize="9" fontWeight="600">
-              {infrared ? 'APPARENT TEMP' : 'ACTUAL TEMP'}
-            </text>
-            <text y="18" fill={infrared ? '#f97316' : '#22d3ee'} fontSize="14" fontWeight="700">
-              {infrared ? `${apparentTemp.toFixed(1)}C` : `${props.actualTemp}C`}
-            </text>
-          </g>
-
-          <g transform="translate(120, 12)">
-            <text fill="#e2e8f0" fontSize="9" fontWeight="600">EMISSIVITY</text>
-            <text y="18" fill="#a855f7" fontSize="14" fontWeight="700">
-              e = {props.emissivity.toFixed(2)}
-            </text>
-          </g>
-
-          <g transform="translate(220, 12)">
-            <text fill="#e2e8f0" fontSize="9" fontWeight="600">STATUS</text>
-            <text y="18" fill={props.emissivity > 0.5 ? '#10b981' : '#eab308'} fontSize="11" fontWeight="600">
-              {props.emissivity > 0.5 ? 'High IR Emission' : 'Low Emission / Reflective'}
-            </text>
-          </g>
-        </g>
+        {/* Info panel - placed below main content area, using absolute coordinates */}
+        <rect x="8" y={height - 62} width={width - 16} height="55" rx="6" fill="#111827" stroke="#334155" strokeWidth="1" />
+        {/* Column 1: Temperature */}
+        <text x="20" y={height - 47} fill="rgba(148,163,184,0.7)" fontSize="11" fontWeight="600">
+          {infrared ? 'APPARENT' : 'ACTUAL TEMP'}
+        </text>
+        <text x="20" y={height - 24} fill={infrared ? '#f97316' : '#22d3ee'} fontSize="15" fontWeight="700">
+          {infrared ? `${apparentTemp.toFixed(1)}°C` : `${props.actualTemp}°C`}
+        </text>
+        {/* Column 2: Emissivity */}
+        <text x="163" y={height - 47} fill="rgba(148,163,184,0.7)" fontSize="11" fontWeight="600">EMISSIVITY</text>
+        <text x="163" y={height - 24} fill="#a855f7" fontSize="15" fontWeight="700">
+          ε = {props.emissivity.toFixed(2)}
+        </text>
+        {/* Column 3: Status */}
+        <text x="298" y={height - 47} fill="rgba(148,163,184,0.7)" fontSize="11" fontWeight="600">STATUS</text>
+        <text x="298" y={height - 24} fill={props.emissivity > 0.5 ? '#10b981' : '#eab308'} fontSize="11" fontWeight="600">
+          {props.emissivity > 0.5 ? '↑ Emitting' : '↓ Reflecting'}
+        </text>
       </svg>
     );
   };
@@ -680,7 +691,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
 
         {/* Header */}
         <rect x="0" y="0" width={width} height="35" fill={infrared ? '#0f172a' : '#111827'} rx="12" />
-        <text x={width/2} y="14" textAnchor="middle" fill="#e2e8f0" fontSize="10" fontWeight="600">
+        <text x={width/2} y="14" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="600">
           EMISSIVITY COMPARISON
         </text>
         <text x={width/2} y="28" textAnchor="middle" fill={infrared ? '#f97316' : '#22d3ee'} fontSize="12" fontWeight="600">
@@ -691,7 +702,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
             <circle cx="20" cy="17" r="4" fill="#ef4444">
               <animate attributeName="opacity" values="1;0.4;1" dur="1s" repeatCount="indefinite" />
             </circle>
-            <text x="30" y="21" fill="#ef4444" fontSize="9">IR</text>
+            <text x="30" y="21" fill="#ef4444" fontSize="11">IR</text>
           </>
         )}
 
@@ -705,7 +716,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
             <ellipse cx="58" cy="25" rx="38" ry="10"
               fill={infrared ? matteIRColor : '#374151'} />
             <path
-              d="M 96 40 Q 130 52 130 75 Q 130 98 96 108"
+              d="M 96 30 Q 140 50 140 80 Q 140 110 96 135"
               fill="none"
               stroke={infrared ? matteIRColor : '#374151'}
               strokeWidth="8"
@@ -717,7 +728,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
           {!infrared && [...Array(3)].map((_, i) => (
             <path
               key={i}
-              d={`M ${40 + i * 15} 18 Q ${43 + i * 15} ${6 - Math.sin(animPhase + i) * 4} ${40 + i * 15} ${-4 - Math.sin(animPhase + i) * 4}`}
+              d={`M ${40 + i * 15} 15 Q ${50 + i * 15} ${-20 - Math.sin(animPhase + i) * 30} ${40 + i * 15} ${-60 - Math.sin(animPhase + i) * 30}`}
               fill="none"
               stroke="#e2e8f0"
               strokeWidth="2"
@@ -746,8 +757,8 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
           {/* Label */}
           <rect x="8" y="130" width="100" height="35" rx="4" fill="#111827" stroke="#334155" strokeWidth="1" />
           <text x="58" y="147" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="600">Matte Black</text>
-          <text x="58" y="160" textAnchor="middle" fill={infrared ? '#f97316' : '#a855f7'} fontSize="10">
-            {infrared ? '~58C apparent' : 'Emissivity: 0.95'}
+          <text x="58" y="162" textAnchor="middle" fill={infrared ? '#f97316' : '#a855f7'} fontSize="11">
+            {infrared ? '~58°C apparent' : 'ε = 0.95'}
           </text>
         </g>
 
@@ -768,7 +779,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
             <ellipse cx="58" cy="25" rx="38" ry="10"
               fill={infrared ? shinyIRColor : '#9ca3af'} />
             <path
-              d="M 96 40 Q 130 52 130 75 Q 130 98 96 108"
+              d="M 96 30 Q 140 50 140 80 Q 140 110 96 135"
               fill="none"
               stroke={infrared ? shinyIRColor : '#9ca3af'}
               strokeWidth="8"
@@ -785,7 +796,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
           {!infrared && [...Array(3)].map((_, i) => (
             <path
               key={i}
-              d={`M ${40 + i * 15} 18 Q ${43 + i * 15} ${6 - Math.sin(animPhase + i) * 4} ${40 + i * 15} ${-4 - Math.sin(animPhase + i) * 4}`}
+              d={`M ${40 + i * 15} 15 Q ${50 + i * 15} ${-20 - Math.sin(animPhase + i) * 30} ${40 + i * 15} ${-60 - Math.sin(animPhase + i) * 30}`}
               fill="none"
               stroke="#e2e8f0"
               strokeWidth="2"
@@ -797,29 +808,37 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
           {/* Label */}
           <rect x="8" y="130" width="100" height="35" rx="4" fill="#111827" stroke="#334155" strokeWidth="1" />
           <text x="58" y="147" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="600">Polished Metal</text>
-          <text x="58" y="160" textAnchor="middle" fill={infrared ? '#60a5fa' : '#a855f7'} fontSize="10">
-            {infrared ? `~${shinyApparent.toFixed(0)}C apparent` : 'Emissivity: 0.10'}
+          <text x="58" y="162" textAnchor="middle" fill={infrared ? '#60a5fa' : '#a855f7'} fontSize="11">
+            {infrared ? `~${shinyApparent.toFixed(0)}°C apparent` : 'ε = 0.10'}
           </text>
         </g>
 
+        {/* Grid lines for twist visualization */}
+        {[60, 100, 140, 180].map(y => (
+          <line key={y} x1="0" y1={y} x2={width} y2={y} stroke="rgba(148,163,184,0.3)" strokeDasharray="4 4" strokeWidth="1" opacity="0.3" />
+        ))}
+        {/* Axis labels */}
+        <text x="6" y="45" fill="rgba(148,163,184,0.7)" fontSize="11">°C</text>
+        <text x={width/2} y={height - 3} textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11">Surface Type</text>
+
         {/* Bottom explanation */}
-        <g transform={`translate(15, ${height - 45})`}>
-          <rect x="0" y="0" width={width - 30} height="35" rx="6" fill="#111827" stroke={infrared ? '#f97316' : '#334155'} strokeWidth="1" />
+        <g transform={`translate(15, ${height - 50})`}>
+          <rect x="0" y="0" width={width - 30} height="40" rx="6" fill="#111827" stroke={infrared ? '#f97316' : '#334155'} strokeWidth="1" />
           {infrared ? (
             <>
-              <text x={(width-30)/2} y="14" textAnchor="middle" fill="#fbbf24" fontSize="10" fontWeight="600">
-                SAME ACTUAL TEMPERATURE - DIFFERENT IR READINGS!
+              <text x={(width-30)/2} y="15" textAnchor="middle" fill="#fbbf24" fontSize="11" fontWeight="600">
+                SAME TEMP — DIFFERENT IR READINGS!
               </text>
-              <text x={(width-30)/2} y="27" textAnchor="middle" fill="#e2e8f0" fontSize="9">
-                Shiny surface reflects the cold room (~{ambientTemp}C) instead of emitting its true 60C
+              <text x={(width-30)/2} y="30" textAnchor="middle" fill="#e2e8f0" fontSize="11">
+                Shiny reflects room (~{ambientTemp}°C) instead of emitting 60°C
               </text>
             </>
           ) : (
             <>
-              <text x={(width-30)/2} y="14" textAnchor="middle" fill="#22d3ee" fontSize="10" fontWeight="600">
-                Both cups at 60C - Steam rising from both
+              <text x={(width-30)/2} y="15" textAnchor="middle" fill="#22d3ee" fontSize="11" fontWeight="600">
+                Both cups at 60°C — Steam rising from both
               </text>
-              <text x={(width-30)/2} y="27" textAnchor="middle" fill="#e2e8f0" fontSize="9">
+              <text x={(width-30)/2} y="30" textAnchor="middle" fill="#e2e8f0" fontSize="11">
                 Switch to IR view to see how emissivity affects thermal camera readings
               </text>
             </>
@@ -830,31 +849,68 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
   };
 
   // Navigation bar component
-  const renderNavBar = () => (
-    <nav style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      height: '56px',
-      background: colors.bgSecondary,
-      borderBottom: `1px solid ${colors.border}`,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '0 16px',
-      zIndex: 1001,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <span style={{ fontSize: '24px' }}>🌡️</span>
-        <span style={{ color: '#e2e8f0', fontWeight: 600, fontSize: '16px' }}>Infrared Emissivity</span>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={{ color: '#e2e8f0', fontSize: '14px' }}>{phaseLabels[phase]}</span>
-        <span style={{ color: '#e2e8f0', fontSize: '14px' }}>({phaseOrder.indexOf(phase) + 1}/{phaseOrder.length})</span>
-      </div>
-    </nav>
-  );
+  const renderNavBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    return (
+      <nav style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '48px',
+        background: colors.bgSecondary,
+        borderBottom: `1px solid ${colors.border}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 16px',
+        zIndex: 1001,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {currentIndex > 0 && (
+            <button
+              onClick={() => goToPhase(phaseOrder[currentIndex - 1])}
+              aria-label="Back"
+              style={{
+                background: 'transparent',
+                border: `1px solid ${colors.border}`,
+                borderRadius: '6px',
+                color: colors.textSecondary,
+                padding: '4px 10px',
+                cursor: 'pointer',
+                fontSize: '13px',
+              }}
+            >
+              ← Back
+            </button>
+          )}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ color: '#e2e8f0', fontSize: '13px' }}>🌡️ Infrared Emissivity</span>
+          <span style={{ color: colors.textMuted, fontSize: '12px' }}>({currentIndex + 1}/{phaseOrder.length})</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {currentIndex < phaseOrder.length - 1 && (
+            <button
+              onClick={() => goToPhase(phaseOrder[currentIndex + 1])}
+              aria-label="Next"
+              style={{
+                background: colors.accent,
+                border: 'none',
+                borderRadius: '6px',
+                color: 'white',
+                padding: '4px 10px',
+                cursor: 'pointer',
+                fontSize: '13px',
+              }}
+            >
+              Next →
+            </button>
+          )}
+        </div>
+      </nav>
+    );
+  };
 
   // Progress bar component
   const renderProgressBar = () => (
@@ -933,7 +989,8 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
-        paddingTop: '80px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
         textAlign: 'center',
         overflowY: 'auto',
       }}>
@@ -973,7 +1030,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
             "A polished metal cup filled with hot coffee can appear cold on a thermal camera, while your hand appears to glow brightly. Same room, vastly different IR readings. Why?"
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+          <p className="text-muted" style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', marginTop: '8px' }}>
             - Thermal Imaging Principles
           </p>
         </div>
@@ -1003,7 +1060,8 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingTop: '80px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
         overflowY: 'auto',
       }}>
         {renderNavBar()}
@@ -1026,35 +1084,58 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
             You point a thermal camera at your hand. What determines how bright it appears on the camera?
           </h2>
 
-          {/* Simple diagram */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>37C</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Body Temperature</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>-&gt;</div>
-              <div style={{
-                background: colors.accent + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.accent}`,
-              }}>
-                <div style={{ fontSize: '24px', color: colors.accent }}>?</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>IR Camera</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>-&gt;</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>???</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Display</p>
-              </div>
-            </div>
+          {/* Predict SVG diagram */}
+          <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'center' }}>
+            <svg width="460" height="220" viewBox="0 0 460 220" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <defs>
+                <filter id="predictGlow">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+                <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L8,3 z" fill="#94a3b8" />
+                </marker>
+              </defs>
+              {/* Grid lines */}
+              {[40, 80, 120, 160, 200].map(y => (
+                <line key={y} x1="10" y1={y} x2="450" y2={y} stroke="rgba(148,163,184,0.3)" strokeDasharray="4 4" strokeWidth="1" opacity="0.3" />
+              ))}
+              {/* Y axis label */}
+              <text x="14" y="14" fill="rgba(148,163,184,0.7)" fontSize="11">IR Output</text>
+              {/* X axis */}
+              <line x1="20" y1="200" x2="440" y2="200" stroke="#334155" strokeWidth="1" />
+              <text x="230" y="216" textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11">Surface Properties</text>
+
+              {/* Hand / body */}
+              <ellipse cx="80" cy="120" rx="40" ry="55" fill="#e8b4a0" filter="url(#predictGlow)" />
+              <ellipse cx="80" cy="85" rx="8" ry="20" fill="#e8b4a0" />
+              <ellipse cx="93" cy="80" rx="7" ry="22" fill="#e8b4a0" />
+              <ellipse cx="106" cy="83" rx="7" ry="20" fill="#e8b4a0" />
+              <text x="80" y="188" textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="600">Hand 37°C</text>
+              <text x="80" y="202" textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11">High emissivity</text>
+
+              {/* Arrow */}
+              <line x1="140" y1="110" x2="200" y2="110" stroke="#94a3b8" strokeWidth="2" markerEnd="url(#arrow)" />
+              <text x="170" y="103" textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11">emits IR</text>
+
+              {/* Camera */}
+              <rect x="200" y="85" width="60" height="50" rx="6" fill="#1e293b" stroke={colors.accent} strokeWidth="2" />
+              <circle cx="230" cy="110" r="14" fill="#0f172a" stroke={colors.accent} strokeWidth="2" />
+              <circle cx="230" cy="110" r="8" fill="#1e3a5f" />
+              <text x="230" y="148" textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="600">IR Camera</text>
+
+              {/* Arrow 2 */}
+              <line x1="260" y1="110" x2="320" y2="110" stroke="#94a3b8" strokeWidth="2" markerEnd="url(#arrow)" />
+              <text x="290" y="103" textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11">detects</text>
+
+              {/* Display */}
+              <rect x="320" y="75" width="100" height="70" rx="6" fill="#0f172a" stroke="#f97316" strokeWidth="2" />
+              <rect x="330" y="83" width="80" height="54" rx="3" fill="#1e293b" />
+              <ellipse cx="370" cy="110" rx="25" ry="20" fill="#f97316" opacity="0.8" />
+              <text x="370" y="115" textAnchor="middle" fill="white" fontSize="14" fontWeight="700">37°</text>
+              <text x="370" y="156" textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="600">Display</text>
+              <text x="370" y="170" textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11">???</text>
+            </svg>
           </div>
 
           {/* Options */}
@@ -1115,13 +1196,15 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        paddingTop: '48px',
+        paddingBottom: '100px',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Thermal Camera Simulator
@@ -1175,28 +1258,32 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
               </div>
             </div>
 
-            {/* Temperature slider for cups */}
-            {(selectedObject === 'cup_matte' || selectedObject === 'cup_shiny') && (
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Cup Temperature</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{objectTemp}C</span>
-                </div>
-                <input
-                  type="range"
-                  min="20"
-                  max="80"
-                  value={objectTemp}
-                  onChange={(e) => setObjectTemp(parseInt(e.target.value))}
-                  style={{
-                    width: '100%',
-                    height: '8px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                  }}
-                />
+            {/* Temperature slider - always enabled */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Object Temperature</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{objectTemp}°C</span>
               </div>
-            )}
+              <input
+                type="range"
+                min="5"
+                max="90"
+                value={objectTemp}
+                onChange={(e) => { setObjectTemp(parseInt(e.target.value)); }}
+                style={{
+                  width: '100%',
+                  height: '20px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6',
+                }}
+              />
+              <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', margin: '4px 0 0', fontSize: '12px' }}>
+                Watch how temperature changes affect infrared emission. Higher temperature → more IR radiation emitted.
+              </p>
+            </div>
 
             {/* View mode toggle */}
             <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
@@ -1233,18 +1320,34 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
             </div>
           </div>
 
-          {/* Discovery prompt */}
+          {/* Observation guidance - always visible */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '14px',
+            marginBottom: '16px',
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: '0 0 4px', fontWeight: 600 }}>
+              🔍 What to watch for:
+            </p>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              Compare the Normal View vs IR Camera view for each object. Notice how the <strong style={{ color: colors.textPrimary }}>Polished Metal Cup</strong> appears much cooler on the IR camera than its actual temperature — this is the emissivity effect. Surface finish determines how much infrared radiation is emitted vs reflected.
+            </p>
+          </div>
+
+          {/* Discovery prompt for shiny cup */}
           {viewMode === 'infrared' && selectedObject === 'cup_shiny' && (
             <div style={{
               background: `${colors.warning}22`,
               border: `1px solid ${colors.warning}`,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '16px',
               textAlign: 'center',
             }}>
               <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
-                Notice: The shiny cup appears cooler than its actual temperature! Why might that be?
+                ⚠️ Notice: The shiny cup appears cooler than its actual temperature! Why might that be?
               </p>
             </div>
           )}
@@ -1269,6 +1372,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
             Understand the Physics
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -1282,7 +1386,8 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingTop: '80px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
         overflowY: 'auto',
       }}>
         {renderNavBar()}
@@ -1360,7 +1465,8 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingTop: '80px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
         overflowY: 'auto',
       }}>
         {renderNavBar()}
@@ -1383,26 +1489,55 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
             You fill TWO cups with 60C hot water. One is matte black, one is polished metal. On a thermal camera:
           </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '40px' }}>
-              <div>
-                <div style={{ fontSize: '48px' }}>☕</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Matte Black Cup</p>
-                <p style={{ ...typo.small, color: colors.accent }}>60C water</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
-              <div>
-                <div style={{ fontSize: '48px' }}>🥤</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Polished Metal Cup</p>
-                <p style={{ ...typo.small, color: colors.accent }}>60C water</p>
-              </div>
-            </div>
+          {/* Twist predict SVG - static, no sliders */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <svg width="460" height="220" viewBox="0 0 460 220" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <defs>
+                <filter id="twistPredictGlowA">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+                <linearGradient id="tpMatteGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#374151" />
+                  <stop offset="100%" stopColor="#111827" />
+                </linearGradient>
+                <linearGradient id="tpMetalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#9ca3af" />
+                  <stop offset="50%" stopColor="#e5e7eb" />
+                  <stop offset="100%" stopColor="#6b7280" />
+                </linearGradient>
+              </defs>
+              {/* Background */}
+              <rect width="460" height="220" fill="#0f172a" rx="12" />
+              {/* Grid lines */}
+              {[40, 80, 120, 160, 200].map(y => (
+                <line key={y} x1="0" y1={y} x2="460" y2={y} stroke="rgba(148,163,184,0.3)" strokeDasharray="4 4" strokeWidth="1" opacity="0.3" />
+              ))}
+              {/* Y axis - Temperature */}
+              <text x="6" y="36" fill="rgba(148,163,184,0.7)" fontSize="11">Temperature</text>
+              {/* Title */}
+              <text x="230" y="18" textAnchor="middle" fill="#e2e8f0" fontSize="13" fontWeight="700">Both Cups at 60°C</text>
+              {/* VS Divider */}
+              <line x1="230" y1="30" x2="230" y2="190" stroke="#334155" strokeDasharray="6 4" strokeWidth="1" />
+              <text x="230" y="120" textAnchor="middle" fill="#fbbf24" fontSize="18" fontWeight="800">vs</text>
+              {/* Matte cup left */}
+              <path d="M 70 60 L 78 155 L 138 155 L 146 60 Z" fill="url(#tpMatteGrad)" />
+              <ellipse cx="108" cy="60" rx="38" ry="10" fill="#374151" />
+              <path d="M 146 75 Q 170 90 170 110 Q 170 130 146 145" fill="none" stroke="#374151" strokeWidth="8" strokeLinecap="round" />
+              {/* Temperature label matte */}
+              <text x="108" y="178" textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="600">Matte Black</text>
+              <text x="108" y="194" textAnchor="middle" fill="#f97316" fontSize="11">ε = 0.95</text>
+              <text x="108" y="210" textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11">Actual: 60°C</text>
+              {/* Polished metal cup right */}
+              <path d="M 310 60 L 318 155 L 378 155 L 386 60 Z" fill="url(#tpMetalGrad)" stroke="#e5e7eb" strokeWidth="1" />
+              <ellipse cx="348" cy="60" rx="38" ry="10" fill="#9ca3af" />
+              <path d="M 386 75 Q 410 90 410 110 Q 410 130 386 145" fill="none" stroke="#9ca3af" strokeWidth="8" strokeLinecap="round" />
+              <ellipse cx="330" cy="105" rx="7" ry="25" fill="rgba(255,255,255,0.3)" />
+              {/* Temperature label metal */}
+              <text x="348" y="178" textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="600">Polished Metal</text>
+              <text x="348" y="194" textAnchor="middle" fill="#60a5fa" fontSize="11">ε = 0.10</text>
+              <text x="348" y="210" textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11">Actual: 60°C</text>
+            </svg>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1462,7 +1597,8 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingTop: '80px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
         overflowY: 'auto',
       }}>
         {renderNavBar()}
@@ -1556,7 +1692,8 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingTop: '80px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
         overflowY: 'auto',
       }}>
         {renderNavBar()}
@@ -1629,7 +1766,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
               border: `1px solid ${colors.success}33`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>Pro Tip</span>
+                <span style={{ fontSize: '24px' }}>💡</span>
                 <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Accurate Readings</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
@@ -1662,7 +1799,8 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingTop: '80px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
         overflowY: 'auto',
       }}>
         {renderNavBar()}
@@ -1716,7 +1854,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
                     fontSize: '12px',
                     lineHeight: '18px',
                   }}>
-                    OK
+                    ✓
                   </div>
                 )}
                 <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
@@ -1761,13 +1899,31 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
               </p>
             </div>
 
+            {/* How it works */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            {/* Stats comparison - flex row */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'row',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
+                  flex: 1,
                   background: colors.bgSecondary,
                   borderRadius: '8px',
                   padding: '12px',
@@ -1778,6 +1934,21 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
                   <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
                 </div>
               ))}
+            </div>
+
+            {/* Future impact */}
+            <div style={{
+              background: `${app.color}11`,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '8px',
+            }}>
+              <p style={{ ...typo.small, color: app.color, margin: 0, fontWeight: 600 }}>
+                🔮 Future Impact:
+              </p>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: '4px 0 0' }}>
+                {app.futureImpact}
+              </p>
             </div>
 
             {/* Got It button for current app */}
@@ -1841,7 +2012,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
               fontSize: '80px',
               marginBottom: '24px',
             }}>
-              {passed ? 'Trophy' : 'Book'}
+              {passed ? '🏆' : '📖'}
             </div>
             <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
               {passed ? 'Excellent!' : 'Keep Learning!'}
@@ -2068,7 +2239,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
           marginBottom: '24px',
           animation: 'bounce 1s infinite',
         }}>
-          Trophy
+          🏆
         </div>
         <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
@@ -2099,7 +2270,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
               'Real-world thermal imaging applications',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: colors.success }}>OK</span>
+                <span style={{ color: colors.success }}>✓</span>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
               </div>
             ))}

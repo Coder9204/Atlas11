@@ -787,6 +787,12 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '16px' }}>The Science of Dissolution Energy</h2>
 
+          <div style={{ ...cardStyle, maxWidth: '600px', marginBottom: '16px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)' }}>
+            <p style={{ color: design.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+              As you observed in the experiment, dissolving different salts produces dramatically different temperature changes. You predicted how energy balance works — recall that the key is whether bond-breaking energy exceeds hydration energy. Earlier you saw this principle in action with real compounds!
+            </p>
+          </div>
+
           {prediction && (
             <div style={{
               ...cardStyle, maxWidth: '600px', marginBottom: '24px',

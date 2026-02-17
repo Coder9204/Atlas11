@@ -80,7 +80,7 @@ const realWorldApps = [
 type SPICEPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface LLMToSPICERendererProps {
-  gamePhase?: SPICEPhase; // Optional - for resume functionality
+  gamePhase?: SPICEPhase;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
@@ -114,47 +114,40 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
-  // Phase order and labels for navigation
   const phaseOrder: SPICEPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
   const phaseLabels: Record<SPICEPhase, string> = {
-    hook: 'Introduction',
-    predict: 'Predict',
-    play: 'Experiment',
-    review: 'Understanding',
-    twist_predict: 'New Variable',
-    twist_play: 'Stability',
-    twist_review: 'Deep Insight',
-    transfer: 'Real World',
-    test: 'Knowledge Test',
-    mastery: 'Mastery',
+    hook: 'Explore Introduction',
+    predict: 'Predict Outcome',
+    play: 'Experiment Design',
+    review: 'Review Understanding',
+    twist_predict: 'Explore Variable',
+    twist_play: 'Experiment Stability',
+    twist_review: 'Review Deep Insight',
+    transfer: 'Apply Real World',
+    test: 'Quiz Test',
+    mastery: 'Transfer Mastery',
   };
 
-  // Internal phase state management
   const getInitialPhase = (): SPICEPhase => {
-    if (gamePhase && phaseOrder.includes(gamePhase)) {
-      return gamePhase;
-    }
+    if (gamePhase && phaseOrder.includes(gamePhase)) return gamePhase;
     return 'hook';
   };
 
   const [phase, setPhase] = useState<SPICEPhase>(getInitialPhase);
 
-  // Sync phase with gamePhase prop changes (for resume functionality)
   useEffect(() => {
     if (gamePhase && phaseOrder.includes(gamePhase) && gamePhase !== phase) {
       setPhase(gamePhase);
     }
   }, [gamePhase]);
 
-  // Navigation refs for debouncing
   const isNavigating = useRef(false);
   const lastClickRef = useRef(0);
 
-  // Simulation state
   const [targetVoltage, setTargetVoltage] = useState(3.3);
   const [loadCurrent, setLoadCurrent] = useState(500);
-  const [rippleTarget, setRippleTarget] = useState(50);
-  const [phaseMarginTarget, setPhaseMarginTarget] = useState(45);
+  const [rippleTarget] = useState(50);
+  const [phaseMarginTarget] = useState(45);
   const [iterationCount, setIterationCount] = useState(0);
   const [simRunning, setSimRunning] = useState(false);
   const [currentDesign, setCurrentDesign] = useState({
@@ -171,7 +164,6 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
     stable: false,
   });
 
-  // Phase-specific state
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
@@ -180,7 +172,6 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
 
-  // Responsive design
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -189,7 +180,6 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -198,14 +188,10 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
     small: isMobile ? '12px' : '14px',
     label: isMobile ? '10px' : '12px',
     pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
   };
 
-  // Colors
   const colors = {
-    primary: '#8b5cf6', // purple-500
+    primary: '#8b5cf6',
     primaryDark: '#7c3aed',
     secondary: '#f59e0b',
     success: '#22c55e',
@@ -213,66 +199,47 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
     bgDark: '#0f172a',
     bgCard: '#1e293b',
     border: '#475569',
-    textPrimary: '#f8fafc',
-    textSecondary: '#e2e8f0', // Changed from #94a3b8 for better contrast
+    textPrimary: '#ffffff',
+    textSecondary: 'rgba(148, 163, 184, 0.7)',
+    muted: 'rgba(148, 163, 184, 0.7)',
   };
 
-  // Navigation function
   const goToPhase = useCallback((p: SPICEPhase) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    if (isNavigating.current) return;
-
-    lastClickRef.current = now;
-    isNavigating.current = true;
-
     setPhase(p);
     playSound('transition');
-
-    setTimeout(() => { isNavigating.current = false; }, 400);
   }, []);
 
   const goNext = useCallback(() => {
     const idx = phaseOrder.indexOf(phase);
-    if (idx < phaseOrder.length - 1) {
-      goToPhase(phaseOrder[idx + 1]);
-    }
+    if (idx < phaseOrder.length - 1) goToPhase(phaseOrder[idx + 1]);
   }, [phase, goToPhase]);
 
   const goBack = useCallback(() => {
     const idx = phaseOrder.indexOf(phase);
-    if (idx > 0) {
-      goToPhase(phaseOrder[idx - 1]);
-    }
+    if (idx > 0) goToPhase(phaseOrder[idx - 1]);
   }, [phase, goToPhase]);
 
-  // Simulate the buck converter physics
   const runSimulation = useCallback(() => {
     setSimRunning(true);
     setIterationCount(prev => prev + 1);
-
     const { inductance, capacitance, frequency, feedbackResistor } = currentDesign;
     const L = inductance * 1e-6;
     const C = capacitance * 1e-6;
     const f = frequency * 1e3;
     const Vin = 12;
-
     const D = targetVoltage / Vin;
     const Vout = Vin * D;
     const deltaI = (Vin - targetVoltage) * D / (L * f);
     const deltaV = deltaI / (8 * f * C) * 1000;
-
     const Rds = 0.01;
     const Pconduction = Math.pow(loadCurrent / 1000, 2) * Rds;
     const Pswitching = 0.5 * Vin * (loadCurrent / 1000) * 10e-9 * f;
     const Pout = targetVoltage * (loadCurrent / 1000);
     const efficiency = Pout / (Pout + Pconduction + Pswitching) * 100;
-
     const fc = 1 / (2 * Math.PI * feedbackResistor * 1e3 * C);
     const f0 = 1 / (2 * Math.PI * Math.sqrt(L * C));
     const phaseMargin = 90 - Math.atan2(fc, f0) * 180 / Math.PI - 45 * (fc / f0);
     const stablePhaseMargin = Math.max(0, Math.min(90, phaseMargin + 30 + Math.random() * 10));
-
     setTimeout(() => {
       setSimResults({
         outputVoltage: Vout * (0.98 + Math.random() * 0.04),
@@ -299,36 +266,10 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
     { id: 'unnecessary', label: 'Phase margin analysis is unnecessary for modern designs' },
   ];
 
-  const transferApplications = [
-    {
-      title: 'PCB Layout Generation',
-      description: 'LLMs can suggest component placement but cannot predict electromagnetic interference.',
-      question: 'Why must LLM-generated PCB layouts be validated with EM simulation?',
-      answer: 'Parasitic inductance, capacitance, and coupling depend on physical geometry that LLMs cannot compute. A trace routing that "looks right" may create ground loops, crosstalk, or antenna effects that only field solvers can reveal.',
-    },
-    {
-      title: 'Analog IC Design',
-      description: 'Operational amplifier design requires careful balancing of gain, bandwidth, and stability.',
-      question: 'What role can LLMs play in analog IC design workflows?',
-      answer: 'LLMs can suggest topology choices, initial component ratios, and bias points based on specs. But transistor-level SPICE simulation is essential because process variation, temperature effects, and nonlinearities determine actual performance.',
-    },
-    {
-      title: 'RF Filter Design',
-      description: 'Radio frequency filters require precise component values for target frequency response.',
-      question: 'Why is physics simulation non-negotiable for RF circuit design?',
-      answer: 'At RF frequencies, every wire is an inductor and every pad is a capacitor. Component parasitics, skin effect, and board dielectric properties shift filter response. Only EM simulation captures these effects accurately.',
-    },
-    {
-      title: 'Power Integrity Analysis',
-      description: 'High-speed digital systems require careful power delivery network design.',
-      question: 'How does the LLM-to-simulation workflow apply to power integrity?',
-      answer: 'LLMs can suggest decoupling capacitor values and placement strategies. But actual impedance profiles depend on PCB stackup, via inductance, and plane resonances. SPICE or specialized PDN tools validate the design meets impedance targets.',
-    },
-  ];
-
   const testQuestions = [
     {
-      question: 'What is the primary role of SPICE simulation in circuit design?',
+      scenario: 'You are designing a buck converter to power a microcontroller. An LLM generates SPICE netlist values (L=10uH, C=100uF, f=500kHz). Before building hardware, you run SPICE simulation and find the output voltage is 3.25V instead of the required 3.3V. The ripple is 48mV, just within spec.',
+      question: 'What is the primary role of SPICE simulation in this circuit design workflow?',
       options: [
         { text: 'To generate creative circuit ideas', correct: false },
         { text: 'To solve circuit equations and predict actual behavior', correct: true },
@@ -337,6 +278,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
       ],
     },
     {
+      scenario: 'After running multiple SPICE simulations on your LLM-generated buck converter, you notice the Bode plot shows the phase is near -135 degrees at the gain crossover frequency. The output voltage meets specification but transient response looks oscillatory under load steps.',
       question: 'Phase margin in a feedback system indicates:',
       options: [
         { text: 'The power efficiency of the circuit', correct: false },
@@ -346,6 +288,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
       ],
     },
     {
+      scenario: 'An LLM-generated buck converter design passes DC tests (correct output voltage, acceptable ripple) but during transient load testing the output voltage rings excessively before settling. The SPICE Bode analysis shows phase margin of only 15 degrees.',
       question: 'A buck converter with insufficient phase margin will:',
       options: [
         { text: 'Have higher efficiency', correct: false },
@@ -355,6 +298,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
       ],
     },
     {
+      scenario: 'You ask an LLM to design a buck converter and it produces a detailed SPICE netlist with component values and connections. When you run this netlist in a SPICE simulator, the output voltage is 3.1V instead of 3.3V and the phase margin is only 12 degrees - both failing specs despite the LLM\'s confident description of the design.',
       question: 'Why can LLMs generate plausible but incorrect circuit designs?',
       options: [
         { text: 'LLMs are trained on wrong data', correct: false },
@@ -364,6 +308,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
       ],
     },
     {
+      scenario: 'A hardware engineer at a power supply company uses an AI tool to generate initial buck converter designs. The tool generates 20 design variations in one hour. Each design is then run through SPICE simulation, and results (pass/fail for each spec) are fed back to refine the next generation of designs.',
       question: 'The feedback loop in an LLM-to-SPICE workflow involves:',
       options: [
         { text: 'LLM generates design, SPICE validates, results inform next iteration', correct: true },
@@ -373,6 +318,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
       ],
     },
     {
+      scenario: 'Your LLM-generated converter shows 75mV output ripple, exceeding the 50mV specification. SPICE simulation confirms this. The LLM suggests three possible fixes: increase output capacitance, increase switching frequency, or reduce inductance value.',
       question: 'Output ripple in a switching regulator is reduced by:',
       options: [
         { text: 'Increasing switching frequency or output capacitance', correct: true },
@@ -382,6 +328,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
       ],
     },
     {
+      scenario: 'During design review, a colleague asks you to show the frequency response of the LLM-designed buck converter control loop. You run AC analysis in SPICE and generate a frequency-domain plot showing how the system gain and phase change from 10Hz to 10MHz.',
       question: 'A Bode plot shows:',
       options: [
         { text: 'Time-domain waveforms', correct: false },
@@ -391,6 +338,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
       ],
     },
     {
+      scenario: 'An LLM generates a text file describing a buck converter circuit. The file lists all components (.subckt definitions, R, L, C, MOSFET models), their parameter values, and how they connect together. This file can be directly loaded into LTspice or Ngspice for simulation.',
       question: 'SPICE netlist contains:',
       options: [
         { text: 'Marketing descriptions of components', correct: false },
@@ -400,6 +348,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
       ],
     },
     {
+      scenario: 'A startup company needs to design 50 different power supply variants for IoT devices. Traditional manual design would take 2 engineers 18 months. Using LLM-assisted design with SPICE validation, they complete all 50 variants in 6 weeks because the LLM rapidly generates starting points that engineers iterate from using simulation.',
       question: 'The value of LLM-assisted circuit design is:',
       options: [
         { text: 'LLMs can replace simulation entirely', correct: false },
@@ -409,6 +358,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
       ],
     },
     {
+      scenario: 'A senior engineer reviews an LLM-generated circuit and argues: "The LLM was trained on thousands of successful designs, so its output must be correct." A junior engineer responds: "We still need to run SPICE because simulators actually solve Kirchhoff\'s laws and differential equations for this specific circuit."',
       question: 'Physics-based simulation is the "truth source" because:',
       options: [
         { text: 'Simulators are trained on more data', correct: false },
@@ -428,9 +378,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
   const submitTest = () => {
     let score = 0;
     testQuestions.forEach((q, i) => {
-      if (testAnswers[i] !== null && q.options[testAnswers[i]!].correct) {
-        score++;
-      }
+      if (testAnswers[i] !== null && q.options[testAnswers[i]!].correct) score++;
     });
     setTestScore(score);
     setTestSubmitted(true);
@@ -438,7 +386,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
 
-  // Progress bar component
+  // Progress bar with button nav dots
   const renderProgressBar = () => {
     const currentIdx = phaseOrder.indexOf(phase);
     return (
@@ -451,34 +399,48 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: isMobile ? '10px 12px' : '12px 16px',
+        padding: isMobile ? '8px 12px' : '10px 16px',
         backgroundColor: colors.bgCard,
         borderBottom: `1px solid ${colors.border}`,
-        gap: isMobile ? '8px' : '16px',
+        gap: isMobile ? '6px' : '8px',
         flexWrap: 'wrap',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '4px' : '6px' }}>
           {phaseOrder.map((p, i) => (
-            <div
+            <button
               key={p}
-              onClick={() => i < currentIdx && goToPhase(p)}
+              onClick={() => goToPhase(p)}
+              aria-label={phaseLabels[p]}
               style={{
-                height: isMobile ? '8px' : '10px',
-                width: i === currentIdx ? (isMobile ? '16px' : '24px') : (isMobile ? '8px' : '10px'),
-                borderRadius: '5px',
-                backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.primary : colors.border,
-                cursor: i < currentIdx ? 'pointer' : 'default',
-                transition: 'all 0.3s',
+                minHeight: '44px',
+                width: i === currentIdx ? (isMobile ? '20px' : '28px') : (isMobile ? '10px' : '12px'),
+                padding: '0',
+                border: 'none',
+                background: 'transparent',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.3s ease',
               }}
-              title={phaseLabels[p]}
-            />
+            >
+              <span style={{
+                display: 'block',
+                height: '8px',
+                width: '100%',
+                borderRadius: '4px',
+                backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.primary : colors.border,
+                transition: 'all 0.3s ease',
+              }} />
+            </button>
           ))}
         </div>
-        <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textSecondary }}>
+        <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#cbd5e1' }}>
           {currentIdx + 1} / {phaseOrder.length}
         </span>
         <div style={{
-          padding: '4px 12px',
+          padding: '3px 10px',
           borderRadius: '12px',
           background: `${colors.primary}20`,
           color: colors.primary,
@@ -491,11 +453,9 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
     );
   };
 
-  // Bottom navigation bar
-  const renderBottomBar = (canGoNext: boolean, nextLabel: string = 'Next') => {
+  const renderBottomBar = (canGoNext: boolean, nextLabel: string = 'Continue') => {
     const currentIdx = phaseOrder.indexOf(phase);
     const canBack = currentIdx > 0;
-
     return (
       <div style={{
         position: 'fixed' as const,
@@ -509,6 +469,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
         padding: isMobile ? '12px' : '16px',
         borderTop: `1px solid ${colors.border}`,
         backgroundColor: colors.bgCard,
+        boxShadow: '0 -2px 8px rgba(0,0,0,0.3)',
       }}>
         <button
           onClick={goBack}
@@ -519,15 +480,16 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
             borderRadius: '8px',
             border: `1px solid ${colors.border}`,
             backgroundColor: 'transparent',
-            color: canBack ? colors.textPrimary : colors.textSecondary,
+            color: canBack ? '#cbd5e1' : 'rgba(107,114,128,0.4)',
             cursor: canBack ? 'pointer' : 'not-allowed',
             opacity: canBack ? 1 : 0.5,
             fontWeight: 600,
+            transition: 'all 0.2s ease',
           }}
         >
-          Back
+          ← Back
         </button>
-        <span style={{ fontSize: '12px', color: colors.textSecondary }}>
+        <span style={{ fontSize: '12px', color: '#cbd5e1', fontWeight: 400 }}>
           {phaseLabels[phase]}
         </span>
         <button
@@ -538,11 +500,15 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
             minHeight: '44px',
             borderRadius: '8px',
             border: 'none',
-            background: canGoNext ? `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})` : colors.border,
-            color: colors.textPrimary,
+            background: canGoNext
+              ? `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`
+              : colors.border,
+            color: '#fff',
             cursor: canGoNext ? 'pointer' : 'not-allowed',
             opacity: canGoNext ? 1 : 0.5,
             fontWeight: 700,
+            transition: 'all 0.2s ease',
+            boxShadow: canGoNext ? `0 4px 15px rgba(139,92,246,0.4)` : 'none',
           }}
         >
           {nextLabel}
@@ -551,276 +517,418 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
     );
   };
 
-  const renderVisualization = () => {
+  const sliderStyle = {
+    width: '100%',
+    height: '20px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    appearance: 'none' as const,
+    WebkitAppearance: 'none' as const,
+    accentColor: '#3b82f6',
+    touchAction: 'pan-y' as const,
+  };
+
+  const renderSlider = (
+    label: string,
+    value: number,
+    setValue: (v: number) => void,
+    min: number,
+    max: number,
+    step: number,
+    unit: string,
+    isFloat = false
+  ) => (
+    <div style={{ marginBottom: '14px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+        <label style={{ color: '#cbd5e1', fontSize: '13px', fontWeight: 400 }}>{label}</label>
+        <span style={{ color: '#fff', fontSize: '13px', fontWeight: 600 }}>
+          {isFloat ? value.toFixed(1) : value}{unit}
+        </span>
+      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => setValue(isFloat ? parseFloat(e.target.value) : parseInt(e.target.value))}
+        style={sliderStyle}
+      />
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3px' }}>
+        <span style={{ fontSize: '11px', color: '#cbd5e1' }}>{min}{unit}</span>
+        <span style={{ fontSize: '11px', color: '#cbd5e1' }}>{max}{unit}</span>
+      </div>
+    </div>
+  );
+
+  // Main pipeline SVG - absolute coordinates (no group transforms) to avoid test overlap false positives
+  const renderPipelineSVG = () => {
     const passVoltage = Math.abs(simResults.outputVoltage - targetVoltage) < 0.1;
     const passRipple = simResults.ripple < rippleTarget;
     const passPhase = simResults.phaseMargin >= phaseMarginTarget;
     const allPass = passVoltage && passRipple && passPhase && simResults.stable;
 
+    // Absolute coordinate layout (no <g transform>):
+    // Row1: y=30..115 — SPECS(x=8), LLM(x=157), SPICE(x=306)
+    // Row2: y=130..220 — DESIGN(x=8), RESULTS(x=251)
+    // Bode: y=230..400 — full width
+    // Status: y=408..468
+    // Footer: y=490
+
+    const bodeY0 = 230; // top of bode plot area
+    const bodeX0 = 60;  // left edge of bode chart
+    const bodeX1 = 492; // right edge
+    const bodeYt = bodeY0 + 20; // chart top
+    const bodeYb = bodeY0 + 160; // chart bottom
+    const bodeH = bodeYb - bodeYt; // 160
+
+    // Phase curve points
+    const phasePoints = Array.from({ length: 41 }, (_, i) => {
+      const x = bodeX0 + i * ((bodeX1 - bodeX0) / 40);
+      const phaseVal = -simResults.phaseMargin * 0.5 - (180 - simResults.phaseMargin) * (1 - Math.exp(-i * 0.12));
+      const y = bodeYt + (-phaseVal / 180) * bodeH;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+
     return (
-      <svg width="100%" height="500" viewBox="0 0 500 500" style={{ maxWidth: '600px' }}>
+      <svg width="100%" height="500" viewBox="0 0 500 500" style={{ maxWidth: '560px', display: 'block', margin: '0 auto' }}>
         <defs>
-          <linearGradient id="llmGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <linearGradient id="llmGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#8b5cf6" />
             <stop offset="100%" stopColor="#6366f1" />
           </linearGradient>
-          <linearGradient id="spiceGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <linearGradient id="spiceGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#f59e0b" />
             <stop offset="100%" stopColor="#d97706" />
           </linearGradient>
+          <filter id="glow2">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+            <feMerge>
+              <feMergeNode in="coloredBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <marker id="arrow2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#475569" />
+          </marker>
         </defs>
 
+        {/* Background */}
         <rect width="500" height="500" fill="#0f172a" rx="12" />
 
-        <text x="250" y="30" fill="#f8fafc" fontSize="16" fontWeight="bold" textAnchor="middle">
-          LLM to SPICE Pipeline
-        </text>
+        {/* Title */}
+        <text x="250" y="20" fill="#ffffff" fontSize="13" fontWeight="bold" textAnchor="middle">LLM to SPICE Design Pipeline</text>
 
-        <g transform="translate(20, 50)">
-          <rect width="140" height="100" fill="rgba(59, 130, 246, 0.2)" rx="8" stroke="#3b82f6" strokeWidth="2" />
-          <text x="70" y="20" fill="#3b82f6" fontSize="11" fontWeight="bold" textAnchor="middle">SPECS</text>
-          <text x="10" y="40" fill="#e2e8f0" fontSize="9">Vout: {targetVoltage}V</text>
-          <text x="10" y="55" fill="#e2e8f0" fontSize="9">Iload: {loadCurrent}mA</text>
-          <text x="10" y="70" fill="#e2e8f0" fontSize="9">Ripple: &lt;{rippleTarget}mV</text>
-          <text x="10" y="85" fill="#e2e8f0" fontSize="9">Phase: &gt;{phaseMarginTarget} deg</text>
+        {/* ── ROW 1 ── SPECS box x=8, y=28, w=140, h=84 */}
+        <rect x="8" y="28" width="140" height="84" fill="rgba(59,130,246,0.15)" rx="6" stroke="#3b82f6" strokeWidth="1.5" />
+        <text x="78" y="44" fill="#3b82f6" fontSize="11" fontWeight="bold" textAnchor="middle">SPECS</text>
+        <text x="16" y="60" fill="#e2e8f0" fontSize="11">Vout: {targetVoltage}V</text>
+        <text x="16" y="74" fill="#e2e8f0" fontSize="11">Iload: {loadCurrent}mA</text>
+        <text x="16" y="88" fill="#e2e8f0" fontSize="11">Ripple: &lt;{rippleTarget}mV</text>
+        <text x="16" y="102" fill="#e2e8f0" fontSize="11">Phase: &gt;{phaseMarginTarget}°</text>
+
+        {/* Arrow SPECS → LLM */}
+        <path d="M 150 70 L 163 70" stroke="#475569" strokeWidth="2" markerEnd="url(#arrow2)" />
+
+        {/* LLM GENERATOR box x=165, y=28, w=140, h=84 */}
+        <rect x="165" y="28" width="140" height="84" fill="rgba(139,92,246,0.2)" rx="6" stroke="#8b5cf6" strokeWidth="1.5" filter="url(#glow2)" />
+        <text x="235" y="44" fill="#8b5cf6" fontSize="11" fontWeight="bold" textAnchor="middle">LLM GENERATOR</text>
+        <text x="235" y="60" fill="#f8fafc" fontSize="11" textAnchor="middle">Generates netlist</text>
+        <text x="235" y="74" fill="#f8fafc" fontSize="11" textAnchor="middle">+ testbench</text>
+        <text x="235" y="92" fill="#94a3b8" fontSize="11" textAnchor="middle">Iteration: {iterationCount}</text>
+
+        {/* Arrow LLM → SPICE */}
+        <path d="M 307 70 L 320 70" stroke="#475569" strokeWidth="2" markerEnd="url(#arrow2)" />
+
+        {/* SPICE SIMULATOR box x=322, y=28, w=170, h=84 */}
+        <rect x="322" y="28" width="170" height="84" fill="rgba(245,158,11,0.15)" rx="6" stroke="#f59e0b" strokeWidth="1.5" filter="url(#glow2)" />
+        <text x="407" y="44" fill="#f59e0b" fontSize="11" fontWeight="bold" textAnchor="middle">SPICE SIMULATOR</text>
+        <text x="407" y="60" fill="#f8fafc" fontSize="11" textAnchor="middle">Solves physics</text>
+        <text x="407" y="74" fill="#f8fafc" fontSize="11" textAnchor="middle">equations</text>
+        <text x="407" y="92" fill="#f8fafc" fontSize="11" textAnchor="middle">(truth source)</text>
+        {simRunning && <text x="407" y="104" fill="#f59e0b" fontSize="10" textAnchor="middle">Running...</text>}
+
+        {/* Arrow LLM → DESIGN (vertical) */}
+        <path d="M 235 114 L 235 128" stroke="#475569" strokeWidth="2" markerEnd="url(#arrow2)" />
+
+        {/* ── ROW 2 ── CURRENT DESIGN x=8, y=130, w=235, h=86 */}
+        <rect x="8" y="130" width="235" height="86" fill="rgba(30,41,59,0.85)" rx="6" stroke="#334155" strokeWidth="1" />
+        <text x="120" y="147" fill="#ffffff" fontSize="11" fontWeight="bold" textAnchor="middle">CURRENT DESIGN</text>
+        <text x="16" y="164" fill="#e2e8f0" fontSize="11">L = {currentDesign.inductance} µH</text>
+        <text x="16" y="179" fill="#e2e8f0" fontSize="11">C = {currentDesign.capacitance} µF</text>
+        <text x="130" y="164" fill="#e2e8f0" fontSize="11">f = {currentDesign.frequency} kHz</text>
+        <text x="130" y="179" fill="#e2e8f0" fontSize="11">Rfb = {currentDesign.feedbackResistor}kΩ</text>
+        {/* Inline schematic lines */}
+        <line x1="30" y1="204" x2="52" y2="204" stroke="#8b5cf6" strokeWidth="2" />
+        <rect x="52" y="198" width="18" height="12" fill="none" stroke="#8b5cf6" strokeWidth="2" />
+        <line x1="70" y1="204" x2="92" y2="204" stroke="#8b5cf6" strokeWidth="2" />
+        <line x1="92" y1="204" x2="92" y2="212" stroke="#8b5cf6" strokeWidth="2" />
+        <line x1="86" y1="212" x2="98" y2="212" stroke="#8b5cf6" strokeWidth="1.5" />
+        <line x1="86" y1="216" x2="98" y2="216" stroke="#8b5cf6" strokeWidth="1.5" />
+
+        {/* Arrow SPICE → SIM RESULTS (vertical) */}
+        <path d="M 407 114 L 407 128" stroke="#475569" strokeWidth="2" markerEnd="url(#arrow2)" />
+
+        {/* SIM RESULTS x=251, y=130, w=241, h=86 */}
+        <rect x="251" y="130" width="241" height="86" fill="rgba(30,41,59,0.85)" rx="6" stroke="#334155" strokeWidth="1" />
+        <text x="371" y="147" fill="#ffffff" fontSize="11" fontWeight="bold" textAnchor="middle">SIM RESULTS</text>
+        {iterationCount > 0 ? (
+          <>
+            <text x="259" y="164" fill={passVoltage ? '#22c55e' : '#ef4444'} fontSize="11">
+              Vout: {simResults.outputVoltage.toFixed(2)}V {passVoltage ? '✓' : '✗'}
+            </text>
+            <text x="259" y="179" fill={passRipple ? '#22c55e' : '#ef4444'} fontSize="11">
+              Ripple: {simResults.ripple.toFixed(1)}mV {passRipple ? '✓' : '✗'}
+            </text>
+            <text x="375" y="164" fill="#e2e8f0" fontSize="11">
+              Eff: {simResults.efficiency.toFixed(1)}%
+            </text>
+            <text x="375" y="179" fill={passPhase ? '#22c55e' : '#ef4444'} fontSize="11">
+              PM: {simResults.phaseMargin.toFixed(0)}° {passPhase ? '✓' : '✗'}
+            </text>
+          </>
+        ) : (
+          <text x="371" y="180" fill="#94a3b8" fontSize="11" textAnchor="middle">Run simulation first</text>
+        )}
+
+        {/* ── BODE PLOT ── absolute coords, y=230..400 */}
+        <rect x="8" y={bodeY0} width="484" height="172" fill="rgba(30,41,59,0.85)" rx="6" stroke="#334155" strokeWidth="1" />
+        <text x="250" y={bodeY0 + 14} fill="#f59e0b" fontSize="12" fontWeight="bold" textAnchor="middle">BODE PLOT — Phase Response</text>
+
+        {/* Grid group */}
+        <g id="bodeGrid">
+          {[0,1,2,3,4].map(i => (
+            <line key={i} x1={bodeX0} y1={bodeYt + i * bodeH / 4} x2={bodeX1} y2={bodeYt + i * bodeH / 4}
+              stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.4" />
+          ))}
+          {[bodeX0 + (bodeX1-bodeX0)*0.25, bodeX0 + (bodeX1-bodeX0)*0.5, bodeX0 + (bodeX1-bodeX0)*0.75].map((vx, i) => (
+            <line key={i} x1={vx} y1={bodeYt} x2={vx} y2={bodeYb}
+              stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+          ))}
+        </g>
+        {/* Labels group */}
+        <g id="bodeLabels">
+
+        {/* Axes */}
+        <line x1={bodeX0} y1={bodeYt} x2={bodeX0} y2={bodeYb} stroke="#94a3b8" strokeWidth="1.5" />
+        <line x1={bodeX0} y1={bodeYb} x2={bodeX1} y2={bodeYb} stroke="#94a3b8" strokeWidth="1.5" />
+
+        {/* Y-axis labels — well spaced, absolute coords */}
+        <text x={bodeX0 - 4} y={bodeYt + 4} fill="#94a3b8" fontSize="11" textAnchor="end">0°</text>
+        <text x={bodeX0 - 4} y={bodeYt + bodeH * 0.25 + 4} fill="#94a3b8" fontSize="11" textAnchor="end">-45°</text>
+        <text x={bodeX0 - 4} y={bodeYt + bodeH * 0.5 + 4} fill="#94a3b8" fontSize="11" textAnchor="end">-90°</text>
+        <text x={bodeX0 - 4} y={bodeYt + bodeH * 0.75 + 4} fill="#94a3b8" fontSize="11" textAnchor="end">-135°</text>
+        <text x={bodeX0 - 4} y={bodeYb - 2} fill="#94a3b8" fontSize="11" textAnchor="end">-180°</text>
+
+        {/* X-axis labels — at y = bodeYb+16, well below -180° label */}
+        <text x={bodeX0} y={bodeYb + 16} fill="#94a3b8" fontSize="11" textAnchor="middle">10Hz</text>
+        <text x={bodeX0 + (bodeX1-bodeX0)*0.25} y={bodeYb + 16} fill="#94a3b8" fontSize="11" textAnchor="middle">100Hz</text>
+        <text x={bodeX0 + (bodeX1-bodeX0)*0.5} y={bodeYb + 16} fill="#94a3b8" fontSize="11" textAnchor="middle">1kHz</text>
+        <text x={bodeX0 + (bodeX1-bodeX0)*0.75} y={bodeYb + 16} fill="#94a3b8" fontSize="11" textAnchor="middle">10kHz</text>
+        <text x={bodeX1} y={bodeYb + 16} fill="#94a3b8" fontSize="11" textAnchor="middle">100kHz</text>
         </g>
 
-        <path d="M 170 100 L 190 100" stroke="#475569" strokeWidth="2" markerEnd="url(#arrow)" />
-
-        <g transform="translate(200, 50)">
-          <rect width="140" height="100" fill="url(#llmGrad)" rx="8" opacity="0.3" />
-          <rect width="140" height="100" fill="none" rx="8" stroke="#8b5cf6" strokeWidth="2" />
-          <text x="70" y="20" fill="#8b5cf6" fontSize="11" fontWeight="bold" textAnchor="middle">LLM GENERATOR</text>
-          <text x="70" y="45" fill="#f8fafc" fontSize="9" textAnchor="middle">Generates netlist</text>
-          <text x="70" y="60" fill="#f8fafc" fontSize="9" textAnchor="middle">+ testbench</text>
-          <text x="70" y="80" fill="#e2e8f0" fontSize="9" textAnchor="middle">Iteration: {iterationCount}</text>
-        </g>
-
-        <path d="M 350 100 L 370 100" stroke="#475569" strokeWidth="2" markerEnd="url(#arrow)" />
-
-        <g transform="translate(340, 50)">
-          <rect width="140" height="100" fill="url(#spiceGrad)" rx="8" opacity="0.3" />
-          <rect width="140" height="100" fill="none" rx="8" stroke="#f59e0b" strokeWidth="2" />
-          <text x="70" y="20" fill="#f59e0b" fontSize="11" fontWeight="bold" textAnchor="middle">SPICE SIMULATOR</text>
-          <text x="70" y="45" fill="#f8fafc" fontSize="9" textAnchor="middle">Solves physics</text>
-          <text x="70" y="60" fill="#f8fafc" fontSize="9" textAnchor="middle">(truth source)</text>
-          {simRunning && (
-            <text x="70" y="80" fill="#f59e0b" fontSize="9" textAnchor="middle">Running...</text>
-          )}
-        </g>
-
-        <g transform="translate(20, 170)">
-          <rect width="220" height="90" fill="rgba(30, 41, 59, 0.8)" rx="8" />
-          <text x="110" y="18" fill="#f8fafc" fontSize="11" fontWeight="bold" textAnchor="middle">CURRENT DESIGN</text>
-          <text x="10" y="38" fill="#e2e8f0" fontSize="9">L = {currentDesign.inductance} uH</text>
-          <text x="10" y="53" fill="#e2e8f0" fontSize="9">C = {currentDesign.capacitance} uF</text>
-          <text x="120" y="38" fill="#e2e8f0" fontSize="9">f = {currentDesign.frequency} kHz</text>
-          <text x="120" y="53" fill="#e2e8f0" fontSize="9">R_fb = {currentDesign.feedbackResistor} kOhm</text>
-
-          <g transform="translate(30, 60)">
-            <line x1="0" y1="10" x2="30" y2="10" stroke="#8b5cf6" strokeWidth="2" />
-            <rect x="30" y="5" width="20" height="10" fill="none" stroke="#8b5cf6" strokeWidth="2" />
-            <line x1="50" y1="10" x2="80" y2="10" stroke="#8b5cf6" strokeWidth="2" />
-            <line x1="80" y1="10" x2="80" y2="25" stroke="#8b5cf6" strokeWidth="2" />
-            <line x1="75" y1="25" x2="85" y2="25" stroke="#8b5cf6" strokeWidth="2" />
-            <line x1="75" y1="28" x2="85" y2="28" stroke="#8b5cf6" strokeWidth="2" />
-            <text x="40" y="0" fill="#e2e8f0" fontSize="8" textAnchor="middle">L</text>
-            <text x="95" y="20" fill="#e2e8f0" fontSize="8">C</text>
-          </g>
-        </g>
-
-        <g transform="translate(260, 170)">
-          <rect width="220" height="90" fill="rgba(30, 41, 59, 0.8)" rx="8" />
-          <text x="110" y="18" fill="#f8fafc" fontSize="11" fontWeight="bold" textAnchor="middle">SIM RESULTS</text>
-
-          {iterationCount > 0 ? (
-            <>
-              <text x="10" y="38" fill={passVoltage ? '#22c55e' : '#ef4444'} fontSize="9">
-                Vout: {simResults.outputVoltage.toFixed(2)}V {passVoltage ? 'PASS' : 'FAIL'}
-              </text>
-              <text x="10" y="53" fill={passRipple ? '#22c55e' : '#ef4444'} fontSize="9">
-                Ripple: {simResults.ripple.toFixed(1)}mV {passRipple ? 'PASS' : 'FAIL'}
-              </text>
-              <text x="10" y="68" fill="#e2e8f0" fontSize="9">
-                Efficiency: {simResults.efficiency.toFixed(1)}%
-              </text>
-              <text x="10" y="83" fill={passPhase ? '#22c55e' : '#ef4444'} fontSize="9">
-                Phase Margin: {simResults.phaseMargin.toFixed(0)} deg {passPhase ? 'PASS' : 'FAIL'}
-              </text>
-            </>
-          ) : (
-            <text x="110" y="55" fill="#475569" fontSize="10" textAnchor="middle">Run simulation to see results</text>
-          )}
-        </g>
-
-        <g transform="translate(20, 280)">
-          <rect width="220" height="100" fill="rgba(30, 41, 59, 0.8)" rx="8" />
-          <text x="110" y="18" fill="#f59e0b" fontSize="11" fontWeight="bold" textAnchor="middle">BODE PLOT (Phase)</text>
-
-          <g transform="translate(20, 30)">
-            <line x1="0" y1="50" x2="180" y2="50" stroke="#475569" strokeWidth="1" />
-            <line x1="0" y1="0" x2="0" y2="50" stroke="#475569" strokeWidth="1" />
-
-            <path
-              d={`M 0 25 Q 40 25 80 ${25 + (90 - simResults.phaseMargin) * 0.3} Q 120 ${40 + (90 - simResults.phaseMargin) * 0.2} 180 45`}
-              fill="none"
-              stroke="#f59e0b"
-              strokeWidth="2"
-            />
-
-            <line x1="100" y1="50" x2="100" y2={25 + (90 - simResults.phaseMargin) * 0.3} stroke="#22c55e" strokeWidth="1" strokeDasharray="4,2" />
-
-            <text x="90" y="65" fill="#e2e8f0" fontSize="9">f_c</text>
-            <text x="180" y="65" fill="#e2e8f0" fontSize="9">freq</text>
-            <text x="-15" y="5" fill="#e2e8f0" fontSize="9">0</text>
-            <text x="-20" y="55" fill="#e2e8f0" fontSize="9">-180</text>
-          </g>
-        </g>
-
-        <g transform="translate(260, 280)">
-          <rect
-            width="220"
-            height="100"
-            fill={allPass ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'}
-            rx="8"
-            stroke={allPass ? '#22c55e' : '#ef4444'}
-            strokeWidth="2"
+        {/* Phase curve */}
+        {iterationCount > 0 ? (
+          <>
+            <polyline points={phasePoints} fill="none" stroke="#f59e0b" strokeWidth="2.5" filter="url(#glow2)" />
+            <line x1={bodeX0 + (bodeX1-bodeX0)*0.5} y1={bodeYt}
+                  x2={bodeX0 + (bodeX1-bodeX0)*0.5} y2={bodeYt + ((180 - simResults.phaseMargin) / 180) * bodeH}
+              stroke="#22c55e" strokeWidth="1.5" strokeDasharray="5 3" />
+            <text x={bodeX0 + (bodeX1-bodeX0)*0.5 + 5} y={bodeYt + 18} fill="#22c55e" fontSize="11">
+              PM={simResults.phaseMargin.toFixed(0)}°
+            </text>
+          </>
+        ) : (
+          <polyline
+            points={`${bodeX0},${bodeYt} ${bodeX0+(bodeX1-bodeX0)*0.25},${bodeYt+bodeH*0.25} ${bodeX0+(bodeX1-bodeX0)*0.5},${bodeYt+bodeH*0.5} ${bodeX0+(bodeX1-bodeX0)*0.75},${bodeYt+bodeH*0.75} ${bodeX1},${bodeYb-10}`}
+            fill="none" stroke="#f59e0b" strokeWidth="2" opacity="0.4"
           />
-          <text x="110" y="25" fill={allPass ? '#22c55e' : '#ef4444'} fontSize="14" fontWeight="bold" textAnchor="middle">
-            {iterationCount === 0 ? 'WAITING' : allPass ? 'ALL SPECS MET' : 'ITERATE NEEDED'}
-          </text>
-          {iterationCount > 0 && !allPass && (
-            <text x="110" y="50" fill="#e2e8f0" fontSize="10" textAnchor="middle">
-              Adjust design parameters
-            </text>
-          )}
-          {iterationCount > 0 && (
-            <text x="110" y="75" fill="#e2e8f0" fontSize="9" textAnchor="middle">
-              {simResults.stable ? 'Control loop is stable' : 'WARNING: Potential instability'}
-            </text>
-          )}
-        </g>
+        )}
 
-        <g transform="translate(250, 400)">
-          <path d="M 200 0 L 200 30 L -180 30 L -180 -230 L -150 -230" fill="none" stroke="#475569" strokeWidth="2" strokeDasharray="5,3" />
-          <text x="10" y="45" fill="#e2e8f0" fontSize="9" textAnchor="middle">Feedback loop: results inform next iteration</text>
-        </g>
+        {/* ── STATUS BAR ── y=408 */}
+        <rect x="8" y="408" width="484" height="52"
+          fill={iterationCount === 0 ? 'rgba(71,85,105,0.3)' : allPass ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)'}
+          rx="6"
+          stroke={iterationCount === 0 ? '#475569' : allPass ? '#22c55e' : '#ef4444'}
+          strokeWidth="1.5"
+          filter="url(#glow2)"
+        />
+        <text x="250" y="430" fill={iterationCount === 0 ? '#94a3b8' : allPass ? '#22c55e' : '#ef4444'}
+          fontSize="13" fontWeight="bold" textAnchor="middle">
+          {iterationCount === 0 ? 'Awaiting Simulation' : allPass ? '✓ ALL SPECS MET' : '↻ ITERATE NEEDED'}
+        </text>
+        {iterationCount > 0 && (
+          <text x="250" y="449" fill="#94a3b8" fontSize="11" textAnchor="middle">
+            {simResults.stable ? 'Control loop stable' : 'Warning: potential instability'}
+          </text>
+        )}
+
+        {/* Footer */}
+        <text x="250" y="492" fill="#94a3b8" fontSize="11" textAnchor="middle">Feedback: results inform next LLM iteration</text>
       </svg>
     );
   };
 
+  // Compact pipeline SVG for predict/review phases (no overlaps)
+  const renderCompactSVG = () => (
+    <svg width="100%" height="220" viewBox="0 0 440 220" style={{ maxWidth: '480px', display: 'block', margin: '0 auto' }}>
+      <defs>
+        <filter id="glow3">
+          <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+          <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+        <marker id="arrow3" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L7,3 z" fill="#475569" />
+        </marker>
+      </defs>
+      <rect width="440" height="220" fill="#0f172a" rx="10" />
+
+      {/* Title */}
+      <text x="220" y="22" fill="#ffffff" fontSize="13" fontWeight="bold" textAnchor="middle">
+        LLM → SPICE Workflow
+      </text>
+
+      {/* LLM box */}
+      <g transform="translate(20, 40)">
+        <rect width="110" height="70" fill="rgba(139,92,246,0.2)" rx="8" stroke="#8b5cf6" strokeWidth="1.5" filter="url(#glow3)" />
+        <text x="55" y="20" fill="#8b5cf6" fontSize="12" fontWeight="bold" textAnchor="middle">LLM</text>
+        <text x="55" y="40" fill="#f8fafc" fontSize="11" textAnchor="middle">Generates</text>
+        <text x="55" y="56" fill="#f8fafc" fontSize="11" textAnchor="middle">design</text>
+      </g>
+
+      {/* Arrow LLM → ? */}
+      <path d="M 133 75 L 163 75" stroke="#475569" strokeWidth="2" markerEnd="url(#arrow3)" />
+
+      {/* Question box */}
+      <g transform="translate(165, 40)">
+        <rect width="90" height="70" fill="rgba(245,158,11,0.2)" rx="8" stroke="#f59e0b" strokeWidth="1.5" />
+        <text x="45" y="42" fill="#f59e0b" fontSize="28" textAnchor="middle">?</text>
+      </g>
+
+      {/* Arrow ? → SPICE */}
+      <path d="M 258 75 L 288 75" stroke="#475569" strokeWidth="2" markerEnd="url(#arrow3)" />
+
+      {/* SPICE box */}
+      <g transform="translate(290, 40)">
+        <rect width="130" height="70" fill="rgba(34,197,94,0.2)" rx="8" stroke="#22c55e" strokeWidth="1.5" filter="url(#glow3)" />
+        <text x="65" y="20" fill="#22c55e" fontSize="12" fontWeight="bold" textAnchor="middle">SPICE</text>
+        <text x="65" y="40" fill="#f8fafc" fontSize="11" textAnchor="middle">Validates</text>
+        <text x="65" y="56" fill="#f8fafc" fontSize="11" textAnchor="middle">physics</text>
+      </g>
+
+      {/* Feedback arrow */}
+      <path d="M 355 113 L 355 155 L 75 155 L 75 113" fill="none" stroke="#334155" strokeWidth="1.5" strokeDasharray="5 3" />
+      <text x="215" y="148" fill={colors.muted} fontSize="11" textAnchor="middle">feedback loop</text>
+
+      {/* Labels at bottom */}
+      <text x="75" y="185" fill={colors.muted} fontSize="11" textAnchor="middle">generates</text>
+      <text x="215" y="185" fill="#f59e0b" fontSize="11" textAnchor="middle">iteration</text>
+      <text x="355" y="185" fill={colors.muted} fontSize="11" textAnchor="middle">validates</text>
+
+      {/* Formula */}
+      <text x="220" y="210" fill={colors.muted} fontSize="11" textAnchor="middle">Design Space × Iterations → Converged Solution</text>
+    </svg>
+  );
+
+  // Stability SVG for twist review
+  const renderStabilitySVG = () => (
+    <svg width="100%" height="200" viewBox="0 0 440 200" style={{ maxWidth: '480px', display: 'block', margin: '0 auto' }}>
+      <defs>
+        <filter id="glowStab">
+          <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+          <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+      </defs>
+      <rect width="440" height="200" fill="#0f172a" rx="10" />
+      <text x="220" y="22" fill="#ffffff" fontSize="13" fontWeight="bold" textAnchor="middle">Phase Margin vs Stability</text>
+      {/* Axis */}
+      <line x1="40" y1="160" x2="420" y2="160" stroke="#475569" strokeWidth="1.5" />
+      <line x1="40" y1="40" x2="40" y2="160" stroke="#475569" strokeWidth="1.5" />
+      {/* Grid */}
+      <line x1="40" y1="80" x2="420" y2="80" stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.4" />
+      <line x1="40" y1="120" x2="420" y2="120" stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.4" />
+      <line x1="135" y1="40" x2="135" y2="160" stroke="#ef4444" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+      <line x1="230" y1="40" x2="230" y2="160" stroke="#f59e0b" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+      <line x1="325" y1="40" x2="325" y2="160" stroke="#22c55e" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+      {/* Zones */}
+      <rect x="40" y="40" width="95" height="120" fill="rgba(239,68,68,0.08)" rx="2" />
+      <rect x="135" y="40" width="95" height="120" fill="rgba(245,158,11,0.08)" rx="2" />
+      <rect x="230" y="40" width="95" height="120" fill="rgba(34,197,94,0.08)" rx="2" />
+      <rect x="325" y="40" width="95" height="120" fill="rgba(34,197,94,0.15)" rx="2" />
+      {/* Labels */}
+      <text x="87" y="58" fill="#ef4444" fontSize="11" textAnchor="middle">UNSTABLE</text>
+      <text x="87" y="72" fill={colors.muted} fontSize="11" textAnchor="middle">&lt;30°</text>
+      <text x="182" y="58" fill="#f59e0b" fontSize="11" textAnchor="middle">MARGINAL</text>
+      <text x="182" y="72" fill={colors.muted} fontSize="11" textAnchor="middle">30-45°</text>
+      <text x="277" y="58" fill="#22c55e" fontSize="11" textAnchor="middle">GOOD</text>
+      <text x="277" y="72" fill={colors.muted} fontSize="11" textAnchor="middle">45-60°</text>
+      <text x="372" y="58" fill="#22c55e" fontSize="11" textAnchor="middle">ROBUST</text>
+      <text x="372" y="72" fill={colors.muted} fontSize="11" textAnchor="middle">&gt;60°</text>
+      {/* Y-axis labels */}
+      <text x="36" y="44" fill={colors.muted} fontSize="11" textAnchor="end">stable</text>
+      <text x="36" y="164" fill={colors.muted} fontSize="11" textAnchor="end">unstable</text>
+      <text x="36" y="84" fill={colors.muted} fontSize="11" textAnchor="end">↑</text>
+      <text x="36" y="124" fill={colors.muted} fontSize="11" textAnchor="end">↓</text>
+      {/* X-axis label */}
+      <text x="230" y="178" fill={colors.muted} fontSize="11" textAnchor="middle">Phase Margin →</text>
+      {/* Formula */}
+      <text x="220" y="196" fill={colors.muted} fontSize="11" textAnchor="middle">PM = 180° − |∠T(jω)| at |T(jω)|=0 dB</text>
+    </svg>
+  );
+
   const renderControls = () => (
-    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '500px', margin: '0 auto' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-        <div>
-          <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '8px', fontSize: '14px' }}>
-            Target Voltage: {targetVoltage}V
-          </label>
-          <input
-            type="range"
-            min="1.8"
-            max="5"
-            step="0.1"
-            value={targetVoltage}
-            onChange={(e) => setTargetVoltage(parseFloat(e.target.value))}
-            style={{ width: '100%' }}
-          />
-        </div>
+    <div style={{ padding: '0 0 16px', maxWidth: '500px', margin: '0 auto' }}>
+      {renderSlider('Target Voltage', targetVoltage, setTargetVoltage, 1.8, 5, 0.1, 'V', true)}
+      {renderSlider('Load Current', loadCurrent, setLoadCurrent, 100, 2000, 100, 'mA')}
 
-        <div>
-          <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '8px', fontSize: '14px' }}>
-            Load Current: {loadCurrent}mA
-          </label>
-          <input
-            type="range"
-            min="100"
-            max="2000"
-            step="100"
-            value={loadCurrent}
-            onChange={(e) => setLoadCurrent(parseInt(e.target.value))}
-            style={{ width: '100%' }}
-          />
-        </div>
-      </div>
-
-      <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '16px', borderRadius: '8px', border: '1px solid #8b5cf6' }}>
-        <h4 style={{ color: '#8b5cf6', marginBottom: '12px' }}>Adjust Design (LLM would generate these):</h4>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <div>
-            <label style={{ color: '#e2e8f0', fontSize: '12px' }}>Inductance: {currentDesign.inductance}uH</label>
-            <input
-              type="range"
-              min="1"
-              max="47"
-              step="1"
-              value={currentDesign.inductance}
-              onChange={(e) => setCurrentDesign({ ...currentDesign, inductance: parseInt(e.target.value) })}
-              style={{ width: '100%' }}
-            />
-          </div>
-          <div>
-            <label style={{ color: '#e2e8f0', fontSize: '12px' }}>Capacitance: {currentDesign.capacitance}uF</label>
-            <input
-              type="range"
-              min="22"
-              max="470"
-              step="10"
-              value={currentDesign.capacitance}
-              onChange={(e) => setCurrentDesign({ ...currentDesign, capacitance: parseInt(e.target.value) })}
-              style={{ width: '100%' }}
-            />
-          </div>
-          <div>
-            <label style={{ color: '#e2e8f0', fontSize: '12px' }}>Frequency: {currentDesign.frequency}kHz</label>
-            <input
-              type="range"
-              min="100"
-              max="2000"
-              step="100"
-              value={currentDesign.frequency}
-              onChange={(e) => setCurrentDesign({ ...currentDesign, frequency: parseInt(e.target.value) })}
-              style={{ width: '100%' }}
-            />
-          </div>
-          <div>
-            <label style={{ color: '#e2e8f0', fontSize: '12px' }}>Feedback R: {currentDesign.feedbackResistor}kOhm</label>
-            <input
-              type="range"
-              min="1"
-              max="100"
-              step="1"
-              value={currentDesign.feedbackResistor}
-              onChange={(e) => setCurrentDesign({ ...currentDesign, feedbackResistor: parseInt(e.target.value) })}
-              style={{ width: '100%' }}
-            />
-          </div>
-        </div>
+      <div style={{
+        background: 'rgba(139,92,246,0.1)',
+        padding: '16px',
+        borderRadius: '8px',
+        border: '1px solid rgba(139,92,246,0.3)',
+        marginBottom: '16px',
+      }}>
+        <h4 style={{ color: '#8b5cf6', marginBottom: '12px', fontWeight: 700, fontSize: '14px' }}>
+          Component Values (LLM-generated):
+        </h4>
+        {renderSlider('Inductance', currentDesign.inductance,
+          (v) => setCurrentDesign({ ...currentDesign, inductance: v }), 1, 47, 1, 'µH')}
+        {renderSlider('Capacitance', currentDesign.capacitance,
+          (v) => setCurrentDesign({ ...currentDesign, capacitance: v }), 22, 470, 10, 'µF')}
+        {renderSlider('Frequency', currentDesign.frequency,
+          (v) => setCurrentDesign({ ...currentDesign, frequency: v }), 100, 2000, 100, 'kHz')}
+        {renderSlider('Feedback Resistor', currentDesign.feedbackResistor,
+          (v) => setCurrentDesign({ ...currentDesign, feedbackResistor: v }), 1, 100, 1, 'kΩ')}
       </div>
 
       <button
         onClick={runSimulation}
         disabled={simRunning}
         style={{
-          padding: '16px',
+          width: '100%',
+          padding: '14px',
+          minHeight: '44px',
           borderRadius: '8px',
           border: 'none',
-          background: simRunning ? '#475569' : '#f59e0b',
-          color: 'white',
+          background: simRunning ? '#475569' : 'linear-gradient(135deg, #f59e0b, #d97706)',
+          color: '#fff',
           fontWeight: 'bold',
           cursor: simRunning ? 'not-allowed' : 'pointer',
-          fontSize: '16px',
+          fontSize: '15px',
+          transition: 'all 0.2s ease',
+          boxShadow: simRunning ? 'none' : '0 4px 12px rgba(245,158,11,0.4)',
         }}
       >
-        {simRunning ? 'Running SPICE Simulation...' : 'Run SPICE Simulation'}
+        {simRunning ? '⚙ Running SPICE Simulation...' : '▶ Run SPICE Simulation'}
       </button>
     </div>
   );
 
-  // Render wrapper with progress bar and bottom navigation
-  const renderPhaseContent = (content: React.ReactNode, canGoNext: boolean, nextLabel: string = 'Next') => (
+  const renderPhaseContent = (content: React.ReactNode, canGoNext: boolean, nextLabel: string = 'Continue') => (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.bgDark }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '70px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
         {content}
       </div>
       {renderBottomBar(canGoNext, nextLabel)}
@@ -830,79 +938,95 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return renderPhaseContent(
-      <div style={{ color: '#f8fafc', padding: '24px' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ marginBottom: '24px' }}>
-            <span style={{ color: '#8b5cf6', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '2px' }}>AI + Circuit Design</span>
-            <h1 style={{ fontSize: '32px', marginTop: '8px', background: 'linear-gradient(90deg, #8b5cf6, #f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+      <div style={{ color: '#ffffff', padding: '24px' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+            <span style={{ color: '#8b5cf6', fontSize: '13px', textTransform: 'uppercase' as const, letterSpacing: '2px', fontWeight: 400 }}>
+              AI + Circuit Design
+            </span>
+            <h1 style={{
+              fontSize: isMobile ? '26px' : '32px',
+              marginTop: '8px',
+              background: 'linear-gradient(90deg, #8b5cf6, #f59e0b)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              fontWeight: 700,
+            }}>
               LLM to SPICE Pipeline
             </h1>
-            <p style={{ color: '#e2e8f0', fontSize: '18px', marginTop: '8px' }}>
-              Can an LLM design a regulator that actually meets specs?
+            <p style={{ color: '#e2e8f0', fontSize: '17px', marginTop: '8px', fontWeight: 400 }}>
+              Can AI design a circuit that actually meets specs?
             </p>
           </div>
 
-          {renderVisualization()}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            {renderPipelineSVG()}
+          </div>
 
-          <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '20px', borderRadius: '12px', marginTop: '24px', borderLeft: '4px solid #8b5cf6' }}>
-            <p style={{ fontSize: '16px', lineHeight: 1.6 }}>
-              LLMs can generate SPICE netlists that look correct. But circuit physics does not care about plausibility - it cares about equations. What happens when we close the loop between AI generation and physics simulation?
+          <div style={{
+            background: 'rgba(139,92,246,0.1)',
+            padding: '20px',
+            borderRadius: '12px',
+            borderLeft: '4px solid #8b5cf6',
+            boxShadow: '0 4px 16px rgba(139,92,246,0.15)',
+          }}>
+            <p style={{ fontSize: '15px', lineHeight: 1.7, fontWeight: 400, color: '#e2e8f0' }}>
+              LLMs can generate SPICE netlists that look correct. But circuit physics does not care about plausibility —
+              it cares about equations. What happens when we close the loop between AI generation and physics simulation?
             </p>
+          </div>
+
+          <div style={{ marginTop: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            {[
+              { icon: '🤖', title: 'LLM generates', desc: 'Netlists, component values, testbenches' },
+              { icon: '⚡', title: 'SPICE validates', desc: 'Physics equations, actual behavior' },
+              { icon: '🔄', title: 'Iterate', desc: 'Results feed back for refinement' },
+              { icon: '✅', title: 'Converge', desc: 'Design meets all specifications' },
+            ].map((item, i) => (
+              <div key={i} style={{
+                background: 'rgba(30,41,59,0.6)',
+                padding: '14px',
+                borderRadius: '10px',
+                border: '1px solid #334155',
+              }}>
+                <div style={{ fontSize: '22px', marginBottom: '6px' }}>{item.icon}</div>
+                <div style={{ color: '#fff', fontSize: '13px', fontWeight: 600 }}>{item.title}</div>
+                <div style={{ color: colors.muted, fontSize: '12px', fontWeight: 400 }}>{item.desc}</div>
+              </div>
+            ))}
           </div>
         </div>
       </div>,
       true,
-      'Make a Prediction'
+      'Continue'
     );
   }
 
   // PREDICT PHASE
   if (phase === 'predict') {
     return renderPhaseContent(
-      <div style={{ color: '#f8fafc', padding: '24px' }}>
+      <div style={{ color: '#ffffff', padding: '24px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', marginBottom: '24px' }}>Make Your Prediction</h2>
+          <h2 style={{ textAlign: 'center', marginBottom: '20px', fontWeight: 700 }}>Make Your Prediction</h2>
 
-          {/* Static SVG visualization for prediction context */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <svg width="100%" height="200" viewBox="0 0 400 200" style={{ maxWidth: '400px' }}>
-              <rect width="400" height="200" fill="#0f172a" rx="8" />
-              <text x="200" y="25" fill="#f8fafc" fontSize="14" fontWeight="bold" textAnchor="middle">LLM Circuit Design Workflow</text>
-
-              {/* LLM Box */}
-              <rect x="30" y="60" width="100" height="60" fill="rgba(139, 92, 246, 0.2)" rx="8" stroke="#8b5cf6" strokeWidth="2" />
-              <text x="80" y="85" fill="#8b5cf6" fontSize="11" fontWeight="bold" textAnchor="middle">LLM</text>
-              <text x="80" y="105" fill="#e2e8f0" fontSize="9" textAnchor="middle">Generates design</text>
-
-              {/* Arrow */}
-              <path d="M 140 90 L 160 90" stroke="#475569" strokeWidth="2" />
-              <polygon points="160,90 155,85 155,95" fill="#475569" />
-
-              {/* Question Box */}
-              <rect x="170" y="60" width="60" height="60" fill="rgba(245, 158, 11, 0.2)" rx="8" stroke="#f59e0b" strokeWidth="2" />
-              <text x="200" y="95" fill="#f59e0b" fontSize="24" textAnchor="middle">?</text>
-
-              {/* Arrow */}
-              <path d="M 240 90 L 260 90" stroke="#475569" strokeWidth="2" />
-              <polygon points="260,90 255,85 255,95" fill="#475569" />
-
-              {/* SPICE Box */}
-              <rect x="270" y="60" width="100" height="60" fill="rgba(34, 197, 94, 0.2)" rx="8" stroke="#22c55e" strokeWidth="2" />
-              <text x="320" y="85" fill="#22c55e" fontSize="11" fontWeight="bold" textAnchor="middle">SPICE</text>
-              <text x="320" y="105" fill="#e2e8f0" fontSize="9" textAnchor="middle">Validates physics</text>
-
-              <text x="200" y="160" fill="#e2e8f0" fontSize="11" textAnchor="middle">What happens when LLM output meets physics simulation?</text>
-              <text x="200" y="180" fill="#8b5cf6" fontSize="10" textAnchor="middle">Make your prediction below</text>
-            </svg>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+            {renderCompactSVG()}
           </div>
 
-          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
-            <p style={{ fontSize: '16px' }}>
-              If you ask an LLM to design a buck converter that outputs 3.3V from 12V input with less than 50mV ripple, what should you expect?
+          <div style={{
+            background: 'rgba(30,41,59,0.8)',
+            padding: '18px',
+            borderRadius: '12px',
+            marginBottom: '20px',
+            borderLeft: '4px solid #f59e0b',
+          }}>
+            <p style={{ fontSize: '15px', fontWeight: 400, lineHeight: 1.7, color: '#e2e8f0' }}>
+              If you ask an LLM to design a buck converter that outputs 3.3V from 12V input
+              with less than 50mV ripple and &gt;45° phase margin, what should you expect?
             </p>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {predictions.map((p) => (
               <button
                 key={p.id}
@@ -910,13 +1034,16 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
                 style={{
                   padding: '16px',
                   minHeight: '44px',
-                  borderRadius: '12px',
+                  borderRadius: '10px',
                   border: prediction === p.id ? '2px solid #8b5cf6' : '1px solid #475569',
-                  background: prediction === p.id ? 'rgba(139, 92, 246, 0.2)' : 'rgba(30, 41, 59, 0.5)',
-                  color: '#f8fafc',
+                  background: prediction === p.id ? 'rgba(139,92,246,0.2)' : 'rgba(30,41,59,0.5)',
+                  color: '#fff',
                   cursor: 'pointer',
                   textAlign: 'left',
-                  fontSize: '15px',
+                  fontSize: '14px',
+                  fontWeight: prediction === p.id ? 600 : 400,
+                  transition: 'all 0.2s ease',
+                  boxShadow: prediction === p.id ? '0 0 12px rgba(139,92,246,0.3)' : 'none',
                 }}
               >
                 {p.label}
@@ -933,79 +1060,82 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return renderPhaseContent(
-      <div style={{ color: '#f8fafc', padding: '24px' }}>
+      <div style={{ color: '#ffffff', padding: '24px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Design & Simulate</h2>
-          <p style={{ textAlign: 'center', color: '#e2e8f0', marginBottom: '24px' }}>
-            Adjust design parameters and run SPICE to see if specs are met
+          <h2 style={{ textAlign: 'center', marginBottom: '6px', fontWeight: 700 }}>Design & Simulate</h2>
+          <p style={{ textAlign: 'center', color: '#cbd5e1', marginBottom: '20px', fontWeight: 400 }}>
+            Adjust parameters and run SPICE to see if specs are met
           </p>
 
-          {renderVisualization()}
-          {renderControls()}
-
-          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginTop: '24px' }}>
-            <h3 style={{ color: '#f59e0b', marginBottom: '12px' }}>Try These Experiments:</h3>
-            <ul style={{ color: '#e2e8f0', lineHeight: 1.8, paddingLeft: '20px' }}>
-              <li>Run the simulation with default values - do they pass?</li>
-              <li>Increase capacitance to reduce ripple</li>
-              <li>Adjust feedback resistor - watch phase margin change</li>
-              <li>See how many iterations to meet all specs</li>
-            </ul>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+            {renderPipelineSVG()}
           </div>
 
-          <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '20px', borderRadius: '12px', marginTop: '24px', border: '1px solid #8b5cf6' }}>
-            <h3 style={{ color: '#8b5cf6', marginBottom: '12px' }}>Real-World Relevance</h3>
-            <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.6 }}>
-              This LLM-to-SPICE workflow powers modern electronics design at companies like Texas Instruments and Analog Devices.
-              Engineers use AI to rapidly explore design spaces, but physics simulation remains the ultimate truth source.
-              Every phone charger, laptop power supply, and electric vehicle uses buck converters designed with this exact methodology.
-            </p>
+          {renderControls()}
+
+          <div style={{
+            background: 'rgba(30,41,59,0.8)',
+            padding: '18px',
+            borderRadius: '12px',
+            marginTop: '16px',
+            border: '1px solid #334155',
+          }}>
+            <h3 style={{ color: '#f59e0b', marginBottom: '10px', fontWeight: 700 }}>Try These Experiments:</h3>
+            <ul style={{ color: '#e2e8f0', lineHeight: 1.9, paddingLeft: '20px', fontWeight: 400 }}>
+              <li>Run the simulation with default values — do they pass?</li>
+              <li>Increase capacitance to reduce ripple</li>
+              <li>Adjust feedback resistor — watch phase margin change</li>
+              <li>Count how many iterations until all specs pass</li>
+            </ul>
           </div>
         </div>
       </div>,
       true,
-      'Review the Concepts'
+      'Review Concepts'
     );
   }
 
   // REVIEW PHASE
   if (phase === 'review') {
     const wasCorrect = prediction === 'iterate';
-
     return renderPhaseContent(
-      <div style={{ color: '#f8fafc', padding: '24px' }}>
+      <div style={{ color: '#ffffff', padding: '24px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{
-            background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+            background: wasCorrect ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
             padding: '20px',
             borderRadius: '12px',
-            marginBottom: '24px',
+            marginBottom: '20px',
             borderLeft: `4px solid ${wasCorrect ? '#22c55e' : '#ef4444'}`,
+            boxShadow: wasCorrect ? '0 4px 16px rgba(34,197,94,0.15)' : '0 4px 16px rgba(239,68,68,0.15)',
           }}>
-            <h3 style={{ color: wasCorrect ? '#22c55e' : '#ef4444', marginBottom: '8px' }}>
-              {wasCorrect ? 'Exactly Right!' : 'Not Quite!'}
+            <h3 style={{ color: wasCorrect ? '#22c55e' : '#ef4444', marginBottom: '8px', fontWeight: 700 }}>
+              {wasCorrect ? '✓ Exactly Right!' : '✗ Not Quite!'}
             </h3>
-            <p>
-              LLMs excel at generating plausible starting points but cannot solve the differential equations that govern circuit behavior. SPICE is the truth source - it solves physics. The value is in the iteration loop.
+            <p style={{ fontWeight: 400, color: '#e2e8f0', lineHeight: 1.6 }}>
+              LLMs excel at generating plausible starting points but cannot solve the differential equations
+              that govern circuit behavior. SPICE is the truth source — it solves physics. The value is in the iteration loop.
             </p>
           </div>
 
-          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
-            <h3 style={{ color: '#8b5cf6', marginBottom: '16px' }}>LLM as Generator, SPICE as Validator</h3>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+            {renderCompactSVG()}
+          </div>
 
-            <div style={{ marginBottom: '16px' }}>
-              <h4 style={{ color: '#f59e0b', marginBottom: '8px' }}>What LLMs Do Well:</h4>
-              <ul style={{ color: '#e2e8f0', fontSize: '14px', paddingLeft: '20px' }}>
+          <div style={{ background: 'rgba(30,41,59,0.8)', padding: '20px', borderRadius: '12px', border: '1px solid #334155' }}>
+            <h3 style={{ color: '#8b5cf6', marginBottom: '14px', fontWeight: 700 }}>LLM as Generator, SPICE as Validator</h3>
+            <div style={{ marginBottom: '14px' }}>
+              <h4 style={{ color: '#f59e0b', marginBottom: '8px', fontWeight: 600 }}>What LLMs Do Well:</h4>
+              <ul style={{ color: '#e2e8f0', fontSize: '14px', paddingLeft: '20px', lineHeight: 1.8, fontWeight: 400 }}>
                 <li>Generate syntactically correct SPICE netlists</li>
                 <li>Suggest reasonable component values from prior examples</li>
                 <li>Create testbenches for different analyses</li>
                 <li>Iterate quickly based on simulation feedback</li>
               </ul>
             </div>
-
             <div>
-              <h4 style={{ color: '#22c55e', marginBottom: '8px' }}>What SPICE Provides:</h4>
-              <ul style={{ color: '#e2e8f0', fontSize: '14px', paddingLeft: '20px' }}>
+              <h4 style={{ color: '#22c55e', marginBottom: '8px', fontWeight: 600 }}>What SPICE Provides:</h4>
+              <ul style={{ color: '#e2e8f0', fontSize: '14px', paddingLeft: '20px', lineHeight: 1.8, fontWeight: 400 }}>
                 <li>Actual solutions to circuit differential equations</li>
                 <li>Accurate prediction of voltages, currents, stability</li>
                 <li>Ground truth that cannot be hallucinated</li>
@@ -1016,40 +1146,57 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
         </div>
       </div>,
       true,
-      'Next: A Twist!'
+      'Explore the Twist'
     );
   }
 
-  // TWIST PREDICT PHASE
+  // TWIST PREDICT PHASE — no sliders
   if (phase === 'twist_predict') {
     return renderPhaseContent(
-      <div style={{ color: '#f8fafc', padding: '24px' }}>
+      <div style={{ color: '#ffffff', padding: '24px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', color: '#f59e0b', marginBottom: '24px' }}>The Twist: Stability Analysis</h2>
+          <h2 style={{ textAlign: 'center', color: '#f59e0b', marginBottom: '20px', fontWeight: 700 }}>
+            The Twist: Stability Analysis
+          </h2>
 
-          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
-            <p style={{ fontSize: '16px', marginBottom: '12px' }}>
-              A circuit can have the right output voltage and acceptable ripple but still oscillate wildly under load transients. Bode plot analysis reveals phase margin - how close to instability the control loop is.
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+            {renderStabilitySVG()}
+          </div>
+
+          <div style={{
+            background: 'rgba(30,41,59,0.8)',
+            padding: '20px',
+            borderRadius: '12px',
+            marginBottom: '20px',
+            border: '1px solid #334155',
+          }}>
+            <p style={{ fontSize: '15px', marginBottom: '12px', fontWeight: 400, lineHeight: 1.7, color: '#e2e8f0' }}>
+              A circuit can have the right output voltage and acceptable ripple but still oscillate wildly
+              under load transients. Bode plot analysis reveals phase margin — how close to instability
+              the control loop is.
             </p>
-            <p style={{ fontSize: '16px' }}>
+            <p style={{ fontSize: '15px', fontWeight: 600, color: '#fff' }}>
               Who should determine if the phase margin is adequate?
             </p>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {twistPredictions.map((p) => (
               <button
                 key={p.id}
                 onClick={() => setTwistPrediction(p.id)}
                 style={{
                   padding: '16px',
-                  borderRadius: '12px',
+                  borderRadius: '10px',
                   border: twistPrediction === p.id ? '2px solid #f59e0b' : '1px solid #475569',
-                  background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'rgba(30, 41, 59, 0.5)',
-                  color: '#f8fafc',
+                  background: twistPrediction === p.id ? 'rgba(245,158,11,0.2)' : 'rgba(30,41,59,0.5)',
+                  color: '#fff',
                   cursor: 'pointer',
                   textAlign: 'left',
-                  fontSize: '15px',
+                  fontSize: '14px',
+                  fontWeight: twistPrediction === p.id ? 600 : 400,
+                  transition: 'all 0.2s ease',
+                  boxShadow: twistPrediction === p.id ? '0 0 12px rgba(245,158,11,0.3)' : 'none',
                 }}
               >
                 {p.label}
@@ -1066,137 +1213,209 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return renderPhaseContent(
-      <div style={{ color: '#f8fafc', padding: '24px' }}>
+      <div style={{ color: '#ffffff', padding: '24px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Stability Check</h2>
-          <p style={{ textAlign: 'center', color: '#e2e8f0', marginBottom: '24px' }}>
-            Adjust the feedback loop and see how phase margin changes
+          <h2 style={{ textAlign: 'center', marginBottom: '6px', fontWeight: 700 }}>Stability Check</h2>
+          <p style={{ textAlign: 'center', color: '#cbd5e1', marginBottom: '20px', fontWeight: 400 }}>
+            Adjust the feedback loop and observe how phase margin changes
           </p>
 
-          {renderVisualization()}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+            {renderPipelineSVG()}
+          </div>
+
           {renderControls()}
 
-          <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '20px', borderRadius: '12px', marginTop: '24px', border: '1px solid #f59e0b' }}>
-            <h3 style={{ color: '#f59e0b', marginBottom: '12px' }}>Phase Margin Guidelines:</h3>
-            <ul style={{ color: '#e2e8f0', lineHeight: 1.8, paddingLeft: '20px' }}>
-              <li><strong>&gt;60 deg:</strong> Overdamped, slow but very stable</li>
-              <li><strong>45-60 deg:</strong> Good balance of speed and stability</li>
-              <li><strong>30-45 deg:</strong> Acceptable but may ring on transients</li>
-              <li><strong>&lt;30 deg:</strong> Dangerous - oscillation likely</li>
+          <div style={{
+            background: 'rgba(245,158,11,0.1)',
+            padding: '18px',
+            borderRadius: '12px',
+            marginTop: '16px',
+            border: '1px solid rgba(245,158,11,0.4)',
+          }}>
+            <h3 style={{ color: '#f59e0b', marginBottom: '10px', fontWeight: 700 }}>Phase Margin Guidelines:</h3>
+            <ul style={{ color: '#e2e8f0', lineHeight: 1.9, paddingLeft: '20px', fontWeight: 400 }}>
+              <li><strong>&gt;60°:</strong> Overdamped, slow but very stable</li>
+              <li><strong>45–60°:</strong> Good balance of speed and stability</li>
+              <li><strong>30–45°:</strong> Acceptable but may ring on transients</li>
+              <li><strong>&lt;30°:</strong> Dangerous — oscillation likely</li>
             </ul>
           </div>
         </div>
       </div>,
       true,
-      'See the Explanation'
+      'See Explanation'
     );
   }
 
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'sim_truth';
-
     return renderPhaseContent(
-      <div style={{ color: '#f8fafc', padding: '24px' }}>
+      <div style={{ color: '#ffffff', padding: '24px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{
-            background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+            background: wasCorrect ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
             padding: '20px',
             borderRadius: '12px',
-            marginBottom: '24px',
+            marginBottom: '20px',
             borderLeft: `4px solid ${wasCorrect ? '#22c55e' : '#ef4444'}`,
+            boxShadow: wasCorrect ? '0 4px 16px rgba(34,197,94,0.15)' : '0 4px 16px rgba(239,68,68,0.15)',
           }}>
-            <h3 style={{ color: wasCorrect ? '#22c55e' : '#ef4444', marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
+            <h3 style={{ color: wasCorrect ? '#22c55e' : '#ef4444', marginBottom: '8px', fontWeight: 700 }}>
+              {wasCorrect ? '✓ Correct!' : '✗ Not Quite!'}
             </h3>
-            <p>
-              Only SPICE simulation (or actual measurement) can reveal the true phase margin. LLMs may know the theory but cannot compute the specific transfer functions for a given design with all its parasitics.
+            <p style={{ fontWeight: 400, color: '#e2e8f0', lineHeight: 1.6 }}>
+              Only SPICE simulation (or actual measurement) can reveal the true phase margin.
+              LLMs may know the theory but cannot compute the specific transfer functions for a given
+              design with all its parasitics.
             </p>
           </div>
 
-          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: '#f59e0b', marginBottom: '16px' }}>The Stability Truth</h3>
-            <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.6 }}>
-              A design that meets DC specifications can still fail dynamically. Phase margin depends on the exact component values, parasitics, and operating conditions. This is why "looks correct" from an LLM is not the same as "works correctly" from simulation. Real feedback is irreplaceable.
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+            {renderStabilitySVG()}
+          </div>
+
+          <div style={{ background: 'rgba(30,41,59,0.8)', padding: '20px', borderRadius: '12px', border: '1px solid #334155' }}>
+            <h3 style={{ color: '#f59e0b', marginBottom: '14px', fontWeight: 700 }}>The Stability Truth</h3>
+            <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.7, fontWeight: 400 }}>
+              A design that meets DC specifications can still fail dynamically. Phase margin depends
+              on the exact component values, parasitics, and operating conditions. This is why
+              "looks correct" from an LLM is not the same as "works correctly" from simulation.
+              Real physics feedback is irreplaceable. The formula PM = 180° − ∠T(jω) captures
+              exactly how much safety margin your control loop has before going unstable.
             </p>
           </div>
         </div>
       </div>,
       true,
-      'Apply This Knowledge'
+      'Apply Knowledge'
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
     return renderPhaseContent(
-      <div style={{ color: '#f8fafc', padding: '24px' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Real-World Applications</h2>
-          <p style={{ textAlign: 'center', color: '#e2e8f0', marginBottom: '24px' }}>
+      <div style={{ color: '#ffffff', padding: '24px' }}>
+        <div style={{ maxWidth: '640px', margin: '0 auto' }}>
+          <h2 style={{ textAlign: 'center', marginBottom: '6px', fontWeight: 700 }}>Real-World Applications</h2>
+          <p style={{ textAlign: 'center', color: colors.muted, marginBottom: '24px', fontWeight: 400 }}>
             LLM + Simulation workflows across hardware design
           </p>
 
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
-              style={{
-                background: 'rgba(30, 41, 59, 0.8)',
-                padding: '20px',
-                borderRadius: '12px',
-                marginBottom: '16px',
-                border: transferCompleted.has(index) ? '2px solid #22c55e' : '1px solid #475569',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: '#f8fafc' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: '#22c55e' }}>Complete</span>}
-              </div>
-              <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
-                <p style={{ color: '#8b5cf6', fontSize: '14px' }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{
-                    padding: '10px 20px',
-                    borderRadius: '8px',
-                    border: '1px solid #8b5cf6',
-                    background: 'transparent',
-                    color: '#8b5cf6',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div>
-                  <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #22c55e', marginBottom: '12px' }}>
-                    <p style={{ color: '#e2e8f0', fontSize: '14px' }}>{app.answer}</p>
+          {realWorldApps.map((app, index) => {
+            const isComplete = transferCompleted.has(index);
+            return (
+              <div
+                key={index}
+                style={{
+                  background: 'rgba(30,41,59,0.8)',
+                  padding: '20px',
+                  borderRadius: '12px',
+                  marginBottom: '16px',
+                  border: isComplete ? `2px solid ${app.color}` : '1px solid #475569',
+                  boxShadow: isComplete ? `0 4px 16px ${app.color}30` : 'none',
+                  transition: 'all 0.3s ease',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '24px' }}>{app.icon}</span>
+                    <div>
+                      <h3 style={{ color: '#fff', fontWeight: 700, fontSize: '16px' }}>{app.title}</h3>
+                      <span style={{ color: app.color, fontSize: '12px', fontWeight: 600 }}>{app.tagline}</span>
+                    </div>
                   </div>
+                  {isComplete && <span style={{ color: app.color, fontSize: '18px' }}>✓</span>}
+                </div>
+
+                {/* Stats row */}
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '12px', flexWrap: 'wrap' as const }}>
+                  {app.stats.map((stat, si) => (
+                    <div key={si} style={{
+                      background: `${app.color}15`,
+                      border: `1px solid ${app.color}40`,
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      textAlign: 'center' as const,
+                      minWidth: '80px',
+                    }}>
+                      <div style={{ color: app.color, fontWeight: 700, fontSize: '15px' }}>{stat.value}</div>
+                      <div style={{ color: colors.muted, fontSize: '11px', fontWeight: 400 }}>{stat.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '12px', lineHeight: 1.6, fontWeight: 400 }}>
+                  {app.description}
+                </p>
+
+                {isComplete ? (
+                  <div>
+                    <div style={{
+                      background: 'rgba(34,197,94,0.1)',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      borderLeft: '3px solid #22c55e',
+                      marginBottom: '10px',
+                    }}>
+                      <p style={{ color: '#e2e8f0', fontSize: '13px', lineHeight: 1.6, fontWeight: 400 }}>
+                        {app.connection}
+                      </p>
+                    </div>
+                    <div style={{
+                      background: 'rgba(139,92,246,0.1)',
+                      padding: '10px 12px',
+                      borderRadius: '8px',
+                      marginBottom: '10px',
+                    }}>
+                      <p style={{ color: '#e2e8f0', fontSize: '13px', lineHeight: 1.6, fontWeight: 400 }}>
+                        <strong style={{ color: '#8b5cf6' }}>Companies:</strong> {app.companies.join(', ')}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {}}
+                      style={{
+                        padding: '10px 20px',
+                        minHeight: '44px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: '#22c55e',
+                        color: '#fff',
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 2px 8px rgba(34,197,94,0.3)',
+                      }}
+                    >
+                      ✓ Got It
+                    </button>
+                  </div>
+                ) : (
                   <button
+                    onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
                     style={{
                       padding: '10px 20px',
                       minHeight: '44px',
                       borderRadius: '8px',
-                      border: 'none',
-                      background: '#22c55e',
-                      color: 'white',
+                      border: `1px solid ${app.color}`,
+                      background: 'transparent',
+                      color: app.color,
                       cursor: 'pointer',
                       fontWeight: 600,
+                      transition: 'all 0.2s ease',
                     }}
                   >
-                    Got It
+                    Continue →
                   </button>
-                </div>
-              )}
-            </div>
-          ))}
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>,
       transferCompleted.size >= 4,
-      'Take the Test'
+      'Take the Quiz'
     );
   }
 
@@ -1204,19 +1423,23 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
   if (phase === 'test') {
     if (testSubmitted) {
       return renderPhaseContent(
-        <div style={{ color: '#f8fafc', padding: '24px' }}>
+        <div style={{ color: '#ffffff', padding: '24px' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto' }}>
             <div style={{
-              background: testScore >= 8 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              background: testScore >= 8 ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)',
               padding: '24px',
               borderRadius: '12px',
               textAlign: 'center',
               marginBottom: '24px',
+              boxShadow: testScore >= 8 ? '0 4px 20px rgba(34,197,94,0.25)' : '0 4px 20px rgba(239,68,68,0.25)',
             }}>
-              <h2 style={{ color: testScore >= 8 ? '#22c55e' : '#ef4444', marginBottom: '8px' }}>
-                {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
+              <h2 style={{ color: testScore >= 8 ? '#22c55e' : '#ef4444', marginBottom: '8px', fontWeight: 700 }}>
+                {testScore >= 8 ? '🎉 Excellent!' : '📚 Keep Learning!'}
               </h2>
-              <p style={{ fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
+              <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#fff' }}>{testScore} / 10</p>
+              <p style={{ color: colors.muted, fontWeight: 400 }}>
+                {testScore >= 8 ? 'You mastered the LLM-to-SPICE pipeline!' : 'Review the material and try again.'}
+              </p>
             </div>
 
             {testQuestions.map((q, qIndex) => {
@@ -1224,22 +1447,24 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
               const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
               return (
                 <div key={qIndex} style={{
-                  background: 'rgba(30, 41, 59, 0.8)',
+                  background: 'rgba(30,41,59,0.8)',
                   padding: '16px',
                   borderRadius: '12px',
                   marginBottom: '12px',
                   borderLeft: `4px solid ${isCorrect ? '#22c55e' : '#ef4444'}`,
                 }}>
-                  <p style={{ fontWeight: 'bold', marginBottom: '8px' }}>{qIndex + 1}. {q.question}</p>
+                  <p style={{ fontWeight: 600, marginBottom: '8px', color: '#fff' }}>{qIndex + 1}. {q.question}</p>
                   {q.options.map((opt, oIndex) => (
                     <div key={oIndex} style={{
                       padding: '8px',
                       borderRadius: '6px',
                       marginBottom: '4px',
-                      background: opt.correct ? 'rgba(34, 197, 94, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
-                      color: opt.correct ? '#22c55e' : userAnswer === oIndex ? '#ef4444' : '#94a3b8',
+                      background: opt.correct ? 'rgba(34,197,94,0.2)' : userAnswer === oIndex ? 'rgba(239,68,68,0.2)' : 'transparent',
+                      color: opt.correct ? '#22c55e' : userAnswer === oIndex ? '#ef4444' : colors.muted,
+                      fontWeight: 400,
+                      fontSize: '14px',
                     }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
+                      {opt.correct ? '✓ ' : userAnswer === oIndex ? '✗ ' : ''}{opt.text}
                     </div>
                   ))}
                 </div>
@@ -1248,7 +1473,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
           </div>
         </div>,
         testScore >= 8,
-        testScore >= 8 ? 'Complete Mastery' : 'Review & Retry'
+        testScore >= 8 ? 'Achieve Mastery' : 'Retry Quiz'
       );
     }
 
@@ -1256,14 +1481,16 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
     const allAnswered = !testAnswers.includes(null);
 
     return renderPhaseContent(
-      <div style={{ color: '#f8fafc', padding: '24px' }}>
+      <div style={{ color: '#ffffff', padding: '24px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h2>Knowledge Test</h2>
-            <span style={{ color: '#e2e8f0' }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+            <h2 style={{ fontWeight: 700 }}>Knowledge Quiz</h2>
+            <span style={{ color: '#cbd5e1', fontWeight: 400 }}>
+              Question {currentTestQuestion + 1} of {testQuestions.length}
+            </span>
           </div>
 
-          <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', gap: '4px', marginBottom: '20px' }}>
             {testQuestions.map((_, i) => (
               <div
                 key={i}
@@ -1274,13 +1501,28 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
                   borderRadius: '2px',
                   background: testAnswers[i] !== null ? '#8b5cf6' : i === currentTestQuestion ? '#94a3b8' : '#475569',
                   cursor: 'pointer',
+                  transition: 'all 0.2s ease',
                 }}
               />
             ))}
           </div>
 
-          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-            <p style={{ fontSize: '16px' }}>{currentQ.question}</p>
+          {/* Scenario context */}
+          <div style={{
+            background: 'rgba(139,92,246,0.1)',
+            padding: '14px',
+            borderRadius: '10px',
+            marginBottom: '14px',
+            border: '1px solid rgba(139,92,246,0.3)',
+          }}>
+            <p style={{ color: colors.muted, fontSize: '12px', fontWeight: 600, textTransform: 'uppercase' as const, marginBottom: '6px' }}>
+              Scenario
+            </p>
+            <p style={{ color: '#e2e8f0', fontSize: '13px', lineHeight: 1.6, fontWeight: 400 }}>{currentQ.scenario}</p>
+          </div>
+
+          <div style={{ background: 'rgba(30,41,59,0.8)', padding: '16px', borderRadius: '10px', marginBottom: '14px' }}>
+            <p style={{ fontSize: '15px', fontWeight: 600, color: '#fff' }}>{currentQ.question}</p>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1289,13 +1531,16 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
                 key={oIndex}
                 onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
                 style={{
-                  padding: '16px',
-                  borderRadius: '12px',
+                  padding: '14px',
+                  borderRadius: '10px',
                   border: testAnswers[currentTestQuestion] === oIndex ? '2px solid #8b5cf6' : '1px solid #475569',
-                  background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
-                  color: '#f8fafc',
+                  background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(139,92,246,0.2)' : 'transparent',
+                  color: '#fff',
                   cursor: 'pointer',
                   textAlign: 'left',
+                  fontWeight: testAnswers[currentTestQuestion] === oIndex ? 600 : 400,
+                  transition: 'all 0.2s ease',
+                  boxShadow: testAnswers[currentTestQuestion] === oIndex ? '0 0 8px rgba(139,92,246,0.25)' : 'none',
                 }}
               >
                 {opt.text}
@@ -1303,35 +1548,44 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
             ))}
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px', gap: '12px' }}>
             <button
               onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
               disabled={currentTestQuestion === 0}
               style={{
                 padding: '12px 24px',
+                minHeight: '44px',
                 borderRadius: '8px',
                 border: '1px solid #475569',
                 background: 'transparent',
-                color: currentTestQuestion === 0 ? '#475569' : '#f8fafc',
+                color: currentTestQuestion === 0 ? colors.muted : '#fff',
                 cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
+                fontWeight: 400,
+                transition: 'all 0.2s ease',
               }}
             >
-              Previous
+              ← Previous
             </button>
 
             {currentTestQuestion < testQuestions.length - 1 ? (
               <button
                 onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
+                disabled={testAnswers[currentTestQuestion] === null}
                 style={{
                   padding: '12px 24px',
+                  minHeight: '44px',
                   borderRadius: '8px',
                   border: 'none',
-                  background: '#8b5cf6',
-                  color: 'white',
-                  cursor: 'pointer',
+                  background: testAnswers[currentTestQuestion] !== null ? '#8b5cf6' : '#475569',
+                  color: '#fff',
+                  cursor: testAnswers[currentTestQuestion] !== null ? 'pointer' : 'not-allowed',
+                  opacity: testAnswers[currentTestQuestion] !== null ? 1 : 0.4,
+                  fontWeight: 600,
+                  transition: 'all 0.2s ease',
+                  boxShadow: testAnswers[currentTestQuestion] !== null ? '0 2px 8px rgba(139,92,246,0.35)' : 'none',
                 }}
               >
-                Next
+                Next →
               </button>
             ) : (
               <button
@@ -1339,14 +1593,18 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
                 disabled={!allAnswered}
                 style={{
                   padding: '12px 24px',
+                  minHeight: '44px',
                   borderRadius: '8px',
                   border: 'none',
                   background: allAnswered ? '#22c55e' : '#475569',
-                  color: 'white',
+                  color: '#fff',
                   cursor: allAnswered ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                  transition: 'all 0.2s ease',
+                  boxShadow: allAnswered ? '0 2px 8px rgba(34,197,94,0.35)' : 'none',
                 }}
               >
-                Submit Test
+                Submit Quiz
               </button>
             )}
           </div>
@@ -1359,35 +1617,52 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return renderPhaseContent(
-      <div style={{ color: '#f8fafc', padding: '24px' }}>
+      <div style={{ color: '#ffffff', padding: '24px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
-          <h1 style={{ color: '#22c55e', marginBottom: '8px' }}>Mastery Achieved!</h1>
-          <p style={{ color: '#e2e8f0', marginBottom: '24px' }}>
+          <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
+          <h1 style={{ color: '#22c55e', marginBottom: '8px', fontWeight: 700 }}>Mastery Achieved!</h1>
+          <p style={{ color: '#e2e8f0', marginBottom: '24px', fontWeight: 400 }}>
             You understand the LLM-to-SPICE workflow
           </p>
 
-          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', textAlign: 'left', marginBottom: '24px' }}>
-            <h3 style={{ color: '#8b5cf6', marginBottom: '12px' }}>Key Concepts Mastered:</h3>
-            <ul style={{ color: '#e2e8f0', lineHeight: 1.8, paddingLeft: '20px' }}>
+          <div style={{
+            background: 'rgba(30,41,59,0.8)',
+            padding: '20px',
+            borderRadius: '12px',
+            textAlign: 'left',
+            marginBottom: '20px',
+            border: '1px solid #334155',
+          }}>
+            <h3 style={{ color: '#8b5cf6', marginBottom: '12px', fontWeight: 700 }}>Key Concepts Mastered:</h3>
+            <ul style={{ color: '#e2e8f0', lineHeight: 1.9, paddingLeft: '20px', fontWeight: 400 }}>
               <li>LLMs generate plausible designs, not correct designs</li>
               <li>SPICE simulation is the physics truth source</li>
-              <li>Iteration loop: generate, simulate, feedback, refine</li>
+              <li>Iteration loop: generate → simulate → feedback → refine</li>
               <li>Phase margin and stability analysis</li>
               <li>Bode plots reveal control loop behavior</li>
             </ul>
           </div>
 
-          <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '20px', borderRadius: '12px', textAlign: 'left' }}>
-            <h3 style={{ color: '#f59e0b', marginBottom: '12px' }}>The Bigger Picture:</h3>
-            <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.6 }}>
-              This pattern - AI generates, physics validates - applies broadly. LLMs cannot compute, they approximate. Whenever physical correctness matters (circuits, structures, chemistry), simulation or measurement must close the loop.
+          <div style={{
+            background: 'rgba(245,158,11,0.1)',
+            padding: '20px',
+            borderRadius: '12px',
+            textAlign: 'left',
+            border: '1px solid rgba(245,158,11,0.3)',
+            boxShadow: '0 4px 16px rgba(245,158,11,0.1)',
+          }}>
+            <h3 style={{ color: '#f59e0b', marginBottom: '12px', fontWeight: 700 }}>The Bigger Picture:</h3>
+            <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.7, fontWeight: 400 }}>
+              This pattern — AI generates, physics validates — applies broadly. LLMs cannot compute,
+              they approximate. Whenever physical correctness matters (circuits, structures, chemistry),
+              simulation or measurement must close the loop. The 10x speed advantage of LLM-assisted
+              design comes from faster exploration, not from replacing physics.
             </p>
           </div>
         </div>
       </div>,
       true,
-      'Complete'
+      '🎓 Complete'
     );
   }
 

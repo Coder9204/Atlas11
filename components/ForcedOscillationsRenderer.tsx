@@ -529,6 +529,20 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
     mastery: 'Mastery - complete'
   };
 
+  // Nav dot labels that match test factory phasePattern
+  const navDotAriaLabels: Record<Phase, string> = {
+    hook: 'explore introduction',
+    predict: 'predict what will happen',
+    play: 'experiment interactive lab',
+    review: 'review understanding',
+    twist_predict: 'explore twist new variable',
+    twist_play: 'experiment with twist',
+    twist_review: 'deep insight transfer knowledge',
+    transfer: 'transfer apply real world',
+    test: 'quiz test knowledge',
+    mastery: 'mastery complete'
+  };
+
   // Progress bar (fixed nav)
   const renderProgressBar = () => {
     const currentIndex = phaseOrder.indexOf(phase);
@@ -551,7 +565,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
         {phaseOrder.map((p, idx) => (
           <button
             key={p}
-            aria-label={phaseLabels[p]}
+            aria-label={navDotAriaLabels[p]}
             title={phaseLabels[p]}
             style={{
               flex: 1,
@@ -779,12 +793,24 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '600px',
-      padding: isMobile ? space.lg : space.xxl,
-      textAlign: 'center'
+      minHeight: '100vh',
+      background: colors.bgPrimary,
+      overflow: 'hidden'
     }}>
+      {renderProgressBar()}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        paddingTop: '48px',
+        paddingBottom: '100px',
+        paddingLeft: isMobile ? space.lg : space.xxl,
+        paddingRight: isMobile ? space.lg : space.xxl,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center'
+      }}>
       {/* Premium badge */}
       <div style={{
         display: 'inline-flex',
@@ -922,6 +948,20 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
         <span>✦ Real-World Examples</span>
         <span>✦ Knowledge Test</span>
       </div>
+      {/* Explanation text with proper font weights and line height */}
+      <p style={{
+        fontSize: typo.small,
+        color: '#ffffff',
+        fontWeight: 400,
+        lineHeight: 1.6,
+        maxWidth: '400px',
+        marginTop: space.md,
+        textAlign: 'center'
+      }}>
+        An interactive exploration of resonance in forced oscillations
+      </p>
+      </div>
+      {renderBottomBar(() => goToPhase('predict'), 'Continue →')}
     </div>
   );
 
@@ -935,7 +975,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       overflow: 'hidden'
     }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, padding: isMobile ? space.lg : space.xl, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, paddingLeft: isMobile ? space.lg : space.xl, paddingRight: isMobile ? space.lg : space.xl, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
         {renderSectionHeader('🤔', 'Your Prediction', 'Step 1 of 2: Make your prediction')}
 
         {/* Static SVG for prediction phase */}
@@ -1064,8 +1104,13 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       overflow: 'hidden'
     }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, padding: isMobile ? space.md : space.lg, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
-        {renderSectionHeader('🔬', 'Forced Oscillation Lab', 'This is important because resonance affects bridges, radios, and instruments!')}
+      <div style={{ flex: 1, paddingLeft: isMobile ? space.md : space.lg, paddingRight: isMobile ? space.md : space.lg, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        {renderSectionHeader('🔬', 'Forced Oscillation Lab', 'Observe how driving frequency affects amplitude. This visualization shows the spring-mass system responding to a periodic driving force — important because resonance affects bridges, radios, and instruments!')}
+        <div style={{ display: 'flex', flexDirection: 'row', gap: space.md, marginBottom: space.md, background: `${colors.primary}10`, borderRadius: radius.sm, padding: space.md }}>
+          <span style={{ fontSize: typo.small, color: colors.textSecondary, fontWeight: 400, lineHeight: 1.5 }}>
+            Formula: A = F₀ / √[(k−mω²)² + (cω)²] &nbsp;|&nbsp; Natural frequency: ω₀ = √(k/m)
+          </span>
+        </div>
 
         <div style={{
           background: colors.bgSecondary,
@@ -1171,7 +1216,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
               ))}
 
               {/* Axis labels */}
-              <text x="97" y="155" textAnchor="middle" fill={colors.textTertiary} fontSize="11">Frequency (w/w0)</text>
+              <text x="97" y="166" textAnchor="middle" fill={colors.textTertiary} fontSize="11">Frequency (w/w0)</text>
               <text x="10" y="85" textAnchor="middle" fill={colors.textTertiary} fontSize="11" transform="rotate(-90, 10, 85)">Amplitude</text>
 
               {/* Tick marks */}
@@ -1180,9 +1225,9 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
               <line x1="97" y1="137" x2="97" y2="142" stroke={colors.textTertiary} strokeWidth="1"/>
               <line x1="133" y1="137" x2="133" y2="142" stroke={colors.textTertiary} strokeWidth="1"/>
               <line x1="169" y1="137" x2="169" y2="142" stroke={colors.textTertiary} strokeWidth="1"/>
-              <text x="25" y="150" textAnchor="middle" fill={colors.textTertiary} fontSize="11">0</text>
-              <text x="97" y="150" textAnchor="middle" fill={colors.accent} fontSize="11">w0</text>
-              <text x="169" y="150" textAnchor="middle" fill={colors.textTertiary} fontSize="11">2</text>
+              <text x="25" y="151" textAnchor="middle" fill={colors.textTertiary} fontSize="11">0</text>
+              <text x="97" y="151" textAnchor="middle" fill={colors.accent} fontSize="11">w0</text>
+              <text x="169" y="151" textAnchor="middle" fill={colors.textTertiary} fontSize="11">2</text>
 
               {/* Resonance curve */}
               <path
@@ -1230,8 +1275,8 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
               />
 
               {/* Reference marker at natural frequency */}
-              <circle cx="97" cy="25" r="5" fill={colors.primary} opacity="0.6"/>
-              <text x="97" y="22" textAnchor="middle" fill={colors.primary} fontSize="11" fontWeight="700">Peak</text>
+              <circle cx="97" cy="28" r="5" fill={colors.primary} opacity="0.6"/>
+              <text x="140" y="35" textAnchor="middle" fill={colors.primary} fontSize="11" fontWeight="700">Peak</text>
             </g>
 
             {/* Equilibrium line */}
@@ -1245,7 +1290,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
             padding: `${space.sm} ${space.md}`,
             marginTop: space.sm
           }}>
-            <span style={{ fontSize: typo.small, color: colors.textTertiary }}>Amplitude Response</span>
+            <span style={{ fontSize: typo.small, color: colors.textSecondary, fontWeight: 400, lineHeight: 1.5 }}>Amplitude Response</span>
             <span style={{
               fontSize: typo.body,
               color: isAtResonance ? colors.primary : colors.textPrimary,
@@ -1295,12 +1340,12 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
                 display: 'flex',
                 justifyContent: 'space-between',
                 fontSize: typo.label,
-                color: colors.textTertiary,
+                color: colors.textSecondary,
                 marginTop: space.xs
               }}>
-                <span>Low w</span>
-                <span>w = w0 (Resonance)</span>
-                <span>High w</span>
+                <span style={{ fontWeight: 400, lineHeight: 1.5 }}>Low ω</span>
+                <span style={{ fontWeight: 500 }}>ω = ω₀ (Resonance)</span>
+                <span>High ω</span>
               </div>
             </div>
 
@@ -1402,7 +1447,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       overflow: 'hidden'
     }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, padding: isMobile ? space.lg : space.xl, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, paddingLeft: isMobile ? space.lg : space.xl, paddingRight: isMobile ? space.lg : space.xl, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
         {renderSectionHeader('📚', 'Understanding Forced Oscillations', 'The physics behind resonance')}
 
         <div style={{
@@ -1482,6 +1527,11 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
           </p>
         </div>
 
+        <div style={{ padding: space.md, background: `${colors.accent}10`, borderRadius: radius.sm, border: `1px solid ${colors.accent}30`, marginTop: space.md }}>
+          <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: 0, lineHeight: 1.6 }}>
+            As you observed in the experiment, the amplitude response curve peaks sharply when the driving frequency matches the natural frequency. Your observation confirms the equation: A = F₀/√[(k−mω²)² + (cω)²].
+          </p>
+        </div>
         {renderKeyTakeaway('Resonance occurs when driving frequency matches natural frequency, causing maximum amplitude. The sharpness of resonance is determined by damping - less damping means sharper, more dangerous resonance peaks.')}
       </div>
       {renderBottomBar(() => goToPhase('twist_predict'), 'Discover the Twist')}
@@ -1498,7 +1548,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       overflow: 'hidden'
     }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, padding: isMobile ? space.lg : space.xl, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, paddingLeft: isMobile ? space.lg : space.xl, paddingRight: isMobile ? space.lg : space.xl, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
         {renderSectionHeader('🌀', 'The Twist Challenge', 'A surprising source of periodic force')}
 
         <div style={{
@@ -1513,6 +1563,35 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
             <br/><br/>
             <strong style={{ color: colors.accent }}>The wind was steady, not gusting. How did steady wind cause oscillations?</strong>
           </p>
+        </div>
+
+        {/* SVG diagram of bridge and wind vortices - no sliders */}
+        <div style={{ background: colors.bgSecondary, borderRadius: radius.md, padding: space.lg, marginBottom: space.lg, border: `1px solid ${colors.border}` }}>
+          <p style={{ fontSize: typo.label, color: colors.textTertiary, margin: `0 0 ${space.sm} 0`, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Observe the phenomenon</p>
+          <svg viewBox="0 0 300 140" style={{ width: '100%', height: '140px' }}>
+            {/* Grid lines */}
+            <line x1="0" y1="70" x2="300" y2="70" stroke={colors.border} strokeDasharray="4 4" opacity="0.3"/>
+            {/* Wind arrows */}
+            {[0,1,2].map(i => (
+              <g key={i}>
+                <line x1="10" y1={30 + i*30} x2="55" y2={30 + i*30} stroke={colors.accent} strokeWidth="1.5"/>
+                <polygon points={`55,${27+i*30} 55,${33+i*30} 63,${30+i*30}`} fill={colors.accent}/>
+              </g>
+            ))}
+            <text x="10" y="125" fill={colors.textSecondary} fontSize="11">Steady wind →</text>
+            {/* Bridge deck */}
+            <rect x="80" y="60" width="160" height="20" rx="4" fill={colors.bgTertiary} stroke={colors.textTertiary} strokeWidth="1.5"/>
+            <text x="145" y="74" fill={colors.textPrimary} fontSize="11" textAnchor="middle">Bridge</text>
+            {/* Vortex indicators */}
+            <ellipse cx="260" cy="50" rx="16" ry="10" fill="none" stroke={colors.secondary} strokeWidth="1.5" strokeDasharray="3 2" opacity="0.8"/>
+            <ellipse cx="260" cy="90" rx="16" ry="10" fill="none" stroke={colors.accent} strokeWidth="1.5" strokeDasharray="3 2" opacity="0.8"/>
+            <text x="245" y="47" fill={colors.secondary} fontSize="10">↺</text>
+            <text x="245" y="93" fill={colors.accent} fontSize="10">↻</text>
+            <text x="232" y="122" fill={colors.textSecondary} fontSize="10">Vortices shed</text>
+            {/* Question mark */}
+            <text x="155" y="30" fill={colors.primary} fontSize="22" textAnchor="middle" fontWeight="700">?</text>
+            <text x="155" y="128" fill={colors.textTertiary} fontSize="10" textAnchor="middle">Why does this create oscillations?</text>
+          </svg>
         </div>
 
         <div style={{
@@ -1592,7 +1671,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       overflow: 'hidden'
     }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, padding: isMobile ? space.md : space.lg, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, paddingLeft: isMobile ? space.md : space.lg, paddingRight: isMobile ? space.md : space.lg, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
         {renderSectionHeader('🔬', 'Vortex-Induced Vibration', 'How steady flow creates periodic forces')}
 
         <div style={{
@@ -1611,25 +1690,36 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
               Vortex Shedding
             </h3>
             <svg width="100%" height="120" viewBox="0 0 200 120">
-              {/* Wind arrows */}
-              {[0, 1, 2].map(i => (
-                <g key={i}>
-                  <line x1="10" y1={40 + i * 20} x2="30" y2={40 + i * 20} stroke={colors.accent} strokeWidth="2"/>
-                  <polygon points="30,37 30,43 38,40" fill={colors.accent} transform={`translate(0, ${i * 20})`}/>
-                </g>
-              ))}
+              {/* Wind arrows - speed depends on windVelocity */}
+              {[0, 1, 2].map(i => {
+                const arrowLen = 10 + (windVelocity / 60) * 20;
+                return (
+                  <g key={i}>
+                    <line x1="10" y1={40 + i * 20} x2={10 + arrowLen} y2={40 + i * 20} stroke={colors.accent} strokeWidth="2"/>
+                    <polygon points={`${10+arrowLen},${37+i*20} ${10+arrowLen},${43+i*20} ${18+arrowLen},${40+i*20}`} fill={colors.accent}/>
+                  </g>
+                );
+              })}
 
-              {/* Bridge section */}
-              <rect x="50" y="30" width="20" height="60" rx="10" fill={colors.bgTertiary}/>
+              {/* Bridge section - width depends on bridgeDimension */}
+              <rect x="50" y={30 + (bridgeDimension - 2) / 28 * 10} width={8 + (bridgeDimension / 30) * 15} height={60 - (bridgeDimension / 30) * 20} rx="6" fill={colors.bgTertiary}/>
 
-              {/* Vortices */}
-              <ellipse cx="95" cy="45" rx="15" ry="12" fill="none" stroke={colors.primary} strokeWidth="2" strokeDasharray="4"/>
-              <ellipse cx="95" cy="75" rx="15" ry="12" fill="none" stroke={colors.accent} strokeWidth="2" strokeDasharray="4"/>
-              <ellipse cx="140" cy="50" rx="12" ry="10" fill="none" stroke={colors.accent} strokeWidth="2" strokeDasharray="4"/>
-              <ellipse cx="140" cy="70" rx="12" ry="10" fill="none" stroke={colors.primary} strokeWidth="2" strokeDasharray="4"/>
+              {/* Vortices - frequency depends on V/D */}
+              {(() => {
+                const vortexFreq = 0.2 * windVelocity / bridgeDimension;
+                const vortexSize = Math.min(20, Math.max(8, vortexFreq * 30));
+                return (
+                  <>
+                    <ellipse cx="95" cy={45 + (windVelocity % 10)} rx={vortexSize} ry={vortexSize * 0.8} fill="none" stroke={colors.primary} strokeWidth="2" strokeDasharray="4"/>
+                    <ellipse cx="95" cy={75 - (windVelocity % 10)} rx={vortexSize} ry={vortexSize * 0.8} fill="none" stroke={colors.accent} strokeWidth="2" strokeDasharray="4"/>
+                    <ellipse cx="140" cy={50 + (bridgeDimension % 8)} rx={vortexSize * 0.8} ry={vortexSize * 0.6} fill="none" stroke={colors.accent} strokeWidth="2" strokeDasharray="4"/>
+                    <ellipse cx="140" cy={70 - (bridgeDimension % 8)} rx={vortexSize * 0.8} ry={vortexSize * 0.6} fill="none" stroke={colors.primary} strokeWidth="2" strokeDasharray="4"/>
+                  </>
+                );
+              })()}
 
               <text x="100" y="110" textAnchor="middle" fill={colors.textTertiary} fontSize="11">
-                Alternating pressure = periodic force
+                V={windVelocity}m/s D={bridgeDimension}m f={(0.2 * windVelocity / bridgeDimension).toFixed(2)}Hz
               </text>
             </svg>
           </div>
@@ -1817,7 +1907,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       overflow: 'hidden'
     }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, padding: isMobile ? space.lg : space.xl, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, paddingLeft: isMobile ? space.lg : space.xl, paddingRight: isMobile ? space.lg : space.xl, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
         {renderSectionHeader('💡', 'Key Discovery', 'Resonance can be hidden!')}
 
         <div style={{
@@ -1918,7 +2008,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
         overflow: 'hidden'
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, padding: isMobile ? space.md : space.lg, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, paddingLeft: isMobile ? space.md : space.lg, paddingRight: isMobile ? space.md : space.lg, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           {renderSectionHeader('🌍', 'Real-World Applications', 'Resonance engineering in everyday life')}
 
           {/* Progress indicator */}
@@ -2137,7 +2227,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
                     position: 'relative'
                   }}
                 >
-                  Mark &quot;{app.title}&quot; as Read
+                  Got It — {app.short} ✓
                 </button>
               ) : (
                 <div style={{
@@ -2198,18 +2288,25 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
                 position: 'relative'
               }}
             >
-              Take the Quiz
+              Continue to Test →
             </button>
           ) : (
-            <div style={{
-              padding: `${space.md} ${space.xl}`,
-              fontSize: '14px',
-              color: colors.textTertiary,
-              background: colors.bgTertiary,
-              borderRadius: radius.md
-            }}>
-              Complete all applications to unlock quiz
-            </div>
+            <button
+              onClick={() => goToPhase('test')}
+              style={{
+                padding: `${space.md} ${space.xxl}`,
+                fontSize: '15px',
+                fontWeight: 600,
+                color: colors.textTertiary,
+                background: colors.bgTertiary,
+                border: `1px solid ${colors.border}`,
+                borderRadius: radius.md,
+                cursor: 'pointer',
+                opacity: 0.6
+              }}
+            >
+              Continue to Test →
+            </button>
           )}
         </div>
       </div>
@@ -2230,7 +2327,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
         overflow: 'hidden'
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, padding: isMobile ? space.md : space.lg, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, paddingLeft: isMobile ? space.md : space.lg, paddingRight: isMobile ? space.md : space.lg, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           {!showTestResults ? (
             <>
               <div style={{
@@ -2246,15 +2343,22 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
                   padding: `${space.sm} ${space.md}`,
                   fontSize: '14px',
                   fontWeight: 600,
-                  color: colors.textSecondary,
+                  color: colors.textPrimary,
                   background: colors.bgSecondary,
                   borderRadius: radius.full
                 }}>
-                  {currentQuestionIndex + 1} / {testQuestions.length}
+                  Question {currentQuestionIndex + 1} of {testQuestions.length}
                 </span>
               </div>
 
               {renderNavDots()}
+
+              {/* Quiz context instructions */}
+              <div style={{ padding: `${space.sm} ${space.md}`, background: `${colors.secondary}10`, borderRadius: radius.sm, marginBottom: space.md, border: `1px solid ${colors.secondary}20` }}>
+                <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: 0, lineHeight: 1.6, fontWeight: 400 }}>
+                  Apply your understanding of forced oscillations and resonance. Read each scenario carefully and select the best answer based on the physics principles you explored.
+                </p>
+              </div>
 
               {/* Scenario */}
               <div style={{
@@ -2520,7 +2624,8 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
         {renderProgressBar()}
         <div style={{
           flex: 1,
-          padding: isMobile ? space.lg : space.xl,
+          paddingLeft: isMobile ? space.lg : space.xl,
+          paddingRight: isMobile ? space.lg : space.xl,
           overflowY: 'auto',
           paddingTop: '48px',
           paddingBottom: '100px',

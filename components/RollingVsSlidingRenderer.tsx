@@ -481,7 +481,12 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
                 idx === currentIndex ? 'bg-indigo-500 shadow-lg shadow-indigo-500/50' :
                 'bg-slate-600'
               }`}
-              style={{ cursor: idx <= currentIndex ? 'pointer' : 'default', transition: 'all 0.3s ease' }}
+              style={{
+                cursor: idx <= currentIndex ? 'pointer' : 'default',
+                transition: 'all 0.3s ease',
+                borderRadius: '4px',
+                background: idx < currentIndex ? '#10b981' : idx === currentIndex ? '#6366f1' : '#475569'
+              }}
             />
           ))}
         </div>
@@ -518,10 +523,19 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
               ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
               : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-500 hover:to-purple-500 active:scale-95 shadow-lg shadow-indigo-500/30'
           }`}
-          style={{ cursor: !canGoNext() || isLastPhase ? 'not-allowed' : 'pointer' }}
+          style={{
+            cursor: !canGoNext() || isLastPhase ? 'not-allowed' : 'pointer',
+            background: !canGoNext() || isLastPhase ? '#334155' : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+            color: !canGoNext() || isLastPhase ? '#64748b' : 'white',
+            fontWeight: 700,
+            borderRadius: '12px',
+            padding: '12px 24px',
+            boxShadow: !canGoNext() || isLastPhase ? 'none' : '0 4px 15px rgba(99,102,241,0.3)',
+            transition: 'all 0.2s ease'
+          }}
         >
-          {phase === 'transfer' && viewedApps.size < realWorldApps.length ? 'View All Apps' :
-           phase === 'test' && answeredQuestions.size < 10 ? 'Answer All Questions' :
+          {phase === 'transfer' && viewedApps.size < realWorldApps.length ? 'Next →' :
+           phase === 'test' && answeredQuestions.size < 10 ? 'Next →' :
            'Next →'}
         </button>
       </div>
@@ -536,6 +550,23 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
         <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-2">
           <h3 className="text-lg font-bold text-center text-indigo-300 mb-2">Friction Force Comparison</h3>
           <svg width="100%" viewBox="0 0 600 450" className="bg-slate-900/30 rounded-lg" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <linearGradient id="slidingGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#ef4444" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#dc2626" stopOpacity="0.7" />
+              </linearGradient>
+              <linearGradient id="rollingGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#2563eb" stopOpacity="0.7" />
+              </linearGradient>
+              <filter id="glowEffect">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                <feMerge>
+                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
             {/* Grid lines */}
             <g stroke="#475569" strokeWidth="0.5" opacity="0.3">
               {[0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => (
@@ -548,11 +579,10 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
 
             {/* Y-axis */}
             <line x1="50" y1="80" x2="50" y2="330" stroke="#94a3b8" strokeWidth="2" />
-            <text x="35" y="85" textAnchor="end" fill="#94a3b8" fontSize="11">High</text>
-            <text x="35" y="205" textAnchor="end" fill="#94a3b8" fontSize="11">Medium</text>
-            <text x="35" y="325" textAnchor="end" fill="#94a3b8" fontSize="11">Low</text>
-            <text x="20" y="200" textAnchor="middle" fill="#cbd5e1" fontSize="13" fontWeight="600" transform="rotate(-90 20 200)">
-              Friction Force (N)
+            <text x="46" y="88" textAnchor="end" fill="#94a3b8" fontSize="11">High</text>
+            <text x="46" y="328" textAnchor="end" fill="#94a3b8" fontSize="11">Low</text>
+            <text x="8" y="205" textAnchor="middle" fill="#cbd5e1" fontSize="11" fontWeight="600" transform="rotate(-90 8 205)">
+              Force (N)
             </text>
 
             {/* X-axis */}
@@ -575,13 +605,13 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
             </text>
 
             {/* Sliding box (left) */}
-            <g>
-              <rect x="120" y="270" width="60" height="50" fill="#ef4444" stroke="#dc2626" strokeWidth="2" rx="4" />
+            <g filter="url(#glowEffect)">
+              <rect x="120" y="270" width="60" height="50" fill="url(#slidingGrad)" stroke="#dc2626" strokeWidth="2" rx="4" />
               <text x="150" y="300" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold">BOX</text>
-              <text x="150" y="245" textAnchor="middle" fill="#ef4444" fontSize="14" fontWeight="bold">
-                SLIDING FRICTION (μ = {results.coeffs.sliding})
+              <text x="150" y="255" textAnchor="middle" fill="#ef4444" fontSize="12" fontWeight="bold">
+                Sliding μ={results.coeffs.sliding}
               </text>
-              <text x="150" y="230" textAnchor="middle" fill="#fca5a5" fontSize="12">
+              <text x="150" y="220" textAnchor="middle" fill="#fca5a5" fontSize="12">
                 f = {results.slidingFriction.toFixed(1)} N
               </text>
               {results.slidingAccel > 0 && (
@@ -596,11 +626,11 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
               <rect x="380" y="275" width="60" height="40" fill="#3b82f6" stroke="#2563eb" strokeWidth="2" rx="4" />
               <circle cx="395" cy="320" r="10" fill="#1f2937" stroke="#374151" strokeWidth="2" />
               <circle cx="425" cy="320" r="10" fill="#1f2937" stroke="#374151" strokeWidth="2" />
-              <text x="410" y="300" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">CART</text>
-              <text x="410" y="200" textAnchor="middle" fill="#10b981" fontSize="14" fontWeight="bold">
-                ROLLING FRICTION (μ = {results.coeffs.rolling})
+              <text x="410" y="299" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">CART</text>
+              <text x="410" y="255" textAnchor="middle" fill="#10b981" fontSize="12" fontWeight="bold">
+                Rolling μ={results.coeffs.rolling}
               </text>
-              <text x="410" y="215" textAnchor="middle" fill="#6ee7b7" fontSize="12">
+              <text x="410" y="220" textAnchor="middle" fill="#6ee7b7" fontSize="12">
                 f = {results.rollingFriction.toFixed(1)} N
               </text>
               {results.rollingAccel > 0 && (
@@ -621,11 +651,11 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
                     <polygon points="0 0, 10 3, 0 6" fill="#10b981" />
                   </marker>
                 </defs>
-                <line x1="70" y1="295" x2="115" y2="295" stroke="#ef4444" strokeWidth="3" markerEnd="url(#arrowhead-red)" />
-                <text x="75" y="285" fill="#ef4444" fontSize="12" fontWeight="600">F = {force} N</text>
+                <line x1="70" y1="305" x2="115" y2="305" stroke="#ef4444" strokeWidth="3" markerEnd="url(#arrowhead-red)" />
+                <text x="72" y="318" fill="#ef4444" fontSize="11" fontWeight="600">F={force}N</text>
 
-                <line x1="330" y1="295" x2="375" y2="295" stroke="#10b981" strokeWidth="3" markerEnd="url(#arrowhead-green)" />
-                <text x="335" y="285" fill="#10b981" fontSize="12" fontWeight="600">F = {force} N</text>
+                <line x1="330" y1="305" x2="375" y2="305" stroke="#10b981" strokeWidth="3" markerEnd="url(#arrowhead-green)" />
+                <text x="332" y="318" fill="#10b981" fontSize="11" fontWeight="600">F={force}N</text>
               </>
             )}
 
@@ -726,20 +756,20 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-700">
-              <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
-                <div className="text-xs text-red-300 mb-1">Sliding Acceleration</div>
-                <div className="text-2xl font-bold text-red-400">{results.slidingAccel.toFixed(2)} m/s²</div>
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-700" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', paddingTop: '16px', borderTop: '1px solid #334155', marginTop: '16px' }}>
+              <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4" style={{ background: 'rgba(127,29,29,0.2)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '10px', padding: '16px', boxShadow: '0 2px 8px rgba(239,68,68,0.1)' }}>
+                <div className="text-xs text-red-300 mb-1" style={{ color: '#fca5a5', fontSize: '12px', marginBottom: '4px', fontWeight: 400 }}>Sliding Acceleration</div>
+                <div className="text-2xl font-bold text-red-400" style={{ color: '#f87171', fontSize: '24px', fontWeight: 700 }}>{results.slidingAccel.toFixed(2)} m/s²</div>
               </div>
-              <div className="bg-emerald-900/20 border border-emerald-500/30 rounded-lg p-4">
-                <div className="text-xs text-emerald-300 mb-1">Rolling Acceleration</div>
-                <div className="text-2xl font-bold text-emerald-400">{results.rollingAccel.toFixed(2)} m/s²</div>
+              <div className="bg-emerald-900/20 border border-emerald-500/30 rounded-lg p-4" style={{ background: 'rgba(6,78,59,0.2)', border: '1px solid rgba(52,211,153,0.3)', borderRadius: '10px', padding: '16px', boxShadow: '0 2px 8px rgba(16,185,129,0.1)' }}>
+                <div className="text-xs text-emerald-300 mb-1" style={{ color: '#6ee7b7', fontSize: '12px', marginBottom: '4px', fontWeight: 400 }}>Rolling Acceleration</div>
+                <div className="text-2xl font-bold text-emerald-400" style={{ color: '#34d399', fontSize: '24px', fontWeight: 700 }}>{results.rollingAccel.toFixed(2)} m/s²</div>
               </div>
             </div>
 
-            <div className="bg-cyan-900/20 border border-cyan-500/30 rounded-lg p-4" style={{ transition: 'all 0.3s ease' }}>
-              <div className="text-sm font-semibold text-cyan-300 mb-2">🔍 Observation Guidance - What to Watch:</div>
-              <p className="text-sm text-slate-300 leading-relaxed">
+            <div className="bg-cyan-900/20 border border-cyan-500/30 rounded-lg p-4" style={{ transition: 'all 0.3s ease', background: 'rgba(22,78,99,0.2)', border: '1px solid rgba(34,211,238,0.3)', borderRadius: '10px', padding: '16px' }}>
+              <div className="text-sm font-semibold text-cyan-300 mb-2" style={{ fontWeight: 600, color: '#67e8f9', marginBottom: '8px' }}>🔍 Observation Guidance - What to Watch:</div>
+              <p className="text-sm text-slate-300 leading-relaxed" style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: '1.6', fontWeight: 400 }}>
                 Notice how both objects experience the same applied force, but the cart with wheels moves much more easily. Watch the acceleration values (a = m/s²) update in real-time as you adjust the sliders. The friction force (f) shown above each object demonstrates the huge difference between sliding and rolling.
               </p>
             </div>
@@ -996,53 +1026,53 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
   };
 
   const renderHook = () => (
-    <div className="space-y-6">
-      <h1 className="text-4xl font-bold text-center bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent leading-tight">
+    <div className="space-y-6" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <h1 className="text-4xl font-bold text-center bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent leading-tight" style={{ fontSize: '36px', fontWeight: 800, textAlign: 'center', color: '#818cf8', lineHeight: '1.2', margin: '0 0 8px 0' }}>
         Rolling vs Sliding Friction
       </h1>
 
-      <div className="bg-gradient-to-br from-indigo-900/40 to-purple-900/40 rounded-2xl p-8 border border-indigo-500/30 shadow-2xl">
+      <div className="bg-gradient-to-br from-indigo-900/40 to-purple-900/40 rounded-2xl p-8 border border-indigo-500/30 shadow-2xl" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.1) 100%)', borderRadius: '16px', border: '1px solid rgba(99,102,241,0.3)', padding: '32px', boxShadow: '0 8px 32px rgba(99,102,241,0.2)' }}>
         <div className="text-6xl text-center mb-6">🛞 📦</div>
 
         <div className="space-y-4 text-lg text-slate-200 leading-relaxed">
-          <p>
+          <p style={{ color: '#e2e8f0', fontSize: '18px', lineHeight: '1.6', fontWeight: 400, margin: '0 0 12px 0' }}>
             Imagine trying to push a heavy refrigerator across your kitchen floor. It's incredibly difficult - you might need 200+ Newtons of force just to budge it.
           </p>
-          <p>
+          <p style={{ color: '#e2e8f0', fontSize: '18px', lineHeight: '1.6', fontWeight: 400, margin: '0 0 12px 0' }}>
             Now imagine placing that same refrigerator on a dolly with wheels. Suddenly, you can move it with just 10-20 Newtons of force!
           </p>
-          <p className="text-xl font-semibold text-indigo-300">
+          <p className="text-xl font-semibold text-indigo-300" style={{ color: '#a5b4fc', fontSize: '20px', fontWeight: 600, lineHeight: '1.5' }}>
             What changed? The type of friction.
           </p>
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="bg-red-900/20 border border-red-500/40 rounded-xl p-6">
+      <div className="grid md:grid-cols-2 gap-4" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        <div className="bg-red-900/20 border border-red-500/40 rounded-xl p-6" style={{ background: 'rgba(127,29,29,0.2)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '12px', padding: '24px' }}>
           <div className="text-3xl mb-3">📦</div>
-          <h3 className="text-xl font-bold text-red-300 mb-2">Sliding Friction</h3>
-          <p className="text-slate-300 text-sm leading-relaxed">
+          <h3 className="text-xl font-bold text-red-300 mb-2" style={{ color: '#fca5a5', fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>Sliding Friction</h3>
+          <p className="text-slate-300 text-sm leading-relaxed" style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: '1.6', fontWeight: 400 }}>
             High friction coefficient (μ ≈ 0.3-0.7). Every point on the bottom surface rubs against the ground, creating massive resistance.
           </p>
         </div>
 
-        <div className="bg-emerald-900/20 border border-emerald-500/40 rounded-xl p-6">
+        <div className="bg-emerald-900/20 border border-emerald-500/40 rounded-xl p-6" style={{ background: 'rgba(6,78,59,0.2)', border: '1px solid rgba(52,211,153,0.4)', borderRadius: '12px', padding: '24px' }}>
           <div className="text-3xl mb-3">🛞</div>
-          <h3 className="text-xl font-bold text-emerald-300 mb-2">Rolling Friction</h3>
-          <p className="text-slate-300 text-sm leading-relaxed">
+          <h3 className="text-xl font-bold text-emerald-300 mb-2" style={{ color: '#6ee7b7', fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>Rolling Friction</h3>
+          <p className="text-slate-300 text-sm leading-relaxed" style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: '1.6', fontWeight: 400 }}>
             Low friction coefficient (μ ≈ 0.001-0.02). Only a tiny contact point deforms, creating 10-100× less resistance!
           </p>
         </div>
       </div>
 
-      <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-xl p-6 border border-purple-500/30">
-        <p className="text-center text-lg text-slate-200 leading-relaxed">
-          <span className="font-bold text-purple-300">This discovery changed human civilization.</span> The invention of the wheel around 3500 BCE enabled carts, chariots, mills, and eventually cars, trains, and aircraft. All because rolling friction is so much lower than sliding friction.
+      <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-xl p-6 border border-purple-500/30" style={{ background: 'linear-gradient(135deg, rgba(88,28,135,0.3) 0%, rgba(131,24,67,0.3) 100%)', borderRadius: '12px', border: '1px solid rgba(168,85,247,0.3)', padding: '24px', boxShadow: '0 4px 16px rgba(139,92,246,0.15)' }}>
+        <p className="text-center text-lg text-slate-200 leading-relaxed" style={{ textAlign: 'center', color: '#e2e8f0', fontSize: '18px', lineHeight: '1.7', fontWeight: 400 }}>
+          <span className="font-bold text-purple-300" style={{ fontWeight: 700, color: '#c084fc' }}>This discovery changed human civilization.</span> The invention of the wheel around 3500 BCE enabled carts, chariots, mills, and eventually cars, trains, and aircraft. All because rolling friction is so much lower than sliding friction.
         </p>
       </div>
 
-      <div className="text-center text-slate-400 text-sm">
-        Press <span className="font-semibold text-indigo-400">Next</span> to explore the physics of friction types
+      <div className="text-center text-slate-400 text-sm" style={{ textAlign: 'center', color: '#94a3b8', fontSize: '14px', fontWeight: 400 }}>
+        Press <span className="font-semibold text-indigo-400" style={{ fontWeight: 600, color: '#818cf8' }}>Next</span> to explore the physics of friction types
       </div>
     </div>
   );
@@ -1403,7 +1433,10 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
             className="rounded-xl p-6 border-2 transition-all duration-300"
             style={{
               background: `linear-gradient(135deg, ${app.color}15, ${app.color}05)`,
-              borderColor: `${app.color}40`
+              borderColor: `${app.color}40`,
+              borderRadius: '12px',
+              border: `2px solid ${app.color}40`,
+              padding: '24px'
             }}
           >
             <div className="flex items-start gap-4 mb-4">
@@ -1416,14 +1449,14 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
 
             <p className="text-slate-200 leading-relaxed mb-4">{app.description}</p>
 
-            <div className="bg-slate-800/50 rounded-lg p-4 mb-4 border border-slate-700">
-              <h4 className="font-semibold text-purple-300 mb-2">Connection to Friction:</h4>
-              <p className="text-sm text-slate-300 leading-relaxed">{app.connection}</p>
+            <div className="bg-slate-800/50 rounded-lg p-4 mb-4 border border-slate-700" style={{ background: 'rgba(30,41,59,0.5)', borderRadius: '8px', border: '1px solid #334155', padding: '16px', marginBottom: '16px' }}>
+              <h4 className="font-semibold text-purple-300 mb-2" style={{ fontWeight: 600, color: '#c084fc', marginBottom: '8px' }}>Connection to Friction:</h4>
+              <p className="text-sm text-slate-300 leading-relaxed" style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: '1.6', fontWeight: 400 }}>{app.connection}</p>
             </div>
 
-            <div className="bg-slate-800/50 rounded-lg p-4 mb-4 border border-slate-700">
-              <h4 className="font-semibold text-indigo-300 mb-2">How It Works:</h4>
-              <p className="text-sm text-slate-300 leading-relaxed">{app.howItWorks}</p>
+            <div className="bg-slate-800/50 rounded-lg p-4 mb-4 border border-slate-700" style={{ background: 'rgba(30,41,59,0.5)', borderRadius: '8px', border: '1px solid #334155', padding: '16px', marginBottom: '16px' }}>
+              <h4 className="font-semibold text-indigo-300 mb-2" style={{ fontWeight: 600, color: '#a5b4fc', marginBottom: '8px' }}>How It Works:</h4>
+              <p className="text-sm text-slate-300 leading-relaxed" style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: '1.6', fontWeight: 400 }}>{app.howItWorks}</p>
             </div>
 
             <div className="grid grid-cols-3 gap-3 mb-4">
@@ -1466,32 +1499,30 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
           </div>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-3" style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
           <button
             onClick={() => {
-              const newApp = (currentApp - 1 + realWorldApps.length) % realWorldApps.length;
-              setCurrentApp(newApp);
-              setViewedApps(new Set([...viewedApps, newApp]));
-              emitEvent('button_clicked', { action: 'previous_app' });
-              playSound('click');
+              setViewedApps(new Set([...viewedApps, currentApp]));
+              emitEvent('button_clicked', { action: 'got_it', appIndex: currentApp });
+              playSound('success');
             }}
-            className="flex-1 py-3 px-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-semibold transition-all duration-200 active:scale-95"
-            style={{ cursor: 'pointer' }}
+            className="flex-1 py-3 px-4 text-white rounded-xl font-semibold transition-all duration-200 active:scale-95"
+            style={{ cursor: 'pointer', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white', fontWeight: 700, borderRadius: '12px', padding: '12px 24px', boxShadow: '0 4px 15px rgba(16,185,129,0.3)', flex: 1 }}
           >
-            ← Previous
+            Got It! ✓
           </button>
           <button
             onClick={() => {
               const newApp = (currentApp + 1) % realWorldApps.length;
               setCurrentApp(newApp);
-              setViewedApps(new Set([...viewedApps, newApp]));
+              setViewedApps(new Set([...viewedApps, currentApp, newApp]));
               emitEvent('button_clicked', { action: 'next_app' });
               playSound('click');
             }}
             className="flex-1 py-3 px-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-semibold transition-all duration-200 active:scale-95"
-            style={{ cursor: 'pointer' }}
+            style={{ cursor: 'pointer', background: '#334155', color: 'white', fontWeight: 600, borderRadius: '12px', padding: '12px 24px', flex: 1 }}
           >
-            Next →
+            Next App →
           </button>
         </div>
 
@@ -1688,7 +1719,42 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
                       ? 'bg-gradient-to-r from-indigo-600 to-purple-600 border-indigo-400 text-white shadow-xl'
                       : 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600'
                 }`}
-                style={{ cursor: hasAnswered ? 'default' : 'pointer' }}
+                style={{
+                  cursor: hasAnswered ? 'default' : 'pointer',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  marginBottom: '8px',
+                  background: showResult
+                    ? isCorrectAnswer
+                      ? 'rgba(6,78,59,0.3)'
+                      : isSelected
+                        ? 'rgba(127,29,29,0.3)'
+                        : 'rgba(30,41,59,0.5)'
+                    : isSelected
+                      ? 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)'
+                      : 'rgba(51,65,85,0.8)',
+                  border: showResult
+                    ? isCorrectAnswer
+                      ? '2px solid rgba(52,211,153,0.5)'
+                      : isSelected
+                        ? '2px solid rgba(239,68,68,0.5)'
+                        : '2px solid #475569'
+                    : isSelected
+                      ? '2px solid #818cf8'
+                      : '2px solid #475569',
+                  color: showResult
+                    ? isCorrectAnswer
+                      ? '#6ee7b7'
+                      : isSelected
+                        ? '#fca5a5'
+                        : '#64748b'
+                    : isSelected
+                      ? '#ffffff'
+                      : '#e2e8f0',
+                  fontWeight: 500,
+                  boxShadow: isSelected && !showResult ? '0 4px 20px rgba(99,102,241,0.4)' : 'none',
+                  transition: 'all 0.2s ease'
+                }}
               >
                 <div className="flex items-center gap-3">
                   <span className="font-bold text-xl">{option.id.toUpperCase()}.</span>
@@ -1723,7 +1789,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
             }`}
             style={{ cursor: currentQuestion === 0 ? 'not-allowed' : 'pointer' }}
           >
-            ← Previous
+            ← Back
           </button>
 
           <button
@@ -1736,7 +1802,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
             }`}
             style={{ cursor: !hasAnswered ? 'not-allowed' : 'pointer' }}
           >
-            {currentQuestion === 9 ? 'View Results' : 'Next Question →'}
+            {currentQuestion === 9 ? 'See Results →' : 'Next Question →'}
           </button>
         </div>
       </div>
@@ -1848,12 +1914,12 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
   // ============================================================================
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col overflow-hidden" style={{ minHeight: '100vh' }}>
-      <div className="flex-1 overflow-y-auto p-6" style={{ flex: 1, overflowY: 'auto' }}>
-        <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col overflow-hidden" style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)' }}>
+      <div className="flex-1 overflow-y-auto p-6" style={{ flex: 1, overflowY: 'auto', paddingTop: '48px' }}>
+        <div className="max-w-4xl mx-auto" style={{ maxWidth: '900px', margin: '0 auto', padding: '0 24px' }}>
           {renderProgressBar()}
 
-          <div className="bg-slate-800/40 backdrop-blur-xl rounded-2xl shadow-2xl p-6 md:p-8 border border-slate-700/50">
+          <div className="bg-slate-800/40 backdrop-blur-xl rounded-2xl shadow-2xl p-6 md:p-8 border border-slate-700/50" style={{ background: 'rgba(30,41,59,0.6)', borderRadius: '16px', border: '1px solid #334155', boxShadow: '0 8px 32px rgba(0,0,0,0.4)', padding: '24px' }}>
             {phase === 'hook' && renderHook()}
             {phase === 'predict' && renderPredict()}
             {phase === 'play' && renderPlay()}

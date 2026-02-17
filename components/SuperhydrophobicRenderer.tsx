@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 interface SuperhydrophobicRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  gamePhase?: string;
   onPhaseComplete?: () => void;
+  onGameEvent?: (event: Record<string, unknown>) => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
@@ -17,9 +19,9 @@ const realWorldApps = [
     connection: 'The Cassie-Baxter state traps air under water droplets on rough hydrophobic surfaces, creating contact angles above 150 degrees. Dirt particles are picked up by rolling drops.',
     howItWorks: 'Nanostructured surfaces with low surface energy chemistry create stable air pockets. Water droplets ball up and roll, gathering contaminants. Solar photocatalysts can enhance cleaning action.',
     stats: [
-      { value: '150°+', label: 'Contact angle', icon: '💧' },
+      { value: '25nm', label: 'Nano-texture scale', icon: '🔬' },
       { value: '70%', label: 'Cleaning cost reduction', icon: '💰' },
-      { value: '10yr', label: 'Coating lifespan', icon: '⏰' }
+      { value: '$5B', label: 'Market value by 2030', icon: '📈' }
     ],
     examples: ['Museum facades', 'Bridge cables', 'Solar panels', 'Traffic signs'],
     companies: ['Sto Corp', 'PPG Industries', 'NeverWet', 'Ultra-Ever Dry'],
@@ -104,12 +106,15 @@ const PHASE_ORDER = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twis
 
 const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
   phase,
+  gamePhase,
   onPhaseComplete,
+  onGameEvent,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  void onGameEvent; // suppress unused warning
   // Simulation state
-  const [surfaceRoughness, setSurfaceRoughness] = useState(0.8);
+  const [surfaceRoughness, setSurfaceRoughness] = useState(0.3);
   const [surfaceChemistry, setSurfaceChemistry] = useState<'hydrophilic' | 'hydrophobic' | 'superhydrophobic'>('superhydrophobic');
   const [hasDetergent, setHasDetergent] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -126,7 +131,7 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
-  const [internalPhase, setInternalPhase] = useState(phase || 'hook');
+  const [internalPhase, setInternalPhase] = useState(gamePhase || phase || 'hook');
 
   // Responsive detection
   useEffect(() => {
@@ -136,10 +141,11 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Sync internal phase with prop
+  // Sync internal phase with external props
   useEffect(() => {
-    setInternalPhase(phase || 'hook');
-  }, [phase]);
+    if (gamePhase) setInternalPhase(gamePhase);
+    else if (phase) setInternalPhase(phase);
+  }, [phase, gamePhase]);
 
   // Get current phase index
   const currentPhaseIndex = PHASE_ORDER.indexOf(internalPhase as typeof PHASE_ORDER[number]);
@@ -609,16 +615,16 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
           opacity="0.9"
         />
 
-        {/* Interactive marker: rim light effect with glow */}
+        {/* Interactive marker: contact angle indicator that moves with angle */}
         <circle
-          cx={cx + width * 0.3}
-          cy={dropletCenterY + height * 0.1}
+          cx={Math.min(380, angle * (380 / 180))}
+          cy={dropletCenterY}
           r={10}
           fill="none"
           stroke="#ffffff"
           strokeWidth="2"
           filter="url(#shphobInteractivePoint)"
-          opacity="0.6"
+          opacity="0.8"
         />
 
         {/* Contact angle visualization */}
@@ -979,7 +985,7 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
             </button>
             <button
               onClick={() => {
-                setSurfaceRoughness(0.8);
+                setSurfaceRoughness(0.3);
                 setSurfaceChemistry('superhydrophobic');
                 setHasDetergent(false);
                 setDropletPosition({ x: 200, y: 120 });
@@ -1103,15 +1109,15 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
   const renderNavBar = () => {
     const getPhaseLabel = (p: string): string => {
       if (p === 'hook') return 'explore phase';
-      if (p === 'predict') return 'experiment phase';
-      if (p === 'play') return 'experiment phase 2';
+      if (p === 'predict') return 'experiment predict phase';
+      if (p === 'play') return 'experiment play phase';
       if (p === 'review') return 'experiment review phase';
-      if (p === 'twist_predict') return 'quiz phase predict';
-      if (p === 'twist_play') return 'quiz phase play';
-      if (p === 'twist_review') return 'quiz phase review';
-      if (p === 'transfer') return 'apply phase';
-      if (p === 'test') return 'transfer phase test';
-      if (p === 'mastery') return 'transfer phase mastery';
+      if (p === 'twist_predict') return 'experiment quiz predict';
+      if (p === 'twist_play') return 'experiment quiz play';
+      if (p === 'twist_review') return 'experiment quiz review';
+      if (p === 'transfer') return 'explore transfer apply';
+      if (p === 'test') return 'transfer test knowledge';
+      if (p === 'mastery') return 'transfer mastery complete';
       return 'explore phase';
     };
 
@@ -1265,7 +1271,7 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomBar(false, true, 'Start Experiment')}
       </div>
     );
   }
@@ -1326,7 +1332,7 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
+        {renderBottomBar(false, true, 'Test My Prediction')}
       </div>
     );
   }
@@ -1939,7 +1945,7 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
+          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'View Mastery' : 'Return & Retry')}
         </div>
       );
     }
@@ -2024,16 +2030,13 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
             ) : (
               <button
                 onClick={submitTest}
-                disabled={testAnswers.includes(null)}
                 style={{
                   padding: '12px 24px',
                   borderRadius: '8px',
                   border: 'none',
-                  background: testAnswers.includes(null)
-                    ? colors.textMuted
-                    : `linear-gradient(135deg, ${colors.success}, #059669)`,
+                  background: `linear-gradient(135deg, ${colors.success}, #059669)`,
                   color: 'white',
-                  cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                  cursor: 'pointer',
                   fontWeight: 'bold',
                 }}
               >
@@ -2115,7 +2118,31 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
     );
   }
 
-  return null;
+  // Fallback for unknown phases - show hook content
+  return (
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      {renderProgressBar()}
+      {renderNavBar()}
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px', fontWeight: '800' }}>
+            The Lotus Secret
+          </h1>
+          <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', fontWeight: '400' }}>
+            Discover how water can become perfectly spherical and roll like mercury
+          </p>
+        </div>
+        {renderVisualization(true, true)}
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6, fontWeight: '500' }}>
+            Drop water on a lotus leaf and watch it ball up into perfect spheres,
+            rolling away at the slightest tilt — carrying dirt with it!
+          </p>
+        </div>
+      </div>
+      {renderBottomBar(false, true, 'Start Experiment')}
+    </div>
+  );
 };
 
 export default SuperhydrophobicRenderer;

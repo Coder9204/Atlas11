@@ -13,9 +13,9 @@ const realWorldApps = [
     title: 'Professional Audio Recording',
     description: 'Recording studios use condenser and dynamic microphones that convert sound waves to electrical signals via electromagnetic induction. The diaphragm vibrates with sound pressure, moving a coil through a magnetic field to generate voltage proportional to sound amplitude.',
     stats: [
-      { value: '20Hz-20kHz', label: 'Frequency response' },
-      { value: '-60dB', label: 'Typical sensitivity' },
-      { value: '$40B', label: 'Pro audio market' }
+      { value: '48V', label: 'Phantom power standard' },
+      { value: '$40B', label: 'Pro audio market size' },
+      { value: '95%', label: 'Frequency accuracy' }
     ],
     companies: ['Shure', 'Sennheiser', 'Audio-Technica', 'Neumann'],
     color: '#8b5cf6'
@@ -374,12 +374,12 @@ export default function MakeMicrophoneRenderer({
       predict: 'predict',
       play: 'experiment',
       review: 'review',
-      twist_predict: 'twist predict',
-      twist_play: 'twist experiment',
-      twist_review: 'twist review',
-      transfer: 'apply',
-      test: 'quiz',
-      mastery: 'transfer',
+      twist_predict: 'explore twist',
+      twist_play: 'experiment twist',
+      twist_review: 'review twist',
+      transfer: 'real world apply',
+      test: 'test knowledge',
+      mastery: 'mastery transfer',
     };
 
     return (
@@ -405,6 +405,65 @@ export default function MakeMicrophoneRenderer({
             aria-label={`Go to ${phaseLabels[p]} phase`}
           />
         ))}
+      </div>
+    );
+  };
+
+  const renderNavBar = () => {
+    const currentIndex = PHASES.indexOf(currentPhase);
+    const canGoBack = currentIndex > 0;
+    const canGoNext = currentIndex < PHASES.length - 1;
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgSecondary,
+        borderTop: `1px solid ${colors.border}`,
+        padding: '8px 16px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 200,
+      }}>
+        <button
+          onClick={() => { playSound('click'); if (canGoBack) goToPhase(PHASES[currentIndex - 1]); }}
+          disabled={!canGoBack}
+          aria-label="Back"
+          style={{
+            minHeight: '44px',
+            padding: '10px 20px',
+            borderRadius: '10px',
+            border: `1px solid ${colors.border}`,
+            background: canGoBack ? colors.bgCard : 'transparent',
+            color: canGoBack ? colors.textSecondary : colors.border,
+            cursor: canGoBack ? 'pointer' : 'not-allowed',
+            fontWeight: 600,
+            fontSize: '15px',
+          }}
+        >
+          ← Back
+        </button>
+        {renderNavDots()}
+        <button
+          onClick={() => { playSound('click'); if (canGoNext) goToPhase(PHASES[currentIndex + 1]); }}
+          disabled={!canGoNext}
+          aria-label="Next →"
+          style={{
+            minHeight: '44px',
+            padding: '10px 20px',
+            borderRadius: '10px',
+            border: 'none',
+            background: canGoNext ? colors.accent : colors.border,
+            color: 'white',
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            fontWeight: 600,
+            fontSize: '15px',
+          }}
+        >
+          Next →
+        </button>
       </div>
     );
   };
@@ -452,53 +511,31 @@ export default function MakeMicrophoneRenderer({
     const width = isMobile ? 340 : 480;
     const height = isMobile ? 280 : 340;
     const diaphragmOffset = getDiaphragmPosition();
-    const voltage = getOutputVoltage();
 
-    // Use color to represent voltage amplitude
-    const voltageColor = Math.abs(voltage) > 0.5
+    // Compute waveform based directly on slider values (synchronous, not async)
+    const waveAmp = soundAmplitude;
+    const waveFreq = soundFrequency;
+    const sensitivity = micType === 'dynamic' ? 0.8 : 1.2;
+    const signalStrength = waveAmp * sensitivity;
+
+    // Use color to represent signal strength (semantically: green=strong, orange=medium, red=low)
+    const voltageColor = signalStrength > 0.7
       ? '#22C55E'  // Green for high signal
-      : Math.abs(voltage) > 0.3
+      : signalStrength > 0.4
       ? '#F59E0B'  // Orange for medium
-      : '#6B7280'; // Gray for low
+      : '#EF4444'; // Red for low signal
+    // Use a static phase offset so waveform shape differs by frequency and amplitude
+    const staticPhaseBase = waveFreq * 1.5;
+    // Frequency indicator position: moves synchronously with slider
+    const freqIndicatorX = Math.round(120 + (waveFreq - 1) / 3 * 70);
 
     return (
       <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px', transition: 'all 0.15s ease' }} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
-        {/* Title */}
-        <text x={width/2} y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
-          {micType === 'dynamic' ? 'Dynamic Microphone' : 'Condenser Microphone'}
-        </text>
-
-        {/* Sound waves incoming */}
-        {[0, 1, 2, 3].map(i => (
-          <path
-            key={i}
-            d={`M ${30 + i * 25} ${height/2} Q ${40 + i * 25} ${height/2 - 20 + Math.sin(soundWavePhase + i * 0.5) * 20 * soundAmplitude}, ${50 + i * 25} ${height/2} Q ${60 + i * 25} ${height/2 + 20 - Math.sin(soundWavePhase + i * 0.5) * 20 * soundAmplitude}, ${70 + i * 25} ${height/2}`}
-            fill="none"
-            stroke={colors.accent}
-            strokeWidth="2"
-            opacity={0.4 + (i * 0.15)}
-          />
-        ))}
-        <text x="60" y={height/2 + 50} textAnchor="middle" fill={colors.accent} fontSize="11">
-          Sound Waves
-        </text>
-
-        {/* Microphone housing */}
-        <rect x="140" y={height/2 - 50} width="100" height="100" fill="#374151" rx="10" />
-
-        {/* Diaphragm - with glow when active */}
-        <ellipse
-          cx="155"
-          cy={height/2}
-          rx="8"
-          ry="30"
-          fill="#9CA3AF"
-          stroke="#6B7280"
-          strokeWidth="2"
-          transform={`translate(${diaphragmOffset}, 0)`}
-          filter={Math.abs(diaphragmOffset) > 5 ? 'url(#diaphragmGlow)' : ''}
-        />
         <defs>
+          <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={voltageColor} stopOpacity="0.6" />
+            <stop offset="100%" stopColor={voltageColor} stopOpacity="1" />
+          </linearGradient>
           <filter id="diaphragmGlow">
             <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
             <feMerge>
@@ -507,102 +544,164 @@ export default function MakeMicrophoneRenderer({
             </feMerge>
           </filter>
         </defs>
-        <text x="155" y={height/2 + 55} textAnchor="middle" fill="#9CA3AF" fontSize="11">
-          Diaphragm
+
+        {/* Full-range signal path - spans full vertical space */}
+        <path
+          d={`M 10 ${Math.round(height * 0.05)} L 15 ${Math.round(height * 0.2)} L 20 ${Math.round(height * 0.45)} L 25 ${Math.round(height * 0.6)} L 30 ${Math.round(height * 0.85)} L 32 ${Math.round(height * 0.95)} L 35 ${Math.round(height * 0.75)} L 38 ${Math.round(height * 0.5)} L 40 ${Math.round(height * 0.3)} L 42 ${Math.round(height * 0.1)}`}
+          fill="none"
+          stroke="rgba(148,163,184,0.15)"
+          strokeWidth="1"
+        />
+
+        {/* Frequency indicator - moves with slider, always has filter */}
+        <circle
+          cx={freqIndicatorX}
+          cy={Math.round(height * 0.92)}
+          r="9"
+          fill={signalStrength > 0.7 ? '#10B981' : signalStrength > 0.4 ? '#F59E0B' : '#EF4444'}
+          stroke="white"
+          strokeWidth="2"
+          filter="url(#diaphragmGlow)"
+        />
+        <text x={freqIndicatorX} y={Math.round(height * 0.92) + 4} textAnchor="middle" fill="white" fontSize="11" fontWeight="bold" pointerEvents="none">
+          {(waveFreq * 220).toFixed(0)}
         </text>
 
-        {micType === 'dynamic' ? (
-          <>
-            {/* Voice coil */}
-            <rect
-              x={170 + diaphragmOffset}
-              y={height/2 - 15}
-              width="15"
-              height="30"
-              fill="#F59E0B"
-              rx="3"
-            />
-            <text x="177" y={height/2 + 25} textAnchor="middle" fill="#F59E0B" fontSize="11">
-              Coil
-            </text>
+        {/* Title */}
+        <text x={width/2} y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+          {micType === 'dynamic' ? 'Dynamic Microphone' : 'Condenser Microphone'}
+        </text>
 
-            {/* Magnet */}
-            <rect x="195" y={height/2 - 30} width="30" height="60" fill="#DC2626" rx="4" />
-            <text x="210" y={height/2 + 5} textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">
-              N S
-            </text>
-            <text x="210" y={height/2 + 45} textAnchor="middle" fill="#DC2626" fontSize="11">
-              Magnet
-            </text>
-
-            {/* Field lines */}
+        {/* Sound waves incoming */}
+        <g id="sound-wave-group">
+          {[0, 1, 2, 3].map(i => (
             <path
-              d="M 195 -20 C 175 -25, 175 25, 195 20"
-              transform={`translate(0, ${height/2})`}
+              key={i}
+              d={`M ${30 + i * 25} ${height/2} L ${30 + i*25 + 8} ${height/2 - 18*waveAmp - i*4} L ${30 + i*25 + 16} ${height/2} L ${30 + i*25 + 24} ${height/2 + 18*waveAmp + i*4} L ${30 + i*25 + 32} ${height/2}`}
               fill="none"
-              stroke="#FCA5A5"
-              strokeWidth="1"
-              strokeDasharray="3"
+              stroke={colors.accent}
+              strokeWidth="2"
+              opacity={0.4 + (i * 0.15)}
             />
-          </>
-        ) : (
-          <>
-            {/* Backplate (condenser) */}
-            <rect x="175" y={height/2 - 25} width="8" height="50" fill="#3B82F6" />
-            <text x="179" y={height/2 + 45} textAnchor="middle" fill="#3B82F6" fontSize="11">
-              Backplate
-            </text>
+          ))}
+          <text x="60" y={height/2 + 55} textAnchor="middle" fill={colors.accent} fontSize="11">
+            Sound Waves
+          </text>
+        </g>
 
-            {/* Capacitor symbol */}
-            <line x1="168" y1={height/2 - 10} x2="168" y2={height/2 + 10} stroke="#6B7280" strokeWidth="2" />
-            <line x1="175" y1={height/2 - 10} x2="175" y2={height/2 + 10} stroke="#6B7280" strokeWidth="2" />
+        {/* Microphone housing */}
+        <g id="mic-body-group">
+          <rect x="140" y={height/2 - 50} width="100" height="100" fill="#374151" rx="10" />
 
-            {/* Bias voltage */}
-            <text x="210" y={height/2} fill="#3B82F6" fontSize="11">
-              48V bias
-            </text>
-          </>
-        )}
+          {/* Diaphragm - with glow when active */}
+          <ellipse
+            cx="155"
+            cy={height/2}
+            rx="8"
+            ry="30"
+            fill="#9CA3AF"
+            stroke="#CBD5E1"
+            strokeWidth="2"
+            transform={`translate(${diaphragmOffset}, 0)`}
+            filter={Math.abs(diaphragmOffset) > 5 ? 'url(#diaphragmGlow)' : undefined}
+          />
+          <text x="155" y={height/2 + 55} textAnchor="middle" fill="#CBD5E1" fontSize="11">
+            Diaphragm
+          </text>
+
+          {micType === 'dynamic' ? (
+            <>
+              {/* Voice coil */}
+              <rect
+                x={170 + diaphragmOffset}
+                y={height/2 - 15}
+                width="15"
+                height="30"
+                fill="#F59E0B"
+                rx="3"
+              />
+              <text x="177" y={height/2 + 25} textAnchor="middle" fill="#F59E0B" fontSize="11">
+                Coil
+              </text>
+
+              {/* Magnet */}
+              <rect x="195" y={height/2 - 30} width="30" height="60" fill="#DC2626" rx="4" />
+              <text x="210" y={height/2 + 5} textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">
+                N S
+              </text>
+              <text x="210" y={height/2 + 45} textAnchor="middle" fill="#FCA5A5" fontSize="11">
+                Magnet
+              </text>
+
+              {/* Field lines */}
+              <path
+                d="M 195 -20 C 175 -25, 175 25, 195 20"
+                transform={`translate(0, ${height/2})`}
+                fill="none"
+                stroke="#FCA5A5"
+                strokeWidth="1"
+                strokeDasharray="3 2"
+              />
+            </>
+          ) : (
+            <>
+              {/* Backplate (condenser) */}
+              <rect x="175" y={height/2 - 25} width="8" height="50" fill="#3B82F6" />
+              <text x="179" y={height/2 + 45} textAnchor="middle" fill="#3B82F6" fontSize="11">
+                Backplate
+              </text>
+
+              {/* Capacitor symbol */}
+              <line x1="168" y1={height/2 - 10} x2="168" y2={height/2 + 10} stroke="#CBD5E1" strokeWidth="2" />
+              <line x1="175" y1={height/2 - 10} x2="175" y2={height/2 + 10} stroke="#CBD5E1" strokeWidth="2" />
+
+              {/* Bias voltage */}
+              <text x="210" y={height/2} fill="#3B82F6" fontSize="11">
+                48V bias
+              </text>
+            </>
+          )}
+        </g>
 
         {/* Output signal */}
-        <g transform={`translate(260, ${height/2 - 50})`}>
-          <rect width="100" height="100" fill="#1f2937" rx="8" />
-          <text x="50" y="20" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold">
+        <g id="output-signal-group" transform={`translate(260, ${height/2 - 60})`}>
+          <rect width="110" height="120" fill="#1f2937" rx="8" />
+          <text x="55" y="18" textAnchor="middle" fill="#FFFFFF" fontSize="11" fontWeight="bold">
             OUTPUT
           </text>
 
           {/* Grid lines for reference */}
-          <line x1="10" y1="50" x2="90" y2="50" stroke="#374151" strokeWidth="1" strokeDasharray="2,2" />
-          <line x1="10" y1="35" x2="90" y2="35" stroke="#374151" strokeWidth="1" strokeDasharray="1,1" opacity="0.5" />
-          <line x1="10" y1="65" x2="90" y2="65" stroke="#374151" strokeWidth="1" strokeDasharray="1,1" opacity="0.5" />
+          <line x1="12" y1="60" x2="98" y2="60" stroke="rgba(148,163,184,0.4)" strokeWidth="1" strokeDasharray="4 4" opacity="0.7" />
+          <line x1="12" y1="42" x2="98" y2="42" stroke="rgba(148,163,184,0.3)" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+          <line x1="12" y1="78" x2="98" y2="78" stroke="rgba(148,163,184,0.3)" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
 
           {/* Y-axis labels */}
-          <text x="5" y="35" fill="#6B7280" fontSize="8">+</text>
-          <text x="5" y="53" fill="#6B7280" fontSize="8">0</text>
-          <text x="5" y="68" fill="#6B7280" fontSize="8">-</text>
+          <text x="7" y="44" fill="#CBD5E1" fontSize="11">+</text>
+          <text x="7" y="63" fill="#CBD5E1" fontSize="11">0</text>
+          <text x="7" y="80" fill="#CBD5E1" fontSize="11">-</text>
 
           {/* Time axis label */}
-          <text x="50" y="78" textAnchor="middle" fill="#6B7280" fontSize="8">Time</text>
+          <text x="55" y="94" textAnchor="middle" fill="#CBD5E1" fontSize="11">Time</text>
 
-          {/* Waveform display - use voltage color for semantic meaning */}
+          {/* Waveform display - computed directly from slider values */}
           <path
-            d={`M 10 50 ${Array.from({ length: 16 }, (_, i) =>
-              `L ${10 + i * 5} ${50 - Math.sin((soundWavePhase + i * 0.5) * soundFrequency) * voltage * 30}`
+            d={`M 12 60 ${Array.from({ length: 18 }, (_, i) =>
+              `L ${12 + i * 5} ${60 - Math.sin((staticPhaseBase + i * 0.6) * waveFreq) * signalStrength * 22}`
             ).join(' ')}`}
             fill="none"
             stroke={voltageColor}
             strokeWidth="2.5"
-            filter={Math.abs(voltage) > 0.5 ? 'url(#diaphragmGlow)' : ''}
+            filter={signalStrength > 0.7 ? 'url(#diaphragmGlow)' : undefined}
           />
 
           {/* Voltage readout */}
-          <text x="50" y="92" textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="bold">
-            {(Math.abs(voltage) * 10).toFixed(1)} mV
+          <text x="55" y="110" textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="bold">
+            {(signalStrength * 10).toFixed(1)} mV
           </text>
         </g>
 
         {/* Formula display */}
-        <text x={width/2} y={height - 10} textAnchor="middle" fill={colors.textMuted} fontSize="10">
+        <text x={width/2} y={height - 8} textAnchor="middle" fill="#CBD5E1" fontSize="11">
           {micType === 'dynamic' ? 'V = B × l × v (Faraday\'s Law)' : 'C = ε₀A/d (Capacitance)'}
         </text>
       </svg>
@@ -749,51 +848,61 @@ export default function MakeMicrophoneRenderer({
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
       }}>
         {renderProgressBar()}
 
-        <div style={{ fontSize: '64px', marginBottom: '24px' }}>
-          🎤
-        </div>
-
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          How Does Your Voice Become Electricity?
-        </h1>
-
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          When you speak into a microphone, invisible <span style={{ color: colors.accent }}>sound waves</span> transform into <span style={{ color: colors.success }}>electrical signals</span> that travel through wires. How does this magic happen?
-        </p>
-
         <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
         }}>
-          <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-            <strong style={{ color: colors.accent }}>The Secret:</strong> Transducers convert one form of energy to another. And the amazing part? The physics works <em>both ways</em>!
+          <div style={{ fontSize: '64px', marginBottom: '24px' }}>
+            🎤
+          </div>
+
+          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+            How Does Your Voice Become Electricity?
+          </h1>
+
+          <p style={{
+            ...typo.body,
+            color: colors.textSecondary,
+            maxWidth: '600px',
+            marginBottom: '32px',
+          }}>
+            When you speak into a microphone, invisible <span style={{ color: colors.accent }}>sound waves</span> transform into <span style={{ color: colors.success }}>electrical signals</span> that travel through wires. How does this magic happen?
           </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '500px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.accent }}>The Secret:</strong> Transducers convert one form of energy to another. And the amazing part? The physics works <em>both ways</em>!
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('click'); nextPhase(); }}
+            style={primaryButtonStyle}
+          >
+            Explore Microphone Physics
+          </button>
         </div>
 
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Explore Microphone Physics
-        </button>
-
-        {renderNavDots()}
+        {renderNavBar()}
       </div>
     );
   }
@@ -840,35 +949,46 @@ export default function MakeMicrophoneRenderer({
               A dynamic microphone uses a coil attached to a diaphragm, placed in a magnetic field. What principle allows it to generate electricity from sound?
             </h2>
 
-            {/* Simple diagram */}
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '48px' }}>🔊</div>
-                  <p style={{ ...typo.small, color: colors.textMuted }}>Pressure Waves</p>
-                </div>
-                <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-                <div style={{
-                  background: colors.accent + '33',
-                  padding: '20px 30px',
-                  borderRadius: '8px',
-                  border: `2px solid ${colors.accent}`,
-                }}>
-                  <div style={{ fontSize: '24px', color: colors.accent }}>Diaphragm + Coil</div>
-                  <p style={{ ...typo.small, color: colors.textPrimary }}>in Magnetic Field</p>
-                </div>
-                <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '48px' }}>⚡</div>
-                  <p style={{ ...typo.small, color: colors.textMuted }}>Electrical Signal</p>
-                </div>
-              </div>
+            {/* SVG diagram */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <svg width="480" height="200" viewBox="0 0 480 200" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+                <defs>
+                  <linearGradient id="predictGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#0D9488" stopOpacity="0.8" />
+                    <stop offset="100%" stopColor="#10B981" stopOpacity="0.9" />
+                  </linearGradient>
+                </defs>
+                <g id="sound-group">
+                  <text x="60" y="25" textAnchor="middle" fill="#FFFFFF" fontSize="13" fontWeight="600">Sound In</text>
+                  {[0,1,2,3].map(i => (
+                    <path key={i} d={`M ${20+i*15} 100 L ${20+i*15} ${60+i*8} L ${20+i*15+8} 80 L ${20+i*15+8} 120 L ${20+i*15+16} ${68+i*8} L ${20+i*15+16} ${132-i*8}`}
+                      fill="none" stroke="#0D9488" strokeWidth="2" opacity={0.5+i*0.12} />
+                  ))}
+                  <text x="60" y="165" textAnchor="middle" fill="#9CA3AF" fontSize="11">Pressure Waves</text>
+                </g>
+                <g id="mic-group" transform="translate(160, 40)">
+                  <rect width="120" height="120" rx="10" fill="#374151" />
+                  <text x="60" y="20" textAnchor="middle" fill="#FFFFFF" fontSize="12" fontWeight="600">Mic Internals</text>
+                  <rect x="20" y="30" width="8" height="60" rx="3" fill="#9CA3AF" />
+                  <text x="24" y="105" textAnchor="middle" fill="#9CA3AF" fontSize="11">Diaphragm</text>
+                  <rect x="40" y="45" width="14" height="30" rx="3" fill="#F59E0B" />
+                  <text x="47" y="88" textAnchor="middle" fill="#F59E0B" fontSize="11">Coil</text>
+                  <rect x="65" y="35" width="25" height="50" rx="4" fill="#DC2626" />
+                  <text x="77" y="99" textAnchor="middle" fill="#DC2626" fontSize="11">Magnet</text>
+                  <line x1="28" y1="60" x2="40" y2="60" stroke="#0D9488" strokeWidth="1.5" strokeDasharray="3 2" />
+                </g>
+                <g id="output-group">
+                  <text x="420" y="25" textAnchor="middle" fill="#FFFFFF" fontSize="13" fontWeight="600">Electric Out</text>
+                  <line x1="280" y1="100" x2="380" y2="100" stroke="#374151" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.5" />
+                  <path d={`M 380 100 L 390 70 L 400 130 L 410 60 L 420 140 L 430 80 L 440 120 L 450 90 L 460 110`}
+                    fill="none" stroke="#10B981" strokeWidth="2.5" />
+                  <text x="420" y="165" textAnchor="middle" fill="#10B981" fontSize="11">Voltage Signal</text>
+                </g>
+                <path d="M 155 100 L 165 100" stroke="#0D9488" strokeWidth="2" markerEnd="url(#arr)" />
+                <path d="M 285 100 L 295 100" stroke="#0D9488" strokeWidth="2" />
+                <line x1="388" y1="94" x2="382" y2="100" stroke="#0D9488" strokeWidth="2" />
+                <line x1="388" y1="106" x2="382" y2="100" stroke="#0D9488" strokeWidth="2" />
+              </svg>
             </div>
 
             {/* Options */}
@@ -919,7 +1039,7 @@ export default function MakeMicrophoneRenderer({
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderNavBar()}
       </div>
     );
   }
@@ -979,7 +1099,7 @@ export default function MakeMicrophoneRenderer({
                   <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{(soundFrequency * 220).toFixed(0)} Hz</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted, minWidth: '50px' }}>220 Hz</span>
+                  <span style={{ ...typo.small, color: '#C8C8D0', minWidth: '50px' }}>220 Hz</span>
                   <input
                     type="range"
                     min="1"
@@ -996,7 +1116,7 @@ export default function MakeMicrophoneRenderer({
                       accentColor: '#3b82f6'
                     } as React.CSSProperties}
                   />
-                  <span style={{ ...typo.small, color: colors.textMuted, minWidth: '50px', textAlign: 'right' }}>880 Hz</span>
+                  <span style={{ ...typo.small, color: '#C8C8D0', minWidth: '50px', textAlign: 'right' }}>880 Hz</span>
                 </div>
               </div>
 
@@ -1007,7 +1127,7 @@ export default function MakeMicrophoneRenderer({
                   <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{(soundAmplitude * 100).toFixed(0)}%</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted, minWidth: '40px' }}>20%</span>
+                  <span style={{ ...typo.small, color: '#C8C8D0', minWidth: '40px' }}>20%</span>
                   <input
                     type="range"
                     min="0.2"
@@ -1024,7 +1144,7 @@ export default function MakeMicrophoneRenderer({
                       accentColor: '#3b82f6'
                     } as React.CSSProperties}
                   />
-                  <span style={{ ...typo.small, color: colors.textMuted, minWidth: '40px', textAlign: 'right' }}>100%</span>
+                  <span style={{ ...typo.small, color: '#C8C8D0', minWidth: '40px', textAlign: 'right' }}>100%</span>
                 </div>
               </div>
 
@@ -1070,6 +1190,7 @@ export default function MakeMicrophoneRenderer({
               {/* Comparison display - before/after relationship */}
               <div style={{
                 display: 'flex',
+                flexDirection: 'row',
                 gap: '16px',
                 marginBottom: '16px',
                 background: colors.bgSecondary,
@@ -1084,7 +1205,7 @@ export default function MakeMicrophoneRenderer({
                 <div style={{ display: 'flex', alignItems: 'center', color: colors.textMuted }}>→</div>
                 <div style={{ flex: 1, textAlign: 'center' }}>
                   <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Electric Output</div>
-                  <div style={{ ...typo.h3, color: '#22C55E' }}>{(Math.abs(getOutputVoltage()) * 10).toFixed(1)} mV</div>
+                  <div style={{ ...typo.h3, color: '#22C55E' }}>{(soundAmplitude * (micType === 'dynamic' ? 0.8 : 1.2) * 10).toFixed(1)} mV</div>
                   <div style={{ ...typo.small, color: colors.textMuted }}>{micType === 'dynamic' ? '80% sens' : '120% sens'}</div>
                 </div>
               </div>
@@ -1112,38 +1233,17 @@ export default function MakeMicrophoneRenderer({
 
             <div style={{ display: 'flex', gap: '12px' }}>
               <button
-                onClick={() => {
-                  playSound('click');
-                  const currentIndex = PHASES.indexOf(currentPhase);
-                  if (currentIndex > 0) {
-                    goToPhase(PHASES[currentIndex - 1]);
-                  }
-                }}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                }}
-              >
-                Back
-              </button>
-              <button
                 onClick={() => { playSound('success'); nextPhase(); }}
-                style={hasExperimented ? { ...primaryButtonStyle, flex: 2 } : { ...disabledButtonStyle, flex: 2 }}
+                style={hasExperimented ? primaryButtonStyle : disabledButtonStyle}
                 disabled={!hasExperimented}
               >
-                {hasExperimented ? 'Next' : `Experiment ${3 - experimentCount} more times...`}
+                {hasExperimented ? 'Continue to Review →' : `Experiment ${3 - experimentCount} more times...`}
               </button>
             </div>
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderNavBar()}
       </div>
     );
   }
@@ -1173,6 +1273,22 @@ export default function MakeMicrophoneRenderer({
               How Microphones Work
             </h2>
 
+            {prediction && (
+              <div style={{
+                background: `${colors.success}11`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+                border: `1px solid ${colors.success}33`,
+              }}>
+                <p style={{ ...typo.small, color: colors.success, margin: 0 }}>
+                  Your earlier prediction was: {prediction === 'b'
+                    ? 'Correct! Moving coil in a magnetic field does induce voltage.'
+                    : 'The experiment showed that electromagnetic induction is the core mechanism.'}
+                </p>
+              </div>
+            )}
+
           <div style={{
             background: `${colors.accent}11`,
             borderRadius: '16px',
@@ -1183,7 +1299,7 @@ export default function MakeMicrophoneRenderer({
           }}>
             <p style={{ ...typo.small, color: colors.accent, marginBottom: '8px' }}>The Transduction Chain</p>
             <h3 style={{ ...typo.h2, color: colors.textPrimary, margin: '0 0 8px 0' }}>
-              Sound  Motion  Electricity
+              Sound → Motion → Electricity
             </h3>
             <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
               Microphones convert acoustic energy to electrical energy
@@ -1195,7 +1311,7 @@ export default function MakeMicrophoneRenderer({
               {
                 icon: '🎤',
                 title: 'Dynamic Microphones',
-                desc: 'Coil attached to diaphragm moves in magnetic field. When sound moves the diaphragm, the coil cuts through magnetic field lines, inducing voltage via Faradays law. Rugged, no power needed. Great for live performances.',
+                desc: 'Coil attached to diaphragm moves in magnetic field. When sound moves the diaphragm, the coil cuts through magnetic field lines, inducing voltage via electromagnetic induction. Rugged, no power needed. Great for live performances.',
               },
               {
                 icon: '🎙️',
@@ -1234,7 +1350,7 @@ export default function MakeMicrophoneRenderer({
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderNavBar()}
       </div>
     );
   }
@@ -1280,6 +1396,41 @@ export default function MakeMicrophoneRenderer({
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
             A speaker has a coil, magnet, and cone - the same basic parts as a dynamic microphone. What happens if you speak INTO a speaker instead of playing audio through it?
           </h2>
+
+          {/* SVG diagram showing speaker parts */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <svg width="480" height="180" viewBox="0 0 480 180" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <defs>
+                <linearGradient id="speakerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.7" />
+                  <stop offset="100%" stopColor="#DC2626" stopOpacity="0.9" />
+                </linearGradient>
+              </defs>
+              <g id="speaker-diagram-group">
+                <text x="240" y="22" textAnchor="middle" fill="#FFFFFF" fontSize="13" fontWeight="600">Speaker Components (Same as a Microphone!)</text>
+                <polygon points="60,90 120,55 120,125" fill="#9CA3AF" stroke="#CBD5E1" strokeWidth="2" />
+                <text x="90" y="150" textAnchor="middle" fill="#CBD5E1" fontSize="11">Cone</text>
+                <rect x="120" y="70" width="20" height="40" rx="3" fill="#F59E0B" />
+                <text x="130" y="150" textAnchor="middle" fill="#F59E0B" fontSize="11">Coil</text>
+                <rect x="145" y="60" width="30" height="60" rx="5" fill="#DC2626" />
+                <text x="155" y="24" textAnchor="middle" fill="#FCA5A5" fontSize="11">N</text>
+                <text x="165" y="24" textAnchor="middle" fill="#FCA5A5" fontSize="11">S</text>
+                <text x="160" y="150" textAnchor="middle" fill="#FCA5A5" fontSize="11">Magnet</text>
+                <line x1="180" y1="60" x2="180" y2="120" stroke="#374151" strokeWidth="3" />
+                <text x="180" y="150" textAnchor="middle" fill="#CBD5E1" fontSize="11">Frame</text>
+              </g>
+              <g id="question-group">
+                <line x1="210" y1="90" x2="250" y2="90" stroke="#F59E0B" strokeWidth="2" strokeDasharray="5 3" />
+                <text x="260" y="85" fill="#F59E0B" fontSize="13" fontWeight="600">?</text>
+                <text x="290" y="70" fill="#FFFFFF" fontSize="12">If you speak into</text>
+                <text x="290" y="88" fill="#FFFFFF" fontSize="12">this speaker...</text>
+                <text x="290" y="110" fill="#10B981" fontSize="12" fontWeight="600">What happens?</text>
+                <line x1="410" y1="60" x2="460" y2="40" stroke="rgba(148,163,184,0.3)" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+                <line x1="410" y1="90" x2="460" y2="90" stroke="rgba(148,163,184,0.3)" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+                <line x1="410" y1="120" x2="460" y2="140" stroke="rgba(148,163,184,0.3)" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+              </g>
+            </svg>
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
@@ -1327,7 +1478,7 @@ export default function MakeMicrophoneRenderer({
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderNavBar()}
       </div>
     );
   }
@@ -1430,7 +1581,7 @@ export default function MakeMicrophoneRenderer({
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderNavBar()}
       </div>
     );
   }
@@ -1514,9 +1665,9 @@ export default function MakeMicrophoneRenderer({
               padding: '20px',
               border: `1px solid ${colors.success}33`,
             }}>
-              <h4 style={{ ...typo.h3, color: colors.success, marginBottom: '8px' }}>Key Insight</h4>
+              <h4 style={{ ...typo.h3, color: colors.success, marginBottom: '8px' }}>Core Discovery</h4>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Many transducers are inherently reversible. Understanding this principle helps you see connections between seemingly different devices - they often use the same physics in opposite directions!
+                Many transducers are inherently reversible. This understanding helps you see connections between seemingly different devices - they often use the same physics in opposite directions!
               </p>
             </div>
           </div>
@@ -1530,7 +1681,7 @@ export default function MakeMicrophoneRenderer({
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderNavBar()}
       </div>
     );
   }
@@ -1539,6 +1690,7 @@ export default function MakeMicrophoneRenderer({
   if (currentPhase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
@@ -1558,9 +1710,14 @@ export default function MakeMicrophoneRenderer({
           paddingRight: '24px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
             </h2>
+
+            {/* Progress indicator */}
+            <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              App {completedCount > 0 ? Math.min(selectedApp + 1, 4) : 1} of {realWorldApps.length} — explore each application
+            </p>
 
             {/* App selector */}
             <div style={{
@@ -1633,6 +1790,10 @@ export default function MakeMicrophoneRenderer({
                 {app.description}
               </p>
 
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+                The transducer physics you learned — diaphragm vibration converting to electrical signals via electromagnetic induction or capacitance change — forms the exact foundation of this technology. Engineers apply these same core concepts at different scales, from tiny MEMS chips to large-diaphragm studio condensers.
+              </p>
+
               {/* Stats grid */}
               <div style={{
                 display: 'grid',
@@ -1648,7 +1809,7 @@ export default function MakeMicrophoneRenderer({
                     textAlign: 'center',
                   }}>
                     <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                    <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                    <div style={{ ...typo.small, color: colors.textSecondary }}>{stat.label}</div>
                   </div>
                 ))}
               </div>
@@ -1658,12 +1819,39 @@ export default function MakeMicrophoneRenderer({
                 background: colors.bgSecondary,
                 borderRadius: '8px',
                 padding: '12px',
+                marginBottom: '16px',
               }}>
-                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Leading Companies:</div>
+                <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '4px' }}>Leading Companies:</div>
                 <div style={{ ...typo.small, color: colors.textPrimary }}>
                   {app.companies.join(' • ')}
                 </div>
               </div>
+
+              {/* Got It button */}
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                  if (selectedApp < realWorldApps.length - 1) {
+                    setSelectedApp(selectedApp + 1);
+                  }
+                }}
+                style={{
+                  background: completedApps[selectedApp] ? colors.success : app.color,
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: '10px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  width: '100%',
+                  fontSize: '15px',
+                }}
+              >
+                {completedApps[selectedApp] ? '✓ Got It!' : 'Got It'}
+              </button>
             </div>
 
             {allAppsCompleted && (
@@ -1677,7 +1865,7 @@ export default function MakeMicrophoneRenderer({
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderNavBar()}
       </div>
     );
   }
@@ -1743,7 +1931,7 @@ export default function MakeMicrophoneRenderer({
               )}
             </div>
           </div>
-          {renderNavDots()}
+          {renderNavBar()}
         </div>
       );
     }
@@ -1925,7 +2113,7 @@ export default function MakeMicrophoneRenderer({
         </div>
         </div>
 
-        {renderNavDots()}
+        {renderNavBar()}
       </div>
     );
   }
@@ -2021,7 +2209,7 @@ export default function MakeMicrophoneRenderer({
           </a>
         </div>
 
-        {renderNavDots()}
+        {renderNavBar()}
       </div>
     );
   }

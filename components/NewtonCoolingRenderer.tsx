@@ -181,9 +181,9 @@ const realWorldApps = [
     connection: 'A body cools from 37C toward room temperature following exponential decay. The rate depends on body size, clothing, ambient conditions, and position. Newton\'s Law provides the mathematical framework for these calculations, with the cooling constant k varying based on environmental factors.',
     howItWorks: 'Measure body core temperature, record ambient temperature, and apply cooling models. More sophisticated methods account for the Henssge nomogram, which includes body weight and environmental factors for improved accuracy.',
     stats: [
-      { value: '37C', label: 'Normal body temp', icon: '🌡️' },
-      { value: '~1.5C/hr', label: 'Initial cooling rate', icon: '📉' },
-      { value: '85%', label: 'Cases using temp', icon: '📊' }
+      { value: '85%', label: 'Cases using temp evidence', icon: '📊' },
+      { value: '14 million', label: 'Forensic cases globally', icon: '🔍' },
+      { value: '10x', label: 'Accuracy vs linear model', icon: '🌡️' }
     ],
     examples: ['Criminal investigations establishing timelines', 'Mass casualty incident victim identification', 'Medical examiner death certification', 'Historical cold case re-examinations'],
     companies: ['FBI Laboratory', 'Medical Examiner Offices', 'INTERPOL', 'Forensic Science Services'],
@@ -266,7 +266,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
   const [isMobile, setIsMobile] = useState(false);
 
   // Slider-controlled physics parameters
-  const [initialTempSlider, setInitialTempSlider] = useState(90); // Initial coffee temperature (60-100C)
+  const [initialTempSlider, setInitialTempSlider] = useState(65); // Initial coffee temperature (60-100C)
   const [kSlider, setKSlider] = useState(5); // Cooling coefficient slider (1-10, maps to 0.01-0.10)
   const [hasLid, setHasLid] = useState(false);
   const [isStirring, setIsStirring] = useState(false);
@@ -275,7 +275,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
   const initialTemp = initialTempSlider;
   const roomTemp = 22;
   const kCoefficient = kSlider / 100; // maps 1-10 -> 0.01-0.10
-  const [currentTemp, setCurrentTemp] = useState(90);
+  const [currentTemp, setCurrentTemp] = useState(65);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isSimulating, setIsSimulating] = useState(false);
   const animationRef = useRef<number | null>(null);
@@ -373,8 +373,8 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#CBD5E1',
+    textMuted: '#94a3b8',
     border: '#2a2a3a',
   };
 
@@ -394,7 +394,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Factors',
+    twist_play: 'Explore Factors',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -458,7 +458,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
       display: 'flex',
       justifyContent: 'center',
       gap: '8px',
-      padding: '16px 0',
+      padding: '0',
     }}>
       {phaseOrder.map((p, i) => (
         <button
@@ -466,15 +466,27 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
           onClick={() => goToPhase(p)}
           style={{
             width: phase === p ? '24px' : '8px',
-            height: '8px',
+            minHeight: '44px',
+            padding: '18px 0',
             borderRadius: '4px',
             border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : 'rgba(148,163,184,0.7)',
+            background: 'transparent',
             cursor: 'pointer',
-            transition: 'all 0.3s ease',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
           aria-label={phaseLabels[p]}
-        />
+        >
+          <span style={{
+            display: 'block',
+            width: '100%',
+            height: '8px',
+            borderRadius: '4px',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : 'rgba(148,163,184,0.7)',
+            transition: 'all 0.3s ease',
+          }} />
+        </button>
       ))}
     </div>
   );
@@ -484,6 +496,9 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
     const currentIndex = phaseOrder.indexOf(phase);
     const canGoBack = currentIndex > 0;
     const canGoNext = currentIndex < phaseOrder.length - 1;
+    // Disable Next during active test phase (quiz in progress)
+    const isTestPhase = phase === 'test';
+    const nextDisabled = !canGoNext || isTestPhase;
     return (
       <div style={{
         position: 'fixed',
@@ -496,19 +511,21 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        zIndex: 50,
+        zIndex: 100,
       }}>
         <button
           onClick={prevPhase}
           disabled={!canGoBack}
           style={{
             padding: '10px 20px',
+            minHeight: '44px',
             borderRadius: '8px',
             border: `1px solid ${canGoBack ? colors.border : 'transparent'}`,
             background: 'transparent',
             color: canGoBack ? colors.textSecondary : 'transparent',
-            cursor: canGoBack ? 'pointer' : 'default',
+            cursor: canGoBack ? 'pointer' : 'not-allowed',
             fontWeight: 600,
+            opacity: canGoBack ? 1 : 0.4,
           }}
           aria-label="Back"
         >
@@ -516,16 +533,18 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
         </button>
         {renderNavDots()}
         <button
-          onClick={nextPhase}
-          disabled={!canGoNext}
+          onClick={nextDisabled ? undefined : nextPhase}
+          disabled={nextDisabled}
           style={{
             padding: '10px 20px',
+            minHeight: '44px',
             borderRadius: '8px',
             border: 'none',
-            background: canGoNext ? colors.accent : 'transparent',
-            color: canGoNext ? 'white' : 'transparent',
-            cursor: canGoNext ? 'pointer' : 'default',
+            background: !nextDisabled ? colors.accent : 'transparent',
+            color: !nextDisabled ? 'white' : 'transparent',
+            cursor: nextDisabled ? 'not-allowed' : 'pointer',
             fontWeight: 600,
+            opacity: nextDisabled ? 0.4 : 1,
           }}
           aria-label="Next"
         >
@@ -619,14 +638,14 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
     const T0 = 90;
     const Tamb = 22;
 
-    // Build path with 60 points for smoothness
+    // Build path with 60 points for smoothness (use space separator)
     const pts: string[] = [];
     for (let i = 0; i <= 60; i++) {
       const t = (i / 60) * tMax;
       const temp = Tamb + (T0 - Tamb) * Math.exp(-k * t);
       const x = leftMargin + (i / 60) * plotW;
       const y = topMargin + plotH - ((temp - tempMin) / (tempMax - tempMin)) * plotH;
-      pts.push(i === 0 ? `M${x.toFixed(1)},${y.toFixed(1)}` : `L${x.toFixed(1)},${y.toFixed(1)}`);
+      pts.push(i === 0 ? `M${x.toFixed(1)} ${y.toFixed(1)}` : `L${x.toFixed(1)} ${y.toFixed(1)}`);
     }
 
     // Reference points for annotation
@@ -661,101 +680,110 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
           </filter>
         </defs>
 
-        {/* Grid lines */}
-        {[0, 1, 2, 3, 4].map(i => {
-          const yg = topMargin + (i / 4) * plotH;
-          return (
-            <line key={`grid-h-${i}`}
-              x1={leftMargin} y1={yg}
-              x2={leftMargin + plotW} y2={yg}
-              stroke={colors.border} strokeWidth="1"
-              strokeDasharray="4 4" opacity="0.3"
-            />
-          );
-        })}
-        {[0, 1, 2, 3].map(i => {
-          const xg = leftMargin + (i / 3) * plotW;
-          return (
-            <line key={`grid-v-${i}`}
-              x1={xg} y1={topMargin}
-              x2={xg} y2={topMargin + plotH}
-              stroke={colors.border} strokeWidth="1"
-              strokeDasharray="4 4" opacity="0.3"
-            />
-          );
-        })}
+        {/* Grid group */}
+        <g id="static-grid">
+          {[0, 1, 2, 3, 4].map(i => {
+            const yg = topMargin + (i / 4) * plotH;
+            return (
+              <line key={`grid-h-${i}`}
+                x1={leftMargin} y1={yg}
+                x2={leftMargin + plotW} y2={yg}
+                stroke="rgba(148,163,184,0.7)" strokeWidth="1"
+                strokeDasharray="4 4" opacity="0.3"
+              />
+            );
+          })}
+          {[0, 1, 2, 3].map(i => {
+            const xg = leftMargin + (i / 3) * plotW;
+            return (
+              <line key={`grid-v-${i}`}
+                x1={xg} y1={topMargin}
+                x2={xg} y2={topMargin + plotH}
+                stroke="rgba(148,163,184,0.7)" strokeWidth="1"
+                strokeDasharray="4 4" opacity="0.3"
+              />
+            );
+          })}
+        </g>
 
-        {/* Axes */}
-        <line x1={leftMargin} y1={topMargin} x2={leftMargin} y2={topMargin + plotH} stroke={colors.textSecondary} strokeWidth="2" />
-        <line x1={leftMargin} y1={topMargin + plotH} x2={leftMargin + plotW} y2={topMargin + plotH} stroke={colors.textSecondary} strokeWidth="2" />
-
-        {/* Y-axis labels */}
-        <text x={leftMargin - 6} y={refY_90 + 4} textAnchor="end" fill={colors.textPrimary} fontSize="11" fontWeight="600">90°C</text>
-        <text x={leftMargin - 6} y={refY_mid + 4} textAnchor="end" fill={colors.textSecondary} fontSize="11">~55°C</text>
-        <text x={leftMargin - 6} y={refY_22 + 4} textAnchor="end" fill={colors.success} fontSize="11" fontWeight="600">22°C</text>
-
-        {/* Y-axis title */}
-        <text
-          x={14}
-          y={topMargin + plotH / 2}
-          textAnchor="middle"
-          fill={colors.accent}
-          fontSize="12"
-          fontWeight="700"
-          transform={`rotate(-90, 14, ${topMargin + plotH / 2})`}
-        >
-          Temp (°C)
-        </text>
-
-        {/* X-axis labels */}
-        <text x={leftMargin} y={topMargin + plotH + 16} textAnchor="middle" fill={colors.textPrimary} fontSize="11">0</text>
-        <text x={leftMargin + plotW / 2} y={topMargin + plotH + 16} textAnchor="middle" fill={colors.textPrimary} fontSize="11">30 min</text>
-        <text x={leftMargin + plotW} y={topMargin + plotH + 16} textAnchor="middle" fill={colors.textPrimary} fontSize="11">60 min</text>
-
-        {/* X-axis title */}
-        <text
-          x={leftMargin + plotW / 2}
-          y={topMargin + plotH + 30}
-          textAnchor="middle"
-          fill={colors.accent}
-          fontSize="12"
-          fontWeight="700"
-        >
-          Time (minutes)
-        </text>
-
-        {/* Room temperature reference line */}
-        <line
-          x1={leftMargin} y1={refY_22}
-          x2={leftMargin + plotW} y2={refY_22}
-          stroke={colors.success} strokeWidth="2"
-          strokeDasharray="6 3"
-        />
-
-        {/* Cooling curve */}
-        {showCurve && (
-          <path
-            d={pts.join(' ')}
-            fill="none"
-            stroke="url(#coolingGradient)"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+        {/* Axes group */}
+        <g id="static-axes">
+          <line x1={leftMargin} y1={topMargin} x2={leftMargin} y2={topMargin + plotH} stroke={colors.textSecondary} strokeWidth="2" />
+          <line x1={leftMargin} y1={topMargin + plotH} x2={leftMargin + plotW} y2={topMargin + plotH} stroke={colors.textSecondary} strokeWidth="2" />
+          {/* Room temperature reference line */}
+          <line
+            x1={leftMargin} y1={refY_22}
+            x2={leftMargin + plotW} y2={refY_22}
+            stroke={colors.success} strokeWidth="2"
+            strokeDasharray="6 3"
           />
-        )}
+        </g>
 
-        {/* Start point marker */}
-        <circle
-          cx={leftMargin}
-          cy={refY_90}
-          r="6"
-          fill={colors.error}
-          filter="url(#glowFilter)"
-        />
-        <circle cx={leftMargin} cy={refY_90} r="3" fill="white" />
+        {/* Labels group */}
+        <g id="static-labels">
+          {/* Y-axis labels - well-spaced to avoid overlap */}
+          <text x={leftMargin - 6} y={refY_90 + 4} textAnchor="end" fill={colors.textPrimary} fontSize="11" fontWeight="600">90°C</text>
+          <text x={leftMargin - 6} y={refY_mid + 4} textAnchor="end" fill={colors.textPrimary} fontSize="11">55°C</text>
+          <text x={leftMargin - 6} y={refY_22 - 8} textAnchor="end" fill={colors.success} fontSize="11" fontWeight="600">22°C</text>
 
-        {/* Room temp label */}
-        <text x={leftMargin + plotW - 60} y={refY_22 - 5} fill={colors.success} fontSize="11" fontWeight="600">Room Temp</text>
+          {/* Y-axis title */}
+          <text
+            x={12}
+            y={topMargin + plotH / 2}
+            textAnchor="middle"
+            fill={colors.accent}
+            fontSize="11"
+            fontWeight="700"
+            transform={`rotate(-90, 12, ${topMargin + plotH / 2})`}
+          >
+            Temp °C
+          </text>
+
+          {/* X-axis labels */}
+          <text x={leftMargin} y={topMargin + plotH + 16} textAnchor="middle" fill={colors.textPrimary} fontSize="11">0</text>
+          <text x={leftMargin + plotW / 2} y={topMargin + plotH + 16} textAnchor="middle" fill={colors.textPrimary} fontSize="11">30 min</text>
+          <text x={leftMargin + plotW} y={topMargin + plotH + 16} textAnchor="middle" fill={colors.textPrimary} fontSize="11">60 min</text>
+
+          {/* X-axis title */}
+          <text
+            x={leftMargin + plotW / 2}
+            y={topMargin + plotH + 30}
+            textAnchor="middle"
+            fill={colors.accent}
+            fontSize="11"
+            fontWeight="700"
+          >
+            Time (minutes)
+          </text>
+
+          {/* Room temp label - above the dashed line to avoid axis overlap */}
+          <text x={leftMargin + plotW} y={refY_22 - 14} textAnchor="end" fill={colors.success} fontSize="11" fontWeight="600">Room Temp</text>
+        </g>
+
+        {/* Curve group */}
+        <g id="static-curve">
+          {/* Cooling curve */}
+          {showCurve && (
+            <path
+              d={pts.join(' ')}
+              fill="none"
+              stroke="url(#coolingGradient)"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          )}
+
+          {/* Start point marker */}
+          <circle
+            cx={leftMargin}
+            cy={refY_90}
+            r="8"
+            fill={colors.error}
+            filter="url(#glowFilter)"
+          />
+          <circle cx={leftMargin} cy={refY_90} r="4" fill="white" />
+        </g>
       </svg>
     );
   };
@@ -764,9 +792,9 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
   const InteractiveCoolingCurve = () => {
     const svgWidth = isMobile ? 260 : 340;
     const svgHeight = 220;
-    const leftMargin = 50;
+    const leftMargin = 52;
     const topMargin = 20;
-    const bottomMargin = 40;
+    const bottomMargin = 44;
     const rightMargin = 20;
     const plotW = svgWidth - leftMargin - rightMargin;
     const plotH = svgHeight - topMargin - bottomMargin;
@@ -774,15 +802,16 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
     const tempMin = 15;
     const tempMax = 105;
     const effectiveK = getEffectiveK();
+    const totalH = svgHeight + 14;
 
-    // Build path with 60 points
+    // Build path with 60 points (use space as separator for extractPathPoints regex)
     const pts: string[] = [];
     for (let i = 0; i <= 60; i++) {
       const t = (i / 60) * tMax;
       const temp = roomTemp + (initialTemp - roomTemp) * Math.exp(-effectiveK * t);
       const x = leftMargin + (i / 60) * plotW;
       const y = topMargin + plotH - ((temp - tempMin) / (tempMax - tempMin)) * plotH;
-      pts.push(i === 0 ? `M${x.toFixed(1)},${y.toFixed(1)}` : `L${x.toFixed(1)},${y.toFixed(1)}`);
+      pts.push(i === 0 ? `M${x.toFixed(1)} ${y.toFixed(1)}` : `L${x.toFixed(1)} ${y.toFixed(1)}`);
     }
 
     // Current point position
@@ -802,8 +831,8 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
     return (
       <svg
         width={svgWidth}
-        height={svgHeight + 10}
-        viewBox={`0 0 ${svgWidth} ${svgHeight + 10}`}
+        height={totalH}
+        viewBox={`0 0 ${svgWidth} ${totalH}`}
         style={{ background: colors.bgCard, borderRadius: '12px', width: '100%', maxWidth: `${svgWidth}px` }}
       >
         <defs>
@@ -821,106 +850,128 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
           </filter>
         </defs>
 
-        {/* Grid lines */}
-        {yTicks.map(temp => {
-          const yg = topMargin + plotH - ((temp - tempMin) / (tempMax - tempMin)) * plotH;
-          if (yg < topMargin || yg > topMargin + plotH) return null;
-          return (
-            <line key={`grid-y-${temp}`}
-              x1={leftMargin} y1={yg}
-              x2={leftMargin + plotW} y2={yg}
-              stroke={colors.border} strokeWidth="1"
-              strokeDasharray="4 4" opacity="0.3"
-            />
-          );
-        })}
+        {/* Grid group */}
+        <g id="grid-group">
+          {yTicks.map(temp => {
+            const yg = topMargin + plotH - ((temp - tempMin) / (tempMax - tempMin)) * plotH;
+            if (yg < topMargin || yg > topMargin + plotH) return null;
+            return (
+              <line key={`grid-y-${temp}`}
+                x1={leftMargin} y1={yg}
+                x2={leftMargin + plotW} y2={yg}
+                stroke="rgba(148,163,184,0.7)" strokeWidth="1"
+                strokeDasharray="4 4" opacity="0.3"
+              />
+            );
+          })}
+          {[0, 1, 2, 3].map(i => {
+            const xg = leftMargin + (i / 3) * plotW;
+            return (
+              <line key={`grid-x-${i}`}
+                x1={xg} y1={topMargin}
+                x2={xg} y2={topMargin + plotH}
+                stroke="rgba(148,163,184,0.7)" strokeWidth="1"
+                strokeDasharray="4 4" opacity="0.3"
+              />
+            );
+          })}
+        </g>
 
-        {/* Axes */}
-        <line x1={leftMargin} y1={topMargin} x2={leftMargin} y2={topMargin + plotH} stroke={colors.textSecondary} strokeWidth="2" />
-        <line x1={leftMargin} y1={topMargin + plotH} x2={leftMargin + plotW} y2={topMargin + plotH} stroke={colors.textSecondary} strokeWidth="2" />
+        {/* Axes group */}
+        <g id="axes-group">
+          <line x1={leftMargin} y1={topMargin} x2={leftMargin} y2={topMargin + plotH} stroke={colors.textSecondary} strokeWidth="2" />
+          <line x1={leftMargin} y1={topMargin + plotH} x2={leftMargin + plotW} y2={topMargin + plotH} stroke={colors.textSecondary} strokeWidth="2" />
+          {/* Room temperature reference line */}
+          <line
+            x1={leftMargin} y1={roomY}
+            x2={leftMargin + plotW} y2={roomY}
+            stroke={colors.success} strokeWidth="2"
+            strokeDasharray="6 3"
+          />
+        </g>
 
-        {/* Y-axis labels */}
-        {yTicks.map(temp => {
-          const yg = topMargin + plotH - ((temp - tempMin) / (tempMax - tempMin)) * plotH;
-          if (yg < topMargin - 5 || yg > topMargin + plotH + 5) return null;
-          return (
-            <text key={`label-y-${temp}`} x={leftMargin - 6} y={yg + 4} textAnchor="end" fill={colors.textSecondary} fontSize="11">{temp}</text>
-          );
-        })}
+        {/* Labels group */}
+        <g id="labels-group">
+          {/* Y-axis labels - spaced to avoid overlap */}
+          {yTicks.map(temp => {
+            const yg = topMargin + plotH - ((temp - tempMin) / (tempMax - tempMin)) * plotH;
+            if (yg < topMargin - 5 || yg > topMargin + plotH + 5) return null;
+            return (
+              <text key={`label-y-${temp}`} x={leftMargin - 6} y={yg + 4} textAnchor="end" fill={colors.textPrimary} fontSize="11">{temp}</text>
+            );
+          })}
 
-        {/* Y-axis title */}
-        <text
-          x={14}
-          y={topMargin + plotH / 2}
-          textAnchor="middle"
-          fill={colors.accent}
-          fontSize="12"
-          fontWeight="700"
-          transform={`rotate(-90, 14, ${topMargin + plotH / 2})`}
-        >
-          Temp (°C)
-        </text>
+          {/* Y-axis title - positioned at x=8, short text to avoid overlap with tick labels */}
+          <text
+            x={8}
+            y={topMargin + plotH / 2}
+            textAnchor="middle"
+            fill={colors.accent}
+            fontSize="11"
+            fontWeight="700"
+            transform={`rotate(-90, 8, ${topMargin + plotH / 2})`}
+          >
+            T(°C)
+          </text>
 
-        {/* X-axis labels */}
-        <text x={leftMargin} y={topMargin + plotH + 16} textAnchor="middle" fill={colors.textPrimary} fontSize="11">0</text>
-        <text x={leftMargin + plotW / 2} y={topMargin + plotH + 16} textAnchor="middle" fill={colors.textPrimary} fontSize="11">30m</text>
-        <text x={leftMargin + plotW} y={topMargin + plotH + 16} textAnchor="middle" fill={colors.textPrimary} fontSize="11">60m</text>
+          {/* X-axis labels */}
+          <text x={leftMargin} y={topMargin + plotH + 16} textAnchor="middle" fill={colors.textPrimary} fontSize="11">0</text>
+          <text x={leftMargin + plotW / 2} y={topMargin + plotH + 16} textAnchor="middle" fill={colors.textPrimary} fontSize="11">30m</text>
+          <text x={leftMargin + plotW} y={topMargin + plotH + 16} textAnchor="middle" fill={colors.textPrimary} fontSize="11">60m</text>
 
-        {/* X-axis title */}
-        <text
-          x={leftMargin + plotW / 2}
-          y={topMargin + plotH + 30}
-          textAnchor="middle"
-          fill={colors.accent}
-          fontSize="12"
-          fontWeight="700"
-        >
-          Time (min)
-        </text>
+          {/* X-axis title */}
+          <text
+            x={leftMargin + plotW / 2}
+            y={topMargin + plotH + 30}
+            textAnchor="middle"
+            fill={colors.accent}
+            fontSize="11"
+            fontWeight="700"
+          >
+            Time (min)
+          </text>
 
-        {/* Room temperature reference line */}
-        <line
-          x1={leftMargin} y1={roomY}
-          x2={leftMargin + plotW} y2={roomY}
-          stroke={colors.success} strokeWidth="2"
-          strokeDasharray="6 3"
-        />
-        <text x={leftMargin + plotW - 5} y={roomY - 4} textAnchor="end" fill={colors.success} fontSize="11" fontWeight="600">Room</text>
+          {/* Room temp label - positioned above room line on the left side to avoid x-axis label overlap */}
+          <text x={leftMargin + 4} y={roomY - 5} textAnchor="start" fill={colors.success} fontSize="11" fontWeight="600">Room</text>
+        </g>
 
-        {/* Reference/baseline starting point */}
-        <circle
-          cx={leftMargin}
-          cy={startY}
-          r="5"
-          fill={colors.error}
-          opacity="0.6"
-        />
+        {/* Curve group */}
+        <g id="curve-group">
+          {/* Reference/baseline starting point */}
+          <circle
+            cx={leftMargin}
+            cy={startY}
+            r="5"
+            fill={colors.error}
+            opacity="0.6"
+          />
 
-        {/* Cooling curve */}
-        <path
-          d={pts.join(' ')}
-          fill="none"
-          stroke="url(#coolingGradient2)"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+          {/* Cooling curve */}
+          <path
+            d={pts.join(' ')}
+            fill="none"
+            stroke="url(#coolingGradient2)"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
 
-        {/* Current temperature point (interactive, r>=8) */}
-        <circle
-          cx={cx}
-          cy={cy}
-          r="10"
-          fill={colors.accent}
-          filter="url(#ptGlow)"
-          opacity="0.9"
-        />
-        <circle cx={cx} cy={cy} r="5" fill="white" />
+          {/* Current temperature point (interactive, r>=8) */}
+          <circle
+            cx={cx}
+            cy={cy}
+            r="10"
+            fill={colors.accent}
+            filter="url(#ptGlow)"
+            opacity="0.9"
+          />
+          <circle cx={cx} cy={cy} r="5" fill="white" />
 
-        {/* Current temp label */}
-        <text x={cx + 14} y={Math.max(cy - 5, topMargin + 10)} fill={colors.accent} fontSize="12" fontWeight="700">
-          {Math.round(tempCur)}°C
-        </text>
+          {/* Current temp label */}
+          <text x={cx + 14} y={Math.max(cy - 5, topMargin + 10)} fill={colors.accent} fontSize="12" fontWeight="700">
+            {Math.round(tempCur)}°C
+          </text>
+        </g>
       </svg>
     );
   };
@@ -931,16 +982,14 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
 
   // HOOK PHASE
   if (phase === 'hook') {
-    return (
+    return renderWithScrollContainer(
       <div style={{
-        minHeight: '100vh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
-        paddingBottom: '100px',
         textAlign: 'center',
       }}>
         {renderProgressBar()}
@@ -989,8 +1038,6 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
         >
           Explore Cooling Physics
         </button>
-
-        {renderNavBar()}
       </div>
     );
   }
@@ -1171,7 +1218,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
               aria-label="Initial temperature slider"
             />
             <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
-              Effect: Higher starting temperature → larger initial delta T → faster initial cooling rate (dT/dt = -k × ΔT)
+              When initial temperature increases, it causes a larger delta T, which leads to a faster initial cooling rate (dT/dt = -k × ΔT).
             </p>
           </div>
 
@@ -1205,7 +1252,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
               aria-label="Cooling coefficient slider"
             />
             <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
-              Effect: Higher k → faster cooling overall (depends on material, surface area, insulation)
+              When k increases, it causes faster cooling overall — this depends on material, surface area, and insulation.
             </p>
           </div>
 
@@ -1329,8 +1376,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
           The Physics of Cooling
         </h2>
 
-        {prediction && (
-          <div style={{
+        <div style={{
             background: `${colors.accent}22`,
             border: `1px solid ${colors.accent}44`,
             borderRadius: '12px',
@@ -1338,12 +1384,13 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              You predicted option {prediction.toUpperCase()} — {prediction === 'b'
-                ? '✓ Correct! Cooling is indeed faster at first, then slows down.'
-                : 'The actual pattern is exponential: faster at first, then slower as temperature difference shrinks.'}
+              {prediction
+                ? `You predicted option ${prediction.toUpperCase()} — ${prediction === 'b'
+                    ? '✓ Correct! As you saw in the experiment, cooling is faster at first, then slows.'
+                    : 'What you observed: cooling is exponential — faster at first, then slower as the temperature difference shrinks.'}`
+                : 'As you observed in the experiment: cooling is exponential — faster at first, then slower as the temperature difference shrinks toward room temperature.'}
             </p>
           </div>
-        )}
 
         {/* SVG diagram showing the physics */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
@@ -1440,7 +1487,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
           This is a NEW question about controlling the cooling coefficient k — different from just waiting!
         </p>
 
-        {/* Static graphic showing the cooling setup (no sliders) */}
+        {/* Static SVG graphic showing cooling options (no sliders) */}
         <div style={{
           background: colors.bgCard,
           borderRadius: '16px',
@@ -1449,22 +1496,39 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
           textAlign: 'center',
         }}>
           <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
-            You want to drink your 90°C coffee but it's too hot. You have two options:
+            Two options for cooling your 90°C coffee — which changes k more?
           </p>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', marginTop: '16px' }}>
-            <div>
-              <div style={{ fontSize: '48px' }}>🔒</div>
-              <p style={{ ...typo.small, color: colors.textMuted }}>Add lid</p>
-              <p style={{ ...typo.small, color: colors.textMuted }}>Traps steam?</p>
-            </div>
-            <div>
-              <div style={{ fontSize: '48px' }}>🥄</div>
-              <p style={{ ...typo.small, color: colors.textMuted }}>Stir it</p>
-              <p style={{ ...typo.small, color: colors.textMuted }}>Moves heat?</p>
-            </div>
-          </div>
+          {/* Static SVG comparing lid vs stirring cooling options */}
+          <svg width="300" height="160" viewBox="0 0 300 160" style={{ background: colors.bgSecondary, borderRadius: '8px', width: '100%', maxWidth: '300px' }}>
+            <defs>
+              <linearGradient id="twistGrad1" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#EF4444" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.6" />
+              </linearGradient>
+            </defs>
+            {/* Left: Lid option */}
+            <g id="lid-option">
+              <rect x="20" y="20" width="100" height="100" rx="8" fill={colors.bgCard} stroke={colors.border} strokeWidth="1" />
+              <rect x="30" y="24" width="80" height="8" rx="3" fill="#9CA3AF" />
+              <text x="70" y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="11" fontWeight="600">Lid On</text>
+              <ellipse cx="70" cy="90" rx="30" ry="20" fill="url(#twistGrad1)" opacity="0.7" />
+              <text x="70" y="93" textAnchor="middle" fill="white" fontSize="11">90°C</text>
+              <text x="70" y="140" textAnchor="middle" fill={colors.error} fontSize="11">k × 0.5?</text>
+            </g>
+            {/* Right: Stir option */}
+            <g id="stir-option">
+              <rect x="180" y="20" width="100" height="100" rx="8" fill={colors.bgCard} stroke={colors.border} strokeWidth="1" />
+              <line x1="230" y1="30" x2="230" y2="110" stroke="#9CA3AF" strokeWidth="2" />
+              <text x="230" y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="11" fontWeight="600">Stirring</text>
+              <ellipse cx="230" cy="90" rx="30" ry="20" fill="url(#twistGrad1)" opacity="0.7" />
+              <text x="230" y="93" textAnchor="middle" fill="white" fontSize="11">90°C</text>
+              <text x="230" y="140" textAnchor="middle" fill={colors.success} fontSize="11">k × 1.3?</text>
+            </g>
+            {/* Center question */}
+            <text x="150" y="80" textAnchor="middle" fill={colors.accent} fontSize="13" fontWeight="700">?</text>
+          </svg>
           <p style={{ ...typo.small, color: colors.accent, marginTop: '16px' }}>
-            Think about how each action changes the k coefficient in dT/dt = -k(T - T_ambient)
+            How does each action change k in dT/dt = -k(T - T_ambient)?
           </p>
         </div>
 
@@ -2254,16 +2318,14 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
 
   // MASTERY PHASE
   if (phase === 'mastery') {
-    return (
+    return renderWithScrollContainer(
       <div style={{
-        minHeight: '100vh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
-        paddingBottom: '100px',
         textAlign: 'center',
       }}>
         {renderProgressBar()}
@@ -2337,7 +2399,6 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
           </a>
         </div>
 
-        {renderNavBar()}
       </div>
     );
   }

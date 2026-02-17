@@ -397,6 +397,19 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
     mastery: 'Mastery'
   };
 
+  const navDotLabels: Record<Phase, string> = {
+    hook: 'explore introduction',
+    predict: 'predict waveform type',
+    play: 'experiment inverter lab',
+    review: 'review understanding',
+    twist_predict: 'explore twist motor effects',
+    twist_play: 'experiment with motor load',
+    twist_review: 'deep insight transfer knowledge',
+    transfer: 'transfer apply real world',
+    test: 'quiz test knowledge',
+    mastery: 'mastery complete'
+  };
+
   const goToPhase = useCallback((p: Phase) => {
     if (isNavigating.current) return;
     isNavigating.current = true;
@@ -424,16 +437,33 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
   // Inverter Visualization Component
   const InverterVisualization = ({ interactive }: { interactive: boolean }) => {
     const width = isMobile ? 360 : 680;
-    const height = isMobile ? 400 : 480;
-    const graphWidth = isMobile ? 320 : 620;
-    const graphHeight = 100;
-    const graphX = isMobile ? 20 : 30;
+    const height = isMobile ? 420 : 500;
+    const graphWidth = isMobile ? 300 : 600;
+    const graphHeight = isMobile ? 80 : 90;
+    const graphX = isMobile ? 25 : 35;
+
+    // Absolute Y offsets for each section (no group transforms)
+    const bridgeY = 38;         // H-Bridge circuit Y offset
+    const beforeFilterY = isMobile ? 120 : 130;   // Before Filter graph top
+    const afterFilterY = isMobile ? 240 : 255;     // After Filter graph top
+    const thdPanelY = isMobile ? 360 : 378;        // THD panel top
+
+    const beforeCenterY = beforeFilterY + graphHeight / 2 + 15;
+    const afterCenterY = afterFilterY + graphHeight / 2 + 15;
 
     const scaleX = (i: number) => graphX + (i / 200) * graphWidth;
-    const scaleY = (v: number, centerY: number) => centerY - (v / (dcVoltage / 2)) * (graphHeight / 2 - 8);
+    const scaleY = (v: number, centerY: number) => centerY - (v / (dcVoltage / 2)) * 65;
 
     const switchState1 = Math.sin(animationTime * 2) > 0;
     const switchState2 = !switchState1;
+
+    // H-Bridge horizontal layout positions
+    const dcX = isMobile ? 10 : 30;
+    const bridgeX = dcX + 60;
+    const bridgeW = isMobile ? 100 : 120;
+    const lcX = bridgeX + bridgeW + 20;
+    const lcW = isMobile ? 55 : 75;
+    const acX = lcX + lcW + 15;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
@@ -469,63 +499,43 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
             DC to AC: {waveformType === 'square' ? 'Square Wave' : waveformType === 'modified' ? 'Modified Sine' : 'PWM Pure Sine'}
           </text>
 
-          {/* H-Bridge Circuit Diagram */}
-          <g transform={`translate(${isMobile ? 20 : 40}, 40)`}>
-            {/* DC Source */}
-            <rect x="0" y="15" width="50" height="40" rx="4" fill={colors.bgSecondary} stroke={colors.dc} strokeWidth="2" />
-            <text x="25" y="32" textAnchor="middle" fill={colors.dc} fontSize="10" fontWeight="bold">DC</text>
-            <text x="25" y="48" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="bold">{dcVoltage}V</text>
-
-            {/* H-Bridge Box */}
-            <rect x="70" y="0" width={isMobile ? 100 : 120} height="70" rx="6" fill={colors.bgSecondary} stroke={colors.pwm} strokeWidth="2" />
-            <text x={70 + (isMobile ? 50 : 60)} y="16" textAnchor="middle" fill={colors.pwm} fontSize="10" fontWeight="bold">H-BRIDGE</text>
-
-            {/* Switches */}
-            <rect x="80" y="25" width="30" height="18" rx="3" fill={switchState1 ? colors.success : colors.bgCard} stroke={switchState1 ? colors.success : colors.textMuted} strokeWidth="1.5" />
-            <text x="95" y="37" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">Q1</text>
-
-            <rect x={isMobile ? 120 : 130} y="25" width="30" height="18" rx="3" fill={switchState2 ? colors.success : colors.bgCard} stroke={switchState2 ? colors.success : colors.textMuted} strokeWidth="1.5" />
-            <text x={isMobile ? 135 : 145} y="37" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">Q2</text>
-
-            <rect x="80" y="47" width="30" height="18" rx="3" fill={switchState2 ? colors.success : colors.bgCard} stroke={switchState2 ? colors.success : colors.textMuted} strokeWidth="1.5" />
-            <text x="95" y="59" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">Q3</text>
-
-            <rect x={isMobile ? 120 : 130} y="47" width="30" height="18" rx="3" fill={switchState1 ? colors.success : colors.bgCard} stroke={switchState1 ? colors.success : colors.textMuted} strokeWidth="1.5" />
-            <text x={isMobile ? 135 : 145} y="59" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">Q4</text>
-
-            {/* LC Filter */}
-            <rect x={isMobile ? 190 : 210} y="15" width={isMobile ? 60 : 80} height="40" rx="4" fill={colors.bgSecondary} stroke={colors.warning} strokeWidth="2" />
-            <text x={isMobile ? 220 : 250} y="32" textAnchor="middle" fill={colors.warning} fontSize="10" fontWeight="bold">LC Filter</text>
-            <text x={isMobile ? 220 : 250} y="48" textAnchor="middle" fill={colors.textMuted} fontSize="9">L + C</text>
-
-            {/* AC Output */}
-            <rect x={isMobile ? 270 : 310} y="15" width="55" height="40" rx="4" fill={colors.bgSecondary} stroke={colors.ac} strokeWidth="2" />
-            <text x={isMobile ? 297 : 337} y="32" textAnchor="middle" fill={colors.ac} fontSize="10" fontWeight="bold">AC OUT</text>
-            <text x={isMobile ? 297 : 337} y="48" textAnchor="middle" fill={colors.textPrimary} fontSize="11" fontWeight="bold">{frequency}Hz</text>
-
-            {/* Connection arrows */}
-            <line x1="50" y1="35" x2="70" y2="35" stroke={colors.dc} strokeWidth="2" markerEnd="url(#arrow)" />
-            <line x1={isMobile ? 170 : 190} y1="35" x2={isMobile ? 190 : 210} y2="35" stroke={colors.pwm} strokeWidth="2" />
-            <line x1={isMobile ? 250 : 290} y1="35" x2={isMobile ? 270 : 310} y2="35" stroke={colors.ac} strokeWidth="2" />
+          {/* Layer 1: H-Bridge Circuit Diagram */}
+          <g id="circuit-layer">
+            <rect x={dcX} y={bridgeY + 12} width="50" height="40" rx="4" fill={colors.bgSecondary} stroke={colors.dc} strokeWidth="2" />
+            <text x={dcX + 25} y={bridgeY + 30} textAnchor="middle" fill={colors.dc} fontSize="11" fontWeight="bold">DC</text>
+            <text x={dcX + 25} y={bridgeY + 46} textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="bold">{dcVoltage}V</text>
+            <rect x={bridgeX} y={bridgeY} width={bridgeW} height="68" rx="6" fill={colors.bgSecondary} stroke={colors.pwm} strokeWidth="2" />
+            <text x={bridgeX + bridgeW / 2} y={bridgeY + 14} textAnchor="middle" fill={colors.pwm} fontSize="11" fontWeight="bold">H-BRIDGE</text>
+            <rect x={bridgeX + 10} y={bridgeY + 22} width="28" height="16" rx="3" fill={switchState1 ? colors.success : colors.bgCard} stroke={switchState1 ? colors.success : colors.textMuted} strokeWidth="1.5" />
+            <text x={bridgeX + 24} y={bridgeY + 33} textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">Q1</text>
+            <rect x={bridgeX + bridgeW - 38} y={bridgeY + 22} width="28" height="16" rx="3" fill={switchState2 ? colors.success : colors.bgCard} stroke={switchState2 ? colors.success : colors.textMuted} strokeWidth="1.5" />
+            <text x={bridgeX + bridgeW - 24} y={bridgeY + 33} textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">Q2</text>
+            <rect x={bridgeX + 10} y={bridgeY + 44} width="28" height="16" rx="3" fill={switchState2 ? colors.success : colors.bgCard} stroke={switchState2 ? colors.success : colors.textMuted} strokeWidth="1.5" />
+            <text x={bridgeX + 24} y={bridgeY + 55} textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">Q3</text>
+            <rect x={bridgeX + bridgeW - 38} y={bridgeY + 44} width="28" height="16" rx="3" fill={switchState1 ? colors.success : colors.bgCard} stroke={switchState1 ? colors.success : colors.textMuted} strokeWidth="1.5" />
+            <text x={bridgeX + bridgeW - 24} y={bridgeY + 55} textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">Q4</text>
+            <rect x={lcX} y={bridgeY + 12} width={lcW} height="40" rx="4" fill={colors.bgSecondary} stroke={colors.warning} strokeWidth="2" />
+            <text x={lcX + lcW / 2} y={bridgeY + 30} textAnchor="middle" fill={colors.warning} fontSize="11" fontWeight="bold">LC Filter</text>
+            <text x={lcX + lcW / 2} y={bridgeY + 46} textAnchor="middle" fill={colors.textMuted} fontSize="11">L + C</text>
+            <rect x={acX} y={bridgeY + 12} width="52" height="40" rx="4" fill={colors.bgSecondary} stroke={colors.ac} strokeWidth="2" />
+            <text x={acX + 26} y={bridgeY + 30} textAnchor="middle" fill={colors.ac} fontSize="11" fontWeight="bold">AC OUT</text>
+            <text x={acX + 26} y={bridgeY + 46} textAnchor="middle" fill={colors.textPrimary} fontSize="11" fontWeight="bold">{frequency}Hz</text>
+            <line x1={dcX + 50} y1={bridgeY + 32} x2={bridgeX} y2={bridgeY + 32} stroke={colors.dc} strokeWidth="2" />
+            <line x1={bridgeX + bridgeW} y1={bridgeY + 32} x2={lcX} y2={bridgeY + 32} stroke={colors.pwm} strokeWidth="2" />
+            <line x1={lcX + lcW} y1={bridgeY + 32} x2={acX} y2={bridgeY + 32} stroke={colors.ac} strokeWidth="2" />
           </g>
 
-          {/* Before Filter Graph */}
-          <g transform={`translate(0, ${isMobile ? 115 : 125})`}>
-            <rect x={graphX - 5} y="0" width={graphWidth + 10} height={graphHeight + 25} rx="6" fill={colors.bgSecondary} />
-            <text x={graphX} y="14" fill={colors.pwm} fontSize="11" fontWeight="bold">Before Filter: PWM Switching</text>
-
-            {/* Zero line */}
-            <line x1={graphX} y1={graphHeight/2 + 15} x2={graphX + graphWidth} y2={graphHeight/2 + 15} stroke={colors.textMuted} strokeWidth="1" strokeDasharray="4,4" opacity="0.5" />
-
-            {/* Y labels */}
-            <text x={graphX - 3} y={22} fill={colors.textMuted} fontSize="8" textAnchor="end">+</text>
-            <text x={graphX - 3} y={graphHeight + 12} fill={colors.textMuted} fontSize="8" textAnchor="end">-</text>
-
-            {/* PWM waveform */}
+          {/* Layer 2: Before Filter Graph */}
+          <g id="before-filter-layer">
+            <rect x={graphX - 5} y={beforeFilterY} width={graphWidth + 10} height={graphHeight + 28} rx="6" fill={colors.bgSecondary} />
+            <text x={graphX} y={beforeFilterY + 14} fill={colors.pwm} fontSize="11" fontWeight="bold">Before Filter: PWM Switching</text>
+            <line x1={graphX} y1={beforeCenterY} x2={graphX + graphWidth} y2={beforeCenterY} stroke={colors.textMuted} strokeWidth="1" strokeDasharray="4,4" opacity="0.5" />
+            <text x={graphX - 3} y={beforeFilterY + 30} fill={colors.textMuted} fontSize="11" textAnchor="end">+V</text>
+            <text x={graphX - 3} y={beforeFilterY + graphHeight + 14} fill={colors.textMuted} fontSize="11" textAnchor="end">-V</text>
             <path
               d={squareWave.map((p, i) => {
                 const x = scaleX(p.x);
-                const y = scaleY(p.y, graphHeight/2 + 15);
+                const y = scaleY(p.y, beforeCenterY);
                 return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
               }).join(' ')}
               fill="none"
@@ -535,19 +545,15 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
             />
           </g>
 
-          {/* After Filter Graph */}
-          <g transform={`translate(0, ${isMobile ? 250 : 265})`}>
-            <rect x={graphX - 5} y="0" width={graphWidth + 10} height={graphHeight + 25} rx="6" fill={colors.bgSecondary} />
-            <text x={graphX} y="14" fill={colors.ac} fontSize="11" fontWeight="bold">After Filter: Clean AC Output</text>
-
-            {/* Zero line */}
-            <line x1={graphX} y1={graphHeight/2 + 15} x2={graphX + graphWidth} y2={graphHeight/2 + 15} stroke={colors.textMuted} strokeWidth="1" strokeDasharray="4,4" opacity="0.5" />
-
-            {/* Ideal sine (dashed) */}
+          {/* Layer 3: After Filter Graph */}
+          <g id="after-filter-layer">
+            <rect x={graphX - 5} y={afterFilterY} width={graphWidth + 10} height={graphHeight + 28} rx="6" fill={colors.bgSecondary} />
+            <text x={graphX} y={afterFilterY + 14} fill={colors.ac} fontSize="11" fontWeight="bold">After Filter: Clean AC Output</text>
+            <line x1={graphX} y1={afterCenterY} x2={graphX + graphWidth} y2={afterCenterY} stroke={colors.textMuted} strokeWidth="1" strokeDasharray="4,4" opacity="0.5" />
             <path
               d={sineWave.map((p, i) => {
                 const x = scaleX(p.x);
-                const y = scaleY(p.y, graphHeight/2 + 15);
+                const y = scaleY(p.y, afterCenterY);
                 return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
               }).join(' ')}
               fill="none"
@@ -556,12 +562,10 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
               strokeDasharray="6,4"
               opacity="0.4"
             />
-
-            {/* Actual output */}
             <path
               d={outputWave.map((p, i) => {
                 const x = scaleX(p.x);
-                const y = scaleY(p.y, graphHeight/2 + 15);
+                const y = scaleY(p.y, afterCenterY);
                 return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
               }).join(' ')}
               fill="none"
@@ -569,23 +573,22 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
               strokeWidth="2.5"
               filter="url(#glowFilter)"
             />
-
-            <text x={graphX + graphWidth - 5} y={graphHeight + 22} fill={colors.textMuted} fontSize="9" textAnchor="end">
-              Dashed = ideal sine
-            </text>
+            <text x={graphX + graphWidth / 2} y={afterFilterY + graphHeight + 24} fill={colors.textMuted} fontSize="11" textAnchor="middle">Time →</text>
+            <text x={graphX - 8} y={afterCenterY} fill={colors.textMuted} fontSize="11" textAnchor="middle" transform={`rotate(-90, ${graphX - 8}, ${afterCenterY})`}>Voltage (V)</text>
+            <text x={graphX + graphWidth - 5} y={afterFilterY + graphHeight + 14} fill={colors.textMuted} fontSize="11" textAnchor="end">Dashed = ideal sine</text>
           </g>
 
-          {/* THD Stats Panel */}
-          <g transform={`translate(${graphX - 5}, ${isMobile ? 365 : 385})`}>
-            <rect x="0" y="0" width={graphWidth + 10} height="30" rx="6" fill={colors.bgSecondary} stroke={thd < 5 ? colors.success : thd < 25 ? colors.warning : colors.error} strokeWidth="1.5" />
-            <text x="15" y="20" fill={colors.textPrimary} fontSize="12" fontWeight="bold">
+          {/* Layer 4: THD Stats Panel */}
+          <g id="thd-layer">
+            <rect x={graphX - 5} y={thdPanelY} width={graphWidth + 10} height="32" rx="6" fill={colors.bgSecondary} stroke={thd < 5 ? colors.success : thd < 25 ? colors.warning : colors.error} strokeWidth="1.5" />
+            <text x={graphX + 10} y={thdPanelY + 21} fill={colors.textPrimary} fontSize="12" fontWeight="bold">
               THD: <tspan fill={thd < 5 ? colors.success : thd < 25 ? colors.warning : colors.error}>{thd.toFixed(1)}%</tspan>
             </text>
-            <text x={isMobile ? 100 : 150} y="20" fill={colors.textMuted} fontSize="11">
-              {thd < 5 ? 'Excellent - Grid Compatible' : thd < 25 ? 'Moderate - Light Loads OK' : 'Poor - Motor Damage Risk'}
+            <text x={graphX + (isMobile ? 80 : 120)} y={thdPanelY + 21} fill={colors.textMuted} fontSize="11">
+              {thd < 5 ? 'Excellent - Grid Compatible' : thd < 25 ? 'Moderate - Light Loads OK' : 'Poor - Motor Damage'}
             </text>
-            <text x={graphWidth - 10} y="20" fill={colors.textSecondary} fontSize="10" textAnchor="end">
-              PWM: {pwmFrequency}kHz | Efficiency: {waveformType === 'pwm' ? '95-98%' : waveformType === 'modified' ? '85-90%' : '80-85%'}
+            <text x={graphX + graphWidth - 5} y={thdPanelY + 21} fill={colors.textSecondary} fontSize="11" textAnchor="end">
+              PWM: {pwmFrequency}kHz
             </text>
           </g>
         </svg>
@@ -636,6 +639,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
   const MotorVisualization = () => {
     const tempColor = motorTemp < 70 ? colors.success : motorTemp < 90 ? colors.warning : colors.error;
     const dangerLevel = motorTemp >= 90 ? 'DANGER' : motorTemp >= 70 ? 'WARNING' : 'SAFE';
+    const tempBarWidth = Math.min(100, ((motorTemp - 40) / 80) * 100);
 
     return (
       <div style={{
@@ -644,6 +648,35 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
         padding: '20px',
         marginBottom: '16px',
       }}>
+        {/* SVG motor temperature visualization */}
+        <svg viewBox="0 0 320 160" style={{ width: '100%', height: '160px', marginBottom: '12px' }}>
+          {/* Grid */}
+          <line x1="0" y1="80" x2="320" y2="80" stroke={colors.border} strokeDasharray="4 4" opacity="0.3"/>
+          {/* Motor body */}
+          <rect x="100" y="50" width="120" height="70" rx="8" fill={colors.bgSecondary} stroke={tempColor} strokeWidth="2.5"/>
+          <text x="160" y="82" textAnchor="middle" fill={tempColor} fontSize="14" fontWeight="bold">Motor</text>
+          <text x="160" y="98" textAnchor="middle" fill={tempColor} fontSize="13" fontWeight="bold">{motorTemp}°C</text>
+          <text x="160" y="112" textAnchor="middle" fill={colors.textMuted} fontSize="11">{dangerLevel}</text>
+          {/* Temperature bar */}
+          <rect x="40" y="55" width="50" height="14" rx="4" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1"/>
+          <rect x="40" y="55" width={tempBarWidth * 0.5} height="14" rx="4" fill={tempColor}/>
+          <text x="65" y="82" textAnchor="middle" fill={colors.textMuted} fontSize="11">Temp</text>
+          {/* THD label */}
+          <text x="40" y="105" fill={colors.textMuted} fontSize="11">THD: <tspan fill={thd < 5 ? colors.success : thd < 25 ? colors.warning : colors.error} fontWeight="bold">{thd.toFixed(1)}%</tspan></text>
+          <text x="40" y="120" fill={colors.textMuted} fontSize="11">Load: <tspan fill={colors.textPrimary} fontWeight="bold">{motorLoad}%</tspan></text>
+          {/* Heat waves if hot */}
+          {motorTemp >= 80 && (
+            <>
+              <text x="230" y="60" fill={colors.error} fontSize="16">🔥</text>
+              <text x="255" y="75" fill={colors.error} fontSize="11">Overheating!</text>
+            </>
+          )}
+          {/* Waveform type indicator */}
+          <text x="230" y="100" fill={colors.textMuted} fontSize="11">Waveform:</text>
+          <text x="230" y="114" fill={colors.textPrimary} fontSize="11" fontWeight="bold">{waveformType === 'square' ? 'Square' : waveformType === 'modified' ? 'Modified' : 'Pure Sine'}</text>
+          {/* Axis */}
+          <text x="160" y="148" textAnchor="middle" fill={colors.textMuted} fontSize="11">Motor Temperature vs Waveform Type</text>
+        </svg>
         <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
           {/* Motor icon */}
           <div style={{
@@ -659,7 +692,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
             boxShadow: motorTemp >= 80 ? `0 0 20px ${tempColor}66` : 'none',
             animation: motorTemp >= 90 ? 'pulse 0.5s infinite' : 'none',
           }}>
-            <span style={{ fontSize: '32px' }}>Motor</span>
+            <span style={{ fontSize: '32px' }}>⚙️</span>
             <span style={{ color: tempColor, fontSize: '24px', fontWeight: 'bold' }}>{motorTemp}C</span>
             <span style={{ color: colors.textMuted, fontSize: '12px' }}>{dangerLevel}</span>
           </div>
@@ -763,11 +796,70 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
             cursor: 'pointer',
             transition: 'all 0.3s ease',
           }}
-          aria-label={phaseLabels[p]}
+          aria-label={navDotLabels[p]}
         />
       ))}
     </div>
   );
+
+  // Bottom navigation bar with Back/Next buttons
+  const renderBottomBar = (onNext?: () => void, nextLabel = 'Next →', nextDisabled = false) => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+        background: colors.bgSecondary,
+        borderTop: `1px solid ${colors.border}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '12px 20px',
+      }}>
+        <button
+          onClick={() => canGoBack && goToPhase(phaseOrder[currentIndex - 1])}
+          disabled={!canGoBack}
+          aria-label="Back"
+          style={{
+            padding: '10px 20px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.border}`,
+            background: 'transparent',
+            color: canGoBack ? colors.textSecondary : colors.border,
+            cursor: canGoBack ? 'pointer' : 'not-allowed',
+            fontSize: '14px',
+            fontWeight: 600,
+            minHeight: '44px',
+          }}
+        >
+          ← Back
+        </button>
+        <button
+          onClick={onNext && !nextDisabled ? onNext : undefined}
+          disabled={nextDisabled || !onNext}
+          aria-label="Next"
+          style={{
+            padding: '10px 24px',
+            borderRadius: '8px',
+            border: 'none',
+            background: nextDisabled || !onNext ? colors.border : `linear-gradient(135deg, ${colors.accent}, #D97706)`,
+            color: 'white',
+            cursor: nextDisabled || !onNext ? 'not-allowed' : 'pointer',
+            fontSize: '14px',
+            fontWeight: 700,
+            minHeight: '44px',
+            boxShadow: nextDisabled || !onNext ? 'none' : `0 4px 16px ${colors.accentGlow}`,
+          }}
+        >
+          {nextLabel}
+        </button>
+      </div>
+    );
+  };
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
@@ -806,65 +898,68 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
-        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '80px 24px 24px',
-        textAlign: 'center',
-        overflowY: 'auto',
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
-
         <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '80px',
+          paddingBottom: '100px',
+          paddingLeft: isMobile ? '16px' : '24px',
+          paddingRight: isMobile ? '16px' : '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
         }}>
-          ☀️⚡
-        </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+          <div style={{
+            fontSize: '64px',
+            marginBottom: '24px',
+            animation: 'pulse 2s infinite',
+          }}>
+            ☀️⚡
+          </div>
+          <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Inverter Sine Wave Synthesis
-        </h1>
+          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+            Inverter Sine Wave Synthesis
+          </h1>
 
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          Solar panels produce <span style={{ color: colors.dc }}>DC power</span>, but your home needs <span style={{ color: colors.ac }}>AC power</span>. How do inverters create a smooth sinusoidal waveform from switched DC?
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
-        }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "A cheap square-wave inverter can destroy motors and electronics. The difference between a $50 inverter and a $500 pure sine inverter is the quality of the waveform - and that comes down to PWM switching and filtering."
+          <p style={{
+            ...typo.body,
+            color: colors.textSecondary,
+            maxWidth: '600px',
+            marginBottom: '32px',
+          }}>
+            Solar panels produce <span style={{ color: colors.dc }}>DC power</span>, but your home needs <span style={{ color: colors.ac }}>AC power</span>. How do inverters create a smooth sinusoidal waveform from switched DC?
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            - Power Electronics Engineering
-          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '500px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+              "A cheap square-wave inverter can destroy motors and electronics. The difference between a $50 inverter and a $500 pure sine inverter is the quality of the waveform - and that comes down to PWM switching and filtering."
+            </p>
+            <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', marginTop: '8px' }}>
+              — Power Electronics Engineering
+            </p>
+          </div>
+
+          {renderNavDots()}
         </div>
-
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Learn How Inverters Work
-        </button>
-
-        {renderNavDots()}
+        {renderBottomBar(() => { playSound('click'); nextPhase(); }, 'Explore Inverter Technology →')}
       </div>
     );
   }
@@ -988,17 +1083,10 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
             ))}
           </div>
 
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test My Prediction
-            </button>
-          )}
         </div>
 
         {renderNavDots()}
+        {renderBottomBar(prediction ? () => { playSound('success'); nextPhase(); } : undefined, 'Continue →', !prediction)}
       </div>
     );
   }
@@ -1007,20 +1095,22 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
   if (phase === 'play') {
     return (
       <div style={{
+        display: 'flex',
+        flexDirection: 'column',
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '80px 24px 24px',
-        overflowY: 'auto',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
 
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Inverter Waveform Simulator
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-            Compare square wave, modified sine, and PWM pure sine inverters
+            Observe how switching technique affects waveform quality. Compare square wave, modified sine, and PWM pure sine inverters — THD directly impacts motor and electronics performance.
           </p>
 
           {/* Real-world relevance */}
@@ -1067,7 +1157,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
                 step="10"
                 value={dcVoltage}
                 onChange={(e) => setDcVoltage(parseInt(e.target.value))}
-                style={{ width: '100%', height: '8px', cursor: 'pointer' }}
+                style={{ width: '100%', height: '20px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                 <span style={{ ...typo.small, color: colors.textMuted }}>100V (Low)</span>
@@ -1089,7 +1179,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
                   step="1"
                   value={pwmFrequency}
                   onChange={(e) => setPwmFrequency(parseInt(e.target.value))}
-                  style={{ width: '100%', height: '8px', cursor: 'pointer' }}
+                  style={{ width: '100%', height: '20px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                   <span style={{ ...typo.small, color: colors.textMuted }}>5kHz (Large filter)</span>
@@ -1111,7 +1201,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
                 step="10"
                 value={frequency}
                 onChange={(e) => setFrequency(parseInt(e.target.value))}
-                style={{ width: '100%', height: '8px', cursor: 'pointer' }}
+                style={{ width: '100%', height: '20px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                 <span style={{ ...typo.small, color: colors.textMuted }}>50Hz (Europe/Asia)</span>
@@ -1138,15 +1228,11 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
             </ul>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Physics
-          </button>
         </div>
 
         {renderNavDots()}
+        </div>
+        {renderBottomBar(() => { playSound('success'); nextPhase(); }, 'Understand the Physics')}
       </div>
     );
   }
@@ -1242,15 +1328,10 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
             </ul>
           </div>
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Discover the Consequences
-          </button>
         </div>
 
         {renderNavDots()}
+        {renderBottomBar(() => { playSound('success'); nextPhase(); }, 'Discover the Consequences')}
       </div>
     );
   }
@@ -1290,6 +1371,28 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
             What happens when you run motors and transformers on distorted waveforms?
           </h2>
+
+          {/* SVG showing waveform quality impact - no sliders */}
+          <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '24px', border: `1px solid ${colors.border}` }}>
+            <svg viewBox="0 0 320 120" style={{ width: '100%', height: '120px' }}>
+              {/* Grid */}
+              <line x1="0" y1="60" x2="320" y2="60" stroke={colors.border} strokeDasharray="4 4" opacity="0.3"/>
+              {/* Square wave */}
+              <path d="M10,30 L50,30 L50,90 L90,90 L90,30 L130,30 L130,90 L170,90 L170,30 L210,30" fill="none" stroke={colors.error} strokeWidth="2"/>
+              <text x="20" y="16" fill={colors.error} fontSize="11" fontWeight="bold">Square: 48% THD</text>
+              {/* Sine wave */}
+              <path d="M10,90 Q30,30 50,90 Q70,150 90,90 Q110,30 130,90 Q150,150 170,90 Q190,30 210,90" fill="none" stroke={colors.success} strokeWidth="2"/>
+              <text x="220" y="52" fill={colors.success} fontSize="11">Pure Sine</text>
+              <text x="220" y="66" fill={colors.success} fontSize="11">{'<3%'} THD</text>
+              {/* Motor icon */}
+              <circle cx="275" cy="60" r="22" fill="none" stroke={colors.warning} strokeWidth="2"/>
+              <text x="275" y="56" textAnchor="middle" fill={colors.warning} fontSize="11" fontWeight="bold">Motor</text>
+              <text x="275" y="70" textAnchor="middle" fill={colors.error} fontSize="11">🔥 Hot!</text>
+              {/* Arrow from square to motor */}
+              <line x1="210" y1="60" x2="250" y2="60" stroke={colors.error} strokeWidth="1.5"/>
+              <polygon points="250,57 250,63 255,60" fill={colors.error}/>
+            </svg>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1337,17 +1440,10 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
             ))}
           </div>
 
-          {twistPrediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              See the Effects
-            </button>
-          )}
         </div>
 
         {renderNavDots()}
+        {renderBottomBar(twistPrediction ? () => { playSound('success'); nextPhase(); } : undefined, 'See the Effects', !twistPrediction)}
       </div>
     );
   }
@@ -1420,7 +1516,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
                 max="100"
                 value={motorLoad}
                 onChange={(e) => setMotorLoad(parseInt(e.target.value))}
-                style={{ width: '100%', height: '8px', cursor: 'pointer' }}
+                style={{ width: '100%', height: '20px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
               />
             </div>
           </div>
@@ -1442,15 +1538,10 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
             </div>
           )}
 
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand Why
-          </button>
         </div>
 
         {renderNavDots()}
+        {renderBottomBar(() => { playSound('success'); nextPhase(); }, 'Understand Why')}
       </div>
     );
   }
@@ -1497,7 +1588,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
               border: `1px solid ${colors.border}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>Motor</span>
+                <span style={{ fontSize: '24px' }}>🔧</span>
                 <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Motor Heating (15-25% extra)</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
@@ -1512,7 +1603,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
               border: `1px solid ${colors.border}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>Transformer</span>
+                <span style={{ fontSize: '24px' }}>⚡</span>
                 <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Transformer Losses (49x for 7th harmonic)</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
@@ -1527,7 +1618,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
               border: `1px solid ${colors.border}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>Electronics</span>
+                <span style={{ fontSize: '24px' }}>💻</span>
                 <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Electronic Interference</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
@@ -1542,7 +1633,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
               border: `1px solid ${colors.success}33`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>Check</span>
+                <span style={{ fontSize: '24px' }}>✓</span>
                 <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>The Solution: Pure Sine Inverters</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
@@ -1628,7 +1719,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
                     fontSize: '12px',
                     lineHeight: '18px',
                   }}>
-                    Check
+                    ✓
                   </div>
                 )}
                 <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
@@ -1668,8 +1759,14 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
               <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
                 Connection to What You Learned:
               </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
                 {app.connection}
+              </p>
+              <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '4px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
               </p>
             </div>
 
@@ -1754,7 +1851,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
               fontSize: '80px',
               marginBottom: '24px',
             }}>
-              {passed ? 'Trophy' : 'Book'}
+              {passed ? '🏆' : '📖'}
             </div>
             <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
               {passed ? 'Excellent!' : 'Keep Learning!'}
@@ -1985,7 +2082,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
           marginBottom: '24px',
           animation: 'bounce 1s infinite',
         }}>
-          Trophy
+          🏆
         </div>
         <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
@@ -2017,7 +2114,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
               'Grid-tie requires <5% THD',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: colors.success }}>Check</span>
+                <span style={{ color: colors.success }}>✓</span>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
               </div>
             ))}

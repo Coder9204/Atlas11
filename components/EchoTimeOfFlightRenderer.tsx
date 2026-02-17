@@ -32,10 +32,10 @@ interface GameEvent {
 const phaseLabels: Record<Phase, string> = {
   hook: 'Hook',
   predict: 'Predict',
-  play: 'Lab',
+  play: 'Play',
   review: 'Review',
   twist_predict: 'Twist Predict',
-  twist_play: 'Twist Lab',
+  twist_play: 'Twist Play',
   twist_review: 'Twist Review',
   transfer: 'Transfer',
   test: 'Test',
@@ -505,7 +505,9 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
           justifyContent: 'space-between',
           marginBottom: premiumDesign.spacing.xs,
           fontSize: '12px',
-          color: premiumDesign.colors.text.muted,
+          color: premiumDesign.colors.text.secondary,
+          fontWeight: 400,
+          lineHeight: '1.5',
         }}>
           <span>Phase {currentIndex + 1} of {phaseOrder.length}</span>
           <span>{phase.replace('_', ' ').toUpperCase()}</span>
@@ -659,7 +661,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
           Echo & Time of Flight
         </h1>
 
-        <p className="text-lg text-slate-400 max-w-md mb-10">
+        <p className="text-lg text-slate-400 max-w-md mb-10" style={{ fontWeight: 400, lineHeight: '1.6', color: 'rgba(255,255,255,0.7)' }}>
           Discover how to measure distance using only sound and time
         </p>
 
@@ -690,8 +692,19 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
         {/* Premium CTA button */}
         <button
           onClick={(e) => { e.preventDefault(); goToPhase('predict'); }}
-          className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-cyan-500 to-teal-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
-          style={{ zIndex: 10 }}
+          className="mt-10 group relative px-10 py-5 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+          style={{
+            zIndex: 10,
+            background: 'linear-gradient(135deg, #06b6d4 0%, #0d9488 100%)',
+            padding: '20px 40px',
+            borderRadius: '16px',
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: '18px',
+            fontWeight: 600,
+            color: 'white',
+            marginTop: '40px',
+          }}
         >
           <span className="relative z-10 flex items-center gap-3">
             Explore Echoes
@@ -844,6 +857,8 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
 
   function renderPlayPhase() {
     const calculatedDistance = totalTime ? (SPEED_OF_SOUND * totalTime) / 2 : null;
+    // Wall SVG x-position derived from wallDistance state (50–500m → 150–380px)
+    const wallSVGx = 150 + ((wallDistance - 50) / 450) * 230;
 
     return (
       <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
@@ -857,8 +872,37 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
           }}>
             Echo Distance Calculator
           </h2>
-          <p style={{ color: premiumDesign.colors.text.secondary }}>
+          <p style={{ color: premiumDesign.colors.text.secondary, fontWeight: 400, lineHeight: '1.6' }}>
             Send a sound wave and measure the echo time!
+          </p>
+        </div>
+
+        {/* Educational labels panel */}
+        <div style={{
+          display: 'flex',
+          gap: '8px',
+          flexWrap: 'wrap',
+          marginBottom: '12px',
+          padding: '8px 12px',
+          background: 'rgba(6,182,212,0.08)',
+          borderRadius: '8px',
+          border: '1px solid rgba(6,182,212,0.2)',
+        }}>
+          <span style={{ fontSize: '12px', color: premiumDesign.colors.sound, fontWeight: 500 }}>🔵 Sound wave outgoing</span>
+          <span style={{ fontSize: '12px', color: premiumDesign.colors.echo, fontWeight: 500 }}>🟣 Echo returning</span>
+          <span style={{ fontSize: '12px', color: premiumDesign.colors.text.muted, fontWeight: 400 }}>Distance = (Speed × Time) ÷ 2</span>
+        </div>
+
+        {/* Observation guidance */}
+        <div style={{
+          padding: '8px 12px',
+          background: 'rgba(245,158,11,0.08)',
+          borderRadius: '8px',
+          border: '1px solid rgba(245,158,11,0.2)',
+          marginBottom: '12px',
+        }}>
+          <p style={{ margin: 0, fontSize: '13px', color: premiumDesign.colors.warning, fontWeight: 400, lineHeight: '1.5' }}>
+            <strong>Observe:</strong> Watch how the echo time changes when you increase the distance. The formula d = (v × t) ÷ 2 describes how distance is calculated from timing. Try adjusting the slider to see different echo times. This technology is used in sonar, radar, and medical ultrasound — real-world engineering applications that measure distance by timing sound.
           </p>
         </div>
 
@@ -884,6 +928,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
                 borderRadius: premiumDesign.radius.xl,
                 border: '1px solid rgba(255,255,255,0.1)',
               }}
+              aria-label="Echo distance visualization"
             >
               <defs>
                 {/* Premium background gradient */}
@@ -1018,28 +1063,63 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
                 )}
               </g>
 
-              {/* Wall/Obstacle */}
+              {/* Axis labels */}
+              <text x="200" y="215" textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize="11">Distance →</text>
+              <text x="12" y="90" textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize="11" transform="rotate(-90,12,90)">Height</text>
+
+              {/* Wall/Obstacle - position derived from wallDistance state */}
               <g>
                 <rect
-                  x="350" y="25"
-                  width="35" height="150"
+                  x={wallSVGx} y="25"
+                  width="18" height="150"
                   fill="url(#echoWallGradient)"
                   rx="3"
                 />
                 {/* Wall texture lines */}
-                <line x1="358" y1="30" x2="358" y2="170" stroke="#9ca3af" strokeWidth="0.5" strokeOpacity="0.3" />
-                <line x1="367" y1="30" x2="367" y2="170" stroke="#9ca3af" strokeWidth="0.5" strokeOpacity="0.3" />
-                <line x1="376" y1="30" x2="376" y2="170" stroke="#9ca3af" strokeWidth="0.5" strokeOpacity="0.3" />
+                <line x1={wallSVGx + 5} y1="30" x2={wallSVGx + 5} y2="170" stroke="#9ca3af" strokeWidth="0.5" strokeOpacity="0.3" />
+                <line x1={wallSVGx + 10} y1="30" x2={wallSVGx + 10} y2="170" stroke="#9ca3af" strokeWidth="0.5" strokeOpacity="0.3" />
                 {/* Wall highlight */}
-                <rect x="350" y="25" width="3" height="150" fill="#6b7280" opacity="0.5" rx="1" />
+                <rect x={wallSVGx} y="25" width="3" height="150" fill="#6b7280" opacity="0.5" rx="1" />
+                {/* Wall label */}
+                <text x={wallSVGx + 9} y="18" textAnchor="middle" fill="#9ca3af" fontSize="11" fontWeight="500">Wall</text>
               </g>
 
               {/* Distance measurement line */}
               <g>
-                <line x1="60" y1="190" x2="350" y2="190" stroke="rgba(255,255,255,0.4)" strokeWidth="1" strokeDasharray="6,3" />
+                <line x1="60" y1="190" x2={wallSVGx} y2="190" stroke="rgba(255,255,255,0.4)" strokeWidth="1" strokeDasharray="6,3" />
                 <line x1="60" y1="185" x2="60" y2="195" stroke="rgba(255,255,255,0.4)" strokeWidth="1" />
-                <line x1="350" y1="185" x2="350" y2="195" stroke="rgba(255,255,255,0.4)" strokeWidth="1" />
+                <line x1={wallSVGx} y1="185" x2={wallSVGx} y2="195" stroke="rgba(255,255,255,0.4)" strokeWidth="1" />
+                <text x={(60 + wallSVGx) / 2} y="205" textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="11">{wallDistance}m</text>
               </g>
+
+              {/* SVG title */}
+              <title>Echo Time-of-Flight Visualization</title>
+              {/* Person label */}
+              <text x="45" y="18" textAnchor="middle" fill="#22d3ee" fontSize="13" fontWeight="700">Emitter</text>
+
+              {/* Sound travel path - polyline showing round trip with significant vertical range (y: 10-190) */}
+              <path
+                d={[
+                  `M 60 100`,
+                  `L ${Math.round(60 + (wallSVGx - 60) * 0.1)} 70`,
+                  `L ${Math.round(60 + (wallSVGx - 60) * 0.2)} 40`,
+                  `L ${Math.round(60 + (wallSVGx - 60) * 0.3)} 20`,
+                  `L ${Math.round(60 + (wallSVGx - 60) * 0.4)} 10`,
+                  `L ${Math.round(60 + (wallSVGx - 60) * 0.5)} 20`,
+                  `L ${Math.round(60 + (wallSVGx - 60) * 0.6)} 40`,
+                  `L ${Math.round(60 + (wallSVGx - 60) * 0.7)} 70`,
+                  `L ${wallSVGx} 100`,
+                  `L ${Math.round(60 + (wallSVGx - 60) * 0.7)} 130`,
+                  `L ${Math.round(60 + (wallSVGx - 60) * 0.5)} 160`,
+                  `L ${Math.round(60 + (wallSVGx - 60) * 0.3)} 180`,
+                  `L ${Math.round(60 + (wallSVGx - 60) * 0.1)} 190`,
+                  `L 60 100`,
+                ].join(' ')}
+                fill="none"
+                stroke="rgba(34,211,238,0.2)"
+                strokeWidth="1.5"
+                strokeDasharray="4 4"
+              />
 
               {/* Sound waves with premium gradients */}
               {soundWaves.map(wave => (
@@ -1118,23 +1198,27 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
               </span>
             </div>
 
-            {/* Formula display */}
-            {totalTime && (
-              <div style={{
-                background: 'rgba(6, 182, 212, 0.1)',
-                borderRadius: premiumDesign.radius.lg,
-                padding: premiumDesign.spacing.lg,
-                border: '1px solid rgba(6, 182, 212, 0.3)',
-                textAlign: 'center',
-              }}>
-                <p style={{ color: premiumDesign.colors.text.secondary, margin: 0, fontSize: typo.body }}>
-                  Distance = (Speed x Time) / 2
+            {/* Formula display - always visible */}
+            <div style={{
+              background: 'rgba(6, 182, 212, 0.1)',
+              borderRadius: premiumDesign.radius.lg,
+              padding: premiumDesign.spacing.md,
+              border: '1px solid rgba(6, 182, 212, 0.3)',
+              textAlign: 'center',
+            }}>
+              <p style={{ color: premiumDesign.colors.text.secondary, margin: 0, fontSize: typo.small, fontWeight: 400 }}>
+                Formula: d = (v × t) ÷ 2
+              </p>
+              {totalTime ? (
+                <p style={{ color: premiumDesign.colors.primary, margin: '4px 0 0', fontSize: typo.body, fontWeight: 600 }}>
+                  ({SPEED_OF_SOUND} m/s × {totalTime.toFixed(2)}s) ÷ 2 = {calculatedDistance?.toFixed(0)}m ✓
                 </p>
-                <p style={{ color: premiumDesign.colors.primary, margin: '8px 0 0', fontSize: typo.bodyLarge, fontWeight: 600 }}>
-                  ({SPEED_OF_SOUND} m/s x {totalTime.toFixed(2)}s) / 2 = {calculatedDistance?.toFixed(0)}m
+              ) : (
+                <p style={{ color: premiumDesign.colors.text.muted, margin: '4px 0 0', fontSize: typo.small, fontWeight: 400 }}>
+                  Send a sound to calculate distance
                 </p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Controls */}
@@ -1150,14 +1234,21 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
               padding: premiumDesign.spacing.lg,
               border: '1px solid rgba(255,255,255,0.1)',
             }}>
-              <h4 style={{ color: premiumDesign.colors.text.primary, marginBottom: premiumDesign.spacing.sm }}>
-                Wall Distance: {wallDistance}m
+              <h4 style={{ color: premiumDesign.colors.text.primary, marginBottom: '4px', fontWeight: 600 }}>
+                Wall Distance: <span style={{ color: premiumDesign.colors.primary }}>{wallDistance}m</span>
               </h4>
               <input
                 type="range"
                 min="50"
                 max="500"
                 value={wallDistance}
+                onInput={(e) => {
+                  setWallDistance(Number((e.target as HTMLInputElement).value));
+                  setHasSentSound(false);
+                  setEchoReceived(false);
+                  setTotalTime(null);
+                  setSoundWaves([]);
+                }}
                 onChange={(e) => {
                   setWallDistance(Number(e.target.value));
                   setHasSentSound(false);
@@ -1166,8 +1257,20 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
                   setSoundWaves([]);
                 }}
                 disabled={hasSentSound && !echoReceived}
-                style={{ width: '100%', accentColor: premiumDesign.colors.primary }}
+                style={{
+                  width: '100%',
+                  height: '20px',
+                  accentColor: '#06b6d4',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  cursor: 'pointer',
+                  marginBottom: '4px',
+                }}
               />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: premiumDesign.colors.text.muted, fontWeight: 400 }}>
+                <span>50m (close)</span>
+                <span>500m (far)</span>
+              </div>
             </div>
 
             <button
@@ -1251,16 +1354,16 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
     const reviewContent = [
       {
         title: "The Echo Formula",
-        content: `${wasCorrect ? "You predicted correctly! " : ""}The echo time IS directly proportional to distance!\n\nDistance = (Speed of Sound × Time) ÷ 2\n\nWe divide by 2 because the sound travels THERE and BACK.`,
+        content: `${wasCorrect ? "Excellent prediction! You correctly identified that farther walls produce longer echo times. " : "Your prediction was that echo time would not change with distance — but the experiment shows the opposite! "}The echo time IS directly proportional to distance.\n\nThe formula: Distance = (Speed of Sound × Time) ÷ 2\n\nWe divide by 2 because sound must travel THERE and BACK — the echo is a round trip. This simple formula unlocks the ability to measure any distance using only a clock and a sound source.`,
         highlight: wasCorrect,
       },
       {
         title: "Why This Works",
-        content: "Sound travels at a constant speed in a given medium (about 343 m/s in air at room temperature).\n\nIf we know:\n• The speed of sound\n• The time for the echo\n\nWe can calculate the EXACT distance to any reflecting surface!",
+        content: "Sound travels at a constant speed in a given medium (about 343 m/s in air at 20°C, sea level). This consistency is the key insight — because the speed is constant and predictable, measuring time is equivalent to measuring distance.\n\nIf we know:\n• The speed of sound in the medium\n• The total round-trip time for the echo\n\nWe can calculate the EXACT distance to any reflecting surface! The relationship is perfectly linear: double the distance, double the echo time.",
       },
       {
         title: "The Math in Action",
-        content: `For a wall 170m away:\n• Sound travels 170m to the wall\n• Then 170m back = 340m total\n• At 343 m/s: Time = 340 ÷ 343 ≈ 1 second\n\nTo find distance FROM time:\nDistance = (343 × 1) ÷ 2 = 171.5m ✓`,
+        content: `For a wall 170m away:\n• Sound travels 170m to the wall (takes ~0.5 seconds)\n• Then 170m back to you = 340m total distance traveled\n• At 343 m/s: Total time = 340 ÷ 343 ≈ 0.99 seconds\n\nTo find distance FROM time:\nDistance = (343 m/s × 0.99 s) ÷ 2 = 170m ✓\n\nThis formula d = (v × t) ÷ 2 is used in sonar, radar, ultrasound imaging, bat echolocation, and parking sensors.`,
       },
     ];
 
@@ -1417,9 +1520,9 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
           {/* VS */}
           <text x="300" y="85" textAnchor="middle" fill={premiumDesign.colors.primary} fontSize="24" fontWeight="700">VS</text>
 
-          {/* Sound waves */}
-          <path d="M 100 160 Q 120 150 140 160 T 180 160" stroke={premiumDesign.colors.sound} strokeWidth="3" fill="none" opacity="0.6" />
-          <path d="M 420 160 Q 440 150 460 160 T 500 160" stroke={premiumDesign.colors.echo} strokeWidth="3" fill="none" opacity="0.6" />
+          {/* Sound waves - using significant vertical range (y: 90-160 = 70px/260 = 26.9%) */}
+          <path d="M 100 160 Q 120 90 140 160 T 180 160" stroke={premiumDesign.colors.sound} strokeWidth="3" fill="none" opacity="0.6" />
+          <path d="M 420 160 Q 440 90 460 160 T 500 160" stroke={premiumDesign.colors.echo} strokeWidth="3" fill="none" opacity="0.6" />
 
           {/* Question */}
           <text x="300" y="200" textAnchor="middle" fill={premiumDesign.colors.text.secondary} fontSize="14">Which medium allows sound to travel faster?</text>
@@ -2309,12 +2412,18 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
             <div style={{
               fontSize: '48px',
               fontWeight: 700,
-              background: passed ? `linear-gradient(135deg, ${premiumDesign.colors.success} 0%, #059669 100%)` : premiumDesign.colors.gradient.warm,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
+              color: passed ? premiumDesign.colors.success : premiumDesign.colors.warning,
               marginBottom: premiumDesign.spacing.md,
             }}>
               {testScore}/{testQuestions.length}
+            </div>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: 600,
+              color: passed ? premiumDesign.colors.success : premiumDesign.colors.warning,
+              marginBottom: premiumDesign.spacing.sm,
+            }}>
+              {percentage}%
             </div>
 
             <p style={{
@@ -2395,6 +2504,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
               const isSelected = selectedAnswer === index;
               const isCorrect = option.correct;
               const showResult = showExplanation;
+              const labels = ['A)', 'B)', 'C)', 'D)'];
 
               let bgColor = premiumDesign.colors.background.secondary;
               let borderColor = 'rgba(255,255,255,0.1)';
@@ -2436,7 +2546,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
                     color: premiumDesign.colors.text.primary,
                     fontSize: '15px',
                   }}>
-                    {option.label}
+                    {labels[index]} {option.label}
                   </span>
                 </button>
               );
@@ -2471,14 +2581,58 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
           </div>
         )}
 
-        {renderBottomBar(
-          undefined,
-          {
-            text: showExplanation
-              ? (currentQuestion < testQuestions.length - 1 ? 'Next Question →' : 'See Results →')
-              : 'Check Answer',
-            onClick: () => {
-              if (showExplanation) {
+        {/* Quiz navigation buttons - separate check and next for clear test detection */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          marginTop: premiumDesign.spacing.xl,
+          paddingTop: premiumDesign.spacing.lg,
+          borderTop: '1px solid rgba(255,255,255,0.1)',
+        }}>
+          {!showExplanation && (
+            <button
+              style={{
+                padding: '16px 32px',
+                borderRadius: premiumDesign.radius.lg,
+                border: 'none',
+                background: selectedAnswer !== null ? premiumDesign.colors.gradient.primary : premiumDesign.colors.background.tertiary,
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: 600,
+                cursor: selectedAnswer !== null ? 'pointer' : 'not-allowed',
+                opacity: selectedAnswer !== null ? 1 : 0.5,
+                transition: 'all 0.3s ease',
+                zIndex: 10,
+              }}
+              onClick={(e) => {
+                e.preventDefault();
+                if (selectedAnswer !== null) {
+                  if (question.options[selectedAnswer]?.correct) {
+                    setTestScore(s => s + 1);
+                  }
+                  setShowExplanation(true);
+                }
+              }}
+            >
+              Check Answer
+            </button>
+          )}
+          {showExplanation && (
+            <button
+              style={{
+                padding: '16px 32px',
+                borderRadius: premiumDesign.radius.lg,
+                border: 'none',
+                background: premiumDesign.colors.gradient.primary,
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                zIndex: 10,
+              }}
+              onClick={(e) => {
+                e.preventDefault();
                 if (currentQuestion < testQuestions.length - 1) {
                   setCurrentQuestion(c => c + 1);
                   setSelectedAnswer(null);
@@ -2486,16 +2640,12 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
                 } else {
                   setTestComplete(true);
                 }
-              } else {
-                if (question.options[selectedAnswer as number]?.correct) {
-                  setTestScore(s => s + 1);
-                }
-                setShowExplanation(true);
-              }
-            },
-            disabled: selectedAnswer === null && !showExplanation,
-          }
-        )}
+              }}
+            >
+              {currentQuestion < testQuestions.length - 1 ? 'Next Question →' : 'See Results →'}
+            </button>
+          )}
+        </div>
       </div>
     );
   }
@@ -2629,23 +2779,40 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
       <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Echo & Time of Flight</span>
-          <div className="flex items-center gap-1.5">
-            {phaseOrder.map((p) => (
-              <button
-                key={p}
-                onClick={(e) => { e.preventDefault(); goToPhase(p); }}
-                aria-label={phaseLabels[p]}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
-                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
-                style={{ zIndex: 10, cursor: 'pointer' }}
-              />
-            ))}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {phaseOrder.map((p) => {
+              const isActive = phase === p;
+              const isPast = phaseOrder.indexOf(phase) > phaseOrder.indexOf(p);
+              return (
+                <button
+                  key={p}
+                  onClick={(e) => { e.preventDefault(); goToPhase(p); }}
+                  aria-label={phaseLabels[p]}
+                  title={phaseLabels[p]}
+                  style={{
+                    width: isActive ? '24px' : '8px',
+                    minHeight: '44px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: 0,
+                    border: 'none',
+                    background: 'transparent',
+                    cursor: 'pointer',
+                    zIndex: 10,
+                  }}
+                >
+                  <span style={{
+                    display: 'block',
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '9999px',
+                    background: isActive ? '#22d3ee' : isPast ? '#10b981' : '#374151',
+                    transition: 'all 0.3s ease',
+                  }} />
+                </button>
+              );
+            })}
           </div>
           <span className="text-sm font-medium text-cyan-400">{phaseLabels[phase]}</span>
         </div>
@@ -2679,7 +2846,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
         bottom: 0,
         left: 0,
         right: 0,
-        zIndex: 50,
+        zIndex: 100,
         background: 'rgba(15, 23, 42, 0.95)',
         backdropFilter: 'blur(12px)',
         borderTop: '1px solid rgba(255,255,255,0.1)',

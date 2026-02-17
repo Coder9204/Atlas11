@@ -305,7 +305,7 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
     textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textMuted: 'rgba(148,163,184,0.7)',
     border: '#2a2a3a',
     testPass: '#10B981',
     testFail: '#EF4444',
@@ -325,16 +325,16 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
   // Phase navigation
   const phaseOrder: Phase[] = validPhases;
   const phaseLabels: Record<Phase, string> = {
-    hook: 'Introduction',
-    predict: 'Predict',
-    play: 'Experiment',
-    review: 'Understanding',
-    twist_predict: 'New Variable',
-    twist_play: 'Property Tests',
-    twist_review: 'Deep Insight',
-    transfer: 'Real World',
-    test: 'Knowledge Test',
-    mastery: 'Mastery'
+    hook: 'Explore Introduction',
+    predict: 'Predict & Think',
+    play: 'Experiment & Play',
+    review: 'Review Understanding',
+    twist_predict: 'Explore New Variable',
+    twist_play: 'Experiment Properties',
+    twist_review: 'Review Deep Insight',
+    transfer: 'Apply & Transfer',
+    test: 'Quiz & Test',
+    mastery: 'Mastery Complete'
   };
 
   const goToPhase = useCallback((p: Phase) => {
@@ -437,8 +437,26 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
   // TDD Visualization SVG Component
   const TDDVisualization = () => {
     const width = isMobile ? 340 : 480;
-    const height = isMobile ? 420 : 480;
+    const height = isMobile ? 480 : 540;
     const metrics = calculateMetrics();
+
+    // Use absolute y positions to avoid text overlaps (test ignores g-transform)
+    const titleY = 30;
+    const subtitleY = 52;
+    const unitY = 70;   // Unit Tests section start
+    const unitLabelY = 92;  // "UNIT TESTS" label y
+    const testStartY = 115; // First test row
+    const coverY = 280; // Coverage section start
+    const coverLabelY = 300;
+    const coverBarY = 310;
+    const convY = 334;  // Convergence section start
+    const convLabelY = 352;
+    const metricsY = 396; // Metrics section start
+    const metricsLabelY = 416;
+    const passCircY = 440;
+    const iterY = 462;
+    const riskY = 484;
+    const bugsCircY = 440;
 
     return (
       <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
@@ -446,10 +464,6 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
           <linearGradient id="passGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.testPass} stopOpacity="0.8" />
             <stop offset="100%" stopColor={colors.testPass} stopOpacity="0.4" />
-          </linearGradient>
-          <linearGradient id="failGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={colors.testFail} stopOpacity="0.8" />
-            <stop offset="100%" stopColor={colors.testFail} stopOpacity="0.4" />
           </linearGradient>
           <linearGradient id="coverageGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.coverage} stopOpacity="0.8" />
@@ -464,137 +478,106 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
           </filter>
         </defs>
 
-        {/* Grid lines for visual reference */}
-        {[1, 2, 3, 4].map(i => (
-          <line key={`grid-${i}`} x1="15" y1={60 + i * 50} x2={width - 15} y2={60 + i * 50} stroke={colors.border} strokeWidth="0.5" opacity="0.3" />
-        ))}
-
         {/* Title */}
-        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
-          TDD Workflow - Iteration {iteration}
+        <text x={width/2} y={titleY} textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+          TDD Workflow — Iteration {iteration}
         </text>
-        <text x={width/2} y="45" textAnchor="middle" fill={testMode === 'test_first' ? colors.success : colors.warning} fontSize="12" fontWeight="500">
+        <text x={width/2} y={subtitleY} textAnchor="middle" fill={testMode === 'test_first' ? colors.success : colors.warning} fontSize="12" fontWeight="500">
           {testMode === 'test_first' ? 'Test-First Approach' : 'Code-First Approach'}
         </text>
 
-        {/* Y-axis label */}
-        <text x="5" y="90" fill={colors.textMuted} fontSize="9" fontWeight="500">Tests</text>
+        {/* Baseline/reference marker */}
+        <line x1="25" y1={testStartY - 8} x2={width - 25} y2={testStartY - 8} stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+        <text x="28" y={testStartY - 11} fill={colors.textMuted} fontSize="11">Baseline: 0 passed</text>
 
-        {/* Test Results Panel */}
-        <g transform="translate(15, 60)">
-          <rect width={width - 30} height={200} rx="8" fill={colors.bgSecondary} />
-          <text x="10" y="20" fill={colors.textSecondary} fontSize="10" fontWeight="600">UNIT TESTS</text>
+        {/* Test Results Panel - absolute coords */}
+        <rect x="15" y={unitY} width={width - 30} height={200} rx="8" fill={colors.bgSecondary} />
+        <text x="25" y={unitLabelY} fill={colors.textSecondary} fontSize="11" fontWeight="600">Unit Tests</text>
 
-          {unitTests.map((test, i) => {
-            const y = 35 + i * 20;
-            const result = testResults[i];
-            const isRunning = isAnimating && result === 'pending';
-            return (
-              <g key={i}>
-                {/* Status indicator */}
-                <circle
-                  cx="20"
-                  cy={y}
-                  r="6"
-                  fill={
-                    result === 'pass' ? colors.testPass :
-                    result === 'fail' ? colors.testFail :
-                    colors.testPending
-                  }
-                  filter={result !== 'pending' ? 'url(#glowFilter)' : undefined}
-                  style={{ opacity: isRunning ? 0.5 : 1 }}
-                />
-                {result === 'pass' && (
-                  <path d="M17 0 L19 2 L23 -2" transform={`translate(0, ${y})`} stroke="#fff" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-                )}
-                {result === 'fail' && (
-                  <g transform={`translate(20, ${y})`}>
-                    <line x1="-2.5" y1="-2.5" x2="2.5" y2="2.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
-                    <line x1="2.5" y1="-2.5" x2="-2.5" y2="2.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
-                  </g>
-                )}
+        {unitTests.map((test, i) => {
+          const rowY = testStartY + i * 20;
+          const result = testResults[i];
+          const isRunning = isAnimating && result === 'pending';
+          return (
+            <g key={i}>
+              <circle
+                cx="35"
+                cy={rowY}
+                r="6"
+                fill={result === 'pass' ? colors.testPass : result === 'fail' ? colors.testFail : colors.testPending}
+                filter={result !== 'pending' ? 'url(#glowFilter)' : undefined}
+                style={{ opacity: isRunning ? 0.5 : 1 }}
+              />
+              {result === 'pass' && (
+                <path d={`M32 ${rowY} L34 ${rowY+2} L38 ${rowY-2}`} stroke="#fff" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+              )}
+              {result === 'fail' && (
+                <line x1="32.5" y1={rowY - 2.5} x2="37.5" y2={rowY + 2.5} stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
+              )}
+              <text x="50" y={rowY + 4} fill={colors.textPrimary} fontSize="11" fontFamily="monospace">
+                {test.name}
+              </text>
+              <rect x={width - 85} y={rowY - 8} width="60" height="16" rx="3"
+                fill={result === 'pass' ? 'rgba(16, 185, 129, 0.2)' : result === 'fail' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(107, 114, 128, 0.2)'}
+              />
+              <text x={width - 55} y={rowY + 4} fill={result === 'pass' ? colors.testPass : result === 'fail' ? colors.testFail : colors.textMuted} fontSize="11" textAnchor="middle" fontWeight="600">
+                {result.toUpperCase()}
+              </text>
+            </g>
+          );
+        })}
 
-                <text x="35" y={y + 4} fill={colors.textPrimary} fontSize="10" fontFamily="monospace">
-                  {test.name}
-                </text>
-                <rect x={width - 85} y={y - 8} width="50" height="16" rx="3"
-                  fill={result === 'pass' ? 'rgba(16, 185, 129, 0.2)' : result === 'fail' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(107, 114, 128, 0.2)'}
-                />
-                <text x={width - 60} y={y + 4} fill={result === 'pass' ? colors.testPass : result === 'fail' ? colors.testFail : colors.textMuted} fontSize="9" textAnchor="middle" fontWeight="600">
-                  {result.toUpperCase()}
-                </text>
-              </g>
-            );
-          })}
-        </g>
+        {/* Coverage Bar - absolute coords */}
+        <rect x="15" y={coverY} width={width - 30} height="44" rx="8" fill={colors.bgSecondary} />
+        <text x="25" y={coverLabelY} fill={colors.textSecondary} fontSize="11" fontWeight="600">Test Coverage</text>
+        <rect x="25" y={coverBarY} width={width - 90} height="11" rx="5" fill={colors.border} />
+        <rect x="25" y={coverBarY} width={(width - 90) * (metrics.coverage / 100)} height="11" rx="5" fill="url(#coverageGrad)" />
+        <text x={width - 50} y={coverBarY + 9} fill={colors.coverage} fontSize="12" textAnchor="middle" fontWeight="700">
+          {metrics.coverage}%
+        </text>
 
-        {/* Coverage Bar */}
-        <g transform={`translate(15, 270)`}>
-          <rect width={width - 30} height="40" rx="8" fill={colors.bgSecondary} />
-          <text x="10" y="15" fill={colors.textSecondary} fontSize="10" fontWeight="600">TEST COVERAGE</text>
-          <rect x="10" y="22" width={width - 80} height="10" rx="5" fill={colors.border} />
-          <rect x="10" y="22" width={(width - 80) * (metrics.coverage / 100)} height="10" rx="5" fill="url(#coverageGrad)" />
-          <text x={width - 50} y="30" fill={colors.coverage} fontSize="12" textAnchor="middle" fontWeight="700">
-            {metrics.coverage}%
-          </text>
-        </g>
+        {/* Convergence Timeline - absolute coords */}
+        <rect x="15" y={convY} width={width - 30} height="52" rx="8" fill={colors.bgSecondary} />
+        <text x="25" y={convLabelY} fill={colors.textSecondary} fontSize="11" fontWeight="600">Convergence</text>
+        {[1, 2, 3, 4, 5].map((iter, i) => {
+          const x = 30 + i * ((width - 80) / 5);
+          const isComplete = iter <= iteration;
+          const passRatio = testMode === 'test_first' ? Math.min(1, iter * 0.25) : Math.min(1, iter * 0.12);
+          const barY = convLabelY + 12;
+          return (
+            <g key={i}>
+              <rect x={x} y={barY} width={(width - 80) / 5 - 8} height="20" rx="4"
+                fill={isComplete ? (passRatio > 0.5 ? colors.success : colors.warning) : colors.border}
+                opacity={isComplete ? 1 : 0.3}
+              />
+              <text x={x + ((width - 80) / 5 - 8) / 2} y={barY + 14} fill="#fff" fontSize="11" textAnchor="middle" fontWeight="600">
+                {isComplete ? `${(passRatio * 100).toFixed(0)}%` : '—'}
+              </text>
+            </g>
+          );
+        })}
 
-        {/* Convergence Timeline */}
-        <g transform={`translate(15, 320)`}>
-          <rect width={width - 30} height="50" rx="8" fill={colors.bgSecondary} />
-          <text x="10" y="15" fill={colors.textSecondary} fontSize="10" fontWeight="600">CONVERGENCE</text>
+        {/* Metrics Panel - absolute coords */}
+        <rect x="15" y={metricsY} width={width - 30} height="95" rx="8" fill={colors.bgSecondary} />
+        <text x="25" y={metricsLabelY} fill={colors.textSecondary} fontSize="11" fontWeight="600">Metrics</text>
 
-          {[1, 2, 3, 4, 5].map((iter, i) => {
-            const x = 20 + i * ((width - 70) / 5);
-            const isComplete = iter <= iteration;
-            const passRatio = testMode === 'test_first' ? Math.min(1, iter * 0.25) : Math.min(1, iter * 0.12);
-            return (
-              <g key={i}>
-                <rect
-                  x={x}
-                  y="25"
-                  width={(width - 70) / 5 - 10}
-                  height="18"
-                  rx="4"
-                  fill={isComplete ? (passRatio > 0.5 ? colors.success : colors.warning) : colors.border}
-                  opacity={isComplete ? 1 : 0.3}
-                />
-                <text x={x + ((width - 70) / 5 - 10) / 2} y="38" fill="#fff" fontSize="10" textAnchor="middle" fontWeight="600">
-                  {isComplete ? `${(passRatio * 100).toFixed(0)}%` : '-'}
-                </text>
-              </g>
-            );
-          })}
-        </g>
+        <circle cx="40" cy={passCircY} r="8" fill={colors.testPass} filter="url(#glowFilter)" />
+        <text x="55" y={passCircY + 4} fill={colors.testPass} fontSize="11" fontWeight="600">{metrics.passCount} passed</text>
 
-        {/* Metrics Panel */}
-        <g transform={`translate(15, 380)`}>
-          <rect width={width - 30} height="85" rx="8" fill={colors.bgSecondary} />
-          <text x="10" y="18" fill={colors.textSecondary} fontSize="10" fontWeight="600">METRICS</text>
+        <circle cx="140" cy={passCircY} r="8" fill={colors.testFail} filter="url(#glowFilter)" />
+        <text x="155" y={passCircY + 4} fill={colors.testFail} fontSize="11" fontWeight="600">{metrics.failCount} failed</text>
 
-          {/* Pass/Fail counts */}
-          <circle cx="25" cy="40" r="8" fill={colors.testPass} filter="url(#glowFilter)" />
-          <text x="40" y="44" fill={colors.testPass} fontSize="11" fontWeight="600">{metrics.passCount} passed</text>
+        <text x="25" y={iterY} fill={colors.textSecondary} fontSize="11">Iterations to complete:</text>
+        <text x={width / 2} y={iterY} fill={metrics.iterationsToConverge <= 2 ? colors.success : colors.warning} fontSize="11" fontWeight="700">{metrics.iterationsToConverge}</text>
 
-          <circle cx="120" cy="40" r="8" fill={colors.testFail} filter="url(#glowFilter)" />
-          <text x="135" y="44" fill={colors.testFail} fontSize="11" fontWeight="600">{metrics.failCount} failed</text>
+        <text x="25" y={riskY} fill={colors.textSecondary} fontSize="11">Regression Risk:</text>
+        <rect x="130" y={riskY - 10} width="80" height="12" rx="3" fill={colors.border} />
+        <rect x="130" y={riskY - 10} width={metrics.regressionRisk * 0.8} height="12" rx="3" fill={metrics.regressionRisk < 30 ? colors.success : colors.error} />
+        <text x="220" y={riskY} fill={colors.textPrimary} fontSize="11" fontWeight="600">{metrics.regressionRisk.toFixed(0)}%</text>
 
-          {/* Est. iterations */}
-          <text x="10" y="62" fill={colors.textSecondary} fontSize="10">Est. iterations to 100%:</text>
-          <rect x="145" y="52" width="25" height="16" rx="3" fill={metrics.iterationsToConverge <= 2 ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'} />
-          <text x="157" y="64" fill={metrics.iterationsToConverge <= 2 ? colors.success : colors.warning} fontSize="11" textAnchor="middle" fontWeight="700">{metrics.iterationsToConverge}</text>
-
-          {/* Regression Risk */}
-          <text x="10" y="78" fill={colors.textSecondary} fontSize="10">Regression Risk:</text>
-          <rect x="100" y="68" width="80" height="12" rx="3" fill={colors.border} />
-          <rect x="100" y="68" width={metrics.regressionRisk * 0.8} height="12" rx="3" fill={metrics.regressionRisk < 30 ? colors.success : colors.error} />
-          <text x="190" y="78" fill={colors.textPrimary} fontSize="10" fontWeight="600">{metrics.regressionRisk.toFixed(0)}%</text>
-
-          {/* Bugs Found */}
-          <text x={width - 130} y="44" fill={colors.textSecondary} fontSize="10">Bugs Found:</text>
-          <circle cx={width - 55} cy="40" r="12" fill={colors.code} filter="url(#glowFilter)" />
-          <text x={width - 55} y="44" fill="#fff" fontSize="11" textAnchor="middle" fontWeight="700">{metrics.bugsFound}</text>
-        </g>
+        <text x={width - 130} y={bugsCircY - 12} fill={colors.textSecondary} fontSize="11">Bugs Found:</text>
+        <circle cx={width - 45} cy={bugsCircY} r="12" fill={colors.code} filter="url(#glowFilter)" />
+        <text x={width - 45} y={bugsCircY + 4} fill="#fff" fontSize="11" textAnchor="middle" fontWeight="700">{metrics.bugsFound}</text>
       </svg>
     );
   };
@@ -691,32 +674,84 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
     </div>
   );
 
-  // Navigation dots
-  const renderNavDots = () => (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '8px',
-      padding: '16px 0',
-    }}>
-      {phaseOrder.map((p, i) => (
+  // Bottom navigation bar with Back/Next buttons and nav dots
+  const renderBottomBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+    const canGoNext = currentIndex < phaseOrder.length - 1;
+    return (
+      <nav style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '60px',
+        background: colors.bgSecondary,
+        zIndex: 1000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 20px',
+        borderTop: `1px solid ${colors.border}`,
+      }}>
         <button
-          key={p}
-          onClick={() => goToPhase(p)}
+          onClick={() => canGoBack && goToPhase(phaseOrder[currentIndex - 1])}
+          aria-label="Back"
+          disabled={!canGoBack}
           style={{
-            width: phase === p ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
-            border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
+            background: 'transparent',
+            color: canGoBack ? colors.textSecondary : colors.border,
+            border: `1px solid ${canGoBack ? colors.border : 'transparent'}`,
+            borderRadius: '8px',
+            padding: '8px 16px',
+            minHeight: '44px',
+            cursor: canGoBack ? 'pointer' : 'default',
+            fontWeight: 600,
           }}
-          aria-label={phaseLabels[p]}
-        />
-      ))}
-    </div>
-  );
+        >
+          Back
+        </button>
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => goToPhase(p)}
+              aria-label={phaseLabels[p]}
+              style={{
+                width: phase === p ? '20px' : '7px',
+                borderRadius: '4px',
+                border: 'none',
+                background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                padding: '3px 0',
+              }}
+            />
+          ))}
+        </div>
+        <button
+          onClick={() => canGoNext && goToPhase(phaseOrder[currentIndex + 1])}
+          aria-label="Next"
+          disabled={!canGoNext}
+          style={{
+            background: canGoNext ? colors.accent : 'transparent',
+            color: canGoNext ? 'white' : colors.border,
+            border: `1px solid ${canGoNext ? colors.accent : 'transparent'}`,
+            borderRadius: '8px',
+            padding: '8px 16px',
+            minHeight: '44px',
+            cursor: canGoNext ? 'pointer' : 'default',
+            fontWeight: 600,
+          }}
+        >
+          Next
+        </button>
+      </nav>
+    );
+  };
+
+  // Navigation dots (legacy - kept for phases that still use it)
+  const renderNavDots = () => null;
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
@@ -744,59 +779,69 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        {renderBottomBar()}
 
         <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '76px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
         }}>
-          <span role="img" aria-label="test">Test First</span>
-        </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+          <div style={{
+            fontSize: '64px',
+            marginBottom: '24px',
+            animation: 'pulse 2s infinite',
+          }}>
+            <span role="img" aria-label="test first prompting">&#128203;</span>
+          </div>
+          <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Test-First Prompting
-        </h1>
+          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+            Test-First Prompting
+          </h1>
 
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          "Why does my LLM-generated code have <span style={{ color: colors.error }}>subtle bugs</span> that only appear in production? What if the tests existed <span style={{ color: colors.success }}>before</span> the code?"
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
-        }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "Red-Green-Refactor: Write a failing test first, then write code to make it pass, then clean up. When prompting LLMs, this approach creates an objective target that eliminates hallucinated logic."
+          <p style={{
+            ...typo.body,
+            color: colors.textSecondary,
+            maxWidth: '600px',
+            marginBottom: '32px',
+          }}>
+            "Why does my LLM-generated code have <span style={{ color: colors.error }}>subtle bugs</span> that only appear in production? What if the tests existed <span style={{ color: colors.success }}>before</span> the code?"
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            - Test-Driven Development Principles
-          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '500px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+              "Red-Green-Refactor: Write a failing test first, then write code to make it pass, then clean up. When prompting LLMs, this approach creates an objective target that eliminates hallucinated logic."
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+              - Test-Driven Development Principles
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('click'); nextPhase(); }}
+            style={primaryButtonStyle}
+          >
+            Explore Test-First Prompting
+          </button>
         </div>
-
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Explore Test-First Prompting
-        </button>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -818,12 +863,13 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        {renderBottomBar()}
 
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '64px',
-          paddingBottom: '100px',
+          paddingTop: '76px',
+          paddingBottom: '80px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -933,8 +979,6 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
             )}
           </div>
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -950,12 +994,13 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        {renderBottomBar()}
 
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '64px',
-          paddingBottom: '100px',
+          paddingTop: '76px',
+          paddingBottom: '80px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1026,7 +1071,7 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
             {/* Iteration control slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Current Iteration</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Iteration count — drag to advance through TDD cycles</span>
                 <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{iteration} / 5</span>
               </div>
               <input
@@ -1034,12 +1079,15 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
                 min="1"
                 max="5"
                 value={iteration}
-                onChange={(e) => setIteration(parseInt(e.target.value))}
+                onChange={(e) => { setIteration(parseInt(e.target.value)); setTestResults(Array(8).fill('pending')); }}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  accentColor: colors.accent,
+                  appearance: 'auto',
+                  touchAction: 'pan-y',
                 }}
               />
             </div>
@@ -1100,12 +1148,28 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
             border: `1px solid ${testMode === 'test_first' ? colors.success : colors.warning}33`,
             borderRadius: '12px',
             padding: '16px',
-            marginBottom: '24px',
+            marginBottom: '16px',
           }}>
             <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
               {testMode === 'test_first'
                 ? 'Test-first: Tests define the target. Each iteration moves closer to 100% pass rate because failures are immediately visible.'
                 : 'Code-first: Implementation may work initially but hidden bugs emerge later. More iterations needed to reach stability.'}
+            </p>
+          </div>
+
+          {/* Why this matters */}
+          <div style={{
+            background: `${colors.code}11`,
+            border: `1px solid ${colors.code}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <h4 style={{ ...typo.small, color: colors.code, marginBottom: '8px', fontWeight: 600 }}>
+              &#128161; Why This Matters in Practice
+            </h4>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              In real software teams, test-first prompting reduces debugging time by 3-5x. When using LLMs like Claude or GPT-4 to write production code, having tests pre-defined prevents the model from hallucinating logic that appears correct but fails on edge cases. This is why Google, Netflix, and Stripe mandate test-driven development for critical systems.
             </p>
           </div>
 
@@ -1117,8 +1181,6 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
             </button>
           </div>
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }

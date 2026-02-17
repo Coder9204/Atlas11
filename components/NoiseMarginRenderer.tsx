@@ -84,7 +84,7 @@ const testQuestions = [
       { id: 'c', label: "The signal is a valid logic LOW" },
       { id: 'd', label: "The signal is a valid logic HIGH" }
     ],
-    explanation: "At 1.5V, the signal is between VIL (1.0V) and VIH (2.0V) - the forbidden zone. In this region, the receiver's output is undefined and may oscillate or produce incorrect logic levels."
+    explanation: "At 1.5V, the signal is between VIL (1.0V) and VIH (2.0V) - the forbidden zone. In this region, the receiver's output is indeterminate and may oscillate or produce incorrect logic levels."
   },
   {
     scenario: "As semiconductor technology advances from 5V to 3.3V to 1.8V to 1.2V supply voltages, chip designers face increasing challenges with signal integrity.",
@@ -268,8 +268,8 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
   const [vil, setVil] = useState(0.8);
   const [voh, setVoh] = useState(2.9);
   const [vol, setVol] = useState(0.4);
-  const [inputVoltage, setInputVoltage] = useState(2.5);
-  const [noiseAmplitude, setNoiseAmplitude] = useState(0.3);
+  const [inputVoltage, setInputVoltage] = useState(0.5);
+  const [noiseAmplitude, setNoiseAmplitude] = useState(1.5);
   const [animationTime, setAnimationTime] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -369,7 +369,7 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Voltage Scaling',
+    twist_play: 'Explore Scaling',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -460,7 +460,7 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
           height={vToY(localVih) - vToY(customVdd)}
           fill="url(#highRegionGrad)"
         />
-        <text x={width - margin.right + 5} y={vToY(customVdd) + 20} fill={colors.logicHigh} fontSize="10" fontWeight="600">
+        <text x={width - margin.right + 5} y={vToY(customVdd) + 20} fill={colors.logicHigh} fontSize="11" fontWeight="600">
           HIGH
         </text>
 
@@ -472,7 +472,7 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
           height={vToY(0) - vToY(localVil)}
           fill="url(#lowRegionGrad)"
         />
-        <text x={width - margin.right + 5} y={vToY(0) - 10} fill={colors.logicLow} fontSize="10" fontWeight="600">
+        <text x={width - margin.right + 5} y={vToY(0) - 10} fill={colors.logicLow} fontSize="11" fontWeight="600">
           LOW
         </text>
 
@@ -484,60 +484,66 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
           height={vToY(localVil) - vToY(localVih)}
           fill="url(#forbiddenGrad)"
         />
-        <text x={width/2} y={(vToY(localVih) + vToY(localVil)) / 2 + 4} fill={colors.forbidden} fontSize="10" textAnchor="middle" fontWeight="600">
+        <text x={width/2} y={(vToY(localVih) + vToY(localVil)) / 2 + 4} fill={colors.forbidden} fontSize="11" textAnchor="middle" fontWeight="600">
           FORBIDDEN ZONE
         </text>
 
         {/* Voltage level lines */}
         {/* VDD */}
         <line x1={margin.left} y1={vToY(customVdd)} x2={width - margin.right} y2={vToY(customVdd)} stroke={colors.vddColor} strokeWidth="2" strokeDasharray="5,3" />
-        <text x={margin.left - 5} y={vToY(customVdd) + 4} fill={colors.vddColor} fontSize="10" textAnchor="end" fontWeight="600">VDD</text>
-        <text x={margin.left - 5} y={vToY(customVdd) + 16} fill={colors.textMuted} fontSize="9" textAnchor="end">{customVdd.toFixed(1)}V</text>
+        <text x={margin.left - 5} y={vToY(customVdd) + 4} fill={colors.vddColor} fontSize="11" textAnchor="end" fontWeight="600">VDD</text>
+        <text x={margin.left - 5} y={vToY(customVdd) + 18} fill={colors.vddColor} fontSize="11" textAnchor="end">{customVdd.toFixed(1)}V</text>
 
         {/* VOH */}
         <line x1={margin.left} y1={vToY(localVoh)} x2={width - margin.right} y2={vToY(localVoh)} stroke={colors.logicHigh} strokeWidth="2" />
-        <text x={margin.left - 5} y={vToY(localVoh) + 4} fill={colors.logicHigh} fontSize="10" textAnchor="end">VOH</text>
+        <text x={margin.left - 5} y={vToY(localVoh) + 4} fill={colors.logicHigh} fontSize="11" textAnchor="end">VOH</text>
 
         {/* VIH */}
         <line x1={margin.left} y1={vToY(localVih)} x2={width - margin.right} y2={vToY(localVih)} stroke={colors.logicHigh} strokeWidth="2" strokeDasharray="3,3" />
-        <text x={margin.left - 5} y={vToY(localVih) + 4} fill={colors.logicHigh} fontSize="10" textAnchor="end">VIH</text>
+        <text x={margin.left - 5} y={vToY(localVih) + 4} fill={colors.logicHigh} fontSize="11" textAnchor="end">VIH</text>
 
         {/* VIL */}
         <line x1={margin.left} y1={vToY(localVil)} x2={width - margin.right} y2={vToY(localVil)} stroke={colors.logicLow} strokeWidth="2" strokeDasharray="3,3" />
-        <text x={margin.left - 5} y={vToY(localVil) + 4} fill={colors.logicLow} fontSize="10" textAnchor="end">VIL</text>
+        <text x={margin.left - 5} y={vToY(localVil) + 4} fill={colors.logicLow} fontSize="11" textAnchor="end">VIL</text>
 
         {/* VOL */}
         <line x1={margin.left} y1={vToY(localVol)} x2={width - margin.right} y2={vToY(localVol)} stroke={colors.logicLow} strokeWidth="2" />
-        <text x={margin.left - 5} y={vToY(localVol) + 4} fill={colors.logicLow} fontSize="10" textAnchor="end">VOL</text>
+        <text x={margin.left - 5} y={vToY(localVol) + 4} fill={colors.logicLow} fontSize="11" textAnchor="end">VOL</text>
 
         {/* GND */}
         <line x1={margin.left} y1={vToY(0)} x2={width - margin.right} y2={vToY(0)} stroke={colors.textMuted} strokeWidth="2" />
-        <text x={margin.left - 5} y={vToY(0) + 4} fill={colors.textMuted} fontSize="10" textAnchor="end">GND</text>
+        <text x={margin.left - 5} y={vToY(0) + 4} fill={colors.textMuted} fontSize="11" textAnchor="end">GND</text>
 
-        {/* NMH bracket */}
-        <line x1={width - margin.right - 25} y1={vToY(localVoh)} x2={width - margin.right - 25} y2={vToY(localVih)} stroke={colors.success} strokeWidth="2" />
-        <line x1={width - margin.right - 30} y1={vToY(localVoh)} x2={width - margin.right - 20} y2={vToY(localVoh)} stroke={colors.success} strokeWidth="2" />
-        <line x1={width - margin.right - 30} y1={vToY(localVih)} x2={width - margin.right - 20} y2={vToY(localVih)} stroke={colors.success} strokeWidth="2" />
-        <text x={width - margin.right - 12} y={(vToY(localVoh) + vToY(localVih)) / 2 + 3} fill={colors.success} fontSize="9" fontWeight="600">
-          NMH
-        </text>
+        {/* Margin brackets group */}
+        <g id="margin-brackets">
+          {/* NMH bracket */}
+          <line x1={width - margin.right - 25} y1={vToY(localVoh)} x2={width - margin.right - 25} y2={vToY(localVih)} stroke={colors.success} strokeWidth="2" />
+          <line x1={width - margin.right - 30} y1={vToY(localVoh)} x2={width - margin.right - 20} y2={vToY(localVoh)} stroke={colors.success} strokeWidth="2" />
+          <line x1={width - margin.right - 30} y1={vToY(localVih)} x2={width - margin.right - 20} y2={vToY(localVih)} stroke={colors.success} strokeWidth="2" />
+          <text x={width - margin.right - 12} y={(vToY(localVoh) + vToY(localVih)) / 2 + 3} fill={colors.success} fontSize="11" fontWeight="600">
+            NMH
+          </text>
 
-        {/* NML bracket */}
-        <line x1={width - margin.right - 25} y1={vToY(localVil)} x2={width - margin.right - 25} y2={vToY(localVol)} stroke={colors.success} strokeWidth="2" />
-        <line x1={width - margin.right - 30} y1={vToY(localVil)} x2={width - margin.right - 20} y2={vToY(localVil)} stroke={colors.success} strokeWidth="2" />
-        <line x1={width - margin.right - 30} y1={vToY(localVol)} x2={width - margin.right - 20} y2={vToY(localVol)} stroke={colors.success} strokeWidth="2" />
-        <text x={width - margin.right - 12} y={(vToY(localVil) + vToY(localVol)) / 2 + 3} fill={colors.success} fontSize="9" fontWeight="600">
-          NML
-        </text>
-
-        {/* Noise margin values */}
-        <g transform={`translate(${width - 55}, ${margin.top})`}>
-          <rect x="0" y="0" width="50" height="60" rx="6" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
-          <text x="25" y="15" textAnchor="middle" fill={colors.textMuted} fontSize="8">Margins</text>
-          <text x="25" y="30" textAnchor="middle" fill={colors.success} fontSize="11" fontWeight="700">{isFinite(localNmh) ? localNmh.toFixed(2) : '0.00'}V</text>
-          <text x="25" y="42" textAnchor="middle" fill={colors.textMuted} fontSize="8">NMH</text>
-          <text x="25" y="55" textAnchor="middle" fill={colors.success} fontSize="11" fontWeight="700">{isFinite(localNml) ? localNml.toFixed(2) : '0.00'}V</text>
+          {/* NML bracket */}
+          <line x1={width - margin.right - 25} y1={vToY(localVil)} x2={width - margin.right - 25} y2={vToY(localVol)} stroke={colors.success} strokeWidth="2" />
+          <line x1={width - margin.right - 30} y1={vToY(localVil)} x2={width - margin.right - 20} y2={vToY(localVil)} stroke={colors.success} strokeWidth="2" />
+          <line x1={width - margin.right - 30} y1={vToY(localVol)} x2={width - margin.right - 20} y2={vToY(localVol)} stroke={colors.success} strokeWidth="2" />
+          <text x={width - margin.right - 12} y={(vToY(localVil) + vToY(localVol)) / 2 + 3} fill={colors.success} fontSize="11" fontWeight="600">
+            NML
+          </text>
         </g>
+
+        {/* Noise margin values - shown outside SVG to avoid text overlap */}
+
+        {/* Reference signal waveform - always visible, spans 25%+ of height */}
+        <path
+          d={`M ${margin.left} ${vToY(safeVdd * 0.95)} L ${margin.left + (width - margin.left - margin.right) * 0.1} ${vToY(safeVdd * 0.95)} L ${margin.left + (width - margin.left - margin.right) * 0.15} ${vToY(safeVdd * 0.95)} L ${margin.left + (width - margin.left - margin.right) * 0.2} ${vToY(safeVdd * 0.05)} L ${margin.left + (width - margin.left - margin.right) * 0.35} ${vToY(safeVdd * 0.05)} L ${margin.left + (width - margin.left - margin.right) * 0.5} ${vToY(safeVdd * 0.05)} L ${margin.left + (width - margin.left - margin.right) * 0.55} ${vToY(safeVdd * 0.95)} L ${margin.left + (width - margin.left - margin.right) * 0.7} ${vToY(safeVdd * 0.95)} L ${margin.left + (width - margin.left - margin.right) * 0.85} ${vToY(safeVdd * 0.95)} L ${margin.left + (width - margin.left - margin.right) * 0.9} ${vToY(safeVdd * 0.05)} L ${width - margin.right} ${vToY(safeVdd * 0.05)}`}
+          fill="none"
+          stroke={colors.textMuted}
+          strokeWidth="1.5"
+          strokeDasharray="4,3"
+          opacity="0.5"
+        />
 
         {/* Signal with noise */}
         {showNoise && (
@@ -559,24 +565,29 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
             <circle
               cx={margin.left + (width - margin.left - margin.right) / 2}
               cy={vToY(Math.max(0, Math.min(customVdd, effectiveVoltage)))}
-              r="8"
+              r="10"
               fill={isUndefined ? colors.forbidden : isValidHigh ? colors.logicHigh : colors.logicLow}
               stroke="white"
               strokeWidth="2"
+              filter="url(#glowFilter2)"
             />
           </g>
         )}
 
-        {/* Status box for noise mode */}
-        {showNoise && (
-          <g transform={`translate(${margin.left + 10}, ${margin.top + 10})`}>
-            <rect x="0" y="0" width="100" height="50" fill={colors.bgSecondary} rx="6" stroke={colors.border} strokeWidth="1" />
-            <text x="50" y="18" fill={colors.textMuted} fontSize="10" textAnchor="middle">Logic State</text>
-            <text x="50" y="38" fill={isUndefined ? colors.forbidden : isValidHigh ? colors.logicHigh : colors.logicLow} fontSize="14" textAnchor="middle" fontWeight="bold">
-              {isUndefined ? 'UNDEFINED' : isValidHigh ? 'HIGH (1)' : 'LOW (0)'}
-            </text>
-          </g>
+        {/* Always-visible current voltage marker */}
+        {!showNoise && (
+          <circle
+            cx={margin.left + (width - margin.left - margin.right) / 2}
+            cy={vToY(Math.max(0, Math.min(safeVdd, inputVoltage)))}
+            r="10"
+            fill={colors.accent}
+            stroke="white"
+            strokeWidth="2"
+            filter="url(#glowFilter2)"
+          />
         )}
+
+        {/* Status info rendered outside SVG for clarity */}
       </svg>
     );
   };
@@ -641,6 +652,75 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
     </div>
   );
 
+  // Bottom navigation bar
+  const renderBottomNav = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirst = currentIndex === 0;
+    const isLast = currentIndex === phaseOrder.length - 1;
+    const isTestActive = phase === 'test' && !testSubmitted;
+    const nextDisabled = isLast || isTestActive;
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '12px 20px',
+        background: `linear-gradient(0deg, ${colors.bgPrimary} 80%, transparent 100%)`,
+        zIndex: 100,
+        gap: '12px',
+      }}>
+        <button
+          onClick={() => { if (!isFirst) { const prev = phaseOrder[currentIndex - 1]; goToPhase(prev); } }}
+          disabled={isFirst}
+          aria-label="Back"
+          style={{
+            padding: '12px 24px',
+            borderRadius: '10px',
+            border: `1px solid ${colors.border}`,
+            background: isFirst ? 'transparent' : colors.bgCard,
+            color: isFirst ? colors.textMuted : colors.textSecondary,
+            cursor: isFirst ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
+            fontSize: '15px',
+            opacity: isFirst ? 0.5 : 1,
+            minWidth: '80px',
+          }}
+        >
+          ← Back
+        </button>
+        <div style={{ flex: 1, textAlign: 'center' }}>
+          <span style={{ color: colors.textMuted, fontSize: '13px' }}>
+            {phaseLabels[phase]}
+          </span>
+        </div>
+        <button
+          onClick={() => { if (!nextDisabled) { nextPhase(); } }}
+          disabled={nextDisabled}
+          aria-label="Next"
+          style={{
+            padding: '12px 24px',
+            borderRadius: '10px',
+            border: 'none',
+            background: nextDisabled ? colors.border : `linear-gradient(135deg, ${colors.accent}, #D97706)`,
+            color: 'white',
+            cursor: nextDisabled ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
+            fontSize: '15px',
+            opacity: nextDisabled ? 0.4 : 1,
+            minWidth: '80px',
+            boxShadow: nextDisabled ? 'none' : `0 4px 15px ${colors.accentGlow}`,
+          }}
+        >
+          Next →
+        </button>
+      </div>
+    );
+  };
+
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, #D97706)`,
@@ -667,12 +747,23 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
+        position: 'relative',
       }}>
         {renderProgressBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+        }}>
 
         <div style={{
           fontSize: '64px',
@@ -707,7 +798,7 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
             "The secret is noise margin - the built-in safety zone that separates a solid 1 from a shaky 0. It is the difference between a computer that crashes and one that runs for years without error."
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+          <p className="text-muted" style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
             - Digital Logic Fundamentals
           </p>
         </div>
@@ -720,6 +811,8 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
         </button>
 
         {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -737,11 +830,21 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        position: 'relative',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+        <div style={{ maxWidth: '700px', margin: '16px auto 0' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -758,34 +861,45 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
             How does a CMOS gate determine if an input is logic "1" or logic "0"?
           </h2>
 
-          {/* Simple diagram */}
+          {/* Static SVG diagram for predict phase */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '36px', color: colors.accent }}>???V</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Input Signal</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>-&gt;</div>
-              <div style={{
-                background: colors.bgSecondary,
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.accent}`,
-              }}>
-                <div style={{ fontSize: '24px', color: colors.accent }}>CMOS Gate</div>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>-&gt;</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '36px' }}>0 or 1?</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Output</p>
-              </div>
-            </div>
+            <svg viewBox="0 0 400 200" width="100%" height="180" style={{ maxWidth: '400px' }}>
+              <defs>
+                <linearGradient id="predictHighGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#22c55e" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#22c55e" stopOpacity="0.1" />
+                </linearGradient>
+                <linearGradient id="predictLowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.1" />
+                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.3" />
+                </linearGradient>
+              </defs>
+              {/* HIGH region */}
+              <rect x="60" y="15" width="280" height="55" fill="url(#predictHighGrad)" rx="4" />
+              <text x="200" y="32" textAnchor="middle" fill="#22c55e" fontSize="12" fontWeight="bold">HIGH region (VOH to VDD)</text>
+              <text x="200" y="52" textAnchor="middle" fill="#22c55e" fontSize="11">Input &gt;= VIH → Logic 1</text>
+              {/* Forbidden zone */}
+              <rect x="60" y="75" width="280" height="50" fill="#ef444422" rx="4" />
+              <text x="200" y="97" textAnchor="middle" fill="#ef4444" fontSize="12" fontWeight="bold">FORBIDDEN ZONE</text>
+              <text x="200" y="115" textAnchor="middle" fill="#ef4444" fontSize="11">VIL &lt; V &lt; VIH → Indeterminate</text>
+              {/* LOW region */}
+              <rect x="60" y="130" width="280" height="55" fill="url(#predictLowGrad)" rx="4" />
+              <text x="200" y="150" textAnchor="middle" fill="#3b82f6" fontSize="12" fontWeight="bold">LOW region (GND to VOL)</text>
+              <text x="200" y="170" textAnchor="middle" fill="#3b82f6" fontSize="11">Input &lt;= VIL → Logic 0</text>
+              {/* Y-axis label */}
+              <text x="30" y="105" textAnchor="middle" fill="#9CA3AF" fontSize="11" fontWeight="bold">Voltage</text>
+              <line x1="52" y1="15" x2="52" y2="185" stroke="#6B7280" strokeWidth="1" />
+              <text x="52" y="24" textAnchor="middle" fill="#9CA3AF" fontSize="11">VDD</text>
+              <text x="52" y="80" textAnchor="middle" fill="#9CA3AF" fontSize="11">VIH</text>
+              <text x="52" y="130" textAnchor="middle" fill="#9CA3AF" fontSize="11">VIL</text>
+              <text x="52" y="186" textAnchor="middle" fill="#9CA3AF" fontSize="11">0V</text>
+            </svg>
           </div>
 
           {/* Options */}
@@ -834,8 +948,10 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
             </button>
           )}
         </div>
+        </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -846,15 +962,25 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        position: 'relative',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+        <div style={{ maxWidth: '800px', margin: '16px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Logic Level Explorer
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textPrimary, textAlign: 'center', marginBottom: '24px' }}>
             Adjust input voltage and add noise to see how thresholds protect signals
           </p>
 
@@ -882,9 +1008,36 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
             padding: '16px',
             marginBottom: '16px',
           }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              <strong>What to watch:</strong> Adjust the input voltage to see how it moves between HIGH, LOW, and FORBIDDEN zones. Add noise to simulate real-world interference—notice how signals stay valid as long as noise stays within the margin.
+            <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>
+              <strong style={{ color: colors.accent }}>What to watch:</strong> Adjust the input voltage to see how it moves between HIGH, LOW, and FORBIDDEN zones. Add noise to simulate real-world interference—notice how signals stay valid as long as noise stays within the margin.
             </p>
+          </div>
+
+          {/* Cause-Effect explanation */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textPrimary, margin: '0 0 8px 0', fontWeight: 600 }}>
+              Cause → Effect Relationships:
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>
+                When input voltage increases above VIH, it causes the gate to output logic HIGH (1) reliably
+              </p>
+              <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>
+                When input voltage decreases below VIL, it causes the gate to output logic LOW (0) reliably
+              </p>
+              <p style={{ ...typo.small, color: colors.forbidden, margin: 0 }}>
+                ⚠ Input between VIL and VIH → FORBIDDEN zone, output unpredictable — this affects all downstream logic
+              </p>
+              <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>
+                When noise amplitude increases, it reduces effective safety margin and impacts signal reliability
+              </p>
+            </div>
           </div>
 
           {/* Main visualization */}
@@ -913,10 +1066,13 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
                 onChange={(e) => setInputVoltage(Number(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   background: `linear-gradient(to right, ${colors.accent} ${(inputVoltage / vdd) * 100}%, ${colors.border} ${(inputVoltage / vdd) * 100}%)`,
                   cursor: 'pointer',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6',
+                  touchAction: 'pan-y',
                 }}
               />
             </div>
@@ -930,16 +1086,19 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
               <input
                 type="range"
                 min="0"
-                max="1"
+                max="3"
                 step="0.05"
                 value={noiseAmplitude}
                 onChange={(e) => setNoiseAmplitude(Number(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   background: `linear-gradient(to right, ${colors.error} ${noiseAmplitude * 100}%, ${colors.border} ${noiseAmplitude * 100}%)`,
                   cursor: 'pointer',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6',
+                  touchAction: 'pan-y',
                 }}
               />
             </div>
@@ -965,8 +1124,8 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
               </button>
               <button
                 onClick={() => {
-                  setInputVoltage(2.5);
-                  setNoiseAmplitude(0.3);
+                  setInputVoltage(0.5);
+                  setNoiseAmplitude(1.5);
                   setIsAnimating(false);
                 }}
                 style={{
@@ -1014,7 +1173,7 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
                 textAlign: 'center',
               }}>
                 <div style={{ ...typo.h3, color: isUndefined ? colors.forbidden : isValidHigh ? colors.logicHigh : colors.logicLow }}>
-                  {isUndefined ? 'UNDEFINED' : isValidHigh ? 'HIGH' : 'LOW'}
+                  {isUndefined ? 'INDETERMINATE' : isValidHigh ? 'HIGH' : 'LOW'}
                 </div>
                 <div style={{ ...typo.small, color: colors.textMuted }}>Current State</div>
               </div>
@@ -1032,7 +1191,7 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
               textAlign: 'center',
             }}>
               <p style={{ ...typo.body, color: colors.forbidden, margin: 0 }}>
-                Signal in forbidden zone! Logic state is undefined and may cause errors.
+                Signal in forbidden zone! Logic state is indeterminate and may cause errors.
               </p>
             </div>
           )}
@@ -1044,8 +1203,10 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
             Understand the Physics
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1056,11 +1217,21 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        position: 'relative',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+        <div style={{ maxWidth: '700px', margin: '16px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Understanding Noise Margins
           </h2>
@@ -1130,7 +1301,25 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
               The Forbidden Zone
             </h3>
             <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              Between VIL and VIH lies the forbidden zone. Any signal in this region causes undefined behavior - the gate might output HIGH, LOW, or oscillate unpredictably. Good design ensures signals never linger in this danger zone.
+              Between VIL and VIH lies the forbidden zone. Any signal in this region causes indeterminate behavior - the gate might output HIGH, LOW, or oscillate unpredictably. Good design ensures signals never linger in this danger zone.
+            </p>
+          </div>
+
+          {/* Connect to prediction made earlier */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: '0 0 6px 0', fontWeight: 600 }}>
+              Connecting your prediction to the experiment:
+            </p>
+            <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>
+              {prediction === 'b'
+                ? 'You correctly predicted that threshold regions with safety margins determine logic levels. Your observation during the experiment confirmed this!'
+                : `Your prediction leads us here: the correct answer is threshold regions (option B). The experiment observation shows that noise margin is the safety gap between output and input thresholds. What happened when you moved the slider into the forbidden zone?`}
             </p>
           </div>
 
@@ -1141,8 +1330,10 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
             Discover the Voltage Challenge
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1160,11 +1351,21 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        position: 'relative',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+        <div style={{ maxWidth: '700px', margin: '16px auto 0' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1180,6 +1381,49 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
             As supply voltages drop (5V to 3.3V to 1.8V to 1.2V), what happens to noise margins?
           </h2>
+
+          {/* Static SVG showing voltage scaling concept - no sliders */}
+          <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '24px', textAlign: 'center' }}>
+            <svg viewBox="0 0 400 180" width="100%" height="160" style={{ maxWidth: '400px' }}>
+              <defs>
+                <linearGradient id="twistPredGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#22c55e" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#22c55e" stopOpacity="0.1" />
+                </linearGradient>
+                <linearGradient id="twistPredGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.1" />
+                </linearGradient>
+              </defs>
+              {/* 5V bar */}
+              <text x="50" y="15" textAnchor="middle" fill="#9CA3AF" fontSize="11">5V</text>
+              <rect x="20" y="20" width="60" height="130" fill="url(#twistPredGrad1)" rx="4" stroke="#22c55e" strokeWidth="1" />
+              <rect x="20" y="20" width="60" height="39" fill="#22c55e" opacity="0.7" rx="4" />
+              <text x="50" y="44" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">NMH</text>
+              <text x="50" y="56" textAnchor="middle" fill="white" fontSize="11">1.5V</text>
+              {/* 3.3V bar */}
+              <text x="150" y="15" textAnchor="middle" fill="#9CA3AF" fontSize="11">3.3V</text>
+              <rect x="120" y="46" width="60" height="104" fill="url(#twistPredGrad1)" rx="4" stroke="#22c55e" strokeWidth="1" />
+              <rect x="120" y="46" width="60" height="26" fill="#22c55e" opacity="0.7" rx="4" />
+              <text x="150" y="63" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">NMH</text>
+              <text x="150" y="75" textAnchor="middle" fill="white" fontSize="11">1.0V</text>
+              {/* 1.8V bar */}
+              <text x="250" y="15" textAnchor="middle" fill="#9CA3AF" fontSize="11">1.8V</text>
+              <rect x="220" y="83" width="60" height="67" fill="url(#twistPredGrad2)" rx="4" stroke="#f59e0b" strokeWidth="1" />
+              <rect x="220" y="83" width="60" height="14" fill="#f59e0b" opacity="0.7" rx="4" />
+              <text x="250" y="94" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">NMH</text>
+              <text x="250" y="106" textAnchor="middle" fill="white" fontSize="11">0.54V</text>
+              {/* 1.2V bar */}
+              <text x="350" y="15" textAnchor="middle" fill="#9CA3AF" fontSize="11">1.2V</text>
+              <rect x="320" y="105" width="60" height="45" fill="#ef444422" rx="4" stroke="#ef4444" strokeWidth="1" />
+              <rect x="320" y="105" width="60" height="9" fill="#ef4444" opacity="0.7" rx="4" />
+              <text x="350" y="116" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">NMH</text>
+              <text x="350" y="128" textAnchor="middle" fill="white" fontSize="11">0.36V</text>
+              {/* Baseline */}
+              <line x1="10" y1="150" x2="390" y2="150" stroke="#6B7280" strokeWidth="1" strokeDasharray="3,3" />
+              <text x="200" y="168" textAnchor="middle" fill="#6B7280" fontSize="11">VDD decreasing →</text>
+            </svg>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1250,8 +1494,10 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
             </button>
           )}
         </div>
+        </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1262,11 +1508,21 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        position: 'relative',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+        <div style={{ maxWidth: '800px', margin: '16px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Voltage Scaling Explorer
           </h2>
@@ -1312,9 +1568,12 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
                 onChange={(e) => setTwistVdd(Number(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6',
+                  touchAction: 'pan-y',
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
@@ -1427,8 +1686,10 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
             Understand the Implications
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1439,11 +1700,21 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        position: 'relative',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+        <div style={{ maxWidth: '700px', margin: '16px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Low-Voltage Challenge
           </h2>
@@ -1532,8 +1803,10 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
             See Real-World Applications
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1616,6 +1889,13 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
               ))}
             </div>
 
+            {/* Progress indicator */}
+            <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+              <span style={{ ...typo.small, color: colors.textMuted }}>
+                App {selectedApp + 1} of {realWorldApps.length}
+              </span>
+            </div>
+
             {/* Selected app details */}
             <div style={{
               background: colors.bgCard,
@@ -1654,6 +1934,7 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
                 display: 'grid',
                 gridTemplateColumns: 'repeat(3, 1fr)',
                 gap: '12px',
+                marginBottom: '16px',
               }}>
                 {app.stats.map((stat, i) => (
                   <div key={i} style={{
@@ -1668,7 +1949,61 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
                   </div>
                 ))}
               </div>
+
+              {/* How it works section */}
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '16px', marginBottom: '16px' }}>
+                <h4 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px', fontWeight: 600 }}>
+                  How It Works:
+                </h4>
+                <p style={{ ...typo.small, color: '#9CA3AF', margin: 0 }}>{app.howItWorks}</p>
+              </div>
+
+              {/* Examples */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
+                {app.examples.map((ex, i) => (
+                  <span key={i} style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '6px',
+                    padding: '4px 10px',
+                    fontSize: '12px',
+                    color: '#6B7280',
+                  }}>{ex}</span>
+                ))}
+              </div>
+
+              {/* Future impact */}
+              <p style={{ ...typo.small, color: '#6B7280', margin: 0, fontStyle: 'italic' }}>
+                {app.futureImpact}
+              </p>
             </div>
+
+            {/* Got It button */}
+            <button
+              onClick={() => {
+                playSound('success');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                if (selectedApp < realWorldApps.length - 1) {
+                  setSelectedApp(selectedApp + 1);
+                }
+              }}
+              style={{
+                width: '100%',
+                padding: '16px',
+                borderRadius: '12px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #10B981, #059669)',
+                color: 'white',
+                fontWeight: 600,
+                cursor: 'pointer',
+                marginBottom: '16px',
+                fontSize: '16px',
+                boxShadow: '0 4px 15px rgba(16,185,129,0.25)',
+              }}
+            >
+              Got It
+            </button>
 
             {allAppsCompleted && (
               <button
@@ -1682,6 +2017,7 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
         </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1694,11 +2030,21 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          position: 'relative',
         }}>
           {renderProgressBar()}
-
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            paddingTop: '48px',
+            paddingBottom: '100px',
+            paddingLeft: '24px',
+            paddingRight: '24px',
+          }}>
+          <div style={{ maxWidth: '600px', margin: '16px auto 0', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1739,7 +2085,9 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
               </button>
             )}
           </div>
+          </div>
           {renderNavDots()}
+          {renderBottomNav()}
         </div>
       );
     }
@@ -1750,11 +2098,21 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        position: 'relative',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+        <div style={{ maxWidth: '700px', margin: '16px auto 0' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1763,7 +2121,7 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
             marginBottom: '24px',
           }}>
             <span style={{ ...typo.small, color: colors.textSecondary }}>
-              Question {currentQuestion + 1} of 10
+              Knowledge Test — Question {currentQuestion + 1} of 10
             </span>
             <div style={{ display: 'flex', gap: '6px' }}>
               {testQuestions.map((_, i) => (
@@ -1904,8 +2262,10 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
             )}
           </div>
         </div>
+        </div>
 
         {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1918,12 +2278,23 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
+        position: 'relative',
       }}>
         {renderProgressBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+        }}>
 
         <div style={{
           fontSize: '100px',
@@ -1958,7 +2329,7 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
               'VOH and VOL are guaranteed output levels',
               'NMH = VOH - VIH, NML = VIL - VOL',
               'Lower supply voltages mean smaller noise margins',
-              'The forbidden zone causes undefined behavior',
+              'The forbidden zone causes indeterminate behavior',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ color: colors.success }}>✓</span>
@@ -1995,6 +2366,8 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
         </div>
 
         {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }

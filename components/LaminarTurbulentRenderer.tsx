@@ -413,15 +413,15 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
   // Phase navigation
   const phaseOrder: Phase[] = validPhases;
   const phaseLabels: Record<Phase, string> = {
-    hook: 'Introduction',
+    hook: 'Explore Introduction',
     predict: 'Predict',
-    play: 'Experiment',
+    play: 'Experiment Lab',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Boundary Layers',
+    twist_play: 'Experiment Boundary',
     twist_review: 'Deep Insight',
-    transfer: 'Real World',
-    test: 'Knowledge Test',
+    transfer: 'Apply Transfer',
+    test: 'Quiz Knowledge',
     mastery: 'Mastery'
   };
 
@@ -465,35 +465,67 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
   };
 
   // Navigation bar component
-  const renderNavBar = () => (
-    <nav style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      height: '56px',
-      background: colors.bgSecondary,
-      borderBottom: `1px solid ${colors.border}`,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '0 16px',
-      zIndex: 1000,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <span style={{ fontSize: '24px' }}>🌊</span>
-        <span style={{ color: colors.textPrimary, fontWeight: 600 }}>Laminar vs Turbulent Flow</span>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
-          {phaseLabels[phase]}
-        </span>
-        <span style={{ color: colors.textMuted, fontSize: '12px' }}>
-          ({phaseOrder.indexOf(phase) + 1}/{phaseOrder.length})
-        </span>
-      </div>
-    </nav>
-  );
+  const renderNavBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    return (
+      <nav style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '48px',
+        background: colors.bgSecondary,
+        borderBottom: `1px solid ${colors.border}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 16px',
+        zIndex: 1000,
+      }}>
+        <div>
+          {currentIndex > 0 && (
+            <button
+              onClick={() => goToPhase(phaseOrder[currentIndex - 1])}
+              aria-label="Back"
+              style={{
+                background: 'transparent',
+                border: `1px solid ${colors.border}`,
+                borderRadius: '6px',
+                color: colors.textSecondary,
+                padding: '4px 10px',
+                cursor: 'pointer',
+                fontSize: '13px',
+              }}
+            >
+              ← Back
+            </button>
+          )}
+        </div>
+        <span style={{ color: '#e2e8f0', fontSize: '13px', fontWeight: 500 }}>🌊 Laminar vs Turbulent Flow</span>
+        <div>
+          {currentIndex < phaseOrder.length - 1 && (
+            <button
+              onClick={() => { if (phase !== 'test') goToPhase(phaseOrder[currentIndex + 1]); }}
+              aria-label="Next"
+              disabled={phase === 'test'}
+              style={{
+                background: phase === 'test' ? colors.border : colors.accent,
+                border: 'none',
+                borderRadius: '6px',
+                color: 'white',
+                padding: '4px 10px',
+                cursor: phase === 'test' ? 'not-allowed' : 'pointer',
+                fontSize: '13px',
+                opacity: phase === 'test' ? 0.4 : 1,
+              }}
+            >
+              Next →
+            </button>
+          )}
+        </div>
+      </nav>
+    );
+  };
 
   // Progress bar component
   const renderProgressBar = () => (
@@ -567,14 +599,22 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        paddingTop: '80px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '80px 24px 100px',
+          textAlign: 'center',
+        }}>
 
         {hookStep === 0 && (
           <>
@@ -751,6 +791,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
         )}
 
         {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -767,13 +808,15 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', padding: '72px 24px 100px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress indicator */}
           <div style={{
             display: 'flex',
@@ -879,6 +922,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
             </button>
           )}
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -894,18 +938,29 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0', overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', padding: '72px 24px 100px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Reynolds Number Lab
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
             Adjust velocity, diameter, and viscosity to control the flow regime.
+          </p>
+          <p style={{ ...typo.small, color: '#e2e8f0', textAlign: 'center', marginBottom: '8px' }}>
+            This visualization shows how fluid flow transitions between laminar and turbulent regimes. Observe the dye streaks: laminar flow displays smooth parallel lines while turbulent flow illustrates chaotic mixing patterns.
+          </p>
+          <p style={{ ...typo.small, color: '#e2e8f0', textAlign: 'center', marginBottom: '8px' }}>
+            When you increase velocity, Re increases and the flow regime changes. Higher Re causes the inertial forces to overcome viscous damping, because the ratio of momentum to friction rises above the critical threshold (~4000).
+          </p>
+          <p style={{ ...typo.small, color: '#e2e8f0', textAlign: 'center', marginBottom: '16px' }}>
+            Try adjusting each slider to observe how it affects the Reynolds number. Experiment with viscosity: watch how increasing it calms turbulent flow. Notice how diameter and velocity both affect the transition threshold.
           </p>
 
           {/* Main visualization */}
@@ -917,7 +972,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
           }}>
             {/* Pipe visualization with dye */}
             <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
-              <svg width="100%" height="200" viewBox="0 0 450 200">
+              <svg width="100%" height="240" viewBox="0 0 450 240">
                 <defs>
                   <linearGradient id="pipeWall" x1="0%" y1="0%" x2="0%" y2="100%">
                     <stop offset="0%" stopColor="#6b7280" />
@@ -929,68 +984,104 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                     <stop offset="50%" stopColor="#030712" />
                     <stop offset="100%" stopColor="#1f2937" />
                   </linearGradient>
+                  <filter id="glowFilter" x="-30%" y="-30%" width="160%" height="160%">
+                    <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                    <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                  </filter>
+                  <filter id="depthShadow">
+                    <feDropShadow dx="1" dy="1" stdDeviation="2" floodColor="rgba(0,0,0,0.6)" />
+                  </filter>
                 </defs>
 
-                {/* Pipe */}
-                <rect x="25" y="55" width="400" height="10" fill="url(#pipeWall)" />
-                <rect x="25" y="135" width="400" height="10" fill="url(#pipeWall)" />
-                <rect x="25" y="65" width="400" height="70" fill="url(#pipeInterior)" />
+                {/* Background/grid layer */}
+                <g id="grid-layer">
+                  <rect x="0" y="0" width="450" height="240" fill="#111827" rx="8" />
+                  {[60, 80, 100, 120, 140].map(y => (
+                    <line key={y} x1="25" y1={y} x2="425" y2={y} stroke="#1f2937" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+                  ))}
+                  {/* Y-axis label */}
+                  <text x="12" y="100" fill="#94a3b8" fontSize="11" textAnchor="middle" transform="rotate(-90, 12, 100)">Velocity Profile</text>
+                  {/* X-axis label */}
+                  <text x="225" y="230" fill="#94a3b8" fontSize="11" textAnchor="middle">Flow Direction →</text>
+                </g>
 
-                {/* Flow streamlines */}
+                {/* Pipe layer */}
+                <g id="pipe-layer" filter="url(#depthShadow)">
+                  <rect x="25" y="55" width="400" height="10" fill="url(#pipeWall)" />
+                  <rect x="25" y="155" width="400" height="10" fill="url(#pipeWall)" />
+                  <rect x="25" y="65" width="400" height="90" fill="url(#pipeInterior)" />
+                </g>
+
+                {/* Flow streamlines layer */}
+                <g id="flow-layer">
                 {flowType === 'laminar' ? (
-                  // Laminar: parallel lines
-                  [75, 90, 100, 110, 125].map((y, i) => (
+                  [75, 88, 100, 112, 125].map((y, i) => (
                     <line key={i} x1="40" y1={y} x2="410" y2={y} stroke={colors.laminar} strokeWidth="2" opacity="0.5">
                       <animate attributeName="stroke-dashoffset" from="0" to="-20" dur={`${1.5 - flowVelocity * 0.2}s`} repeatCount="indefinite" />
                     </line>
                   ))
                 ) : flowType === 'turbulent' ? (
-                  // Turbulent: wavy chaotic lines
-                  [75, 90, 100, 110, 125].map((y, i) => (
+                  [75, 88, 100, 112, 125].map((y, i) => (
                     <path key={i}
-                      d={`M 40 ${y} Q 100 ${y + (i % 2 === 0 ? 15 : -15)} 160 ${y} Q 220 ${y + (i % 2 === 0 ? -10 : 10)} 280 ${y} Q 340 ${y + (i % 2 === 0 ? 12 : -12)} 410 ${y}`}
+                      d={`M 40 ${y} Q 100 ${y + (i % 2 === 0 ? 35 : -35)} 160 ${y} Q 220 ${y + (i % 2 === 0 ? -30 : 30)} 280 ${y} Q 340 ${y + (i % 2 === 0 ? 35 : -35)} 410 ${y}`}
                       fill="none" stroke={colors.turbulent} strokeWidth="2" opacity="0.5">
                       <animate attributeName="d"
-                        values={`M 40 ${y} Q 100 ${y + 15} 160 ${y} Q 220 ${y - 10} 280 ${y} Q 340 ${y + 12} 410 ${y};M 40 ${y} Q 100 ${y - 12} 160 ${y} Q 220 ${y + 8} 280 ${y} Q 340 ${y - 15} 410 ${y};M 40 ${y} Q 100 ${y + 15} 160 ${y} Q 220 ${y - 10} 280 ${y} Q 340 ${y + 12} 410 ${y}`}
+                        values={`M 40 ${y} Q 100 ${y + 35} 160 ${y} Q 220 ${y - 30} 280 ${y} Q 340 ${y + 35} 410 ${y};M 40 ${y} Q 100 ${y - 35} 160 ${y} Q 220 ${y + 30} 280 ${y} Q 340 ${y - 35} 410 ${y};M 40 ${y} Q 100 ${y + 35} 160 ${y} Q 220 ${y - 30} 280 ${y} Q 340 ${y + 35} 410 ${y}`}
                         dur="0.5s" repeatCount="indefinite" />
                     </path>
                   ))
                 ) : (
-                  // Transition: wavy lines
-                  [75, 90, 100, 110, 125].map((y, i) => (
+                  [75, 88, 100, 112, 125].map((y, i) => (
                     <path key={i}
-                      d={`M 40 ${y} Q 150 ${y + (i % 2 === 0 ? 8 : -8)} 260 ${y} Q 350 ${y + (i % 2 === 0 ? -6 : 6)} 410 ${y}`}
+                      d={`M 40 ${y} Q 150 ${y + (i % 2 === 0 ? 25 : -25)} 260 ${y} Q 350 ${y + (i % 2 === 0 ? -20 : 20)} 410 ${y}`}
                       fill="none" stroke={colors.warning} strokeWidth="2" opacity="0.5">
                       <animate attributeName="d"
-                        values={`M 40 ${y} Q 150 ${y + 8} 260 ${y} Q 350 ${y - 6} 410 ${y};M 40 ${y} Q 150 ${y - 6} 260 ${y} Q 350 ${y + 8} 410 ${y};M 40 ${y} Q 150 ${y + 8} 260 ${y} Q 350 ${y - 6} 410 ${y}`}
+                        values={`M 40 ${y} Q 150 ${y + 25} 260 ${y} Q 350 ${y - 20} 410 ${y};M 40 ${y} Q 150 ${y - 20} 260 ${y} Q 350 ${y + 25} 410 ${y};M 40 ${y} Q 150 ${y + 25} 260 ${y} Q 350 ${y - 20} 410 ${y}`}
                         dur="1.5s" repeatCount="indefinite" />
                     </path>
                   ))
                 )}
+                </g>
 
-                {/* Dye particles */}
+                {/* Dye particles layer */}
+                <g id="dye-layer">
                 {showDyeInjection && dyeParticles.map(p => (
                   <circle key={p.id} cx={p.x} cy={p.y} r="4"
                     fill={flowType === 'turbulent' ? colors.turbulent : flowType === 'laminar' ? colors.laminar : colors.warning}
                   />
                 ))}
 
-                {/* Dye injector */}
                 {showDyeInjection && (
-                  <g transform="translate(35, 75)">
-                    <rect x="-10" y="0" width="20" height="50" rx="3" fill="#8B5CF6" />
-                    <rect x="-5" y="15" width="10" height="20" fill="#0a0f1a" opacity="0.5" />
+                  <g transform="translate(35, 68)">
+                    <rect x="-10" y="0" width="20" height="80" rx="3" fill="#8B5CF6" />
+                    <rect x="-5" y="15" width="10" height="40" fill="#0a0f1a" opacity="0.5" />
                   </g>
                 )}
+                </g>
 
-                {/* Labels */}
-                <text x="225" y="25" fill={flowType === 'laminar' ? colors.laminar : flowType === 'turbulent' ? colors.turbulent : colors.warning}
-                  fontSize="16" textAnchor="middle" fontWeight="700">
-                  {flowType.toUpperCase()} FLOW
-                </text>
-                <text x="225" y="180" fill={colors.textMuted} fontSize="12" textAnchor="middle">
-                  Flow Direction ---&gt;
-                </text>
+                {/* Labels/annotations layer */}
+                <g id="labels-layer">
+                  <text x="225" y="25" fill={flowType === 'laminar' ? colors.laminar : flowType === 'turbulent' ? colors.turbulent : colors.warning}
+                    fontSize="14" textAnchor="middle" fontWeight="700">
+                    {flowType.toUpperCase()} FLOW — Re = {Re.toFixed(0)}
+                  </text>
+                  <text x="225" y="40" fill="#94a3b8" fontSize="11" textAnchor="middle">Re = ρvD/μ</text>
+                  {/* Tick marks on pipe walls */}
+                  {[100, 175, 250, 325, 400].map(x => (
+                    <line key={x} x1={x} y1="55" x2={x} y2="62" stroke="#6b7280" strokeWidth="1" />
+                  ))}
+                </g>
+
+                {/* Interactive Re indicator circle - position moves with flow velocity slider */}
+                <circle
+                  cx={Math.min(420, Math.max(30, 30 + ((flowVelocity - 0.1) / (5 - 0.1)) * 380))}
+                  cy="100"
+                  r="9"
+                  fill={flowType === 'laminar' ? '#22D3EE' : flowType === 'turbulent' ? '#EF4444' : '#F59E0B'}
+                  stroke={flowType === 'laminar' ? '#22D3EE' : flowType === 'turbulent' ? '#EF4444' : '#F59E0B'}
+                  strokeWidth="2"
+                  filter="url(#glowFilter)"
+                />
               </svg>
             </div>
 
@@ -1047,7 +1138,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                   step="0.1"
                   value={flowVelocity}
                   onChange={(e) => setFlowVelocity(parseFloat(e.target.value))}
-                  style={{ width: '100%', accentColor: colors.accent }}
+                  style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none', borderRadius: '4px', cursor: 'pointer' }}
                 />
               </div>
 
@@ -1064,7 +1155,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                   step="0.5"
                   value={pipeDiameter}
                   onChange={(e) => setPipeDiameter(parseFloat(e.target.value))}
-                  style={{ width: '100%', accentColor: colors.success }}
+                  style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none', borderRadius: '4px', cursor: 'pointer' }}
                 />
               </div>
 
@@ -1081,7 +1172,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                   step="0.5"
                   value={fluidViscosity}
                   onChange={(e) => setFluidViscosity(parseFloat(e.target.value))}
-                  style={{ width: '100%', accentColor: colors.warning }}
+                  style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none', borderRadius: '4px', cursor: 'pointer' }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: colors.textMuted }}>
                   <span>Water</span>
@@ -1168,8 +1259,9 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Understand the Physics
+            Continue to Next →
           </button>
+        </div>
         </div>
 
         {renderNavDots()}
@@ -1254,7 +1346,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Discover a Paradox
+            Continue to Next →
           </button>
         </div>
 
@@ -1290,7 +1382,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
             border: `1px solid ${colors.warning}44`,
           }}>
             <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              The Golf Ball Paradox
+              The Golf Ball Paradox — What do you predict will happen?
             </p>
           </div>
 
@@ -1482,7 +1574,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                         const angle = (i * 30) * Math.PI / 180;
                         return <circle key={i} cx={28 * Math.cos(angle)} cy={28 * Math.sin(angle)} r="4" fill="#9ca3af" />;
                       })}
-                      <path d="M 40 -3 Q 50 -12 60 -15 L 60 15 Q 50 12 40 3" fill="url(#wakeGradGreen)" />
+                      <path d="M 40 -5 Q 50 -30 65 -35 L 65 35 Q 50 30 40 5" fill="url(#wakeGradGreen)" />
                       <text x="0" y="60" fill={colors.success} fontSize="11" textAnchor="middle" fontWeight="600">DIMPLED</text>
                       <text x="0" y="75" fill={colors.textMuted} fontSize="9" textAnchor="middle">Small wake = 50% less drag!</text>
                       <circle cx="38" cy="20" r="4" fill={colors.success}>
@@ -1496,7 +1588,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                 {objectShape === 'streamlined' && (
                   <g transform="translate(250, 100)">
                     <ellipse rx="100" ry="35" fill="url(#sphereGrad)" />
-                    <path d="M 100 0 Q 110 -5 115 0 Q 110 5 100 0" fill="url(#wakeGradGreen)" />
+                    <path d="M 100 -5 Q 110 -30 120 -35 L 120 35 Q 110 30 100 5" fill="url(#wakeGradGreen)" />
                     <text x="0" y="55" fill={colors.success} fontSize="12" textAnchor="middle" fontWeight="600">STREAMLINED</text>
                     <text x="0" y="70" fill={colors.textMuted} fontSize="10" textAnchor="middle">Flow stays attached - Minimal drag</text>
                   </g>

@@ -342,8 +342,8 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
     predict: 'Predict',
     play: 'Experiment',
     review: 'Understanding',
-    twist_predict: 'New Variable',
-    twist_play: 'AC vs DC',
+    twist_predict: 'Compare Variable',
+    twist_play: 'Explore AC DC',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -420,23 +420,30 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           </filter>
         </defs>
 
+        {/* Background spanning path - always visible, uses full height */}
+        <path
+          d={`M ${width * 0.42} ${height * 0.08} L ${width * 0.44} ${height * 0.92} L ${width * 0.46} ${height * 0.08} L ${width * 0.48} ${height * 0.92} L ${width * 0.50} ${height * 0.08} L ${width * 0.52} ${height * 0.92} L ${width * 0.54} ${height * 0.08} L ${width * 0.56} ${height * 0.5}`}
+          fill="none"
+          stroke={ac ? "#3b82f6" : "#374151"}
+          strokeWidth="1"
+          opacity="0.1"
+        />
+
         {/* Title */}
         <text x={width/2} y="22" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">
           Transformer Circuit - {ac ? 'AC Input' : 'DC Input'}
         </text>
 
         {/* Axis labels and grid */}
-        <text x="10" y="50" fill={colors.textMuted} fontSize="11">Voltage (V)</text>
-        <text x={width - 40} y={height - 10} fill={colors.textMuted} fontSize="11">Time</text>
+        <text x="10" y="50" fill={colors.textSecondary} fontSize="11">Voltage (V)</text>
+        <text x={width - 40} y={height - 10} fill={colors.textSecondary} fontSize="11">Time</text>
         <line x1="0" y1={height/2} x2={width} y2={height/2} stroke={colors.border} strokeWidth="0.5" strokeDasharray="4 2" opacity="0.3" />
         <line x1={width/2} y1="40" x2={width/2} y2={height - 70} stroke={colors.border} strokeWidth="0.5" strokeDasharray="4 2" opacity="0.3" />
 
         {/* Iron Core */}
-        <g transform={`translate(${width/2 - 80}, 45)`}>
-          <rect x="0" y="0" width="160" height="140" rx="6" fill="url(#coreGrad)" stroke="#4b5563" strokeWidth="3" />
-          <rect x="20" y="20" width="120" height="100" rx="4" fill={colors.bgPrimary} />
-          <text x="80" y="-8" textAnchor="middle" fill={colors.textMuted} fontSize="11">Iron Core</text>
-        </g>
+        <rect x={width/2 - 80} y="45" width="160" height="140" rx="6" fill="url(#coreGrad)" stroke="#4b5563" strokeWidth="3" />
+        <rect x={width/2 - 60} y="65" width="120" height="100" rx="4" fill={colors.bgPrimary} />
+        <text x={width/2} y="42" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Iron Core</text>
 
         {/* Magnetic Flux (only when AC) */}
         {ac && (
@@ -450,115 +457,112 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
         )}
 
         {/* Primary Coil */}
-        <g transform={`translate(${width/2 - 55}, 70)`}>
-          {[...Array(Math.min(Math.floor(pTurns / 15), 8))].map((_, i) => (
-            <ellipse
-              key={i}
-              cx="0"
-              cy={i * 11}
-              rx="18"
-              ry="6"
-              fill="none"
-              stroke="url(#copperPrimary)"
-              strokeWidth="4"
-              style={{ opacity: ac ? 0.7 + currentIntensity * 0.3 : 0.4 }}
-            />
-          ))}
-          <text x="0" y="100" textAnchor="middle" fill="#f87171" fontSize="11" fontWeight="600">Primary</text>
-          <text x="0" y="114" textAnchor="middle" fill={colors.textMuted} fontSize="11">{pTurns} turns</text>
-        </g>
+        {[...Array(Math.min(Math.floor(pTurns / 15), 8))].map((_, i) => (
+          <ellipse
+            key={i}
+            cx={width/2 - 55}
+            cy={70 + i * 11}
+            rx="18"
+            ry="6"
+            fill="none"
+            stroke="url(#copperPrimary)"
+            strokeWidth="4"
+            style={{ opacity: ac ? 0.7 + currentIntensity * 0.3 : 0.4 }}
+          />
+        ))}
+        <text x={width/2 - 55} y={170} textAnchor="middle" fill="#f87171" fontSize="11" fontWeight="600">Primary</text>
+        <text x={width/2 - 55} y={184} textAnchor="middle" fill={colors.textSecondary} fontSize="11">{pTurns} turns</text>
 
         {/* Secondary Coil */}
-        <g transform={`translate(${width/2 + 55}, 70)`}>
-          {[...Array(Math.min(Math.floor(sTurns / 15), 10))].map((_, i) => (
-            <ellipse
-              key={i}
-              cx="0"
-              cy={i * 9}
-              rx="18"
-              ry="5"
-              fill="none"
-              stroke="url(#copperSecondary)"
-              strokeWidth="3"
-              style={{ opacity: ac && vOut > 0 ? 0.7 + currentIntensity * 0.3 : 0.4 }}
-            />
-          ))}
-          <text x="0" y="100" textAnchor="middle" fill="#4ade80" fontSize="11" fontWeight="600">Secondary</text>
-          <text x="0" y="114" textAnchor="middle" fill={colors.textMuted} fontSize="11">{sTurns} turns</text>
-        </g>
+        {[...Array(Math.min(Math.floor(sTurns / 15), 10))].map((_, i) => (
+          <ellipse
+            key={i}
+            cx={width/2 + 55}
+            cy={70 + i * 9}
+            rx="18"
+            ry="5"
+            fill="none"
+            stroke="url(#copperSecondary)"
+            strokeWidth="3"
+            style={{ opacity: ac && vOut > 0 ? 0.7 + currentIntensity * 0.3 : 0.4 }}
+          />
+        ))}
+        <text x={width/2 + 55} y={170} textAnchor="middle" fill="#4ade80" fontSize="11" fontWeight="600">Secondary</text>
+        <text x={width/2 + 55} y={184} textAnchor="middle" fill={colors.textSecondary} fontSize="11">{sTurns} turns</text>
 
         {/* Input Panel */}
-        <g transform="translate(15, 60)">
-          <rect x="0" y="0" width="75" height="80" rx="6" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
-          <text x="37" y="15" textAnchor="middle" fill={colors.textMuted} fontSize="11">INPUT</text>
-          <text x="37" y="38" textAnchor="middle" fill="#f87171" fontSize="16" fontWeight="700" filter="url(#activeGlow)">{vIn}V</text>
-          <text x="37" y="55" textAnchor="middle" fill={colors.textMuted} fontSize="11">{ac ? 'AC ~' : 'DC ='}</text>
-          <rect x="10" y="62" width="55" height="12" rx="3" fill={ac ? '#14532d' : '#450a0a'} />
-          <text x="37" y="72" textAnchor="middle" fill={ac ? '#4ade80' : '#f87171'} fontSize="11" fontWeight="600">
-            {ac ? 'ACTIVE' : 'DC MODE'}
-          </text>
-        </g>
+        <rect x="15" y="60" width="75" height="80" rx="6" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
+        <text x="52" y="75" textAnchor="middle" fill={colors.textSecondary} fontSize="11">INPUT</text>
+        <text x="52" y="98" textAnchor="middle" fill="#f87171" fontSize="16" fontWeight="700" filter="url(#activeGlow)">{vIn}V</text>
+        <text x="52" y="115" textAnchor="middle" fill={colors.textSecondary} fontSize="11">{ac ? 'AC ~' : 'DC ='}</text>
+        <rect x="25" y="122" width="55" height="12" rx="3" fill={ac ? '#14532d' : '#450a0a'} />
+        <text x="52" y="132" textAnchor="middle" fill={ac ? '#4ade80' : '#f87171'} fontSize="11" fontWeight="600">
+          {ac ? 'ACTIVE' : 'DC MODE'}
+        </text>
 
         {/* Output Panel */}
-        <g transform={`translate(${width - 90}, 60)`}>
-          <rect x="0" y="0" width="75" height="80" rx="6" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
-          <text x="37" y="15" textAnchor="middle" fill={colors.textMuted} fontSize="11">OUTPUT</text>
-          <text x="37" y="38" textAnchor="middle" fill={vOut > 0 ? '#4ade80' : '#6b7280'} fontSize="16" fontWeight="700" filter={vOut > 0 ? "url(#activeGlow)" : undefined}>
-            {vOut.toFixed(0)}V
-          </text>
-          <text x="37" y="55" textAnchor="middle" fill={colors.textMuted} fontSize="11">
-            {vOut > 0 ? `${(inputCurrent / ratio).toFixed(2)}A` : 'No output'}
-          </text>
-          <rect x="10" y="62" width="55" height="12" rx="3" fill={vOut > 0 ? '#14532d' : '#450a0a'} />
-          <text x="37" y="72" textAnchor="middle" fill={vOut > 0 ? '#4ade80' : '#f87171'} fontSize="11" fontWeight="600">
-            {vOut > 0 ? 'ACTIVE' : 'NO OUTPUT'}
-          </text>
-        </g>
+        <rect x={width - 90} y="60" width="75" height="80" rx="6" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
+        <text x={width - 52} y="75" textAnchor="middle" fill={colors.textSecondary} fontSize="11">OUTPUT</text>
+        <text x={width - 52} y="98" textAnchor="middle" fill={vOut > 0 ? '#4ade80' : '#6b7280'} fontSize="16" fontWeight="700" filter={vOut > 0 ? "url(#activeGlow)" : undefined}>
+          {vOut.toFixed(0)}V
+        </text>
+        <text x={width - 52} y="115" textAnchor="middle" fill={colors.textSecondary} fontSize="11">
+          {vOut > 0 ? `${(inputCurrent / ratio).toFixed(2)}A` : 'No output'}
+        </text>
+        <rect x={width - 80} y="122" width="55" height="12" rx="3" fill={vOut > 0 ? '#14532d' : '#450a0a'} />
+        <text x={width - 52} y="132" textAnchor="middle" fill={vOut > 0 ? '#4ade80' : '#f87171'} fontSize="11" fontWeight="600">
+          {vOut > 0 ? 'ACTIVE' : 'NO OUTPUT'}
+        </text>
 
         {/* Waveforms */}
-        <g transform={`translate(15, ${height - 65})`}>
-          <rect x="0" y="0" width="75" height="40" rx="4" fill={colors.bgPrimary} stroke={colors.border} strokeWidth="1" />
-          <text x="37" y="12" textAnchor="middle" fill={colors.textMuted} fontSize="11">Input Wave</text>
-          {ac ? (
-            <path
-              d={`M 8 25 ${[...Array(10)].map((_, i) => `L ${8 + i * 6} ${25 + Math.sin(animP + i * 0.8) * 8}`).join(' ')}`}
-              fill="none"
-              stroke="#f87171"
-              strokeWidth="2"
-            />
-          ) : (
-            <line x1="8" y1="25" x2="68" y2="25" stroke="#6b7280" strokeWidth="2" strokeDasharray="4 2" />
-          )}
-        </g>
+        <rect x="15" y={height - 65} width="75" height="40" rx="4" fill={colors.bgPrimary} stroke={colors.border} strokeWidth="1" />
+        <text x="52" y={height - 65 + 12} textAnchor="middle" fill={colors.textSecondary} fontSize="11">Input Wave</text>
+        {ac ? (
+          <path
+            d={`M 23 ${height - 40} ${[...Array(10)].map((_, i) => `L ${23 + i * 6} ${height - 40 + Math.sin(animP + i * 0.8) * 8}`).join(' ')}`}
+            fill="none"
+            stroke="#f87171"
+            strokeWidth="2"
+          />
+        ) : (
+          <line x1="23" y1={height - 40} x2="83" y2={height - 40} stroke="#6b7280" strokeWidth="2" strokeDasharray="4 2" />
+        )}
 
-        <g transform={`translate(${width - 90}, ${height - 65})`}>
-          <rect x="0" y="0" width="75" height="40" rx="4" fill={colors.bgPrimary} stroke={colors.border} strokeWidth="1" />
-          <text x="37" y="12" textAnchor="middle" fill={colors.textMuted} fontSize="11">Output Wave</text>
-          {ac && vOut > 0 ? (
-            <path
-              d={`M 8 25 ${[...Array(10)].map((_, i) => `L ${8 + i * 6} ${25 + Math.sin(animP + i * 0.8) * 8 * Math.min(ratio, 1.5)}`).join(' ')}`}
-              fill="none"
-              stroke="#4ade80"
-              strokeWidth="2"
-            />
-          ) : (
-            <line x1="8" y1="25" x2="68" y2="25" stroke="#374151" strokeWidth="2" strokeDasharray="4 2" />
-          )}
-        </g>
+        <rect x={width - 90} y={height - 65} width="75" height="40" rx="4" fill={colors.bgPrimary} stroke={colors.border} strokeWidth="1" />
+        <text x={width - 52} y={height - 65 + 12} textAnchor="middle" fill={colors.textSecondary} fontSize="11">Output Wave</text>
+        {ac && vOut > 0 ? (
+          <path
+            d={`M ${width - 82} ${height - 40} ${[...Array(10)].map((_, i) => `L ${width - 82 + i * 6} ${height - 40 + Math.sin(animP + i * 0.8) * 8 * Math.min(ratio, 1.5)}`).join(' ')}`}
+            fill="none"
+            stroke="#4ade80"
+            strokeWidth="2"
+          />
+        ) : (
+          <line x1={width - 82} y1={height - 40} x2={width - 22} y2={height - 40} stroke="#374151" strokeWidth="2" strokeDasharray="4 2" />
+        )}
 
         {/* Transformer Type Badge */}
-        <g transform={`translate(${width/2 - 50}, ${height - 55})`}>
-          <rect x="0" y="0" width="100" height="30" rx="6" fill={colors.bgSecondary} stroke={ratio > 1 ? '#22c55e' : ratio < 1 ? '#f97316' : '#3b82f6'} strokeWidth="2" />
-          <text x="50" y="14" textAnchor="middle" fill={colors.textMuted} fontSize="11">Type</text>
-          <text x="50" y="26" textAnchor="middle" fill={ratio > 1 ? '#4ade80' : ratio < 1 ? '#fb923c' : '#60a5fa'} fontSize="11" fontWeight="700">
-            {ratio > 1 ? 'STEP-UP' : ratio < 1 ? 'STEP-DOWN' : 'ISOLATION'}
-          </text>
-        </g>
+        <rect x={width/2 - 50} y={height - 55} width="100" height="30" rx="6" fill={colors.bgSecondary} stroke={ratio > 1 ? '#22c55e' : ratio < 1 ? '#f97316' : '#3b82f6'} strokeWidth="2" />
+        <text x={width/2} y={height - 41} textAnchor="middle" fill={colors.textSecondary} fontSize="11">Type</text>
+        <text x={width/2} y={height - 29} textAnchor="middle" fill={ratio > 1 ? '#4ade80' : ratio < 1 ? '#fb923c' : '#60a5fa'} fontSize="11" fontWeight="700">
+          {ratio > 1 ? 'STEP-UP' : ratio < 1 ? 'STEP-DOWN' : 'ISOLATION'}
+        </text>
 
         {/* Turns Ratio */}
         <text x={width/2} y={height - 8} textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="600">
           Ratio: {ratio.toFixed(2)}:1
         </text>
+
+        {/* AC waveform indicator (full height span) */}
+        {ac && (
+          <path
+            d={`M ${width * 0.08} ${height * 0.5} L ${width * 0.12} ${height * 0.1} L ${width * 0.16} ${height * 0.9} L ${width * 0.20} ${height * 0.1} L ${width * 0.24} ${height * 0.9} L ${width * 0.28} ${height * 0.5}`}
+            fill="none"
+            stroke="#f87171"
+            strokeWidth="1.5"
+            opacity={0.15 + currentIntensity * 0.15}
+          />
+        )}
       </svg>
     );
   };
@@ -628,10 +632,8 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
   // Bottom navigation bar
   const renderBottomNav = () => {
     const currentIndex = phaseOrder.indexOf(phase);
-    const canGoBack = currentIndex > 0;
-    const canGoNext = currentIndex < phaseOrder.length - 1;
-
-    if (phase === 'hook' || phase === 'mastery') return null;
+    const isTestActive = phase === 'test' && !testSubmitted;
+    const isNextDisabled = currentIndex === phaseOrder.length - 1 || isTestActive;
 
     return (
       <div style={{
@@ -644,47 +646,66 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
         padding: '12px 24px',
         display: 'flex',
         justifyContent: 'space-between',
+        alignItems: 'center',
         gap: '12px',
-        zIndex: 50,
+        zIndex: 100,
       }}>
-        {canGoBack ? (
-          <button
-            onClick={() => goToPhase(phaseOrder[currentIndex - 1])}
-            style={{
-              flex: 1,
-              padding: '12px 20px',
-              borderRadius: '8px',
-              border: `1px solid ${colors.border}`,
-              background: colors.bgCard,
-              color: colors.textSecondary,
-              cursor: 'pointer',
-              fontSize: '15px',
-              fontWeight: 600,
-              minHeight: '44px',
-            }}
-          >
-            ← Back
-          </button>
-        ) : <div style={{ flex: 1 }} />}
-        {canGoNext && (
-          <button
-            onClick={() => nextPhase()}
-            style={{
-              flex: 1,
-              padding: '12px 20px',
-              borderRadius: '8px',
-              border: 'none',
-              background: `linear-gradient(135deg, ${colors.accent}, #D97706)`,
-              color: 'white',
-              cursor: 'pointer',
-              fontSize: '15px',
-              fontWeight: 600,
-              minHeight: '44px',
-            }}
-          >
-            Next →
-          </button>
-        )}
+        <button
+          onClick={() => { if (currentIndex > 0) goToPhase(phaseOrder[currentIndex - 1]); }}
+          disabled={currentIndex === 0}
+          aria-label="Back"
+          style={{
+            padding: '8px 16px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.border}`,
+            background: 'transparent',
+            color: currentIndex === 0 ? colors.textMuted : colors.textSecondary,
+            cursor: currentIndex === 0 ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
+            opacity: currentIndex === 0 ? 0.4 : 1,
+            minHeight: '44px',
+          }}
+        >
+          ← Back
+        </button>
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => goToPhase(p)}
+              aria-label={phaseLabels[p]}
+              style={{
+                minHeight: '44px',
+                width: phase === p ? '24px' : '8px',
+                height: '8px',
+                borderRadius: '4px',
+                border: 'none',
+                background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                padding: 0,
+              }}
+            />
+          ))}
+        </div>
+        <button
+          onClick={() => { if (!isNextDisabled) nextPhase(); }}
+          disabled={isNextDisabled}
+          aria-label="Next"
+          style={{
+            padding: '8px 16px',
+            borderRadius: '8px',
+            border: 'none',
+            background: isNextDisabled ? colors.border : `linear-gradient(135deg, ${colors.accent}, #D97706)`,
+            color: 'white',
+            cursor: isNextDisabled ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
+            opacity: isNextDisabled ? 0.4 : 1,
+            minHeight: '44px',
+          }}
+        >
+          Next →
+        </button>
       </div>
     );
   };
@@ -737,7 +758,10 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
         <style>{sliderStyles}</style>
         {renderProgressBar()}
@@ -775,7 +799,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
             "If you tried to send household current through long transmission lines, the wires would glow red hot! Transformers make modern power grids possible by trading voltage for current."
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+          <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', marginTop: '8px' }}>
             - The War of Currents: Tesla vs Edison
           </p>
         </div>
@@ -787,7 +811,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           Discover How Transformers Work
         </button>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -813,7 +837,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '100px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -944,7 +968,6 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
         </div>
 
         {renderBottomNav()}
-        {renderNavDots()}
       </div>
     );
   }
@@ -964,7 +987,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '100px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1005,7 +1028,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
                 step="10"
                 value={primaryTurns}
                 onChange={(e) => setPrimaryTurns(parseInt(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
+                style={{ width: '100%', height: '20px', cursor: 'pointer', WebkitAppearance: 'none' as const, touchAction: 'pan-y', accentColor: '#3b82f6' }}
               />
             </div>
 
@@ -1022,7 +1045,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
                 step="10"
                 value={secondaryTurns}
                 onChange={(e) => setSecondaryTurns(parseInt(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
+                style={{ width: '100%', height: '20px', cursor: 'pointer', WebkitAppearance: 'none' as const, touchAction: 'pan-y', accentColor: '#3b82f6' }}
               />
             </div>
 
@@ -1039,7 +1062,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
                 step="12"
                 value={inputVoltage}
                 onChange={(e) => setInputVoltage(parseInt(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
+                style={{ width: '100%', height: '20px', cursor: 'pointer', WebkitAppearance: 'none' as const, touchAction: 'pan-y', accentColor: '#3b82f6' }}
               />
             </div>
 
@@ -1154,7 +1177,6 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
         </div>
 
         {renderBottomNav()}
-        {renderNavDots()}
       </div>
     );
   }
@@ -1174,7 +1196,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '100px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1275,6 +1297,20 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
             </div>
           </div>
 
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              As you observed in the experiment, your prediction was: <span style={{ color: prediction === 'c' ? colors.success : colors.warning, fontWeight: 600 }}>
+                {prediction === 'c' ? '✓ Correct! Doubling secondary turns doubles output voltage.' : '✗ Doubling secondary turns doubles the output voltage (not halved or same).'}
+              </span> The result confirms our experiment observations.
+            </p>
+          </div>
+
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
@@ -1284,7 +1320,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1310,7 +1346,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '100px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1391,7 +1427,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1411,7 +1447,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '100px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1533,7 +1569,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1553,7 +1589,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '100px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1618,7 +1654,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1641,7 +1677,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '100px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1690,7 +1726,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
                     fontSize: '12px',
                     lineHeight: '18px',
                   }}>
-                    OK
+                    ✓
                   </div>
                 )}
                 <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
@@ -1739,6 +1775,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1753,6 +1790,35 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
                 </div>
               ))}
             </div>
+
+            <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '16px', marginBottom: '12px' }}>
+              <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 600 }}>How It Works:</h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{app.howItWorks}</p>
+            </div>
+
+            <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '16px', marginBottom: '12px' }}>
+              <h4 style={{ ...typo.small, color: colors.success, marginBottom: '8px', fontWeight: 600 }}>Real-World Examples:</h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{app.examples.join(' • ')}</p>
+            </div>
+
+            <div style={{ background: `${app.color}11`, borderRadius: '8px', padding: '16px', marginBottom: '16px', border: `1px solid ${app.color}33` }}>
+              <h4 style={{ ...typo.small, color: app.color, marginBottom: '8px', fontWeight: 600 }}>Future Impact:</h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{app.futureImpact}</p>
+            </div>
+
+            {!completedApps[selectedApp] && (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{ ...primaryButtonStyle, width: '100%', marginTop: '4px' }}
+              >
+                Got It - Continue
+              </button>
+            )}
           </div>
 
           {allAppsCompleted && (
@@ -1766,7 +1832,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1788,7 +1854,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
             flex: 1,
             overflowY: 'auto',
             paddingTop: '44px',
-            paddingBottom: '80px',
+            paddingBottom: '100px',
             paddingLeft: '24px',
             paddingRight: '24px',
           }}>
@@ -1797,7 +1863,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
               fontSize: '80px',
               marginBottom: '24px',
             }}>
-              {passed ? 'Trophy' : 'Book'}
+              {passed ? '🏆' : '📚'}
             </div>
             <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
               {passed ? 'Excellent!' : 'Keep Learning!'}
@@ -1834,7 +1900,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
             )}
             </div>
           </div>
-          {renderNavDots()}
+          {renderBottomNav()}
         </div>
       );
     }
@@ -1854,7 +1920,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '100px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -2010,7 +2076,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -2035,7 +2101,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           marginBottom: '24px',
           animation: 'bounce 1s infinite',
         }}>
-          Trophy
+          🏆
         </div>
         <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
@@ -2066,7 +2132,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
               'Step-up vs step-down applications',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: colors.success }}>OK</span>
+                <span style={{ color: colors.success }}>✓</span>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
               </div>
             ))}
@@ -2099,7 +2165,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           </a>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }

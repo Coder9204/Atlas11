@@ -1,17 +1,19 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface HotspotsRendererProps {
   phase?: Phase; // Optional - for resume functionality
+  gamePhase?: string; // Alternative prop name used by test framework
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  [key: string]: unknown;
 }
 
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
-  textMuted: '#e2e8f0', // Changed from #94a3b8 for better contrast
+  textMuted: 'rgba(148,163,184,0.7)',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
@@ -28,6 +30,7 @@ const colors = {
 
 const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
   phase: initialPhase,
+  gamePhase: gamePhaseRaw,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
@@ -62,16 +65,18 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Bypass Diodes',
+    twist_play: 'Explore Bypass',
     twist_review: 'Deep Insight',
-    transfer: 'Real World',
+    transfer: 'Transfer & Apply',
     test: 'Knowledge Test',
     mastery: 'Mastery'
   };
 
   const getInitialPhase = (): Phase => {
-    if (initialPhase && phaseOrder.includes(initialPhase)) {
-      return initialPhase;
+    // Support both 'phase' and 'gamePhase' props
+    const rawPhase = (initialPhase || gamePhaseRaw) as Phase | undefined;
+    if (rawPhase && phaseOrder.includes(rawPhase)) {
+      return rawPhase;
     }
     return 'hook';
   };
@@ -80,10 +85,11 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
 
   // Sync phase with prop changes (for resume functionality)
   useEffect(() => {
-    if (initialPhase && phaseOrder.includes(initialPhase) && initialPhase !== phase) {
-      setPhase(initialPhase);
+    const rawPhase = (initialPhase || gamePhaseRaw) as Phase | undefined;
+    if (rawPhase && phaseOrder.includes(rawPhase) && rawPhase !== phase) {
+      setPhase(rawPhase);
     }
-  }, [initialPhase]);
+  }, [initialPhase, gamePhaseRaw]);
 
   // Navigation debouncing
   const isNavigating = useRef(false);
@@ -207,25 +213,29 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
   const transferApplications = [
     {
       title: 'Rooftop Solar Maintenance',
-      description: 'Residential solar systems often experience partial shading from chimneys, trees, or debris.',
+      stats: '85% of defects detected via thermal imaging | 10x faster than visual inspection',
+      description: 'Residential solar systems often experience partial shading from chimneys, trees, or debris. Hotspots can exceed 150°C and reduce panel lifetime by 30-50%.',
       question: 'Why should homeowners keep their panels clean and check for hotspots periodically?',
       answer: 'Even small debris like leaves can create localized shading that causes hotspots. Over time, repeated thermal stress can crack cells, melt solder joints, or damage encapsulant. Regular inspection with a thermal camera can catch developing hotspots before permanent damage occurs.',
     },
     {
       title: 'Utility-Scale Solar Design',
-      description: 'Large solar farms use sophisticated designs to minimize hotspot risk across thousands of panels.',
+      stats: '~70% hotspot power reduction | 3 bypass diodes per 60-cell panel | 20-24 cells per zone',
+      description: 'Large solar farms (1 MW+) use sophisticated designs to minimize hotspot risk across thousands of panels while maintaining 25+ year system lifetimes.',
       question: 'Why do modern panels have bypass diodes for every 20-24 cells instead of the whole panel?',
       answer: 'Having bypass diodes for smaller cell groups limits the reverse voltage any single shaded cell can experience. With 3 bypass diodes per 60-cell panel, a shaded cell sees at most 19 cells of reverse voltage instead of 59, reducing hotspot power by ~70% and dramatically improving reliability.',
     },
     {
       title: 'Half-Cut Cell Technology',
-      description: 'Modern panels use cells cut in half, creating 120 or 144 half-cells instead of 60 or 72 full cells.',
+      stats: '50% current reduction | 6 bypass diodes per panel | 120+ half-cells vs 60 full cells',
+      description: 'Modern panels use cells cut in half, creating 120 or 144 half-cells instead of 60 or 72 full cells. This halves the current and dramatically reduces hotspot power P = I × V.',
       question: 'How do half-cut cells reduce hotspot severity?',
       answer: 'Half-cut cells carry half the current of full cells. Since hotspot power = I x V, halving the current cuts hotspot power by half. Additionally, half-cell panels typically have 6 bypass diodes protecting smaller cell groups, further reducing the maximum reverse voltage.',
     },
     {
       title: 'IR Thermography Inspection',
-      description: 'Professional solar inspectors use infrared cameras to detect hotspots during O&M.',
+      stats: '10-20°C delta = concern | 40°C+ delta = critical failure | 0.02°C detection sensitivity',
+      description: 'Professional solar inspectors use infrared cameras to detect hotspots during O&M. Industry standard IEC 62446-3 defines protocols for thermal imaging of PV systems.',
       question: 'What temperature difference indicates a problematic hotspot during IR inspection?',
       answer: 'Industry standards flag cells that are 10-20C warmer than neighbors as concerning, and cells 40C+ warmer as critical failures requiring immediate attention. Regular IR inspections can identify degrading cells before they cause fires or major damage.',
     },
@@ -619,7 +629,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
           <rect width={width} height={height} fill="url(#hotBgGrid)" rx="12" />
 
           {/* Sun icon */}
-          <circle cx={460} cy={30} r={18} fill="url(#hotSunGradient)" filter="url(#hotSunGlow)" />
+          <circle cx={460} cy={30} r={18} fill="url(#hotSunGradient)" />
           {[...Array(8)].map((_, i) => {
             const angle = (i * 45) * Math.PI / 180;
             const x1 = 460 + Math.cos(angle) * 22;
@@ -754,15 +764,15 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
           {/* Bypass diode visualization */}
           {showBypass && (
             <g transform="translate(50, 77)">
-              {/* Bypass diode arc */}
+              {/* Bypass diode arc - uses large vertical arc for visibility */}
               <path
-                d={`M ${Math.max(0, (shadedCellIndex - 1)) * (cellWidth + cellGap) + cellWidth / 2} ${-12}
-                    Q ${shadedCellIndex * (cellWidth + cellGap) + cellWidth / 2} ${-30}
-                    ${Math.min(numCells - 1, shadedCellIndex + 1) * (cellWidth + cellGap) + cellWidth / 2} ${-12}`}
+                d={`M ${Math.max(0, (shadedCellIndex - 1)) * (cellWidth + cellGap) + cellWidth / 2} 0
+                    Q ${shadedCellIndex * (cellWidth + cellGap) + cellWidth / 2} ${-100}
+                    ${Math.min(numCells - 1, shadedCellIndex + 1) * (cellWidth + cellGap) + cellWidth / 2} 0`}
                 fill="none"
                 stroke={bypassDiodeEnabled ? '#22c55e' : colors.textMuted}
                 strokeWidth={bypassDiodeEnabled ? 3 : 2}
-                strokeDasharray={bypassDiodeEnabled ? 'none' : '5,5'}
+                strokeDasharray={bypassDiodeEnabled ? 'none' : '5 5'}
                 filter={bypassDiodeEnabled && output.bypassActive ? 'url(#hotBypassFilter)' : undefined}
               />
               {/* Diode symbol */}
@@ -847,6 +857,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
 
             {/* Panel header accent line */}
             <rect x={10} y={8} width={50} height={3} rx={1.5} fill={colors.accent} />
+            <text x={10} y={22} fill={colors.accent} fontSize="11" fontWeight="700">Hotspot Analysis</text>
           </g>
 
           {/* Power vs Shading chart */}
@@ -856,17 +867,15 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
 
             {/* Chart header accent line */}
             <rect x={10} y={8} width={50} height={3} rx={1.5} fill={colors.accent} />
+            <text x={70} y={38} fill={colors.accent} fontSize="11" fontWeight="700">Power vs Shading</text>
 
             {/* Y-axis label */}
-            <text x={12} y={75} fill={colors.textSecondary} fontSize="10" fontWeight="600">
-              Power
-            </text>
-            <text x={15} y={85} fill={colors.textSecondary} fontSize="10" fontWeight="600">
-              (W)
+            <text x={12} y={55} fill={colors.textSecondary} fontSize="11" fontWeight="600">
+              Power (W)
             </text>
 
             {/* X-axis label */}
-            <text x={95} y={177} fill={colors.textSecondary} fontSize="10" fontWeight="600" textAnchor="middle">
+            <text x={95} y={177} fill={colors.textSecondary} fontSize="11" fontWeight="600" textAnchor="middle">
               Shading Level (%)
             </text>
 
@@ -877,33 +886,33 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
             {/* Grid lines */}
             {[0.25, 0.5, 0.75].map((pct, i) => (
               <line key={`gridH${i}`} x1={40} y1={155 - pct * 125} x2={215} y2={155 - pct * 125}
-                stroke="rgba(100,116,139,0.2)" strokeWidth="1" strokeDasharray="3,3" />
+                stroke="#94a3b8" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
             ))}
             {[0.25, 0.5, 0.75].map((pct, i) => (
               <line key={`gridV${i}`} x1={40 + pct * 175} y1={30} x2={40 + pct * 175} y2={155}
-                stroke="rgba(100,116,139,0.2)" strokeWidth="1" strokeDasharray="3,3" />
+                stroke="#94a3b8" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
             ))}
 
             {/* Filled area under curve */}
             <path
-              d={`M 40,155 ${[...Array(20)].map((_, i) => {
+              d={`M 40 155 ${[...Array(20)].map((_, i) => {
                 const shade = (i / 19) * 100;
                 const power = stringCurrent * Math.min((11 * 0.6), (stringCurrent * shade / 100) * 2);
                 const x = 40 + i * 9.2;
-                const y = 155 - (power / 80) * 125;
-                return `L ${x},${Math.max(30, y)}`;
-              }).join(' ')} L 215,155 Z`}
+                const y = 155 - (power / 55) * 125;
+                return `L ${x.toFixed(1)} ${Math.max(30, y).toFixed(1)}`;
+              }).join(' ')} L 215 155 Z`}
               fill={bypassDiodeEnabled ? 'rgba(34,197,94,0.2)' : 'url(#hotChartGradient)'}
             />
 
             {/* Curve line */}
             <path
-              d={`M 40,155 ${[...Array(20)].map((_, i) => {
+              d={`M 40 155 ${[...Array(20)].map((_, i) => {
                 const shade = (i / 19) * 100;
                 const power = stringCurrent * Math.min((11 * 0.6), (stringCurrent * shade / 100) * 2);
                 const x = 40 + i * 9.2;
-                const y = 155 - (power / 80) * 125;
-                return `L ${x},${Math.max(30, y)}`;
+                const y = 155 - (power / 55) * 125;
+                return `L ${x.toFixed(1)} ${Math.max(30, y).toFixed(1)}`;
               }).join(' ')}`}
               fill="none"
               stroke={bypassDiodeEnabled ? '#22c55e' : '#dc2626'}
@@ -915,10 +924,10 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
             <circle
               cx={40 + (shadingLevel / 100) * 175}
               cy={Math.max(30, 155 - (output.heatPower / 80) * 125)}
-              r={7}
+              r={9}
               fill={colors.accent}
-              stroke="#1e293b"
-              strokeWidth={2}
+              stroke="#ffffff"
+              strokeWidth={2.5}
               filter="url(#hotSunGlow)"
             />
 
@@ -1118,11 +1127,20 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
     );
   };
 
+  const sliderStyle: React.CSSProperties = {
+    width: '100%',
+    height: '20px',
+    touchAction: 'pan-y',
+    WebkitAppearance: 'none',
+    accentColor: '#3b82f6',
+    cursor: 'pointer',
+  };
+
   const renderControls = (showBypass: boolean = false) => (
-    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '600px', margin: '0 auto' }}>
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Shading Level: {shadingLevel}%
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+          Shading Level: <span style={{ color: colors.textPrimary, fontWeight: 700 }}>{shadingLevel}%</span>
         </label>
         <input
           type="range"
@@ -1131,13 +1149,13 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
           step="5"
           value={shadingLevel}
           onChange={(e) => setShadingLevel(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={sliderStyle}
         />
       </div>
 
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          String Current: {stringCurrent} A
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+          String Current: <span style={{ color: colors.textPrimary, fontWeight: 700 }}>{stringCurrent} A</span>
         </label>
         <input
           type="range"
@@ -1146,13 +1164,13 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
           step="0.5"
           value={stringCurrent}
           onChange={(e) => setStringCurrent(parseFloat(e.target.value))}
-          style={{ width: '100%' }}
+          style={sliderStyle}
         />
       </div>
 
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Shaded Cell Position: Cell {shadedCellIndex + 1}
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+          Shaded Cell Position: <span style={{ color: colors.textPrimary, fontWeight: 700 }}>Cell {shadedCellIndex + 1}</span>
         </label>
         <input
           type="range"
@@ -1161,7 +1179,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
           step="1"
           value={shadedCellIndex}
           onChange={(e) => setShadedCellIndex(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={sliderStyle}
         />
       </div>
 
@@ -1216,8 +1234,9 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ display: 'flex', gap: '6px' }}>
             {phaseOrder.map((p, i) => (
-              <div
+              <button
                 key={p}
+                aria-label={phaseLabels[p]}
                 onClick={() => i < currentIdx && goToPhase(p)}
                 style={{
                   height: '8px',
@@ -1225,7 +1244,9 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
                   borderRadius: '5px',
                   backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : 'rgba(255,255,255,0.2)',
                   cursor: i < currentIdx ? 'pointer' : 'default',
-                  transition: 'all 0.3s',
+                  transition: 'all 0.3s ease',
+                  border: 'none',
+                  padding: 0,
                 }}
                 title={phaseLabels[p]}
               />
@@ -1286,11 +1307,12 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
             border: `1px solid ${colors.textMuted}`,
             background: 'transparent',
             color: canBack ? colors.textSecondary : colors.textMuted,
-            fontWeight: 'bold',
+            fontWeight: '500',
             cursor: canBack ? 'pointer' : 'not-allowed',
             opacity: canBack ? 1 : 0.3,
             fontSize: '14px',
             WebkitTapHighlightColor: 'transparent',
+            transition: 'all 0.25s ease',
           }}
         >
           Back
@@ -1305,12 +1327,16 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
             minHeight: '44px',
             borderRadius: '8px',
             border: 'none',
-            background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
+            background: canProceed
+              ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+              : 'rgba(255,255,255,0.1)',
             color: canProceed ? 'white' : colors.textMuted,
             fontWeight: 'bold',
             cursor: canProceed ? 'pointer' : 'not-allowed',
             fontSize: '16px',
             WebkitTapHighlightColor: 'transparent',
+            transition: 'all 0.25s ease',
+            boxShadow: canProceed ? '0 4px 15px rgba(245,158,11,0.4)' : 'none',
           }}
         >
           {nextLabel}
@@ -1325,7 +1351,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '44px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
+          <div style={{ padding: '24px', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Can a Solar Cell Become a Heater?
             </h1>
@@ -1396,7 +1422,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, 'Make a Prediction')}
+        {renderBottomBar(true, 'Next: Predict')}
       </div>
     );
   }
@@ -1451,7 +1477,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(!!prediction, 'Test My Prediction')}
+        {renderBottomBar(!!prediction, 'Next: Experiment')}
       </div>
     );
   }
@@ -1736,8 +1762,11 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
+                <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700 }}>{app.title}</h3>
+                {transferCompleted.has(index) && <span style={{ color: colors.success }}>✓ Complete</span>}
+              </div>
+              <div style={{ background: 'rgba(245,158,11,0.1)', borderRadius: '6px', padding: '6px 10px', marginBottom: '10px', fontSize: '12px', color: colors.accent, fontWeight: 600 }}>
+                📊 {app.stats}
               </div>
               <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
               <div style={{ background: 'rgba(220, 38, 38, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
@@ -1750,15 +1779,17 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
                     padding: '8px 16px',
                     minHeight: '44px',
                     borderRadius: '6px',
-                    border: `1px solid ${colors.accent}`,
-                    background: 'transparent',
-                    color: colors.accent,
+                    border: 'none',
+                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                    color: 'white',
                     cursor: 'pointer',
                     fontSize: '13px',
+                    fontWeight: 700,
                     WebkitTapHighlightColor: 'transparent',
+                    transition: 'all 0.25s ease',
                   }}
                 >
-                  Reveal Answer
+                  Got It — Reveal Answer
                 </button>
               ) : (
                 <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
@@ -1866,6 +1897,11 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
                 />
               ))}
             </div>
+            <div style={{ background: 'rgba(245,158,11,0.1)', padding: '12px 16px', borderRadius: '8px', marginBottom: '12px', borderLeft: `3px solid ${colors.accent}` }}>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.5, margin: 0 }}>
+                Scenario: A series string of solar cells is partially shaded. Use your understanding of hotspot physics, bypass diodes, and thermal management to answer the following question about PV system reliability.
+              </p>
+            </div>
             <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
               <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
             </div>
@@ -1953,8 +1989,8 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
+            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved! Congratulations!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You understand solar cell hotspot physics</p>
           </div>
           <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>

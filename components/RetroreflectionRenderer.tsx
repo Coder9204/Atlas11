@@ -76,7 +76,8 @@ const realWorldApps = [
 ];
 
 interface RetroreflectionRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  gamePhase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
@@ -100,11 +101,20 @@ const colors = {
 };
 
 const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
-  phase,
+  phase: phaseProp,
+  gamePhase,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  const phaseNames = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  const initialPhase = phaseProp || gamePhase || 'hook';
+  const initialIndex = Math.max(0, phaseNames.indexOf(initialPhase));
+  const [currentPhaseIndex, setCurrentPhaseIndex] = useState(initialIndex);
+
+  const phase = phaseNames[currentPhaseIndex] as typeof initialPhase;
+
   const [sourceAngle, setSourceAngle] = useState(30);
   const [viewerAngle, setViewerAngle] = useState(30);
   const [showMirror, setShowMirror] = useState(true);
@@ -114,14 +124,25 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [currentTransferApp, setCurrentTransferApp] = useState(0);
   const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
-  const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
 
-  const phaseNames = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const goNext = () => {
+    if (currentPhaseIndex < phaseNames.length - 1) {
+      setCurrentPhaseIndex(currentPhaseIndex + 1);
+    }
+    if (onPhaseComplete) onPhaseComplete();
+  };
+
+  const goBack = () => {
+    if (currentPhaseIndex > 0) {
+      setCurrentPhaseIndex(currentPhaseIndex - 1);
+    }
+  };
 
   // Responsive detection
   useEffect(() => {
@@ -132,9 +153,12 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
   }, []);
 
   useEffect(() => {
-    const idx = phaseNames.indexOf(phase);
-    if (idx !== -1) setCurrentPhaseIndex(idx);
-  }, [phase]);
+    const externalPhase = phaseProp || gamePhase;
+    if (externalPhase) {
+      const idx = phaseNames.indexOf(externalPhase);
+      if (idx !== -1) setCurrentPhaseIndex(idx);
+    }
+  }, [phaseProp, gamePhase]);
 
   // Responsive typography
   const typo = {
@@ -205,93 +229,93 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
 
   const testQuestions = [
     {
-      question: 'What makes retroreflection different from regular mirror reflection?',
+      question: 'Scenario: A driver shines headlights at a road sign at a 30-degree angle. The sign uses retroreflective material instead of flat mirror coating. What happens to the light?',
       options: [
-        { text: 'Retroreflectors are brighter', correct: false },
-        { text: 'Retroreflectors return light toward the source regardless of angle', correct: true },
-        { text: 'Retroreflectors only work with laser light', correct: false },
-        { text: 'Retroreflectors absorb more light', correct: false },
+        { text: 'Light reflects away at 30 degrees to the other side', correct: false },
+        { text: 'Light returns toward the driver regardless of sign angle', correct: true },
+        { text: 'Light is absorbed by the coating', correct: false },
+        { text: 'Light scatters diffusely in all directions', correct: false },
       ],
     },
     {
-      question: 'A corner-cube retroreflector works by:',
+      question: 'Scenario: You are designing a corner-cube retroreflector for a surveying prism. The core mechanism relies on which geometric principle to return light to its source?',
       options: [
-        { text: 'Bending light like a lens', correct: false },
-        { text: 'Using three perpendicular mirrors to reverse ray direction', correct: true },
-        { text: 'Creating interference patterns', correct: false },
-        { text: 'Absorbing and re-emitting light', correct: false },
+        { text: 'Bending light like a converging lens', correct: false },
+        { text: 'Three perpendicular mirror surfaces that each reverse one direction component', correct: true },
+        { text: 'Interference between multiple reflected beams', correct: false },
+        { text: 'Absorbing photons and re-emitting them toward the source', correct: false },
       ],
     },
     {
-      question: 'When you shine a light at a retroreflector at 45 degrees:',
+      question: 'Scenario: In a physics lab, you shine a laser pointer at a corner-cube retroreflector at 45 degrees to its surface. Where does the reflected beam go?',
       options: [
-        { text: 'Light reflects at 45 degrees to the other side', correct: false },
-        { text: 'Light returns parallel to the incoming beam', correct: true },
-        { text: 'Light is absorbed', correct: false },
-        { text: 'Light scatters randomly', correct: false },
+        { text: 'At 45 degrees to the opposite side (standard mirror law)', correct: false },
+        { text: 'Parallel back to the incoming beam, toward the source', correct: true },
+        { text: 'The beam is completely absorbed', correct: false },
+        { text: 'Scattered randomly in all directions', correct: false },
       ],
     },
     {
-      question: 'A flat mirror reflects light back to the source only when:',
+      question: 'Scenario: A flat mirror is placed on a road sign. Under what condition would it reflect headlight beams back to the driver?',
       options: [
-        { text: 'The light hits at any angle', correct: false },
-        { text: 'The light hits perpendicular to the surface', correct: true },
-        { text: 'The mirror is curved', correct: false },
-        { text: 'The light is polarized', correct: false },
+        { text: 'When light hits at any angle', correct: false },
+        { text: 'Only when the light hits perpendicular to the mirror surface', correct: true },
+        { text: 'Only when the mirror is curved inward', correct: false },
+        { text: 'Only when the light is polarized horizontally', correct: false },
       ],
     },
     {
-      question: 'Road signs are highly visible to drivers at night because:',
+      question: 'Scenario: Highway engineers replaced flat paint on road signs with retroreflective sheeting. What is the key reason signs are now 50-100x brighter for drivers at night?',
       options: [
-        { text: 'They are made of luminous paint', correct: false },
-        { text: 'Retroreflective materials return headlight light to the driver', correct: true },
-        { text: 'They have built-in lights', correct: false },
-        { text: 'They absorb moonlight', correct: false },
+        { text: 'The sheeting contains luminescent paint that glows in the dark', correct: false },
+        { text: 'Retroreflective materials return headlight light directly back to the driver', correct: true },
+        { text: 'The sheeting has built-in LED lights powered by piezoelectricity', correct: false },
+        { text: 'The coating amplifies moonlight through fluorescence', correct: false },
       ],
     },
     {
-      question: 'The Apollo lunar retroreflectors can return laser light because:',
+      question: 'Scenario: Apollo 11 left retroreflector arrays on the Moon. Scientists fire laser pulses from Earth and detect the returned signal. What property makes this possible?',
       options: [
-        { text: 'They are precisely aimed at Earth', correct: false },
-        { text: 'They return light parallel to incoming rays regardless of angle', correct: true },
-        { text: 'They amplify the laser signal', correct: false },
-        { text: 'They use special Moon materials', correct: false },
+        { text: 'The arrays are precisely aimed at Earth and tracked constantly', correct: false },
+        { text: 'Retroreflectors return light parallel to incoming rays regardless of orientation angle', correct: true },
+        { text: 'The arrays amplify the laser signal before returning it', correct: false },
+        { text: 'Special Moon rock materials naturally reflect light back to its source', correct: false },
       ],
     },
     {
-      question: 'A cat\'s eye road marker is bright to drivers because:',
+      question: 'Scenario: You observe cat\'s eye road markers glowing brightly as your headlights hit them at various angles. What explains the consistent brightness at different viewing angles?',
       options: [
-        { text: 'It contains batteries', correct: false },
-        { text: 'It uses retroreflective glass beads or prisms', correct: true },
-        { text: 'It reflects moonlight', correct: false },
-        { text: 'It is painted with glow-in-the-dark paint', correct: false },
+        { text: 'Each marker contains a small battery-powered LED', correct: false },
+        { text: 'Retroreflective glass beads or prisms inside return light toward the driver', correct: true },
+        { text: 'Moonlight is reflected and amplified by a curved mirror', correct: false },
+        { text: 'Phosphorescent paint charges during daylight and glows at night', correct: false },
       ],
     },
     {
-      question: 'Bicycle reflectors typically use:',
+      question: 'Scenario: A bicycle rider attaches a standard plastic reflector to their bike. The reflector is most effective because it uses:',
       options: [
-        { text: 'Flat mirrors', correct: false },
-        { text: 'Corner-cube arrays or molded prisms', correct: true },
-        { text: 'Fluorescent materials', correct: false },
-        { text: 'LED lights', correct: false },
+        { text: 'A flat polished mirror surface angled at 45 degrees', correct: false },
+        { text: 'An array of corner-cube microprisms that return light to drivers', correct: true },
+        { text: 'Fluorescent dye that re-emits absorbed UV light as visible light', correct: false },
+        { text: 'Miniature LED strips powered by wheel rotation', correct: false },
       ],
     },
     {
-      question: 'The key geometric principle of corner-cube retroreflection is:',
+      question: 'Scenario: Explain the core geometry that makes corner-cube retroreflection work. Each bounce off the three perpendicular surfaces does what?',
       options: [
-        { text: 'Light focuses to a point', correct: false },
-        { text: 'Each of three reflections reverses one direction component', correct: true },
-        { text: 'Light diffracts around corners', correct: false },
-        { text: 'Light changes color on reflection', correct: false },
+        { text: 'Focuses light to a single point like a concave mirror', correct: false },
+        { text: 'Reverses one axis component of the light ray direction', correct: true },
+        { text: 'Causes light to diffract around the cube edges', correct: false },
+        { text: 'Changes the wavelength through Doppler shifting', correct: false },
       ],
     },
     {
-      question: 'Surveyors prefer retroreflective prisms because:',
+      question: 'Scenario: A surveyor uses a total station to measure distance to a prism retroreflector 500 meters away. Why is a retroreflective prism used instead of a flat mirror target?',
       options: [
-        { text: 'They are cheaper than mirrors', correct: false },
-        { text: 'Precise angular alignment is not required', correct: true },
-        { text: 'They work only in daylight', correct: false },
-        { text: 'They measure angles directly', correct: false },
+        { text: 'Retroreflective prisms are cheaper to manufacture than precision mirrors', correct: false },
+        { text: 'Prisms return laser light to the instrument without requiring precise angular alignment', correct: true },
+        { text: 'Retroreflective prisms only function in bright daylight conditions', correct: false },
+        { text: 'Flat mirrors would measure angles rather than distances', correct: false },
       ],
     },
   ];
@@ -555,7 +579,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
             <rect x="-30" y="-25" width="60" height="50" rx="6" fill="#1e293b" opacity="0.3" />
 
             {/* Lens/emitter */}
-            <circle cx="20" cy="0" r="18" fill="url(#retroLightSourceGlow)" filter="url(#retroLightGlow)">
+            <circle cx="20" cy="0" r="18" fill="url(#retroLightSourceGlow)" opacity="0.9">
               <animate attributeName="opacity" values="0.8;1;0.8" dur="1.5s" repeatCount="indefinite" />
             </circle>
             <circle cx="20" cy="0" r="12" fill="#fef3c7" opacity="0.9" />
@@ -677,14 +701,20 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
               />
               <text x={mirrorHitX - 5} y={mirrorHitY - 25} fill="#f59e0b" fontSize="11">r</text>
 
-              {/* Miss indicator */}
-              <g transform={`translate(${mirrorHitX + 140 * Math.cos(mirrorReflectRad)}, ${mirrorHitY - 140 * Math.sin(mirrorReflectRad) + 30})`}>
-                <rect x="-40" y="-10" width="80" height="18" rx="4" fill="rgba(239, 68, 68, 0.2)" stroke="#ef4444" strokeWidth="1" />
-                <text x="0" y="3" textAnchor="middle" fill="#ef4444" fontSize="9" fontWeight="bold">MISS</text>
-              </g>
+              {/* Miss indicator - absolute position */}
+              {(() => {
+                const mx = mirrorHitX + 140 * Math.cos(mirrorReflectRad);
+                const my = mirrorHitY - 140 * Math.sin(mirrorReflectRad) + 30;
+                return (
+                  <g>
+                    <rect x={mx - 40} y={my - 10} width="80" height="20" rx="4" fill="rgba(239, 68, 68, 0.2)" stroke="#ef4444" strokeWidth="1" />
+                    <text x={mx} y={my + 5} textAnchor="middle" fill="#ef4444" fontSize="11" fontWeight="bold">MISS</text>
+                  </g>
+                );
+              })()}
 
               {/* Physics note */}
-              <text x={mirrorX + 40} y={mirrorY + 70} textAnchor="middle" fill="#64748b" fontSize="11">angle in = angle out</text>
+              <text x={mirrorX + 40} y={mirrorY + 80} textAnchor="middle" fill="#64748b" fontSize="11">angle in = angle out</text>
             </g>
           )}
 
@@ -773,62 +803,54 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
                 markerEnd="url(#retroArrowGreen)"
               />
 
-              {/* Success indicator */}
-              <g transform={`translate(${(retroHitX + lightSourceX + 35) / 2 - 80}, ${(retroHitY + lightSourceY + 25) / 2 + 40})`}>
-                <rect x="-45" y="-10" width="90" height="18" rx="6" fill="rgba(16, 185, 129, 0.3)" stroke="#10b981" strokeWidth="1" />
-                <text x="0" y="3" textAnchor="middle" fill="#10b981" fontSize="9" fontWeight="bold">RETURN</text>
-              </g>
+              {/* Success indicator - absolute position */}
+              {(() => {
+                const rx2 = (retroHitX + lightSourceX + 35) / 2 - 35;
+                const ry2 = (retroHitY + lightSourceY + 25) / 2 + 40;
+                return (
+                  <g>
+                    <rect x={rx2 - 45} y={ry2 - 10} width="90" height="22" rx="6" fill="rgba(16, 185, 129, 0.3)" stroke="#10b981" strokeWidth="1" />
+                    <text x={rx2} y={ry2 + 5} textAnchor="middle" fill="#10b981" fontSize="11" fontWeight="bold">RETURN</text>
+                  </g>
+                );
+              })()}
 
               {/* Physics note */}
-              <text x={retroX + 60} y={retroY + 64} textAnchor="middle" fill="#64748b" fontSize="9">3 reflections</text>
-              <text x={retroX + 60} y={retroY + 74} textAnchor="middle" fill="#64748b" fontSize="8">reverse dir</text>
+              <text x={retroX + 60} y={retroY + 68} textAnchor="middle" fill="#64748b" fontSize="11">3 reflections reverse dir</text>
             </g>
           )}
 
-          {/* === PHYSICS EQUATIONS === */}
-          <g transform={`translate(${width - 90}, 200)`}>
-            <rect x="-60" y="-5" width="120" height="55" rx="4" fill="rgba(15, 23, 42, 0.95)" stroke="#334155" strokeWidth="1" />
-            <text x="0" y="10" textAnchor="middle" fill="#fbbf24" fontSize="9" fontWeight="bold">Mirror:</text>
-            <text x="0" y="23" textAnchor="middle" fill="#94a3b8" fontSize="8">θᵢ = θᵣ</text>
-            <text x="0" y="36" textAnchor="middle" fill="#10b981" fontSize="9" fontWeight="bold">Retro:</text>
-            <text x="0" y="48" textAnchor="middle" fill="#94a3b8" fontSize="8">r⃗ₒᵤₜ = -r⃗ᵢₙ</text>
+          {/* === PHYSICS EQUATIONS (absolute coords) === */}
+          <g>
+            <rect x={width - 135} y={height - 80} width="130" height="70" rx="4" fill="rgba(15, 23, 42, 0.95)" stroke="#334155" strokeWidth="1" />
+            <text x={width - 70} y={height - 62} textAnchor="middle" fill="#fbbf24" fontSize="11" fontWeight="bold">Mirror:</text>
+            <text x={width - 70} y={height - 47} textAnchor="middle" fill="#94a3b8" fontSize="11">theta-i = theta-r</text>
+            <text x={width - 70} y={height - 32} textAnchor="middle" fill="#10b981" fontSize="11" fontWeight="bold">Retro:</text>
+            <text x={width - 70} y={height - 17} textAnchor="middle" fill="#94a3b8" fontSize="11">r-out = -r-in</text>
           </g>
 
-          {/* === CALCULATED VALUES === */}
-          <g transform={`translate(25, 200)`}>
-            <rect x="-5" y="-5" width="120" height="65" rx="4" fill="rgba(15, 23, 42, 0.95)" stroke="#334155" strokeWidth="1" />
-            <text x="5" y="9" fill="#fbbf24" fontSize="9" fontWeight="bold">Values:</text>
-            <text x="5" y="22" fill="#94a3b8" fontSize="8">In: {sourceAngle}°</text>
-            <text x="5" y="34" fill="#94a3b8" fontSize="8">Out: {Math.abs(mirrorReflectAngle)}°</text>
-            <text x="5" y="46" fill="#10b981" fontSize="8">Retro:</text>
-            <text x="5" y="57" fill="#10b981" fontSize="8">returns</text>
+          {/* === CALCULATED VALUES (absolute coords) === */}
+          <g>
+            <rect x="10" y={height - 80} width="130" height="70" rx="4" fill="rgba(15, 23, 42, 0.95)" stroke="#334155" strokeWidth="1" />
+            <text x="18" y={height - 62} fill="#fbbf24" fontSize="11" fontWeight="bold">Angle Values:</text>
+            <text x="18" y={height - 47} fill="#94a3b8" fontSize="11">In: {sourceAngle} deg</text>
+            <text x="18" y={height - 32} fill="#94a3b8" fontSize="11">Out: {Math.abs(mirrorReflectAngle)} deg</text>
+            <text x="18" y={height - 17} fill="#10b981" fontSize="11">Retro: returns</text>
           </g>
 
-          {/* === LEGEND === */}
-          <g transform={`translate(20, ${height - 70})`}>
-            <rect x="-5" y="-5" width="280" height="30" rx="4" fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth="1" />
-
-            <rect x="5" y="3" width="16" height="16" rx="3" fill="#fbbf24" />
-            <text x="28" y="15" fill="#94a3b8" fontSize="11">Incoming light</text>
-
-            <rect x="120" y="3" width="16" height="16" rx="3" fill="#10b981" />
-            <text x="143" y="15" fill="#94a3b8" fontSize="11">Returned light</text>
+          {/* === LEGEND (top center) === */}
+          <g transform={`translate(${width / 2 - 140}, 8)`}>
+            <rect x="-5" y="-4" width="290" height="26" rx="4" fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth="1" />
+            <rect x="5" y="2" width="14" height="14" rx="3" fill="#fbbf24" />
+            <text x="25" y="13" fill="#94a3b8" fontSize="11">Incoming light</text>
+            <rect x="140" y="2" width="14" height="14" rx="3" fill="#10b981" />
+            <text x="160" y="13" fill="#94a3b8" fontSize="11">Returned light</text>
           </g>
 
-          {/* === INFO BAR === */}
-          <g transform={`translate(${width / 2}, ${height - 15})`}>
-            <text x="0" y="0" textAnchor="middle" fill="#64748b" fontSize="10">
-              Angle: {sourceAngle}° | Mirror law | Retro returns
-            </text>
-          </g>
-
-          {/* Comparison arrows/indicators */}
+          {/* Comparison divider */}
           {showMirror && showRetro && (
             <g>
-              <line x1={width / 2} y1="60" x2={width / 2} y2={height - 90} stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
-              <rect x={width / 2 - 70} y="42" width="140" height="25" rx="4" fill="rgba(100, 116, 139, 0.3)" stroke="#475569" strokeWidth="1" />
-              <text x={width / 2} y="55" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="bold">⇅ COMPARISON ⇅</text>
-              <text x={width / 2} y="65" textAnchor="middle" fill="#94a3b8" fontSize="9">Before vs After</text>
+              <line x1={width / 2} y1="42" x2={width / 2} y2={height - 55} stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
             </g>
           )}
         </svg>
@@ -920,65 +942,108 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
     </div>
   );
 
-  const renderProgressDots = () => (
-    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', padding: '16px 24px' }}>
-      {['explore', 'experiment', 'quiz', 'apply', 'transfer'].map((label, i) => (
-        <div
-          key={i}
-          aria-label={label}
-          style={{
-            width: '12px',
-            height: '12px',
-            borderRadius: '50%',
-            background: i <= Math.floor(currentPhaseIndex / 2) ? colors.accent : 'rgba(148,163,184,0.7)',
-            transition: 'all 0.3s ease',
-            boxShadow: i <= Math.floor(currentPhaseIndex / 2) ? `0 0 8px ${colors.accentGlow}` : 'none'
-          }}
-        />
-      ))}
-    </div>
-  );
+  const renderProgressDots = () => {
+    const dotLabels = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+    return (
+      <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', alignItems: 'center', flex: 1 }}>
+        {dotLabels.map((label, i) => (
+          <button
+            key={i}
+            aria-label={label}
+            onClick={() => setCurrentPhaseIndex(i)}
+            style={{
+              minHeight: '44px',
+              padding: '18px 0',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              width: '32px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <span style={{
+              display: 'block',
+              width: i === currentPhaseIndex ? '24px' : '8px',
+              height: '8px',
+              borderRadius: '4px',
+              background: i <= currentPhaseIndex ? colors.accent : 'rgba(148,163,184,0.7)',
+              transition: 'all 0.3s ease',
+              boxShadow: i <= currentPhaseIndex ? `0 0 8px ${colors.accentGlow}` : 'none'
+            }} />
+          </button>
+        ))}
+      </div>
+    );
+  };
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 24px', background: 'linear-gradient(180deg, rgba(15, 23, 42, 0) 0%, rgba(15, 23, 42, 0.95) 20%, rgba(15, 23, 42, 0.98) 100%)', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 1000, boxShadow: '0 -4px 12px rgba(0,0,0,0.3)' }}>
-      {renderProgressDots()}
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' : 'rgba(148,163,184,0.3)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-          boxShadow: canProceed ? '0 4px 12px rgba(249, 115, 22, 0.4)' : 'none',
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif'
-        }}
-      >
-        {buttonText}
-      </button>
-    </div>
-  );
+  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => {
+    const isHookPhase = currentPhaseIndex === 0;
+    return (
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 16px', background: 'linear-gradient(180deg, rgba(15, 23, 42, 0) 0%, rgba(15, 23, 42, 0.95) 20%, rgba(15, 23, 42, 0.98) 100%)', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 1000, boxShadow: '0 -4px 12px rgba(0,0,0,0.3)' }}>
+        <button
+          onClick={goBack}
+          disabled={isHookPhase}
+          aria-label="Back"
+          style={{
+            minHeight: '44px',
+            padding: '10px 20px',
+            borderRadius: '8px',
+            border: `2px solid ${isHookPhase ? 'rgba(148,163,184,0.3)' : colors.textMuted}`,
+            background: 'transparent',
+            color: isHookPhase ? 'rgba(148,163,184,0.3)' : colors.textSecondary,
+            fontWeight: '600',
+            cursor: isHookPhase ? 'not-allowed' : 'pointer',
+            fontSize: '14px',
+            transition: 'all 0.3s ease',
+            opacity: isHookPhase ? 0.4 : 1,
+          }}
+        >
+          Back
+        </button>
+        {renderProgressDots()}
+        <button
+          onClick={goNext}
+          disabled={disabled && !canProceed}
+          aria-label="Next"
+          style={{
+            minHeight: '44px',
+            padding: '10px 24px',
+            borderRadius: '8px',
+            border: 'none',
+            background: canProceed ? 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' : 'rgba(148,163,184,0.3)',
+            color: canProceed ? 'white' : colors.textMuted,
+            fontWeight: 'bold',
+            cursor: canProceed ? 'pointer' : 'not-allowed',
+            fontSize: '14px',
+            boxShadow: canProceed ? '0 4px 12px rgba(249, 115, 22, 0.4)' : 'none',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif'
+          }}
+        >
+          {buttonText}
+        </button>
+      </div>
+    );
+  };
 
   if (phase === 'hook') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '100px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
           <div style={{ padding: '24px', textAlign: 'center', maxWidth: '900px', margin: '0 auto' }}>
-            <h1 style={{ color: colors.accent, fontSize: '36px', marginBottom: '12px', fontWeight: '800', lineHeight: 1.4 }}>How can light return to the source no matter the angle?</h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', lineHeight: 1.7 }}>The magic geometry of retroreflectors</p>
+            <h1 style={{ color: colors.accent, fontSize: '36px', marginBottom: '12px', fontWeight: '800', lineHeight: 1.4 }}>Welcome to Retroreflection</h1>
+            <p style={{ color: colors.textSecondary, fontSize: '20px', marginBottom: '8px', fontWeight: '600', lineHeight: 1.5 }}>Discover how light returns to the source no matter the angle</p>
+            <p style={{ color: colors.textMuted, fontSize: '16px', marginBottom: '24px', lineHeight: 1.7 }}>Begin your exploration of the magic geometry of retroreflectors</p>
           </div>
           {renderVisualization(true)}
           <div style={{ padding: '24px', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
             <div style={{ background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95))', padding: '24px', borderRadius: '12px', marginBottom: '16px', boxShadow: '0 8px 24px rgba(0,0,0,0.3)' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.8, fontWeight: '600' }}>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.8, fontWeight: '700' }}>
                 Bike reflectors, road signs, and even mirrors on the Moon all use a special trick: no matter what angle light comes from, it bounces straight back to the source.
               </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px', lineHeight: 1.7 }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px', lineHeight: 1.7, fontWeight: '400' }}>
                 This is retroreflection - and it uses clever geometry, not magic.
               </p>
             </div>
@@ -992,7 +1057,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '100px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
-        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', width: '100%', padding: '0 16px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', width: '100%', paddingLeft: '16px', paddingRight: '16px', paddingTop: '0', paddingBottom: '80px' }}>
           {renderVisualization(false)}
           <div style={{ background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95))', margin: '16px 0', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
             <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: '700', lineHeight: 1.6 }}>What You're Looking At:</h3>
@@ -1000,8 +1065,9 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
               A light source shining on both a flat mirror (top) and a corner-cube retroreflector (bottom). The yellow lines show incoming light, the green lines show returned light. A viewer/eye is positioned near the light source.
             </p>
           </div>
-          <div style={{ padding: '16px 0' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: '700', lineHeight: 1.6 }}>How do these two reflectors differ?</h3>
+          <div style={{ paddingTop: '16px', paddingBottom: '0' }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: '700', lineHeight: 1.6 }}>Make Your Prediction</h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px', lineHeight: 1.7 }}>Think carefully: what do you expect will happen when light hits each surface? How do you predict these two reflectors differ?</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {predictions.map((p) => (
                 <button
@@ -1038,17 +1104,20 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '100px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
           <div style={{ padding: '16px', textAlign: 'center', maxWidth: '900px', margin: '0 auto' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: '700', fontSize: '28px', lineHeight: 1.5 }}>Explore Retroreflection</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>Change the source angle and compare mirror vs retroreflector because this demonstrates how geometry determines light behavior</p>
+            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: '800', fontSize: '28px', lineHeight: 1.5 }}>Explore Retroreflection</h2>
+            <p style={{ color: colors.textSecondary, fontSize: '15px', fontWeight: '500', lineHeight: 1.7 }}>
+              This matters in the real world: retroreflection is why road signs, bike reflectors, and lunar retroreflectors work.
+              Change the source angle and compare mirror vs retroreflector to understand how geometry determines light behavior.
+            </p>
           </div>
           {renderVisualization(true)}
           {renderControls()}
           <div style={{ background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95))', margin: '16px', padding: '20px', borderRadius: '12px', maxWidth: '700px', marginLeft: 'auto', marginRight: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
             <h4 style={{ color: colors.accent, marginBottom: '12px', fontWeight: '700', lineHeight: 1.5 }}>Try These Experiments:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.9, paddingLeft: '20px', margin: 0 }}>
-              <li>Change the source angle - mirror reflection direction changes</li>
-              <li>Notice retroreflector always returns to source</li>
-              <li>At steep angles, mirror light goes far from viewer</li>
+            <ul style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: '400', lineHeight: 1.9, paddingLeft: '20px', margin: 0 }}>
+              <li><strong style={{ fontWeight: '700' }}>Change the source angle</strong> - mirror reflection direction changes, but retroreflector always returns to source</li>
+              <li><strong style={{ fontWeight: '700' }}>At steep angles</strong>, mirror light goes far from viewer - this is why flat mirrors don't work for road signs</li>
+              <li><strong style={{ fontWeight: '700' }}>Notice the green beam</strong> - retroreflected light always traces back to the observer, no matter the angle</li>
             </ul>
           </div>
         </div>
@@ -1061,7 +1130,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
     const wasCorrect = prediction === 'retro_source';
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '100px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
-        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', padding: '0 16px', width: '100%', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', paddingLeft: '16px', paddingRight: '16px', paddingTop: '0', paddingBottom: '80px', width: '100%' }}>
           <div style={{ background: wasCorrect ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(16, 185, 129, 0.2))' : 'linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(239, 68, 68, 0.2))', margin: '16px 0', padding: '24px', borderRadius: '12px', borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`, boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '12px', fontWeight: '700', lineHeight: 1.5 }}>{wasCorrect ? 'Correct!' : 'Not Quite!'}</h3>
             <p style={{ color: colors.textPrimary, lineHeight: 1.7 }}>The retroreflector always sends light back toward its source because the three perpendicular reflections reverse all direction components!</p>
@@ -1084,7 +1153,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '100px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
-        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', padding: '0 16px', width: '100%', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', paddingLeft: '16px', paddingRight: '16px', paddingTop: '0', paddingBottom: '80px', width: '100%' }}>
           <div style={{ padding: '16px 0', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px', fontWeight: '700', fontSize: '28px', lineHeight: 1.5 }}>The Twist</h2>
             <p style={{ color: colors.textSecondary, lineHeight: 1.6 }}>Standing next to a car at night with headlights on...</p>
@@ -1151,7 +1220,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
     const wasCorrect = twistPrediction === 'retro_bright';
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '100px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
-        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', padding: '0 16px', width: '100%', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', paddingLeft: '16px', paddingRight: '16px', paddingTop: '0', paddingBottom: '80px', width: '100%' }}>
           <div style={{ background: wasCorrect ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(16, 185, 129, 0.2))' : 'linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(239, 68, 68, 0.2))', margin: '16px 0', padding: '24px', borderRadius: '12px', borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`, boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '12px', fontWeight: '700', lineHeight: 1.5 }}>{wasCorrect ? 'Correct!' : 'Not Quite!'}</h3>
             <p style={{ color: colors.textPrimary, lineHeight: 1.7 }}>The retroreflector appears much brighter from the driver's position because it returns light directly to the source!</p>
@@ -1171,61 +1240,116 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
   }
 
   if (phase === 'transfer') {
-    const totalChars = transferApplications.reduce((sum, app) => sum + app.description.length + app.answer.length, 0);
+    const app = transferApplications[currentTransferApp];
+    const isCompleted = transferCompleted.has(currentTransferApp);
+    const allCompleted = transferCompleted.size >= transferApplications.length;
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '100px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
-        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', padding: '0 16px', width: '100%', paddingBottom: '80px' }}>
-          <div style={{ padding: '16px 0' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center', fontWeight: '700', fontSize: '28px', lineHeight: 1.5 }}>Real-World Applications</h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px', lineHeight: 1.7 }}>Retroreflection keeps us safe and enables precision measurement in real-world industry applications</p>
-            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap', margin: '16px 0' }}>
-              {realWorldApps.map((app, idx) => (
-                app.stats.slice(0, 3).map((stat, statIdx) => (
-                  <div key={`${idx}-${statIdx}`} style={{ background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95))', padding: '16px 20px', borderRadius: '8px', textAlign: 'center', minWidth: '120px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
-                    <div style={{ fontSize: '24px', marginBottom: '4px' }}>{stat.icon}</div>
-                    <div style={{ color: colors.accent, fontSize: '20px', fontWeight: '800', marginBottom: '4px' }}>{stat.value}</div>
-                    <div style={{ color: colors.textMuted, fontSize: '12px', lineHeight: 1.4 }}>{stat.label}</div>
-                  </div>
-                ))
-              )).flat()}
+        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', paddingLeft: '16px', paddingRight: '16px', paddingTop: '0', paddingBottom: '80px', width: '100%' }}>
+          <div style={{ paddingTop: '16px', paddingBottom: '0' }}>
+            <h2 style={{ color: colors.textPrimary, marginBottom: '4px', textAlign: 'center', fontWeight: '800', fontSize: '28px', lineHeight: 1.5 }}>Real-World Applications</h2>
+            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '12px', fontSize: '14px', fontWeight: '600', lineHeight: 1.7 }}>
+              App {currentTransferApp + 1} of {transferApplications.length}
+            </p>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '16px' }}>
+              {transferApplications.map((_, i) => (
+                <div key={i} style={{ width: '32px', height: '6px', borderRadius: '3px', background: transferCompleted.has(i) ? colors.success : i === currentTransferApp ? colors.accent : 'rgba(148,163,184,0.3)', transition: 'all 0.3s ease' }} />
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '16px' }}>
+              {[
+                { value: '100x', label: 'Brighter than paint', icon: '💡' },
+                { value: '500+ ft', label: 'Visibility distance', icon: '👁️' },
+                { value: '384,400 km', label: 'Earth-Moon measured', icon: '🌍' },
+                { value: '$15B', label: 'Surveying market', icon: '🏗️' },
+              ].map((stat, i) => (
+                <div key={i} style={{ background: 'rgba(30,41,59,0.9)', padding: '12px 16px', borderRadius: '8px', textAlign: 'center', minWidth: '100px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ color: colors.accent, fontSize: '18px', fontWeight: '800', marginBottom: '2px' }}>{stat.value}</div>
+                  <div style={{ color: colors.textMuted, fontSize: '11px', lineHeight: 1.4, fontWeight: '500' }}>{stat.label}</div>
+                </div>
+              ))}
             </div>
           </div>
-          {transferApplications.map((app, index) => (
-            <div key={index} style={{ background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95))', margin: '16px 0', padding: '20px', borderRadius: '12px', border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: '700', lineHeight: 1.5 }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success, fontWeight: '600' }}>✓ Done</span>}
-              </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px', lineHeight: 1.7 }}>{app.description}</p>
-              <div style={{ background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(249, 115, 22, 0.1))', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: '700', lineHeight: 1.6 }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{
-                    padding: '10px 20px',
-                    borderRadius: '6px',
-                    border: `2px solid ${colors.accent}`,
-                    background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(249, 115, 22, 0.1))',
-                    color: colors.accent,
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.1))', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px', lineHeight: 1.7 }}>{app.answer}</p>
-                </div>
-              )}
+          <div style={{ background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95))', margin: '8px 0 16px', padding: '20px', borderRadius: '12px', border: isCompleted ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: '700', lineHeight: 1.5 }}>{app.title}</h3>
+              {isCompleted && <span style={{ color: colors.success, fontWeight: '700', fontSize: '16px' }}>✓ Done</span>}
             </div>
-          ))}
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '16px', lineHeight: 1.8 }}>{app.description}</p>
+            <div style={{ background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(249, 115, 22, 0.1))', padding: '14px', borderRadius: '8px', marginBottom: '14px', borderLeft: `3px solid ${colors.accent}` }}>
+              <p style={{ color: colors.accent, fontSize: '14px', fontWeight: '700', lineHeight: 1.6, margin: 0 }}>{app.question}</p>
+            </div>
+            {!isCompleted ? (
+              <button
+                onClick={() => setTransferCompleted(new Set([...transferCompleted, currentTransferApp]))}
+                style={{
+                  minHeight: '44px',
+                  padding: '10px 24px',
+                  borderRadius: '8px',
+                  border: `2px solid ${colors.accent}`,
+                  background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(249, 115, 22, 0.1))',
+                  color: colors.accent,
+                  cursor: 'pointer',
+                  fontSize: '15px',
+                  fontWeight: '700',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                Got It
+              </button>
+            ) : (
+              <div>
+                <div style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.1))', padding: '14px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
+                  <p style={{ color: colors.textPrimary, fontSize: '14px', lineHeight: 1.8, margin: 0 }}>{app.answer}</p>
+                </div>
+                {currentTransferApp < transferApplications.length - 1 ? (
+                  <button
+                    onClick={() => setCurrentTransferApp(currentTransferApp + 1)}
+                    style={{
+                      minHeight: '44px',
+                      padding: '10px 24px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '15px',
+                      fontWeight: '700',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 4px 12px rgba(249, 115, 22, 0.4)'
+                    }}
+                  >
+                    Next App
+                  </button>
+                ) : null}
+              </div>
+            )}
+          </div>
+          {allCompleted && (
+            <div style={{ textAlign: 'center', margin: '16px 0' }}>
+              <button
+                onClick={goNext}
+                style={{
+                  minHeight: '44px',
+                  padding: '14px 40px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '18px',
+                  fontWeight: '800',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 6px 20px rgba(16, 185, 129, 0.5)'
+                }}
+              >
+                Take the Test
+              </button>
+            </div>
+          )}
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Quiz')}
+        {renderBottomBar(!allCompleted, allCompleted, 'Take the Quiz')}
       </div>
     );
   }
@@ -1234,7 +1358,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
     if (testSubmitted) {
       return (
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '100px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
-          <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', padding: '0 16px', width: '100%', paddingBottom: '80px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', paddingLeft: '16px', paddingRight: '16px', paddingTop: '0', paddingBottom: '80px', width: '100%' }}>
             <div style={{ background: testScore >= 8 ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(16, 185, 129, 0.2))' : 'linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(239, 68, 68, 0.2))', margin: '16px 0', padding: '24px', borderRadius: '12px', textAlign: 'center', boxShadow: '0 8px 24px rgba(0,0,0,0.3)' }}>
               <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, fontWeight: '700', lineHeight: 1.5 }}>{testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}</h2>
               <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: '800' }}>{testScore} / 10</p>
@@ -1259,7 +1383,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '100px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
-        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', padding: '0 16px', width: '100%', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', paddingLeft: '16px', paddingRight: '16px', paddingTop: '0', paddingBottom: '80px', width: '100%' }}>
           <div style={{ padding: '16px 0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary, fontWeight: '700', fontSize: '24px', lineHeight: 1.5 }}>Knowledge Test</h2>
@@ -1360,7 +1484,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '100px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
-        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', padding: '0 16px', width: '100%', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', paddingLeft: '16px', paddingRight: '16px', paddingTop: '0', paddingBottom: '80px', width: '100%' }}>
           <div style={{ padding: '24px 16px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '12px', fontWeight: '800', fontSize: '32px', lineHeight: 1.4 }}>Mastery Achieved!</h1>

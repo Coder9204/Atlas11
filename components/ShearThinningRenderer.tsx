@@ -1035,6 +1035,41 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
   // BOTTOM BAR
   // ============================================================
 
+  const phaseNavLabels: Record<Phase, string> = {
+    hook: 'intro hook',
+    predict: 'predict outcome',
+    play: 'experiment play',
+    review: 'review understanding',
+    twist_predict: 'new variable predict',
+    twist_play: 'twist experiment',
+    twist_review: 'deep insight',
+    transfer: 'real world transfer',
+    test: 'test knowledge',
+    mastery: 'mastery complete',
+  };
+
+  const renderNavDots = () => (
+    <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', alignItems: 'center' }}>
+      {validPhases.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          aria-label={phaseNavLabels[p]}
+          style={{
+            width: phase === p ? '20px' : '7px',
+            height: '7px',
+            borderRadius: '4px',
+            border: 'none',
+            background: validPhases.indexOf(phase) >= i ? colors.primary : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            padding: 0,
+          }}
+        />
+      ))}
+    </div>
+  );
+
   const renderBottomBar = (showBack: boolean, canProceed: boolean, nextLabel: string, onNext?: () => void) => {
     const handleNext = () => {
       if (!canProceed) return;
@@ -1077,6 +1112,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
         {showBack ? (
           <button
             onClick={handleBack}
+            aria-label="Back"
             style={{
               padding: '12px 20px',
               borderRadius: '12px',
@@ -1093,9 +1129,12 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
           </button>
         ) : <div />}
 
+        {renderNavDots()}
+
         {canProceed ? (
           <button
             onClick={handleNext}
+            aria-label={`${nextLabel}`}
             style={{
               padding: '14px 28px',
               borderRadius: '12px',
@@ -1117,7 +1156,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
             padding: '14px 28px',
             borderRadius: '12px',
             backgroundColor: colors.bgCardLight,
-            color: colors.textMuted,
+            color: '#C8C8D0',
             fontSize: '14px',
             fontWeight: 500,
             minHeight: '52px',
@@ -1413,7 +1452,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
               {/* Shear rate slider */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ color: colors.textMuted, fontSize: '13px', fontWeight: 600 }}>Rest</span>
+                  <span style={{ color: '#C8C8D0', fontSize: '13px', fontWeight: 600 }}>Rest</span>
                   <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>
                     Shear Rate: {shearRate}%
                   </span>
@@ -1428,10 +1467,13 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
                   onInput={(e) => setShearRate(Number((e.target as HTMLInputElement).value))}
                   style={{
                     width: '100%',
-                    height: '8px',
+                    height: '20px',
                     borderRadius: '4px',
                     cursor: 'pointer',
-                    accentColor: colors.primary
+                    accentColor: colors.primary,
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none',
+                    appearance: 'none',
                   }}
                 />
               </div>

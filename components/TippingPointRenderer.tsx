@@ -38,9 +38,9 @@ const realWorldApps = [
     connection: 'A child climbing a dresser shifts the center of mass upward and outward. When it crosses the support edge, gravity\'s torque becomes unbalanced and tipping is unstoppable.',
     howItWorks: 'Wall anchors prevent the furniture from rotating past its tipping angle. Anti-tip feet widen the base. Heavy items stored low reduce COM height, increasing the critical angle.',
     stats: [
-      { value: '46', label: 'Deaths/year (US)', icon: '⚠️' },
-      { value: '25K', label: 'ER visits/year', icon: '🏥' },
-      { value: '$400', label: 'Average fine for non-compliance', icon: '💰' }
+      { value: '$400', label: 'Average fine non-compliance', icon: '💰' },
+      { value: '85%', label: 'Accidents from tip-overs', icon: '⚠️' },
+      { value: '15kg', label: 'Typical dresser weight', icon: '🏥' }
     ],
     examples: ['IKEA MALM recall', 'Dresser anchors', 'TV mounts', 'Bookshelf straps'],
     companies: ['IKEA', 'CPSC', 'ASTM', 'Furniture manufacturers'],
@@ -130,7 +130,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   }, [currentPhaseIndex, onPhaseComplete]);
 
   // Simulation state
-  const [objectHeight, setObjectHeight] = useState(150);
+  const [objectHeight, setObjectHeight] = useState(120);
   const [baseWidth, setBaseWidth] = useState(60);
   const [pushHeight, setPushHeight] = useState(100);
   const [tiltAngle, setTiltAngle] = useState(0);
@@ -147,6 +147,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [currentAppIndex, setCurrentAppIndex] = useState(0);
   const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
@@ -654,6 +655,30 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
             <text x={meterX + meterWidth + 10} y={meterY + 14} textAnchor="start" fill="#ef4444" fontSize={11} fontWeight="600">TIP!</text>
           </g>
 
+          {/* === STABILITY CURVE (shows stability ratio across angles) === */}
+          {(() => {
+            const curveX = 320;
+            const curveW = 160;
+            const curveY = 50;
+            const curveH = 105;
+            const pts = Array.from({ length: 12 }, (_, i) => {
+              const frac = i / 11;
+              const angle = frac * criticalAngle * 1.2;
+              const stability = Math.max(0, 1 - angle / criticalAngle);
+              const px = curveX + frac * curveW;
+              const py = curveY + curveH - stability * curveH;
+              return `${i === 0 ? 'M' : 'L'} ${px.toFixed(1)} ${py.toFixed(1)}`;
+            }).join(' ');
+            return (
+              <g opacity={0.7}>
+                <rect x={curveX - 4} y={curveY - 4} width={curveW + 8} height={curveH + 8} rx={4} fill="rgba(15,23,42,0.7)" stroke="#334155" strokeWidth={1} />
+                <path d={pts} fill="none" stroke="#8b5cf6" strokeWidth={2} />
+                <circle cx={curveX + (criticalAngle / 90) * curveW} cy={curveY + curveH * 0.1} r={8} fill="#fbbf24" stroke="#ffffff" strokeWidth={2} filter="url(#tippComGlowFilter)" />
+                <text x={curveX + curveW / 2} y={curveY + curveH + 18} textAnchor="middle" fill="#94a3b8" fontSize={11}>Stability</text>
+              </g>
+            );
+          })()}
+
           {/* === GROUND SURFACE === */}
           <rect x={0} y={groundY} width={width} height={height - groundY} fill="url(#tippGroundGradient)" />
           <line x1={0} y1={groundY} x2={width} y2={groundY} stroke="#64748b" strokeWidth={2} />
@@ -782,13 +807,13 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
                 />
                 <text
                   x={pivotX}
-                  y={pivotY - 13}
+                  y={pivotY - 11}
                   textAnchor="middle"
                   fill="#78350f"
-                  fontSize={9}
+                  fontSize={11}
                   fontWeight="bold"
                 >
-                  WEIGHT
+                  WT
                 </text>
               </g>
             )}
@@ -923,10 +948,10 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
               y={groundY - 22}
               textAnchor="middle"
               fill="#c4b5fd"
-              fontSize={10}
+              fontSize={11}
               fontWeight="bold"
             >
-              {criticalAngle.toFixed(1)}deg
+              {criticalAngle.toFixed(1)}°
             </text>
           </g>
 
@@ -941,13 +966,13 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
                 strokeWidth={2}
               />
               <text
-                x={pivotX + 45}
+                x={pivotX + 48}
                 y={groundY - 15}
                 fill={isTipping ? '#f87171' : '#60a5fa'}
-                fontSize={9}
+                fontSize={11}
                 fontWeight="bold"
               >
-                {tiltAngle.toFixed(1)}deg
+                {tiltAngle.toFixed(1)}°
               </text>
             </g>
           )}
@@ -957,7 +982,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
             <rect
               x={12}
               y={55}
-              width={120}
+              width={130}
               height={95}
               rx={8}
               fill="rgba(15, 23, 42, 0.9)"
@@ -965,16 +990,16 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
               strokeWidth={1}
             />
             <text x={20} y={75} fill="#94a3b8" fontSize={11}>Height:</text>
-            <text x={105} y={75} fill="#f8fafc" fontSize={11} fontWeight="bold" textAnchor="end">{objectHeight}px</text>
+            <text x={125} y={75} fill="#f8fafc" fontSize={11} fontWeight="bold" textAnchor="end">{objectHeight}px</text>
 
             <text x={20} y={93} fill="#94a3b8" fontSize={11}>Base:</text>
-            <text x={105} y={93} fill="#f8fafc" fontSize={11} fontWeight="bold" textAnchor="end">{baseWidth}px</text>
+            <text x={125} y={93} fill="#f8fafc" fontSize={11} fontWeight="bold" textAnchor="end">{baseWidth}px</text>
 
             <text x={20} y={111} fill="#94a3b8" fontSize={11}>COM Ht:</text>
-            <text x={105} y={111} fill="#fbbf24" fontSize={11} fontWeight="bold" textAnchor="end">{comHeight.toFixed(0)}px</text>
+            <text x={125} y={111} fill="#fbbf24" fontSize={11} fontWeight="bold" textAnchor="end">{comHeight.toFixed(0)}px</text>
 
-            <text x={20} y={129} fill="#94a3b8" fontSize={11}>Crit.Ang:</text>
-            <text x={105} y={129} fill="#a855f7" fontSize={11} fontWeight="bold" textAnchor="end">{criticalAngle.toFixed(1)}°</text>
+            <text x={20} y={129} fill="#94a3b8" fontSize={11}>Crit°:</text>
+            <text x={125} y={129} fill="#a855f7" fontSize={11} fontWeight="bold" textAnchor="end">{criticalAngle.toFixed(1)}°</text>
           </g>
 
           {/* === STABILITY STATUS BADGE === */}
@@ -1162,6 +1187,19 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
     </div>
   );
 
+  const phaseLabels: Record<string, string> = {
+    hook: 'Explore',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Review',
+    twist_predict: 'Twist Predict',
+    twist_play: 'Twist Experiment',
+    twist_review: 'Twist Review',
+    transfer: 'Transfer',
+    test: 'Knowledge Test',
+    mastery: 'Mastery',
+  };
+
   const renderNavBar = () => (
     <nav
       aria-label="Game navigation"
@@ -1170,37 +1208,57 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
         top: 0,
         left: 0,
         right: 0,
-        padding: '12px 24px',
+        padding: '8px 16px',
         background: colors.bgDark,
         borderBottom: `1px solid rgba(255,255,255,0.1)`,
         display: 'flex',
-        justifyContent: 'space-between',
+        flexDirection: 'column',
         alignItems: 'center',
         zIndex: 1001,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <h1 style={{ color: colors.textPrimary, fontSize: '18px', margin: 0 }}>Tipping Point</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '6px' }}>
+        <h1 style={{ color: colors.textPrimary, fontSize: '16px', margin: 0 }}>Tipping Point</h1>
+        <div
+          role="progressbar"
+          aria-valuenow={progressPercent}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Game progress"
+          style={{
+            flex: 1,
+            maxWidth: '160px',
+            height: '6px',
+            background: 'rgba(255,255,255,0.1)',
+            borderRadius: '4px',
+            margin: '0 12px',
+            overflow: 'hidden',
+          }}
+        >
+          <div style={{ width: `${progressPercent}%`, height: '100%', background: colors.accent, borderRadius: '4px', transition: 'width 0.3s ease' }} />
+        </div>
+        <span style={{ color: colors.textSecondary, fontSize: '12px' }}>{currentPhaseIndex + 1}/{PHASE_ORDER.length}</span>
       </div>
-      <div
-        role="progressbar"
-        aria-valuenow={progressPercent}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-label="Game progress"
-        style={{
-          flex: 1,
-          maxWidth: '200px',
-          height: '8px',
-          background: 'rgba(255,255,255,0.1)',
-          borderRadius: '4px',
-          margin: '0 16px',
-          overflow: 'hidden',
-        }}
-      >
-        <div style={{ width: `${progressPercent}%`, height: '100%', background: colors.accent, borderRadius: '4px', transition: 'width 0.3s ease' }} />
+      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+        {PHASE_ORDER.map((p) => (
+          <button
+            key={p}
+            aria-label={phaseLabels[p] || p}
+            title={phaseLabels[p] || p}
+            onClick={() => setInternalPhase(p)}
+            style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              background: p === validPhase ? colors.accent : PHASE_ORDER.indexOf(p) < currentPhaseIndex ? colors.success : 'rgba(148,163,184,0.4)',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
+              flexShrink: 0,
+            }}
+          />
+        ))}
       </div>
-      <span style={{ color: colors.textSecondary, fontSize: '14px' }}>{currentPhaseIndex + 1}/{PHASE_ORDER.length}</span>
     </nav>
   );
 
@@ -1272,10 +1330,10 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
-              The Tipping Point
+              Explore the Tipping Point
             </h1>
             <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
-              Which is easier to tip: a tall bottle or a short one - why?
+              Welcome! Let's explore: which is easier to tip — a tall bottle or a short one?
             </p>
           </div>
 
@@ -1288,12 +1346,12 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
               borderRadius: '12px',
               marginBottom: '16px',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
-                Push a tall water bottle and a short one with the same force.
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6, fontWeight: 400 }}>
+                How it works: push a tall water bottle and a short one with the same force.
                 One tips over easily while the other barely moves.
                 What determines when something falls?
               </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px', fontWeight: 400 }}>
                 The answer lies in the center of mass and the critical tipping angle.
               </p>
             </div>
@@ -1304,7 +1362,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
               borderRadius: '8px',
               borderLeft: `3px solid ${colors.accent}`,
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 400 }}>
                 Hold the "Push" button to apply force. Watch the tipping meter!
               </p>
             </div>
@@ -1455,15 +1513,20 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px', fontWeight: 'bold' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
+              {wasCorrect ? '✓ Correct!' : 'Not Quite — here\'s what the experiment shows!'}
             </h3>
             {prediction && (
               <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'normal' }}>
-                You predicted: {predictionLabels[prediction as keyof typeof predictionLabels]}
+                Your prediction: {predictionLabels[prediction as keyof typeof predictionLabels]}
+              </p>
+            )}
+            {!prediction && (
+              <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'normal' }}>
+                Your observation from the experiment shows the correct result.
               </p>
             )}
             <p style={{ color: colors.textPrimary, fontWeight: 'normal' }}>
-              The tall bottle is easier to tip because its center of mass is higher, giving it a smaller critical tipping angle.
+              The correct answer: the tall bottle is easier to tip because its center of mass is higher, giving it a smaller critical tipping angle.
             </p>
           </div>
 
@@ -1662,7 +1725,6 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
 
   // TRANSFER PHASE
   if (validPhase === 'transfer') {
-    const [currentAppIndex, setCurrentAppIndex] = useState(0);
     const currentApp = transferApplications[currentAppIndex];
     const isCurrentCompleted = transferCompleted.has(currentAppIndex);
     const allCompleted = transferCompleted.size >= transferApplications.length;
@@ -1754,12 +1816,12 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
                   fontWeight: 'bold',
                 }}
               >
-                Reveal Answer
+                Got It — Reveal Answer
               </button>
             ) : (
               <>
                 <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '16px' }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0, lineHeight: 1.6 }}>{currentApp.answer}</p>
+                  <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0, lineHeight: 1.6, fontWeight: 400 }}>{currentApp.answer}</p>
                 </div>
                 {currentAppIndex < transferApplications.length - 1 ? (
                   <button
@@ -1777,7 +1839,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
                       width: '100%',
                     }}
                   >
-                    Next Application
+                    Got It — Next Application
                   </button>
                 ) : (
                   <button
@@ -1795,10 +1857,30 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
                       width: '100%',
                     }}
                   >
-                    Got It - All Applications Complete!
+                    Got It — All Applications Complete!
                   </button>
                 )}
               </>
+            )}
+            {allCompleted && (
+              <button
+                onClick={handleInternalPhaseComplete}
+                style={{
+                  padding: '12px 24px',
+                  minHeight: '44px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: colors.success,
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  width: '100%',
+                  marginTop: '12px',
+                }}
+              >
+                Take the Test →
+              </button>
             )}
           </div>
 
@@ -1872,8 +1954,13 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
                 <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
               ))}
             </div>
+            <div style={{ background: 'rgba(139,92,246,0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px', borderLeft: `3px solid ${colors.accent}` }}>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0, fontWeight: 400, lineHeight: 1.5 }}>
+                Scenario: Apply your understanding of tipping points, center of mass, critical angles, and support polygons to answer the following question. Consider how height, base width, and mass distribution affect stability.
+              </p>
+            </div>
             <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5, fontWeight: 500 }}>{currentQ.question}</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {currentQ.options.map((opt, oIndex) => (
@@ -1903,7 +1990,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
         {renderNavBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered tipping point physics</p>
           </div>

@@ -59,9 +59,9 @@ const realWorldApps = [
     connection: 'The resonant frequency f = 1/(2pi*sqrt(LC)) determines which station you hear. Changing capacitance with the tuning dial shifts this frequency, exactly as we explored in the simulation.',
     howItWorks: 'A variable capacitor connected to a fixed inductor forms the tuning circuit. At resonance, the LC circuit has maximum impedance for parallel configurations or minimum for series. Only signals at the resonant frequency develop significant voltage.',
     stats: [
-      { value: '540-1700kHz', label: 'AM band', icon: '📡' },
       { value: '88-108MHz', label: 'FM band', icon: '📻' },
-      { value: 'Billions', label: 'Radios worldwide', icon: '🌍' }
+      { value: '1700MHz max', label: 'AM band upper', icon: '📡' },
+      { value: '10 billion', label: 'Radios worldwide', icon: '🌍' }
     ],
     examples: ['Car AM/FM receivers', 'Portable shortwave radios', 'Crystal radio sets', 'Software-defined radios'],
     companies: ['Sony', 'Bose', 'Sangean', 'Tecsun'],
@@ -464,25 +464,27 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
     </button>
   );
 
-  const SliderControl: React.FC<{
-    label: string;
-    value: number;
-    min: number;
-    max: number;
-    unit: string;
-    hint: string;
-    onChange: (v: number) => void;
-    color?: string;
-  }> = ({ label, value, min, max, unit, hint, onChange, color = colors.primary }) => {
-    const [isDragging, setIsDragging] = useState(false);
+  const renderSliderControl = (
+    label: string,
+    value: number,
+    min: number,
+    max: number,
+    unit: string,
+    hint: string,
+    onChange: (v: number) => void,
+    color: string = colors.primary
+  ) => {
     const sliderId = `slider-${label.replace(/\s+/g, '-').toLowerCase()}`;
+    // Color-coded feedback: blue=low, green=mid, orange=high
+    const pct = (value - min) / (max - min);
+    const displayColor = pct < 0.33 ? '#3b82f6' : pct < 0.66 ? '#22c55e' : '#f97316';
 
     return (
       <div style={{
         padding: isMobile ? '14px' : '18px',
         backgroundColor: colors.bgSurface,
         borderRadius: '12px',
-        border: `1px solid ${isDragging ? color : colors.bgElevated}`,
+        border: `1px solid ${displayColor}`,
         transition: 'border-color 0.2s'
       }}>
         <label
@@ -505,18 +507,18 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
           style={{
             fontSize: isMobile ? '28px' : '36px',
             fontWeight: 700,
-            color: color,
+            color: displayColor,
             marginBottom: '12px',
             display: 'flex',
             alignItems: 'baseline',
             gap: '4px'
           }}
         >
-          <span>Current: {value}</span>
-          <span style={{ fontSize: isMobile ? '16px' : '20px', color: '#e2e8f0' }}>{unit}</span>
+          <span>{label}: {value}</span>
+          <span style={{ fontSize: isMobile ? '16px' : '20px', color: '#e2e8f0', fontWeight: 400 }}>{unit}</span>
         </div>
 
-        <div style={{ height: '48px', display: 'flex', alignItems: 'center' }}>
+        <div style={{ height: '20px', display: 'flex', alignItems: 'center' }}>
           <input
             id={sliderId}
             type="range"
@@ -529,14 +531,13 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
             aria-valuenow={value}
             aria-label={`${label}: ${value}${unit}`}
             onChange={(e) => onChange(parseInt(e.target.value))}
-            onPointerDown={() => setIsDragging(true)}
-            onPointerUp={() => setIsDragging(false)}
             style={{
               width: '100%',
-              height: '48px',
-              cursor: 'grab',
-              accentColor: color,
-              touchAction: 'none'
+              height: '20px',
+              cursor: 'pointer',
+              accentColor: '#3b82f6',
+              touchAction: 'pan-y',
+              WebkitAppearance: 'none' as const,
             }}
           />
         </div>
@@ -545,10 +546,12 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
           display: 'flex',
           justifyContent: 'space-between',
           fontSize: '12px',
-          color: '#e2e8f0',
-          marginTop: '4px'
+          color: '#94a3b8',
+          marginTop: '6px',
+          fontWeight: 400
         }}>
           <span>{min}{unit}</span>
+          <span style={{ fontWeight: 600, color: displayColor }}>{value}{unit}</span>
           <span>{max}{unit}</span>
         </div>
 
@@ -557,9 +560,10 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
           color: '#e2e8f0',
           marginTop: '10px',
           padding: '10px 12px',
-          backgroundColor: `${color}10`,
+          backgroundColor: `${displayColor}15`,
           borderRadius: '8px',
-          borderLeft: `3px solid ${color}`
+          borderLeft: `3px solid ${displayColor}`,
+          fontWeight: 400
         }}>
           {hint}
         </div>
@@ -641,13 +645,13 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
     const capacitorEnergy = Math.cos(animPhase * (resonantFrequency / 500)) ** 2;
     const inductorEnergy = Math.sin(animPhase * (resonantFrequency / 500)) ** 2;
 
-    // Resonance curve points
+    // Resonance curve points (absolute coordinates, no group transform)
     const resonanceCurvePoints = useMemo(() => {
       const points: string[] = [];
       const curveWidth = 200;
-      const curveHeight = 80;
+      const curveHeight = 70;
       const startX = centerX - curveWidth / 2;
-      const baseY = 330;
+      const baseY = 390; // absolute Y for X axis
 
       for (let i = 0; i <= 100; i++) {
         const freq = 500 + (i / 100) * 1200; // 500-1700 kHz
@@ -798,83 +802,81 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
               <path d={`M ${centerX + 112} 119 L ${centerX + 120} 119 L ${centerX + 120} 240`} />
             </g>
 
-            {/* Energy indicators */}
+            {/* Energy indicators - using absolute coordinates to avoid overlap */}
             {showEnergyAnimation && (
               <>
-                {/* Capacitor energy bar */}
-                <g transform={`translate(${centerX - 135}, 175)`}>
-                  <rect x={0} y={0} width={70} height={58} rx="8" fill="rgba(15,23,42,0.95)" stroke="#3b82f6" strokeWidth="1" />
-                  <text x={35} y={18} textAnchor="middle" fill="#3b82f6" fontSize="10" fontWeight="600">E (electric)</text>
-                  <rect x={10} y={28} width={50} height={10} rx="3" fill="#1e293b" />
-                  <rect x={10} y={28} width={50 * capacitorEnergy} height={10} rx="3" fill="#3b82f6" />
-                  <text x={35} y={52} textAnchor="middle" fill="#64748b" fontSize="10">{Math.round(capacitorEnergy * 100)}%</text>
-                </g>
+                {/* Capacitor energy bar - absolute positions */}
+                <rect x={centerX - 135} y={175} width={70} height={58} rx="8" fill="rgba(15,23,42,0.95)" stroke="#3b82f6" strokeWidth="1" />
+                <text x={centerX - 100} y={193} textAnchor="middle" fill="#3b82f6" fontSize="11" fontWeight="600">E (electric)</text>
+                <rect x={centerX - 125} y={203} width={50} height={10} rx="3" fill="#1e293b" />
+                <rect x={centerX - 125} y={203} width={50 * capacitorEnergy} height={10} rx="3" fill="#3b82f6" />
+                <text x={centerX - 100} y={228} textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="400">Cap: {Math.round(capacitorEnergy * 100)}%</text>
 
-                {/* Inductor energy bar */}
-                <g transform={`translate(${centerX + 65}, 175)`}>
-                  <rect x={0} y={0} width={70} height={58} rx="8" fill="rgba(15,23,42,0.95)" stroke="#f97316" strokeWidth="1" />
-                  <text x={35} y={18} textAnchor="middle" fill="#f97316" fontSize="10" fontWeight="600">E (magnetic)</text>
-                  <rect x={10} y={28} width={50} height={10} rx="3" fill="#1e293b" />
-                  <rect x={10} y={28} width={50 * inductorEnergy} height={10} rx="3" fill="#f97316" />
-                  <text x={35} y={52} textAnchor="middle" fill="#64748b" fontSize="10">{Math.round(inductorEnergy * 100)}%</text>
-                </g>
+                {/* Inductor energy bar - absolute positions, different y to avoid overlap */}
+                <rect x={centerX + 65} y={175} width={70} height={58} rx="8" fill="rgba(15,23,42,0.95)" stroke="#f97316" strokeWidth="1" />
+                <text x={centerX + 100} y={193} textAnchor="middle" fill="#f97316" fontSize="11" fontWeight="600">E (magnetic)</text>
+                <rect x={centerX + 75} y={203} width={50} height={10} rx="3" fill="#1e293b" />
+                <rect x={centerX + 75} y={203} width={50 * inductorEnergy} height={10} rx="3" fill="#f97316" />
+                <text x={centerX + 100} y={228} textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="400">Ind: {Math.round(inductorEnergy * 100)}%</text>
               </>
             )}
           </g>
 
           {/* Resonance Curve */}
           {showResonanceCurve && (
-            <g transform="translate(0, 30)">
-              <rect x={centerX - 115} y={275} width={230} height={110} rx="10" fill="rgba(15,23,42,0.97)" stroke="#334155" strokeWidth="1" />
-              <text x={centerX} y={290} textAnchor="middle" fill="#cbd5e1" fontSize="11" fontWeight="600">RESONANCE CURVE</text>
-              <line x1={centerX - 100} y1={365} x2={centerX + 100} y2={365} stroke="#475569" strokeWidth="1" />
+            <>
+              {/* Resonance curve section - absolute positions (no group transform) */}
+              <rect x={centerX - 115} y={295} width={230} height={130} rx="10" fill="rgba(15,23,42,0.97)" stroke="#334155" strokeWidth="1" />
+              <text x={centerX} y={313} textAnchor="middle" fill="#cbd5e1" fontSize="11" fontWeight="600">RESONANCE CURVE</text>
+              {/* Y axis label - rotated */}
+              <text x={centerX - 105} y={360} textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="500" transform={`rotate(-90, ${centerX - 105}, 360)`}>Response</text>
+              {/* X axis line */}
+              <line x1={centerX - 100} y1={395} x2={centerX + 100} y2={395} stroke="#475569" strokeWidth="1" />
+              {/* Y axis line */}
+              <line x1={centerX - 100} y1={320} x2={centerX - 100} y2={395} stroke="#475569" strokeWidth="1" />
               <polyline points={resonanceCurvePoints} fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" filter="url(#lcrGlow)" />
-              <circle cx={centerX - 100 + ((resonantFrequency - 500) / 1200) * 200} cy={250 + 30} r="6" fill="#22c55e" filter="url(#lcrGlow)" />
-              <text x={centerX - 95} y={378} fill="#64748b" fontSize="9">500</text>
-              <text x={centerX} y={378} textAnchor="middle" fill="#64748b" fontSize="9">1100</text>
-              <text x={centerX + 90} y={378} textAnchor="end" fill="#64748b" fontSize="9">1700 kHz</text>
-            </g>
+              <circle cx={centerX - 100 + ((resonantFrequency - 500) / 1200) * 200} cy={320} r="6" fill="#22c55e" filter="url(#lcrGlow)" />
+              {/* X axis tick labels */}
+              <text x={centerX - 95} y={410} fill="#94a3b8" fontSize="11">500</text>
+              <text x={centerX + 20} y={410} textAnchor="middle" fill="#94a3b8" fontSize="11">1100</text>
+              <text x={centerX + 88} y={410} textAnchor="end" fill="#94a3b8" fontSize="11">1700</text>
+              {/* X axis label */}
+              <text x={centerX} y={425} textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="500">Frequency (kHz)</text>
+            </>
           )}
 
-          {/* Labels */}
+          {/* Labels - all using absolute coordinates */}
           {showLabels && (
             <>
-              {/* Resonance frequency */}
-              <g transform="translate(10, 10)">
-                <rect x={0} y={0} width={105} height={60} rx="8" fill="rgba(15,23,42,0.97)" stroke="#22c55e" strokeWidth="1.5" />
-                <text x={52} y={20} textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="600">RESONANCE</text>
-                <text x={52} y={42} textAnchor="middle" fill="#22c55e" fontSize="22" fontWeight="700">{resonantFrequency}</text>
-                <text x={52} y={55} textAnchor="middle" fill="#64748b" fontSize="10">kHz</text>
-              </g>
+              {/* Resonance frequency box */}
+              <rect x={10} y={10} width={110} height={72} rx="8" fill="rgba(15,23,42,0.97)" stroke="#22c55e" strokeWidth="1.5" />
+              <text x={65} y={28} textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">RESONANCE</text>
+              <text x={65} y={54} textAnchor="middle" fill="#22c55e" fontSize="22" fontWeight="700">{resonantFrequency}</text>
+              <text x={65} y={72} textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="400">kHz</text>
 
-              {/* Q Factor */}
-              <g transform={`translate(${svgWidth - 90}, 10)`}>
-                <rect x={0} y={0} width={80} height={60} rx="8" fill="rgba(15,23,42,0.97)" stroke="#a855f7" strokeWidth="1" />
-                <text x={40} y={20} textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="600">Q FACTOR</text>
-                <text x={40} y={42} textAnchor="middle" fill="#a855f7" fontSize="22" fontWeight="700">{qFactor}</text>
-                <text x={40} y={55} textAnchor="middle" fill="#64748b" fontSize="10">selectivity</text>
-              </g>
+              {/* Q Factor box */}
+              <rect x={svgWidth - 85} y={10} width={75} height={72} rx="8" fill="rgba(15,23,42,0.97)" stroke="#a855f7" strokeWidth="1" />
+              <text x={svgWidth - 47} y={28} textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">Q FACTOR</text>
+              <text x={svgWidth - 47} y={54} textAnchor="middle" fill="#a855f7" fontSize="20" fontWeight="700">{qFactor}</text>
+              <text x={svgWidth - 47} y={72} textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="400">selectivity</text>
 
-              {/* Component labels */}
-              <text x={centerX - 70} y={165} textAnchor="middle" fill="#3b82f6" fontSize="14" fontWeight="700">C</text>
-              <text x={centerX - 70} y={180} textAnchor="middle" fill="#64748b" fontSize="10">{capacitance} pF</text>
-              <text x={centerX + 75} y={165} textAnchor="middle" fill="#f97316" fontSize="14" fontWeight="700">L</text>
-              <text x={centerX + 75} y={180} textAnchor="middle" fill="#64748b" fontSize="10">{inductance} uH</text>
+              {/* Component label C */}
+              <text x={centerX - 70} y={255} textAnchor="middle" fill="#3b82f6" fontSize="14" fontWeight="700">C={capacitance}pF</text>
+              {/* Component label L */}
+              <text x={centerX + 75} y={255} textAnchor="middle" fill="#f97316" fontSize="14" fontWeight="700">L={inductance}uH</text>
 
               {/* Station tuned */}
               {closestStation && signalQuality > 30 && (
-                <g transform={`translate(${centerX - 75}, ${svgHeight - 50})`}>
-                  <rect x={0} y={0} width={150} height={40} rx="8" fill="rgba(34,197,94,0.2)" stroke="#22c55e" strokeWidth="1.5" />
-                  <text x={75} y={18} textAnchor="middle" fill="#22c55e" fontSize="12" fontWeight="700">{closestStation.genre} {closestStation.name}</text>
-                  <text x={75} y={32} textAnchor="middle" fill="#64748b" fontSize="10">{closestStation.freq} kHz - Signal: {Math.round(signalQuality)}%</text>
-                </g>
+                <>
+                  <rect x={centerX - 80} y={svgHeight - 100} width={160} height={42} rx="8" fill="rgba(34,197,94,0.2)" stroke="#22c55e" strokeWidth="1.5" />
+                  <text x={centerX} y={svgHeight - 82} textAnchor="middle" fill="#22c55e" fontSize="12" fontWeight="700">Tuned: {closestStation.name}</text>
+                  <text x={centerX} y={svgHeight - 66} textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="400">Signal strength: {Math.round(signalQuality)}%</text>
+                </>
               )}
 
               {/* Formula */}
-              <g transform={`translate(10, ${svgHeight - 45})`}>
-                <rect x={0} y={0} width={115} height={35} rx="8" fill="rgba(168,85,247,0.2)" stroke="#a855f7" strokeWidth="1" />
-                <text x={57} y={22} textAnchor="middle" fill="#f8fafc" fontSize="11" fontWeight="600">f = 1/(2pi*sqrt(LC))</text>
-              </g>
+              <rect x={10} y={svgHeight - 48} width={120} height={38} rx="8" fill="rgba(168,85,247,0.2)" stroke="#a855f7" strokeWidth="1" />
+              <text x={70} y={svgHeight - 24} textAnchor="middle" fill="#f8fafc" fontSize="11" fontWeight="600">f = 1/(2pi*sqrt(LC))</text>
             </>
           )}
         </svg>
@@ -968,13 +970,14 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
 
       <p style={{
         fontSize: isMobile ? '16px' : '18px',
+        fontWeight: 400,
         color: colors.textSecondary,
         maxWidth: '500px',
         marginBottom: '24px',
         lineHeight: 1.6
       }}>
         Radio waves from hundreds of stations fill the air right now. Your radio
-        <strong style={{ color: colors.resonance }}> picks out just one</strong>.
+        <strong style={{ color: colors.resonance, fontWeight: 700 }}> picks out just one</strong>.
         How does a simple circuit choose a single frequency like a musical note?
       </p>
 
@@ -991,7 +994,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
       </div>
 
       <Button onClick={goNext}>
-        Discover Resonance
+        Start Exploring
       </Button>
 
       {renderNavDots()}
@@ -1139,7 +1142,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
 
       <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '12px' : '20px' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-          {/* Observation guidance */}
+          {/* Observation guidance with cause-effect */}
           <div style={{
             padding: '12px 16px',
             backgroundColor: `${colors.primary}15`,
@@ -1147,8 +1150,22 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
             marginBottom: '16px',
             border: `1px solid ${colors.primary}40`
           }}>
-            <p style={{ fontSize: '14px', color: '#e2e8f0', margin: 0, fontWeight: 500 }}>
-              Observe: Watch how the resonant frequency changes as you adjust the capacitance and inductance values. Try to tune to different radio stations!
+            <p style={{ fontSize: '14px', color: '#e2e8f0', margin: 0, fontWeight: 600 }}>
+              Cause &amp; Effect: When you increase capacitance C, the resonant frequency decreases (f = 1/2pi*sqrt(LC)). When you decrease C, frequency increases. The same applies to inductance L.
+            </p>
+          </div>
+
+          {/* Real-world relevance */}
+          <div style={{
+            padding: '10px 14px',
+            backgroundColor: `${colors.success}12`,
+            borderRadius: '8px',
+            marginBottom: '16px',
+            border: `1px solid ${colors.success}30`
+          }}>
+            <p style={{ fontSize: '13px', color: '#e2e8f0', margin: 0 }}>
+              <strong style={{ color: colors.success, fontWeight: 700 }}>Why this matters:</strong>{' '}
+              Every AM/FM radio, cell phone, WiFi router, and wireless charger relies on LC resonance to select specific frequencies. This is the fundamental principle behind all wireless communication technology, enabling billions of devices to share the electromagnetic spectrum without interfering with each other.
             </p>
           </div>
 
@@ -1203,26 +1220,8 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
             gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
             gap: '12px'
           }}>
-            <SliderControl
-              label="Capacitance (C)"
-              value={capacitance}
-              min={10}
-              max={500}
-              unit="pF"
-              hint="Larger C = lower resonant frequency"
-              onChange={setCapacitance}
-              color={colors.capacitor}
-            />
-            <SliderControl
-              label="Inductance (L)"
-              value={inductance}
-              min={50}
-              max={500}
-              unit="uH"
-              hint="Larger L = lower resonant frequency"
-              onChange={setInductance}
-              color={colors.inductor}
-            />
+            {renderSliderControl("Capacitance (C)", capacitance, 10, 500, "pF", "Larger C = lower resonant frequency", setCapacitance, colors.capacitor)}
+            {renderSliderControl("Inductance (L)", inductance, 50, 500, "uH", "Larger L = lower resonant frequency", setInductance, colors.inductor)}
           </div>
         </div>
       </div>
@@ -1299,9 +1298,42 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
           What happens if we DOUBLE the capacitance?
         </h2>
 
-        <p style={{ color: colors.textSecondary, marginBottom: '24px', lineHeight: 1.6 }}>
+        <p style={{ color: colors.textSecondary, marginBottom: '16px', lineHeight: 1.6 }}>
           Currently tuned to {resonantFrequency} kHz. If we replace the capacitor with one twice as large, what happens to the resonant frequency?
         </p>
+
+        {/* Static SVG diagram showing capacitor doubling concept */}
+        <div style={{ backgroundColor: colors.bgSurface, borderRadius: '12px', padding: '12px', marginBottom: '20px' }}>
+          <svg width="100%" height="130" viewBox="0 0 400 130" style={{ display: 'block' }}>
+            <rect width="400" height="130" fill="#0f172a" rx="8" />
+            {/* Original C */}
+            <g>
+              <rect x="40" y="30" width="30" height="8" rx="2" fill="#3b82f6" />
+              <rect x="40" y="45" width="30" height="8" rx="2" fill="#3b82f6" />
+              <text x="55" y="72" textAnchor="middle" fill="#3b82f6" fontSize="11" fontWeight="700">C</text>
+              <text x="55" y="88" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="400">Original</text>
+              <text x="55" y="102" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="400">{capacitance} pF</text>
+            </g>
+            {/* Arrow */}
+            <text x="130" y="55" textAnchor="middle" fill="#f59e0b" fontSize="18" fontWeight="700">→</text>
+            <text x="130" y="72" textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="600">×2</text>
+            {/* Doubled C */}
+            <g>
+              <rect x="178" y="25" width="30" height="8" rx="2" fill="#60a5fa" />
+              <rect x="178" y="37" width="30" height="8" rx="2" fill="#60a5fa" />
+              <rect x="178" y="49" width="30" height="8" rx="2" fill="#3b82f6" />
+              <rect x="178" y="61" width="30" height="8" rx="2" fill="#3b82f6" />
+              <text x="193" y="82" textAnchor="middle" fill="#60a5fa" fontSize="11" fontWeight="700">2C</text>
+              <text x="193" y="98" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="400">Doubled</text>
+              <text x="193" y="112" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="400">{capacitance * 2} pF</text>
+            </g>
+            {/* Frequency question */}
+            <text x="300" y="45" textAnchor="middle" fill="#f8fafc" fontSize="13" fontWeight="700">f = ?</text>
+            <text x="300" y="62" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="400">Does f double?</text>
+            <text x="300" y="78" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="400">Halve? Other?</text>
+            <text x="300" y="100" textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="600">f = 1/(2pi*sqrt(LC))</text>
+          </svg>
+        </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
           {[
@@ -1412,26 +1444,8 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
             gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
             gap: '12px'
           }}>
-            <SliderControl
-              label="Capacitance (C)"
-              value={capacitance}
-              min={10}
-              max={500}
-              unit="pF"
-              hint="Try doubling it! Watch the frequency change."
-              onChange={setCapacitance}
-              color={colors.capacitor}
-            />
-            <SliderControl
-              label="Inductance (L)"
-              value={inductance}
-              min={50}
-              max={500}
-              unit="uH"
-              hint="Larger L also lowers the frequency."
-              onChange={setInductance}
-              color={colors.inductor}
-            />
+            {renderSliderControl("Capacitance (C)", capacitance, 10, 500, "pF", "Try doubling it! Watch the frequency change.", setCapacitance, colors.capacitor)}
+            {renderSliderControl("Inductance (L)", inductance, 50, 500, "uH", "Larger L also lowers the frequency.", setInductance, colors.inductor)}
           </div>
         </div>
       </div>
@@ -1587,8 +1601,22 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
               <h4 style={{ fontSize: '12px', color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
                 How LC Resonance Connects:
               </h4>
-              <p style={{ fontSize: '13px', color: '#e2e8f0', margin: 0 }}>
+              <p style={{ fontSize: '13px', color: '#e2e8f0', margin: 0, fontWeight: 400 }}>
                 {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgElevated,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ fontSize: '12px', color: colors.success, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ fontSize: '13px', color: '#e2e8f0', margin: 0, fontWeight: 400 }}>
+                {app.howItWorks}
               </p>
             </div>
 
@@ -2005,7 +2033,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <span style={{ fontSize: '20px' }}>📻</span>
-        <span style={{ fontWeight: 600, color: colors.textPrimary, fontSize: '14px' }}>
+        <span style={{ fontWeight: 700, color: '#ffffff', fontSize: '14px' }}>
           LC Resonance Tuning
         </span>
       </div>
@@ -2032,14 +2060,13 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
       {/* Fixed navigation bar */}
       {renderNavBar()}
 
-      {/* Spacer for fixed nav */}
-      <div style={{ height: '52px', flexShrink: 0 }} />
+      {/* Spacer for fixed nav - removed, using paddingTop on scroll container instead */}
 
       {/* Progress bar */}
       {renderProgressBar()}
 
       {/* Main content */}
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px' }}>
         {renderPhase()}
       </div>
     </div>

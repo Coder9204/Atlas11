@@ -32,14 +32,14 @@ const colors = {
 // Phase order and labels for navigation
 const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 const phaseLabels: Record<Phase, string> = {
-  hook: 'Introduction',
+  hook: 'Intro Hook',
   predict: 'Predict',
   play: 'Experiment',
   review: 'Understanding',
   twist_predict: 'New Variable',
-  twist_play: 'Test Twist',
+  twist_play: 'Twist Explore',
   twist_review: 'Deep Insight',
-  transfer: 'Real World',
+  transfer: 'Transfer Real World',
   test: 'Knowledge Test',
   mastery: 'Mastery',
 };
@@ -199,7 +199,7 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
   // Simulation state
   const [ledColor, setLedColor] = useState<'red' | 'green' | 'blue' | 'yellow'>('red');
   const [lightIntensity, setLightIntensity] = useState(80);
-  const [lightWavelength, setLightWavelength] = useState(550); // nm
+  const [lightWavelength, setLightWavelength] = useState(480); // nm - start off-midpoint
   const [showMultimeter, setShowMultimeter] = useState(true);
 
   // Phase-specific state
@@ -445,19 +445,30 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ display: 'flex', gap: '6px' }}>
             {phaseOrder.map((p, i) => (
-              <div
+              <button
                 key={p}
                 onClick={() => i < currentIdx && goToPhase(p)}
+                aria-label={phaseLabels[p]}
                 style={{
+                  background: 'transparent',
+                  border: 'none',
+                  padding: '18px 4px',
+                  cursor: i < currentIdx ? 'pointer' : 'default',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minHeight: '44px',
+                }}
+              >
+                <span style={{
+                  display: 'block',
                   height: '8px',
                   width: i === currentIdx ? '24px' : '8px',
                   borderRadius: '5px',
                   backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : colors.border,
-                  cursor: i < currentIdx ? 'pointer' : 'default',
-                  transition: 'all 0.3s',
-                }}
-                title={phaseLabels[p]}
-              />
+                  transition: 'all 0.3s ease',
+                }} />
+              </button>
             ))}
           </div>
           <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textSecondary }}>
@@ -503,7 +514,7 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
           style={{
             padding: '10px 20px',
             borderRadius: '10px',
-            fontWeight: 600,
+            fontWeight: 400,
             fontSize: '14px',
             backgroundColor: 'rgba(30, 41, 59, 0.9)',
             color: colors.textSecondary,
@@ -512,10 +523,11 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
             opacity: canBack ? 1 : 0.3,
             minHeight: '44px',
             WebkitTapHighlightColor: 'transparent',
+            transition: 'all 0.3s ease',
           }}
           disabled={!canBack}
         >
-          Back
+          ← Back
         </button>
         <span style={{ fontSize: '12px', color: colors.textSecondary, fontWeight: 600 }}>
           {phaseLabels[phase]}
@@ -535,6 +547,7 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
             boxShadow: canGoNext ? `0 2px 12px ${colors.accent}30` : 'none',
             minHeight: '44px',
             WebkitTapHighlightColor: 'transparent',
+            transition: 'all 0.3s ease',
           }}
           disabled={!canGoNext}
         >
@@ -730,6 +743,17 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
             </pattern>
           </defs>
 
+          {/* === INTERACTIVE POINT - moves with wavelength slider === */}
+          <circle
+            cx={60 + ((lightWavelength - 350) / (750 - 350)) * (width - 120)}
+            cy={390}
+            r="9"
+            fill={wavelengthToColor(lightWavelength)}
+            stroke="white"
+            strokeWidth="2"
+            filter="url(#ledscPhotonFilter)"
+          />
+
           {/* Background grid pattern */}
           <rect width={width} height={height} fill="url(#ledscLabGrid)" />
 
@@ -760,12 +784,13 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
             <circle cx="-15" cy="67" r={5} fill={colors.success}>
               <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite" />
             </circle>
-            <text x="10" y="71" fill={colors.textMuted} fontSize={8} textAnchor="middle">ON</text>
+            <text x="10" y="71" fill={colors.textMuted} fontSize={11} textAnchor="middle">ON</text>
 
-            {/* Labels */}
-            <text x="0" y={95} fill={colors.textSecondary} fontSize={11} fontWeight="600" textAnchor="middle">Light Source</text>
-            <text x="0" y={110} fill={wavelengthToColor(lightWavelength)} fontSize={12} fontWeight="bold" textAnchor="middle">{lightWavelength} nm</text>
           </g>
+
+          {/* Light source labels - outside group to avoid raw-coord overlap with multimeter */}
+          <text x="85" y="295" fill={colors.textSecondary} fontSize={11} fontWeight="600" textAnchor="middle">Light Source</text>
+          <text x="85" y="310" fill={wavelengthToColor(lightWavelength)} fontSize={12} fontWeight="bold" textAnchor="middle">{lightWavelength} nm</text>
 
           {/* === PHOTON BEAM WITH PARTICLES === */}
           <g>
@@ -852,10 +877,10 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
               <rect x="-8" y="-18" width={16} height={36} fill="url(#ledscDepletionZone)" />
 
               {/* N-type label */}
-              <text x="-22" y="0" fill="#93c5fd" fontSize={9} fontWeight="bold" textAnchor="middle">N</text>
+              <text x="-22" y="0" fill="#93c5fd" fontSize={11} fontWeight="bold" textAnchor="middle">N</text>
 
               {/* P-type label */}
-              <text x="22" y="0" fill="#fca5a5" fontSize={9} fontWeight="bold" textAnchor="middle">P</text>
+              <text x="22" y="0" fill="#fca5a5" fontSize={11} fontWeight="bold" textAnchor="middle">P</text>
 
               {/* Electron-hole pair generation animation */}
               {output.aboveThreshold && (
@@ -910,12 +935,12 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
             <rect x="8" y={55} width={6} height={40} rx={1} fill="url(#ledscWireAnode)" />
 
             {/* Leg labels */}
-            <text x="-11" y={105} fill="#93c5fd" fontSize={9} textAnchor="middle">-</text>
-            <text x="11" y={105} fill="#fca5a5" fontSize={9} textAnchor="middle">+</text>
+            <text x="-11" y={105} fill="#93c5fd" fontSize={11} textAnchor="middle">-</text>
+            <text x="11" y={105} fill="#fca5a5" fontSize={11} textAnchor="middle">+</text>
 
             {/* Labels */}
             <text x="0" y={-85} fill={colors.textPrimary} fontSize={14} fontWeight="bold" textAnchor="middle">{ledColor.toUpperCase()} LED</text>
-            <text x="0" y={120} fill={colors.textSecondary} fontSize={10} textAnchor="middle">Bandgap: {led.bandgap} eV</text>
+            <text x="0" y={120} fill={colors.textSecondary} fontSize={11} textAnchor="middle">Bandgap: {led.bandgap} eV</text>
 
             {/* Current flow indicator */}
             {output.aboveThreshold && (
@@ -953,46 +978,43 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
                 {output.voltage.toFixed(3)}
               </text>
               <text x="35" y={-5} fill={colors.success} fontSize={12} textAnchor="middle">V</text>
-              <text x="0" y={10} fill={colors.textSecondary} fontSize={8} textAnchor="middle" letterSpacing="0.5">VOLTAGE</text>
+              <text x="0" y={10} fill={colors.textSecondary} fontSize={11} textAnchor="middle">VOLTAGE</text>
 
               {/* Current display */}
               <rect x="-40" y={20} width={80} height={38} rx={4} fill="#030712" stroke="#1f2937" strokeWidth={0.5} />
               <text x="0" y={42} fill={colors.blue} fontSize={18} fontWeight="bold" textAnchor="middle" fontFamily="monospace">
                 {(output.current * 1000).toFixed(1)}
               </text>
-              <text x="35" y={42} fill={colors.blue} fontSize={10} textAnchor="middle">uA</text>
-              <text x="0" y={55} fill={colors.textSecondary} fontSize={8} textAnchor="middle" letterSpacing="0.5">CURRENT</text>
+              <text x="35" y={42} fill={colors.blue} fontSize={11} textAnchor="middle">uA</text>
+              <text x="0" y={55} fill={colors.textSecondary} fontSize={11} textAnchor="middle">CURRENT</text>
 
               {/* Power display */}
-              <rect x="-40" y={65} width={80} height={32} rx={4} fill="#030712" stroke="#1f2937" strokeWidth={0.5} />
-              <text x="0" y={85} fill={colors.warning} fontSize={14} fontWeight="bold" textAnchor="middle" fontFamily="monospace">
+              <rect x="-40" y={65} width={80} height={36} rx={4} fill="#030712" stroke="#1f2937" strokeWidth={0.5} />
+              <text x="0" y={80} fill={colors.warning} fontSize={14} fontWeight="bold" textAnchor="middle" fontFamily="monospace">
                 {(output.power * 1000).toFixed(2)}
               </text>
-              <text x="35" y={85} fill={colors.warning} fontSize={9} textAnchor="middle">uW</text>
-              <text x="0" y={95} fill={colors.textSecondary} fontSize={8} textAnchor="middle" letterSpacing="0.5">POWER</text>
+              <text x="35" y={80} fill={colors.warning} fontSize={11} textAnchor="middle">uW</text>
+              <text x="0" y={98} fill={colors.textSecondary} fontSize={11} textAnchor="middle">POWER</text>
 
               {/* Connection indicator */}
               <circle cx="-35" cy={110} r={4} fill={output.aboveThreshold ? colors.success : colors.textSecondary}>
                 {output.aboveThreshold && <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />}
               </circle>
-              <text x="-20" y={113} fill={colors.textSecondary} fontSize={8}>SIGNAL</text>
+              <text x="-15" y={113} fill={colors.textSecondary} fontSize={11}>SIG</text>
             </g>
           )}
 
           {/* === ENERGY DIAGRAM === */}
-          <g transform="translate(60, 365)">
-            <text x="0" y="0" fill={colors.textSecondary} fontSize={11} fontWeight="600">Energy Comparison:</text>
+          <text x="60" y="365" fill={colors.textSecondary} fontSize={11} fontWeight="600">Energy Comparison:</text>
 
-            {/* Photon energy bar */}
-            <rect x="120" y="-12" width={Math.min(output.photonEnergy * 50, 180)} height={14} rx={3} fill={wavelengthToColor(lightWavelength)} opacity={0.8} />
-            <rect x="120" y="-12" width={Math.min(output.photonEnergy * 50, 180)} height={4} rx={2} fill="#ffffff" opacity={0.3} />
-            <text x="120" y={15} fill={colors.textMuted} fontSize={9}>Photon Energy: <tspan fill={wavelengthToColor(lightWavelength)} fontWeight="bold">{output.photonEnergy.toFixed(2)} eV</tspan></text>
+          {/* Photon energy bar */}
+          <rect x="180" y="353" width={Math.min(output.photonEnergy * 50, 180)} height={14} rx={3} fill={wavelengthToColor(lightWavelength)} opacity={0.8} />
+          <rect x="180" y="353" width={Math.min(output.photonEnergy * 50, 180)} height={4} rx={2} fill="#ffffff" opacity={0.3} />
+          <text x="180" y="380" fill={colors.textMuted} fontSize={11}>Photon: {output.photonEnergy.toFixed(2)} eV</text>
 
-            {/* Bandgap threshold indicator */}
-            <line x1={120 + led.bandgap * 50} y1="-18" x2={120 + led.bandgap * 50} y2="8" stroke={colors.error} strokeWidth={2} strokeDasharray="4,2" />
-            <text x={120 + led.bandgap * 50} y="-22" fill={colors.error} fontSize={8} textAnchor="middle" fontWeight="bold">Bandgap</text>
-            <text x={120 + led.bandgap * 50} y="22" fill={colors.error} fontSize={8} textAnchor="middle">{led.bandgap} eV</text>
-          </g>
+          {/* Bandgap threshold indicator */}
+          <line x1={180 + led.bandgap * 50} y1="347" x2={180 + led.bandgap * 50} y2="373" stroke={colors.error} strokeWidth={2} strokeDasharray="4,2" />
+          <text x={180 + led.bandgap * 50} y="344" fill={colors.error} fontSize={11} textAnchor="middle" fontWeight="bold">Gap:{led.bandgap}eV</text>
 
           {/* === STATUS INDICATOR === */}
           <g transform={`translate(${width / 2}, 420)`}>
@@ -1014,23 +1036,15 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
             </text>
           </g>
 
-          {/* === LEGEND === */}
-          <g transform="translate(20, 60)">
-            <rect x="-5" y="-15" width={120} height={70} rx={6} fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth={0.5} />
-            <text x="5" y="0" fill={colors.textSecondary} fontSize={9} fontWeight="600">LEGEND</text>
-
-            {/* Photon */}
-            <circle cx="15" cy="18" r={4} fill={wavelengthToColor(lightWavelength)} filter="url(#ledscPhotonFilter)" />
-            <text x="28" y="21" fill={colors.textSecondary} fontSize={8}>Photon</text>
-
-            {/* Electron */}
-            <circle cx="15" cy="35" r={4} fill="url(#ledscElectronGlow)" />
-            <text x="28" y="38" fill={colors.textSecondary} fontSize={8}>Electron (e-)</text>
-
-            {/* Hole */}
-            <circle cx="75" cy="35" r={4} fill="url(#ledscHoleGlow)" />
-            <text x="88" y="38" fill={colors.textSecondary} fontSize={8}>Hole (h+)</text>
-          </g>
+          {/* === LEGEND - absolute positions === */}
+          <rect x="15" y="45" width={130} height={75} rx={6} fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth={0.5} />
+          <text x="25" y="62" fill={colors.textSecondary} fontSize={11} fontWeight="600">LEGEND</text>
+          <circle cx="35" cy="76" r={4} fill={wavelengthToColor(lightWavelength)} filter="url(#ledscPhotonFilter)" />
+          <text x="48" y="80" fill={colors.textSecondary} fontSize={11}>Photon</text>
+          <circle cx="35" cy="94" r={4} fill="url(#ledscElectronGlow)" />
+          <text x="48" y="98" fill={colors.textSecondary} fontSize={11}>e-</text>
+          <circle cx="95" cy="94" r={4} fill="url(#ledscHoleGlow)" />
+          <text x="108" y="98" fill={colors.textSecondary} fontSize={11}>h+</text>
         </svg>
       </div>
     );
@@ -1076,7 +1090,7 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
           step="10"
           value={lightWavelength}
           onChange={(e) => setLightWavelength(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: wavelengthToColor(lightWavelength) }}
+          style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: colors.textMuted }}>
           <span style={{ color: colors.purple }}>UV</span>
@@ -1099,7 +1113,7 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
           step="5"
           value={lightIntensity}
           onChange={(e) => setLightIntensity(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
         />
       </div>
 
@@ -1175,7 +1189,7 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
         </div>
       </>,
       true,
-      'Make a Prediction'
+      'Explore and Predict'
     );
   }
 
@@ -1213,7 +1227,7 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
         </div>
       </>,
       !!prediction,
-      'Test My Prediction'
+      'Experiment Now'
     );
   }
 
@@ -1222,9 +1236,9 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
     return renderPhaseContent(
       <>
         <div style={{ padding: '16px', textAlign: 'center' }}>
-          <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore LED Photovoltaic Effect</h2>
-          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-            Change LED color and light wavelength to discover the physics
+          <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>Explore LED Photovoltaic Effect</h2>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
+            This visualization shows the LED acting as a solar cell - when photons hit the P-N junction, they create electron-hole pairs that generate electricity.
           </p>
         </div>
 
@@ -1236,18 +1250,24 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
           margin: '16px',
           padding: '16px',
           borderRadius: '12px',
+          borderLeft: `3px solid ${colors.accent}`,
         }}>
-          <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
-          <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+          <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 700 }}>How it Works - Cause & Effect:</h4>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '8px' }}>
+            When you increase wavelength (redder light), the photon energy decreases because E = hc/λ. Because photon energy must exceed the LED bandgap, this results in less current generation - or none at all for high-bandgap LEDs.
+          </p>
+          <p style={{ color: colors.textMuted, fontSize: '13px', lineHeight: 1.6 }}>
+            <strong style={{ color: colors.textSecondary }}>Why it matters:</strong> This principle is used in real-world applications - from Li-Fi communication to spectral sensors. The same semiconductor that emits light can harvest it!
+          </p>
+          <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: '8px 0 0 0' }}>
             <li>Shine blue light on a red LED - what voltage do you get?</li>
             <li>Try red light on a blue LED - does it work?</li>
-            <li>Which LED produces the highest voltage?</li>
-            <li>What happens at the wavelength threshold?</li>
+            <li>Which LED produces the highest voltage and why?</li>
           </ul>
         </div>
       </>,
       true,
-      'Continue to Review'
+      'Continue'
     );
   }
 
@@ -1282,29 +1302,38 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
           <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics Explained</h3>
           <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
             <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Your Observation:</strong>{' '}
+              {prediction === 'no'
+                ? 'Your experiment showed LEDs DO generate electricity - the observation contradicted the prediction!'
+                : prediction === 'same'
+                ? 'You observed that LEDs generate electricity, but with much lower efficiency than dedicated solar cells.'
+                : prediction === 'depends'
+                ? 'Correct! You observed that only certain wavelengths work - it depends on the LED bandgap.'
+                : 'You observed LEDs generating small but measurable electricity - your prediction was right!'}
+            </p>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Key Formula:</strong> E<sub>photon</sub> = hc/λ ≥ E<sub>bandgap</sub>
+              is required for current generation. The relationship: V<sub>oc</sub> ∝ E<sub>bandgap</sub>.
+            </p>
+            <p style={{ marginBottom: '12px' }}>
               <strong style={{ color: colors.textPrimary }}>P-N Junction Magic:</strong> The same
               semiconductor junction that emits light can also absorb it. Photons with energy
-              greater than the bandgap create electron-hole pairs that generate current.
+              greater than the bandgap (E = hν ≥ Eg) create electron-hole pairs that generate current.
             </p>
             <p style={{ marginBottom: '12px' }}>
               <strong style={{ color: colors.textPrimary }}>Bandgap Energy:</strong> Each LED color
               has a specific bandgap. Blue LEDs have larger bandgaps (2.7 eV) than red LEDs (1.9 eV),
-              so they can generate higher voltages.
-            </p>
-            <p style={{ marginBottom: '12px' }}>
-              <strong style={{ color: colors.textPrimary }}>Threshold Effect:</strong> Light must have
-              photon energy above the bandgap. Red light on a blue LED won't work because red
-              photons don't have enough energy!
+              so they can generate higher voltages. This proportional relationship: V ∝ Eg.
             </p>
             <p>
-              <strong style={{ color: colors.textPrimary }}>Efficiency:</strong> LEDs aren't optimized
-              for solar conversion, so efficiency is low. But the physics is identical to solar cells!
+              <strong style={{ color: colors.textPrimary }}>Efficiency:</strong> LEDs aren&apos;t optimized
+              for solar conversion, so efficiency is low (3-5%). But the physics is identical to solar cells!
             </p>
           </div>
         </div>
       </>,
       true,
-      'Next: A Twist!'
+      'Continue'
     );
   }
 
@@ -1363,7 +1392,7 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
         </div>
       </>,
       !!twistPrediction,
-      'Test My Prediction'
+      'Experiment'
     );
   }
 
@@ -1396,7 +1425,7 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
         </div>
       </>,
       true,
-      'See the Explanation'
+      'See Explanation'
     );
   }
 
@@ -1449,24 +1478,25 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
         </div>
       </>,
       true,
-      'Apply This Knowledge'
+      'Continue'
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
+    const allCompleted = transferCompleted.size >= realWorldApps.length;
     return renderPhaseContent(
       <>
         <div style={{ padding: '16px' }}>
-          <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+          <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center', fontWeight: 700 }}>
             Real-World Applications
           </h2>
-          <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+          <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px', fontWeight: 400 }}>
             LED photovoltaics enable surprising technologies
           </p>
         </div>
 
-        {transferApplications.map((app, index) => (
+        {realWorldApps.map((app, index) => (
           <div
             key={index}
             style={{
@@ -1475,63 +1505,59 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
               padding: '16px',
               borderRadius: '12px',
               border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+              transition: 'all 0.3s ease',
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-              {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
+              <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700 }}>
+                {app.icon} {app.title}
+              </h3>
+              {transferCompleted.has(index) && <span style={{ color: colors.success }}>✓ Done</span>}
             </div>
             <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-            <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-              <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-            </div>
-            {!transferCompleted.has(index) ? (
-              <button
-                onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                style={{
-                  padding: '12px 16px',
-                  borderRadius: '6px',
-                  border: `1px solid ${colors.accent}`,
-                  background: 'transparent',
-                  color: colors.accent,
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  minHeight: '44px',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                Reveal Answer
-              </button>
-            ) : (
-              <>
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '12px' }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+
+            {/* Stats */}
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+              {app.stats.map((stat, si) => (
+                <div key={si} style={{ background: 'rgba(245,158,11,0.1)', borderRadius: '8px', padding: '8px 12px', textAlign: 'center' }}>
+                  <div style={{ color: colors.accent, fontWeight: 700, fontSize: '14px' }}>{stat.value}</div>
+                  <div style={{ color: colors.textMuted, fontSize: '12px' }}>{stat.label}</div>
                 </div>
-                <button
-                  onClick={() => {
-                    // Mark as understood - "Got It" button
-                  }}
-                  style={{
-                    padding: '10px 20px',
-                    borderRadius: '6px',
-                    border: 'none',
-                    background: colors.success,
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    minHeight: '44px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  Got It
-                </button>
-              </>
-            )}
+              ))}
+            </div>
+
+            <div style={{ color: colors.textMuted, fontSize: '13px', marginBottom: '12px' }}>
+              <strong style={{ color: colors.textSecondary }}>How it works:</strong> {app.howItWorks}
+            </div>
+            <div style={{ color: colors.textMuted, fontSize: '12px', marginBottom: '12px' }}>
+              <strong style={{ color: colors.textSecondary }}>Companies:</strong> {app.companies.join(', ')}
+            </div>
+            <div style={{ color: colors.textMuted, fontSize: '12px', marginBottom: '12px' }}>
+              <strong style={{ color: colors.textSecondary }}>Future impact:</strong> {app.futureImpact}
+            </div>
+
+            <button
+              onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+              style={{
+                padding: '10px 20px',
+                borderRadius: '6px',
+                border: 'none',
+                background: transferCompleted.has(index) ? colors.success : colors.accent,
+                color: colors.textPrimary,
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: 600,
+                minHeight: '44px',
+                WebkitTapHighlightColor: 'transparent',
+                transition: 'all 0.3s ease',
+              }}
+            >
+              {transferCompleted.has(index) ? '✓ Got It!' : 'Got It'}
+            </button>
           </div>
         ))}
       </>,
-      transferCompleted.size >= 4,
+      allCompleted,
       'Take the Test'
     );
   }
@@ -1590,6 +1616,12 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
               {testQuestions.map((_, i) => (
                 <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
               ))}
+            </div>
+            <div style={{ background: 'rgba(245,158,11,0.08)', padding: '12px 16px', borderRadius: '8px', marginBottom: '12px', borderLeft: `3px solid ${colors.accent}` }}>
+              <p style={{ color: colors.textMuted, fontSize: '13px', margin: 0 }}>
+                Scenario: An LED is connected to a multimeter in photovoltaic mode. A controlled light source illuminates it with specific wavelengths.
+                You are testing whether the LED generates measurable voltage and current based on the photon energy relative to the semiconductor bandgap.
+              </p>
             </div>
             <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
               <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
@@ -1675,7 +1707,7 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
     return renderPhaseContent(
       <>
         <div style={{ padding: '24px', textAlign: 'center' }}>
-          <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+          <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
           <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
           <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered LED photovoltaics!</p>
         </div>

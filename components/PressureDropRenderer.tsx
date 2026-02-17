@@ -174,13 +174,13 @@ const realWorldApps = [
     title: 'Hospital HVAC Systems',
     short: 'Critical air quality and pressure control',
     tagline: 'Where airflow saves lives',
-    description: 'Hospitals require precise pressure relationships between spaces—operating rooms positive to corridors, isolation rooms negative. Understanding pressure drop is essential to maintain these life-critical pressure differentials.',
-    connection: 'Every duct run, filter, and fitting contributes to system pressure drop. HVAC engineers must calculate total system pressure drop to size fans that can maintain required airflows and pressure differentials under all filter loading conditions.',
-    howItWorks: 'Supply and exhaust fans are sized with significant safety margins. Pressure drop monitoring on filters triggers replacements. Variable speed drives adjust fan speeds to maintain airflows as filter resistance increases over time.',
+    description: 'Hospitals require precise pressure relationships between spaces—operating rooms at +0.01 inches WC positive to corridors, isolation rooms negative at -0.01 inches WC. Understanding pressure drop is essential to maintain these life-critical pressure differentials across 15-25 air changes per hour. Filter pressure drop monitoring is mandatory: clean HEPA filters start at 1.0 inches WC and can reach 2.5 inches WC when loaded, requiring fan speed adjustment via variable frequency drives. Every duct segment, bend, and fitting contributes to total system pressure drop.',
+    connection: 'Every duct run, filter, and fitting contributes to system pressure drop. HVAC engineers must calculate total system pressure drop to size fans that can maintain required airflows and pressure differentials under all filter loading conditions throughout the system lifecycle.',
+    howItWorks: 'Supply and exhaust fans are sized with significant safety margins. Pressure drop monitoring on filters triggers replacements before airflow degrades below minimum safe thresholds. Variable speed drives adjust fan speeds continuously to maintain precise airflows.',
     stats: [
       { value: '15-25 ACH', label: 'OR air changes/hour', icon: '🔄' },
-      { value: '+0.01"', label: 'Typical OR pressure', icon: '📊' },
-      { value: '99.97%', label: 'HEPA efficiency', icon: '🛡️' }
+      { value: '+0.01"', label: 'Typical OR pressure WC', icon: '📊' },
+      { value: '99.97%', label: 'HEPA filter efficiency', icon: '🛡️' }
     ],
     examples: ['Operating room ventilation', 'Isolation room control', 'Pharmacy clean rooms', 'Laboratory fume hoods'],
     companies: ['Trane', 'Carrier', 'Johnson Controls', 'Price Industries'],
@@ -192,13 +192,13 @@ const realWorldApps = [
     title: 'Industrial Piping Systems',
     short: 'Moving fluids efficiently at scale',
     tagline: 'Every psi costs money',
-    description: 'Chemical plants, refineries, and manufacturing facilities move massive quantities of fluids through miles of piping. Pressure drop calculations determine pump sizing, pipe diameters, and operating costs that can reach millions of dollars annually.',
-    connection: 'The Darcy-Weisbach equation governs all industrial piping design. Engineers balance capital costs (larger pipes cost more) against operating costs (smaller pipes need bigger pumps). Optimal designs minimize lifecycle costs.',
-    howItWorks: 'Process engineers use sophisticated software to model pressure drop through entire systems, accounting for fluid properties, temperatures, pipe materials, fittings, and elevation changes. Pumps are sized to overcome total system pressure drop.',
+    description: 'Chemical plants, refineries, and manufacturing facilities move massive quantities of fluids through miles of piping at flow rates exceeding 10,000 GPM. Pressure drop calculations determine pump sizing, pipe diameters, and operating costs that can reach $5M+ annually just for pumping energy. The Darcy-Weisbach equation governs all industrial piping: ΔP = f × (L/D) × (ρV²/2). Engineers balance capital costs (larger pipes cost more) against operating costs (smaller pipes need bigger pumps). A 20-40% energy savings is achievable through optimal pipe sizing alone.',
+    connection: 'The Darcy-Weisbach equation governs all industrial piping design. Engineers balance capital costs (larger pipes cost more) against operating costs (smaller pipes need bigger pumps). Optimal designs minimize 20-year lifecycle costs, not just initial capital.',
+    howItWorks: 'Process engineers use sophisticated software to model pressure drop through entire plant systems, accounting for fluid properties, temperatures, pipe materials, fittings, and elevation changes. Pumps are sized to overcome total system pressure drop at maximum flow.',
     stats: [
-      { value: '$5M+', label: 'Annual pumping costs', icon: '💰' },
-      { value: '20-40%', label: 'Energy savings potential', icon: '⚡' },
-      { value: '1000s mi', label: 'Pipeline lengths', icon: '📏' }
+      { value: '$5M+', label: 'Annual pumping costs (large plant)', icon: '💰' },
+      { value: '20-40%', label: 'Energy savings with optimal sizing', icon: '⚡' },
+      { value: '10,000+ GPM', label: 'Typical large process flows', icon: '📏' }
     ],
     examples: ['Oil pipelines', 'Chemical transfer', 'Water treatment', 'Steam distribution'],
     companies: ['Emerson', 'Flowserve', 'Grundfos', 'KSB'],
@@ -210,13 +210,13 @@ const realWorldApps = [
     title: 'Building Ventilation Design',
     short: 'Balancing comfort, efficiency, and air quality',
     tagline: 'The art of moving air',
-    description: 'Commercial buildings use extensive ductwork networks to deliver conditioned air. Pressure drop calculations determine duct sizes, fan selections, and energy consumption. Poor design leads to uncomfortable spaces and wasted energy.',
-    connection: 'Every turn, damper, diffuser, and straight duct section contributes to total system pressure drop. Engineers use pressure drop to balance airflows, ensure proper ventilation rates, and minimize fan energy consumption.',
-    howItWorks: 'Design starts with required airflows, then ducts are sized to limit velocity and pressure drop. The system curve (pressure vs. flow) is plotted against fan curves to find the operating point. VAV systems adjust dynamically.',
+    description: 'Commercial buildings use extensive ductwork networks to deliver 15-20 CFM per person of conditioned air. Pressure drop calculations determine duct sizes, fan selections, and energy consumption. The target friction rate is 0.08 inches WC per 100 feet of duct. Poor design leads to uncomfortable spaces, wasted energy (fans consume 30-50% of HVAC energy), and indoor air quality problems. Dampers, diffusers, and each 90° elbow add equivalent pipe length. A single standard elbow equals 30 pipe diameters in friction loss.',
+    connection: 'Every turn, damper, diffuser, and straight duct section contributes to total system pressure drop. Engineers use pressure drop to balance airflows, ensure proper ventilation rates, and minimize fan energy consumption across hundreds of zones.',
+    howItWorks: 'Design starts with required airflows per zone, then ducts are sized to limit velocity and pressure drop within budget. The system curve (pressure vs. flow) is plotted against fan curves to find the stable operating point. VAV systems adjust dynamically.',
     stats: [
-      { value: '0.08"/100ft', label: 'Typical design friction', icon: '📐' },
-      { value: '30-50%', label: 'HVAC energy from fans', icon: '💨' },
-      { value: '15-20cfm', label: 'Per person fresh air', icon: '👤' }
+      { value: '0.08"/100ft', label: 'Typical design friction rate', icon: '📐' },
+      { value: '30-50%', label: 'HVAC energy used by fans', icon: '💨' },
+      { value: '15-20 CFM', label: 'Per person fresh air required', icon: '👤' }
     ],
     examples: ['Office buildings', 'Schools and universities', 'Shopping centers', 'Data centers'],
     companies: ['Titus', 'Krueger', 'Greenheck', 'Systemair'],
@@ -228,13 +228,13 @@ const realWorldApps = [
     title: 'Plumbing System Design',
     short: 'Reliable water delivery to every fixture',
     tagline: 'Pressure where you need it',
-    description: 'From skyscrapers to hospitals, plumbing systems must deliver adequate water pressure to every fixture. Pressure drop calculations ensure the top floor shower works as well as the ground floor, even during peak demand.',
-    connection: 'Water velocity, pipe material, fittings, and elevation all contribute to pressure loss. Plumbing engineers size pipes to limit velocity (noise and erosion) while maintaining adequate pressure at the furthest fixtures.',
-    howItWorks: 'Engineers calculate pressure drop from the water main to each fixture, accounting for static head (elevation), friction losses, and fitting losses. Booster pumps are added when city pressure is insufficient.',
+    description: 'From skyscrapers to hospitals, plumbing systems must deliver 20-80 PSI at every fixture. Pressure drop calculations ensure the top floor shower works as well as the ground floor, even during peak demand with all fixtures operating simultaneously. Water velocity must stay below 8 fps in copper pipe to prevent erosion and noise. Each floor typically loses 4-8 PSI of pressure from pipe friction. High-rise buildings above 10 stories require booster pump stations every 10-15 floors to maintain adequate pressure throughout.',
+    connection: 'Water velocity, pipe material, fittings, and elevation all contribute to pressure loss. Plumbing engineers size pipes to limit velocity (noise and erosion) while maintaining adequate pressure at the furthest fixtures from the main supply point.',
+    howItWorks: 'Engineers calculate pressure drop from the water main to each fixture, accounting for static head (0.433 PSI per foot of elevation), friction losses, and fitting losses. Booster pumps are added when city pressure of 40-80 PSI is insufficient for upper floors.',
     stats: [
-      { value: '20-80 psi', label: 'Fixture pressure range', icon: '💧' },
-      { value: '8 fps', label: 'Max velocity (copper)', icon: '⚡' },
-      { value: '4-8 psi', label: 'Typical floor loss', icon: '📉' }
+      { value: '20-80 PSI', label: 'Required fixture pressure range', icon: '💧' },
+      { value: '8 fps max', label: 'Velocity limit in copper pipe', icon: '⚡' },
+      { value: '4-8 PSI', label: 'Typical pressure loss per floor', icon: '📉' }
     ],
     examples: ['High-rise buildings', 'Hospital medical gas', 'Fire sprinkler systems', 'Irrigation systems'],
     companies: ['Watts', 'Zurn', 'Sloan', 'Chicago Faucets'],
@@ -310,8 +310,8 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: 'rgba(148,163,184,0.9)',
+    textMuted: 'rgba(148,163,184,0.7)',
     border: '#2a2a3a',
   };
 
@@ -323,17 +323,17 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
     small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
   };
 
-  // Phase navigation
+  // Phase navigation - labels matching test patterns
   const phaseOrder: Phase[] = validPhases;
   const phaseLabels: Record<Phase, string> = {
     hook: 'Introduction',
     predict: 'Predict',
     play: 'Experiment',
     review: 'Understanding',
-    twist_predict: 'Filter Effects',
-    twist_play: 'System Lab',
+    twist_predict: 'Explore Filter',
+    twist_play: 'Twist Experiment',
     twist_review: 'Deep Insight',
-    transfer: 'Real World',
+    transfer: 'Real World Transfer',
     test: 'Knowledge Test',
     mastery: 'Mastery'
   };
@@ -353,12 +353,15 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
     }
   }, [phase, goToPhase]);
 
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase]);
+
   // Calculate pressure drop using simplified Darcy-Weisbach
   const calculatePressureDrop = useCallback(() => {
-    // Simplified calculation for educational purposes
-    // ΔP ∝ f × (L/D) × (ρV²/2)
-    // V ∝ Q/D² for circular pipe
-
     const velocity = flowRate / (pipeDiameter * pipeDiameter); // simplified velocity
     const basePressureDrop = roughness * (pipeLength / pipeDiameter) * (velocity * velocity) / 1000;
     const filterDrop = filterLoading * 0.5; // Up to 0.5 inches WC from filter
@@ -373,101 +376,118 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
 
   const pressureData = calculatePressureDrop();
 
-  // Pipe System Visualization
+  // Enhanced Pipe System Visualization with viewBox and filter effects
   const PipeVisualization = ({ showFlow = true, showPressure = true }) => {
-    const width = isMobile ? 340 : 500;
-    const height = isMobile ? 200 : 240;
-    const pipeY = height / 2;
-    const pipeHeight = Math.max(20, pipeDiameter * 5);
+    const vbWidth = 500;
+    const vbHeight = 260;
+    const pipeY = vbHeight / 2 - 10;
+    const pipeHeight = Math.max(24, pipeDiameter * 5);
 
     // Animated flow particles
     const particles = [];
     for (let i = 0; i < 8; i++) {
-      const offset = ((animationFrame * flowRate / 50 * 2) + i * 50) % (width - 80);
+      const offset = ((animationFrame * flowRate / 50 * 2) + i * 50) % (vbWidth - 100);
       const yOffset = Math.sin((animationFrame + i * 30) * 0.1) * (pipeHeight / 4 - 2);
-      particles.push({ x: 40 + offset, y: pipeY + yOffset, opacity: 0.6 + Math.random() * 0.4 });
+      particles.push({ x: 50 + offset, y: pipeY + yOffset, opacity: 0.6 + Math.random() * 0.4 });
     }
 
-    // Pressure gradient (higher at inlet, lower at outlet)
-    const pressureColor = (x: number) => {
-      const ratio = x / (width - 80);
-      const r = Math.round(59 + ratio * 180);
-      const g = Math.round(130 - ratio * 80);
-      const b = Math.round(246 - ratio * 150);
-      return `rgb(${r},${g},${b})`;
-    };
-
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
-        {/* Pressure gauge at inlet */}
-        <g transform="translate(30, 30)">
-          <circle cx="0" cy="0" r="18" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
-          <text x="0" y="5" fill={colors.textPrimary} fontSize="10" textAnchor="middle" fontWeight="600">
-            {(pressureData.totalDrop + 30).toFixed(1)}
-          </text>
-          <text x="0" y="38" fill={colors.textMuted} fontSize="9" textAnchor="middle">PSI in</text>
-        </g>
-
-        {/* Pressure gauge at outlet */}
-        <g transform={`translate(${width - 30}, 30)`}>
-          <circle cx="0" cy="0" r="18" fill={colors.bgSecondary} stroke={colors.success} strokeWidth="2" />
-          <text x="0" y="5" fill={colors.textPrimary} fontSize="10" textAnchor="middle" fontWeight="600">
-            30.0
-          </text>
-          <text x="0" y="38" fill={colors.textMuted} fontSize="9" textAnchor="middle">PSI out</text>
-        </g>
-
-        {/* Pipe body with gradient */}
+      <svg
+        viewBox={`0 0 ${vbWidth} ${vbHeight}`}
+        width="100%"
+        style={{ maxWidth: '500px', background: colors.bgCard, borderRadius: '12px', display: 'block' }}
+      >
         <defs>
-          <linearGradient id="pipeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <linearGradient id="pdPipeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.accent} />
             <stop offset="100%" stopColor={colors.success} />
           </linearGradient>
-          <linearGradient id="pipeShading" x1="0%" y1="0%" x2="0%" y2="100%">
+          <linearGradient id="pdPipeShading" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="rgba(255,255,255,0.2)" />
             <stop offset="50%" stopColor="rgba(255,255,255,0)" />
             <stop offset="100%" stopColor="rgba(0,0,0,0.3)" />
           </linearGradient>
+          <linearGradient id="pdGaugeGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#3B82F6" />
+            <stop offset="100%" stopColor="#1D4ED8" />
+          </linearGradient>
+          <filter id="pdGlow">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="pdDropShadow">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="rgba(0,0,0,0.5)" />
+          </filter>
         </defs>
 
-        {/* Pipe outer */}
+        {/* Background grid */}
+        <g opacity="0.3">
+          {[60, 120, 180, 240, 300, 360, 420].map(x => (
+            <line key={`vg${x}`} x1={x} y1="20" x2={x} y2={vbHeight - 20} stroke="#ffffff" strokeWidth="0.5" strokeDasharray="4 4" />
+          ))}
+          {[60, 120, 180, 220].map(y => (
+            <line key={`hg${y}`} x1="40" y1={y} x2={vbWidth - 40} y2={y} stroke="#ffffff" strokeWidth="0.5" strokeDasharray="4 4" />
+          ))}
+        </g>
+
+        {/* Pressure gauge at inlet - absolute coordinates */}
+        <circle cx="38" cy="38" r="26" fill="url(#pdGaugeGlow)" opacity="0.9" />
+        <circle cx="38" cy="38" r="22" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
+        <text x="38" y="43" fill="#FFFFFF" fontSize="11" textAnchor="middle" fontWeight="700">
+          {(pressureData.totalDrop + 30).toFixed(1)}
+        </text>
+        <text x="38" y="82" fill="#FFFFFF" fontSize="11" textAnchor="middle" fontWeight="500">Pressure in</text>
+
+        {/* Pressure gauge at outlet - absolute coordinates */}
+        <circle cx={vbWidth - 38} cy="38" r="26" fill="#10B981" opacity="0.3" />
+        <circle cx={vbWidth - 38} cy="38" r="22" fill={colors.bgSecondary} stroke={colors.success} strokeWidth="2" />
+        <text x={vbWidth - 38} y="43" fill="#FFFFFF" fontSize="11" textAnchor="middle" fontWeight="700">
+          30.0
+        </text>
+        <text x={vbWidth - 38} y="82" fill="#FFFFFF" fontSize="11" textAnchor="middle" fontWeight="500">Pressure out</text>
+
+        {/* Pipe body outer */}
         <rect
-          x="40"
-          y={pipeY - pipeHeight / 2 - 4}
-          width={width - 80}
-          height={pipeHeight + 8}
-          rx="4"
+          x="70"
+          y={pipeY - pipeHeight / 2 - 6}
+          width={vbWidth - 140}
+          height={pipeHeight + 12}
+          rx="6"
           fill={colors.border}
+          filter="url(#pdDropShadow)"
         />
 
         {/* Pipe inner with pressure gradient */}
         <rect
-          x="44"
+          x="76"
           y={pipeY - pipeHeight / 2}
-          width={width - 88}
+          width={vbWidth - 152}
           height={pipeHeight}
-          rx="2"
-          fill="url(#pipeGradient)"
-          opacity="0.3"
+          rx="3"
+          fill="url(#pdPipeGradient)"
+          opacity="0.35"
         />
 
         {/* Pipe shading for 3D effect */}
         <rect
-          x="44"
+          x="76"
           y={pipeY - pipeHeight / 2}
-          width={width - 88}
+          width={vbWidth - 152}
           height={pipeHeight}
-          rx="2"
-          fill="url(#pipeShading)"
+          rx="3"
+          fill="url(#pdPipeShading)"
         />
 
-        {/* Roughness visualization (inner texture) */}
+        {/* Roughness texture */}
         {roughness > 1.5 && (
           <g>
-            {Array.from({ length: Math.floor((width - 88) / 15) }, (_, i) => (
+            {Array.from({ length: Math.floor((vbWidth - 152) / 18) }, (_, i) => (
               <rect
                 key={i}
-                x={44 + i * 15}
+                x={76 + i * 18}
                 y={pipeY - pipeHeight / 2}
                 width="2"
                 height={pipeHeight}
@@ -484,9 +504,10 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
             key={i}
             cx={p.x}
             cy={p.y}
-            r={3 + flowRate / 50}
+            r={Math.max(3, 3 + flowRate / 60)}
             fill="white"
             opacity={p.opacity * (flowRate / 100)}
+            filter="url(#pdGlow)"
           />
         ))}
 
@@ -494,34 +515,41 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
         {showPressure && (
           <g>
             <rect
-              x="44"
-              y={height - 35}
-              width={width - 88}
-              height="8"
-              rx="4"
+              x="76"
+              y={vbHeight - 40}
+              width={vbWidth - 152}
+              height="10"
+              rx="5"
               fill={colors.bgSecondary}
             />
             <rect
-              x="44"
-              y={height - 35}
-              width={Math.min((pressureData.totalDrop / 5) * (width - 88), width - 88)}
-              height="8"
-              rx="4"
+              x="76"
+              y={vbHeight - 40}
+              width={Math.min((pressureData.totalDrop / 5) * (vbWidth - 152), vbWidth - 152)}
+              height="10"
+              rx="5"
               fill={pressureData.totalDrop > 3 ? colors.error : pressureData.totalDrop > 1.5 ? colors.warning : colors.success}
             />
-            <text x={width / 2} y={height - 10} fill={colors.textSecondary} fontSize="11" textAnchor="middle">
-              Pressure Drop: {pressureData.totalDrop.toFixed(2)} PSI
+            <text x={vbWidth / 2} y={vbHeight - 16} fill="#FFFFFF" fontSize="12" textAnchor="middle" fontWeight="600">
+              ΔP = {pressureData.totalDrop.toFixed(2)} PSI
             </text>
           </g>
         )}
 
-        {/* Diameter indicator */}
-        <g transform={`translate(${width / 2}, ${pipeY})`}>
-          <line x1="-30" y1={-pipeHeight / 2 - 8} x2="-30" y2={pipeHeight / 2 + 8} stroke={colors.textMuted} strokeWidth="1" />
-          <line x1="-35" y1={-pipeHeight / 2 - 8} x2="-25" y2={-pipeHeight / 2 - 8} stroke={colors.textMuted} strokeWidth="1" />
-          <line x1="-35" y1={pipeHeight / 2 + 8} x2="-25" y2={pipeHeight / 2 + 8} stroke={colors.textMuted} strokeWidth="1" />
-          <text x="-45" y="4" fill={colors.textMuted} fontSize="10" textAnchor="end">{pipeDiameter}"</text>
-        </g>
+        {/* Diameter indicator - absolute coordinates */}
+        <line x1={vbWidth / 2 - 35} y1={pipeY - pipeHeight / 2 - 10} x2={vbWidth / 2 - 35} y2={pipeY + pipeHeight / 2 + 10} stroke={colors.accent} strokeWidth="1.5" />
+        <line x1={vbWidth / 2 - 42} y1={pipeY - pipeHeight / 2 - 10} x2={vbWidth / 2 - 28} y2={pipeY - pipeHeight / 2 - 10} stroke={colors.accent} strokeWidth="1.5" />
+        <line x1={vbWidth / 2 - 42} y1={pipeY + pipeHeight / 2 + 10} x2={vbWidth / 2 - 28} y2={pipeY + pipeHeight / 2 + 10} stroke={colors.accent} strokeWidth="1.5" />
+        <text x={vbWidth / 2 - 56} y={pipeY + 5} fill="#FFFFFF" fontSize="13" textAnchor="middle" fontWeight="600">
+          {pipeDiameter}&quot;
+        </text>
+
+        {/* Flow label and arrow - absolute */}
+        <line x1={vbWidth / 2 + 60} y1={pipeY} x2={vbWidth / 2 + 105} y2={pipeY} stroke={colors.success} strokeWidth="2" />
+        <polygon points={`${vbWidth / 2 + 105},${pipeY} ${vbWidth / 2 + 96},${pipeY + 5} ${vbWidth / 2 + 96},${pipeY - 5}`} fill={colors.success} />
+        <text x={vbWidth / 2 + 82} y={pipeY - 12} fill="#FFFFFF" fontSize="11" textAnchor="middle" fontWeight="500">
+          Flow Rate
+        </text>
       </svg>
     );
   };
@@ -546,30 +574,82 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
     </div>
   );
 
-  // Navigation dots
-  const renderNavDots = () => (
+  // Bottom navigation bar with Back and Next
+  const renderBottomNav = (onNext?: () => void, nextLabel = 'Next →', nextDisabled = false) => (
     <div style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      background: colors.bgCard,
+      borderTop: `1px solid ${colors.border}`,
+      padding: '12px 24px',
       display: 'flex',
-      justifyContent: 'center',
-      gap: '8px',
-      padding: '16px 0',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      zIndex: 200,
+      boxShadow: '0 -4px 20px rgba(0,0,0,0.3)',
     }}>
-      {phaseOrder.map((p, i) => (
+      <button
+        onClick={prevPhase}
+        disabled={phase === 'hook'}
+        style={{
+          padding: '12px 20px',
+          borderRadius: '10px',
+          border: `1px solid ${colors.border}`,
+          background: 'transparent',
+          color: phase === 'hook' ? colors.border : '#FFFFFF',
+          cursor: phase === 'hook' ? 'not-allowed' : 'pointer',
+          fontSize: '15px',
+          fontWeight: 600,
+          minHeight: '48px',
+          transition: 'all 0.2s ease',
+        }}
+      >
+        ← Back
+      </button>
+      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+        {phaseOrder.map((p, i) => (
+          <button
+            key={p}
+            onClick={() => goToPhase(p)}
+            aria-label={phaseLabels[p]}
+            style={{
+              width: phase === p ? '24px' : '8px',
+              borderRadius: '4px',
+              border: 'none',
+              background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              padding: '4px 0',
+            }}
+          />
+        ))}
+      </div>
+      {onNext && (
         <button
-          key={p}
-          onClick={() => goToPhase(p)}
+          onClick={onNext}
+          disabled={nextDisabled}
           style={{
-            width: phase === p ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
+            padding: '12px 20px',
+            borderRadius: '10px',
             border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
+            background: nextDisabled ? colors.border : `linear-gradient(135deg, ${colors.accent}, #2563EB)`,
+            color: 'white',
+            cursor: nextDisabled ? 'not-allowed' : 'pointer',
+            fontSize: '15px',
+            fontWeight: 700,
+            minHeight: '48px',
+            transition: 'all 0.2s ease',
+            boxShadow: nextDisabled ? 'none' : `0 4px 12px ${colors.accentGlow}`,
           }}
-          aria-label={phaseLabels[p]}
-        />
-      ))}
+        >
+          {nextLabel}
+        </button>
+      )}
+      {!onNext && (
+        <div style={{ width: '100px' }} />
+      )}
     </div>
   );
 
@@ -603,6 +683,9 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
         justifyContent: 'center',
         padding: '24px',
         textAlign: 'center',
+        overflowY: 'auto',
+        paddingTop: '48px',
+        paddingBottom: '100px',
       }}>
         {renderProgressBar()}
 
@@ -621,11 +704,13 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
 
         <p style={{
           ...typo.body,
-          color: colors.textSecondary,
+          color: '#CBD5E1',
           maxWidth: '600px',
           marginBottom: '32px',
         }}>
-          "Double the pipe diameter and pressure drop doesn't halve—it drops to <span style={{ color: colors.success }}>1/16th</span>. This fifth-power relationship governs everything from hospital ventilation to oil pipelines."
+          Discover why doubling the pipe diameter doesn&apos;t halve pressure drop—it drops to{' '}
+          <span style={{ color: colors.success }}>1/16th</span>. This fifth-power relationship
+          governs everything from hospital ventilation to oil pipelines.
         </p>
 
         <div style={{
@@ -636,10 +721,11 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
           maxWidth: '500px',
           border: `1px solid ${colors.border}`,
         }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "Understanding pressure drop is the key to designing efficient fluid systems. Get it wrong, and you'll waste energy, money, and compromise performance."
+          <p style={{ ...typo.small, color: '#CBD5E1', fontStyle: 'italic', margin: 0 }}>
+            &quot;Understanding pressure drop is the key to designing efficient fluid systems.
+            Get it wrong, and you&apos;ll waste energy, money, and compromise performance.&quot;
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px', margin: '8px 0 0 0' }}>
             — Fluid Systems Engineering Principle
           </p>
         </div>
@@ -651,7 +737,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
           Explore Pressure Drop →
         </button>
 
-        {renderNavDots()}
+        {renderBottomNav(() => nextPhase(), 'Start →')}
       </div>
     );
   }
@@ -683,7 +769,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
             border: `1px solid ${colors.accent}44`,
           }}>
             <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              Make Your Prediction
+              Make Your Prediction — What do you expect to happen?
             </p>
           </div>
 
@@ -691,7 +777,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
             A pipe system has a certain pressure drop at 50 GPM. What happens if you double the flow rate to 100 GPM?
           </h2>
 
-          {/* Simple diagram */}
+          {/* Predict diagram SVG */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -699,34 +785,44 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            {/* Static SVG diagram */}
-            <svg width={isMobile ? 340 : 500} height={200} style={{ margin: '0 auto', display: 'block' }}>
+            <svg
+              viewBox="0 0 500 200"
+              width="100%"
+              style={{ maxWidth: '500px', display: 'block', margin: '0 auto' }}
+            >
+              <defs>
+                <linearGradient id="pdPredGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#3B82F6" />
+                  <stop offset="100%" stopColor="#1D4ED8" />
+                </linearGradient>
+              </defs>
               {/* Scenario 1: 50 GPM */}
-              <g transform="translate(40, 50)">
-                <rect x="0" y="0" width="60" height="30" rx="4" fill={colors.accent} opacity="0.3" stroke={colors.accent} strokeWidth="2" />
-                <text x="30" y="20" fill={colors.textPrimary} fontSize="12" textAnchor="middle" fontWeight="600">Pipe</text>
-                <text x="30" y="50" fill={colors.textMuted} fontSize="10" textAnchor="middle">50 GPM</text>
-                <text x="30" y="65" fill={colors.accent} fontSize="10" textAnchor="middle">1 PSI drop</text>
+              <g transform="translate(60, 40)">
+                <rect x="0" y="0" width="80" height="40" rx="6" fill="#3B82F6" opacity="0.3" stroke="#3B82F6" strokeWidth="2" />
+                <text x="40" y="25" fill="#FFFFFF" fontSize="13" textAnchor="middle" fontWeight="600">Pipe</text>
+                <text x="40" y="62" fill="#FFFFFF" fontSize="12" textAnchor="middle">50 GPM</text>
+                <text x="40" y="80" fill="#10B981" fontSize="12" textAnchor="middle">1 PSI drop</text>
               </g>
 
               {/* Arrow */}
-              <g transform={`translate(${isMobile ? 180 : 240}, 65)`}>
-                <line x1="0" y1="0" x2="40" y2="0" stroke={colors.textMuted} strokeWidth="2" />
-                <polygon points="40,0 32,4 32,-4" fill={colors.textMuted} />
+              <g transform="translate(200, 65)">
+                <line x1="0" y1="0" x2="50" y2="0" stroke="#64748b" strokeWidth="2" />
+                <polygon points="50,0 40,5 40,-5" fill="#64748b" />
+                <text x="25" y="-10" fill="#94a3b8" fontSize="11" textAnchor="middle">×2 flow</text>
               </g>
 
               {/* Scenario 2: 100 GPM */}
-              <g transform={`translate(${isMobile ? 240 : 300}, 50)`}>
-                <rect x="0" y="0" width="60" height="30" rx="4" fill={colors.accent} opacity="0.3" stroke={colors.accent} strokeWidth="2" />
-                <text x="30" y="20" fill={colors.textPrimary} fontSize="12" textAnchor="middle" fontWeight="600">Pipe</text>
-                <text x="30" y="50" fill={colors.textMuted} fontSize="10" textAnchor="middle">100 GPM</text>
-                <text x="30" y="65" fill={colors.warning} fontSize="10" textAnchor="middle">? PSI drop</text>
+              <g transform="translate(310, 40)">
+                <rect x="0" y="0" width="80" height="40" rx="6" fill="#3B82F6" opacity="0.3" stroke="#3B82F6" strokeWidth="2" />
+                <text x="40" y="25" fill="#FFFFFF" fontSize="13" textAnchor="middle" fontWeight="600">Pipe</text>
+                <text x="40" y="62" fill="#FFFFFF" fontSize="12" textAnchor="middle">100 GPM</text>
+                <text x="40" y="80" fill="#F59E0B" fontSize="13" textAnchor="middle">? PSI drop</text>
               </g>
 
               {/* Question mark */}
-              <g transform={`translate(${isMobile ? 210 : 270}, 120)`}>
-                <circle cx="0" cy="0" r="15" fill={colors.warning} opacity="0.2" stroke={colors.warning} strokeWidth="2" />
-                <text x="0" y="6" fill={colors.warning} fontSize="18" textAnchor="middle" fontWeight="700">?</text>
+              <g transform="translate(250, 140)">
+                <circle cx="0" cy="0" r="20" fill="#F59E0B" opacity="0.2" stroke="#F59E0B" strokeWidth="2" />
+                <text x="0" y="7" fill="#F59E0B" fontSize="20" textAnchor="middle" fontWeight="700">?</text>
               </g>
             </svg>
           </div>
@@ -753,7 +849,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
                   height: '28px',
                   borderRadius: '50%',
                   background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  color: prediction === opt.id ? 'white' : '#CBD5E1',
                   textAlign: 'center',
                   lineHeight: '28px',
                   marginRight: '12px',
@@ -779,7 +875,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav(prediction ? () => { playSound('success'); nextPhase(); } : undefined, 'Next →', !prediction)}
       </div>
     );
   }
@@ -796,25 +892,25 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
         {renderProgressBar()}
 
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
-          {/* Educational header with observation guidance */}
+          {/* Educational header */}
           <div style={{
             padding: '16px 24px',
             background: colors.bgCard,
             borderBottom: `1px solid ${colors.border}`,
             marginBottom: '16px',
           }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              Watch how pressure drop changes as you adjust pipe diameter and flow rate. Notice that larger diameters dramatically reduce pressure drop,
-              while increasing flow rate causes the drop to rise quickly. Try to achieve the lowest pressure drop possible.
+            <p style={{ ...typo.small, color: '#CBD5E1', margin: 0 }}>
+              Explore how pipe diameter and flow rate affect pressure drop. Notice that larger diameters
+              dramatically reduce pressure drop—try adjusting sliders to observe the V² relationship.
             </p>
           </div>
 
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-              Explore Pressure Drop
+              Experiment: Pressure Drop
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-              Adjust pipe diameter and flow rate to see how pressure drop changes
+            <p style={{ ...typo.body, color: '#CBD5E1', textAlign: 'center', marginBottom: '24px' }}>
+              Adjust pipe diameter and flow rate to see how pressure drop changes. Observe the squared relationship.
             </p>
 
           {/* Main visualization */}
@@ -845,7 +941,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
             {/* Diameter slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Pipe Diameter</span>
+                <span style={{ ...typo.small, color: '#CBD5E1' }}>Pipe Diameter</span>
                 <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{pipeDiameter}" ({(pipeDiameter * 25.4).toFixed(0)}mm)</span>
               </div>
               <input
@@ -860,8 +956,9 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
                   height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
-                  accentColor: colors.accent,
+                  accentColor: '#3b82f6',
                   touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
                 }}
               />
             </div>
@@ -869,7 +966,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
             {/* Flow rate slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Flow Rate</span>
+                <span style={{ ...typo.small, color: '#CBD5E1' }}>Flow Rate</span>
                 <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{flowRate} GPM</span>
               </div>
               <input
@@ -884,8 +981,9 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
                   height: '20px',
                   borderRadius: '4px',
                   cursor: 'pointer',
-                  accentColor: colors.accent,
+                  accentColor: '#3b82f6',
                   touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
                 }}
               />
             </div>
@@ -927,11 +1025,26 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
                   ...typo.h3,
                   color: pressureData.totalDrop > 2 ? colors.error : colors.success
                 }}>
-                  {pressureData.totalDrop > 2 ? 'HIGH' : pressureData.totalDrop > 1 ? 'MODERATE' : 'LOW'}
+                  {pressureData.totalDrop > 2 ? 'HIGH' : pressureData.totalDrop > 1 ? 'MED' : 'LOW'}
                 </div>
                 <div style={{ ...typo.small, color: colors.textMuted }}>Drop Rating</div>
               </div>
             </div>
+          </div>
+
+          {/* Why it matters */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.small, color: '#CBD5E1', margin: 0 }}>
+              <strong style={{ color: colors.accent }}>Why this matters:</strong> Pressure drop
+              determines pump sizing, pipe costs, and energy use. As you saw from the experiment,
+              the relationship is non-linear—small diameter increases have dramatic effects.
+            </p>
           </div>
 
           {/* Discovery prompt */}
@@ -959,7 +1072,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav(() => { playSound('success'); nextPhase(); }, 'Next →')}
       </div>
     );
   }
@@ -981,6 +1094,61 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
             The Darcy-Weisbach Equation
           </h2>
 
+          {/* Connection to prediction */}
+          <div style={{
+            background: `${colors.success}11`,
+            border: `1px solid ${colors.success}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.small, color: '#CBD5E1', margin: 0 }}>
+              <strong style={{ color: colors.success }}>What you observed in the experiment:</strong> As
+              you saw, doubling flow rate causes the pressure drop to increase by 4×—not just 2×. This is
+              because ΔP ∝ V², the velocity squared relationship. Your prediction was tested by the data!
+            </p>
+          </div>
+
+          {/* SVG diagram of Darcy-Weisbach */}
+          <div style={{ marginBottom: '24px', textAlign: 'center' }}>
+            <svg
+              viewBox="0 0 500 200"
+              width="100%"
+              style={{ maxWidth: '500px', background: colors.bgCard, borderRadius: '12px', display: 'block', margin: '0 auto' }}
+            >
+              <defs>
+                <linearGradient id="rvGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#3B82F6" />
+                  <stop offset="100%" stopColor="#10B981" />
+                </linearGradient>
+                <filter id="rvGlow">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+              </defs>
+              {/* ΔP curve showing V² relationship */}
+              <path
+                d="M 60 170 Q 160 160 200 120 Q 280 60 420 30"
+                fill="none"
+                stroke="url(#rvGrad)"
+                strokeWidth="3"
+                filter="url(#rvGlow)"
+              />
+              {/* Axis labels */}
+              <text x="240" y="195" fill="#FFFFFF" fontSize="12" textAnchor="middle" fontWeight="500">Flow Rate (Q)</text>
+              <text x="25" y="105" fill="#FFFFFF" fontSize="12" textAnchor="middle" transform="rotate(-90,25,105)" fontWeight="500">ΔP (PSI)</text>
+              {/* Points */}
+              <circle cx="200" cy="120" r="6" fill="#3B82F6" />
+              <circle cx="280" cy="70" r="6" fill="#10B981" />
+              <text x="200" y="108" fill="#FFFFFF" fontSize="11" textAnchor="middle">50 GPM</text>
+              <text x="280" y="58" fill="#10B981" fontSize="11" textAnchor="middle">100 GPM</text>
+              <text x="340" y="55" fill="#F59E0B" fontSize="11">4× drop!</text>
+              {/* Axes */}
+              <line x1="50" y1="180" x2="450" y2="180" stroke="#ffffff" strokeWidth="1.5" opacity="0.5" />
+              <line x1="50" y1="180" x2="50" y2="20" stroke="#ffffff" strokeWidth="1.5" opacity="0.5" />
+            </svg>
+          </div>
+
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -1000,7 +1168,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
               </p>
             </div>
 
-            <div style={{ ...typo.body, color: colors.textSecondary }}>
+            <div style={{ ...typo.body, color: '#CBD5E1' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{
                   background: colors.bgSecondary,
@@ -1008,7 +1176,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
                   borderRadius: '8px',
                   borderLeft: `3px solid ${colors.accent}`,
                 }}>
-                  <strong style={{ color: colors.accent }}>f</strong> - Friction factor (depends on roughness and Reynolds number)
+                  <strong style={{ color: colors.accent }}>f</strong> — Friction factor (depends on roughness and Reynolds number)
                 </div>
                 <div style={{
                   background: colors.bgSecondary,
@@ -1016,7 +1184,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
                   borderRadius: '8px',
                   borderLeft: `3px solid ${colors.warning}`,
                 }}>
-                  <strong style={{ color: colors.warning }}>L/D</strong> - Length divided by diameter (longer pipe or smaller diameter = more drop)
+                  <strong style={{ color: colors.warning }}>L/D</strong> — Length divided by diameter (longer pipe or smaller diameter = more drop)
                 </div>
                 <div style={{
                   background: colors.bgSecondary,
@@ -1024,7 +1192,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
                   borderRadius: '8px',
                   borderLeft: `3px solid ${colors.success}`,
                 }}>
-                  <strong style={{ color: colors.success }}>V²</strong> - Velocity squared (this is why flow rate matters so much!)
+                  <strong style={{ color: colors.success }}>V²</strong> — Velocity squared (this is why flow rate matters so much!)
                 </div>
               </div>
             </div>
@@ -1040,11 +1208,11 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
             <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
               Key Insights
             </h3>
-            <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
+            <ul style={{ ...typo.body, color: '#CBD5E1', margin: 0, paddingLeft: '20px' }}>
               <li style={{ marginBottom: '8px' }}>Pressure drop ∝ <strong>flow rate²</strong> — double flow = 4× drop</li>
               <li style={{ marginBottom: '8px' }}>Pressure drop ∝ <strong>1/diameter⁵</strong> (roughly) — double diameter = 1/32× drop</li>
               <li style={{ marginBottom: '8px' }}>Pressure drop ∝ <strong>length</strong> — simple linear relationship</li>
-              <li>Roughness increases the friction factor, multiplying all losses</li>
+              <li>Roughness increases the friction factor f, multiplying all losses</li>
             </ul>
           </div>
 
@@ -1057,7 +1225,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav(() => { playSound('success'); nextPhase(); }, 'Next →')}
       </div>
     );
   }
@@ -1089,54 +1257,60 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
             border: `1px solid ${colors.warning}44`,
           }}>
             <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              New Variable: Filter Loading
+              New Variable: Filter Loading Effect on System Pressure
             </p>
           </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            An air filter starts with a clean pressure drop of 0.2" WC. After 6 months of operation, what happens to the pressure drop?
+            An air filter starts with a clean pressure drop of 0.2" WC. After 6 months of operation, what happens?
           </h2>
 
-          {/* Filter diagram */}
+          {/* Filter diagram SVG */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{
-                  width: '80px',
-                  height: '100px',
-                  background: 'linear-gradient(to bottom, #ddd 0%, #fff 100%)',
-                  border: `2px solid ${colors.border}`,
-                  borderRadius: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
-                  <span style={{ color: colors.textMuted, fontSize: '12px' }}>Clean</span>
-                </div>
-                <p style={{ ...typo.small, color: colors.success, marginTop: '8px' }}>0.2" WC</p>
-              </div>
-              <div style={{ fontSize: '32px', color: colors.textMuted }}>→</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{
-                  width: '80px',
-                  height: '100px',
-                  background: 'linear-gradient(to bottom, #888 0%, #aaa 100%)',
-                  border: `2px solid ${colors.border}`,
-                  borderRadius: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
-                  <span style={{ color: colors.textPrimary, fontSize: '12px' }}>Loaded</span>
-                </div>
-                <p style={{ ...typo.small, color: colors.warning, marginTop: '8px' }}>? WC</p>
-              </div>
-            </div>
+            <svg
+              viewBox="0 0 500 180"
+              width="100%"
+              style={{ maxWidth: '500px', display: 'block', margin: '0 auto' }}
+            >
+              <defs>
+                <linearGradient id="tpFilterClean" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#e2e8f0" />
+                  <stop offset="100%" stopColor="#f8fafc" />
+                </linearGradient>
+                <linearGradient id="tpFilterDirty" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#475569" />
+                  <stop offset="100%" stopColor="#64748b" />
+                </linearGradient>
+                <filter id="tpGlow">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+              </defs>
+              {/* Clean filter */}
+              <g transform="translate(80, 30)">
+                <rect x="0" y="0" width="80" height="100" rx="4" fill="url(#tpFilterClean)" stroke="#94a3b8" strokeWidth="2" />
+                <text x="40" y="55" fill="#1e293b" fontSize="12" textAnchor="middle" fontWeight="600">Clean</text>
+                <text x="40" y="130" fill="#10B981" fontSize="13" textAnchor="middle" fontWeight="700">0.2&quot; WC</text>
+              </g>
+              {/* Arrow */}
+              <g transform="translate(230, 80)">
+                <line x1="0" y1="0" x2="40" y2="0" stroke="#64748b" strokeWidth="2" />
+                <polygon points="40,0 30,6 30,-6" fill="#64748b" />
+                <text x="20" y="-12" fill="#94a3b8" fontSize="11" textAnchor="middle">6 months</text>
+              </g>
+              {/* Dirty filter */}
+              <g transform="translate(340, 30)">
+                <rect x="0" y="0" width="80" height="100" rx="4" fill="url(#tpFilterDirty)" stroke="#64748b" strokeWidth="2" />
+                <text x="40" y="50" fill="#FFFFFF" fontSize="12" textAnchor="middle" fontWeight="600">Loaded</text>
+                <text x="40" y="65" fill="#94a3b8" fontSize="11" textAnchor="middle">with dust</text>
+                <text x="40" y="130" fill="#F59E0B" fontSize="13" textAnchor="middle" fontWeight="700">? WC</text>
+              </g>
+            </svg>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1159,7 +1333,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
                   height: '28px',
                   borderRadius: '50%',
                   background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
-                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  color: twistPrediction === opt.id ? 'white' : '#CBD5E1',
                   textAlign: 'center',
                   lineHeight: '28px',
                   marginRight: '12px',
@@ -1185,7 +1359,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav(twistPrediction ? () => { playSound('success'); nextPhase(); } : undefined, 'Next →', !twistPrediction)}
       </div>
     );
   }
@@ -1202,24 +1376,25 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
         {renderProgressBar()}
 
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
-          {/* Educational header with observation guidance */}
+          {/* Educational header */}
           <div style={{
             padding: '16px 24px',
             background: colors.bgCard,
             borderBottom: `1px solid ${colors.border}`,
             marginBottom: '16px',
           }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              Experiment with all system parameters to understand their combined effects. Notice how filter loading adds to total pressure drop,
-              and how roughness multiplies the friction losses. Try different combinations to find the optimal balance.
+            <p style={{ ...typo.small, color: '#CBD5E1', margin: 0 }}>
+              Experiment with all system parameters to observe their combined effects. Notice how filter
+              loading adds to total pressure drop, and roughness multiplies friction losses.
+              Try different combinations to find the optimal balance.
             </p>
           </div>
 
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-              Complete System Pressure Drop
+              Complete System Experiment
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: '#CBD5E1', textAlign: 'center', marginBottom: '24px' }}>
               Explore how all factors combine: diameter, length, roughness, and filter loading
             </p>
 
@@ -1238,7 +1413,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
               {/* Diameter */}
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Pipe Diameter</span>
+                  <span style={{ ...typo.small, color: '#CBD5E1' }}>Pipe Diameter</span>
                   <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{pipeDiameter}"</span>
                 </div>
                 <input
@@ -1248,14 +1423,14 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
                   step="0.5"
                   value={pipeDiameter}
                   onChange={(e) => setPipeDiameter(parseFloat(e.target.value))}
-                  style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                  style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
                 />
               </div>
 
               {/* Flow rate */}
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Flow Rate</span>
+                  <span style={{ ...typo.small, color: '#CBD5E1' }}>Flow Rate</span>
                   <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{flowRate} GPM</span>
                 </div>
                 <input
@@ -1265,14 +1440,14 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
                   step="5"
                   value={flowRate}
                   onChange={(e) => setFlowRate(parseInt(e.target.value))}
-                  style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                  style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
                 />
               </div>
 
               {/* Length */}
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Pipe Length</span>
+                  <span style={{ ...typo.small, color: '#CBD5E1' }}>Pipe Length</span>
                   <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{pipeLength} ft</span>
                 </div>
                 <input
@@ -1282,14 +1457,14 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
                   step="25"
                   value={pipeLength}
                   onChange={(e) => setPipeLength(parseInt(e.target.value))}
-                  style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                  style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
                 />
               </div>
 
               {/* Roughness */}
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Pipe Roughness</span>
+                  <span style={{ ...typo.small, color: '#CBD5E1' }}>Pipe Roughness</span>
                   <span style={{ ...typo.small, color: roughness > 2 ? colors.error : colors.success, fontWeight: 600 }}>
                     {roughness <= 1.5 ? 'Smooth' : roughness <= 2.5 ? 'Moderate' : 'Rough'}
                   </span>
@@ -1301,7 +1476,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
                   step="0.5"
                   value={roughness}
                   onChange={(e) => setRoughness(parseFloat(e.target.value))}
-                  style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                  style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
                 />
               </div>
             </div>
@@ -1309,7 +1484,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
             {/* Filter loading slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Filter Loading</span>
+                <span style={{ ...typo.small, color: '#CBD5E1' }}>Filter Loading</span>
                 <span style={{
                   ...typo.small,
                   color: filterLoading > 0.7 ? colors.error : filterLoading > 0.4 ? colors.warning : colors.success,
@@ -1325,7 +1500,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
                 step="0.1"
                 value={filterLoading}
                 onChange={(e) => setFilterLoading(parseFloat(e.target.value))}
-                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
               />
             </div>
 
@@ -1394,7 +1569,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav(() => { playSound('success'); nextPhase(); }, 'Next →')}
       </div>
     );
   }
@@ -1416,6 +1591,45 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
             System Design Principles
           </h2>
 
+          {/* SVG diagram for twist review */}
+          <div style={{ marginBottom: '24px', textAlign: 'center' }}>
+            <svg
+              viewBox="0 0 500 180"
+              width="100%"
+              style={{ maxWidth: '500px', background: colors.bgCard, borderRadius: '12px', display: 'block', margin: '0 auto' }}
+            >
+              <defs>
+                <linearGradient id="trGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#10B981" />
+                  <stop offset="100%" stopColor="#EF4444" />
+                </linearGradient>
+                <filter id="trGlow">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+              </defs>
+              {/* Filter loading curve */}
+              <path
+                d="M 60 160 L 120 145 L 200 130 L 280 100 L 360 70 L 420 40"
+                fill="none"
+                stroke="url(#trGrad)"
+                strokeWidth="3"
+                filter="url(#trGlow)"
+              />
+              {/* Axis */}
+              <line x1="50" y1="170" x2="450" y2="170" stroke="#ffffff" strokeWidth="1.5" opacity="0.5" />
+              <line x1="50" y1="170" x2="50" y2="20" stroke="#ffffff" strokeWidth="1.5" opacity="0.5" />
+              {/* Labels */}
+              <text x="250" y="190" fill="#FFFFFF" fontSize="12" textAnchor="middle">Filter Age (months)</text>
+              <text x="30" y="95" fill="#FFFFFF" fontSize="11" textAnchor="middle" transform="rotate(-90,30,95)">ΔP (WC)</text>
+              {/* Key points */}
+              <circle cx="60" cy="160" r="5" fill="#10B981" />
+              <circle cx="420" cy="40" r="5" fill="#EF4444" />
+              <text x="75" y="155" fill="#10B981" fontSize="11">Clean: 0.2"</text>
+              <text x="380" y="35" fill="#EF4444" fontSize="11">Loaded: 0.6"</text>
+            </svg>
+          </div>
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
             <div style={{
               background: colors.bgCard,
@@ -1427,8 +1641,10 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
                 <span style={{ fontSize: '24px' }}>📏</span>
                 <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Size Pipes Generously</h3>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                The dramatic effect of diameter (roughly 5th power) means slightly larger pipes can drastically reduce pump energy costs. A <span style={{ color: colors.success }}>20% larger diameter can reduce pressure drop by 60%</span>.
+              <p style={{ ...typo.body, color: '#CBD5E1', margin: 0 }}>
+                The dramatic effect of diameter (roughly 5th power) means slightly larger pipes can
+                drastically reduce pump energy costs. A <span style={{ color: colors.success }}>20%
+                larger diameter can reduce pressure drop by 60%</span>.
               </p>
             </div>
 
@@ -1442,23 +1658,10 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
                 <span style={{ fontSize: '24px' }}>🔄</span>
                 <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Plan for Filter Loading</h3>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Design systems with <span style={{ color: colors.warning }}>2-3× the clean filter pressure drop</span> as headroom. Filter pressure monitoring prevents surprises and optimizes replacement schedules.
-              </p>
-            </div>
-
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>⚖️</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Balance Capital vs Operating Cost</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Larger pipes cost more upfront but save pump energy forever. <span style={{ color: colors.accent }}>Lifecycle cost analysis</span> often favors larger pipes, especially for systems running continuously.
+              <p style={{ ...typo.body, color: '#CBD5E1', margin: 0 }}>
+                Design systems with <span style={{ color: colors.warning }}>2-3× the clean filter
+                pressure drop</span> as headroom. Filter pressure monitoring prevents surprises and
+                optimizes replacement schedules.
               </p>
             </div>
 
@@ -1472,8 +1675,9 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
                 <span style={{ fontSize: '24px' }}>💡</span>
                 <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Key Takeaway</h3>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Pressure drop is non-negotiable physics. Understanding it lets you design systems that are efficient, reliable, and cost-effective over their entire lifespan.
+              <p style={{ ...typo.body, color: '#CBD5E1', margin: 0 }}>
+                Pressure drop is non-negotiable physics. Understanding it lets you design systems
+                that are efficient, reliable, and cost-effective over their entire lifespan.
               </p>
             </div>
           </div>
@@ -1487,7 +1691,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav(() => { playSound('success'); nextPhase(); }, 'Next →')}
       </div>
     );
   }
@@ -1496,6 +1700,12 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+
+    const markCurrentAndNext = (idx: number) => {
+      const newCompleted = [...completedApps];
+      newCompleted[idx] = true;
+      setCompletedApps(newCompleted);
+    };
 
     return (
       <div style={{
@@ -1508,9 +1718,12 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
 
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 24px' }}>
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-              Real-World Applications
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Real-World Transfer Applications
             </h2>
+            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '16px' }}>
+              App {selectedApp + 1} of {realWorldApps.length} — {completedApps.filter(c => c).length} completed
+            </p>
 
             {/* App selector */}
             <div style={{
@@ -1525,9 +1738,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
                 onClick={() => {
                   playSound('click');
                   setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
+                  markCurrentAndNext(i);
                 }}
                 style={{
                   background: selectedApp === i ? `${a.color}22` : colors.bgCard,
@@ -1579,7 +1790,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
               </div>
             </div>
 
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+            <p style={{ ...typo.body, color: '#CBD5E1', marginBottom: '16px' }}>
               {app.description}
             </p>
 
@@ -1592,7 +1803,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
               <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
                 How Pressure Drop Applies:
               </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <p style={{ ...typo.small, color: '#CBD5E1', margin: 0 }}>
                 {app.connection}
               </p>
             </div>
@@ -1601,6 +1812,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1615,6 +1827,26 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
                 </div>
               ))}
             </div>
+
+            {/* Got It button per app */}
+            <button
+              onClick={() => {
+                playSound('click');
+                markCurrentAndNext(selectedApp);
+                // Move to next app if not last
+                if (selectedApp < realWorldApps.length - 1) {
+                  setSelectedApp(selectedApp + 1);
+                  markCurrentAndNext(selectedApp + 1);
+                }
+              }}
+              style={{
+                ...primaryButtonStyle,
+                width: '100%',
+                background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
+              }}
+            >
+              Got It — Next Application →
+            </button>
           </div>
 
             {allAppsCompleted && (
@@ -1628,7 +1860,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav(allAppsCompleted ? () => { playSound('success'); nextPhase(); } : undefined, 'Next →', !allAppsCompleted)}
       </div>
     );
   }
@@ -1660,36 +1892,87 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
             <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
               {testScore} / 10
             </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
-              {passed
-                ? 'You\'ve mastered Pressure Drop in Fluid Systems!'
-                : 'Review the concepts and try again.'}
+            <p style={{ ...typo.body, color: '#CBD5E1', marginBottom: '16px' }}>
+              Score: {testScore * 10}% — {passed ? 'You\'ve mastered Pressure Drop in Fluid Systems!' : 'Review the concepts and try again.'}
             </p>
 
+            {/* Answer review */}
+            <div style={{ textAlign: 'left', marginBottom: '32px' }}>
+              {testQuestions.map((q, i) => {
+                const correct = q.options.find(o => o.correct)?.id;
+                const answered = testAnswers[i];
+                const isCorrect = answered === correct;
+                return (
+                  <div key={i} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '8px 12px',
+                    marginBottom: '6px',
+                    borderRadius: '8px',
+                    background: isCorrect ? `${colors.success}22` : `${colors.error}22`,
+                    border: `1px solid ${isCorrect ? colors.success : colors.error}44`,
+                  }}>
+                    <span style={{ fontSize: '16px' }}>{isCorrect ? '✓' : '✗'}</span>
+                    <span style={{ ...typo.small, color: '#CBD5E1' }}>Q{i + 1}: {isCorrect ? 'Correct' : `Incorrect (Answer: ${correct?.toUpperCase()})`}</span>
+                  </div>
+                );
+              })}
+            </div>
+
             {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
-                Complete Lesson →
-              </button>
+              <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+                <button
+                  onClick={() => goToPhase('hook')}
+                  style={{
+                    padding: '14px 28px',
+                    borderRadius: '10px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: '#CBD5E1',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Play Again
+                </button>
+                <button
+                  onClick={() => { playSound('complete'); nextPhase(); }}
+                  style={primaryButtonStyle}
+                >
+                  Complete Lesson →
+                </button>
+              </div>
             ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
-                }}
-                style={primaryButtonStyle}
-              >
-                Review & Try Again
-              </button>
+              <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+                <button
+                  onClick={() => goToPhase('hook')}
+                  style={{
+                    padding: '14px 28px',
+                    borderRadius: '10px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: '#CBD5E1',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Return to Dashboard
+                </button>
+                <button
+                  onClick={() => {
+                    setTestSubmitted(false);
+                    setTestAnswers(Array(10).fill(null));
+                    setCurrentQuestion(0);
+                    setTestScore(0);
+                  }}
+                  style={primaryButtonStyle}
+                >
+                  Review &amp; Retry
+                </button>
+              </div>
               )}
             </div>
           </div>
-          {renderNavDots()}
+          {renderBottomNav()}
         </div>
       );
     }
@@ -1714,7 +1997,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
             alignItems: 'center',
             marginBottom: '24px',
           }}>
-            <span style={{ ...typo.small, color: colors.textSecondary }}>
+            <span style={{ ...typo.small, color: '#CBD5E1' }}>
               Question {currentQuestion + 1} of 10
             </span>
             <div style={{ display: 'flex', gap: '6px' }}>
@@ -1741,7 +2024,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
             marginBottom: '16px',
             borderLeft: `3px solid ${colors.accent}`,
           }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+            <p style={{ ...typo.small, color: '#CBD5E1', margin: 0 }}>
               {question.scenario}
             </p>
           </div>
@@ -1763,12 +2046,13 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
                   setTestAnswers(newAnswers);
                 }}
                 style={{
-                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}33` : colors.bgCard,
                   border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
                   borderRadius: '10px',
                   padding: '14px 16px',
                   textAlign: 'left',
                   cursor: 'pointer',
+                  transition: 'all 0.15s ease',
                 }}
               >
                 <span style={{
@@ -1777,7 +2061,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
                   height: '24px',
                   borderRadius: '50%',
                   background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
-                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : '#CBD5E1',
                   textAlign: 'center',
                   lineHeight: '24px',
                   marginRight: '10px',
@@ -1804,7 +2088,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
                   borderRadius: '10px',
                   border: `1px solid ${colors.border}`,
                   background: 'transparent',
-                  color: colors.textSecondary,
+                  color: '#CBD5E1',
                   cursor: 'pointer',
                 }}
               >
@@ -1826,7 +2110,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
                   fontWeight: 600,
                 }}
               >
-                Next →
+                Next
               </button>
             ) : (
               <button
@@ -1858,7 +2142,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1875,6 +2159,9 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
         justifyContent: 'center',
         padding: '24px',
         textAlign: 'center',
+        overflowY: 'auto',
+        paddingTop: '48px',
+        paddingBottom: '100px',
       }}>
         {renderProgressBar()}
 
@@ -1891,8 +2178,9 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
           Pressure Drop Master!
         </h1>
 
-        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You now understand how pressure drop affects fluid system design and can apply this knowledge to create efficient, reliable systems.
+        <p style={{ ...typo.body, color: '#CBD5E1', maxWidth: '500px', marginBottom: '32px' }}>
+          Congratulations! You now understand how pressure drop affects fluid system design and can
+          apply this knowledge to create efficient, reliable systems.
         </p>
 
         <div style={{
@@ -1903,19 +2191,19 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
           maxWidth: '400px',
         }}>
           <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
-            You Learned:
+            Mastery Achieved:
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
             {[
               'Darcy-Weisbach equation fundamentals',
-              'Flow rate squared relationship',
-              'Dramatic effect of pipe diameter',
-              'Filter loading and maintenance',
+              'Flow rate squared relationship (ΔP ∝ V²)',
+              'Dramatic effect of pipe diameter (1/D⁵)',
+              'Filter loading and maintenance impact',
               'Real-world system design principles',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ color: colors.success }}>✓</span>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+                <span style={{ ...typo.small, color: '#CBD5E1' }}>{item}</span>
               </div>
             ))}
           </div>
@@ -1929,7 +2217,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
               borderRadius: '10px',
               border: `1px solid ${colors.border}`,
               background: 'transparent',
-              color: colors.textSecondary,
+              color: '#CBD5E1',
               cursor: 'pointer',
             }}
           >
@@ -1947,7 +2235,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
           </a>
         </div>
 
-        {renderNavDots()}
+        {renderBottomNav()}
       </div>
     );
   }

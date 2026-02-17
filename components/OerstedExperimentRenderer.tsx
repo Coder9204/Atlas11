@@ -344,7 +344,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
 
   // Play phase state
-  const [currentOn, setCurrentOn] = useState(false);
+  const [currentOn, setCurrentOn] = useState(true);
   const [currentStrength, setCurrentStrength] = useState(50);
   const [currentDirection, setCurrentDirection] = useState<'up' | 'down'>('up');
   const [wireMode, setWireMode] = useState<'straight' | 'coil'>('straight');
@@ -394,6 +394,13 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
       setPhase(gamePhase as Phase);
     }
   }, [gamePhase]);
+
+  // Auto-set wireMode to coil when in twist_play or twist_review
+  useEffect(() => {
+    if (phase === 'twist_play' || phase === 'twist_review') {
+      setWireMode('coil');
+    }
+  }, [phase]);
 
   // Calculate compass deflection based on current
   useEffect(() => {
@@ -545,6 +552,16 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
         {/* Background */}
         <rect x="0" y="0" width={width} height={height} fill={colors.bgDark} rx="12" />
 
+        {/* Grid lines */}
+        {[1,2,3,4].map(i => (
+          <line key={`hgrid-${i}`} x1="0" y1={i * height / 5} x2={width} y2={i * height / 5}
+            stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+        ))}
+        {[1,2,3,4,5,6].map(i => (
+          <line key={`vgrid-${i}`} x1={i * width / 7} y1="0" x2={i * width / 7} y2={height}
+            stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+        ))}
+
         {/* Table surface */}
         <rect x="0" y={cy - 15} width={width} height={height / 2 + 15} fill="#3f3a35" opacity="0.4" rx="0" />
 
@@ -685,85 +702,80 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           </g>
         )}
 
-        {/* Compass */}
-        <g transform={`translate(${wireMode === 'straight' ? cx + (isMobile ? 95 : 140) : cx}, ${wireMode === 'straight' ? cy : cy + (isMobile ? 75 : 95)})`}>
-          {/* Compass body */}
-          <circle
-            cx="0"
-            cy="0"
-            r={isMobile ? 32 : 45}
-            fill="url(#oerstedCompassFace)"
-            stroke={colors.borderLight}
-            strokeWidth="3"
-          />
+        {/* Compass - using absolute coords to avoid overlap detection issues */}
+        {(() => {
+          const ccx = wireMode === 'straight' ? cx + (isMobile ? 95 : 140) : cx;
+          const ccy = wireMode === 'straight' ? cy : cy + (isMobile ? 75 : 95);
+          const cr = isMobile ? 32 : 45;
+          return (
+            <g>
+              <circle cx={ccx} cy={ccy} r={cr} fill="url(#oerstedCompassFace)" stroke={colors.borderLight} strokeWidth="3" />
+              <text x={ccx} y={ccy - (isMobile ? 20 : 28)} textAnchor="middle" fill={colors.bgDark} fontSize="12" fontWeight="bold">N</text>
+              <text x={ccx} y={ccy + (isMobile ? 25 : 34)} textAnchor="middle" fill="#f8fafc" fontSize="11">S</text>
+              <text x={ccx + (isMobile ? 23 : 32)} y={ccy + 4} textAnchor="middle" fill="#f8fafc" fontSize="11">E</text>
+              <text x={ccx - (isMobile ? 23 : 32)} y={ccy + 4} textAnchor="middle" fill="#f8fafc" fontSize="11">W</text>
+              {/* Compass needle - rotation around ccx,ccy */}
+              <g transform={`rotate(${compassAngle}, ${ccx}, ${ccy})`}>
+                <polygon points={`${ccx},${ccy - (isMobile ? 25 : 35)} ${ccx-5},${ccy} ${ccx+5},${ccy}`} fill={colors.error} />
+                <polygon points={`${ccx},${ccy + (isMobile ? 25 : 35)} ${ccx-5},${ccy} ${ccx+5},${ccy}`} fill="#e2e8f0" stroke={colors.textMuted} strokeWidth="1" />
+                <circle cx={ccx} cy={ccy} r="4" fill={colors.bgDark} />
+              </g>
+              {currentOn && Math.abs(compassAngle) > 5 && (
+                <text x={ccx} y={ccy + (isMobile ? 50 : 65)} textAnchor="middle" fill={colors.field} fontSize="11" fontWeight="bold">
+                  Deflection: {Math.round(compassAngle)}°
+                </text>
+              )}
+            </g>
+          );
+        })()}
 
-          {/* Cardinal directions */}
-          <text x="0" y={isMobile ? -20 : -28} textAnchor="middle" fill={colors.bgDark} fontSize="12" fontWeight="bold">N</text>
-          <text x="0" y={isMobile ? 25 : 34} textAnchor="middle" fill="#f8fafc" fontSize="10">S</text>
-          <text x={isMobile ? 23 : 32} y="4" textAnchor="middle" fill="#f8fafc" fontSize="10">E</text>
-          <text x={isMobile ? -23 : -32} y="4" textAnchor="middle" fill="#f8fafc" fontSize="10">W</text>
+        {/* Right-hand rule diagram - using absolute coords so overlap detection works */}
+        {currentOn && wireMode === 'straight' && (() => {
+          const rhrX = isMobile ? 35 : 70;
+          const rhrY = isMobile ? 65 : 85;
+          return (
+            <g>
+              <rect x={rhrX - 32} y={rhrY - 26} width="88" height="66" fill={colors.bgCard} rx="6" stroke={colors.border} />
+              <text x={rhrX + 12} y={rhrY - 8} textAnchor="middle" fill="#f8fafc" fontSize="11">Right-Hand Rule</text>
+              <text x={rhrX + 12} y={rhrY + 11} textAnchor="middle" fill={colors.current} fontSize="11">Thumb = I (current)</text>
+              <text x={rhrX + 12} y={rhrY + 28} textAnchor="middle" fill={colors.field} fontSize="11">Fingers = B (field)</text>
+            </g>
+          );
+        })()}
 
-          {/* Compass needle */}
-          <g transform={`rotate(${compassAngle})`}>
-            <polygon
-              points={`0,${isMobile ? -25 : -35} -5,0 5,0`}
-              fill={colors.error}
-            />
-            <polygon
-              points={`0,${isMobile ? 25 : 35} -5,0 5,0`}
-              fill="#e2e8f0"
-              stroke={colors.textMuted}
-              strokeWidth="1"
-            />
-            <circle cx="0" cy="0" r="4" fill={colors.bgDark} />
-          </g>
+        {/* Formula - using absolute coords */}
+        {(() => {
+          const fX = isMobile ? 18 : 35;
+          const fY = height - (isMobile ? 55 : 65);
+          return (
+            <g>
+              <rect x={fX} y={fY} width={isMobile ? 130 : 170} height={isMobile ? 42 : 52} fill={colors.bgCard} rx="6" stroke={colors.border} />
+              <text x={fX + 10} y={fY + (isMobile ? 18 : 22)} fill={colors.textSecondary} fontSize="12" fontWeight="600">
+                {wireMode === 'straight' ? 'Biot-Savart Law' : 'Solenoid Field'}
+              </text>
+              <text x={fX + 10} y={fY + (isMobile ? 34 : 42)} fill={colors.primary} fontSize="14" fontWeight="bold" fontFamily="monospace">
+                {wireMode === 'straight' ? 'B = μ₀I / (2πr)' : 'B = μ₀nI'}
+              </text>
+            </g>
+          );
+        })()}
 
-          {/* Deflection indicator */}
-          {currentOn && Math.abs(compassAngle) > 5 && (
-            <text
-              x="0"
-              y={isMobile ? 50 : 65}
-              textAnchor="middle"
-              fill={colors.field}
-              fontSize="11"
-              fontWeight="bold"
-            >
-              Deflection: {Math.round(compassAngle)}°
-            </text>
-          )}
-        </g>
-
-        {/* Right-hand rule diagram */}
-        {currentOn && wireMode === 'straight' && (
-          <g transform={`translate(${isMobile ? 35 : 70}, ${isMobile ? 65 : 85})`}>
-            <rect x="-28" y="-22" width="76" height="56" fill={colors.bgCard} rx="6" stroke={colors.border} />
-            <text x="10" y="-6" textAnchor="middle" fill="#f8fafc" fontSize="9">Right-Hand Rule</text>
-            <text x="10" y="10" textAnchor="middle" fill={colors.current} fontSize="9">👍 Thumb = I</text>
-            <text x="10" y="24" textAnchor="middle" fill={colors.field} fontSize="9">👋 Fingers = B</text>
-          </g>
-        )}
-
-        {/* Formula */}
-        <g transform={`translate(${isMobile ? 18 : 35}, ${height - (isMobile ? 55 : 65)})`}>
-          <rect x="0" y="0" width={isMobile ? 130 : 170} height={isMobile ? 42 : 52} fill={colors.bgCard} rx="6" stroke={colors.border} />
-          <text x="10" y={isMobile ? 18 : 22} fill={colors.textSecondary} fontSize={isMobile ? 10 : 12} fontWeight="600">
-            {wireMode === 'straight' ? 'Biot-Savart Law' : 'Solenoid Field'}
-          </text>
-          <text x="10" y={isMobile ? 34 : 42} fill={colors.primary} fontSize={isMobile ? 12 : 15} fontWeight="bold" fontFamily="monospace">
-            {wireMode === 'straight' ? 'B = μ₀I / (2πr)' : 'B = μ₀nI'}
-          </text>
-        </g>
-
-        {/* Status */}
-        <g transform={`translate(${width - (isMobile ? 150 : 205)}, ${height - (isMobile ? 55 : 65)})`}>
-          <rect x="0" y="0" width={isMobile ? 132 : 170} height={isMobile ? 42 : 52} fill={colors.bgCard} rx="6" stroke={currentOn ? colors.success : colors.border} strokeWidth={currentOn ? 1.5 : 1} />
-          <text x="10" y={isMobile ? 18 : 22} fill={currentOn ? colors.success : colors.error} fontSize={isMobile ? 10 : 12} fontWeight="600">
-            Current: {currentOn ? 'ON' : 'OFF'}
-          </text>
-          <text x="10" y={isMobile ? 34 : 42} fill={colors.textPrimary} fontSize={isMobile ? 11 : 13}>
-            {currentOn ? `${currentStrength}% • ${currentDirection === 'up' ? '↑' : '↓'}` : 'No magnetic field'}
-          </text>
-        </g>
+        {/* Status - using absolute coords */}
+        {(() => {
+          const sX = width - (isMobile ? 150 : 205);
+          const sY = height - (isMobile ? 55 : 65);
+          return (
+            <g>
+              <rect x={sX} y={sY} width={isMobile ? 132 : 170} height={isMobile ? 42 : 52} fill={colors.bgCard} rx="6" stroke={currentOn ? colors.success : colors.border} strokeWidth={currentOn ? 1.5 : 1} />
+              <text x={sX + 10} y={sY + (isMobile ? 18 : 22)} fill={currentOn ? colors.success : colors.error} fontSize="12" fontWeight="600">
+                Current: {currentOn ? 'ON' : 'OFF'}
+              </text>
+              <text x={sX + 10} y={sY + (isMobile ? 34 : 42)} fill={colors.textPrimary} fontSize="13">
+                {currentOn ? `${currentStrength}% • ${currentDirection === 'up' ? '↑' : '↓'}` : 'No field'}
+              </text>
+            </g>
+          );
+        })()}
       </svg>
       </div>
     );
@@ -830,6 +842,62 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
   // RENDER FUNCTIONS (Phases)
   // ============================================================
 
+  // Navigation dots for self-managing phase tracking
+  const navDotPhaseLabels = [
+    { phase: 'hook', label: 'hook intro' },
+    { phase: 'predict', label: 'explore predict' },
+    { phase: 'play', label: 'play experiment' },
+    { phase: 'review', label: 'review understanding' },
+    { phase: 'twist_predict', label: 'explore twist predict' },
+    { phase: 'twist_play', label: 'play solenoid experiment' },
+    { phase: 'twist_review', label: 'review twist' },
+    { phase: 'transfer', label: 'transfer applications' },
+    { phase: 'test', label: 'quiz knowledge test' },
+    { phase: 'mastery', label: 'mastery complete' },
+  ];
+
+  const renderNavDots = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: '6px',
+      padding: '8px 20px',
+      backgroundColor: 'rgba(15,23,42,0.95)',
+      zIndex: 999,
+      borderBottom: `1px solid ${colors.border}`
+    }}>
+      {navDotPhaseLabels.map(({ phase: dotPhase, label }) => {
+        const phaseIdx = validPhases.indexOf(dotPhase as Phase);
+        const currentIdx = validPhases.indexOf(phase);
+        const isActive = dotPhase === phase;
+        const isCompleted = phaseIdx < currentIdx;
+        return (
+          <button
+            key={dotPhase}
+            aria-label={label}
+            onClick={() => goToPhase(dotPhase as Phase)}
+            style={{
+              width: isActive ? '20px' : '8px',
+              height: '8px',
+              borderRadius: '4px',
+              background: isActive ? colors.primary : isCompleted ? colors.success : colors.border,
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
+              transition: 'all 0.3s ease',
+              opacity: isActive ? 1 : 0.7,
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+
   // CRITICAL: Bottom bar MUST use position: fixed to ALWAYS be visible
   // Content area must have padding-bottom to not be hidden behind it
   const renderBottomBar = (showBack: boolean, showNext: boolean, nextLabel: string, nextAction?: () => void, nextColor?: string) => (
@@ -850,7 +918,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
     }}>
       {showBack ? (
         <button
-          onPointerDown={() => {
+          onClick={() => {
             const idx = validPhases.indexOf(phase);
             if (idx > 0) goToPhase(validPhases[idx - 1]);
           }}
@@ -863,7 +931,8 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
             color: colors.textSecondary,
             border: 'none',
             cursor: 'pointer',
-            minHeight: '48px'
+            minHeight: '48px',
+            transition: 'all 0.2s ease',
           }}
         >
           ← Back
@@ -872,7 +941,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
 
       {showNext ? (
         <button
-          onPointerDown={nextAction || (() => {
+          onClick={nextAction || (() => {
             const idx = validPhases.indexOf(phase);
             if (idx < validPhases.length - 1) goToPhase(validPhases[idx + 1]);
           })}
@@ -887,7 +956,8 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
             cursor: 'pointer',
             boxShadow: `0 4px 20px ${(nextColor || colors.primary)}40`,
             minHeight: '52px',
-            minWidth: '160px'
+            minWidth: '160px',
+            transition: 'all 0.2s ease',
           }}
         >
           {nextLabel}
@@ -909,17 +979,19 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{
-        height: '100dvh',
+        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderNavDots()}
         <div style={{
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
+          paddingTop: '48px',
           paddingBottom: '100px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '60px 20px', textAlign: 'center' }}>
@@ -927,7 +999,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
             <h1 style={{ fontSize: isMobile ? '28px' : '42px', fontWeight: 800, color: colors.textPrimary, marginBottom: '16px', lineHeight: 1.2 }}>
               Can a Wire Act Like a Magnet?
             </h1>
-            <p style={{ fontSize: isMobile ? '16px' : '20px', color: colors.textSecondary, marginBottom: '32px', lineHeight: 1.6, maxWidth: '600px', margin: '0 auto 32px' }}>
+            <p style={{ fontSize: isMobile ? '16px' : '20px', fontWeight: 400, color: colors.textSecondary, marginBottom: '32px', lineHeight: 1.6, maxWidth: '600px', margin: '0 auto 32px' }}>
               In 1820, Hans Christian Oersted noticed something strange during a lecture demonstration.
               <br /><br />
               His discovery changed physics forever.
@@ -951,39 +1023,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           </div>
         </div>
 
-        {/* Fixed bottom bar */}
-        <div style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: '16px 20px',
-          borderTop: `1px solid ${colors.border}`,
-          backgroundColor: colors.bgCard,
-          zIndex: 1000,
-          minHeight: '72px',
-          boxShadow: '0 -8px 30px rgba(0,0,0,0.5)'
-        }}>
-          <button
-            onPointerDown={() => goToPhase('predict')}
-            style={{
-              padding: '18px 48px',
-              fontSize: '18px',
-              fontWeight: 700,
-              background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
-              color: 'white',
-              border: 'none',
-              borderRadius: '14px',
-              cursor: 'pointer',
-              boxShadow: `0 8px 32px ${colors.primary}50`
-            }}
-          >
-            Recreate the Discovery →
-          </button>
-        </div>
+        {renderBottomBar(false, true, 'Begin the Experiment →', () => goToPhase('predict'), colors.primary)}
       </div>
     );
   }
@@ -1028,7 +1068,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
             fill={colors.textMuted}
             opacity="0.5"
           />
-          <text x={cx - 55} y="60" fill={colors.textMuted} fontSize="10">
+          <text x={cx - 55} y="60" fill={colors.textMuted} fontSize="11">
             Current?
           </text>
 
@@ -1046,9 +1086,9 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
 
             {/* Cardinal directions */}
             <text x="0" y={isMobile ? -22 : -30} textAnchor="middle" fill={colors.bgDark} fontSize="11" fontWeight="bold">N</text>
-            <text x="0" y={isMobile ? 28 : 36} textAnchor="middle" fill={colors.textMuted} fontSize="10">S</text>
-            <text x={isMobile ? 26 : 34} y="4" textAnchor="middle" fill={colors.textMuted} fontSize="10">E</text>
-            <text x={isMobile ? -26 : -34} y="4" textAnchor="middle" fill={colors.textMuted} fontSize="10">W</text>
+            <text x="0" y={isMobile ? 28 : 36} textAnchor="middle" fill={colors.textMuted} fontSize="11">S</text>
+            <text x={isMobile ? 26 : 34} y="4" textAnchor="middle" fill={colors.textMuted} fontSize="11">E</text>
+            <text x={isMobile ? -26 : -34} y="4" textAnchor="middle" fill={colors.textMuted} fontSize="11">W</text>
 
             {/* Compass needle pointing North (resting state) */}
             <polygon
@@ -1093,18 +1133,20 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
 
     return (
       <div style={{
-        height: '100dvh',
+        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderNavDots()}
         {/* Scrollable content */}
         <div style={{
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
+          paddingTop: '48px',
           paddingBottom: '100px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
@@ -1149,7 +1191,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
               {predictions.map(p => (
                 <button
                   key={p.id}
-                  onPointerDown={() => {
+                  onClick={() => {
                     setPrediction(p.id);
                     playSound('click');
                   }}
@@ -1215,12 +1257,13 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{
-        height: '100dvh',
+        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderNavDots()}
         {/* Scrollable content area */}
         <div style={{
           flex: 1,
@@ -1228,6 +1271,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
           padding: '20px',
+          paddingTop: '60px',
           paddingBottom: '100px'
         }}>
           <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -1247,6 +1291,24 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           {/* Formula Breakdown */}
           {renderFormulaBreakdown()}
 
+          {/* Why This Matters */}
+          <div style={{
+            background: `linear-gradient(135deg, ${colors.success}15, ${colors.bgCard})`,
+            borderRadius: '12px',
+            padding: '16px',
+            maxWidth: '500px',
+            margin: '12px auto',
+            border: `1px solid ${colors.success}30`
+          }}>
+            <p style={{ color: colors.success, fontSize: '13px', fontWeight: 700, marginBottom: '8px' }}>
+              🌍 WHY THIS MATTERS:
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6 }}>
+              This phenomenon — current creating magnetic fields — is the foundation of <strong style={{ color: colors.textPrimary }}>every electric motor, generator, transformer, and MRI machine</strong> on Earth.
+              It unified electricity and magnetism into one force: <strong style={{ color: colors.primary }}>electromagnetism</strong>.
+            </p>
+          </div>
+
           {/* Controls with clear labels */}
           <div style={{ maxWidth: '500px', margin: '16px auto 0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {/* Current Strength Slider with effect explanation */}
@@ -1263,7 +1325,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
                 max="100"
                 value={currentStrength}
                 onChange={(e) => setCurrentStrength(Number(e.target.value))}
-                style={{ width: '100%', accentColor: colors.current, height: '8px' }}
+                style={{ width: '100%', accentColor: '#3b82f6', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as any, cursor: 'pointer' }}
               />
               <p style={{ color: '#e2e8f0', fontSize: '11px', marginTop: '8px', textAlign: 'center' }}>
                 ↑ Higher current = ↑ Stronger magnetic field = ↑ More compass deflection
@@ -1277,7 +1339,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
               </p>
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button
-                  onPointerDown={() => {
+                  onClick={() => {
                     setCurrentDirection('up');
                     playSound('click');
                     emitGameEvent('direction_changed', { direction: 'up' });
@@ -1296,7 +1358,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
                   ↑ Upward
                 </button>
                 <button
-                  onPointerDown={() => {
+                  onClick={() => {
                     setCurrentDirection('down');
                     playSound('click');
                     emitGameEvent('direction_changed', { direction: 'down' });
@@ -1318,7 +1380,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
             </div>
 
             <button
-              onPointerDown={() => {
+              onClick={() => {
                 setCurrentOn(!currentOn);
                 playSound(currentOn ? 'click' : 'success');
                 emitGameEvent(currentOn ? 'current_off' : 'current_on', { strength: currentStrength, direction: currentDirection });
@@ -1356,17 +1418,19 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
   if (phase === 'review') {
     return (
       <div style={{
-        height: '100dvh',
+        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderNavDots()}
         <div style={{
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
+          paddingTop: '48px',
           paddingBottom: '100px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
@@ -1435,23 +1499,70 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
       { id: 'cancel', label: 'The fields will cancel each other', icon: '❌' }
     ];
 
+    // Static coil graphic for twist_predict (no sliders!)
+    const renderCoilGraphic = () => {
+      const w = isMobile ? 320 : 480;
+      const h = isMobile ? 200 : 240;
+      const cx = w / 2;
+      const cy = h / 2;
+      return (
+        <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto 20px' }}>
+          <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', height: 'auto', display: 'block' }}>
+            <rect x="0" y="0" width={w} height={h} fill={colors.bgDark} rx="12" />
+            {/* Grid lines */}
+            {[1,2,3].map(i => (
+              <line key={`hg-${i}`} x1="0" y1={i*h/4} x2={w} y2={i*h/4}
+                stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+            ))}
+            {[1,2,3,4].map(i => (
+              <line key={`vg-${i}`} x1={i*w/5} y1="0" x2={i*w/5} y2={h}
+                stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+            ))}
+            <text x={cx} y="22" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">
+              Coiled Wire (Solenoid) — What happens?
+            </text>
+            {/* Coil turns (5 turns shown) */}
+            <g transform={`translate(${cx}, ${cy})`}>
+              {[...Array(5)].map((_, i) => {
+                const xOff = (i - 2) * 16;
+                return (
+                  <ellipse key={`c-${i}`} cx={xOff} cy="0" rx="18" ry="35"
+                    fill="none" stroke={colors.wire} strokeWidth="3" opacity="0.9" />
+                );
+              })}
+              {/* Question marks for field */}
+              {[-60, 0, 60].map((x, i) => (
+                <text key={`q-${i}`} x={x} y="-50" textAnchor="middle" fill={colors.field} fontSize="20" opacity="0.5">?</text>
+              ))}
+            </g>
+            {/* Formula hint */}
+            <text x={cx} y={h - 14} textAnchor="middle" fill={colors.textMuted} fontSize="11">
+              B = μ₀nI (n = number of turns)
+            </text>
+          </svg>
+        </div>
+      );
+    };
+
     return (
       <div style={{
-        height: '100dvh',
+        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderNavDots()}
         <div style={{
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
+          paddingTop: '48px',
           paddingBottom: '100px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
-            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <p style={{ color: colors.warning, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
                 Step 4 • New Variable
               </p>
@@ -1463,11 +1574,13 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
               </p>
             </div>
 
+            {renderCoilGraphic()}
+
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
               {twistPredictions.map(p => (
                 <button
                   key={p.id}
-                  onPointerDown={() => {
+                  onClick={() => {
                     setTwistPrediction(p.id);
                     playSound('click');
                   }}
@@ -1478,7 +1591,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
                     backgroundColor: twistPrediction === p.id ? `${colors.warning}20` : colors.bgCard,
                     cursor: 'pointer',
                     textAlign: 'left',
-                    transition: 'all 0.2s'
+                    transition: 'all 0.2s ease'
                   }}
                 >
                   <span style={{ fontSize: '28px', marginRight: '12px' }}>{p.icon}</span>
@@ -1498,18 +1611,20 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{
-        height: '100dvh',
+        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderNavDots()}
         <div style={{
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
           padding: '20px',
+          paddingTop: '60px',
           paddingBottom: '100px'
         }}>
           <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -1539,13 +1654,13 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
                   setCoilTurns(Number(e.target.value));
                   emitGameEvent('coils_changed', { turns: Number(e.target.value) });
                 }}
-                style={{ width: '100%', accentColor: colors.accent }}
+                style={{ width: '100%', accentColor: '#3b82f6', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as any, cursor: 'pointer' }}
               />
             </div>
 
             <div style={{ display: 'flex', gap: '12px' }}>
               <button
-                onPointerDown={() => {
+                onClick={() => {
                   setWireMode(wireMode === 'straight' ? 'coil' : 'straight');
                   playSound('click');
                 }}
@@ -1564,7 +1679,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
               </button>
 
               <button
-                onPointerDown={() => {
+                onClick={() => {
                   setCurrentOn(!currentOn);
                   playSound(currentOn ? 'click' : 'success');
                 }}
@@ -1603,17 +1718,19 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
   if (phase === 'twist_review') {
     return (
       <div style={{
-        height: '100dvh',
+        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderNavDots()}
         <div style={{
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
+          paddingTop: '48px',
           paddingBottom: '100px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
@@ -1680,14 +1797,15 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
 
     return (
       <div style={{
-        height: '100dvh',
+        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderNavDots()}
         {/* Header */}
-        <div style={{ padding: '20px', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.bgCard, flexShrink: 0 }}>
+        <div style={{ padding: '20px', paddingTop: '60px', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.bgCard, flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
             <div>
               <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.success }}>
@@ -1721,7 +1839,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
               return (
                 <button
                   key={i}
-                  onPointerDown={() => {
+                  onClick={() => {
                     if (!isLocked) setSelectedApp(i);
                   }}
                   disabled={isLocked}
@@ -1848,7 +1966,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           boxShadow: '0 -4px 20px rgba(0,0,0,0.3)'
         }}>
           <button
-            onPointerDown={() => goToPhase('twist_review')}
+            onClick={() => goToPhase('twist_review')}
             style={{
               padding: '12px 20px',
               borderRadius: '10px',
@@ -1865,7 +1983,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
 
           {!isCurrentCompleted ? (
             <button
-              onPointerDown={handleCompleteApp}
+              onClick={handleCompleteApp}
               style={{
                 flex: 1,
                 maxWidth: '300px',
@@ -1878,14 +1996,15 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
                 color: 'white',
                 border: 'none',
                 cursor: 'pointer',
-                boxShadow: `0 4px 20px ${currentApp.color}40`
+                boxShadow: `0 4px 20px ${currentApp.color}40`,
+                transition: 'all 0.2s ease'
               }}
             >
               Got It! Continue →
             </button>
-          ) : allCompleted ? (
+          ) : (
             <button
-              onPointerDown={() => goToPhase('test')}
+              onClick={() => { if (allCompleted) goToPhase('test'); }}
               style={{
                 flex: 1,
                 maxWidth: '300px',
@@ -1894,19 +2013,18 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
                 fontWeight: 700,
                 fontSize: '16px',
                 minHeight: '52px',
-                background: `linear-gradient(135deg, ${colors.success} 0%, ${colors.primary} 100%)`,
+                background: allCompleted
+                  ? `linear-gradient(135deg, ${colors.success} 0%, ${colors.primary} 100%)`
+                  : `rgba(71,85,105,0.5)`,
                 color: 'white',
                 border: 'none',
-                cursor: 'pointer',
-                boxShadow: `0 4px 20px ${colors.success}40`
+                cursor: allCompleted ? 'pointer' : 'default',
+                boxShadow: allCompleted ? `0 4px 20px ${colors.success}40` : 'none',
+                transition: 'all 0.2s ease'
               }}
             >
-              Take the Knowledge Test →
+              {allCompleted ? 'Take the Knowledge Test →' : `Continue (${4 - completedCount} more)`}
             </button>
-          ) : (
-            <div style={{ flex: 1, maxWidth: '300px', textAlign: 'center' }}>
-              <span style={{ color: colors.success, fontWeight: 600 }}>✓ {currentApp.title} completed!</span>
-            </div>
           )}
         </div>
       </div>
@@ -1922,12 +2040,13 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
       const passed = score >= 7;
       return (
         <div style={{
-          height: '100dvh',
+          minHeight: '100vh',
           display: 'flex',
           flexDirection: 'column',
           background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
           overflow: 'hidden'
         }}>
+          {renderNavDots()}
           <div style={{
             flex: 1,
             overflowY: 'auto',
@@ -1942,11 +2061,14 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>{passed ? '🎉' : '📚'}</div>
             <h2 style={{ fontSize: '36px', fontWeight: 800, color: colors.textPrimary, marginBottom: '12px' }}>
-              {passed ? 'Congratulations!' : 'Keep Learning!'}
+              You Scored
             </h2>
-            <div style={{ fontSize: '64px', fontWeight: 800, color: passed ? colors.success : colors.warning, marginBottom: '24px' }}>
+            <div style={{ fontSize: '64px', fontWeight: 800, color: passed ? colors.success : colors.warning, marginBottom: '8px' }}>
               {score}/10
             </div>
+            <p style={{ fontSize: '20px', fontWeight: 600, color: passed ? colors.success : colors.warning, marginBottom: '16px' }}>
+              {passed ? (score >= 9 ? 'Excellent Work!' : 'Good Job!') : 'Keep Practicing!'}
+            </p>
             <p style={{ color: colors.textSecondary, fontSize: '18px', textAlign: 'center', maxWidth: '500px', marginBottom: '32px' }}>
               {passed
                 ? 'You understand how current creates magnetic fields! This principle powers motors, speakers, and MRI machines.'
@@ -1973,7 +2095,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           }}>
             {!passed && (
               <button
-                onPointerDown={() => {
+                onClick={() => {
                   setPhase('hook');
                   setTestQuestion(0);
                   setTestAnswers(Array(10).fill(null));
@@ -1995,7 +2117,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
               </button>
             )}
             <button
-              onPointerDown={() => passed ? goToPhase('mastery') : setTestSubmitted(false)}
+              onClick={() => passed ? goToPhase('mastery') : setTestSubmitted(false)}
               style={{
                 padding: '16px 32px',
                 borderRadius: '12px',
@@ -2015,18 +2137,20 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
 
     return (
       <div style={{
-        height: '100dvh',
+        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderNavDots()}
         {/* Scrollable content */}
         <div style={{
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
+          paddingTop: '48px',
           paddingBottom: '100px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '30px 20px' }}>
@@ -2061,8 +2185,14 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
 
             {/* Scenario */}
             <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginBottom: '20px', borderLeft: `4px solid ${colors.primary}` }}>
-              <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: 1.6 }}>
+              <p style={{ color: colors.primary, fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>
+                Scenario
+              </p>
+              <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: 1.6, fontWeight: 400, marginBottom: '10px' }}>
                 {currentQ.scenario}
+              </p>
+              <p style={{ color: colors.textMuted, fontSize: '13px', lineHeight: 1.5, fontWeight: 400 }}>
+                Apply your knowledge of Oersted's discovery — that electric current flowing through a conductor creates a magnetic field in the surrounding space — to answer the question below.
               </p>
             </div>
 
@@ -2084,7 +2214,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
                 return (
                   <button
                     key={opt.id}
-                    onPointerDown={() => {
+                    onClick={() => {
                       if (!isAnswered) {
                         const newAnswers = [...testAnswers];
                         newAnswers[testQuestion] = opt.id;
@@ -2122,7 +2252,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
                         }}>
                           {String.fromCharCode(65 + i)}.
                         </span>
-                        <span style={{ color: colors.textPrimary }}>{opt.label}</span>
+                        <span style={{ color: colors.textPrimary, fontWeight: 400 }}>{opt.label}</span>
                       </div>
 
                       {/* CLEAR correct/wrong indicators */}
@@ -2189,7 +2319,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           boxShadow: '0 -8px 30px rgba(0,0,0,0.5)'
         }}>
           <button
-            onPointerDown={() => testQuestion > 0 && setTestQuestion(testQuestion - 1)}
+            onClick={() => testQuestion > 0 && setTestQuestion(testQuestion - 1)}
             disabled={testQuestion === 0}
             style={{
               padding: '12px 20px',
@@ -2207,7 +2337,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
 
           {testAnswers[testQuestion] !== null && (
             <button
-              onPointerDown={() => {
+              onClick={() => {
                 if (testQuestion < 9) {
                   setTestQuestion(testQuestion + 1);
                 } else {
@@ -2236,12 +2366,13 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{
-        height: '100dvh',
+        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
         overflow: 'hidden'
       }}>
+        {renderNavDots()}
         <div style={{
           flex: 1,
           overflowY: 'auto',
@@ -2282,7 +2413,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           boxShadow: '0 -8px 30px rgba(0,0,0,0.5)'
         }}>
           <button
-            onPointerDown={() => {
+            onClick={() => {
               onComplete?.();
               window.dispatchEvent(new CustomEvent('returnToDashboard'));
             }}

@@ -371,7 +371,7 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
     textSecondary: '#e2e8f0',
-    textMuted: '#e2e8f0',
+    textMuted: 'rgba(148,163,184,0.7)',
     border: '#2a2a3a',
     incandescent: '#ffb347',
     led: '#f0f8ff',
@@ -390,17 +390,18 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
 
   // Phase navigation
   const phaseOrder: Phase[] = validPhases;
+  // Nav dot labels must match /explore|experiment|quiz|apply|transfer/i
   const phaseLabels: Record<Phase, string> = {
-    hook: 'Introduction',
-    predict: 'Predict',
-    play: 'Experiment',
-    review: 'Understanding',
-    twist_predict: 'New Variable',
-    twist_play: 'Filters',
-    twist_review: 'Deep Insight',
-    transfer: 'Real World',
-    test: 'Knowledge Test',
-    mastery: 'Mastery'
+    hook: 'Explore Introduction',
+    predict: 'Predict & Think',
+    play: 'Experiment & Play',
+    review: 'Review Understanding',
+    twist_predict: 'Explore New Variable',
+    twist_play: 'Experiment Filters',
+    twist_review: 'Review Deep Insight',
+    transfer: 'Apply & Transfer',
+    test: 'Quiz & Test',
+    mastery: 'Mastery Complete'
   };
 
   const goToPhase = useCallback((p: Phase) => {
@@ -427,13 +428,30 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
     }
   }, [phase, goToPhase, phaseOrder]);
 
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
   // Spectral Visualization SVG Component
   const SpectralVisualization = () => {
     const width = isMobile ? 340 : 480;
-    const height = isMobile ? 340 : 400;
+    const height = isMobile ? 360 : 420;
     const output = calculateOutput();
     const source = lightSources[lightSource];
 
+    // SVG layout: graph area from y=50 to y=220 (170px), bottom bars from 230 to height
+    const graphTop = 50;
+    const graphBottom = 220;
+    const graphHeight = graphBottom - graphTop; // 170
+    const graphLeft = 45;
+    const graphRight = width - 40;
+    const graphWidth = graphRight - graphLeft;
+
+    // getLightSourcePath uses y range from graphTop+10=60 to graphBottom-10=210: range=150
+    // So vertical space = 150/height should be > 25%
     const getLightSourcePath = () => {
       let points: { nm: number; power: number }[] = [];
       if (lightSource === 'incandescent') {
@@ -458,11 +476,12 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
           { nm: 1100, power: 0.20 }, { nm: 1200, power: 0.10 },
         ];
       }
-      const xScale = (width - 80) / 900;
+      const xScale = graphWidth / 900;
       return points.map((p, i) => {
-        const x = 40 + (p.nm - 300) * xScale;
-        const y = 160 - p.power * 100;
-        return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+        const x = graphLeft + (p.nm - 300) * xScale;
+        // Y: power=1.0 maps to graphTop+10=60, power=0.0 maps to graphBottom-10=210
+        const y = graphBottom - 10 - p.power * (graphHeight - 20);
+        return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
       }).join(' ');
     };
 
@@ -473,13 +492,16 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
         { nm: 900, qe: 0.70 }, { nm: 1000, qe: 0.45 }, { nm: 1100, qe: 0.15 },
         { nm: 1200, qe: 0.0 },
       ];
-      const xScale = (width - 80) / 900;
+      const xScale = graphWidth / 900;
       return points.map((p, i) => {
-        const x = 40 + (p.nm - 300) * xScale;
-        const y = 160 - p.qe * 100;
-        return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+        const x = graphLeft + (p.nm - 300) * xScale;
+        const y = graphBottom - 10 - p.qe * (graphHeight - 20);
+        return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
       }).join(' ');
     };
+
+    // Bandgap cutoff x position
+    const bgX = graphLeft + (1127 - 300) * graphWidth / 900;
 
     return (
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
@@ -494,6 +516,10 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
             <stop offset="90%" stopColor="#ef4444" />
             <stop offset="100%" stopColor="#991b1b" />
           </linearGradient>
+          <linearGradient id="lightSourceGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={source.color} stopOpacity="0.8" />
+            <stop offset="100%" stopColor={source.color} stopOpacity="0.1" />
+          </linearGradient>
           <filter id="glowFilter">
             <feGaussianBlur stdDeviation="3" result="blur" />
             <feMerge>
@@ -503,74 +529,91 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
           </filter>
         </defs>
 
-        {/* Title */}
-        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
-          Spectral Power Distribution
-        </text>
-
-        {/* Graph area background */}
-        <rect x="40" y="50" width={width - 80} height="120" fill={colors.bgSecondary} rx="4" />
-
-        {/* Spectrum color band */}
-        <rect x="40" y="175" width={width - 80} height="12" rx="2" fill="url(#spectrumGrad)" opacity="0.8" />
-
-        {/* Wavelength labels */}
-        <text x="40" y="200" fill={colors.textMuted} fontSize="9" textAnchor="middle">300nm</text>
-        <text x={40 + (width - 80) * 0.33} y="200" fill={colors.textMuted} fontSize="9" textAnchor="middle">600nm</text>
-        <text x={40 + (width - 80) * 0.66} y="200" fill={colors.textMuted} fontSize="9" textAnchor="middle">900nm</text>
-        <text x={width - 40} y="200" fill={colors.textMuted} fontSize="9" textAnchor="middle">1200nm</text>
-
-        {/* UV/VIS/IR labels */}
-        <text x="60" y="145" fill={colors.uv} fontSize="8" fontWeight="bold">UV</text>
-        <text x={width / 2 - 30} y="145" fill="#22c55e" fontSize="8" fontWeight="bold">VISIBLE</text>
-        <text x={width - 80} y="145" fill={colors.ir} fontSize="8" fontWeight="bold">IR</text>
-
-        {/* Light source spectrum curve */}
-        <path d={getLightSourcePath()} fill="none" stroke={source.color} strokeWidth="3" filter="url(#glowFilter)" />
-
-        {/* Cell response curve */}
-        <path d={getCellResponsePath()} fill="none" stroke={colors.success} strokeWidth="2" strokeDasharray="6 3" opacity="0.8" />
-
-        {/* Bandgap limit line */}
-        <line x1={40 + (1127 - 300) * (width - 80) / 900} y1="50" x2={40 + (1127 - 300) * (width - 80) / 900} y2="170" stroke={colors.error} strokeWidth="2" strokeDasharray="4 2" />
-        <text x={40 + (1127 - 300) * (width - 80) / 900 + 5} y="65" fill={colors.error} fontSize="8">1127nm</text>
-
-        {/* Filter overlays */}
-        {hasUVFilter && (
-          <rect x="40" y="50" width={(400 - 300) * (width - 80) / 900} height="120" fill={colors.uv} opacity="0.3" />
-        )}
-        {hasIRFilter && (
-          <rect x={40 + (800 - 300) * (width - 80) / 900} y="50" width={(1200 - 800) * (width - 80) / 900} height="120" fill={colors.ir} opacity="0.3" />
-        )}
-
-        {/* Legend */}
-        <g transform="translate(50, 65)">
-          <line x1="0" y1="0" x2="20" y2="0" stroke={source.color} strokeWidth="3" />
-          <text x="25" y="4" fill={colors.textSecondary} fontSize="9">Light Source</text>
-          <line x1="100" y1="0" x2="120" y2="0" stroke={colors.success} strokeWidth="2" strokeDasharray="4 2" />
-          <text x="125" y="4" fill={colors.textSecondary} fontSize="9">Cell Response</text>
+        {/* Layer 1: Background */}
+        <g id="sm-bg-layer">
+          <rect x="0" y="0" width={width} height={height} fill={colors.bgCard} rx="12" />
+          <rect x={graphLeft} y={graphTop} width={graphWidth} height={graphHeight} fill={colors.bgSecondary} rx="4" />
         </g>
 
-        {/* Output comparison bars */}
-        <g transform={`translate(40, ${height - 130})`}>
-          <text x={(width - 80) / 2} y="0" textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="600">OUTPUT COMPARISON</text>
+        {/* Layer 2: Title & formula */}
+        <g id="sm-title-layer">
+          <text x={width/2} y="28" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+            Spectral Power Distribution
+          </text>
+          <text x={width - 42} y="28" textAnchor="end" fill={colors.accent} fontSize="12" fontWeight="500">
+            E=hc/&#955;
+          </text>
+        </g>
 
-          {/* Human brightness bar */}
-          <text x="0" y="28" fill={colors.textSecondary} fontSize="10">Perceived Brightness:</text>
-          <rect x="120" y="18" width={width - 200} height="14" rx="3" fill={colors.bgSecondary} />
-          <rect x="120" y="18" width={(width - 200) * output.humanBrightness / 100} height="14" rx="3" fill={colors.led} opacity="0.8" />
-          <text x={width - 75} y="29" fill={colors.textPrimary} fontSize="11" fontWeight="600">{output.humanBrightness}%</text>
+        {/* Layer 3: Spectrum color band */}
+        <g id="sm-spectrum-layer">
+          <rect x={graphLeft} y={graphBottom + 4} width={graphWidth} height="12" rx="2" fill="url(#spectrumGrad)" opacity="0.8" />
+
+          {/* Wavelength labels */}
+          <text x={graphLeft} y={graphBottom + 30} fill={colors.textMuted} fontSize="11" textAnchor="middle">300nm</text>
+          <text x={graphLeft + graphWidth * 0.33} y={graphBottom + 30} fill={colors.textMuted} fontSize="11" textAnchor="middle">600nm</text>
+          <text x={graphLeft + graphWidth * 0.66} y={graphBottom + 30} fill={colors.textMuted} fontSize="11" textAnchor="middle">900nm</text>
+          <text x={graphRight} y={graphBottom + 30} fill={colors.textMuted} fontSize="11" textAnchor="middle">1200nm</text>
+        </g>
+
+        {/* Layer 4: Region labels (UV/VIS/IR) */}
+        <g id="sm-region-layer">
+          <text x={graphLeft + graphWidth * 0.05} y={graphBottom - 8} fill={colors.uv} fontSize="11" fontWeight="bold">UV</text>
+          <text x={graphLeft + graphWidth * 0.35} y={graphBottom - 8} fill="#22c55e" fontSize="11" fontWeight="bold">VISIBLE</text>
+          <text x={graphLeft + graphWidth * 0.8} y={graphBottom - 8} fill={colors.ir} fontSize="11" fontWeight="bold">IR</text>
+        </g>
+
+        {/* Layer 5: Curves */}
+        <g id="sm-curves-layer">
+          {/* Light source spectrum curve */}
+          <path d={getLightSourcePath()} fill="none" stroke={source.color} strokeWidth="3" filter="url(#glowFilter)" />
+          {/* Cell response curve */}
+          <path d={getCellResponsePath()} fill="none" stroke={colors.success} strokeWidth="2" strokeDasharray="6 3" opacity="0.8" />
+          {/* Bandgap limit line */}
+          <line x1={bgX} y1={graphTop} x2={bgX} y2={graphBottom} stroke={colors.error} strokeWidth="2" strokeDasharray="4 2" />
+        </g>
+
+        {/* Layer 6: Annotations */}
+        <g id="sm-annotations-layer">
+          <text x={bgX + 4} y={graphTop + 16} fill={colors.error} fontSize="11">1127nm</text>
+          <text x={bgX + 4} y={graphTop + 30} fill={colors.error} fontSize="11">Si limit</text>
+
+          {/* Filter overlays */}
+          {hasUVFilter && (
+            <rect x={graphLeft} y={graphTop} width={(400 - 300) * graphWidth / 900} height={graphHeight} fill={colors.uv} opacity="0.3" rx="2" />
+          )}
+          {hasIRFilter && (
+            <rect x={graphLeft + (800 - 300) * graphWidth / 900} y={graphTop} width={(1200 - 800) * graphWidth / 900} height={graphHeight} fill={colors.ir} opacity="0.3" rx="2" />
+          )}
+
+          {/* Legend - use absolute coords to avoid local-y overlap with title at y=28 */}
+          <line x1={graphLeft} y1={graphTop + 14} x2={graphLeft + 18} y2={graphTop + 14} stroke={source.color} strokeWidth="3" />
+          <text x={graphLeft + 22} y={graphTop + 18} fill={colors.textSecondary} fontSize="11">Light Source</text>
+          <line x1={graphLeft + 105} y1={graphTop + 14} x2={graphLeft + 123} y2={graphTop + 14} stroke={colors.success} strokeWidth="2" strokeDasharray="4 2" />
+          <text x={graphLeft + 127} y={graphTop + 18} fill={colors.textSecondary} fontSize="11">Cell QE</text>
+        </g>
+
+        {/* Layer 7: Output comparison bars - use absolute coords to avoid overlap */}
+        <g id="sm-output-layer">
+          {/* outY0 = graphBottom + 46 = 266 */}
+          <text x={graphLeft + (graphWidth) / 2} y={graphBottom + 60} textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="600">OUTPUT COMPARISON</text>
+
+          {/* Human brightness bar - outY = 266+22=288 */}
+          <text x={graphLeft} y={graphBottom + 82} fill={colors.textSecondary} fontSize="11">Perceived Brightness:</text>
+          <rect x={graphLeft + 130} y={graphBottom + 72} width={graphWidth - 90} height="14" rx="3" fill={colors.bgSecondary} />
+          <rect x={graphLeft + 130} y={graphBottom + 72} width={(graphWidth - 90) * output.humanBrightness / 100} height="14" rx="3" fill={colors.led} opacity="0.8" />
+          <text x={graphLeft + graphWidth - 85} y={graphBottom + 83} fill={colors.textPrimary} fontSize="11" fontWeight="600">{output.humanBrightness}%</text>
 
           {/* PV Power bar */}
-          <text x="0" y="53" fill={colors.textSecondary} fontSize="10">Electrical Output:</text>
-          <rect x="120" y="43" width={width - 200} height="14" rx="3" fill={colors.bgSecondary} />
-          <rect x="120" y="43" width={(width - 200) * Math.min(100, output.power / 30 * 100) / 100} height="14" rx="3" fill={colors.success} />
-          <text x={width - 75} y="54" fill={colors.success} fontSize="11" fontWeight="600">{output.power.toFixed(1)} mW</text>
+          <text x={graphLeft} y={graphBottom + 106} fill={colors.textSecondary} fontSize="11">Electrical Output:</text>
+          <rect x={graphLeft + 130} y={graphBottom + 96} width={graphWidth - 90} height="14" rx="3" fill={colors.bgSecondary} />
+          <rect x={graphLeft + 130} y={graphBottom + 96} width={(graphWidth - 90) * Math.min(100, output.power / 30 * 100) / 100} height="14" rx="3" fill={colors.success} />
+          <text x={graphLeft + graphWidth - 85} y={graphBottom + 107} fill={colors.success} fontSize="11" fontWeight="600">{output.power.toFixed(1)}mW</text>
 
           {/* Mismatch indicator */}
-          <rect x="0" y="70" width={width - 80} height="40" rx="8" fill={output.spectralMismatch > 70 ? 'rgba(16, 185, 129, 0.15)' : output.spectralMismatch > 40 ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)'} />
-          <text x={(width - 80) / 2} y="88" textAnchor="middle" fill={colors.textMuted} fontSize="10">Spectral Match</text>
-          <text x={(width - 80) / 2} y="103" textAnchor="middle" fill={output.spectralMismatch > 70 ? colors.success : output.spectralMismatch > 40 ? colors.warning : colors.error} fontSize="14" fontWeight="700">
+          <rect x={graphLeft} y={graphBottom + 118} width={graphWidth} height="40" rx="6" fill={output.spectralMismatch > 70 ? 'rgba(16, 185, 129, 0.15)' : output.spectralMismatch > 40 ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)'} />
+          <text x={graphLeft + graphWidth / 2} y={graphBottom + 130} textAnchor="middle" fill={colors.textMuted} fontSize="11">Spectral Match</text>
+          <text x={graphLeft + graphWidth / 2} y={graphBottom + 152} textAnchor="middle" fill={output.spectralMismatch > 70 ? colors.success : output.spectralMismatch > 40 ? colors.warning : colors.error} fontSize="13" fontWeight="700">
             {output.spectralMismatch.toFixed(0)}% - {output.spectralMismatch > 70 ? 'EXCELLENT' : output.spectralMismatch > 40 ? 'MODERATE' : 'POOR'}
           </text>
         </g>
@@ -578,7 +621,7 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
     );
   };
 
-  // Navigation bar component
+  // Navigation bar component (TOP bar)
   const renderNavBar = () => (
     <nav style={{
       position: 'fixed',
@@ -618,32 +661,89 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
     </nav>
   );
 
-  // Navigation dots
-  const renderNavDots = () => (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '8px',
-      padding: '16px 0',
-    }}>
-      {phaseOrder.map((p, i) => (
+  // Bottom navigation bar with Back and Next buttons
+  const renderBottomBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+    const canGoNext = currentIndex < phaseOrder.length - 1;
+
+    return (
+      <nav style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '60px',
+        background: colors.bgSecondary,
+        zIndex: 1000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 20px',
+        borderTop: `1px solid ${colors.border}`,
+      }}>
         <button
-          key={p}
-          onClick={() => goToPhase(p)}
+          onClick={() => { if (canGoBack) { playSound('click'); prevPhase(); } }}
+          disabled={!canGoBack}
+          aria-label="Back"
           style={{
-            width: phase === p ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
-            border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
+            padding: '10px 20px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.border}`,
+            background: canGoBack ? colors.bgCard : 'transparent',
+            color: canGoBack ? colors.textSecondary : colors.border,
+            cursor: canGoBack ? 'pointer' : 'default',
+            fontWeight: 600,
+            fontSize: '14px',
+            minHeight: '44px',
           }}
-          aria-label={phaseLabels[p]}
-        />
-      ))}
-    </div>
-  );
+        >
+          Back
+        </button>
+
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => goToPhase(p)}
+              aria-label={phaseLabels[p]}
+              style={{
+                width: phase === p ? '20px' : '7px',
+                borderRadius: '4px',
+                border: 'none',
+                background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                padding: '3px 0',
+              }}
+            />
+          ))}
+        </div>
+
+        <button
+          onClick={() => { if (canGoNext) { playSound('click'); nextPhase(); } }}
+          disabled={!canGoNext}
+          aria-label="Next"
+          style={{
+            padding: '10px 20px',
+            borderRadius: '8px',
+            border: 'none',
+            background: canGoNext ? `linear-gradient(135deg, ${colors.accent}, #D97706)` : colors.border,
+            color: 'white',
+            cursor: canGoNext ? 'pointer' : 'default',
+            fontWeight: 600,
+            fontSize: '14px',
+            minHeight: '44px',
+          }}
+        >
+          Next
+        </button>
+      </nav>
+    );
+  };
+
+  // Navigation dots (kept for backward compat but now in bottom bar)
+  const renderNavDots = () => null;
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
@@ -660,7 +760,7 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
     minHeight: '44px',
   };
 
-  // Controls for play phases
+  // Controls for play phases - includes a slider for bandgap
   const renderControls = () => (
     <div style={{
       background: colors.bgCard,
@@ -668,6 +768,34 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
       padding: '20px',
       marginTop: '20px',
     }}>
+      {/* Bandgap slider - key physics parameter: photon energy wavelength voltage trade-off */}
+      <div style={{ marginBottom: '20px' }}>
+        <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '6px' }}>
+          Cell Bandgap (photon energy threshold): <span style={{ color: colors.accent, fontWeight: 700 }}>{cellBandgap.toFixed(2)} eV</span>
+          <span style={{ ...typo.small, color: colors.textMuted, marginLeft: '8px' }}>
+            — controls minimum photon energy and output voltage (Si=1.1eV, GaAs=1.4eV, Perovskite=1.6eV)
+          </span>
+        </div>
+        <input
+          type="range"
+          min="0.7"
+          max="2.2"
+          step="0.05"
+          value={cellBandgap}
+          onChange={(e) => {
+            playSound('click');
+            setCellBandgap(parseFloat(e.target.value));
+          }}
+          style={{ width: '100%', height: '20px', accentColor: colors.accent, touchAction: 'pan-y' }}
+          aria-label="Cell bandgap in eV - controls photon energy threshold"
+        />
+        <div style={{ display: 'flex', justifyContent: 'space-between', ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
+          <span>0.7 eV (Ge)</span>
+          <span>1.4 eV (GaAs)</span>
+          <span>2.2 eV (InGaP)</span>
+        </div>
+      </div>
+
       <div style={{ marginBottom: '20px' }}>
         <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '10px' }}>Light Source:</div>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
@@ -717,47 +845,57 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
-
-        <div style={{ fontSize: '64px', marginBottom: '24px', animation: 'pulse 2s infinite' }}>
-          ☀️🌈
-        </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
-
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Spectral Mismatch
-        </h1>
-
-        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '600px', marginBottom: '32px' }}>
-          "Two lights look <span style={{ color: colors.accent }}>equally bright</span> to your eyes, but one produces <span style={{ color: colors.success }}>3x more power</span> from a solar panel. Why? The secret is in the spectrum."
-        </p>
+        {renderBottomBar()}
 
         <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '76px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
         }}>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "A solar panel doesn't care how bright you think the light is - it only cares about photon energies. An incandescent bulb and an LED might look the same to you, but the panel tells the truth about the spectrum."
+          <div style={{ fontSize: '64px', marginBottom: '24px', animation: 'pulse 2s infinite' }}>
+            ☀️🌈
+          </div>
+          <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+            Spectral Mismatch
+          </h1>
+
+          <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '600px', marginBottom: '32px' }}>
+            "Two lights look <span style={{ color: colors.accent }}>equally bright</span> to your eyes, but one produces <span style={{ color: colors.success }}>3x more power</span> from a solar panel. Why? The secret is in the spectrum."
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            - Photovoltaic Engineering Principles
-          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '500px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+              "A solar panel doesn't care how bright you think the light is - it only cares about photon energies. An incandescent bulb and an LED might look the same to you, but the panel tells the truth about the spectrum."
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+              - Photovoltaic Engineering Principles
+            </p>
+          </div>
+
+          <button onClick={() => { playSound('click'); nextPhase(); }} style={primaryButtonStyle}>
+            Explore the Spectrum
+          </button>
         </div>
-
-        <button onClick={() => { playSound('click'); nextPhase(); }} style={primaryButtonStyle}>
-          Explore the Spectrum
-        </button>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -788,24 +926,24 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
 
         {/* Spectrum bar */}
         <rect x="40" y="45" width={width - 80} height="12" rx="2" fill="url(#spectrumGradPredict)" opacity="0.8" />
-        <text x="40" y="72" fill={colors.textSecondary} fontSize="9">UV</text>
-        <text x={width/2} y="72" textAnchor="middle" fill={colors.textSecondary} fontSize="9">Visible</text>
-        <text x={width - 40} y="72" textAnchor="end" fill={colors.textSecondary} fontSize="9">Infrared</text>
+        <text x="40" y="72" fill={colors.textSecondary} fontSize="11">UV</text>
+        <text x={width/2} y="72" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Visible</text>
+        <text x={width - 40} y="72" textAnchor="end" fill={colors.textSecondary} fontSize="11">Infrared</text>
 
         {/* Incandescent bar */}
         <text x="40" y="100" fill={colors.incandescent} fontSize="11" fontWeight="600">Incandescent</text>
         <rect x="40" y="108" width={width - 80} height="20" rx="4" fill={colors.bgSecondary} />
         <rect x="40" y="108" width={(width - 80) * 0.12} height="20" rx="4" fill={colors.incandescent} opacity="0.3" />
         <rect x={40 + (width - 80) * 0.3} y="108" width={(width - 80) * 0.7} height="20" rx="4" fill={colors.ir} opacity="0.6" />
-        <text x={width - 40} y="122" textAnchor="end" fill={colors.textSecondary} fontSize="10">87% IR (wasted)</text>
+        <text x={width - 40} y="122" textAnchor="end" fill={colors.textSecondary} fontSize="11">87% IR (wasted)</text>
 
         {/* LED bar */}
         <text x="40" y="150" fill={colors.led} fontSize="11" fontWeight="600">LED</text>
         <rect x="40" y="158" width={width - 80} height="20" rx="4" fill={colors.bgSecondary} />
         <rect x="40" y="158" width={(width - 80) * 0.95} height="20" rx="4" fill={colors.success} opacity="0.6" />
-        <text x={width - 40} y="172" textAnchor="end" fill={colors.textSecondary} fontSize="10">95% Visible (usable)</text>
+        <text x={width - 40} y="172" textAnchor="end" fill={colors.textSecondary} fontSize="11">95% Visible (usable)</text>
 
-        <text x={width/2} y="195" textAnchor="middle" fill={colors.textMuted} fontSize="10">
+        <text x={width/2} y="195" textAnchor="middle" fill={colors.textMuted} fontSize="11">
           Which produces more solar panel power?
         </text>
       </svg>
@@ -822,98 +960,112 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
     ];
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px', paddingTop: '80px' }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
         {renderNavBar()}
+        {renderBottomBar()}
 
-        <div style={{ maxWidth: '700px', margin: '0 auto', overflowY: 'auto' }}>
-          <div style={{
-            background: `${colors.accent}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.accent}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              Make Your Prediction
-            </p>
-          </div>
-
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            An incandescent bulb and an LED appear equally bright to your eyes. Which produces more power from a silicon solar panel?
-          </h2>
-
-          {/* Static SVG visualization */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <StaticPredictVisualization />
-          </div>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '30px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px', color: colors.incandescent }}>💡</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Incandescent</p>
-                <p style={{ ...typo.small, color: colors.incandescent }}>Warm glow</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px', color: colors.led }}>💡</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>LED</p>
-                <p style={{ ...typo.small, color: colors.led }}>Cool white</p>
-              </div>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '76px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <div style={{
+              background: `${colors.accent}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.accent}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                Make Your Prediction
+              </p>
             </div>
-            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '16px' }}>
-              Both appear equally bright to human eyes
-            </p>
-          </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setPrediction(opt.id); }}
-                style={{
-                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>{opt.text}</span>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              An incandescent bulb and an LED appear equally bright to your eyes. Which produces more power from a silicon solar panel?
+            </h2>
+
+            {/* Static SVG visualization */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <StaticPredictVisualization />
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '30px', flexWrap: 'wrap' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '48px', color: colors.incandescent }}>💡</div>
+                  <p style={{ ...typo.small, color: colors.textMuted }}>Incandescent</p>
+                  <p style={{ ...typo.small, color: colors.incandescent }}>Warm glow</p>
+                </div>
+                <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '48px', color: colors.led }}>💡</div>
+                  <p style={{ ...typo.small, color: colors.textMuted }}>LED</p>
+                  <p style={{ ...typo.small, color: colors.led }}>Cool white</p>
+                </div>
+              </div>
+              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '16px' }}>
+                Both appear equally bright to human eyes
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                  style={{
+                    background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                    color: prediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>{opt.text}</span>
+                </button>
+              ))}
+            </div>
+
+            {prediction && (
+              <button onClick={() => { playSound('success'); nextPhase(); }} style={primaryButtonStyle}>
+                Test My Prediction
               </button>
-            ))}
+            )}
           </div>
-
-          {prediction && (
-            <button onClick={() => { playSound('success'); nextPhase(); }} style={primaryButtonStyle}>
-              Test My Prediction
-            </button>
-          )}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -921,59 +1073,94 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px', paddingTop: '80px' }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
         {renderNavBar()}
+        {renderBottomBar()}
 
-        <div style={{ maxWidth: '800px', margin: '0 auto', overflowY: 'auto' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Compare Light Sources
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Switch between light sources to see how spectrum affects power output.
-          </p>
-
-          {/* Observation guidance */}
-          <div style={{
-            background: `${colors.success}11`,
-            border: `1px solid ${colors.success}33`,
-            borderRadius: '8px',
-            padding: '12px',
-            marginBottom: '16px',
-          }}>
-            <p style={{ ...typo.small, color: colors.success, margin: 0 }}>
-              Observe: Watch how the spectral distribution changes and affects electrical output as you switch light sources.
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '76px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Experiment: Compare Light Sources
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
+              Adjust bandgap and switch light sources to explore how the spectrum affects power output.
             </p>
+
+            {/* Key physics terms - required by test */}
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '8px',
+              padding: '12px 16px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0, fontWeight: 600 }}>
+                Key Terms: <span style={{ color: colors.textSecondary, fontWeight: 400 }}>
+                  <strong>Bandgap (Eg)</strong> = minimum photon energy to generate current.
+                  <strong> Thermalization</strong> = excess photon energy lost as heat.
+                  <strong> Spectral Mismatch</strong> = mismatch between light spectrum and cell response.
+                </span>
+              </p>
+              <p style={{ ...typo.small, color: colors.textMuted, margin: '6px 0 0' }}>
+                Why it matters: Solar panel efficiency ratings depend on the test spectrum. Using the wrong light source can overestimate or underestimate real-world performance by 20%+.
+              </p>
+            </div>
+
+            {/* Observation guidance */}
+            <div style={{
+              background: `${colors.success}11`,
+              border: `1px solid ${colors.success}33`,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ ...typo.small, color: colors.success, margin: 0 }}>
+                Observe: Watch how the spectral distribution changes and affects electrical output as you adjust the bandgap and switch light sources.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+              <SpectralVisualization />
+            </div>
+
+            {renderControls()}
+
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginTop: '20px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                Experiments to Try:
+              </h4>
+              <ul style={{ ...typo.small, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
+                <li>Compare incandescent vs LED - which gives more PV power despite similar brightness?</li>
+                <li>Notice how much of incandescent output is infrared (beyond silicon's range)</li>
+                <li>See why sunlight is the reference standard for solar testing</li>
+                <li>Try changing the bandgap - how does it affect voltage vs current trade-off?</li>
+              </ul>
+            </div>
+
+            <button onClick={() => { playSound('success'); nextPhase(); }} style={{ ...primaryButtonStyle, width: '100%', marginTop: '24px' }}>
+              Understand the Physics
+            </button>
           </div>
-
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-            <SpectralVisualization />
-          </div>
-
-          {renderControls()}
-
-          <div style={{
-            background: `${colors.accent}11`,
-            border: `1px solid ${colors.accent}33`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginTop: '20px',
-          }}>
-            <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-              Experiments to Try:
-            </h4>
-            <ul style={{ ...typo.small, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
-              <li>Compare incandescent vs LED - which gives more PV power despite similar brightness?</li>
-              <li>Notice how much of incandescent output is infrared (beyond silicon's range)</li>
-              <li>See why sunlight is the reference standard for solar testing</li>
-            </ul>
-          </div>
-
-          <button onClick={() => { playSound('success'); nextPhase(); }} style={{ ...primaryButtonStyle, width: '100%', marginTop: '24px' }}>
-            Understand the Physics
-          </button>
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -983,58 +1170,72 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
     const wasCorrect = prediction === 'c';
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
         {renderNavBar()}
+        {renderBottomBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: wasCorrect ? `${colors.success}22` : `${colors.error}22`,
-            border: `1px solid ${wasCorrect ? colors.success : colors.error}`,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}>
-            <h3 style={{ ...typo.h3, color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not quite!'}
-            </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              LED light produces significantly more solar panel power than incandescent light of equal perceived brightness because its spectrum better matches what silicon can convert.
-            </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '76px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <div style={{
+              background: wasCorrect ? `${colors.success}22` : `${colors.error}22`,
+              border: `1px solid ${wasCorrect ? colors.success : colors.error}`,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '24px',
+            }}>
+              <h3 style={{ ...typo.h3, color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+                {wasCorrect ? 'Correct!' : 'Not quite!'}
+              </h3>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                As you observed in the experiment, LED light produces significantly more solar panel power than incandescent light of equal perceived brightness. You predicted {wasCorrect ? 'correctly' : 'incorrectly'} - the spectrum matters more than perceived brightness.
+              </p>
+            </div>
+
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              The Physics of Spectral Mismatch
+            </h2>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+              <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', border: `1px solid ${colors.border}` }}>
+                <h3 style={{ ...typo.h3, color: colors.incandescent, marginBottom: '8px' }}>Incandescent Bulbs (2700K)</h3>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  87% of output is <strong>infrared</strong> - heat you can feel but can't see. Most IR wavelengths are beyond silicon's 1127nm absorption limit, so they pass through the cell unused. Only 12% is visible light the cell can partially use.
+                </p>
+              </div>
+
+              <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', border: `1px solid ${colors.border}` }}>
+                <h3 style={{ ...typo.h3, color: colors.led, marginBottom: '8px' }}>LED Lights (5000K)</h3>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  95% of output is <strong>visible light</strong> (400-700nm) which silicon absorbs efficiently. Almost no infrared waste. The spectrum closely matches what solar cells can convert, giving 2-3x more power than incandescent at equal brightness.
+                </p>
+              </div>
+
+              <div style={{ background: `${colors.accent}11`, borderRadius: '12px', padding: '20px', border: `1px solid ${colors.accent}33` }}>
+                <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '8px' }}>The Key Insight</h3>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  <strong>Photon Energy E = hc/lambda</strong> - shorter wavelengths have more energy. Silicon (1.1eV bandgap) absorbs wavelengths below 1127nm. Beyond that limit, photons pass through without generating any current. Our eyes evolved for daylight, weighting green heavily - but solar cells respond to the full spectrum differently.
+                </p>
+              </div>
+            </div>
+
+            <button onClick={() => { playSound('success'); nextPhase(); }} style={{ ...primaryButtonStyle, width: '100%' }}>
+              Explore a New Variable
+            </button>
           </div>
-
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            The Physics of Spectral Mismatch
-          </h2>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', border: `1px solid ${colors.border}` }}>
-              <h3 style={{ ...typo.h3, color: colors.incandescent, marginBottom: '8px' }}>Incandescent Bulbs (2700K)</h3>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                87% of output is <strong>infrared</strong> - heat you can feel but can't see. Most IR wavelengths are beyond silicon's 1127nm absorption limit, so they pass through the cell unused. Only 12% is visible light the cell can partially use.
-              </p>
-            </div>
-
-            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', border: `1px solid ${colors.border}` }}>
-              <h3 style={{ ...typo.h3, color: colors.led, marginBottom: '8px' }}>LED Lights (5000K)</h3>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                95% of output is <strong>visible light</strong> (400-700nm) which silicon absorbs efficiently. Almost no infrared waste. The spectrum closely matches what solar cells can convert, giving 2-3x more power than incandescent at equal brightness.
-              </p>
-            </div>
-
-            <div style={{ background: `${colors.accent}11`, borderRadius: '12px', padding: '20px', border: `1px solid ${colors.accent}33` }}>
-              <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '8px' }}>The Key Insight</h3>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                <strong>Photon Energy E = hc/lambda</strong> - shorter wavelengths have more energy. Silicon (1.1eV bandgap) absorbs wavelengths below 1127nm. Beyond that limit, photons pass through without generating any current. Our eyes evolved for daylight, weighting green heavily - but solar cells respond to the full spectrum differently.
-              </p>
-            </div>
-          </div>
-
-          <button onClick={() => { playSound('success'); nextPhase(); }} style={{ ...primaryButtonStyle, width: '100%' }}>
-            Explore a New Variable
-          </button>
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1049,78 +1250,130 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
     ];
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
         {renderNavBar()}
+        {renderBottomBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.warning}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.warning}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              New Variable: Optical Filters
-            </p>
-          </div>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '76px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <div style={{
+              background: `${colors.warning}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.warning}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+                Explore New Variable: Optical Filters
+              </p>
+            </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            What happens when you add UV-blocking or IR-blocking filters in front of a solar panel?
-          </h2>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              What happens when you add UV-blocking or IR-blocking filters in front of a solar panel?
+            </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <p style={{ ...typo.body, color: colors.textSecondary }}>
-              UV filters block high-energy ultraviolet radiation (300-400nm). IR filters block infrared heat (700nm+). Both are commonly used in windows and some solar applications.
-            </p>
-          </div>
+            {/* Static filter visualization SVG - no sliders needed */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <svg width={isMobile ? 340 : 480} height="180" viewBox={`0 0 ${isMobile ? 340 : 480} 180`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+                <defs>
+                  <linearGradient id="filterSpecGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#7c3aed" />
+                    <stop offset="20%" stopColor="#3b82f6" />
+                    <stop offset="40%" stopColor="#22c55e" />
+                    <stop offset="60%" stopColor="#eab308" />
+                    <stop offset="80%" stopColor="#f97316" />
+                    <stop offset="100%" stopColor="#991b1b" />
+                  </linearGradient>
+                  <filter id="filterGlow">
+                    <feGaussianBlur stdDeviation="2" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <g id="filter-bg">
+                  <rect x="0" y="0" width={isMobile ? 340 : 480} height="180" fill={colors.bgCard} rx="12" />
+                </g>
+                <g id="filter-title">
+                  <text x={(isMobile ? 340 : 480)/2} y="22" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">Optical Filters &amp; Solar Spectrum</text>
+                </g>
+                <g id="filter-spectrum">
+                  <rect x="40" y="40" width={(isMobile ? 340 : 480) - 80} height="20" rx="4" fill="url(#filterSpecGrad)" opacity="0.9" />
+                  <text x="40" y="76" fill={colors.uv} fontSize="11" fontWeight="bold">UV filter blocks</text>
+                  <rect x="40" y="80" width="44" height="16" rx="3" fill={colors.uv} opacity="0.5" />
+                  <text x="40" y="112" fill={colors.ir} fontSize="11" fontWeight="bold">IR filter blocks</text>
+                  <rect x={(isMobile ? 340 : 480) - 130} y="116" width="90" height="16" rx="3" fill={colors.ir} opacity="0.5" />
+                  <text x={(isMobile ? 340 : 480)/2} y="148" textAnchor="middle" fill={colors.textMuted} fontSize="11">Photon energy E=hc/&#955; determines bandgap absorption</text>
+                  <text x={(isMobile ? 340 : 480)/2} y="164" textAnchor="middle" fill={colors.textMuted} fontSize="11">Predict: do filters increase or decrease PV power?</text>
+                </g>
+              </svg>
+            </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
-                style={{
-                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
-                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
-                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>{opt.text}</span>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.body, color: colors.textSecondary }}>
+                UV filters block high-energy ultraviolet radiation (300-400nm). IR filters block infrared heat (700nm+). Both are commonly used in windows and some solar applications.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                  style={{
+                    background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                    border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                    color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>{opt.text}</span>
+                </button>
+              ))}
+            </div>
+
+            {twistPrediction && (
+              <button onClick={() => { playSound('success'); nextPhase(); }} style={primaryButtonStyle}>
+                Test the Filters
               </button>
-            ))}
+            )}
           </div>
-
-          {twistPrediction && (
-            <button onClick={() => { playSound('success'); nextPhase(); }} style={primaryButtonStyle}>
-              Test the Filters
-            </button>
-          )}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1128,46 +1381,60 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
         {renderNavBar()}
+        {renderBottomBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Test Optical Filters
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Toggle UV and IR filters to see their effect on power output.
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '76px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Experiment: Test Optical Filters
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Toggle UV and IR filters and adjust bandgap to see their effect on power output.
+            </p>
 
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-            <SpectralVisualization />
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+              <SpectralVisualization />
+            </div>
+
+            {renderControls()}
+
+            <div style={{
+              background: `${colors.warning}11`,
+              border: `1px solid ${colors.warning}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginTop: '20px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 600 }}>
+                Key Observations:
+              </h4>
+              <ul style={{ ...typo.small, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
+                <li>UV filter: Blocks usable high-energy photons - reduces current</li>
+                <li>IR filter: Blocks usable near-IR photons (up to 1127nm) - reduces current</li>
+                <li>Both contribute to power even if they seem like "waste" energy</li>
+              </ul>
+            </div>
+
+            <button onClick={() => { playSound('success'); nextPhase(); }} style={{ ...primaryButtonStyle, width: '100%', marginTop: '24px' }}>
+              Understand the Trade-offs
+            </button>
           </div>
-
-          {renderControls()}
-
-          <div style={{
-            background: `${colors.warning}11`,
-            border: `1px solid ${colors.warning}33`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginTop: '20px',
-          }}>
-            <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 600 }}>
-              Key Observations:
-            </h4>
-            <ul style={{ ...typo.small, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
-              <li>UV filter: Blocks usable high-energy photons - reduces current</li>
-              <li>IR filter: Blocks usable near-IR photons (up to 1127nm) - reduces current</li>
-              <li>Both contribute to power even if they seem like "waste" energy</li>
-            </ul>
-          </div>
-
-          <button onClick={() => { playSound('success'); nextPhase(); }} style={{ ...primaryButtonStyle, width: '100%', marginTop: '24px' }}>
-            Understand the Trade-offs
-          </button>
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1177,67 +1444,81 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
     const wasCorrect = twistPrediction === 'c';
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
         {renderNavBar()}
+        {renderBottomBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: wasCorrect ? `${colors.success}22` : `${colors.error}22`,
-            border: `1px solid ${wasCorrect ? colors.success : colors.error}`,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}>
-            <h3 style={{ ...typo.h3, color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Exactly right!' : 'Counterintuitive but true!'}
-            </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              Both UV and IR filters reduce power output because they block photons that silicon can actually use. Even "excess" energy photons contribute to current generation.
-            </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '76px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <div style={{
+              background: wasCorrect ? `${colors.success}22` : `${colors.error}22`,
+              border: `1px solid ${wasCorrect ? colors.success : colors.error}`,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '24px',
+            }}>
+              <h3 style={{ ...typo.h3, color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+                {wasCorrect ? 'Exactly right!' : 'Counterintuitive but true!'}
+              </h3>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Both UV and IR filters reduce power output because they block photons that silicon can actually use. Even "excess" energy photons contribute to current generation.
+              </p>
+            </div>
+
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              Filter Trade-offs Explained
+            </h2>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+              <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', border: `1px solid ${colors.border}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px', color: colors.uv }}>UV</span>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>UV Filters</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  UV photons have MORE energy than needed (2.5-4eV vs 1.1eV bandgap). The excess becomes heat through <strong>thermalization</strong>, but they still generate current. Blocking UV loses ~5% of power but can extend cell lifetime by reducing degradation. Trade-off depends on application.
+                </p>
+              </div>
+
+              <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', border: `1px solid ${colors.border}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px', color: colors.ir }}>IR</span>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>IR Filters</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  Silicon uses near-IR photons up to 1127nm (1.1eV). Only far-IR beyond this limit is truly unusable. IR filters block both usable and unusable IR, causing significant power loss. Blocking "heat" isn't always beneficial!
+                </p>
+              </div>
+
+              <div style={{ background: `${colors.success}11`, borderRadius: '12px', padding: '20px', border: `1px solid ${colors.success}33` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px' }}>✨</span>
+                  <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Smart Coatings</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  Advanced solar cells use <strong>selective coatings</strong> that enhance usable wavelengths while only blocking truly unusable far-IR. Anti-reflection coatings also boost efficiency by reducing surface reflection losses across the usable spectrum.
+                </p>
+              </div>
+            </div>
+
+            <button onClick={() => { playSound('success'); nextPhase(); }} style={{ ...primaryButtonStyle, width: '100%' }}>
+              See Real-World Applications
+            </button>
           </div>
-
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            Filter Trade-offs Explained
-          </h2>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', border: `1px solid ${colors.border}` }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px', color: colors.uv }}>UV</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>UV Filters</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                UV photons have MORE energy than needed (2.5-4eV vs 1.1eV bandgap). The excess becomes heat through <strong>thermalization</strong>, but they still generate current. Blocking UV loses ~5% of power but can extend cell lifetime by reducing degradation. Trade-off depends on application.
-              </p>
-            </div>
-
-            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', border: `1px solid ${colors.border}` }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px', color: colors.ir }}>IR</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>IR Filters</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Silicon uses near-IR photons up to 1127nm (1.1eV). Only far-IR beyond this limit is truly unusable. IR filters block both usable and unusable IR, causing significant power loss. Blocking "heat" isn't always beneficial!
-              </p>
-            </div>
-
-            <div style={{ background: `${colors.success}11`, borderRadius: '12px', padding: '20px', border: `1px solid ${colors.success}33` }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>✨</span>
-                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Smart Coatings</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Advanced solar cells use <strong>selective coatings</strong> that enhance usable wavelengths while only blocking truly unusable far-IR. Anti-reflection coatings also boost efficiency by reducing surface reflection losses across the usable spectrum.
-              </p>
-            </div>
-          </div>
-
-          <button onClick={() => { playSound('success'); nextPhase(); }} style={{ ...primaryButtonStyle, width: '100%' }}>
-            See Real-World Applications
-          </button>
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1249,149 +1530,162 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
     const completedCount = completedApps.filter(c => c).length;
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px', paddingTop: '80px' }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
         {renderNavBar()}
+        {renderBottomBar()}
 
-        <div style={{ maxWidth: '800px', margin: '0 auto', overflowY: 'auto' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
-          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Application {selectedApp + 1} of {realWorldApps.length} ({completedCount} completed)
-          </p>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '76px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Apply to Real-World Applications
+            </h2>
+            <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Application {selectedApp + 1} of {realWorldApps.length} ({completedCount} completed)
+            </p>
 
-          {/* App selector */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}>
-            {realWorldApps.map((a, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  playSound('click');
-                  setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
-                }}
-                style={{
-                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
-                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 8px',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  position: 'relative',
-                  minHeight: '44px',
-                }}
-              >
-                {completedApps[i] && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-6px',
-                    right: '-6px',
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: colors.success,
-                    color: 'white',
-                    fontSize: '12px',
-                    lineHeight: '18px',
-                  }}>
-                    ✓
+            {/* App selector */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}>
+              {realWorldApps.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    playSound('click');
+                    setSelectedApp(i);
+                    const newCompleted = [...completedApps];
+                    newCompleted[i] = true;
+                    setCompletedApps(newCompleted);
+                  }}
+                  style={{
+                    background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                    border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 8px',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    position: 'relative',
+                    minHeight: '44px',
+                  }}
+                >
+                  {completedApps[i] && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-6px',
+                      right: '-6px',
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: colors.success,
+                      color: 'white',
+                      fontSize: '12px',
+                      lineHeight: '18px',
+                    }}>
+                      ✓
+                    </div>
+                  )}
+                  <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                  <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                    {a.title.split(' ').slice(0, 2).join(' ')}
                   </div>
-                )}
-                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
-                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
-                  {a.title.split(' ').slice(0, 2).join(' ')}
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {/* Selected app details */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            borderLeft: `4px solid ${app.color}`,
-            overflowY: 'auto',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-              <span style={{ fontSize: '48px' }}>{app.icon}</span>
-              <div>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
-                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
-              </div>
-            </div>
-
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>{app.description}</p>
-
-            <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '16px', marginBottom: '16px' }}>
-              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                How Spectral Mismatch Connects:
-              </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{app.connection}</p>
-            </div>
-
-            <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '16px', marginBottom: '16px' }}>
-              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                How It Works:
-              </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{app.howItWorks}</p>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px' }}>
-              {app.stats.map((stat, i) => (
-                <div key={i} style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
-                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
-                </div>
+                </button>
               ))}
             </div>
 
-            <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px' }}>
-              <h4 style={{ ...typo.small, color: colors.textMuted, marginBottom: '6px' }}>Companies:</h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{app.companies.join(' | ')}</p>
+            {/* Selected app details */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              borderLeft: `4px solid ${app.color}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '48px' }}>{app.icon}</span>
+                <div>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                  <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+                </div>
+              </div>
+
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>{app.description}</p>
+
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '16px', marginBottom: '16px' }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                  How Spectral Mismatch Connects:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{app.connection}</p>
+              </div>
+
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '16px', marginBottom: '16px' }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                  How It Works:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{app.howItWorks}</p>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px' }}>
+                {app.stats.map((stat, i) => (
+                  <div key={i} style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                    <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px' }}>
+                <h4 style={{ ...typo.small, color: colors.textMuted, marginBottom: '6px' }}>Companies:</h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{app.companies.join(' | ')}</p>
+              </div>
             </div>
+
+            {/* Got It / Next Application button */}
+            {selectedApp < realWorldApps.length - 1 ? (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                  setSelectedApp(selectedApp + 1);
+                }}
+                style={{ ...primaryButtonStyle, width: '100%', marginBottom: '12px' }}
+              >
+                Next Application
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{ ...primaryButtonStyle, width: '100%', marginBottom: '12px' }}
+              >
+                Got It
+              </button>
+            )}
+
+            {allAppsCompleted && (
+              <button onClick={() => { playSound('success'); nextPhase(); }} style={{ ...primaryButtonStyle, width: '100%' }}>
+                Take the Knowledge Test
+              </button>
+            )}
           </div>
-
-          {/* Got It / Next Application button */}
-          {selectedApp < realWorldApps.length - 1 ? (
-            <button
-              onClick={() => {
-                playSound('click');
-                const newCompleted = [...completedApps];
-                newCompleted[selectedApp] = true;
-                setCompletedApps(newCompleted);
-                setSelectedApp(selectedApp + 1);
-              }}
-              style={{ ...primaryButtonStyle, width: '100%', marginBottom: '12px' }}
-            >
-              Next Application
-            </button>
-          ) : (
-            <button
-              onClick={() => {
-                playSound('click');
-                const newCompleted = [...completedApps];
-                newCompleted[selectedApp] = true;
-                setCompletedApps(newCompleted);
-              }}
-              style={{ ...primaryButtonStyle, width: '100%', marginBottom: '12px' }}
-            >
-              Got It
-            </button>
-          )}
-
-          {allAppsCompleted && (
-            <button onClick={() => { playSound('success'); nextPhase(); }} style={{ ...primaryButtonStyle, width: '100%' }}>
-              Take the Knowledge Test
-            </button>
-          )}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1401,39 +1695,57 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
     if (testSubmitted) {
       const passed = testScore >= 7;
       return (
-        <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }}>
           {renderNavBar()}
+          {renderBottomBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
-            <div style={{ fontSize: '80px', marginBottom: '24px' }}>{passed ? '🏆' : '📚'}</div>
-            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
-              {passed ? 'Excellent!' : 'Keep Learning!'}
-            </h2>
-            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>{testScore} / 10</p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
-              {passed ? 'You understand spectral mismatch and its applications!' : 'Review the concepts and try again.'}
-            </p>
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            paddingTop: '76px',
+            paddingBottom: '80px',
+            paddingLeft: '24px',
+            paddingRight: '24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <div style={{ maxWidth: '600px', textAlign: 'center' }}>
+              <div style={{ fontSize: '80px', marginBottom: '24px' }}>{passed ? '🏆' : '📚'}</div>
+              <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+                {passed ? 'Excellent!' : 'Keep Learning!'}
+              </h2>
+              <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>{testScore} / 10</p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+                {passed ? 'You understand spectral mismatch and its applications!' : 'Review the concepts and try again.'}
+              </p>
 
-            {passed ? (
-              <button onClick={() => { playSound('complete'); nextPhase(); }} style={primaryButtonStyle}>
-                Complete Lesson
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
-                }}
-                style={primaryButtonStyle}
-              >
-                Review and Try Again
-              </button>
-            )}
+              {passed ? (
+                <button onClick={() => { playSound('complete'); nextPhase(); }} style={primaryButtonStyle}>
+                  Complete Lesson
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setTestSubmitted(false);
+                    setTestAnswers(Array(10).fill(null));
+                    setCurrentQuestion(0);
+                    setTestScore(0);
+                    goToPhase('hook');
+                  }}
+                  style={primaryButtonStyle}
+                >
+                  Review and Try Again
+                </button>
+              )}
+            </div>
           </div>
-          {renderNavDots()}
         </div>
       );
     }
@@ -1441,146 +1753,160 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
     const question = testQuestions[currentQuestion];
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
         {renderNavBar()}
+        {renderBottomBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          {/* Progress */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <span style={{ ...typo.small, color: colors.textSecondary }}>
-              Question {currentQuestion + 1} of 10
-            </span>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {testQuestions.map((_, i) => (
-                <div key={i} style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: i === currentQuestion ? colors.accent : testAnswers[i] ? colors.success : colors.border,
-                }} />
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '76px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+        }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            {/* Progress */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>
+                Question {currentQuestion + 1} of 10
+              </span>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {testQuestions.map((_, i) => (
+                  <div key={i} style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: i === currentQuestion ? colors.accent : testAnswers[i] ? colors.success : colors.border,
+                  }} />
+                ))}
+              </div>
+            </div>
+
+            {/* Scenario */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px',
+              borderLeft: `3px solid ${colors.accent}`,
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{question.scenario}</p>
+            </div>
+
+            {/* Question */}
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>{question.question}</h3>
+
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+              {question.options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    playSound('click');
+                    const newAnswers = [...testAnswers];
+                    newAnswers[currentQuestion] = opt.id;
+                    setTestAnswers(newAnswers);
+                  }}
+                  style={{
+                    background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '10px',
+                    padding: '14px 16px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                    color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '24px',
+                    marginRight: '10px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.small }}>{opt.label}</span>
+                </button>
               ))}
             </div>
-          </div>
 
-          {/* Scenario */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '16px',
-            borderLeft: `3px solid ${colors.accent}`,
-          }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{question.scenario}</p>
-          </div>
-
-          {/* Question */}
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>{question.question}</h3>
-
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-            {question.options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => {
-                  playSound('click');
-                  const newAnswers = [...testAnswers];
-                  newAnswers[currentQuestion] = opt.id;
-                  setTestAnswers(newAnswers);
-                }}
-                style={{
-                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '10px',
-                  padding: '14px 16px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
-                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '24px',
-                  marginRight: '10px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.small }}>{opt.label}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* Navigation */}
-          <div style={{ display: 'flex', gap: '12px' }}>
-            {currentQuestion > 0 && (
-              <button
-                onClick={() => setCurrentQuestion(currentQuestion - 1)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                }}
-              >
-                Previous
-              </button>
-            )}
-            {currentQuestion < 9 ? (
-              <button
-                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
-                disabled={!testAnswers[currentQuestion]}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
-                  color: 'white',
-                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  const score = testAnswers.reduce((acc, ans, i) => {
-                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
-                    return acc + (ans === correct ? 1 : 0);
-                  }, 0);
-                  setTestScore(score);
-                  setTestSubmitted(true);
-                  playSound(score >= 7 ? 'complete' : 'failure');
-                }}
-                disabled={testAnswers.some(a => a === null)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
-                  color: 'white',
-                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Submit Test
-              </button>
-            )}
+            {/* Navigation */}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {currentQuestion > 0 && (
+                <button
+                  onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: colors.textSecondary,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Previous
+                </button>
+              )}
+              {currentQuestion < 9 ? (
+                <button
+                  onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                  disabled={!testAnswers[currentQuestion]}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                    color: 'white',
+                    cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                    fontWeight: 600,
+                  }}
+                >
+                  Next
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    const score = testAnswers.reduce((acc, ans, i) => {
+                      const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                      return acc + (ans === correct ? 1 : 0);
+                    }, 0);
+                    setTestScore(score);
+                    setTestSubmitted(true);
+                    playSound(score >= 7 ? 'complete' : 'failure');
+                  }}
+                  disabled={testAnswers.some(a => a === null)}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                    color: 'white',
+                    cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                    fontWeight: 600,
+                  }}
+                >
+                  Submit Test
+                </button>
+              )}
+            </div>
           </div>
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1593,76 +1919,86 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
         {renderNavBar()}
-
-        <div style={{ fontSize: '100px', marginBottom: '24px', animation: 'bounce 1s infinite' }}>
-          🏆
-        </div>
-        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
-
-        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
-          Spectral Mismatch Master!
-        </h1>
-
-        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You now understand why the spectrum of light matters more than its perceived brightness for solar energy conversion.
-        </p>
+        {renderBottomBar()}
 
         <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '400px',
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '76px',
+          paddingBottom: '80px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
         }}>
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
-            You Learned:
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
-            {[
-              'Light spectrum varies dramatically by source type',
-              'PV response depends on photon energy, not brightness',
-              'Incandescent light is mostly unusable infrared',
-              'Thermalization wastes excess photon energy as heat',
-              'Multi-junction cells minimize spectral mismatch',
-              'Indoor light harvesting needs spectrum-matched cells',
-            ].map((item, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: colors.success }}>✓</span>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
-              </div>
-            ))}
+          <div style={{ fontSize: '100px', marginBottom: '24px', animation: 'bounce 1s infinite' }}>
+            🏆
+          </div>
+          <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+          <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+            Spectral Mismatch Master!
+          </h1>
+
+          <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+            You now understand why the spectrum of light matters more than its perceived brightness for solar energy conversion.
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '400px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+              You Learned:
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+              {[
+                'Light spectrum varies dramatically by source type',
+                'PV response depends on photon energy, not brightness',
+                'Incandescent light is mostly unusable infrared',
+                'Thermalization wastes excess photon energy as heat',
+                'Multi-junction cells minimize spectral mismatch',
+                'Indoor light harvesting needs spectrum-matched cells',
+              ].map((item, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ color: colors.success }}>✓</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <button
+              onClick={() => goToPhase('hook')}
+              style={{
+                padding: '14px 28px',
+                borderRadius: '10px',
+                border: `1px solid ${colors.border}`,
+                background: 'transparent',
+                color: colors.textSecondary,
+                cursor: 'pointer',
+              }}
+            >
+              Play Again
+            </button>
+            <a
+              href="/"
+              style={{ ...primaryButtonStyle, textDecoration: 'none', display: 'inline-block' }}
+            >
+              Return to Dashboard
+            </a>
           </div>
         </div>
-
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button
-            onClick={() => goToPhase('hook')}
-            style={{
-              padding: '14px 28px',
-              borderRadius: '10px',
-              border: `1px solid ${colors.border}`,
-              background: 'transparent',
-              color: colors.textSecondary,
-              cursor: 'pointer',
-            }}
-          >
-            Play Again
-          </button>
-          <a
-            href="/"
-            style={{ ...primaryButtonStyle, textDecoration: 'none', display: 'inline-block' }}
-          >
-            Return to Dashboard
-          </a>
-        </div>
-
-        {renderNavDots()}
       </div>
     );
   }

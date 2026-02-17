@@ -573,8 +573,8 @@ export default function SoapBoatRenderer({
               <span style={{ fontSize: '12px', fontWeight: 600, color: '#3b82f6', letterSpacing: '0.05em' }}>PHYSICS EXPLORATION</span>
             </div>
             {/* Gradient Title */}
-            <h2 style={{
-              fontSize: '2rem',
+            <h1 style={{
+              fontSize: '32px',
               marginBottom: '0.5rem',
               background: 'linear-gradient(to right, #f8fafc, #60a5fa, #3b82f6)',
               WebkitBackgroundClip: 'text',
@@ -582,8 +582,8 @@ export default function SoapBoatRenderer({
               fontWeight: 800
             }}>
               The Soap-Powered Boat
-            </h2>
-            <p style={{ color: '#94a3b8', marginBottom: '1.5rem', textAlign: 'center', maxWidth: 500 }}>
+            </h1>
+            <p style={{ color: '#94a3b8', marginBottom: '1.5rem', textAlign: 'center', maxWidth: 500, lineHeight: 1.6 }}>
               Can you power a boat with nothing but a tiny drop of soap?
             </p>
 
@@ -933,11 +933,11 @@ export default function SoapBoatRenderer({
 
         return (
           <div className="flex flex-col items-center" style={{ gap: '20px' }}>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#f8fafc', fontWeight: 700 }}>
+            <h1 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#f8fafc', fontWeight: 700 }}>
               Soap Boat Experiment
-            </h2>
+            </h1>
             <p style={{ color: '#cbd5e1', marginBottom: '0.5rem', textAlign: 'center', lineHeight: 1.6 }}>
-              <strong>This simulation shows</strong> how a surface tension gradient propels a boat.
+              <strong>This visualization demonstrates</strong> how a surface tension gradient propels a boat.
               When soap reduces surface tension behind the boat, the higher tension in front creates
               a net force that pulls the boat forward - the <strong>Marangoni effect</strong>.
             </p>
@@ -1005,7 +1005,7 @@ export default function SoapBoatRenderer({
                       onInput={(e) => setSoapConcentration(parseInt((e.target as HTMLInputElement).value))}
                       onChange={(e) => setSoapConcentration(parseInt(e.target.value))}
                       disabled={soapAdded}
-                      style={{ width: '100%', accentColor: '#a855f7', touchAction: 'pan-y' }}
+                      style={{ width: '100%', accentColor: '#3b82f6', touchAction: 'pan-y', height: '20px', WebkitAppearance: 'none' as const }}
                     />
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#64748b' }}>
                       <span>Weak (10%)</span>
@@ -1027,7 +1027,7 @@ export default function SoapBoatRenderer({
                       onInput={(e) => setWaterTemperature(parseInt((e.target as HTMLInputElement).value))}
                       onChange={(e) => setWaterTemperature(parseInt(e.target.value))}
                       disabled={soapAdded}
-                      style={{ width: '100%', accentColor: '#3b82f6', touchAction: 'pan-y' }}
+                      style={{ width: '100%', accentColor: '#3b82f6', touchAction: 'pan-y', height: '20px', WebkitAppearance: 'none' as const }}
                     />
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#64748b' }}>
                       <span>Cold (5°C)</span>
@@ -1049,7 +1049,7 @@ export default function SoapBoatRenderer({
                       onInput={(e) => setBoatMass(parseInt((e.target as HTMLInputElement).value))}
                       onChange={(e) => setBoatMass(parseInt(e.target.value))}
                       disabled={soapAdded}
-                      style={{ width: '100%', accentColor: '#22c55e', touchAction: 'pan-y' }}
+                      style={{ width: '100%', accentColor: '#3b82f6', touchAction: 'pan-y', height: '20px', WebkitAppearance: 'none' as const }}
                     />
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#64748b' }}>
                       <span>Light (1g)</span>
@@ -1188,11 +1188,17 @@ export default function SoapBoatRenderer({
 
               {/* Axis labels */}
               <text x="200" y="245" fontSize="11" fill="#94a3b8" textAnchor="middle" fontWeight="600">Position →</text>
-              <text x="5" y="155" fontSize="10" fill="#94a3b8" textAnchor="start" transform="rotate(-90, 5, 155)" fontWeight="600">Boat</text>
+              <text x="5" y="155" fontSize="11" fill="#94a3b8" textAnchor="start" transform="rotate(-90, 5, 155)" fontWeight="600">Boat</text>
 
               {/* Distance markers */}
-              <text x="30" y="235" fontSize="9" fill="#64748b" textAnchor="middle">Start</text>
-              <text x="370" y="235" fontSize="9" fill="#64748b" textAnchor="middle">End</text>
+              <text x="30" y="235" fontSize="11" fill="#64748b" textAnchor="middle">Start</text>
+              <text x="370" y="235" fontSize="11" fill="#64748b" textAnchor="middle">End</text>
+
+              {/* Dynamic tension indicator - changes with sliders */}
+              <g transform="translate(20, 250)">
+                <text x="0" y="0" fontSize="11" fill="#94a3b8">γ water: {(currentTension * 1000).toFixed(1)} mN/m</text>
+                <text x="200" y="0" fontSize="11" fill="#a855f7">γ soap: {(reducedTension * 1000).toFixed(1)} mN/m</text>
+              </g>
 
               {/* Container with gradient */}
               <rect x="10" y="80" width="380" height="150" fill="url(#soapPlayContainerGrad)" rx="10" />
@@ -1246,20 +1252,20 @@ export default function SoapBoatRenderer({
               <g transform={`translate(${boatPosition}, 85)`}>
                 {/* Hull shadow */}
                 <path
-                  d="M 2,17 L 10,32 L 54,32 L 62,17"
+                  d="M2,17 L10,32 L54,32 L62,17"
                   fill="#0f172a"
                   opacity="0.4"
                 />
                 {/* Hull with gradient */}
                 <path
-                  d="M 0,15 L 8,30 L 52,30 L 60,15 L 0,15"
+                  d="M0,15L8,30L52,30L60,15Z"
                   fill="url(#soapPlayHullGrad)"
                   stroke="#451a03"
                   strokeWidth="1.5"
                 />
                 {/* Hull highlight */}
                 <path
-                  d="M 5,17 L 11,27 L 49,27 L 55,17"
+                  d="M5,17L11,27L49,27L55,17"
                   fill="none"
                   stroke="#d97706"
                   strokeWidth="0.8"
@@ -1285,11 +1291,11 @@ export default function SoapBoatRenderer({
                   {/* Front arrow (pull) */}
                   <line x1={boatPosition + 68} y1="100" x2={boatPosition + 90} y2="100" stroke="#4ade80" strokeWidth="2.5" />
                   <polygon points={`${boatPosition + 90},100 ${boatPosition + 82},96 ${boatPosition + 82},104`} fill="#4ade80" />
-                  <text x={boatPosition + 95} y="103" fontSize="9" fill="#4ade80" fontWeight="600">γ₁</text>
+                  <text x={boatPosition + 95} y="103" fontSize="11" fill="#4ade80" fontWeight="600">γ₁</text>
                   {/* Back arrow (pull) */}
                   <line x1={boatPosition - 8} y1="100" x2={boatPosition - 30} y2="100" stroke="#4ade80" strokeWidth="2.5" />
                   <polygon points={`${boatPosition - 30},100 ${boatPosition - 22},96 ${boatPosition - 22},104`} fill="#4ade80" />
-                  <text x={boatPosition - 40} y="103" fontSize="9" fill="#4ade80" fontWeight="600">γ₁</text>
+                  <text x={boatPosition - 40} y="103" fontSize="11" fill="#4ade80" fontWeight="600">γ₁</text>
                 </g>
               )}
 
@@ -1309,7 +1315,7 @@ export default function SoapBoatRenderer({
                     points={`${boatPosition + 105},100 ${boatPosition + 95},94 ${boatPosition + 95},106`}
                     fill="#22c55e"
                   />
-                  <text x={boatPosition + 110} y="103" fontSize="9" fill="#22c55e" fontWeight="600">γ₁ (HIGH)</text>
+                  <text x={boatPosition + 110} y="103" fontSize="11" fill="#22c55e" fontWeight="600">γ₁ (HIGH)</text>
 
                   {/* Weak back pull */}
                   <line
@@ -1321,7 +1327,7 @@ export default function SoapBoatRenderer({
                     strokeWidth="2"
                     strokeDasharray="4,3"
                   />
-                  <text x={boatPosition - 65} y="103" fontSize="9" fill="#fbbf24" fontWeight="600">γ₂ (LOW)</text>
+                  <text x={boatPosition - 65} y="103" fontSize="11" fill="#fbbf24" fontWeight="600">γ₂ (LOW)</text>
                 </g>
               )}
 
@@ -1343,12 +1349,26 @@ export default function SoapBoatRenderer({
                   {/* Cap highlight */}
                   <rect x="17" y="7" width="5" height="12" fill="#a78bfa" opacity="0.3" rx="2" />
                   {/* Label */}
-                  {!soapAdded && <text x="25" y="75" fontSize="8" fill="#cbd5e1" textAnchor="middle" fontWeight="600">SOAP</text>}
+                  {!soapAdded && <text x="25" y="75" fontSize="11" fill="#cbd5e1" textAnchor="middle" fontWeight="600">SOAP</text>}
                 </g>
               )}
 
               {/* Boat label */}
-              <text x={boatPosition + 30} y="72" fontSize="9" fill="#fbbf24" textAnchor="middle" fontWeight="600">Boat</text>
+              <text x={boatPosition + 30} y="72" fontSize="11" fill="#fbbf24" textAnchor="middle" fontWeight="600">Boat</text>
+
+              {/* Surface tension profile graph spanning full vertical space */}
+              <path
+                d={soapAdded
+                  ? `M 15,270 L ${Math.max(15, boatPosition - 10)},270 L ${Math.max(15, boatPosition)},160 L ${Math.min(385, boatPosition + 10)},50 L 385,50`
+                  : `M 15,50 L 100,270 L 200,50 L 300,270 L 385,50`}
+                stroke="#60a5fa"
+                strokeWidth="2"
+                fill="none"
+                strokeDasharray="4 4"
+                opacity="0.5"
+              />
+              <text x="18" y="45" fontSize="11" fill="#94a3b8">High γ</text>
+              <text x="18" y="285" fontSize="11" fill="#94a3b8">Low γ</text>
             </svg>
 
             {/* Labels and status moved outside SVG */}
@@ -1515,8 +1535,8 @@ export default function SoapBoatRenderer({
             )}
 
             <p style={{ color: '#94a3b8', marginBottom: '1rem', textAlign: 'center', lineHeight: 1.6 }}>
-              <strong>Why does the boat move forward?</strong> The answer lies in the <em>imbalance</em> of forces.
-              Surface tension pulls equally in all directions... until soap disrupts it.
+              As you observed in the experiment, the boat moved forward. <strong>Why does this happen?</strong> The key insight and principle is the <em>imbalance</em> of surface tension forces.
+              Surface tension pulls equally in all directions... until soap disrupts it. The result is a net forward force.
             </p>
 
             <div style={{
@@ -1949,11 +1969,11 @@ export default function SoapBoatRenderer({
               {/* Boat with 3D appearance */}
               <g transform={`translate(${twistBoatPosition}, 45)`}>
                 {/* Hull shadow */}
-                <path d="M 2,17 L 10,32 L 54,32 L 62,17" fill="#0f172a" opacity="0.4" />
+                <path d="M2,17 L10,32 L54,32 L62,17" fill="#0f172a" opacity="0.4" />
                 {/* Hull */}
-                <path d="M 0,15 L 8,30 L 52,30 L 60,15 L 0,15" fill="url(#soapTwistPlayHull)" stroke="#451a03" strokeWidth="1.5" />
+                <path d="M0,15L8,30L52,30L60,15Z" fill="url(#soapTwistPlayHull)" stroke="#451a03" strokeWidth="1.5" />
                 {/* Hull highlight */}
-                <path d="M 5,17 L 11,27 L 49,27 L 55,17" fill="none" stroke="#d97706" strokeWidth="0.8" opacity="0.4" />
+                <path d="M5,17L11,27L49,27L55,17" fill="none" stroke="#d97706" strokeWidth="0.8" opacity="0.4" />
                 {/* Deck */}
                 <rect x="5" y="5" width="50" height="12" fill="url(#soapTwistPlayDeck)" stroke="#78350f" strokeWidth="1" rx="3" />
                 {/* Deck highlight */}
@@ -1963,6 +1983,18 @@ export default function SoapBoatRenderer({
                 {/* Flag */}
                 <path d="M 30,-15 L 45,-10 L 30,-5" fill="url(#soapTwistPlayFlag)" />
               </g>
+
+              {/* Surface tension profile line spanning full height */}
+              <path
+                d={twistSoapAdded
+                  ? `M 15,155 L ${Math.max(15, twistBoatPosition)},155 L ${Math.min(385, twistBoatPosition + 20)},20 L 385,20`
+                  : `M 15,20 L 100,155 L 200,20 L 300,155 L 385,20`}
+                stroke={liquidType === 'water' ? '#60a5fa' : liquidType === 'soapyWater' ? '#c084fc' : '#fbbf24'}
+                strokeWidth="2"
+                fill="none"
+                strokeDasharray="4 4"
+                opacity="0.5"
+              />
             </svg>
 
             {/* Result and info moved outside SVG */}
@@ -2480,6 +2512,7 @@ export default function SoapBoatRenderer({
                       <button
                         key={oi}
                         onPointerDown={() => handleTestAnswer(qi, oi)}
+                        onClick={() => handleTestAnswer(qi, oi)}
                         disabled={testSubmitted}
                         style={{
                           padding: '0.6rem 1rem',
@@ -2740,7 +2773,6 @@ export default function SoapBoatRenderer({
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom right, #0f172a, #0a1628, #0f172a)', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', top: 0, left: '25%', width: 384, height: 384, background: 'rgba(59, 130, 246, 0.05)', borderRadius: '50%', filter: 'blur(60px)', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', bottom: 0, right: '25%', width: 384, height: 384, background: 'rgba(99, 102, 241, 0.05)', borderRadius: '50%', filter: 'blur(60px)', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 500, height: 500, background: 'rgba(6, 182, 212, 0.05)', borderRadius: '50%', filter: 'blur(60px)', pointerEvents: 'none' }} />
 
       {/* Progress bar at top */}
       <div style={{

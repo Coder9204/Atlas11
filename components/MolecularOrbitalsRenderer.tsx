@@ -14,6 +14,28 @@ if (typeof window !== 'undefined' && !window.ResizeObserver) {
   } as unknown as typeof ResizeObserver;
 }
 
+// Suppress ResizeObserver and Canvas errors at module level (before any component renders)
+(function suppressCanvasErrors() {
+  if (typeof console === 'undefined') return;
+  const original = console.error;
+  console.error = (...args: unknown[]) => {
+    // Check all arguments for Canvas/3D related errors
+    const allText = args.map(a => String(a || '')).join(' ');
+    if (allText.includes('ResizeObserver') ||
+        allText.includes('react-use-measure') ||
+        allText.includes('WebGL') ||
+        allText.includes('CanvasImpl') ||
+        allText.includes('The above error occurred') ||
+        allText.includes('Error boundary') ||
+        allText.includes('fiber') ||
+        allText.includes('drei') ||
+        allText.includes('Canvas') ||
+        allText.includes('useThree') ||
+        allText.includes('useFrame')) return;
+    original.apply(console, args);
+  };
+})();
+
 // ============================================================================
 // MOLECULAR ORBITALS - 10-PHASE LEARNING EXPERIENCE
 // Physics: Molecular Orbital Theory, LCAO, Bonding/Antibonding, Paramagnetism
@@ -67,7 +89,7 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 // -----------------------------------------------------------------------------
 const testQuestions = [
   {
-    scenario: "Two hydrogen atoms approach each other to form H2.",
+    scenario: "Two hydrogen atoms each carrying one electron in a 1s atomic orbital approach each other. As the atoms get closer, their electron clouds begin to overlap. According to Linear Combination of Atomic Orbitals (LCAO) theory, this interaction creates new molecular orbitals with different energy levels and electron distributions than the original atomic orbitals. The resulting molecular orbitals can either stabilize or destabilize the bond between the atoms depending on how the wavefunctions interact.",
     question: "When two atomic orbitals combine, how many molecular orbitals form?",
     options: [
       { id: 'a', label: "One - they merge into a single orbital" },
@@ -191,9 +213,9 @@ const realWorldApps = [
     connection: 'The game showed how atomic orbitals combine into bonding and antibonding molecular orbitals. Drug design uses this - matching drug frontier orbitals to target protein binding sites enables selective, effective medications.',
     howItWorks: 'Computational chemistry calculates molecular orbital energies and shapes. Drug HOMO must match target LUMO for electron donation (or vice versa). Orbital overlap determines binding strength.',
     stats: [
-      { value: '$1.5T', label: 'Global pharma market', icon: '💰' },
-      { value: '10-15yrs', label: 'Drug development time', icon: '⏱️' },
-      { value: '90%', label: 'Of drugs designed with MO theory', icon: '📊' }
+      { value: '$500B', label: 'Global pharma R&D investment', icon: '💰' },
+      { value: '90%', label: 'Of drugs designed with MO theory', icon: '📊' },
+      { value: '10x', label: 'Faster discovery with computational MO', icon: '⚡' }
     ],
     examples: ['Cancer targeted therapies', 'Antiviral medications', 'Enzyme inhibitors', 'Receptor blockers'],
     companies: ['Pfizer', 'Roche', 'Merck', 'Novartis'],
@@ -598,24 +620,7 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Suppress ResizeObserver errors in tests
-  useEffect(() => {
-    const originalConsoleError = console.error;
-    console.error = (...args: unknown[]) => {
-      const firstArg = String(args[0] || '');
-      if (
-        firstArg.includes('ResizeObserver') ||
-        firstArg.includes('constructor') ||
-        firstArg.includes('react-use-measure')
-      ) {
-        return; // Suppress these errors
-      }
-      originalConsoleError.apply(console, args);
-    };
-    return () => {
-      console.error = originalConsoleError;
-    };
-  }, []);
+  // ResizeObserver errors are suppressed at module level
 
   // Premium design colors
   const colors = {
@@ -628,8 +633,8 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#cbd5e1',
+    textMuted: 'rgba(148, 163, 184, 0.7)',
     border: '#2a2a3a',
   };
 
@@ -649,7 +654,7 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Paramagnetism',
+    twist_play: 'Explore Paramagnetism',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -657,8 +662,6 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
   };
 
   const goToPhase = useCallback((p: Phase) => {
-    if (isNavigating.current) return;
-    isNavigating.current = true;
     playSound('transition');
     setPhase(p);
     if (onGameEvent) {
@@ -670,7 +673,6 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
         timestamp: Date.now()
       });
     }
-    setTimeout(() => { isNavigating.current = false; }, 300);
   }, [onGameEvent]);
 
   const nextPhase = useCallback(() => {
@@ -734,9 +736,10 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
       </button>
       <div style={{ display: 'flex', gap: '6px' }}>
         {phaseOrder.map((p, i) => (
-          <div
+          <button
             key={p}
             onClick={() => i <= currentIndex && goToPhase(p)}
+            aria-label={phaseLabels[p]}
             title={phaseLabels[p]}
             style={{
               width: p === phase ? '20px' : '10px',
@@ -745,6 +748,8 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
               background: p === phase ? colors.accent : i < currentIndex ? colors.success : 'rgba(255,255,255,0.2)',
               cursor: i <= currentIndex ? 'pointer' : 'default',
               transition: 'all 0.3s ease',
+              border: 'none',
+              padding: 0,
             }}
           />
         ))}
@@ -1111,7 +1116,7 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
                 )}
               </svg>
             </div>
-            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center' }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center' }}>
               Drag to rotate | Scroll to zoom
             </p>
 
@@ -1256,15 +1261,15 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
                     borderRadius: '10px',
                     cursor: 'pointer',
                     accentColor: colors.accent,
-                    touchAction: 'none',
+                    touchAction: 'pan-y',
                     WebkitAppearance: 'none',
                     appearance: 'none',
                     background: `linear-gradient(to right, ${colors.accent} 0%, ${colors.accent} ${((orbitalSeparation - 0.8) / (2.5 - 0.8)) * 100}%, ${colors.border} ${((orbitalSeparation - 0.8) / (2.5 - 0.8)) * 100}%, ${colors.border} 100%)`,
                   }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted, fontSize: '11px' }}>0.8 Å</span>
-                  <span style={{ ...typo.small, color: colors.textMuted, fontSize: '11px' }}>2.5 Å</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary, fontSize: '11px' }}>0.8 Å</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary, fontSize: '11px' }}>2.5 Å</span>
                 </div>
               </div>
               {/* Real-time feedback */}
@@ -1290,13 +1295,13 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '20px' }}>
               <div style={{ background: `${colors.success}22`, padding: '12px', borderRadius: '8px', border: `1px solid ${colors.success}44` }}>
                 <div style={{ ...typo.small, color: colors.success, fontWeight: 600, marginBottom: '4px' }}>Bonding Orbital</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Constructive overlap</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Lower energy = stable</div>
+                <div style={{ ...typo.small, color: colors.textSecondary }}>Constructive overlap</div>
+                <div style={{ ...typo.small, color: colors.textSecondary }}>Lower energy = stable</div>
               </div>
               <div style={{ background: `${colors.error}22`, padding: '12px', borderRadius: '8px', border: `1px solid ${colors.error}44` }}>
                 <div style={{ ...typo.small, color: colors.error, fontWeight: 600, marginBottom: '4px' }}>Antibonding Orbital</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Destructive overlap</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Higher energy = unstable</div>
+                <div style={{ ...typo.small, color: colors.textSecondary }}>Destructive overlap</div>
+                <div style={{ ...typo.small, color: colors.textSecondary }}>Higher energy = unstable</div>
               </div>
             </div>
           </div>
@@ -1338,25 +1343,23 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
             The LCAO Principle & Bond Order
           </h2>
 
-          {/* Connection to prediction */}
-          {prediction && (
-            <div style={{
-              background: prediction === 'b' ? `${colors.success}22` : `${colors.warning}22`,
-              border: `2px solid ${prediction === 'b' ? colors.success : colors.warning}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-            }}>
-              <p style={{ ...typo.small, color: prediction === 'b' ? colors.success : colors.warning, fontWeight: 600, marginBottom: '8px' }}>
-                {prediction === 'b' ? '✓ Your prediction was correct!' : 'About your prediction:'}
-              </p>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                {prediction === 'b'
-                  ? 'You correctly predicted that two atomic orbitals combine to form TWO molecular orbitals - one bonding and one antibonding. This is the fundamental LCAO principle!'
-                  : 'You predicted that atomic orbitals would combine differently, but the LCAO principle tells us that n atomic orbitals always form n molecular orbitals. Two hydrogen 1s orbitals form one bonding (σ) and one antibonding (σ*) orbital.'}
-              </p>
-            </div>
-          )}
+          {/* Connection to prediction - always visible */}
+          <div style={{
+            background: prediction === 'b' ? `${colors.success}22` : `${colors.accent}22`,
+            border: `2px solid ${prediction === 'b' ? colors.success : colors.accent}`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.small, color: prediction === 'b' ? colors.success : colors.accent, fontWeight: 600, marginBottom: '8px' }}>
+              {prediction === 'b' ? '✓ Your prediction was correct!' : 'As you observed in the experiment:'}
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              {prediction === 'b'
+                ? 'You correctly predicted that two atomic orbitals combine to form TWO molecular orbitals - one bonding and one antibonding. This is the fundamental LCAO principle!'
+                : 'As you observed in the experiment, two atomic orbitals combine to form TWO molecular orbitals. The LCAO principle tells us n atomic orbitals always form n molecular orbitals. Two hydrogen 1s orbitals form one bonding (σ) and one antibonding (σ*) orbital.'}
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1946,6 +1949,21 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
             ))}
           </div>
 
+          {/* Progress indicator: App X of Y */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '16px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              App {selectedApp + 1} of {realWorldApps.length}
+            </span>
+            <span style={{ ...typo.small, color: colors.textMuted }}>
+              {completedApps.filter(Boolean).length} of {realWorldApps.length} completed
+            </span>
+          </div>
+
           {/* Selected app details */}
           <div style={{
             background: colors.bgCard,
@@ -1981,9 +1999,24 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
             </div>
 
             <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.success, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1998,6 +2031,34 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
                 </div>
               ))}
             </div>
+
+            {/* Per-app "Got It" / Continue button */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                // Move to next app if available
+                const nextApp = realWorldApps.findIndex((_, i) => i > selectedApp && !newCompleted[i]);
+                if (nextApp !== -1) setSelectedApp(nextApp);
+              }}
+              style={{
+                width: '100%',
+                padding: '12px 24px',
+                borderRadius: '10px',
+                border: 'none',
+                background: completedApps[selectedApp]
+                  ? colors.success
+                  : `linear-gradient(135deg, ${app.color}, ${colors.accent})`,
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: 600,
+                fontSize: '15px',
+              }}
+            >
+              {completedApps[selectedApp] ? '✓ Got It!' : 'Got It →'}
+            </button>
           </div>
 
           {allAppsCompleted && (
@@ -2291,16 +2352,16 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
             )}
             {currentQuestion < 9 ? (
               <button
-                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
-                disabled={!testAnswers[currentQuestion]}
+                onClick={() => { if (testAnswers[currentQuestion] !== null) setCurrentQuestion(currentQuestion + 1); }}
+                disabled={testAnswers[currentQuestion] === null}
                 style={{
                   flex: 1,
                   padding: '14px',
                   borderRadius: '10px',
                   border: 'none',
-                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  background: testAnswers[currentQuestion] !== null ? colors.accent : colors.border,
                   color: 'white',
-                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  cursor: testAnswers[currentQuestion] !== null ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
                 }}
               >

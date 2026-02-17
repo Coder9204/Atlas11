@@ -94,7 +94,7 @@ const phaseLabels: Record<Phase, string> = {
   play: 'Experiment',
   review: 'Understanding',
   twist_predict: 'New Variable',
-  twist_play: 'Sensitivity Lab',
+  twist_play: 'Explore Sensitivity',
   twist_review: 'Deep Insight',
   transfer: 'Real World',
   test: 'Knowledge Test',
@@ -253,23 +253,23 @@ const TEST_QUESTIONS = [
 const TRANSFER_APPS = [
   {
     title: 'Mobile AI (Smartphones)',
-    description: 'Your phone runs AI models in INT8 or INT4. The A17/Snapdragon chips have dedicated hardware for low-precision math.',
-    insight: 'iPhone neural engine: INT8',
+    description: 'Your smartphone runs AI models in INT8 or INT4 precision. Apple\'s A17 Neural Engine and Qualcomm\'s Snapdragon AI chips have dedicated hardware units optimized for low-precision integer math. This allows real-time face recognition, voice processing, and computational photography without draining the battery. Without quantization, running a 7B parameter model on your phone would require 28GB of storage just for the weights.',
+    insight: 'iPhone Neural Engine: INT8 — 17 TOPS throughput',
   },
   {
     title: 'ChatGPT/LLM Inference',
-    description: 'Running GPT-4 would need 1.7TB of memory in FP32. INT4 quantization makes it fit in 200GB across 8 GPUs.',
-    insight: 'GPTQ: 4-bit with <1% quality loss',
+    description: 'Running GPT-4 scale models would need 1.7TB of memory in FP32 format. INT4 quantization using techniques like GPTQ makes it possible to fit a 70B parameter model on a single consumer GPU with 24GB of VRAM. This reduces model memory by 8x while maintaining less than 1% quality degradation. Engineers use calibration data to find optimal scale factors that preserve model accuracy.',
+    insight: 'GPTQ: 4-bit quantization with less than 1% quality loss',
   },
   {
     title: 'Self-Driving Cars',
-    description: 'Tesla FSD runs INT8 on custom hardware. Every millisecond of latency matters at highway speeds.',
-    insight: 'FSD chip: 144 TOPS @ INT8',
+    description: 'Tesla\'s Full Self-Driving computer runs INT8 inference at 144 TOPS (trillion operations per second). Every millisecond of latency matters when driving at highway speeds — at 60 mph, 10ms equals 9 inches of travel. INT8 operations are 4x faster than FP32, enabling 36 FPS processing across 8 camera inputs simultaneously. Mixed precision keeps critical detection layers at FP16 for safety.',
+    insight: 'Tesla FSD chip: 144 TOPS at INT8, processes 8 cameras at 36 FPS',
   },
   {
     title: 'Real-time Image Generation',
-    description: 'Stable Diffusion on consumer GPUs uses FP16. INT8 versions run on phones generating images in seconds.',
-    insight: 'SD on iPhone: INT8 CoreML',
+    description: 'Stable Diffusion runs on iPhones using INT8 CoreML models. What required a datacenter GPU with 40GB of VRAM in 2022 now generates 512×512 images on phones in about 5 seconds. The diffusion models are quantized because the iterative denoising process naturally smooths out quantization noise. INT8 CoreML inference reduces model size from 8GB to under 2GB while maintaining visual quality.',
+    insight: 'Stable Diffusion on iPhone: INT8 CoreML, 5 second generation, 2GB model',
   },
 ];
 
@@ -722,19 +722,48 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
         <rect width={width} height={height} fill="url(#qprecLabBg)" />
         <rect width={width} height={height} fill="url(#qprecGrid)" />
 
+        {/* Grid reference lines for visual reference */}
+        <line x1="20" y1="100" x2="680" y2="100" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+        <line x1="20" y1="200" x2="680" y2="200" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+        <line x1="20" y1="300" x2="680" y2="300" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+        <line x1="175" y1="0" x2="175" y2="400" stroke="#334155" strokeDasharray="4 4" opacity="0.2" />
+        <line x1="350" y1="0" x2="350" y2="400" stroke="#334155" strokeDasharray="4 4" opacity="0.2" />
+        <line x1="525" y1="0" x2="525" y2="400" stroke="#334155" strokeDasharray="4 4" opacity="0.2" />
+
+        {/* Interactive model-size indicator circle that moves with slider */}
+        {(() => {
+          // Position the circle in the title panel area based on modelSize
+          // modelSize goes 1-70, map to x range 50-650
+          const xPos = 50 + ((modelSize - 1) / 69) * 580;
+          // y is fixed in the title bar area (top panel)
+          const yPos = 8;
+          return (
+            <circle
+              cx={xPos}
+              cy={yPos}
+              r={8}
+              fill={spec.color}
+              stroke="white"
+              strokeWidth="2"
+              filter="url(#qprecBitGlow)"
+              opacity="0.9"
+            />
+          );
+        })()}
+
         {/* Main Title Panel */}
-        <g transform="translate(20, 15)">
-          <rect x="0" y="0" width="660" height="45" rx="8" fill="url(#qprecPanelGlass)" stroke="#334155" strokeWidth="1" />
-          <text x="330" y="28" textAnchor="middle" fill="#f8fafc" fontSize="18" fontWeight="bold">
-            {precision}: {spec.bits}-bit Numerical Precision
+        <g transform="translate(20, 5)">
+          <rect x="0" y="0" width="660" height="30" rx="8" fill="url(#qprecPanelGlass)" stroke="#334155" strokeWidth="1" />
+          <text x="330" y="20" textAnchor="middle" fill="#f8fafc" fontSize="14" fontWeight="bold">
+            {precision} — {spec.bits}-bit Precision
           </text>
-          <rect x="10" y="38" width="640" height="2" rx="1" fill={`url(#qprec${precision}Gradient)`} opacity="0.6" />
+          <rect x="10" y="27" width="640" height="2" rx="1" fill={`url(#qprec${precision}Gradient)`} opacity="0.6" />
         </g>
 
         {/* Bit Representation Panel */}
         <g transform="translate(20, 70)">
           <rect x="0" y="0" width="450" height="120" rx="10" fill="url(#qprecPanelGlass)" stroke="#334155" strokeWidth="1" filter="url(#qprecPanelShadow)" />
-          <text x="15" y="22" fill="#94a3b8" fontSize="10" fontWeight="bold" textTransform="uppercase" letterSpacing="0.1em">
+          <text x="15" y="22" fill="#94a3b8" fontSize="11" fontWeight="bold" textTransform="uppercase" letterSpacing="0.1em">
             Binary Representation
           </text>
 
@@ -772,16 +801,16 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
           {(precision === 'FP32' || precision === 'FP16') && (
             <g transform="translate(15, 85)">
               <rect x="0" y="0" width="10" height="10" rx="2" fill="url(#qprecSignBit)" />
-              <text x="14" y="9" fill="#94a3b8" fontSize="8">Sign</text>
-              <rect x="50" y="0" width="10" height="10" rx="2" fill="url(#qprecExponentBit)" />
-              <text x="64" y="9" fill="#94a3b8" fontSize="8">Exponent</text>
-              <rect x="120" y="0" width="10" height="10" rx="2" fill="url(#qprecMantissaBit)" />
-              <text x="134" y="9" fill="#94a3b8" fontSize="8">Mantissa</text>
+              <text x="14" y="9" fill="#94a3b8" fontSize="11">Sign</text>
+              <rect x="60" y="0" width="10" height="10" rx="2" fill="url(#qprecExponentBit)" />
+              <text x="74" y="9" fill="#94a3b8" fontSize="11">Exponent</text>
+              <rect x="155" y="0" width="10" height="10" rx="2" fill="url(#qprecMantissaBit)" />
+              <text x="169" y="9" fill="#94a3b8" fontSize="11">Mantissa</text>
             </g>
           )}
 
           {/* Bit count info */}
-          <text x="435" y="60" textAnchor="end" fill="#64748b" fontSize="10">
+          <text x="435" y="60" textAnchor="end" fill="#64748b" fontSize="11">
             {bits.length} bits = {Math.pow(2, bits.length).toLocaleString()} values
           </text>
         </g>
@@ -789,17 +818,17 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
         {/* Precision Stats Panel */}
         <g transform="translate(480, 70)">
           <rect x="0" y="0" width="200" height="120" rx="10" fill="url(#qprecPanelGlass)" stroke="#334155" strokeWidth="1" filter="url(#qprecPanelShadow)" />
-          <text x="15" y="22" fill="#94a3b8" fontSize="10" fontWeight="bold" letterSpacing="0.1em">
+          <text x="15" y="22" fill="#94a3b8" fontSize="11" fontWeight="bold" letterSpacing="0.1em">
             PRECISION SPECS
           </text>
 
-          <text x="15" y="48" fill="#64748b" fontSize="10">Dynamic Range:</text>
-          <text x="185" y="48" textAnchor="end" fill={spec.color} fontSize="10" fontWeight="bold">{spec.range}</text>
+          <text x="15" y="48" fill="#64748b" fontSize="11">Dynamic Range:</text>
+          <text x="185" y="48" textAnchor="end" fill={spec.color} fontSize="11" fontWeight="bold">{spec.range}</text>
 
-          <text x="15" y="70" fill="#64748b" fontSize="10">Memory Ratio:</text>
+          <text x="15" y="70" fill="#64748b" fontSize="11">Memory Ratio:</text>
           <text x="185" y="70" textAnchor="end" fill="#10b981" fontSize="12" fontWeight="bold">{(spec.memoryRatio * 100).toFixed(0)}%</text>
 
-          <text x="15" y="92" fill="#64748b" fontSize="10">Speed Multiplier:</text>
+          <text x="15" y="92" fill="#64748b" fontSize="11">Speed Multiplier:</text>
           <text x="185" y="92" textAnchor="end" fill="#06b6d4" fontSize="12" fontWeight="bold">{spec.speedRatio}x</text>
 
           <rect x="10" y="102" width="180" height="8" rx="4" fill="rgba(255,255,255,0.05)" />
@@ -809,7 +838,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
         {/* Value Comparison Panel */}
         <g transform="translate(20, 200)">
           <rect x="0" y="0" width="320" height="100" rx="10" fill="url(#qprecPanelGlass)" stroke="#334155" strokeWidth="1" filter="url(#qprecPanelShadow)" />
-          <text x="15" y="22" fill="#94a3b8" fontSize="10" fontWeight="bold" letterSpacing="0.1em">
+          <text x="15" y="22" fill="#94a3b8" fontSize="11" fontWeight="bold" letterSpacing="0.1em">
             VALUE COMPARISON
           </text>
 
@@ -843,7 +872,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
         {/* Accuracy vs Performance Tradeoff Indicators */}
         <g transform="translate(350, 200)">
           <rect x="0" y="0" width="330" height="100" rx="10" fill="url(#qprecPanelGlass)" stroke="#334155" strokeWidth="1" filter="url(#qprecPanelShadow)" />
-          <text x="15" y="22" fill="#94a3b8" fontSize="10" fontWeight="bold" letterSpacing="0.1em">
+          <text x="15" y="22" fill="#94a3b8" fontSize="11" fontWeight="bold" letterSpacing="0.1em">
             ACCURACY / PERFORMANCE TRADEOFF
           </text>
 
@@ -853,10 +882,10 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
               <animate attributeName="opacity" values={`${1 - quantizationError/5};${0.7 - quantizationError/5};${1 - quantizationError/5}`} dur="2s" repeatCount="indefinite" />
             </circle>
             <circle cx="25" cy="15" r="15" fill="#15803d" stroke="#22c55e" strokeWidth="2" />
-            <text x="25" y="20" textAnchor="middle" fill="#ffffff" fontSize="10" fontWeight="bold">
+            <text x="25" y="20" textAnchor="middle" fill="#ffffff" fontSize="11" fontWeight="bold">
               {(100 - quantizationError).toFixed(0)}%
             </text>
-            <text x="25" y="50" textAnchor="middle" fill="#22c55e" fontSize="9" fontWeight="bold">Accuracy</text>
+            <text x="25" y="50" textAnchor="middle" fill="#22c55e" fontSize="11" fontWeight="bold">Accuracy</text>
           </g>
 
           {/* Performance indicator */}
@@ -865,25 +894,25 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
               <animate attributeName="opacity" values={`${spec.speedRatio/10};${spec.speedRatio/12};${spec.speedRatio/10}`} dur="1.5s" repeatCount="indefinite" />
             </circle>
             <circle cx="25" cy="15" r="15" fill="#92400e" stroke="#f59e0b" strokeWidth="2" />
-            <text x="25" y="20" textAnchor="middle" fill="#ffffff" fontSize="10" fontWeight="bold">
+            <text x="25" y="20" textAnchor="middle" fill="#ffffff" fontSize="11" fontWeight="bold">
               {spec.speedRatio}x
             </text>
-            <text x="25" y="50" textAnchor="middle" fill="#f59e0b" fontSize="9" fontWeight="bold">Speed</text>
+            <text x="25" y="50" textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="bold">Speed</text>
           </g>
 
           {/* Tradeoff arrow indicator */}
           <g transform="translate(200, 40)">
             <line x1="0" y1="25" x2="100" y2="25" stroke="#475569" strokeWidth="2" strokeDasharray="4 2" />
             <polygon points="100,25 90,20 90,30" fill="#475569" />
-            <text x="50" y="15" textAnchor="middle" fill="#64748b" fontSize="8">Lower precision</text>
-            <text x="50" y="55" textAnchor="middle" fill="#64748b" fontSize="8">Better performance</text>
+            <text x="50" y="15" textAnchor="middle" fill="#64748b" fontSize="11">Lower precision</text>
+            <text x="50" y="55" textAnchor="middle" fill="#64748b" fontSize="11">Better performance</text>
           </g>
         </g>
 
         {/* Memory Footprint Visualization */}
         <g transform="translate(20, 310)">
           <rect x="0" y="0" width="660" height="80" rx="10" fill="url(#qprecPanelGlass)" stroke="#334155" strokeWidth="1" filter="url(#qprecPanelShadow)" />
-          <text x="15" y="22" fill="#94a3b8" fontSize="10" fontWeight="bold" letterSpacing="0.1em">
+          <text x="15" y="22" fill="#94a3b8" fontSize="11" fontWeight="bold" letterSpacing="0.1em">
             MEMORY FOOTPRINT ({modelSize}B Parameter Model)
           </text>
 
@@ -895,8 +924,8 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
               const barWidth = 400 * pSpec.memoryRatio;
               const isActive = p === precision;
               return (
-                <g key={p} transform={`translate(0, ${i * 11})`}>
-                  <text x="0" y="8" fill={isActive ? pSpec.color : '#64748b'} fontSize="9" fontWeight={isActive ? 'bold' : 'normal'}>{p}</text>
+                <g key={p} transform={`translate(0, ${i * 14})`}>
+                  <text x="0" y="8" fill={isActive ? pSpec.color : '#64748b'} fontSize="11" fontWeight={isActive ? 'bold' : 'normal'}>{p}</text>
                   <rect x="40" y="0" width="400" height="8" rx="2" fill="rgba(255,255,255,0.05)" />
                   <rect
                     x="40"
@@ -908,7 +937,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
                     opacity={isActive ? 1 : 0.5}
                     filter={isActive ? 'url(#qprecBitGlow)' : undefined}
                   />
-                  <text x="450" y="8" fill={isActive ? '#f8fafc' : '#64748b'} fontSize="9" fontWeight={isActive ? 'bold' : 'normal'}>
+                  <text x="450" y="8" fill={isActive ? '#f8fafc' : '#64748b'} fontSize="11" fontWeight={isActive ? 'bold' : 'normal'}>
                     {memGB} GB
                   </text>
                   {isActive && (
@@ -924,7 +953,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
           {/* Savings indicator */}
           <g transform="translate(540, 35)">
             <rect x="0" y="0" width="105" height="35" rx="6" fill="rgba(16, 185, 129, 0.1)" stroke="#10b981" strokeWidth="1" />
-            <text x="52" y="15" textAnchor="middle" fill="#10b981" fontSize="9">Memory Saved</text>
+            <text x="52" y="15" textAnchor="middle" fill="#10b981" fontSize="11">Memory Saved</text>
             <text x="52" y="30" textAnchor="middle" fill="#22c55e" fontSize="14" fontWeight="bold">
               {((1 - spec.memoryRatio) * 100).toFixed(0)}%
             </text>
@@ -949,10 +978,11 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
                 padding: '10px 20px',
                 borderRadius: '8px',
                 border: precision === p ? `2px solid ${PRECISION_SPECS[p].color}` : '1px solid rgba(255,255,255,0.2)',
-                background: precision === p ? `${PRECISION_SPECS[p].color}22` : 'transparent',
+                background: precision === p ? `linear-gradient(135deg, ${PRECISION_SPECS[p].color}33, ${PRECISION_SPECS[p].color}11)` : 'transparent',
                 color: PRECISION_SPECS[p].color,
                 cursor: 'pointer',
                 fontWeight: 'bold',
+                transition: 'all 0.2s ease-out',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -972,7 +1002,15 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
           max={70}
           value={modelSize}
           onChange={(e) => setModelSize(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
+          onInput={(e) => setModelSize(parseInt((e.target as HTMLInputElement).value))}
+          style={{
+            width: '100%',
+            accentColor: '#3b82f6',
+            height: '20px',
+            touchAction: 'pan-y',
+            WebkitAppearance: 'none',
+            cursor: 'pointer',
+          }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '12px' }}>
           <span>1B (Phi-2)</span>
@@ -1024,18 +1062,21 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, justifyContent: 'center' }}>
           {phaseOrder.map((p, i) => (
-            <div
+            <button
               key={p}
               onClick={() => i <= currentIdx && goToPhase(p)}
+              aria-label={phaseLabels[p]}
+              title={phaseLabels[p]}
               style={{
                 width: i === currentIdx ? '20px' : '10px',
                 height: '10px',
                 borderRadius: '5px',
                 backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : 'rgba(255,255,255,0.2)',
                 cursor: i <= currentIdx ? 'pointer' : 'default',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s ease-out',
+                border: 'none',
+                padding: 0,
               }}
-              title={phaseLabels[p]}
             />
           ))}
         </div>
@@ -1078,10 +1119,11 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
             fontWeight: 'bold',
             cursor: canGoBack ? 'pointer' : 'not-allowed',
             opacity: canGoBack ? 1 : 0.3,
+            transition: 'all 0.2s ease-out',
             WebkitTapHighlightColor: 'transparent',
           }}
         >
-          Back
+          ← Back
         </button>
         <span style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 600 }}>
           {phaseLabels[phase]}
@@ -1093,14 +1135,15 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
             padding: '12px 32px',
             borderRadius: '8px',
             border: 'none',
-            background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
+            background: canProceed ? `linear-gradient(135deg, ${colors.accent}, #7c3aed)` : 'rgba(255,255,255,0.1)',
             color: canProceed ? 'white' : colors.textMuted,
             fontWeight: 'bold',
             cursor: canProceed ? 'pointer' : 'not-allowed',
+            transition: 'all 0.2s ease-out',
             WebkitTapHighlightColor: 'transparent',
           }}
         >
-          {buttonText}
+          {buttonText} →
         </button>
       </div>
     );
@@ -1109,21 +1152,22 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
   // Phase renders
   const renderHook = () => (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, padding: '24px', paddingBottom: '100px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', padding: '24px', paddingBottom: '100px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '24px', maxWidth: '672px', margin: '0 auto 24px' }}>
           <div style={{
             display: 'inline-block',
             padding: '8px 16px',
-            background: 'rgba(168, 85, 247, 0.1)',
+            background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(124, 58, 237, 0.1))',
             borderRadius: '20px',
-            marginBottom: '16px'
+            marginBottom: '16px',
+            border: '1px solid rgba(168,85,247,0.3)',
           }}>
-            <span style={{ color: colors.accent, fontSize: '14px', fontWeight: 'bold' }}>AI COMPUTE PHYSICS</span>
+            <span style={{ color: colors.accent, fontSize: '14px', fontWeight: 700 }}>AI COMPUTE PHYSICS</span>
           </div>
-          <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>
+          <h1 style={{ color: colors.textPrimary, fontSize: '28px', fontWeight: 800, marginBottom: '8px' }}>
             Quantization and Precision
           </h1>
-          <p style={{ color: colors.textSecondary, fontSize: '18px' }}>
+          <p style={{ color: colors.textSecondary, fontSize: '18px', fontWeight: 400 }}>
             How can AI run on 8-bit numbers when training uses 32-bit?
           </p>
         </div>
@@ -1131,12 +1175,15 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
         {renderVisualization()}
 
         <div style={{
-          background: colors.bgCard,
+          background: 'linear-gradient(135deg, rgba(30,41,59,0.9), rgba(15,23,42,0.95))',
           borderRadius: '16px',
           padding: '20px',
-          marginTop: '24px'
+          marginTop: '24px',
+          maxWidth: '672px',
+          margin: '24px auto 0',
+          border: '1px solid rgba(255,255,255,0.08)',
         }}>
-          <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6, marginBottom: '16px' }}>
+          <p style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 400, lineHeight: 1.6, marginBottom: '16px' }}>
             A 7-billion parameter model needs 28GB of memory in FP32. But your phone's AI chip
             only has 8GB. How does AI run everywhere from phones to watches?
           </p>
@@ -1169,15 +1216,48 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
 
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, padding: '24px', paddingBottom: '100px' }}>
-          <h2 style={{ color: colors.textPrimary, fontSize: '24px', textAlign: 'center', marginBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', padding: '24px', paddingBottom: '100px' }}>
+          <h2 style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 800, textAlign: 'center', marginBottom: '16px' }}>
             Make Your Prediction
           </h2>
-          <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px', fontWeight: 400 }}>
             What happens when you reduce numerical precision from 32 bits to 8 bits?
           </p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {/* Static SVG for predict phase */}
+          <svg viewBox="0 0 500 200" style={{ width: '100%', maxHeight: '200px', marginBottom: '20px' }}>
+            <defs>
+              <linearGradient id="predBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#0f172a" />
+                <stop offset="100%" stopColor="#1e1b4b" />
+              </linearGradient>
+            </defs>
+            <rect width="500" height="200" fill="url(#predBg)" rx="10" />
+            {/* Grid lines */}
+            <line x1="0" y1="50" x2="500" y2="50" stroke="#334155" strokeDasharray="4 4" opacity="0.5" />
+            <line x1="0" y1="100" x2="500" y2="100" stroke="#334155" strokeDasharray="4 4" opacity="0.5" />
+            <line x1="0" y1="150" x2="500" y2="150" stroke="#334155" strokeDasharray="4 4" opacity="0.5" />
+            <line x1="125" y1="0" x2="125" y2="200" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+            <line x1="250" y1="0" x2="250" y2="200" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+            <line x1="375" y1="0" x2="375" y2="200" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+            {/* Precision bars showing memory usage */}
+            <rect x="30" y="30" width="80" height="140" rx="4" fill="#3b82f6" opacity="0.8" />
+            <rect x="160" y="100" width="80" height="70" rx="4" fill="#8b5cf6" opacity="0.8" />
+            <rect x="290" y="130" width="80" height="40" rx="4" fill="#22c55e" opacity="0.8" />
+            <rect x="390" y="145" width="80" height="25" rx="4" fill="#f97316" opacity="0.8" />
+            {/* Labels */}
+            <text x="70" y="20" textAnchor="middle" fill="#3b82f6" fontSize="12" fontWeight="bold">FP32</text>
+            <text x="200" y="90" textAnchor="middle" fill="#8b5cf6" fontSize="12" fontWeight="bold">FP16</text>
+            <text x="330" y="120" textAnchor="middle" fill="#22c55e" fontSize="12" fontWeight="bold">INT8</text>
+            <text x="430" y="135" textAnchor="middle" fill="#f97316" fontSize="12" fontWeight="bold">INT4</text>
+            <text x="70" y="185" textAnchor="middle" fill="#94a3b8" fontSize="11">28 GB</text>
+            <text x="200" y="185" textAnchor="middle" fill="#94a3b8" fontSize="11">14 GB</text>
+            <text x="330" y="185" textAnchor="middle" fill="#94a3b8" fontSize="11">7 GB</text>
+            <text x="430" y="185" textAnchor="middle" fill="#94a3b8" fontSize="11">3.5 GB</text>
+            <text x="250" y="13" textAnchor="middle" fill="#e2e8f0" fontSize="13" fontWeight="bold">Memory Usage by Precision</text>
+          </svg>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '672px', margin: '0 auto' }}>
             {predictions.map(p => (
               <button
                 key={p.id}
@@ -1190,6 +1270,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
                   color: colors.textPrimary,
                   textAlign: 'left',
                   cursor: 'pointer',
+                  transition: 'all 0.2s ease-out',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -1223,8 +1304,8 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
 
   const renderPlay = () => (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, padding: '24px', paddingBottom: '100px', overflowY: 'auto' }}>
-        <h2 style={{ color: colors.textPrimary, fontSize: '24px', textAlign: 'center', marginBottom: '16px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', padding: '24px', paddingBottom: '100px' }}>
+        <h2 style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 800, textAlign: 'center', marginBottom: '16px' }}>
           Quantization Lab
         </h2>
 
@@ -1232,18 +1313,39 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
         {renderControls()}
 
         <div style={{
-          background: colors.bgCard,
+          background: 'linear-gradient(135deg, rgba(30,41,59,0.9), rgba(15,23,42,0.95))',
           borderRadius: '12px',
           padding: '16px',
-          marginTop: '16px'
+          marginTop: '16px',
+          maxWidth: '672px',
+          margin: '16px auto 0',
+          border: '1px solid rgba(168,85,247,0.2)',
         }}>
-          <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Observations:</h3>
-          <ul style={{ color: colors.textSecondary, paddingLeft: '20px', margin: 0, lineHeight: 1.8 }}>
-            <li>FP32 to FP16: 50% memory, 2x speed, minimal quality loss</li>
-            <li>FP32 to INT8: 25% memory, 4x speed, slight quality loss</li>
-            <li>FP32 to INT4: 12.5% memory, 8x speed, noticeable but usable</li>
-            <li>Larger models are MORE robust to quantization</li>
+          <h3 style={{ color: colors.accent, marginBottom: '12px', fontWeight: 700 }}>The visualization shows how precision affects memory and speed:</h3>
+          <ul style={{ color: colors.textSecondary, paddingLeft: '20px', margin: 0, lineHeight: 1.8, fontWeight: 400 }}>
+            <li>When you increase precision bits, memory usage increases proportionally — higher bits cause larger model size</li>
+            <li>When precision decreases from FP32 to INT8, speed increases 4x because fewer bits means faster math</li>
+            <li>Notice how lower precision results in small accuracy loss — this affects edge cases more than typical inputs</li>
+            <li>Observe that larger models are MORE robust to quantization because errors average out across more parameters</li>
           </ul>
+        </div>
+
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(59,130,246,0.1), rgba(139,92,246,0.1))',
+          borderRadius: '12px',
+          padding: '16px',
+          marginTop: '12px',
+          maxWidth: '672px',
+          margin: '12px auto 0',
+          border: '1px solid rgba(59,130,246,0.2)',
+        }}>
+          <h3 style={{ color: colors.fp32, marginBottom: '8px', fontWeight: 700 }}>Why This Matters in Industry</h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
+            Quantization is important for real-world AI deployment. It enables engineers to run GPT-scale models
+            on consumer hardware. Technology companies like Apple, Google, and Qualcomm use INT8 in their
+            neural processing units. This is why your phone can run practical AI features despite limited memory.
+            The application of quantization allows models that required datacenter GPUs to run on edge devices.
+          </p>
         </div>
       </div>
       {renderBottomBar(true, 'Review Concepts')}
@@ -1252,7 +1354,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
 
   const renderReview = () => (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', padding: '24px', paddingBottom: '100px' }}>
         <h2 style={{ color: colors.textPrimary, fontSize: '24px', textAlign: 'center', marginBottom: '24px' }}>
           Understanding Quantization
         </h2>
@@ -1305,15 +1407,56 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
 
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, padding: '24px', paddingBottom: '100px' }}>
-          <h2 style={{ color: colors.warning, fontSize: '24px', textAlign: 'center', marginBottom: '8px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', padding: '24px', paddingBottom: '100px' }}>
+          <h2 style={{ color: colors.warning, fontSize: '24px', fontWeight: 800, textAlign: 'center', marginBottom: '8px' }}>
             The Twist: Layer Sensitivity
           </h2>
-          <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px', fontWeight: 400 }}>
             Some layers are more sensitive to quantization than others. Which ones?
           </p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {/* Static SVG showing neural network layer sensitivity */}
+          <svg viewBox="0 0 500 220" style={{ width: '100%', maxHeight: '220px', marginBottom: '20px' }}>
+            <defs>
+              <linearGradient id="twistBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#0f172a" />
+                <stop offset="100%" stopColor="#1e1b4b" />
+              </linearGradient>
+              <linearGradient id="highSens" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#ef4444" />
+                <stop offset="100%" stopColor="#b91c1c" />
+              </linearGradient>
+              <linearGradient id="lowSens" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#22c55e" />
+                <stop offset="100%" stopColor="#15803d" />
+              </linearGradient>
+            </defs>
+            <rect width="500" height="220" fill="url(#twistBg)" rx="10" />
+            {/* Grid lines */}
+            <line x1="0" y1="60" x2="500" y2="60" stroke="#334155" strokeDasharray="4 4" opacity="0.4" />
+            <line x1="0" y1="120" x2="500" y2="120" stroke="#334155" strokeDasharray="4 4" opacity="0.4" />
+            <line x1="0" y1="180" x2="500" y2="180" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+            {/* Layer blocks */}
+            <rect x="30" y="40" width="80" height="140" rx="6" fill="url(#highSens)" opacity="0.85" />
+            <rect x="140" y="100" width="80" height="80" rx="6" fill="url(#lowSens)" opacity="0.75" />
+            <rect x="250" y="100" width="80" height="80" rx="6" fill="url(#lowSens)" opacity="0.75" />
+            <rect x="360" y="40" width="80" height="140" rx="6" fill="url(#highSens)" opacity="0.85" />
+            {/* Connection lines */}
+            <line x1="110" y1="110" x2="140" y2="140" stroke="#475569" strokeWidth="2" opacity="0.6" />
+            <line x1="220" y1="140" x2="250" y2="140" stroke="#475569" strokeWidth="2" opacity="0.6" />
+            <line x1="330" y1="140" x2="360" y2="110" stroke="#475569" strokeWidth="2" opacity="0.6" />
+            {/* Labels */}
+            <text x="70" y="30" textAnchor="middle" fill="#ef4444" fontSize="12" fontWeight="bold">Input</text>
+            <text x="180" y="90" textAnchor="middle" fill="#22c55e" fontSize="12" fontWeight="bold">Hidden</text>
+            <text x="290" y="90" textAnchor="middle" fill="#22c55e" fontSize="12" fontWeight="bold">Hidden</text>
+            <text x="400" y="30" textAnchor="middle" fill="#ef4444" fontSize="12" fontWeight="bold">Output</text>
+            <text x="70" y="200" textAnchor="middle" fill="#94a3b8" fontSize="11">⚠️ Sensitive</text>
+            <text x="235" y="200" textAnchor="middle" fill="#94a3b8" fontSize="11">✅ Quantize-safe</text>
+            <text x="400" y="200" textAnchor="middle" fill="#94a3b8" fontSize="11">⚠️ Sensitive</text>
+            <text x="250" y="13" textAnchor="middle" fill="#f59e0b" fontSize="13" fontWeight="bold">Layer Sensitivity in Neural Networks</text>
+          </svg>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '672px', margin: '0 auto' }}>
             {predictions.map(p => (
               <button
                 key={p.id}
@@ -1326,6 +1469,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
                   color: colors.textPrimary,
                   textAlign: 'left',
                   cursor: 'pointer',
+                  transition: 'all 0.2s ease-out',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -1359,7 +1503,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
 
   const renderTwistPlay = () => (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', padding: '24px', paddingBottom: '100px' }}>
         <h2 style={{ color: colors.warning, fontSize: '24px', textAlign: 'center', marginBottom: '16px' }}>
           Layer Sensitivity Lab
         </h2>
@@ -1428,7 +1572,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
 
   const renderTwistReview = () => (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', padding: '24px', paddingBottom: '100px' }}>
         <h2 style={{ color: colors.warning, fontSize: '24px', textAlign: 'center', marginBottom: '24px' }}>
           Mixed-Precision Strategy
         </h2>
@@ -1473,15 +1617,15 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
 
   const renderTransfer = () => (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, padding: '24px', paddingBottom: '100px' }}>
-        <h2 style={{ color: colors.textPrimary, fontSize: '24px', textAlign: 'center', marginBottom: '8px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', padding: '24px', paddingBottom: '100px' }}>
+        <h2 style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 800, textAlign: 'center', marginBottom: '8px' }}>
           Real-World Applications
         </h2>
-        <p style={{ color: colors.textMuted, textAlign: 'center', marginBottom: '24px', fontSize: '14px' }}>
+        <p style={{ color: colors.textMuted, textAlign: 'center', marginBottom: '24px', fontSize: '14px', fontWeight: 400 }}>
           Explore all 4 applications to continue
         </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '672px', margin: '0 auto' }}>
           {TRANSFER_APPS.map((app, i) => (
             <div
               key={i}
@@ -1493,8 +1637,8 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
-                {transferCompleted.has(i) && <span style={{ color: colors.success }}>Done</span>}
+                <h3 style={{ color: colors.textPrimary, margin: 0, fontWeight: 700 }}>{app.title}</h3>
+                {transferCompleted.has(i) && <span style={{ color: colors.success }}>✅ Done</span>}
               </div>
               <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
               <div style={{
@@ -1515,10 +1659,11 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
                     background: 'transparent',
                     color: colors.accent,
                     cursor: 'pointer',
+                    transition: 'all 0.2s ease-out',
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >
-                  Mark as Read
+                  ✅ Got It — Continue
                 </button>
               )}
             </div>
@@ -1553,7 +1698,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
                 background: passed ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
                 border: `3px solid ${passed ? colors.success : colors.warning}`
               }}>
-                {score === totalQuestions ? 'Trophy' : score >= 9 ? 'Star' : score >= 7 ? 'Check' : 'Book'}
+                {score === totalQuestions ? '🏆' : score >= 9 ? '⭐' : score >= 7 ? '✅' : '📚'}
               </div>
               <h2 style={{ color: passed ? colors.success : colors.warning, fontSize: '28px', marginBottom: '8px' }}>
                 {score}/{totalQuestions} Correct
@@ -1936,7 +2081,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
           marginBottom: '24px',
           boxShadow: `0 0 40px ${colors.accentGlow}`,
         }}>
-          <span style={{ fontSize: '48px' }}>Trophy</span>
+          <span style={{ fontSize: '48px' }}>🏆</span>
         </div>
 
         <h1 style={{ color: colors.textPrimary, fontSize: '32px', marginBottom: '8px', textAlign: 'center' }}>

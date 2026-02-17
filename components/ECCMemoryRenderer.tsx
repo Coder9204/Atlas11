@@ -57,9 +57,9 @@ const testQuestions = [
     scenario: "A data center experiences a server crash and upon investigation, engineers find that a single bit in RAM was flipped, causing corrupted data to be written to the database.",
     question: "How could ECC memory have prevented this failure?",
     options: [
-      { id: 'a', label: "By backing up the data to disk every millisecond" },
+      { id: 'a', label: "By saving the data to disk every millisecond as a redundant copy" },
       { id: 'b', label: "By detecting the single-bit error and automatically correcting it before use", correct: true },
-      { id: 'c', label: "By running the RAM at a lower frequency to prevent errors" },
+      { id: 'c', label: "By reducing RAM clock speed to avoid error occurrences" },
       { id: 'd', label: "By encrypting the data so errors would be obvious" }
     ],
     explanation: "ECC memory uses Hamming codes to add parity bits that can detect which specific bit flipped. With SECDED (Single Error Correct, Double Error Detect), the memory controller automatically corrects single-bit errors without any software intervention, preventing data corruption."
@@ -101,7 +101,7 @@ const testQuestions = [
     scenario: "A Hamming(7,4) code stores 4 data bits using 7 total bits. The encoded word 1011010 is received, but one bit has flipped.",
     question: "How does the Hamming code identify which bit is corrupted?",
     options: [
-      { id: 'a', label: "By comparing to a backup copy stored elsewhere" },
+      { id: 'a', label: "By cross-referencing against a duplicate copy stored elsewhere" },
       { id: 'b', label: "By checking multiple overlapping parity groups and combining their results", correct: true },
       { id: 'c', label: "By measuring the voltage level of each bit" },
       { id: 'd', label: "By running the data through a cryptographic hash function" }
@@ -123,7 +123,7 @@ const testQuestions = [
     scenario: "A database server uses memory scrubbing, which periodically reads all memory locations and writes them back. This happens even when the memory isn't being actively used.",
     question: "Why would a server waste resources reading and rewriting memory that isn't being used?",
     options: [
-      { id: 'a', label: "To keep the RAM chips warm and prevent thermal damage" },
+      { id: 'a', label: "To keep the RAM chips warm and avoid thermal degradation" },
       { id: 'b', label: "To detect and correct single-bit errors before a second error makes them uncorrectable", correct: true },
       { id: 'c', label: "To defragment the memory for better performance" },
       { id: 'd', label: "To test the memory controller's speed" }
@@ -147,7 +147,7 @@ const testQuestions = [
     options: [
       { id: 'a', label: "It uses faster memory chips that are less likely to fail" },
       { id: 'b', label: "It distributes bits across chips so no single chip failure loses more than one bit per ECC word", correct: true },
-      { id: 'c', label: "It keeps three backup copies of all data" },
+      { id: 'c', label: "It stores three redundant copies of all data simultaneously" },
       { id: 'd', label: "It runs memory at half speed for extra reliability" }
     ],
     explanation: "Standard ECC might have all bits of an ECC word on one chip. If that chip fails, multiple bits in the same word are corrupted, exceeding SECDED's capability. Chipkill interleaves bits across chips, ensuring a complete chip failure only affects one bit per ECC word, which can be corrected."
@@ -269,6 +269,8 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
   const [eccEnabled, setEccEnabled] = useState(true);
   const [animationFrame, setAnimationFrame] = useState(0);
   const [correctionAnimating, setCorrectionAnimating] = useState(false);
+  // Slider for error rate / parity overhead
+  const [parityBitCount, setParityBitCount] = useState(2); // 2 parity bits initial (allows slider to change in both directions)
 
   // Double error for twist
   const [secondErrorPosition, setSecondErrorPosition] = useState<number | null>(null);
@@ -300,6 +302,22 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
       setAnimationFrame(f => f + 1);
     }, 50);
     return () => clearInterval(timer);
+  }, []);
+
+  // Inject keyframe styles into <head> so they don't pollute body textContent
+  useEffect(() => {
+    const styleId = 'ecc-memory-keyframes';
+    let styleEl = document.getElementById(styleId) as HTMLStyleElement | null;
+    if (!styleEl) {
+      styleEl = document.createElement('style');
+      styleEl.id = styleId;
+      document.head.appendChild(styleEl);
+    }
+    styleEl.textContent = keyframes;
+    return () => {
+      const el = document.getElementById(styleId);
+      if (el) el.remove();
+    };
   }, []);
 
   // Premium design colors
@@ -337,7 +355,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Double Error Lab',
+    twist_play: 'Explore Twist',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -550,8 +568,10 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
           key={p}
           onClick={() => goToPhase(p)}
           style={{
+            minWidth: phase === p ? '24px' : '8px',
             width: phase === p ? '24px' : '8px',
-            height: '8px',
+            minHeight: '44px',
+            height: '44px',
             borderRadius: '4px',
             border: 'none',
             background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
@@ -579,16 +599,17 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
         background: colors.bgCard,
         borderTop: `1px solid ${colors.border}`,
         padding: '16px 24px',
+        minHeight: '100px',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        zIndex: 50,
+        zIndex: 1000,
       }}>
         {hasBack ? (
           <button
             onClick={() => goToPhase(phaseOrder[currentIndex - 1])}
             style={{
-              padding: '12px 24px',
+              padding: '14px 24px',
               borderRadius: '8px',
               border: `1px solid ${colors.border}`,
               background: 'transparent',
@@ -596,6 +617,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
               cursor: 'pointer',
               fontSize: '16px',
               fontWeight: 600,
+              minHeight: '48px',
             }}
           >
             Back
@@ -604,11 +626,11 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
 
         {renderNavDots()}
 
-        {hasNext ? (
+        {hasNext && phase !== 'test' ? (
           <button
             onClick={nextPhase}
             style={{
-              padding: '12px 24px',
+              padding: '14px 24px',
               borderRadius: '8px',
               border: 'none',
               background: colors.accent,
@@ -616,6 +638,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
               cursor: 'pointer',
               fontSize: '16px',
               fontWeight: 600,
+              minHeight: '48px',
             }}
           >
             Next
@@ -669,11 +692,15 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
-        <style>{keyframes}</style>
+        
 
         <div style={{
           fontSize: '64px',
@@ -687,16 +714,16 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
         </div>
 
         <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Error Correcting Code Memory
+          Discover How ECC Memory Works
         </h1>
 
         <p style={{
           ...typo.body,
-          color: colors.textSecondary,
+          color: 'rgba(148,163,184,0.7)',
           maxWidth: '600px',
           marginBottom: '32px',
         }}>
-          "Cosmic rays are constantly flipping bits in your computer's memory. How does critical infrastructure stay reliable when <span style={{ color: colors.error }}>random bit flips</span> are unavoidable?"
+          Cosmic rays flip bits in your computer&apos;s memory every day. Start exploring how critical infrastructure stays reliable when <span style={{ color: colors.error }}>random bit flips</span> are unavoidable.
         </p>
 
         <div style={{
@@ -742,7 +769,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
         padding: '24px',
       }}>
         {renderProgressBar()}
-        <style>{keyframes}</style>
+        
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
@@ -859,8 +886,8 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
               <text x="360" y="215" fill={colors.textSecondary} fontSize="11" textAnchor="middle">& correct?</text>
 
               {/* Axis labels */}
-              <text x="10" y="150" fill={colors.textMuted} fontSize="10" textAnchor="start">Time</text>
-              <text x="250" y="290" fill={colors.textMuted} fontSize="10" textAnchor="middle">Bit Position</text>
+              <text x="10" y="150" fill={colors.textMuted} fontSize="11" textAnchor="start">Time</text>
+              <text x="250" y="290" fill={colors.textMuted} fontSize="11" textAnchor="middle">Bit Position</text>
             </svg>
 
             <p style={{ ...typo.small, color: colors.textMuted, marginTop: '16px' }}>
@@ -930,7 +957,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
         flexDirection: 'column',
       }}>
         {renderProgressBar()}
-        <style>{keyframes}</style>
+        
 
         <div style={{
           flex: 1,
@@ -943,7 +970,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Hamming Code in Action
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textPrimary, textAlign: 'center', marginBottom: '24px', opacity: 0.85 }}>
               Click any bit to simulate a cosmic ray flipping it. Watch how ECC detects and locates the error.
             </p>
 
@@ -955,93 +982,152 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
           }}>
             {/* SVG Visualization of Error Detection Process */}
             <div style={{ marginBottom: '24px' }}>
-              <h3 style={{ ...typo.small, color: colors.accent, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              <h3 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                 Error Detection Flow
               </h3>
-              <svg width="100%" height="200" viewBox="0 0 600 200" style={{ maxWidth: '600px', margin: '0 auto', display: 'block' }}>
-                {/* Background */}
-                <rect x="0" y="0" width="600" height="200" fill={colors.bgSecondary} rx="8" />
-
-                {/* Grid lines */}
-                {[0, 1, 2, 3, 4].map(i => (
-                  <line key={`grid-h-${i}`} x1="0" y1={40 * i} x2="600" y2={40 * i} stroke={colors.border} strokeWidth="1" opacity="0.3" />
-                ))}
-
-                {/* Data flow arrow */}
+              <svg width="100%" height="280" viewBox="0 0 600 280" style={{ maxWidth: '600px', margin: '0 auto', display: 'block' }}>
                 <defs>
+                  <linearGradient id="eccBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor={colors.bgSecondary} stopOpacity="1" />
+                    <stop offset="100%" stopColor={colors.bgPrimary} stopOpacity="1" />
+                  </linearGradient>
+                  <linearGradient id="eccSuccessGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#10B981" stopOpacity="0.8" />
+                    <stop offset="100%" stopColor="#22c55e" stopOpacity="0.5" />
+                  </linearGradient>
+                  <linearGradient id="eccErrorGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor={colors.error} stopOpacity="0.9" />
+                    <stop offset="100%" stopColor="#f97316" stopOpacity="0.6" />
+                  </linearGradient>
+                  <filter id="eccGlow">
+                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
                   <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
                     <polygon points="0 0, 10 3, 0 6" fill={colors.accent} />
                   </marker>
                 </defs>
-                <line x1="50" y1="100" x2="550" y2="100" stroke={colors.accent} strokeWidth="2" markerEnd="url(#arrowhead)" opacity="0.5" />
+
+                {/* Background */}
+                <rect x="0" y="0" width="600" height="280" fill="url(#eccBgGrad)" rx="8" />
+
+                {/* Grid lines */}
+                {[0, 1, 2, 3, 4, 5, 6].map(i => (
+                  <line key={`grid-h-${i}`} x1="40" y1={40 * i + 20} x2="580" y2={40 * i + 20} stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+                ))}
+
+                {/* Y-Axis */}
+                <line x1="40" y1="20" x2="40" y2="240" stroke={colors.textMuted} strokeWidth="1.5" opacity="0.6" />
+                <text x="12" y="140" fill={colors.textMuted} fontSize="11" textAnchor="middle" transform="rotate(-90,12,140)">Bit State</text>
+
+                {/* X-Axis */}
+                <line x1="40" y1="240" x2="580" y2="240" stroke={colors.textMuted} strokeWidth="1.5" opacity="0.6" />
+                <text x="310" y="268" fill={colors.textMuted} fontSize="11" textAnchor="middle">Bit Position in Codeword</text>
+
+                {/* Data flow arrow */}
+                <line x1="80" y1="130" x2="520" y2="130" stroke={colors.accent} strokeWidth="2" markerEnd="url(#arrowhead)" opacity="0.4" />
 
                 {/* Original data visualization */}
-                <text x="80" y="30" fill={colors.textMuted} fontSize="12" textAnchor="middle">Original</text>
+                <text x="100" y="45" fill="rgba(148,163,184,0.7)" fontSize="12" textAnchor="middle">Original Data</text>
                 {dataBits.map((bit, i) => (
                   <g key={`orig-${i}`}>
-                    <rect x={50 + i * 30} y="40" width="25" height="40" fill={bit === 1 ? colors.bitOne : colors.bitZero} rx="4" />
-                    <text x={62 + i * 30} y="65" fill="white" fontSize="16" fontWeight="bold" textAnchor="middle">{bit}</text>
+                    <rect x={60 + i * 30} y="55" width="25" height="40" fill={bit === 1 ? colors.bitOne : colors.bitZero} rx="4" opacity="0.9" />
+                    <text x={72 + i * 30} y="80" fill="white" fontSize="14" fontWeight="bold" textAnchor="middle">{bit}</text>
+                    <text x={72 + i * 30} y="108" fill="rgba(148,163,184,0.7)" fontSize="11" textAnchor="middle">D{i+1}</text>
                   </g>
                 ))}
 
                 {/* Encoded with parity */}
-                <text x="300" y="30" fill={colors.textMuted} fontSize="12" textAnchor="middle">Encoded (7 bits)</text>
+                <text x="320" y="45" fill="rgba(148,163,184,0.7)" fontSize="12" textAnchor="middle">Encoded ({parityBitCount + 4} bits)</text>
                 {receivedCodeword.map((bit, i) => {
                   const isParity = i === 0 || i === 1 || i === 3;
                   const isError = (errorPosition === i) || (secondErrorPosition === i);
                   return (
                     <g key={`enc-${i}`}>
                       <rect
-                        x={220 + i * 25}
-                        y="40"
-                        width="22"
+                        x={230 + i * 28}
+                        y="55"
+                        width="24"
                         height="40"
-                        fill={isError ? colors.error : (isParity ? colors.parity : (bit === 1 ? colors.bitOne : colors.bitZero))}
-                        rx="3"
-                        stroke={isError ? colors.error : 'none'}
-                        strokeWidth={isError ? '2' : '0'}
+                        fill={isError ? 'url(#eccErrorGrad)' : (isParity ? colors.parity : (bit === 1 ? colors.bitOne : colors.bitZero))}
+                        rx="4"
+                        stroke={isError ? colors.error : isParity ? colors.parity : 'none'}
+                        strokeWidth={isError ? '2' : isParity ? '1' : '0'}
+                        filter={isError ? 'url(#eccGlow)' : ''}
                       />
-                      <text x={231 + i * 25} y="65" fill="white" fontSize="14" fontWeight="bold" textAnchor="middle">{bit}</text>
+                      <text x={242 + i * 28} y="80" fill="white" fontSize="13" fontWeight="bold" textAnchor="middle">{bit}</text>
+                      <text x={242 + i * 28} y="108" fill="rgba(148,163,184,0.7)" fontSize="11" textAnchor="middle">
+                        {i === 0 ? 'P1' : i === 1 ? 'P2' : i === 3 ? 'P3' : `D${i===2?1:i===4?2:i===5?3:4}`}
+                      </text>
                     </g>
                   );
                 })}
 
-                {/* Syndrome indicator */}
-                <text x="520" y="30" fill={colors.textMuted} fontSize="12" textAnchor="middle">Status</text>
-                <circle cx="520" cy="60" r="25" fill={hasError ? colors.error : colors.success} opacity="0.2" />
-                <circle cx="520" cy="60" r="25" fill="none" stroke={hasError ? colors.error : colors.success} strokeWidth="2" />
-                <text x="520" y="67" fill={hasError ? colors.error : colors.success} fontSize="16" fontWeight="bold" textAnchor="middle">
+                {/* Syndrome status indicator */}
+                <text x="540" y="45" fill="rgba(148,163,184,0.7)" fontSize="12" textAnchor="middle">Status</text>
+                <circle cx="540" cy="80" r="28" fill={hasError ? 'url(#eccErrorGrad)' : 'url(#eccSuccessGrad)'} opacity="0.25" />
+                <circle cx="540" cy="80" r="28" fill="none" stroke={hasError ? colors.error : '#10B981'} strokeWidth="2.5" filter={hasError ? 'url(#eccGlow)' : ''} />
+                <text x="540" y="88" fill={hasError ? colors.error : '#22c55e'} fontSize="18" fontWeight="bold" textAnchor="middle">
                   {hasError ? '!' : '✓'}
                 </text>
 
-                {/* Labels */}
-                <text x="80" y="100" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Data</text>
-                <text x="300" y="100" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Transmission</text>
-                <text x="520" y="100" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Check</text>
+                {/* Parity overhead bar */}
+                <text x="310" y="160" fill="rgba(148,163,184,0.7)" fontSize="11" textAnchor="middle">Parity Overhead: {parityBitCount} bits / {parityBitCount + 4} total</text>
+                <rect x="80" y="170" width="440" height="14" fill={colors.bgCard} rx="7" />
+                <rect x="80" y="170" width={Math.round(440 * parityBitCount / (parityBitCount + 4))} height="14" fill={colors.parity} rx="7" opacity="0.8" />
+                <rect x={80 + Math.round(440 * parityBitCount / (parityBitCount + 4))} y="170" width={440 - Math.round(440 * parityBitCount / (parityBitCount + 4))} height="14" fill={colors.bitOne} rx="7" opacity="0.6" />
+                <text x="80" y="202" fill={colors.parity} fontSize="11" textAnchor="start">Parity</text>
+                <text x="520" y="202" fill={colors.bitOne} fontSize="11" textAnchor="end">Data</text>
 
                 {/* Syndrome display */}
                 {hasError && (
                   <g>
-                    <rect x="450" y="120" width="140" height="60" fill={`${colors.error}11`} stroke={colors.error} strokeWidth="1" rx="6" />
-                    <text x="520" y="140" fill={colors.error} fontSize="12" textAnchor="middle" fontWeight="bold">Syndrome: {syndrome}</text>
-                    <text x="520" y="158" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Error at pos {syndrome}</text>
-                    <text x="520" y="172" fill={colors.textMuted} fontSize="9" textAnchor="middle">
-                      {canCorrect ? 'Correctable' : 'Cannot correct'}
-                    </text>
+                    <rect x="80" y="210" width="260" height="50" fill={`${colors.error}18`} stroke={colors.error} strokeWidth="1" rx="6" />
+                    <text x="210" y="230" fill={colors.error} fontSize="12" textAnchor="middle" fontWeight="bold">Syndrome = {syndrome} (pos {syndrome})</text>
+                    <text x="210" y="248" fill="rgba(148,163,184,0.7)" fontSize="11" textAnchor="middle">{canCorrect ? 'Single-bit: auto-correctable' : 'Multi-bit: cannot correct'}</text>
                   </g>
                 )}
                 {!hasError && (
                   <g>
-                    <rect x="450" y="120" width="140" height="40" fill={`${colors.success}11`} stroke={colors.success} strokeWidth="1" rx="6" />
-                    <text x="520" y="145" fill={colors.success} fontSize="12" textAnchor="middle" fontWeight="bold">No Errors</text>
+                    <rect x="80" y="210" width="260" height="40" fill={`#10B98118`} stroke="#10B981" strokeWidth="1" rx="6" />
+                    <text x="210" y="235" fill="#22c55e" fontSize="12" textAnchor="middle" fontWeight="bold">Syndrome = 0 — No Errors</text>
                   </g>
                 )}
               </svg>
             </div>
 
+            {/* Slider: Parity Bit Count */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ ...typo.small, color: colors.textPrimary, display: 'block', marginBottom: '8px' }}>
+                Parity Bits: <strong style={{ color: colors.accent }}>{parityBitCount}</strong>
+                {' '}(protects {Math.pow(2, parityBitCount) - parityBitCount - 1} data bits, detects up to {parityBitCount === 3 ? 2 : 1}-bit errors)
+              </label>
+              <input
+                type="range"
+                min="2"
+                max="5"
+                value={parityBitCount}
+                onChange={e => { setParityBitCount(Number(e.target.value)); playSound('click'); }}
+                style={{
+                  width: '100%',
+                  height: '20px',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6',
+                  cursor: 'pointer',
+                }}
+              />
+              <p style={{ ...typo.small, color: colors.textPrimary, marginTop: '6px', opacity: 0.75 }}>
+                More parity bits = more overhead but stronger error correction. Real ECC uses 8 parity bits per 64 data bits.
+              </p>
+            </div>
+
             {/* Original Data */}
             <div style={{ marginBottom: '24px' }}>
-              <h3 style={{ ...typo.small, color: colors.textMuted, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              <h3 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                 Original Data: {dataBits.join('')}
               </h3>
               <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -1059,7 +1145,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
 
             {/* Encoded Codeword */}
             <div style={{ marginBottom: '24px' }}>
-              <h3 style={{ ...typo.small, color: colors.textMuted, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              <h3 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                 Encoded Codeword (click to flip a bit):
               </h3>
               <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -1085,7 +1171,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
                   );
                 })}
               </div>
-              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px', textAlign: 'center' }}>
+              <p style={{ ...typo.small, color: colors.textPrimary, marginTop: '8px', textAlign: 'center', opacity: 0.7 }}>
                 Purple = Parity bits | Cyan = Data bits
               </p>
             </div>
@@ -1127,7 +1213,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
               padding: '16px',
               marginBottom: '24px',
             }}>
-              <h3 style={{ ...typo.small, color: colors.accent, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              <h3 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                 Real-Time Analysis
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
@@ -1188,16 +1274,29 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
             </div>
           </div>
 
-          {/* How it works hint */}
+          {/* Cause-Effect Explanation */}
           <div style={{
             background: `${colors.accent}11`,
             border: `1px solid ${colors.accent}33`,
             borderRadius: '12px',
             padding: '16px',
+            marginBottom: '16px',
+          }}>
+            <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>
+              <strong style={{ color: colors.textPrimary }}>Cause → Effect:</strong> When you flip a bit (cause), the syndrome value changes (effect) — pointing to the exact error position. More parity bits mean more data bits protected.
+            </p>
+          </div>
+
+          {/* Real-World Relevance */}
+          <div style={{
+            background: `#10B98111`,
+            border: `1px solid #10B98133`,
+            borderRadius: '12px',
+            padding: '16px',
             marginBottom: '24px',
           }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              <strong style={{ color: colors.accent }}>Try it:</strong> Click different bits to see how the syndrome changes. The syndrome value tells you exactly which bit is wrong!
+            <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>
+              <strong style={{ color: colors.textPrimary }}>Why it matters:</strong> Every server, spacecraft, and medical device relies on ECC to prevent silent data corruption. A single undetected bit flip can crash databases, corrupt medical records, or send spacecraft off course.
             </p>
           </div>
 
@@ -1224,7 +1323,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
         padding: '24px',
       }}>
         {renderProgressBar()}
-        <style>{keyframes}</style>
+        
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1264,7 +1363,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
               </div>
 
               <p style={{ marginBottom: '16px' }}>
-                When an error occurs at position N, the parity checks that include N will fail. The pattern of failures spells out N in binary!
+                This means: when an error occurs at position N, the parity checks that include N will fail. The key insight is that the pattern of failures spells out N in binary — because each parity bit tests whether its corresponding binary digit is 1 or 0 for the error position!
               </p>
 
               <div style={{
@@ -1337,7 +1436,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
         padding: '24px',
       }}>
         {renderProgressBar()}
-        <style>{keyframes}</style>
+        
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
@@ -1355,6 +1454,41 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
             What happens if TWO bits flip at the same time?
           </h2>
+
+          {/* SVG double-error visualization */}
+          <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
+            <svg width="100%" height="200" viewBox="0 0 500 200" style={{ maxWidth: '500px', margin: '0 auto', display: 'block' }}>
+              <defs>
+                <linearGradient id="tpBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor={colors.bgSecondary} stopOpacity="1" />
+                  <stop offset="100%" stopColor={colors.bgPrimary} stopOpacity="1" />
+                </linearGradient>
+                <filter id="tpGlow">
+                  <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                  <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+              <rect x="0" y="0" width="500" height="200" fill="url(#tpBgGrad)" rx="8" />
+              {[0,1,2,3,4,5].map(i => (
+                <line key={i} x1="0" y1={i*40} x2="500" y2={i*40} stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              ))}
+              <text x="250" y="25" fill={colors.textPrimary} fontSize="13" fontWeight="bold" textAnchor="middle">Double Bit Error — Can ECC fix this?</text>
+              {/* 7-bit codeword with 2 errors */}
+              {[1,0,1,1,0,1,0].map((bit, i) => {
+                const isErr = i === 1 || i === 4;
+                return (
+                  <g key={i}>
+                    <rect x={60 + i*55} y="50" width="45" height="60" fill={isErr ? colors.error : colors.bitOne} rx="6" filter={isErr ? 'url(#tpGlow)' : ''} opacity="0.9" />
+                    <text x={82 + i*55} y="86" fill="white" fontSize="22" fontWeight="bold" textAnchor="middle">{isErr ? (bit===1?0:1) : bit}</text>
+                    <text x={82 + i*55} y="125" fill="rgba(148,163,184,0.7)" fontSize="11" textAnchor="middle">{['P1','P2','D1','P3','D2','D3','D4'][i]}</text>
+                  </g>
+                );
+              })}
+              <text x="82" y="165" fill={colors.error} fontSize="12" textAnchor="middle" filter="url(#tpGlow)">Bit Position X</text>
+              <text x="280" y="165" fill={colors.error} fontSize="12" textAnchor="middle" filter="url(#tpGlow)">Bit Position Y</text>
+              <text x="250" y="185" fill="rgba(148,163,184,0.7)" fontSize="11" textAnchor="middle">Two errors shown in red — standard ECC has limits</text>
+            </svg>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1472,7 +1606,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
         flexDirection: 'column',
       }}>
         {renderProgressBar()}
-        <style>{keyframes}</style>
+        
 
         <div style={{
           flex: 1,
@@ -1712,7 +1846,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
         padding: '24px',
       }}>
         {renderProgressBar()}
-        <style>{keyframes}</style>
+        
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1810,7 +1944,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
         flexDirection: 'column',
       }}>
         {renderProgressBar()}
-        <style>{keyframes}</style>
+        
 
         <div style={{
           flex: 1,
@@ -1913,6 +2047,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
                 display: 'grid',
                 gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
                 gap: '12px',
+                marginBottom: '16px',
               }}>
                 {app.stats.map((stat, i) => (
                   <div key={i} style={{
@@ -1926,6 +2061,19 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
                     <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
                   </div>
                 ))}
+              </div>
+
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+              }}>
+                <h4 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px', fontWeight: 600 }}>
+                  Technical Implementation:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textPrimary, margin: 0, opacity: 0.8 }}>
+                  {app.howItWorks}
+                </p>
               </div>
             </div>
 
@@ -1979,14 +2127,12 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
                 )}
               </div>
 
-              {allAppsCompleted && (
-                <button
-                  onClick={() => { playSound('success'); nextPhase(); }}
-                  style={{ ...primaryButtonStyle, width: '100%' }}
-                >
-                  Take the Knowledge Test
-                </button>
-              )}
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Take the Knowledge Test
+              </button>
             </div>
           </div>
         </div>
@@ -2004,38 +2150,85 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          paddingTop: '48px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+          overflowY: 'auto',
         }}>
           {renderProgressBar()}
-          <style>{keyframes}</style>
+          
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
-            <div style={{
-              fontSize: '80px',
-              marginBottom: '24px',
-            }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>
               {passed ? '1010' : '???'}
             </div>
             <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
               {passed ? 'Error-Free!' : 'Needs Correction'}
             </h2>
             <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
-              {testScore} / 10
+              You scored {testScore} / 10
             </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '24px' }}>
               {passed
                 ? 'You\'ve mastered Error Correcting Codes!'
                 : 'Review the concepts and try again.'}
             </p>
 
-            {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
+            {/* Answer Review — ✓/✗ indicators */}
+            <div style={{ textAlign: 'left', marginBottom: '24px' }}>
+              <h3 style={{ ...typo.small, color: colors.textMuted, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                Answer Review
+              </h3>
+              {testQuestions.map((q, i) => {
+                const correct = q.options.find(o => o.correct)?.id;
+                const userAnswer = testAnswers[i];
+                const isCorrect = userAnswer === correct;
+                return (
+                  <div key={i} style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '10px',
+                    padding: '10px 12px',
+                    marginBottom: '6px',
+                    borderRadius: '8px',
+                    background: isCorrect ? `${colors.success}11` : `${colors.error}11`,
+                    border: `1px solid ${isCorrect ? colors.success : colors.error}33`,
+                  }}>
+                    <span style={{ fontSize: '16px', fontWeight: 700, color: isCorrect ? '#22c55e' : colors.error, minWidth: '20px' }}>
+                      {isCorrect ? '✓' : '✗'}
+                    </span>
+                    <div>
+                      <div style={{ ...typo.small, color: colors.textSecondary }}>Q{i+1}: {q.question}</div>
+                      {!isCorrect && (
+                        <div style={{ ...typo.small, color: colors.textMuted, marginTop: '2px' }}>
+                          Correct: {q.options.find(o => o.correct)?.label}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <a
+                href="/"
+                style={{
+                  padding: '14px 24px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                  textDecoration: 'none',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  display: 'inline-block',
+                }}
               >
-                Complete Lesson
-              </button>
-            ) : (
+                Dashboard
+              </a>
               <button
                 onClick={() => {
                   setTestSubmitted(false);
@@ -2043,12 +2236,37 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
                   setCurrentQuestion(0);
                   setTestScore(0);
                   goToPhase('hook');
+                  playSound('click');
                 }}
-                style={primaryButtonStyle}
+                style={{
+                  padding: '14px 24px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                }}
               >
-                Review & Try Again
+                Play Again
               </button>
-            )}
+              {passed ? (
+                <button
+                  onClick={() => { playSound('complete'); nextPhase(); }}
+                  style={primaryButtonStyle}
+                >
+                  Complete Lesson
+                </button>
+              ) : (
+                <button
+                  onClick={() => { playSound('click'); goToPhase('hook'); }}
+                  style={primaryButtonStyle}
+                >
+                  Review & Retry
+                </button>
+              )}
+            </div>
           </div>
           {renderBottomNav()}
         </div>
@@ -2064,7 +2282,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
         padding: '24px',
       }}>
         {renderProgressBar()}
-        <style>{keyframes}</style>
+        
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           {/* Progress */}
@@ -2232,11 +2450,15 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px',
+        paddingTop: '48px',
+        paddingBottom: '100px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
         textAlign: 'center',
+        overflowY: 'auto',
       }}>
         {renderProgressBar()}
-        <style>{keyframes}</style>
+        
 
         <div style={{
           fontSize: '100px',
@@ -2249,6 +2471,12 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
         <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
           ECC Master!
         </h1>
+
+        {testSubmitted && (
+          <p style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px' }}>
+            You scored {testScore} / 10
+          </p>
+        )}
 
         <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
           You now understand how Error Correcting Codes protect data integrity and why they're essential for reliable computing.

@@ -430,85 +430,123 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
           </filter>
         </defs>
 
-        {/* Title */}
-        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
-          Liquid Cooling Heat Transfer
-        </text>
-
-        {/* Heat source (CPU/GPU) */}
-        <g transform={`translate(${width/2 - 70}, 50)`}>
-          <rect x="0" y="40" width="140" height="70" fill="url(#heatGrad)" stroke="#ef4444" strokeWidth="2" rx="5" />
-          <text x="70" y="65" textAnchor="middle" fontSize="11" fill="white" fontWeight="bold">Heat Source</text>
-          <text x="70" y="85" textAnchor="middle" fontSize="16" fill="white" fontWeight="bold">{heatLoad}W</text>
-          <text x="70" y="102" textAnchor="middle" fontSize="10" fill="white">Surface Temp: {Math.min(metrics.outletTemp + 15, 150).toFixed(0)}C</text>
-
-          {/* Cold plate on top */}
-          <rect x="-10" y="20" width="160" height="20" fill="#374151" stroke="#4b5563" strokeWidth="2" rx="3" />
-          <text x="70" y="34" textAnchor="middle" fontSize="9" fill="#e5e7eb">Cold Plate</text>
-        </g>
-
-        {/* Inlet pipe */}
-        <g>
-          <line x1="30" y1="80" x2={width/2 - 80} y2="80" stroke={props.color} strokeWidth="14" strokeLinecap="round" />
-          <text x="60" y="65" textAnchor="middle" fontSize="10" fill={props.color} fontWeight="600">IN {inletTemp}C</text>
-          {/* Flow particles */}
-          {[...Array(4)].map((_, i) => {
-            const x = 40 + ((animationFrame * (flowRate / 3) + i * 30) % (width/2 - 120));
-            return <circle key={`in-${i}`} cx={x} cy={80} r={4} fill="white" opacity={0.7} />;
-          })}
-        </g>
-
-        {/* Outlet pipe */}
-        <g>
-          <line x1={width/2 + 80} y1="80" x2={width - 30} y2="80" stroke={getTempColor(metrics.outletTemp)} strokeWidth="14" strokeLinecap="round" />
-          <text x={width - 60} y="65" textAnchor="middle" fontSize="10" fill={getTempColor(metrics.outletTemp)} fontWeight="600">OUT {metrics.outletTemp.toFixed(1)}C</text>
-          {/* Flow particles */}
-          {[...Array(4)].map((_, i) => {
-            const x = width/2 + 90 + ((animationFrame * (flowRate / 3) + i * 30) % (width/2 - 120));
-            return <circle key={`out-${i}`} cx={x} cy={80} r={4} fill="white" opacity={0.7} />;
-          })}
-        </g>
-
-        {/* Formula box */}
-        <g transform={`translate(${width/2 - 100}, 145)`}>
-          <rect x="0" y="0" width="200" height="45" rx="8" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="1" />
-          <text x="100" y="18" textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="700">Q = m_dot x Cp x deltaT</text>
-          <text x="100" y="36" textAnchor="middle" fill={colors.textSecondary} fontSize="10">
-            {heatLoad}W = {metrics.massFlowRate.toFixed(1)}g/s x {metrics.specificHeat.toFixed(2)} x {metrics.deltaT.toFixed(1)}C
+        {/* Background layer */}
+        <g id="background-layer">
+          <text x={width/2} y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+            Liquid Cooling Heat Transfer
           </text>
+          {/* Grid lines */}
+          <line x1="30" y1="95" x2={width - 20} y2="95" stroke="rgba(255,255,255,0.07)" strokeWidth="1" strokeDasharray="4,4" />
+          <line x1="30" y1="170" x2={width - 20} y2="170" stroke="rgba(255,255,255,0.07)" strokeWidth="1" strokeDasharray="4,4" />
+          <line x1="30" y1="245" x2={width - 20} y2="245" stroke="rgba(255,255,255,0.07)" strokeWidth="1" strokeDasharray="4,4" />
+          <line x1="30" y1="320" x2={width - 20} y2="320" stroke="rgba(255,255,255,0.07)" strokeWidth="1" strokeDasharray="4,4" />
+          {/* Axis labels */}
+          <text x="14" y={height/2} textAnchor="middle" fill="#9CA3AF" fontSize="11" transform={`rotate(-90,14,${height/2})`}>Temp (C)</text>
+          <text x={width/2} y={height - 2} textAnchor="middle" fill="#9CA3AF" fontSize="11">Flow Rate (L/min)</text>
         </g>
 
-        {/* Metrics panel */}
-        <g transform={`translate(20, 205)`}>
-          <rect x="0" y="0" width={width - 40} height="80" rx="8" fill={colors.bgSecondary} />
+        {/* Pipes layer */}
+        <g id="pipes-layer">
+          {/* Inlet pipe */}
+          <line x1="30" y1="95" x2={width/2 - 78} y2="95" stroke={props.color} strokeWidth="14" strokeLinecap="round" />
+          <text x="55" y="82" textAnchor="middle" fontSize="12" fill={props.color} fontWeight="700">IN</text>
+          <text x="55" y="115" textAnchor="middle" fontSize="11" fill={props.color}>{inletTemp}°C</text>
+          {/* Flow particles */}
+          {[...Array(4)].map((_, i) => {
+            const x = 40 + ((animationFrame * (flowRate / 3) + i * 30) % (width/2 - 118));
+            return <circle key={`in-${i}`} cx={x} cy={95} r={4} fill="white" opacity={0.7} />;
+          })}
 
-          <g transform="translate(20, 15)">
-            <text x="0" y="12" fill={colors.textMuted} fontSize="10">Coolant</text>
-            <text x="0" y="30" fill={props.color} fontSize="16" fontWeight="700">{props.name}</text>
-            <text x="0" y="48" fill={colors.textMuted} fontSize="10">Cp = {props.cp.toFixed(2)} J/(g*K)</text>
-          </g>
-
-          <g transform={`translate(${(width-40)/3}, 15)`}>
-            <text x="0" y="12" fill={colors.textMuted} fontSize="10">Temp Rise</text>
-            <text x="0" y="30" fill={getTempColor(metrics.outletTemp)} fontSize="16" fontWeight="700">{metrics.deltaT.toFixed(1)}C</text>
-            <text x="0" y="48" fill={colors.textMuted} fontSize="10">deltaT = Q/(m*Cp)</text>
-          </g>
-
-          <g transform={`translate(${2*(width-40)/3}, 15)`}>
-            <text x="0" y="12" fill={colors.textMuted} fontSize="10">Cooling Capacity</text>
-            <text x="0" y="30" fill={metrics.relativeCapacity > 80 ? colors.success : colors.warning} fontSize="16" fontWeight="700">{metrics.relativeCapacity.toFixed(0)}%</text>
-            <text x="0" y="48" fill={colors.textMuted} fontSize="10">vs water baseline</text>
-          </g>
+          {/* Outlet pipe */}
+          <line x1={width/2 + 82} y1="95" x2={width - 20} y2="95" stroke={getTempColor(metrics.outletTemp)} strokeWidth="14" strokeLinecap="round" filter="url(#glowFilter)" />
+          <text x={width - 48} y="82" textAnchor="middle" fontSize="12" fill={getTempColor(metrics.outletTemp)} fontWeight="700">OUT</text>
+          <text x={width - 48} y="115" textAnchor="middle" fontSize="11" fill={getTempColor(metrics.outletTemp)}>{metrics.outletTemp.toFixed(1)}°C</text>
+          {/* Flow particles */}
+          {[...Array(4)].map((_, i) => {
+            const x = width/2 + 92 + ((animationFrame * (flowRate / 3) + i * 30) % (width/2 - 118));
+            return <circle key={`out-${i}`} cx={x} cy={95} r={4} fill="white" opacity={0.7} />;
+          })}
         </g>
 
-        {/* Comparison bar */}
-        <g transform={`translate(20, 300)`}>
-          <text x="0" y="12" fill={colors.textMuted} fontSize="10">Cooling Effectiveness Comparison:</text>
-          <rect x="0" y="20" width={width - 40} height="12" rx="6" fill={colors.border} />
-          <rect x="0" y="20" width={Math.min((width - 40) * (metrics.relativeCapacity / 200), width - 40)} height="12" rx="6" fill={props.color} />
-          <text x={(width-40)/4} y="50" textAnchor="middle" fill={colors.textMuted} fontSize="9">Air (1x)</text>
-          <text x={(width-40)/2} y="50" textAnchor="middle" fill={colors.textMuted} fontSize="9">Oil (8x)</text>
-          <text x={3*(width-40)/4} y="50" textAnchor="middle" fill={colors.textMuted} fontSize="9">Water (25x)</text>
+        {/* Heat source layer */}
+        <g id="heatsource-layer">
+          {(() => {
+            const hsX = width/2 - 68;
+            const hsY = 30;
+            return (
+              <>
+                {/* Cold plate */}
+                <rect x={hsX - 8} y={hsY} width="156" height="20" fill="#374151" stroke="#4b5563" strokeWidth="2" rx="3" />
+                <text x={hsX + 70} y={hsY + 14} textAnchor="middle" fontSize="11" fill="#e5e7eb" fontWeight="600">Cold Plate</text>
+                {/* Heat source */}
+                <rect x={hsX} y={hsY + 22} width="136" height="70" fill="url(#heatGrad)" stroke="#ef4444" strokeWidth="2" rx="5" />
+                <text x={hsX + 68} y={hsY + 47} textAnchor="middle" fontSize="12" fill="white" fontWeight="bold">Heat Source</text>
+                <text x={hsX + 68} y={hsY + 67} textAnchor="middle" fontSize="16" fill="white" fontWeight="bold">{heatLoad}W</text>
+                <text x={hsX + 68} y={hsY + 84} textAnchor="middle" fontSize="11" fill="#fca5a5">T={Math.min(metrics.outletTemp + 15, 150).toFixed(0)}°C</text>
+              </>
+            );
+          })()}
+        </g>
+
+        {/* Formula layer */}
+        <g id="formula-layer">
+          {(() => {
+            const fbX = width/2 - 100;
+            const fbY = 135;
+            return (
+              <>
+                <rect x={fbX} y={fbY} width="200" height="50" rx="8" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="1.5" />
+                <text x={fbX + 100} y={fbY + 18} textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="700">Q = ṁ × Cp × ΔT</text>
+                <text x={fbX + 100} y={fbY + 36} textAnchor="middle" fill="#C4B5FD" fontSize="11">
+                  {heatLoad}W = {metrics.massFlowRate.toFixed(1)}g/s × {metrics.specificHeat.toFixed(2)} × {metrics.deltaT.toFixed(1)}°C
+                </text>
+              </>
+            );
+          })()}
+        </g>
+
+        {/* Metrics layer */}
+        <g id="metrics-layer">
+          {(() => {
+            const mpX = 20;
+            const mpY = 200;
+            const colW = (width - 40) / 3;
+            return (
+              <>
+                <rect x={mpX} y={mpY} width={width - 40} height="78" rx="8" fill={colors.bgSecondary} />
+                {/* Col 1: Coolant */}
+                <text x={mpX + 16} y={mpY + 17} fill="#D1D5DB" fontSize="11">Coolant Type</text>
+                <text x={mpX + 16} y={mpY + 37} fill={props.color} fontSize="16" fontWeight="700">{props.name}</text>
+                <text x={mpX + 16} y={mpY + 56} fill="#C4B5FD" fontSize="11">Cp={props.cp.toFixed(2)} J/g·K</text>
+                {/* Col 2: Temp Rise */}
+                <text x={mpX + colW + 8} y={mpY + 17} fill="#D1D5DB" fontSize="11">Temp Rise</text>
+                <text x={mpX + colW + 8} y={mpY + 37} fill={getTempColor(metrics.outletTemp)} fontSize="16" fontWeight="700">{metrics.deltaT.toFixed(1)}°C</text>
+                <text x={mpX + colW + 8} y={mpY + 56} fill="#C4B5FD" fontSize="11">ΔT=Q/ṁCp</text>
+                {/* Col 3: Capacity */}
+                <text x={mpX + 2*colW + 8} y={mpY + 17} fill="#D1D5DB" fontSize="11">Capacity</text>
+                <text x={mpX + 2*colW + 8} y={mpY + 37} fill={metrics.relativeCapacity > 80 ? colors.success : colors.warning} fontSize="16" fontWeight="700">{metrics.relativeCapacity.toFixed(0)}%</text>
+                <text x={mpX + 2*colW + 8} y={mpY + 56} fill="#C4B5FD" fontSize="11">vs water</text>
+              </>
+            );
+          })()}
+        </g>
+
+        {/* Comparison bar layer */}
+        <g id="comparison-layer">
+          {(() => {
+            const cbX = 20;
+            const cbY = 292;
+            return (
+              <>
+                <text x={cbX} y={cbY + 12} fill="#D1D5DB" fontSize="11" fontWeight="600">Cooling Effectiveness:</text>
+                <rect x={cbX} y={cbY + 18} width={width - 40} height="14" rx="7" fill={colors.border} />
+                <rect x={cbX} y={cbY + 18} width={Math.min((width - 40) * (metrics.relativeCapacity / 200), width - 40)} height="14" rx="7" fill={props.color} />
+                <text x={cbX + (width-40)/6} y={cbY + 48} textAnchor="middle" fill="#D1D5DB" fontSize="11">Air (1x)</text>
+                <text x={cbX + (width-40)/2} y={cbY + 48} textAnchor="middle" fill="#D1D5DB" fontSize="11">Oil (8x)</text>
+                <text x={cbX + 5*(width-40)/6} y={cbY + 48} textAnchor="middle" fill="#D1D5DB" fontSize="11">Water (25x)</text>
+              </>
+            );
+          })()}
         </g>
       </svg>
     );
@@ -522,69 +560,81 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
     const singlePhaseDeltaT = twistHeatLoad / ((5 / 60000) * 1000 * 4.186 * 1000);
     const twoPhaseDeltaT = useTwoPhase ? twistHeatLoad / ((5 / 60000) * 1000 * 100 * 1000) : singlePhaseDeltaT; // Effective Cp with latent heat
 
+    // Tank absolute coords (no transform groups)
+    const tankLeft = width / 2 - 80;
+    const tankTop = 40;
+    const tankH = 110;
+    const heatSrcTop = tankTop + tankH - 35;
+    const tempTextY = tankTop + tankH + 18;
+    // Condenser above tank (two-phase)
+    const condTop = tankTop - 28;
+    // Explanation panel
+    const panelTop = tempTextY + 18;
+    const panelH = height - panelTop - 8;
+
     return (
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
-        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+        {/* Title */}
+        <text x={width/2} y="22" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
           {useTwoPhase ? 'Two-Phase (Boiling) Cooling' : 'Single-Phase Liquid Cooling'}
         </text>
 
-        {/* Heat source with cooling */}
-        <g transform={`translate(${width/2 - 80}, 45)`}>
-          {/* Fluid/tank */}
-          <rect x="0" y="0" width="160" height="100" fill={useTwoPhase ? '#7c3aed22' : '#3b82f622'} stroke={useTwoPhase ? '#7c3aed' : '#3b82f6'} strokeWidth="2" rx="8" />
+        {/* Condenser at top for two-phase */}
+        {useTwoPhase && (
+          <g id="condenser-layer">
+            <rect x={tankLeft + 20} y={condTop} width="120" height="20" fill="#374151" stroke="#60a5fa" strokeWidth="2" rx="3" />
+            <text x={tankLeft + 80} y={condTop + 14} textAnchor="middle" fontSize="11" fill="#60a5fa">Condenser</text>
+            {/* Dripping condensate */}
+            {[...Array(3)].map((_, i) => {
+              const cx = tankLeft + 50 + i * 30;
+              const cy = condTop + 20 + ((animationFrame + i * 40) % 15);
+              return <circle key={`drop-${i}`} cx={cx} cy={cy} r={2} fill="#60a5fa" />;
+            })}
+          </g>
+        )}
 
-          {/* Heat source at bottom */}
-          <rect x="30" y="70" width="100" height="25" fill="url(#heatGrad)" stroke="#ef4444" strokeWidth="2" rx="4" />
-          <text x="80" y="88" textAnchor="middle" fontSize="12" fill="white" fontWeight="bold">{twistHeatLoad}W</text>
+        {/* Fluid/tank */}
+        <g id="tank-layer">
+          <rect x={tankLeft} y={tankTop} width="160" height={tankH} fill={useTwoPhase ? '#7c3aed22' : '#3b82f622'} stroke={useTwoPhase ? '#7c3aed' : '#3b82f6'} strokeWidth="2" rx="8" />
+
+          {/* Heat source at bottom of tank */}
+          <rect x={tankLeft + 30} y={heatSrcTop} width="100" height="25" fill="url(#heatGrad)" stroke="#ef4444" strokeWidth="2" rx="4" />
+          <text x={tankLeft + 80} y={heatSrcTop + 17} textAnchor="middle" fontSize="12" fill="white" fontWeight="bold">{twistHeatLoad}W</text>
 
           {/* Bubbles for two-phase */}
           {useTwoPhase && [...Array(12)].map((_, i) => {
-            const x = 40 + (i % 4) * 30;
-            const baseY = 65;
-            const y = baseY - ((animationFrame * 1.5 + i * 20) % 60);
-            const size = 4 + Math.sin(animationFrame / 10 + i) * 2;
+            const cx = tankLeft + 40 + (i % 4) * 30;
+            const baseY = tankTop + tankH - 20;
+            const cy = baseY - ((animationFrame * 1.5 + i * 20) % (tankH - 30));
+            const r = 4 + Math.sin(animationFrame / 10 + i) * 2;
             return (
-              <circle key={`bubble-${i}`} cx={x} cy={y} r={size} fill="white" opacity={0.6} />
+              <circle key={`bubble-${i}`} cx={cx} cy={cy} r={r} fill="white" opacity={0.6} />
             );
           })}
-
-          {/* Condenser at top for two-phase */}
-          {useTwoPhase && (
-            <g>
-              <rect x="20" y="-25" width="120" height="20" fill="#374151" stroke="#60a5fa" strokeWidth="2" rx="3" />
-              <text x="80" y="-11" textAnchor="middle" fontSize="9" fill="#60a5fa">Condenser</text>
-              {/* Dripping condensate */}
-              {[...Array(3)].map((_, i) => {
-                const x = 50 + i * 30;
-                const y = -5 + ((animationFrame + i * 40) % 15);
-                return <circle key={`drop-${i}`} cx={x} cy={y} r={2} fill="#60a5fa" />;
-              })}
-            </g>
-          )}
-
-          {/* Temperature indicator */}
-          <text x="80" y={useTwoPhase ? 130 : 115} textAnchor="middle" fontSize="11" fill={colors.textSecondary}>
-            Surface: {useTwoPhase ? '34C (boiling point)' : `${(25 + singlePhaseDeltaT + 10).toFixed(0)}C`}
-          </text>
         </g>
 
+        {/* Temperature indicator */}
+        <text x={tankLeft + 80} y={tempTextY} textAnchor="middle" fontSize="11" fill="#D1D5DB">
+          Surface: {useTwoPhase ? '34C (boiling point)' : `${(25 + singlePhaseDeltaT + 10).toFixed(0)}C`}
+        </text>
+
         {/* Explanation panel */}
-        <g transform={`translate(20, ${height - 110})`}>
-          <rect x="0" y="0" width={width - 40} height="95" rx="8" fill={colors.bgSecondary} />
+        <g id="explanation-layer">
+          <rect x={20} y={panelTop} width={width - 40} height={panelH} rx="8" fill={colors.bgSecondary} />
 
           {useTwoPhase ? (
-            <g>
-              <text x="15" y="20" fill="#7c3aed" fontSize="12" fontWeight="600">Two-Phase (Boiling) Advantage:</text>
-              <text x="15" y="40" fill={colors.textSecondary} fontSize="10">Latent heat of vaporization: 2260 J/g</text>
-              <text x="15" y="55" fill={colors.textSecondary} fontSize="10">vs sensible heat: 4.2 J/g per 1C</text>
-              <text x="15" y="75" fill={colors.success} fontSize="11" fontWeight="600">540x more energy absorbed at constant temp!</text>
+            <g id="twophase-text">
+              <text x={35} y={panelTop + 20} fill="#7c3aed" fontSize="12" fontWeight="600">Two-Phase (Boiling) Advantage:</text>
+              <text x={35} y={panelTop + 40} fill="#D1D5DB" fontSize="11">Latent heat of vaporization: 2260 J/g</text>
+              <text x={35} y={panelTop + 56} fill="#D1D5DB" fontSize="11">vs sensible heat: 4.2 J/g per 1C</text>
+              <text x={35} y={panelTop + 76} fill={colors.success} fontSize="11" fontWeight="600">540x more energy absorbed at constant temp!</text>
             </g>
           ) : (
-            <g>
-              <text x="15" y="20" fill={colors.accent} fontSize="12" fontWeight="600">Single-Phase Limitation:</text>
-              <text x="15" y="40" fill={colors.textSecondary} fontSize="10">Heat absorbed: Q = m*Cp*deltaT</text>
-              <text x="15" y="55" fill={colors.textSecondary} fontSize="10">Temperature must rise to transfer heat</text>
-              <text x="15" y="75" fill={colors.warning} fontSize="11" fontWeight="600">Temperature rise: {singlePhaseDeltaT.toFixed(1)}C at {twistHeatLoad}W</text>
+            <g id="singlephase-text">
+              <text x={35} y={panelTop + 20} fill={colors.accent} fontSize="12" fontWeight="600">Single-Phase Limitation:</text>
+              <text x={35} y={panelTop + 40} fill="#D1D5DB" fontSize="11">Heat absorbed: Q = m*Cp*deltaT</text>
+              <text x={35} y={panelTop + 56} fill="#D1D5DB" fontSize="11">Temperature must rise to transfer heat</text>
+              <text x={35} y={panelTop + 76} fill={colors.warning} fontSize="11" fontWeight="600">Temperature rise: {singlePhaseDeltaT.toFixed(1)}C at {twistHeatLoad}W</text>
             </g>
           )}
         </g>
@@ -731,12 +781,19 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
+        overflowY: 'auto',
         padding: '24px',
-        textAlign: 'center',
       }}>
         {renderNavBar()}
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginTop: '56px',
+          textAlign: 'center',
+        }}>
 
         <div style={{
           fontSize: '64px',
@@ -784,6 +841,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
         </button>
 
         {renderNavDots()}
+        </div>
       </div>
     );
   }
@@ -801,10 +859,12 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '80px auto 0', overflowY: 'auto' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', paddingTop: '80px', overflowY: 'auto', flex: 1 }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -918,10 +978,12 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavBar()}
 
-        <div style={{ maxWidth: '800px', margin: '80px auto 0', overflowY: 'auto' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', paddingTop: '80px', overflowY: 'auto', flex: 1 }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Liquid Cooling Lab
           </h2>
@@ -979,7 +1041,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
             {/* Flow rate slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Flow Rate</span>
+                <span style={{ ...typo.small, color: colors.textPrimary }}>Flow Rate</span>
                 <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{flowRate} L/min</span>
               </div>
               <input
@@ -1004,7 +1066,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
             {/* Heat load slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Heat Load (GPU Power)</span>
+                <span style={{ ...typo.small, color: colors.textPrimary }}>Heat Load (GPU Power)</span>
                 <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{heatLoad}W</span>
               </div>
               <input
@@ -1087,16 +1149,18 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '80px auto 0', overflowY: 'auto' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', paddingTop: '80px', overflowY: 'auto', flex: 1 }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Physics of Liquid Cooling
           </h2>
 
           {/* Reference user's prediction */}
-          {userPrediction && (
+          {userPrediction ? (
             <div style={{
               background: wasCorrect ? `${colors.success}22` : `${colors.warning}22`,
               border: `1px solid ${wasCorrect ? colors.success : colors.warning}`,
@@ -1105,12 +1169,26 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
               marginBottom: '24px',
             }}>
               <p style={{ ...typo.small, color: wasCorrect ? colors.success : colors.warning, margin: 0, fontWeight: 600 }}>
-                Your prediction: "{userPrediction}"
+                {wasCorrect
+                  ? `You predicted correctly: "${userPrediction}"`
+                  : `You predicted: "${userPrediction}"`}
               </p>
               <p style={{ ...typo.small, color: colors.textSecondary, margin: '8px 0 0 0' }}>
                 {wasCorrect
-                  ? 'Correct! You identified the key factor - specific heat capacity.'
+                  ? 'As you observed, the key factor is specific heat capacity.'
                   : 'Let\'s explore why specific heat capacity is the key factor.'}
+              </p>
+            </div>
+          ) : (
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                As you observed from the experiment, liquid cooling dramatically outperforms air cooling.
               </p>
             </div>
           )}
@@ -1214,10 +1292,12 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', paddingTop: '64px', overflowY: 'auto', flex: 1 }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1324,10 +1404,12 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', paddingTop: '64px', overflowY: 'auto', flex: 1 }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Two-Phase vs Single-Phase Cooling
           </h2>
@@ -1440,10 +1522,12 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', paddingTop: '64px', overflowY: 'auto', flex: 1 }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Power of Phase Change
           </h2>
@@ -1537,10 +1621,12 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavBar()}
 
-        <div style={{ maxWidth: '800px', margin: '80px auto 0', overflowY: 'auto' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', paddingTop: '80px', overflowY: 'auto', flex: 1 }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
@@ -1744,10 +1830,12 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
           minHeight: '100vh',
           background: colors.bgPrimary,
           padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
         }}>
           {renderNavBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', paddingTop: '64px', flex: 1, textAlign: 'center', overflowY: 'auto' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1800,10 +1888,12 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
         minHeight: '100vh',
         background: colors.bgPrimary,
         padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderNavBar()}
 
-        <div style={{ maxWidth: '700px', margin: '80px auto 0', overflowY: 'auto' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', paddingTop: '80px', overflowY: 'auto', flex: 1 }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1811,9 +1901,14 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
             alignItems: 'center',
             marginBottom: '24px',
           }}>
-            <span style={{ ...typo.small, color: colors.textSecondary }}>
-              Question {currentQuestion + 1} of 10
-            </span>
+            <div>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>
+                Question {currentQuestion + 1} of 10
+              </span>
+              <span style={{ ...typo.small, color: colors.textMuted, marginLeft: '12px' }}>
+                Progress: {testAnswers.filter(a => a !== null).length}/10 answered
+              </span>
+            </div>
             <div style={{ display: 'flex', gap: '6px' }}>
               {testQuestions.map((_, i) => (
                 <div key={i} style={{

@@ -179,8 +179,8 @@ const realWorldApps = [
     howItWorks: 'Heat conducts from the CPU die through the IHS (integrated heat spreader), across thermal paste, into the heatsink base, then spreads through fins where forced airflow carries it away. Tower coolers use heat pipes to transport heat vertically, while AIO liquid coolers move heat to a remote radiator.',
     stats: [
       { value: '350W', label: 'Max CPU TDP', icon: '🔥' },
-      { value: '0.2 K/W', label: 'Premium TIM', icon: '💧' },
-      { value: '90C', label: 'Throttle Point', icon: '⚠️' }
+      { value: '25%', label: 'TIM quality impact', icon: '💧' },
+      { value: '65W', label: 'Typical CPU TDP', icon: '⚠️' }
     ],
     examples: ['Tower coolers with 6+ heat pipes', 'AIO liquid coolers with 360mm radiators', 'Vapor chamber laptop designs', 'Direct-die cooling for enthusiasts'],
     companies: ['Noctua', 'Corsair', 'NZXT', 'be quiet!'],
@@ -335,8 +335,8 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#e2e8f0', // High contrast for accessibility
-    textMuted: '#e2e8f0', // High contrast for accessibility
+    textSecondary: '#cbd5e1',
+    textMuted: '#94a3b8',
     border: '#2a2a3a',
   };
 
@@ -351,15 +351,15 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
   // Phase navigation
   const phaseOrder: Phase[] = validPhases;
   const phaseLabels: Record<Phase, string> = {
-    hook: 'Introduction',
+    hook: 'Explore',
     predict: 'Predict',
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Fin Design',
+    twist_play: 'Deep Explore',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
-    test: 'Knowledge Test',
+    test: 'Knowledge',
     mastery: 'Mastery'
   };
 
@@ -470,7 +470,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
           rx="3"
           filter="url(#heatGlow)"
         />
-        <text x={width / 2} y={height - 48} textAnchor="middle" fill="white" fontSize="10" fontWeight="600">CPU DIE</text>
+        <text x={width / 2} y={height - 48} textAnchor="middle" fill="white" fontSize="11" fontWeight="600">CPU DIE</text>
 
         {/* Thermal Paste */}
         <rect
@@ -481,7 +481,6 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
           fill={thermalPaste === 'none' ? '#374151' : thermalPaste === 'cheap' ? '#6b7280' : '#a855f7'}
           rx="2"
         />
-        <text x={width / 2} y={height - 68} textAnchor="middle" fill="white" fontSize="8">TIM</text>
 
         {/* Heatsink Base */}
         <rect
@@ -546,25 +545,27 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
         <text x={width - 65} y="48" textAnchor="middle" fill={tempStatus.color} fontSize="22" fontWeight="bold">
           {cpuTemp.toFixed(0)}C
         </text>
-        <text x={width - 65} y="68" textAnchor="middle" fill={tempStatus.color} fontSize="12">
+        <text x={width - 65} y="68" textAnchor="middle" fill={tempStatus.color} fontSize="12" fontWeight="600">
           {tempStatus.status}
+        </text>
+
+        {/* Formula label */}
+        <text x={width / 2} y={height - 20} textAnchor="middle" fill={colors.textMuted} fontSize="11">
+          ΔT = P × R_total = {cpuPower}W × {thermalRes.total.toFixed(2)} K/W = {(cpuPower * thermalRes.total).toFixed(1)}°C
         </text>
 
         {/* Thermal Resistance Chain */}
         <g transform="translate(20, 20)">
-          <text x="0" y="0" fill={colors.textSecondary} fontSize="10" fontWeight="600">Thermal Chain (K/W):</text>
-          <text x="0" y="16" fill={colors.textMuted} fontSize="9">R_jc: {thermalRes.R_jc.toFixed(2)}</text>
-          <text x="0" y="30" fill={colors.textMuted} fontSize="9">R_tim: {thermalRes.R_tim.toFixed(2)}</text>
-          <text x="0" y="44" fill={colors.textMuted} fontSize="9">R_base: {thermalRes.R_base.toFixed(2)}</text>
-          <text x="0" y="58" fill={colors.textMuted} fontSize="9">R_fins: {thermalRes.R_fins.toFixed(2)}</text>
-          <text x="0" y="76" fill={colors.accent} fontSize="11" fontWeight="700">Total: {thermalRes.total.toFixed(2)} K/W</text>
+          <text x="0" y="0" fill={colors.textSecondary} fontSize="11" fontWeight="600">Thermal Chain:</text>
+          <text x="0" y="16" fill={colors.textMuted} fontSize="11">R_jc: {thermalRes.R_jc.toFixed(2)}</text>
+          <text x="0" y="32" fill={colors.textMuted} fontSize="11">R_tim: {thermalRes.R_tim.toFixed(2)}</text>
+          <text x="0" y="48" fill={colors.textMuted} fontSize="11">R_base: {thermalRes.R_base.toFixed(2)}</text>
+          <text x="0" y="64" fill={colors.textMuted} fontSize="11">R_fins: {thermalRes.R_fins.toFixed(2)}</text>
+          <text x="0" y="84" fill={colors.accent} fontSize="12" fontWeight="700">Total: {thermalRes.total.toFixed(2)}</text>
         </g>
 
-        {/* Power indicator */}
-        <g transform={`translate(20, ${height - 50})`}>
-          <text x="0" y="0" fill={colors.textSecondary} fontSize="10">Power: {cpuPower}W</text>
-          <text x="0" y="14" fill={colors.textMuted} fontSize="9">DeltaT = {(cpuPower * thermalRes.total).toFixed(1)}C</text>
-        </g>
+        {/* Power indicator - in chain group area, after last chain item */}
+        <text x="20" y="108" fill={colors.textSecondary} fontSize="11">Input: {cpuPower}W</text>
       </svg>
     );
   };
@@ -657,6 +658,66 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
     </nav>
   );
 
+  // Bottom navigation bar with Back and Next
+  const renderBottomNav = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const hasPrev = currentIndex > 0;
+    const hasNext = currentIndex < phaseOrder.length - 1;
+    return (
+      <nav style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '56px',
+        background: colors.bgSecondary,
+        borderTop: `1px solid ${colors.border}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 16px',
+        zIndex: 1001,
+      }}>
+        <button
+          onClick={() => hasPrev && goToPhase(phaseOrder[currentIndex - 1])}
+          disabled={!hasPrev}
+          aria-label="Back"
+          style={{
+            background: 'transparent',
+            border: `1px solid ${hasPrev ? colors.border : 'transparent'}`,
+            borderRadius: '8px',
+            padding: '8px 16px',
+            color: hasPrev ? colors.textSecondary : 'transparent',
+            cursor: hasPrev ? 'pointer' : 'default',
+            fontSize: '14px',
+          }}
+        >
+          Back
+        </button>
+        <span style={{ ...typo.small, color: colors.textSecondary }}>
+          {currentIndex + 1} / {phaseOrder.length}
+        </span>
+        <button
+          onClick={() => hasNext && goToPhase(phaseOrder[currentIndex + 1])}
+          disabled={!hasNext}
+          aria-label="Next"
+          style={{
+            background: hasNext ? colors.accent : 'transparent',
+            border: 'none',
+            borderRadius: '8px',
+            padding: '8px 16px',
+            color: hasNext ? 'white' : 'transparent',
+            cursor: hasNext ? 'pointer' : 'default',
+            fontSize: '14px',
+            fontWeight: 600,
+          }}
+        >
+          Next
+        </button>
+      </nav>
+    );
+  };
+
   // ─────────────────────────────────────────────────────────────────────────────
   // PHASE RENDERS
   // ─────────────────────────────────────────────────────────────────────────────
@@ -672,6 +733,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
       }}>
         {renderNavBar()}
         {renderProgressBar()}
+        {renderBottomNav()}
 
         <div style={{
           flex: 1,
@@ -717,7 +779,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
             <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
               "Every interface between your CPU and the air is a thermal resistance. Like resistors in a circuit, they add up - and the total determines whether your chip runs cool or catches fire."
             </p>
-            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '8px' }}>
               - Thermal Engineering Fundamentals
             </p>
           </div>
@@ -752,6 +814,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
       }}>
         {renderNavBar()}
         {renderProgressBar()}
+        {renderBottomNav()}
 
         <div style={{
           flex: 1,
@@ -789,44 +852,46 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
               A CPU's heat must pass through: the die, thermal paste, heatsink base, and fins. How is total thermal resistance calculated?
             </h2>
 
-            {/* Diagram */}
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                <div style={{ textAlign: 'center', padding: '10px' }}>
-                  <div style={{ fontSize: '32px' }}>🔲</div>
-                  <p style={{ ...typo.small, color: colors.textMuted }}>CPU Die</p>
-                  <p style={{ ...typo.small, color: colors.accent }}>0.3 K/W</p>
-                </div>
-                <div style={{ fontSize: '20px', color: colors.textMuted }}>+</div>
-                <div style={{ textAlign: 'center', padding: '10px' }}>
-                  <div style={{ fontSize: '32px' }}>💧</div>
-                  <p style={{ ...typo.small, color: colors.textMuted }}>TIM</p>
-                  <p style={{ ...typo.small, color: colors.accent }}>0.5 K/W</p>
-                </div>
-                <div style={{ fontSize: '20px', color: colors.textMuted }}>+</div>
-                <div style={{ textAlign: 'center', padding: '10px' }}>
-                  <div style={{ fontSize: '32px' }}>🧱</div>
-                  <p style={{ ...typo.small, color: colors.textMuted }}>Base</p>
-                  <p style={{ ...typo.small, color: colors.accent }}>0.1 K/W</p>
-                </div>
-                <div style={{ fontSize: '20px', color: colors.textMuted }}>+</div>
-                <div style={{ textAlign: 'center', padding: '10px' }}>
-                  <div style={{ fontSize: '32px' }}>🌡️</div>
-                  <p style={{ ...typo.small, color: colors.textMuted }}>Fins</p>
-                  <p style={{ ...typo.small, color: colors.accent }}>0.6 K/W</p>
-                </div>
-                <div style={{ fontSize: '20px', color: colors.textMuted }}>=</div>
-                <div style={{ textAlign: 'center', padding: '10px', background: colors.accent + '22', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '32px' }}>?</div>
-                  <p style={{ ...typo.small, color: colors.textPrimary }}>Total</p>
-                </div>
-              </div>
+            {/* Static SVG Diagram */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <svg width="480" height="200" viewBox="0 0 480 200" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+                {/* CPU Die block */}
+                <rect x="20" y="80" width="70" height="40" rx="4" fill="#ef4444" opacity="0.8" />
+                <text x="55" y="95" textAnchor="middle" fill="white" fontSize="11" fontWeight="600">CPU Die</text>
+                <text x="55" y="112" textAnchor="middle" fill="white" fontSize="11">0.3 K/W</text>
+                {/* Arrow */}
+                <line x1="90" y1="100" x2="120" y2="100" stroke="#6b7280" strokeWidth="2" />
+                <polygon points="118,96 126,100 118,104" fill="#6b7280" />
+                <text x="105" y="93" textAnchor="middle" fill="#6b7280" fontSize="11">+</text>
+                {/* TIM block */}
+                <rect x="126" y="80" width="70" height="40" rx="4" fill="#a855f7" opacity="0.8" />
+                <text x="161" y="95" textAnchor="middle" fill="white" fontSize="11" fontWeight="600">TIM</text>
+                <text x="161" y="112" textAnchor="middle" fill="white" fontSize="11">0.5 K/W</text>
+                {/* Arrow */}
+                <line x1="196" y1="100" x2="226" y2="100" stroke="#6b7280" strokeWidth="2" />
+                <polygon points="224,96 232,100 224,104" fill="#6b7280" />
+                <text x="211" y="93" textAnchor="middle" fill="#6b7280" fontSize="11">+</text>
+                {/* Base block */}
+                <rect x="232" y="80" width="70" height="40" rx="4" fill="#6b7280" opacity="0.8" />
+                <text x="267" y="95" textAnchor="middle" fill="white" fontSize="11" fontWeight="600">Base</text>
+                <text x="267" y="112" textAnchor="middle" fill="white" fontSize="11">0.1 K/W</text>
+                {/* Arrow */}
+                <line x1="302" y1="100" x2="332" y2="100" stroke="#6b7280" strokeWidth="2" />
+                <polygon points="330,96 338,100 330,104" fill="#6b7280" />
+                <text x="317" y="93" textAnchor="middle" fill="#6b7280" fontSize="11">+</text>
+                {/* Fins block */}
+                <rect x="338" y="80" width="70" height="40" rx="4" fill="#3b82f6" opacity="0.8" />
+                <text x="373" y="95" textAnchor="middle" fill="white" fontSize="11" fontWeight="600">Fins</text>
+                <text x="373" y="112" textAnchor="middle" fill="white" fontSize="11">0.6 K/W</text>
+                {/* Equals */}
+                <text x="415" y="105" textAnchor="middle" fill="#9ca3af" fontSize="16" fontWeight="700">=</text>
+                {/* Total */}
+                <text x="455" y="97" textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="700">?</text>
+                <text x="455" y="112" textAnchor="middle" fill={colors.accent} fontSize="11">K/W</text>
+                {/* Title */}
+                <text x="240" y="30" textAnchor="middle" fill={colors.textSecondary} fontSize="12" fontWeight="600">Thermal Resistance Chain (Series)</text>
+                <text x="240" y="170" textAnchor="middle" fill={colors.textMuted} fontSize="11">R_total = R_jc + R_tim + R_base + R_fins</text>
+              </svg>
             </div>
 
             {/* Options */}
@@ -894,11 +959,13 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
       }}>
         {renderNavBar()}
         {renderProgressBar()}
+        {renderBottomNav()}
 
         <div style={{
           flex: 1,
           padding: '24px',
           paddingTop: '80px',
+          paddingBottom: '88px',
           overflowY: 'auto',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
@@ -908,6 +975,19 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
             <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
               Adjust each parameter to see how it affects CPU temperature
             </p>
+
+            {/* Why it matters */}
+            <div style={{
+              background: `${colors.success}15`,
+              border: `1px solid ${colors.success}44`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.success }}>Why it matters:</strong> This is how every computer, phone, and electric vehicle stays cool. Engineers use these exact calculations to prevent thermal throttling and component failure in real products — from gaming GPUs to EV inverters.
+              </p>
+            </div>
 
             {/* Observation guidance */}
             <div style={{
@@ -945,7 +1025,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
                   max="250"
                   value={cpuPower}
                   onChange={(e) => setCpuPower(parseInt(e.target.value))}
-                  style={{ width: '100%', cursor: 'pointer' }}
+                  style={{ width: '100%', cursor: 'pointer', accentColor: colors.accent, WebkitAppearance: 'none', appearance: 'none', touchAction: 'pan-y' }}
                 />
               </div>
 
@@ -974,7 +1054,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
                       }}
                     >
                       <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>{tim.label}</div>
-                      <div style={{ ...typo.small, color: colors.textMuted }}>{tim.r}</div>
+                      <div style={{ ...typo.small, color: colors.textSecondary }}>{tim.r}</div>
                     </button>
                   ))}
                 </div>
@@ -992,7 +1072,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
                   max="50"
                   value={finCount}
                   onChange={(e) => setFinCount(parseInt(e.target.value))}
-                  style={{ width: '100%', cursor: 'pointer' }}
+                  style={{ width: '100%', cursor: 'pointer', accentColor: colors.accent, WebkitAppearance: 'none', appearance: 'none', touchAction: 'pan-y' }}
                 />
               </div>
 
@@ -1008,8 +1088,30 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
                   max="100"
                   value={fanSpeed}
                   onChange={(e) => setFanSpeed(parseInt(e.target.value))}
-                  style={{ width: '100%', cursor: 'pointer' }}
+                  style={{ width: '100%', cursor: 'pointer', accentColor: colors.accent, WebkitAppearance: 'none', appearance: 'none', touchAction: 'pan-y' }}
                 />
+              </div>
+            </div>
+
+            {/* Before/after comparison */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'row',
+              gap: '16px',
+              marginBottom: '24px',
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+            }}>
+              <div style={{ flex: 1, textAlign: 'center', borderRight: `1px solid ${colors.border}`, paddingRight: '16px' }}>
+                <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '4px' }}>No TIM (Air)</p>
+                <p style={{ ...typo.h3, color: colors.error, margin: '4px 0' }}>{(ambientTemp + cpuPower * (0.3 + 2.0 + 0.1 + thermalRes.R_fins)).toFixed(0)}°C</p>
+                <p style={{ ...typo.small, color: colors.textSecondary }}>R_tim = 2.0 K/W</p>
+              </div>
+              <div style={{ flex: 1, textAlign: 'center' }}>
+                <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '4px' }}>Premium TIM</p>
+                <p style={{ ...typo.h3, color: colors.success, margin: '4px 0' }}>{(ambientTemp + cpuPower * (0.3 + 0.2 + 0.1 + thermalRes.R_fins)).toFixed(0)}°C</p>
+                <p style={{ ...typo.small, color: colors.textSecondary }}>R_tim = 0.2 K/W</p>
               </div>
             </div>
 
@@ -1069,6 +1171,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
       }}>
         {renderNavBar()}
         {renderProgressBar()}
+        {renderBottomNav()}
 
         <div style={{
           flex: 1,
@@ -1080,6 +1183,18 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Thermal Ohm's Law
           </h2>
+
+          <div style={{
+            background: `${colors.accent}15`,
+            border: `1px solid ${colors.accent}44`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              As you observed in the experiment: thermal resistances in a series chain add up, just like electrical resistors in series. You predicted how resistances combine — now let's understand the physics behind it.
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1094,7 +1209,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
             <div style={{ ...typo.body, color: colors.textSecondary }}>
               Temperature rise = Power x Total thermal resistance
             </div>
-            <div style={{ marginTop: '16px', ...typo.small, color: colors.textMuted }}>
+            <div style={{ marginTop: '16px', ...typo.small, color: colors.textSecondary }}>
               Just like V = IR in electrical circuits!
             </div>
           </div>
@@ -1170,6 +1285,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
       }}>
         {renderNavBar()}
         {renderProgressBar()}
+        {renderBottomNav()}
 
         <div style={{
           flex: 1,
@@ -1207,26 +1323,29 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
               You double the fin count from 25 to 50. What happens to cooling performance?
             </h2>
 
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '20px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '30px' }}>
-                <div>
-                  <div style={{ fontSize: '40px' }}>📊</div>
-                  <p style={{ ...typo.small, color: colors.textMuted }}>25 fins</p>
-                  <p style={{ ...typo.small, color: colors.success }}>Good spacing</p>
-                </div>
-                <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
-                <div>
-                  <div style={{ fontSize: '40px' }}>📊📊</div>
-                  <p style={{ ...typo.small, color: colors.textMuted }}>50 fins</p>
-                  <p style={{ ...typo.small, color: colors.warning }}>Packed tight</p>
-                </div>
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <svg width="400" height="180" viewBox="0 0 400 180" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+                {/* 25 fins visualization */}
+                <text x="100" y="25" textAnchor="middle" fill={colors.success} fontSize="12" fontWeight="600">25 Fins - Good Spacing</text>
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <rect key={`f25-${i}`} x={40 + i * 17} y="35" width="8" height="80" rx="2" fill="#6b7280" opacity="0.8" />
+                ))}
+                <rect x="30" y="115" width="150" height="12" rx="2" fill="#9ca3af" />
+                <text x="100" y="145" textAnchor="middle" fill={colors.success} fontSize="11">Airflow: Good</text>
+                <text x="100" y="160" textAnchor="middle" fill={colors.textMuted} fontSize="11">R_fins ~ 0.5 K/W</text>
+
+                {/* 50 fins visualization */}
+                <text x="300" y="25" textAnchor="middle" fill={colors.warning} fontSize="12" fontWeight="600">50 Fins - Packed</text>
+                {Array.from({ length: 14 }).map((_, i) => (
+                  <rect key={`f50-${i}`} x={222 + i * 9} y="35" width="5" height="80" rx="1" fill="#6b7280" opacity="0.8" />
+                ))}
+                <rect x="212" y="115" width="150" height="12" rx="2" fill="#9ca3af" />
+                <text x="300" y="145" textAnchor="middle" fill={colors.warning} fontSize="11">Airflow: Restricted</text>
+                <text x="300" y="160" textAnchor="middle" fill={colors.textMuted} fontSize="11">R_fins ~ 0.4 K/W</text>
+
+                {/* VS divider */}
+                <text x="200" y="95" textAnchor="middle" fill="#9ca3af" fontSize="16" fontWeight="700">vs</text>
+              </svg>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1294,6 +1413,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
       }}>
         {renderNavBar()}
         {renderProgressBar()}
+        {renderBottomNav()}
 
         <div style={{
           flex: 1,
@@ -1344,12 +1464,12 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
                 max="60"
                 value={finCount}
                 onChange={(e) => setFinCount(parseInt(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
+                style={{ width: '100%', cursor: 'pointer', accentColor: colors.accent, WebkitAppearance: 'none', appearance: 'none', touchAction: 'pan-y' }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>10 (sparse)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>35 (optimal)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>60 (packed)</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>10 (sparse)</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>35 (optimal)</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>60 (packed)</span>
               </div>
             </div>
 
@@ -1381,7 +1501,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
               background: colors.bgSecondary,
               borderRadius: '8px',
             }}>
-              <p style={{ ...typo.small, color: colors.textMuted, margin: 0 }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
                 <strong>Boundary Layer Effect:</strong> Air flowing past each fin develops a slow-moving boundary layer. When fins are too close, these layers merge and block fresh air from reaching fin surfaces.
               </p>
             </div>
@@ -1407,11 +1527,15 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
+        {renderBottomNav()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, padding: '24px', paddingTop: '80px', paddingBottom: '80px', overflowY: 'auto' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Heatsink Design Optimization
           </h2>
@@ -1470,6 +1594,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
             See Real-World Applications
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -1480,136 +1605,196 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);
+    const completedCount = completedApps.filter(c => c).length;
 
     return (
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
+        {renderBottomNav()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingTop: '80px',
+          paddingBottom: '80px',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
 
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
-            {realWorldApps.map((a, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  playSound('click');
-                  setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
-                }}
-                style={{
-                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
-                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 8px',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  position: 'relative',
-                }}
-              >
-                {completedApps[i] && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-6px',
-                    right: '-6px',
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: colors.success,
-                    color: 'white',
-                    fontSize: '12px',
-                    lineHeight: '18px',
-                  }}>
-                    ✓
+            {/* Progress: App X of Y */}
+            <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              App {selectedApp + 1} of {realWorldApps.length} — {completedCount} of {realWorldApps.length} explored
+            </p>
+
+            {/* App selector */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '12px',
+              marginBottom: '24px',
+            }}>
+              {realWorldApps.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    playSound('click');
+                    setSelectedApp(i);
+                    const newCompleted = [...completedApps];
+                    newCompleted[i] = true;
+                    setCompletedApps(newCompleted);
+                  }}
+                  style={{
+                    background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                    border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 8px',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    position: 'relative',
+                  }}
+                >
+                  {completedApps[i] && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-6px',
+                      right: '-6px',
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: colors.success,
+                      color: 'white',
+                      fontSize: '12px',
+                      lineHeight: '18px',
+                    }}>
+                      ✓
+                    </div>
+                  )}
+                  <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                  <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                    {a.title.split(' ').slice(0, 2).join(' ')}
                   </div>
-                )}
-                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
-                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
-                  {a.title.split(' ').slice(0, 2).join(' ')}
-                </div>
-              </button>
-            ))}
-          </div>
+                </button>
+              ))}
+            </div>
 
-          {/* Selected app details */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            borderLeft: `4px solid ${app.color}`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-              <span style={{ fontSize: '48px' }}>{app.icon}</span>
-              <div>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
-                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+            {/* Scroll container for app cards */}
+            <div style={{
+              overflowY: 'auto',
+              maxHeight: '600px',
+              borderRadius: '16px',
+            }}>
+              {/* Selected app details */}
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '16px',
+                borderLeft: `4px solid ${app.color}`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                  <span style={{ fontSize: '48px' }}>{app.icon}</span>
+                  <div>
+                    <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                    <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+                  </div>
+                </div>
+
+                <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+                  {app.description}
+                </p>
+
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '16px',
+                  marginBottom: '16px',
+                }}>
+                  <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                    Connection to Thermal Resistance:
+                  </h4>
+                  <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                    {app.connection}
+                  </p>
+                </div>
+
+                <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '16px' }}>
+                  {app.howItWorks}
+                </p>
+
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '12px',
+                  marginBottom: '16px',
+                }}>
+                  {app.stats.map((stat, i) => (
+                    <div key={i} style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '8px',
+                      padding: '12px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                      <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                      <div style={{ ...typo.small, color: colors.textSecondary }}>{stat.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '16px' }}>
+                  Future Impact: {app.futureImpact}
+                </p>
+
+                {/* Got It button */}
+                <button
+                  onClick={() => {
+                    playSound('click');
+                    const newCompleted = [...completedApps];
+                    newCompleted[selectedApp] = true;
+                    setCompletedApps(newCompleted);
+                    // Move to next app if not at last
+                    if (selectedApp < realWorldApps.length - 1) {
+                      setSelectedApp(selectedApp + 1);
+                    }
+                  }}
+                  style={{
+                    background: completedApps[selectedApp] ? colors.success : colors.accent,
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '10px',
+                    padding: '12px 24px',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    fontSize: '15px',
+                    width: '100%',
+                  }}
+                >
+                  {completedApps[selectedApp] ? '✓ Got It!' : 'Got It'}
+                </button>
               </div>
             </div>
 
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
-              {app.description}
-            </p>
-
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '16px',
-            }}>
-              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                Connection to Thermal Resistance:
-              </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                {app.connection}
-              </p>
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}>
-              {app.stats.map((stat, i) => (
-                <div key={i} style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
-                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
-                </div>
-              ))}
-            </div>
+            {allAppsCompleted && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%', marginTop: '16px' }}
+              >
+                Take the Knowledge Test
+              </button>
+            )}
           </div>
 
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
+          {renderNavDots()}
         </div>
-
-        {renderNavDots()}
       </div>
     );
   }
@@ -1622,11 +1807,14 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
         }}>
+          {renderNavBar()}
           {renderProgressBar()}
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ flex: 1, padding: '24px', paddingTop: '80px', overflowY: 'auto' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1667,6 +1855,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
               </button>
             )}
           </div>
+          </div>
           {renderNavDots()}
         </div>
       );
@@ -1678,11 +1867,14 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
+        {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, padding: '24px', paddingTop: '80px', overflowY: 'auto' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1831,6 +2023,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
               </button>
             )}
           </div>
+        </div>
         </div>
 
         {renderNavDots()}
