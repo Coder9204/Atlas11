@@ -834,8 +834,8 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
               {/* Production curve - zero at y=200, scale /10 */}
               {/* y range: 200-57=143px, 143/490=29% >= 25% SVG vertical space */}
               <path
-                d={`M 0,200 ${hourlyProduction.map((val, i) =>
-                  `L ${i * 8.75},${Math.max(5, 200 - (val / 10) * 200)}`
+                d={`M 0 200 ${hourlyProduction.map((val, i) =>
+                  `L ${(i * 8.75).toFixed(1)} ${Math.max(5, 200 - (val / 10) * 200).toFixed(1)}`
                 ).join(' ')}`}
                 fill="none"
                 stroke="url(#sypEnergyGradient)"
@@ -847,9 +847,9 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
 
               {/* Area fill under curve */}
               <path
-                d={`M 0,200 ${hourlyProduction.map((val, i) =>
-                  `L ${i * 8.75},${Math.max(5, 200 - (val / 10) * 200)}`
-                ).join(' ')} L 210,200 Z`}
+                d={`M 0 200 ${hourlyProduction.map((val, i) =>
+                  `L ${(i * 8.75).toFixed(1)} ${Math.max(5, 200 - (val / 10) * 200).toFixed(1)}`
+                ).join(' ')} L 210 200 Z`}
                 fill="url(#sypEnergyGradient)"
                 opacity="0.15"
               />

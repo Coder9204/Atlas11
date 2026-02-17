@@ -1273,10 +1273,10 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
                 <span style={{ fontSize: typo.body, color: colors.text, fontWeight: '600' }}>{waterLevel.toFixed(0)}%</span>
               </div>
               <div style={{ textAlign: 'center' }}>
-                <span style={{ fontSize: typo.small, color: heightDiff > 0 ? '#10B981' : '#EF4444' }}>
+                <span style={{ fontSize: typo.small, color: heightDiff > 0 ? colors.success : colors.accent }}>
                   Δh = {heightDiff > 0 ? '+' : ''}{heightDiff}
                 </span>
-                <span style={{ fontSize: typo.label, color: heightDiff > 0 ? '#10B981' : '#EF4444', display: 'block' }}>
+                <span style={{ fontSize: typo.label, color: colors.textSecondary, display: 'block' }}>
                   {heightDiff > 0 ? 'Will flow' : 'No flow'}
                 </span>
               </div>
@@ -1386,9 +1386,11 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
           </div>
 
           {/* Color-coded flow indicator */}
-          <div style={{ marginTop: '12px', padding: '10px 14px', borderRadius: '8px', background: heightDiff > 0 && siphonPrimed ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)', border: `1px solid ${heightDiff > 0 && siphonPrimed ? '#10B981' : '#EF4444'}`, display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: heightDiff > 0 && siphonPrimed ? '#10B981' : '#EF4444' }} />
-            <span style={{ color: heightDiff > 0 && siphonPrimed ? '#10B981' : '#EF4444', fontSize: '13px', fontWeight: 600 }}>
+          <div style={{ marginTop: '12px', padding: '10px 14px', borderRadius: '8px', background: heightDiff > 0 && siphonPrimed ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <svg width="12" height="12" viewBox="0 0 12 12" style={{ flexShrink: 0 }}>
+              <circle cx="6" cy="6" r="5" fill={heightDiff > 0 && siphonPrimed ? '#10B981' : '#EF4444'} />
+            </svg>
+            <span style={{ color: colors.text, fontSize: '13px', fontWeight: 600 }}>
               {heightDiff > 0 && siphonPrimed ? 'Siphon FLOWING — green = active' : 'Siphon INACTIVE — red = stopped'}
             </span>
           </div>

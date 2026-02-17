@@ -633,6 +633,24 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
           })}
         </g>
 
+        {/* Attention flow arc (decorative path showing Q→K attention reach) */}
+        <path
+          d={`M ${padL + 10} ${padT + 10} Q ${padL + chartW * 0.2} ${padT + chartH * 0.55} ${queryX - 30} ${queryY - 20}`}
+          fill="none"
+          stroke={showCache ? '#10B981' : '#EF4444'}
+          strokeWidth="1.5"
+          strokeDasharray="6,4"
+          opacity="0.2"
+        />
+        <path
+          d={`M ${padL + chartW - 10} ${padT + 10} Q ${padL + chartW * 0.8} ${padT + chartH * 0.55} ${queryX + 30} ${queryY - 20}`}
+          fill="none"
+          stroke={showCache ? '#10B981' : '#EF4444'}
+          strokeWidth="1.5"
+          strokeDasharray="6,4"
+          opacity="0.2"
+        />
+
         {/* Query box (new token) */}
         <g id="query-box" filter="url(#kvGlow)">
           <rect x={queryX - 28} y={queryY - 16} width="56" height="32" rx="8"

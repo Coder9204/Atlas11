@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 interface TunedMassDamperRendererProps {
   phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
@@ -166,6 +166,10 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
   const buildingC = 10;       // Building damping
   const damperC = 20;         // Damper damping
 
+  // Use refs to avoid infinite re-render loops in animation
+  const maxBuildingAmplitudeRef = useRef(0);
+  const timeRef = useRef(0);
+
   // Physics simulation
   const updatePhysics = useCallback((dt: number, state: BuildingState, t: number): BuildingState => {
     // Ground acceleration (earthquake)
@@ -194,8 +198,9 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
     const newDamperV = state.damperV + damperAcc * dt;
     const newDamperX = state.damperX + newDamperV * dt;
 
-    // Track max amplitude
-    if (Math.abs(newX) > maxBuildingAmplitude) {
+    // Track max amplitude via ref to avoid dependency cycle
+    if (Math.abs(newX) > maxBuildingAmplitudeRef.current) {
+      maxBuildingAmplitudeRef.current = Math.abs(newX);
       setMaxBuildingAmplitude(Math.abs(newX));
     }
 
@@ -205,23 +210,26 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
       damperX: newDamperX,
       damperV: newDamperV,
     };
-  }, [earthquakeFreq, earthquakeAmplitude, damperEnabled, damperK, damperC, buildingK, buildingC, buildingMass, damperMass, maxBuildingAmplitude]);
+  }, [earthquakeFreq, earthquakeAmplitude, damperEnabled, damperK, damperC, buildingK, buildingC, buildingMass, damperMass]);
 
-  // Animation loop
+  // Animation loop - use timeRef to avoid time in deps (prevents infinite re-mount cycle)
   useEffect(() => {
     if (!isPlaying) return;
 
     const dt = 0.01;
     const interval = setInterval(() => {
-      setBuilding(prev => updatePhysics(dt, prev, time));
-      setTime(prev => prev + dt);
+      timeRef.current += dt;
+      setBuilding(prev => updatePhysics(dt, prev, timeRef.current));
+      setTime(timeRef.current);
     }, 10);
 
     return () => clearInterval(interval);
-  }, [isPlaying, updatePhysics, time]);
+  }, [isPlaying, updatePhysics]);
 
   // Reset simulation
   const resetSimulation = useCallback(() => {
+    timeRef.current = 0;
+    maxBuildingAmplitudeRef.current = 0;
     setTime(0);
     setIsPlaying(false);
     setMaxBuildingAmplitude(0);

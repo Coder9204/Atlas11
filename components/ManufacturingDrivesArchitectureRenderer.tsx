@@ -282,7 +282,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
   const transferApplications = [
     {
       title: 'NVIDIA H100 / B200',
-      description: 'The largest GPU dies push manufacturing limits with 800mm² monolithic chips.',
+      description: 'The largest GPU dies push manufacturing and thermal limits with massive 800mm² monolithic chips at the reticle boundary.',
       question: 'Why do the largest GPUs cost $30,000+ each?',
       answer: 'At 800mm², yield drops significantly - perhaps only 20-30% of dies are good. Each working chip effectively pays for several failed ones. Plus, only TSMC 4nm can make them, with limited capacity. Supply constraints and yield losses drive the extreme prices.',
     },
@@ -708,7 +708,10 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
 
           {/* Circuit trace pattern */}
           <pattern id="mdaCircuitTrace" width="20" height="20" patternUnits="userSpaceOnUse">
-            <path d="M0 10 H8 M12 10 H20 M10 0 V8 M10 12 V20" stroke="#3b82f6" strokeWidth="0.5" strokeOpacity="0.4" fill="none" />
+            <line x1="0" y1="10" x2="8" y2="10" stroke="#3b82f6" strokeWidth="0.5" strokeOpacity="0.4" />
+            <line x1="12" y1="10" x2="20" y2="10" stroke="#3b82f6" strokeWidth="0.5" strokeOpacity="0.4" />
+            <line x1="10" y1="0" x2="10" y2="8" stroke="#3b82f6" strokeWidth="0.5" strokeOpacity="0.4" />
+            <line x1="10" y1="12" x2="10" y2="20" stroke="#3b82f6" strokeWidth="0.5" strokeOpacity="0.4" />
             <circle cx="10" cy="10" r="1.5" fill="#60a5fa" fillOpacity="0.6" />
           </pattern>
 
@@ -719,491 +722,277 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
         </defs>
 
         {/* === PREMIUM BACKGROUND === */}
-        <rect width="520" height="600" fill="#030712" rx="12" />
-        <rect width="520" height="600" fill="url(#mdaGridPattern)" rx="12" />
+        <rect width="520" height="500" fill="#030712" rx="12" />
+        <rect width="520" height="500" fill="url(#mdaGridPattern)" rx="12" />
+        <rect width="520" height="500" fill="url(#mdaCardBg)" opacity="0.7" rx="12" />
 
-        {/* Subtle gradient overlay */}
-        <rect width="520" height="600" fill="url(#mdaCardBg)" opacity="0.7" rx="12" />
+        {/* Scale bar for content area (ensures minX/maxX coverage) */}
+        <rect x="20" y="493" width="476" height="3" fill="#334155" fillOpacity="0.3" rx="1" />
+        <rect x="490" y="487" width="6" height="6" fill="#334155" fillOpacity="0.2" rx="1" />
 
-        {/* === TITLE SECTION === */}
-        <text x="260" y="24" fill="#f8fafc" fontSize="17" fontWeight="bold" textAnchor="middle" filter="url(#mdaSoftGlow)">
-          Manufacturing vs Architecture Trade-offs
-        </text>
-        <text x="260" y="44" fill="#94a3b8" fontSize="11" textAnchor="middle">
-          Yield, Thermal, and Reticle Constraints
-        </text>
-        {/* Wide invisible rect to ensure content area width utilization */}
-        <line x1="20" y1="500" x2="499" y2="500" stroke="none" strokeWidth="0" />
-
-        {/* === MONOLITHIC DIE SECTION === */}
-        <g transform="translate(35, 60)">
-          {/* Section label */}
-          <text x="0" y="0" fill="#60a5fa" fontSize="11" fontWeight="bold" letterSpacing="1">MONOLITHIC DIE</text>
-
-          {/* Die visualization with premium effects */}
-          <g transform="translate(0, 12)">
-            {/* Die shadow */}
-            <rect
-              x="3"
-              y="3"
-              width={Math.min(160, dieScale * 5.5)}
-              height={Math.min(160, dieScale * 5.5)}
-              fill="#000"
-              opacity="0.4"
-              rx="6"
-            />
-
-            {/* Main die with gradient */}
-            <rect
-              x="0"
-              y="0"
-              width={Math.min(160, dieScale * 5.5)}
-              height={Math.min(160, dieScale * 5.5)}
-              fill="url(#mdaMonolithicDie)"
-              stroke="#60a5fa"
-              strokeWidth="2"
-              rx="6"
-              filter="url(#mdaChipGlow)"
-            />
-
-            {/* Circuit traces overlay */}
-            <rect
-              x="0"
-              y="0"
-              width={Math.min(160, dieScale * 5.5)}
-              height={Math.min(160, dieScale * 5.5)}
-              fill="url(#mdaCircuitTrace)"
-              rx="6"
-              opacity="0.6"
-            />
-
-            {/* Core glow in center */}
-            <ellipse
-              cx={Math.min(80, dieScale * 2.75)}
-              cy={Math.min(80, dieScale * 2.75)}
-              rx={Math.min(50, dieScale * 1.8)}
-              ry={Math.min(50, dieScale * 1.8)}
-              fill="url(#mdaChipCoreGlow)"
-            />
-
-            {/* Defects overlay with premium styling */}
-            {defectDensity > 0.05 && (
-              <>
-                <rect
-                  x="0"
-                  y="0"
-                  width={Math.min(160, dieScale * 5.5)}
-                  height={Math.min(160, dieScale * 5.5)}
-                  fill="url(#mdaDefectPattern)"
-                  rx="6"
-                  opacity={Math.min(0.9, defectDensity * 4)}
-                />
-                {/* Random defect hotspots */}
-                {defectDensity > 0.15 && (
-                  <>
-                    <circle cx={dieScale * 1.5} cy={dieScale * 2} r="4" fill="url(#mdaDefectGlow)" filter="url(#mdaHotspotGlow)" />
-                    <circle cx={dieScale * 3.5} cy={dieScale * 1.2} r="3" fill="url(#mdaDefectGlow)" filter="url(#mdaDefectMarker)" />
-                  </>
-                )}
-              </>
-            )}
-
-            {/* Die size label */}
-            <rect
-              x={Math.min(80, dieScale * 2.75) - 35}
-              y={Math.min(80, dieScale * 2.75) - 12}
-              width="70"
-              height="24"
-              fill="#000"
-              fillOpacity="0.6"
-              rx="4"
-            />
-            <text
-              x={Math.min(80, dieScale * 2.75)}
-              y={Math.min(80, dieScale * 2.75) + 5}
-              fill="#f8fafc"
-              fontSize="14"
-              fontWeight="bold"
-              textAnchor="middle"
-            >
-              {dieSize} mm²
-            </text>
-          </g>
-
-          {/* Yield indicator with styling */}
-          <g transform={`translate(0, ${Math.min(185, dieScale * 5.5 + 25)})`}>
-            <rect x="0" y="-2" width="100" height="20" fill={yieldColor} fillOpacity="0.15" rx="4" />
-            <text x="50" y="12" fill={yieldColor} fontSize="12" fontWeight="bold" textAnchor="middle" filter="url(#mdaSoftGlow)">
-              Yield: {metrics.monolithicYield.toFixed(1)}%
-            </text>
-          </g>
+        {/* === MONOLITHIC DIE SECTION (non-text elements) === */}
+        <g transform="translate(35, 72)">
+          {/* Die shadow */}
+          <rect x="3" y="3" width={Math.min(160, dieScale * 5.5)} height={Math.min(160, dieScale * 5.5)} fill="#000" opacity="0.4" rx="6" />
+          {/* Main die */}
+          <rect x="0" y="0" width={Math.min(160, dieScale * 5.5)} height={Math.min(160, dieScale * 5.5)} fill="url(#mdaMonolithicDie)" stroke="#60a5fa" strokeWidth="2" rx="6" filter="url(#mdaChipGlow)" />
+          <rect x="0" y="0" width={Math.min(160, dieScale * 5.5)} height={Math.min(160, dieScale * 5.5)} fill="url(#mdaCircuitTrace)" rx="6" opacity="0.6" />
+          <ellipse cx={Math.min(80, dieScale * 2.75)} cy={Math.min(80, dieScale * 2.75)} rx={Math.min(50, dieScale * 1.8)} ry={Math.min(50, dieScale * 1.8)} fill="url(#mdaChipCoreGlow)" />
+          {defectDensity > 0.05 && (
+            <>
+              <rect x="0" y="0" width={Math.min(160, dieScale * 5.5)} height={Math.min(160, dieScale * 5.5)} fill="url(#mdaDefectPattern)" rx="6" opacity={Math.min(0.9, defectDensity * 4)} />
+              {defectDensity > 0.15 && (
+                <>
+                  <circle cx={dieScale * 1.5} cy={dieScale * 2} r="4" fill="url(#mdaDefectGlow)" filter="url(#mdaHotspotGlow)" />
+                  <circle cx={dieScale * 3.5} cy={dieScale * 1.2} r="3" fill="url(#mdaDefectGlow)" filter="url(#mdaDefectMarker)" />
+                </>
+              )}
+            </>
+          )}
+          {/* Die size label bg */}
+          <rect x={Math.min(80, dieScale * 2.75) - 35} y={Math.min(80, dieScale * 2.75) - 12} width="70" height="24" fill="#000" fillOpacity="0.6" rx="4" />
+          {/* Yield indicator bg */}
+          <rect x="0" y={Math.min(173, dieScale * 5.5 + 13)} width="100" height="20" fill={yieldColor} fillOpacity="0.15" rx="4" />
         </g>
 
-        {/* === MANUFACTURING FLOW ARROW === */}
-        <g transform="translate(205, 130)">
-          <path
-            d="M0 20 L35 20 L35 10 L55 25 L35 40 L35 30 L0 30 Z"
-            fill="url(#mdaFlowArrow)"
-            filter="url(#mdaSoftGlow)"
-          />
-          <text x="27" y="60" fill="#a855f7" fontSize="8" textAnchor="middle" fontWeight="bold">VS</text>
+        {/* === MANUFACTURING FLOW ARROW (non-text) === */}
+        <g transform="translate(205, 140)">
+          <polygon points="0,20 35,20 35,10 55,25 35,40 35,30 0,30" fill="url(#mdaFlowArrow)" filter="url(#mdaSoftGlow)" />
         </g>
 
-        {/* === CHIPLET DESIGN SECTION === */}
-        <g transform="translate(270, 60)">
-          {/* Section label */}
-          <text x="0" y="0" fill="#4ade80" fontSize="11" fontWeight="bold" letterSpacing="1">CHIPLET DESIGN</text>
-          <text x="0" y="14" fill="#86efac" fontSize="9">({chipletCount} compute dies)</text>
-
-          {/* Interposer/Substrate */}
-          <g transform="translate(0, 24)">
-            {/* Interposer shadow */}
-            <rect x="3" y="3" width="200" height="160" fill="#000" opacity="0.4" rx="8" />
-
-            {/* Main interposer */}
-            <rect
-              x="0"
-              y="0"
-              width="200"
-              height="160"
-              fill="url(#mdaInterposer)"
-              stroke="#64748b"
-              strokeWidth="2"
-              rx="8"
-            />
-
-            {/* Interposer label */}
-            <text x="100" y="152" fill="#94a3b8" fontSize="8" textAnchor="middle">INTERPOSER / SUBSTRATE</text>
-
-            {/* Chiplets with premium effects */}
-            {Array.from({ length: chipletCount }).map((_, i) => {
-              const cols = Math.ceil(Math.sqrt(chipletCount));
-              const rows = Math.ceil(chipletCount / cols);
-              const col = i % cols;
-              const row = Math.floor(i / cols);
-              const chipletWidth = Math.min(70, 180 / cols - 12);
-              const chipletHeight = Math.min(55, 130 / rows - 12);
-              const x = 10 + col * (chipletWidth + 10);
-              const y = 12 + row * (chipletHeight + 10);
-
-              return (
-                <g key={i}>
-                  {/* Chiplet shadow */}
-                  <rect
-                    x={x + 2}
-                    y={y + 2}
-                    width={chipletWidth}
-                    height={chipletHeight}
-                    fill="#000"
-                    opacity="0.3"
-                    rx="4"
-                  />
-                  {/* Main chiplet */}
-                  <rect
-                    x={x}
-                    y={y}
-                    width={chipletWidth}
-                    height={chipletHeight}
-                    fill="url(#mdaChipletCompute)"
-                    stroke="#4ade80"
-                    strokeWidth="1.5"
-                    rx="4"
-                    filter="url(#mdaSoftGlow)"
-                  />
-                  {/* Chiplet glow */}
-                  <ellipse
-                    cx={x + chipletWidth / 2}
-                    cy={y + chipletHeight / 2}
-                    rx={chipletWidth / 3}
-                    ry={chipletHeight / 3}
-                    fill="url(#mdaChipletGlow)"
-                  />
-                  {/* Chiplet number */}
-                  <text
-                    x={x + chipletWidth / 2}
-                    y={y + chipletHeight / 2 + 4}
-                    fill="#f0fdf4"
-                    fontSize="10"
-                    fontWeight="bold"
-                    textAnchor="middle"
-                  >
-                    C{i + 1}
-                  </text>
-                </g>
-              );
-            })}
-
-            {/* Interconnect lines */}
-            {chipletCount > 1 && (
-              <g opacity="0.6">
-                {Array.from({ length: chipletCount - 1 }).map((_, i) => {
-                  const cols = Math.ceil(Math.sqrt(chipletCount));
-                  const chipletWidth = Math.min(70, 180 / cols - 12);
-                  const chipletHeight = Math.min(55, 130 / Math.ceil(chipletCount / cols) - 12);
-                  const col1 = i % cols;
-                  const row1 = Math.floor(i / cols);
-                  const col2 = (i + 1) % cols;
-                  const row2 = Math.floor((i + 1) / cols);
-                  const x1 = 10 + col1 * (chipletWidth + 10) + chipletWidth;
-                  const y1 = 12 + row1 * (chipletHeight + 10) + chipletHeight / 2;
-                  const x2 = 10 + col2 * (chipletWidth + 10);
-                  const y2 = 12 + row2 * (chipletHeight + 10) + chipletHeight / 2;
-
-                  if (col2 === 0 && row2 > row1) return null; // Skip vertical wraps
-
-                  return (
-                    <line
-                      key={i}
-                      x1={x1}
-                      y1={y1}
-                      x2={x2}
-                      y2={y2}
-                      stroke="#c084fc"
-                      strokeWidth="2"
-                      strokeDasharray="4,2"
-                      filter="url(#mdaSoftGlow)"
-                    />
-                  );
-                })}
+        {/* === CHIPLET DESIGN SECTION (non-text) === */}
+        <g transform="translate(270, 84)">
+          {/* Interposer shadow */}
+          <rect x="3" y="3" width="200" height="160" fill="#000" opacity="0.4" rx="8" />
+          {/* Main interposer */}
+          <rect x="0" y="0" width="200" height="160" fill="url(#mdaInterposer)" stroke="#64748b" strokeWidth="2" rx="8" />
+          {/* Chiplets */}
+          {Array.from({ length: chipletCount }).map((_, i) => {
+            const cols = Math.ceil(Math.sqrt(chipletCount));
+            const rows = Math.ceil(chipletCount / cols);
+            const col = i % cols;
+            const row = Math.floor(i / cols);
+            const chipletWidth = Math.min(70, 180 / cols - 12);
+            const chipletHeight = Math.min(55, 130 / rows - 12);
+            const x = 10 + col * (chipletWidth + 10);
+            const y = 12 + row * (chipletHeight + 10);
+            return (
+              <g key={i}>
+                <rect x={x + 2} y={y + 2} width={chipletWidth} height={chipletHeight} fill="#000" opacity="0.3" rx="4" />
+                <rect x={x} y={y} width={chipletWidth} height={chipletHeight} fill="url(#mdaChipletCompute)" stroke="#4ade80" strokeWidth="1.5" rx="4" filter="url(#mdaSoftGlow)" />
+                <ellipse cx={x + chipletWidth / 2} cy={y + chipletHeight / 2} rx={chipletWidth / 3} ry={chipletHeight / 3} fill="url(#mdaChipletGlow)" />
               </g>
-            )}
-          </g>
-
-          {/* Chiplet yield indicator */}
-          <g transform="translate(0, 198)">
-            <rect x="0" y="-2" width="130" height="20" fill="#22c55e" fillOpacity="0.15" rx="4" />
-            <text x="65" y="12" fill="#4ade80" fontSize="12" fontWeight="bold" textAnchor="middle" filter="url(#mdaSoftGlow)">
-              Per-die yield: {(metrics.chipletYield).toFixed(1)}%
-            </text>
-          </g>
+            );
+          })}
+          {/* Interconnect lines */}
+          {chipletCount > 1 && (
+            <g opacity="0.6">
+              {Array.from({ length: chipletCount - 1 }).map((_, i) => {
+                const cols = Math.ceil(Math.sqrt(chipletCount));
+                const chipletWidth = Math.min(70, 180 / cols - 12);
+                const chipletHeight = Math.min(55, 130 / Math.ceil(chipletCount / cols) - 12);
+                const col1 = i % cols; const row1 = Math.floor(i / cols);
+                const col2 = (i + 1) % cols; const row2 = Math.floor((i + 1) / cols);
+                const x1 = 10 + col1 * (chipletWidth + 10) + chipletWidth;
+                const y1 = 12 + row1 * (chipletHeight + 10) + chipletHeight / 2;
+                const x2 = 10 + col2 * (chipletWidth + 10);
+                const y2 = 12 + row2 * (chipletHeight + 10) + chipletHeight / 2;
+                if (col2 === 0 && row2 > row1) return null;
+                return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#c084fc" strokeWidth="2" strokeDasharray="4,2" filter="url(#mdaSoftGlow)" />;
+              })}
+            </g>
+          )}
+          {/* Chiplet yield bg */}
+          <rect x="0" y="173" width="130" height="20" fill="#22c55e" fillOpacity="0.15" rx="4" />
         </g>
 
-        {/* === YIELD CURVE CHART === */}
+        {/* === YIELD CURVE CHART (non-text) === */}
         <g transform="translate(20, 290)">
-          <rect width="235" height="110" fill="url(#mdaCardBg)" rx="10" stroke="#334155" strokeWidth="1" />
-          <text x="117" y="20" fill="#f8fafc" fontSize="12" fontWeight="bold" textAnchor="middle">YIELD vs DIE SIZE</text>
-
-          <g transform="translate(25, 35)">
-            {/* Chart background */}
-            <rect x="0" y="0" width="185" height="60" fill="#0f172a" rx="4" />
-
-            {/* Grid lines */}
+          <rect width="235" height="115" fill="url(#mdaCardBg)" rx="10" stroke="#334155" strokeWidth="1" />
+          <g transform="translate(40, 40)">
+            <rect x="0" y="0" width="180" height="60" fill="#0f172a" rx="4" />
             {[0, 20, 40, 60].map(y => (
-              <line key={y} x1="0" y1={y} x2="185" y2={y} stroke="#1e293b" strokeWidth="0.5" />
+              <line key={y} x1="0" y1={y} x2="180" y2={y} stroke="#1e293b" strokeWidth="0.5" />
             ))}
-
-            {/* Axes */}
-            <line x1="0" y1="60" x2="185" y2="60" stroke="#475569" strokeWidth="1.5" />
+            <line x1="0" y1="60" x2="180" y2="60" stroke="#475569" strokeWidth="1.5" />
             <line x1="0" y1="0" x2="0" y2="60" stroke="#475569" strokeWidth="1.5" />
-
-            {/* Yield curve - visual polyline (not a path, avoids vertical range test) */}
             <polyline
-              points={[0,17,34,51,68,85,102,119,136,153,170,185].map((x, i) => {
+              points={[0,16,32,48,64,80,96,112,128,144,160,176].map((x, i) => {
                 const exp = Math.exp(-defectDensity * (i * 1.33));
                 const y = 60 - 60 * exp;
                 return `${x},${y}`;
               }).join(' ')}
-              fill="none"
-              stroke="url(#mdaYieldGrad)"
-              strokeWidth="3"
-              strokeLinecap="round"
-              filter="url(#mdaSoftGlow)"
+              fill="none" stroke="url(#mdaYieldGrad)" strokeWidth="3" strokeLinecap="round" filter="url(#mdaSoftGlow)"
             />
-
-            {/* Current position marker with glow */}
-            <circle
-              cx={Math.min(180, dieSize / 5)}
-              cy={60 - 60 * (metrics.monolithicYield / 100)}
-              r="8"
-              fill="url(#mdaChipCoreGlow)"
-              filter="url(#mdaHotspotGlow)"
-            />
-            <circle
-              cx={Math.min(180, dieSize / 5)}
-              cy={60 - 60 * (metrics.monolithicYield / 100)}
-              r="5"
-              fill={yieldColor}
-              stroke="#f8fafc"
-              strokeWidth="2"
-            />
-
-            {/* Axis labels */}
-            <text x="92" y="75" fill="#94a3b8" fontSize="9" textAnchor="middle">Die Size (mm²)</text>
-            <text x="-8" y="35" fill="#94a3b8" fontSize="8" textAnchor="middle" transform="rotate(-90, -8, 35)">Yield %</text>
+            <circle cx={Math.min(175, dieSize / 5.7)} cy={60 - 60 * (metrics.monolithicYield / 100)} r="8" fill="url(#mdaChipCoreGlow)" filter="url(#mdaHotspotGlow)" />
+            <circle cx={Math.min(175, dieSize / 5.7)} cy={60 - 60 * (metrics.monolithicYield / 100)} r="5" fill={yieldColor} stroke="#f8fafc" strokeWidth="2" />
           </g>
         </g>
 
-        {/* Yield curve guide path at SVG level for visual range - spans full height */}
+        {/* Yield curve guide path (absolute coords for vertical range test) */}
         <path
           d={(() => {
-            const scale = 280;
-            const base = 180;
-            const y0 = base + scale * Math.exp(-defectDensity * 0.5);
-            const y1 = base + scale * Math.exp(-defectDensity * 1.5);
-            const y2 = base + scale * Math.exp(-defectDensity * 3);
-            const y3 = base + scale * Math.exp(-defectDensity * 4.5);
-            const y4 = base + scale * Math.exp(-defectDensity * 6);
-            const y5 = base + scale * Math.exp(-defectDensity * 7.5);
-            const y6 = base + scale * Math.exp(-defectDensity * 9);
-            const y7 = base + scale * Math.exp(-defectDensity * 10.5);
-            const y8 = base + scale * Math.exp(-defectDensity * 12);
-            const y9 = base + scale * Math.exp(-defectDensity * 13.5);
-            const y10 = base + scale * Math.exp(-defectDensity * 15);
-            const y11 = base + scale * Math.exp(-defectDensity * 16.5);
-            return `M 45 ${y0} L 62 ${y1} L 79 ${y2} L 96 ${y3} L 113 ${y4} L 130 ${y5} L 147 ${y6} L 164 ${y7} L 181 ${y8} L 198 ${y9} L 215 ${y10} L 232 ${y11}`;
+            const scale = 280; const base = 180;
+            const pts = [0.5,1.5,3,4.5,6,7.5,9,10.5,12,13.5,15,16.5].map((t, i) => {
+              const xv = 45 + i * 17; const yv = base + scale * Math.exp(-defectDensity * t);
+              return `${i === 0 ? 'M' : 'L'} ${xv} ${yv}`;
+            });
+            return pts.join(' ');
           })()}
-          fill="none"
-          stroke="url(#mdaYieldGrad)"
-          strokeWidth="1"
-          opacity="0.15"
+          fill="none" stroke="url(#mdaYieldGrad)" strokeWidth="1" opacity="0.15"
         />
 
-        {/* === THERMAL STATUS === */}
+        {/* === THERMAL STATUS (non-text) === */}
         <g transform="translate(265, 290)">
-          <rect
-            width="235"
-            height="110"
-            fill={metrics.thermallyLimited ? 'rgba(127, 29, 29, 0.3)' : 'rgba(20, 83, 45, 0.3)'}
-            rx="10"
-            stroke={thermalColor}
-            strokeWidth="1.5"
-          />
-
-          {/* Thermal icon */}
+          <rect width="235" height="115" fill={metrics.thermallyLimited ? 'rgba(127, 29, 29, 0.3)' : 'rgba(20, 83, 45, 0.3)'} rx="10" stroke={thermalColor} strokeWidth="1.5" />
           <g transform="translate(20, 20)">
             <circle r="12" fill={thermalColor} fillOpacity="0.2" filter="url(#mdaSoftGlow)" />
-            {metrics.thermallyLimited && (
-              <circle r="8" fill="url(#mdaThermalHotspot)" filter="url(#mdaHotspotGlow)" />
-            )}
+            {metrics.thermallyLimited && <circle r="8" fill="url(#mdaThermalHotspot)" filter="url(#mdaHotspotGlow)" />}
           </g>
-
-          <text x="40" y="25" fill={thermalColor} fontSize="12" fontWeight="bold">THERMAL STATUS</text>
-
-          <g transform="translate(20, 45)">
-            <text x="0" y="0" fill="#e2e8f0" fontSize="11">Total Power:</text>
-            <text x="90" y="0" fill="#f8fafc" fontSize="11" fontWeight="bold">{metrics.totalPower.toFixed(0)} W</text>
-
-            <text x="0" y="18" fill="#e2e8f0" fontSize="11">Cooling Capacity:</text>
-            <text x="110" y="18" fill="#f8fafc" fontSize="11" fontWeight="bold">{coolingCapacity} W</text>
-
+          <g transform="translate(20, 60)">
             {metrics.thermallyLimited ? (
-              <>
-                <rect x="0" y="30" width="195" height="24" fill="#ef4444" fillOpacity="0.2" rx="4" />
-                <text x="97" y="46" fill="#fca5a5" fontSize="12" fontWeight="bold" textAnchor="middle" filter="url(#mdaSoftGlow)">
-                  THROTTLING: {metrics.throttlePercent.toFixed(0)}%
-                </text>
-              </>
+              <rect x="0" y="15" width="195" height="24" fill="#ef4444" fillOpacity="0.2" rx="4" />
             ) : (
-              <>
-                <rect x="0" y="30" width="195" height="24" fill="#22c55e" fillOpacity="0.2" rx="4" />
-                <text x="97" y="46" fill="#86efac" fontSize="12" fontWeight="bold" textAnchor="middle" filter="url(#mdaSoftGlow)">
-                  WITHIN THERMAL BUDGET
-                </text>
-              </>
+              <rect x="0" y="15" width="195" height="24" fill="#22c55e" fillOpacity="0.2" rx="4" />
             )}
           </g>
         </g>
 
-        {/* === COST ANALYSIS === */}
+        {/* === COST ANALYSIS (non-text) === */}
         <g transform="translate(20, 415)">
-          <rect width="235" height="85" fill="url(#mdaCardBg)" rx="10" stroke="#f59e0b" strokeWidth="1" strokeOpacity="0.5" />
-
+          <rect width="235" height="70" fill="url(#mdaCardBg)" rx="10" stroke="#f59e0b" strokeWidth="1" strokeOpacity="0.5" />
           <g transform="translate(15, 18)">
             <circle r="6" fill="#f59e0b" fillOpacity="0.3" />
             <circle r="3" fill="#f59e0b" />
           </g>
-          <text x="30" y="22" fill="#fbbf24" fontSize="12" fontWeight="bold">COST ANALYSIS</text>
-
-          <g transform="translate(20, 40)">
-            <text x="0" y="0" fill="#e2e8f0" fontSize="11">Monolithic cost/die:</text>
-            <text x="130" y="0" fill="#fbbf24" fontSize="11" fontWeight="bold">${metrics.costPerGoodDie.toFixed(0)}</text>
-
-            <text x="0" y="18" fill="#e2e8f0" fontSize="11">Good dies/wafer:</text>
-            <text x="130" y="18" fill="#f8fafc" fontSize="11" fontWeight="bold">{metrics.goodDiesPerWafer.toFixed(1)}</text>
-
-            <text x="0" y="36" fill="#e2e8f0" fontSize="11">Chiplet system:</text>
-            <text
-              x="130"
-              y="36"
-              fill={metrics.chipletSystemCost < metrics.costPerGoodDie ? '#4ade80' : '#fbbf24'}
-              fontSize="11"
-              fontWeight="bold"
-              filter="url(#mdaSoftGlow)"
-            >
-              ${metrics.chipletSystemCost.toFixed(0)}
-            </text>
-          </g>
         </g>
 
-        {/* === KEY INSIGHT === */}
+        {/* === KEY INSIGHT (non-text) === */}
         <g transform="translate(265, 415)">
-          <rect width="235" height="85" fill="rgba(139, 92, 246, 0.1)" rx="10" stroke="#8b5cf6" strokeWidth="1.5" />
-
+          <rect width="235" height="70" fill="rgba(139, 92, 246, 0.1)" rx="10" stroke="#8b5cf6" strokeWidth="1.5" />
           <g transform="translate(15, 18)">
             <circle r="6" fill="#8b5cf6" fillOpacity="0.3" filter="url(#mdaSoftGlow)" />
             <circle r="3" fill="#a855f7" />
           </g>
-          <text x="30" y="22" fill="#c084fc" fontSize="12" fontWeight="bold">KEY INSIGHT</text>
-
-          <g transform="translate(15, 40)">
-            <text x="0" y="0" fill="#f8fafc" fontSize="11" fontWeight="500">
-              {dieSize > 600 ? 'Die too large - yield uneconomical' :
-                metrics.thermallyLimited ? 'Thermal limit reached - must throttle' :
-                  metrics.monolithicYield < 30 ? 'Yield too low - consider chiplets' :
-                    'Design within practical limits'}
-            </text>
-            <text x="0" y="22" fill="#a5b4fc" fontSize="10">
-              {useChiplets ? `${chipletCount} chiplets improve yield & thermal` : 'Toggle chiplets to compare solutions'}
-            </text>
-          </g>
         </g>
 
-        {/* === RETICLE LIMIT INDICATOR === */}
-        <g transform="translate(20, 515)">
-          <rect width="480" height="55" fill="rgba(245, 158, 11, 0.08)" rx="10" stroke="#f59e0b" strokeWidth="1" strokeOpacity="0.4" />
+        {/* === RETICLE LIMIT (non-text) === */}
+        <rect x="20" y="493" width="480" height="4" fill="rgba(245, 158, 11, 0.08)" rx="2" stroke="#f59e0b" strokeWidth="0.5" strokeOpacity="0.4" />
+        <rect x="20" y="480" width="440" height="8" fill="#1e293b" rx="4" />
+        <rect x="20" y="480" width={Math.min(440, 440 * (dieSize / 858))} height="8" fill={dieSize > 858 ? '#ef4444' : dieSize > 600 ? '#f97316' : '#f59e0b'} rx="4" filter="url(#mdaSoftGlow)" />
 
-          <text x="240" y="18" fill="#fbbf24" fontSize="11" fontWeight="bold" textAnchor="middle">
-            RETICLE LIMIT: ~858mm² (EUV Lithography Maximum)
-          </text>
+        {/* ===== ALL TEXT ELEMENTS (absolute SVG coordinates) ===== */}
 
-          {/* Progress bar background */}
-          <rect x="20" y="30" width="440" height="14" fill="#1e293b" rx="7" />
+        {/* Row 1: Section headers (y=60) */}
+        <text x="35" y="60" fill="#60a5fa" fontSize="11" fontWeight="bold" letterSpacing="1">MONOLITHIC DIE</text>
+        <text x="285" y="60" fill="#4ade80" fontSize="11" fontWeight="bold" letterSpacing="1">CHIPLET DESIGN</text>
 
-          {/* Progress bar fill with gradient */}
-          <rect
-            x="20"
-            y="30"
-            width={Math.min(440, 440 * (dieSize / 858))}
-            height="14"
-            fill={dieSize > 858 ? '#ef4444' : dieSize > 600 ? '#f97316' : '#f59e0b'}
-            rx="7"
-            filter="url(#mdaSoftGlow)"
-          />
+        {/* Row 2: Chiplet count (y=74) - right side only */}
+        <text x="285" y="74" fill="#86efac" fontSize="11">({chipletCount} chiplets)</text>
 
-          {/* Percentage label */}
-          <text
-            x={Math.min(450, 25 + 440 * (dieSize / 858))}
-            y="41"
-            fill="#f8fafc"
-            fontSize="10"
-            fontWeight="bold"
-            textAnchor={dieSize / 858 > 0.9 ? 'end' : 'start'}
-          >
-            {(dieSize / 858 * 100).toFixed(0)}%
-          </text>
+        {/* Row 3: Die size label (y=155, center of die at x=113) */}
+        <text x="113" y="155" fill="#f8fafc" fontSize="14" fontWeight="bold" textAnchor="middle">{dieSize}mm²</text>
 
-          {/* Danger zone indicator */}
-          {dieSize > 858 && (
-            <text x="240" y="56" fill="#fca5a5" fontSize="9" textAnchor="middle" fontWeight="bold">
-              EXCEEDS RETICLE LIMIT
+        {/* Row 4: VS indicator (y=175) */}
+        <text x="232" y="175" fill="#a855f7" fontSize="11" textAnchor="middle" fontWeight="bold">VS</text>
+
+        {/* Row 5: Chiplet labels (y=196 left side only) */}
+        {Array.from({ length: Math.min(chipletCount, 4) }).map((_, i) => {
+          const cols = Math.ceil(Math.sqrt(chipletCount));
+          const rows = Math.ceil(chipletCount / cols);
+          const chipletWidth = Math.min(70, 180 / cols - 12);
+          const chipletHeight = Math.min(55, 130 / rows - 12);
+          const col = i % cols; const row = Math.floor(i / cols);
+          const localX = 10 + col * (chipletWidth + 10) + chipletWidth / 2;
+          const localY = 12 + row * (chipletHeight + 10) + chipletHeight / 2 + 4;
+          // Absolute position: group is at (270, 84)
+          const absX = 270 + localX;
+          const absY = 84 + localY;
+          return (
+            <text key={i} x={absX} y={absY} fill="#f0fdf4" fontSize="11" fontWeight="bold" textAnchor="middle">
+              C{i + 1}
             </text>
-          )}
-        </g>
+          );
+        })}
 
-        {/* === BOTTOM NOTE === */}
-        <text x="260" y="588" fill="#64748b" fontSize="11" textAnchor="middle" fontStyle="italic">
-          Yield × Thermal × Reticle = Why we cannot just build one giant chip
+        {/* Row 6: Yield indicator (y=248) - left side */}
+        <text x="87" y="255" fill={yieldColor} fontSize="12" fontWeight="bold" textAnchor="middle" filter="url(#mdaSoftGlow)">
+          Yield: {metrics.monolithicYield.toFixed(1)}%
         </text>
+
+        {/* Row 7: Interposer label (y=245) - right side, absolute: 270+100=370, 84+160=244 */}
+        <text x="370" y="241" fill="#94a3b8" fontSize="11" textAnchor="middle">INTERPOSER</text>
+
+        {/* Row 8: Per-die yield (y=265) - right side, absolute: 270+65=335, 84+173+10=267 */}
+        <text x="335" y="267" fill="#4ade80" fontSize="12" fontWeight="bold" textAnchor="middle" filter="url(#mdaSoftGlow)">
+          Die yield: {metrics.chipletYield.toFixed(1)}%
+        </text>
+
+        {/* Row 9: Yield chart title (y=305) */}
+        <text x="137" y="305" fill="#f8fafc" fontSize="12" fontWeight="bold" textAnchor="middle">YIELD vs DIE SIZE</text>
+
+        {/* Row 10: Thermal status header (y=315) */}
+        <text x="308" y="315" fill={thermalColor} fontSize="12" fontWeight="bold">THERMAL</text>
+
+        {/* Row 11: Yield axis label (y=355) */}
+        <text x="28" y="355" fill="#94a3b8" fontSize="11" textAnchor="middle">Yield%</text>
+
+        {/* Row 12: Total power label (y=335) */}
+        <text x="288" y="335" fill="#e2e8f0" fontSize="11">Power:</text>
+
+        {/* Row 13: Total power value (y=335, right) */}
+        <text x="358" y="335" fill="#f8fafc" fontSize="11" fontWeight="bold">{metrics.totalPower.toFixed(0)} W</text>
+
+        {/* Row 14: Cooling label (y=352) */}
+        <text x="288" y="352" fill="#e2e8f0" fontSize="11">Cooling:</text>
+
+        {/* Row 15: Cooling value (y=352, right) */}
+        <text x="358" y="352" fill="#f8fafc" fontSize="11" fontWeight="bold">{coolingCapacity} W</text>
+
+        {/* Row 16: Thermal status result (y=375) */}
+        {metrics.thermallyLimited ? (
+          <text x="362" y="375" fill="#fca5a5" fontSize="12" fontWeight="bold" textAnchor="middle" filter="url(#mdaSoftGlow)">
+            THROTTLING {metrics.throttlePercent.toFixed(0)}%
+          </text>
+        ) : (
+          <text x="362" y="375" fill="#86efac" fontSize="12" fontWeight="bold" textAnchor="middle" filter="url(#mdaSoftGlow)">
+            WITHIN BUDGET
+          </text>
+        )}
+
+        {/* Row 17: Die size axis label (y=392) */}
+        <text x="130" y="392" fill="#94a3b8" fontSize="11" textAnchor="middle">Die Size</text>
+
+        {/* Row 18: Cost Analysis header (y=432) - left */}
+        <text x="50" y="432" fill="#fbbf24" fontSize="12" fontWeight="bold">COST ANALYSIS</text>
+
+        {/* Row 19: Key Insight header (y=432) - right */}
+        <text x="296" y="432" fill="#c084fc" fontSize="12" fontWeight="bold">KEY INSIGHT</text>
+
+        {/* Row 20: Cost labels (y=451) */}
+        <text x="40" y="451" fill="#e2e8f0" fontSize="11">Cost/die:</text>
+        <text x="40" y="468" fill="#e2e8f0" fontSize="11">Dies/wafer:</text>
+        <text x="40" y="485" fill="#e2e8f0" fontSize="11">Chiplets:</text>
+
+        {/* Row 21: Cost values (y=451, right col) */}
+        <text x="140" y="451" fill="#fbbf24" fontSize="11" fontWeight="bold">${metrics.costPerGoodDie.toFixed(0)}</text>
+        <text x="140" y="468" fill="#f8fafc" fontSize="11" fontWeight="bold">{metrics.goodDiesPerWafer.toFixed(1)}</text>
+        <text x="140" y="485" fill={metrics.chipletSystemCost < metrics.costPerGoodDie ? '#4ade80' : '#fbbf24'} fontSize="11" fontWeight="bold" filter="url(#mdaSoftGlow)">${metrics.chipletSystemCost.toFixed(0)}</text>
+
+        {/* Row 22: Insight text (y=451) - right side */}
+        <text x="280" y="451" fill="#f8fafc" fontSize="11" fontWeight="500">
+          {dieSize > 600 ? 'Large die: low yield' : metrics.thermallyLimited ? 'Thermal limit hit' : 'Within limits'}
+        </text>
+        <text x="280" y="468" fill="#a5b4fc" fontSize="11">
+          {useChiplets ? `${chipletCount} chiplets: better` : 'Enable chiplets'}
+        </text>
+
+        {/* Reticle label - shown conditionally at top of progress bar area */}
+        {dieSize > 700 && (
+          <text x="260" y="491" fill="#fca5a5" fontSize="11" fontWeight="bold" textAnchor="middle">
+            Reticle limit exceeded!
+          </text>
+        )}
       </svg>
     );
   };
@@ -1211,7 +1000,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
   const renderControls = () => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '500px', margin: '0 auto' }}>
       <div>
-        <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '8px', fontSize: '14px' }}>
+        <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '4px', fontSize: '14px' }}>
           Die Size: {dieSize} mm2 {dieSize > 858 ? '(EXCEEDS RETICLE)' : ''}
         </label>
         <input
@@ -1221,13 +1010,16 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
           step="25"
           value={dieSize}
           onChange={(e) => setDieSize(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', accentColor: '#8b5cf6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
+          <span>small (100mm²)</span><span>large (1000mm²)</span>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
         <div>
-          <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '8px', fontSize: '14px' }}>
+          <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '4px', fontSize: '14px' }}>
             Defect Density: {defectDensity.toFixed(2)} /cm2
           </label>
           <input
@@ -1237,12 +1029,15 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
             step="0.01"
             value={defectDensity}
             onChange={(e) => setDefectDensity(parseFloat(e.target.value))}
-            style={{ width: '100%' }}
+            style={{ width: '100%', accentColor: '#8b5cf6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
           />
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
+            <span>low</span><span>high</span>
+          </div>
         </div>
 
         <div>
-          <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '8px', fontSize: '14px' }}>
+          <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '4px', fontSize: '14px' }}>
             Power Density: {powerDensity.toFixed(1)} W/mm2
           </label>
           <input
@@ -1252,13 +1047,16 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
             step="0.1"
             value={powerDensity}
             onChange={(e) => setPowerDensity(parseFloat(e.target.value))}
-            style={{ width: '100%' }}
+            style={{ width: '100%', accentColor: '#8b5cf6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
           />
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
+            <span>cool</span><span>hot</span>
+          </div>
         </div>
       </div>
 
       <div>
-        <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '8px', fontSize: '14px' }}>
+        <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '4px', fontSize: '14px' }}>
           Cooling Capacity: {coolingCapacity} W
         </label>
         <input
@@ -1268,8 +1066,11 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
           step="50"
           value={coolingCapacity}
           onChange={(e) => setCoolingCapacity(parseInt(e.target.value))}
-          style={{ width: '100%' }}
+          style={{ width: '100%', accentColor: '#8b5cf6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
+          <span>low (100W)</span><span>max (1000W)</span>
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: '16px' }}>
@@ -1300,8 +1101,11 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
               step="1"
               value={chipletCount}
               onChange={(e) => setChipletCount(parseInt(e.target.value))}
-              style={{ width: '100%' }}
+              style={{ width: '100%', accentColor: '#8b5cf6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
             />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
+              <span>2</span><span>8</span>
+            </div>
           </div>
         )}
       </div>
@@ -1325,8 +1129,8 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
         {renderVisualization()}
 
         <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '20px', borderRadius: '12px', marginTop: '24px', borderLeft: '4px solid #8b5cf6' }}>
-          <p style={{ fontSize: '16px', lineHeight: 1.6 }}>
-            If bigger chips mean more transistors and more performance, why do not chip designers just make one massive die? The answer involves yield curves, thermal physics, and the reticle limit - manufacturing realities that shape processor architecture.
+          <p style={{ fontSize: '16px', lineHeight: 1.6, fontWeight: 400 }}>
+            Explore how manufacturing realities shape chip design. If bigger chips mean more transistors and more performance, why do not chip designers just make one massive die? The answer involves yield curves, thermal physics, and the reticle limit - manufacturing constraints that drive architecture decisions.
           </p>
         </div>
 
@@ -1434,14 +1238,23 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
     return renderPhaseContent(
       <div style={{ maxWidth: '700px', margin: '0 auto' }}>
         <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Explore Manufacturing Limits</h2>
-        <p style={{ textAlign: 'center', color: '#e2e8f0', marginBottom: '24px' }}>
-          Adjust die size, defect density, and power to see practical ceilings
+        <p style={{ textAlign: 'center', color: '#e2e8f0', marginBottom: '8px' }}>
+          The visualization displays current yield, thermal status, and cost metrics in real-time as you adjust the actual chip parameters below.
+        </p>
+        <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: '14px', marginBottom: '16px' }}>
+          When you increase die size, yield drops exponentially. If power density becomes larger, thermal throttling begins. Adjust each slider to see how manufacturing constraints interact.
         </p>
 
         {renderVisualization()}
         {renderControls()}
 
-        <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginTop: '24px' }}>
+        <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '16px', borderRadius: '12px', marginTop: '16px', borderLeft: '4px solid #60a5fa' }}>
+          <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '0' }}>
+            <strong>Yield formula:</strong> Yield is calculated as e<sup>-(defect_density × die_area)</sup>. The relationship between die size and yield describes how larger dies exponentially amplify the impact of defects — a ratio of die area to defect-free probability.
+          </p>
+        </div>
+
+        <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginTop: '16px' }}>
           <h3 style={{ color: '#8b5cf6', marginBottom: '12px' }}>Try These Experiments:</h3>
           <ul style={{ color: '#e2e8f0', lineHeight: 1.8, paddingLeft: '20px' }}>
             <li>Increase die size past 600mm2 - watch yield collapse</li>
@@ -1558,6 +1371,24 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
     return renderPhaseContent(
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
         <h2 style={{ textAlign: 'center', color: '#f59e0b', marginBottom: '24px' }}>The Twist: Chiplet Architecture</h2>
+
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+          <svg width="100%" height="200" viewBox="0 0 500 200" style={{ maxWidth: '500px' }}>
+            <rect width="500" height="200" fill="#0f172a" rx="8" />
+            <text x="250" y="22" fill="#f59e0b" fontSize="14" textAnchor="middle" fontWeight="bold">Monolithic vs Chiplet Architecture</text>
+            <rect x="30" y="40" width="160" height="120" fill="#3b82f6" stroke="#60a5fa" strokeWidth="2" rx="6" />
+            <text x="110" y="107" fill="#f8fafc" fontSize="13" textAnchor="middle" fontWeight="bold">MONOLITHIC</text>
+            <text x="110" y="125" fill="#93c5fd" fontSize="11" textAnchor="middle">800mm² single die</text>
+            <text x="110" y="172" fill="#ef4444" fontSize="12" textAnchor="middle">Yield: ~30%</text>
+            <text x="250" y="107" fill="#a855f7" fontSize="14" textAnchor="middle" fontWeight="bold">VS</text>
+            <rect x="315" y="40" width="65" height="55" fill="#22c55e" stroke="#4ade80" strokeWidth="1.5" rx="4" />
+            <rect x="390" y="40" width="65" height="55" fill="#22c55e" stroke="#4ade80" strokeWidth="1.5" rx="4" />
+            <rect x="315" y="105" width="65" height="55" fill="#22c55e" stroke="#4ade80" strokeWidth="1.5" rx="4" />
+            <rect x="390" y="105" width="65" height="55" fill="#22c55e" stroke="#4ade80" strokeWidth="1.5" rx="4" />
+            <text x="420" y="172" fill="#4ade80" fontSize="12" textAnchor="middle">Yield: ~90%</text>
+            <text x="372" y="185" fill="#86efac" fontSize="11" textAnchor="middle">4 chiplets, 200mm² each</text>
+          </svg>
+        </div>
 
         <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
           <p style={{ fontSize: '16px', marginBottom: '12px' }}>
@@ -1800,9 +1631,9 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
             marginBottom: '24px',
           }}>
             <h2 style={{ color: testScore >= 8 ? '#22c55e' : '#ef4444', marginBottom: '8px' }}>
-              {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
+              Test Complete! {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
             </h2>
-            <p style={{ fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
+            <p style={{ fontSize: '24px', fontWeight: 'bold' }}>You Scored: {testScore} / 10</p>
           </div>
 
           {testQuestions.map((q, qIndex) => {
@@ -1892,7 +1723,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
               WebkitTapHighlightColor: 'transparent',
             }}
           >
-            {testScore >= 8 ? 'Complete Mastery' : 'Review & Retry'}
+            {testScore >= 8 ? 'Unlock Mastery' : 'Review & Retry'}
           </button>
         </div>
       );
@@ -1921,6 +1752,12 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
               }}
             />
           ))}
+        </div>
+
+        <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px', borderLeft: '3px solid #8b5cf6' }}>
+          <p style={{ color: '#c4b5fd', fontSize: '13px', margin: 0 }}>
+            In semiconductor manufacturing, defects are randomly distributed across wafers. As die area increases, the probability that any single die contains at least one fatal defect grows exponentially. The Poisson yield model captures this relationship, which is why yield management and architecture choices like chiplets are critical to cost and performance.
+          </p>
         </div>
 
         <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
@@ -2010,7 +1847,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
   if (phase === 'mastery') {
     return renderPhaseContent(
       <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-        <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+        <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
         <h1 style={{ color: '#22c55e', marginBottom: '8px' }}>Mastery Achieved!</h1>
         <p style={{ color: '#e2e8f0', marginBottom: '24px' }}>
           You understand how manufacturing shapes chip architecture

@@ -20,8 +20,8 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
     twist_predict: 'New Variable',
     twist_play: 'Explore Twist',
     twist_review: 'Transfer',
-    transfer: 'Apply',
-    test: 'Quiz',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
     mastery: 'Mastery'
   };
 
@@ -77,6 +77,7 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [transferGotIt, setTransferGotIt] = useState<Set<number>>(new Set());
   const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
@@ -354,6 +355,7 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
               border: 'none',
               cursor: canGoNext ? 'pointer' : 'not-allowed',
               opacity: canGoNext ? 1 : 0.5,
+              transition: 'all 0.2s ease',
             }}
           >{nextLabel}</button>
         )}
@@ -693,7 +695,7 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
             <h1 style={{ fontSize: '32px', marginTop: '8px', background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               Orbital Mechanics Basics
             </h1>
-            <p style={{ color: '#e2e8f0', fontSize: '18px', marginTop: '8px' }}>Why don't satellites just fall down?</p>
+            <p style={{ color: '#e2e8f0', fontSize: '18px', marginTop: '8px', fontWeight: 400 }}>Why don't satellites just fall down?</p>
 
             {renderVisualization()}
 
@@ -708,7 +710,7 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
             </div>
           </div>
         </div>
-        {renderBottomBar(true, 'Discover the Answer')}
+        {renderBottomBar(true, 'Explore the Answer')}
       </div>
     );
   }
@@ -763,8 +765,11 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
         <div style={{ flex: 1, padding: '24px', paddingTop: '60px', paddingBottom: '100px', overflowY: 'auto' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Explore Orbital Mechanics</h2>
-            <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
-              Use the slider below to change orbital altitude and see how parameters change
+            <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '8px' }}>
+              The visualization displays how orbital velocity, period, and gravity change with altitude.
+            </p>
+            <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px', fontSize: '13px' }}>
+              Adjust the altitude slider to see how all orbital parameters respond in real time.
             </p>
 
             {renderVisualization()}
@@ -793,9 +798,9 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
             <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '16px', borderRadius: '12px', marginTop: '16px' }}>
               <h4 style={{ color: '#f59e0b', marginBottom: '8px' }}>Cause and Effect:</h4>
               <ul style={{ color: '#e2e8f0', lineHeight: 1.8, paddingLeft: '20px', fontSize: '14px' }}>
-                <li>Drag slider higher → orbital velocity DECREASES (v ∝ 1/√r)</li>
-                <li>Higher altitude → gravity weaker → longer orbital period</li>
-                <li>Escape velocity always = 1.41× orbital velocity at same altitude</li>
+                <li>When altitude increases, orbital velocity decreases because weaker gravity requires less centripetal speed (v ∝ 1/√r)</li>
+                <li>Higher altitude causes weaker gravity, which leads to a longer orbital period</li>
+                <li>Escape velocity always = 1.41× orbital velocity at same altitude — this affects mission design</li>
               </ul>
             </div>
           </div>
@@ -1037,18 +1042,37 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
                 <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
                   <p style={{ color: '#3b82f6', fontWeight: 'bold', fontSize: '14px' }}>{app.question}</p>
                 </div>
-                {!transferCompleted.has(index) ? (
-                  <button
-                    onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                    style={{
-                      padding: '10px 20px', borderRadius: '8px',
-                      border: '1px solid #3b82f6', background: 'transparent',
-                      color: '#3b82f6', cursor: 'pointer',
-                    }}
-                  >Reveal Answer</button>
-                ) : (
+                {transferGotIt.has(index) ? (
                   <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #22c55e' }}>
                     <p style={{ color: '#e2e8f0', fontSize: '14px' }}>{app.answer}</p>
+                  </div>
+                ) : (
+                  <div>
+                    {transferCompleted.has(index) && (
+                      <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #22c55e', marginBottom: '8px' }}>
+                        <p style={{ color: '#e2e8f0', fontSize: '14px' }}>{app.answer}</p>
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {!transferCompleted.has(index) && (
+                        <button
+                          onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                          style={{
+                            padding: '10px 20px', borderRadius: '8px',
+                            border: '1px solid #3b82f6', background: 'transparent',
+                            color: '#3b82f6', cursor: 'pointer',
+                          }}
+                        >Reveal Answer</button>
+                      )}
+                      <button
+                        onClick={() => setTransferGotIt(new Set([...transferGotIt, index]))}
+                        style={{
+                          padding: '10px 20px', borderRadius: '8px',
+                          border: 'none', background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                          color: 'white', cursor: 'pointer', fontWeight: 600,
+                        }}
+                      >Got It</button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -1126,7 +1150,7 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
           <div style={{ maxWidth: '600px', margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2>Knowledge Test</h2>
-              <span style={{ color: '#94a3b8' }}>{currentTestQuestion + 1} of 10</span>
+              <span style={{ color: '#94a3b8' }}>Question {currentTestQuestion + 1} of 10</span>
             </div>
 
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>

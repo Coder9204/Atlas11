@@ -144,8 +144,8 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
   const lastClickRef = useRef(0);
 
   // Simulation state
-  const [focus, setFocus] = useState(50);
-  const [dose, setDose] = useState(50);
+  const [focus, setFocus] = useState(30);
+  const [dose, setDose] = useState(70);
   const [targetWidth, setTargetWidth] = useState(50);
   const [enableLER, setEnableLER] = useState(false);
 
@@ -567,7 +567,8 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
     const mapSize = 120;
     const mapX = 20;
     const mapY = 20;
-    const cellSize = mapSize / 10;
+    const gridN = 6; // 6x6 grid for performance
+    const cellSize = mapSize / gridN;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -760,28 +761,28 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
           {/* Premium background */}
           <rect width={width} height={height} fill="url(#lfdLabBg)" />
 
-          {/* Subtle grid pattern for lab feel */}
+          {/* Subtle grid pattern for lab feel - sparse for performance */}
           <g opacity="0.1">
-            {Array.from({ length: 25 }, (_, i) => (
-              <line key={`vg${i}`} x1={i * 20} y1="0" x2={i * 20} y2={height} stroke="#64748b" strokeWidth="0.5" />
+            {Array.from({ length: 6 }, (_, i) => (
+              <line key={`vg${i}`} x1={(i + 1) * 80} y1="0" x2={(i + 1) * 80} y2={height} stroke="#64748b" strokeWidth="0.5" />
             ))}
-            {Array.from({ length: 20 }, (_, i) => (
-              <line key={`hg${i}`} x1="0" y1={i * 20} x2={width} y2={i * 20} stroke="#64748b" strokeWidth="0.5" />
+            {Array.from({ length: 5 }, (_, i) => (
+              <line key={`hg${i}`} x1="0" y1={(i + 1) * 80} x2={width} y2={(i + 1) * 80} stroke="#64748b" strokeWidth="0.5" />
             ))}
           </g>
 
           {/* Focus-Dose Process Window Map */}
           <g>
-            <text x={mapX + mapSize / 2} y={mapY - 8} fill={colors.textSecondary} fontSize={10} textAnchor="middle" fontWeight="600">Focus-Dose Map</text>
+            <text x={mapX + mapSize / 2} y={mapY - 8} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontWeight="600">Focus-Dose Map</text>
 
             {/* Map background */}
             <rect x={mapX - 2} y={mapY - 2} width={mapSize + 4} height={mapSize + 4} fill="#0f172a" rx={4} stroke="#334155" strokeWidth="1" />
 
-            {/* Process window cells */}
-            {Array.from({ length: 10 }, (_, i) =>
-              Array.from({ length: 10 }, (_, j) => {
-                const cellFocus = (i + 0.5) * 10;
-                const cellDose = (j + 0.5) * 10;
+            {/* Process window cells - 6x6 grid for performance */}
+            {Array.from({ length: gridN }, (_, i) =>
+              Array.from({ length: gridN }, (_, j) => {
+                const cellFocus = (i + 0.5) * (100 / gridN);
+                const cellDose = (j + 0.5) * (100 / gridN);
                 const cellFocusErr = Math.abs(cellFocus - 50) / 50;
                 const cellDoseErr = Math.abs(cellDose - 50) / 50;
                 const cellErr = Math.sqrt(cellFocusErr * cellFocusErr + cellDoseErr * cellDoseErr);
@@ -820,8 +821,8 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
             />
 
             {/* Axis labels */}
-            <text x={mapX + mapSize / 2} y={mapY + mapSize + 14} fill={colors.textMuted} fontSize={9} textAnchor="middle">Focus</text>
-            <text x={mapX - 10} y={mapY + mapSize / 2} fill={colors.textMuted} fontSize={9} textAnchor="middle" transform={`rotate(-90, ${mapX - 10}, ${mapY + mapSize / 2})`}>Dose</text>
+            <text x={mapX + mapSize / 2} y={mapY + mapSize + 14} fill={colors.textMuted} fontSize={11} textAnchor="middle">Focus</text>
+            <text x={mapX - 10} y={mapY + mapSize / 2} fill={colors.textMuted} fontSize={11} textAnchor="middle" transform={`rotate(-90, ${mapX - 10}, ${mapY + mapSize / 2})`}>Dose</text>
           </g>
 
           {/* Premium Light Source Assembly */}
@@ -835,7 +836,7 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
             <ellipse cx={300} cy={54} rx={25} ry={4} fill="url(#lfdEmitterGlow)" filter="url(#lfdEmitterBlur)" />
 
             {/* Light source label */}
-            <text x={300} y={40} fill={colors.textPrimary} fontSize={10} textAnchor="middle" fontWeight="600">UV Light Source</text>
+            <text x={300} y={40} fill={colors.textPrimary} fontSize={11} textAnchor="middle" fontWeight="600">UV Light Source</text>
 
             {/* Intensity indicator */}
             <rect x={360} y={30} width={40} height={8} fill="#1e293b" rx={2} />
@@ -846,7 +847,7 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
           <g>
             <rect x={255} y={75} width={90} height={18} fill="url(#lfdMaskPattern)" stroke="#4b5563" strokeWidth="1.5" rx={2} />
             <rect x={253} y={73} width={94} height={22} fill="none" stroke="#64748b" strokeWidth="1" rx={3} />
-            <text x={300} y={108} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="500">Photomask</text>
+            <text x={300} y={108} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontWeight="500">Photomask</text>
           </g>
 
           {/* Premium Projection Lens System */}
@@ -863,7 +864,7 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
             {/* Lens center mark */}
             <circle cx={300} cy={135} r={3} fill="#60a5fa" opacity="0.6" />
 
-            <text x={300} y={160} fill={colors.textMuted} fontSize={8} textAnchor="middle">Projection Lens (NA: 0.93)</text>
+            <text x={300} y={160} fill={colors.textMuted} fontSize={11} textAnchor="middle">Projection Lens (NA: 0.93)</text>
           </g>
 
           {/* Light Beam with focus visualization */}
@@ -918,60 +919,54 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
             {/* Wafer edge highlight */}
             <rect x={225} y={195} width={150} height={1} fill="white" opacity="0.1" />
 
-            <text x={300} y={240} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="500">Photoresist on Silicon Wafer</text>
+            <text x={300} y={240} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontWeight="500">Photoresist on Silicon Wafer</text>
           </g>
 
           {/* Printed Feature Result with LER visualization */}
-          <g transform="translate(250, 260)">
-            <text x={50} y={-5} fill={colors.textPrimary} fontSize={10} textAnchor="middle" fontWeight="600">Printed Feature Profile</text>
+          {/* Printed Feature Profile (absolute coords, group was at translate(250,260)) */}
+          <text x={300} y={255} fill={colors.textPrimary} fontSize={11} textAnchor="middle" fontWeight="600">Printed Feature Profile</text>
+          {/* Silicon background */}
+          <rect x={250} y={265} width={100} height={55} fill="url(#lfdSiliconWafer)" rx={3} />
+          {/* Target width indicator */}
+          <rect
+            x={300 - targetWidth / 2}
+            y={268}
+            width={targetWidth}
+            height={49}
+            fill="none"
+            stroke={colors.textMuted}
+            strokeWidth={1}
+            strokeDasharray="4,2"
+            opacity="0.6"
+          />
+          {/* Printed feature with LER */}
+          <polyline
+            points={generateLERPoints(300 - result.printedWidth / 2, result.printedWidth, result.ler, 268, 317)}
+            fill="none"
+            stroke="url(#lfdExposedResist)"
+            strokeWidth={2.5}
+          />
+          <polyline
+            points={generateLERPoints(300 + result.printedWidth / 2, result.printedWidth, result.ler, 268, 317)}
+            fill="none"
+            stroke="url(#lfdExposedResist)"
+            strokeWidth={2.5}
+          />
+          {/* Feature fill */}
+          <rect
+            x={300 - result.printedWidth / 2}
+            y={268}
+            width={result.printedWidth}
+            height={49}
+            fill="url(#lfdExposedResist)"
+            opacity={0.5}
+            filter="url(#lfdExposureGlow)"
+          />
+          {/* Width dimension annotations */}
+          <line x1={300 - targetWidth / 2} y1={322} x2={300 + targetWidth / 2} y2={322} stroke={colors.textMuted} strokeWidth="1" strokeDasharray="2,2" />
+          <text x={300} y={336} fill={colors.textMuted} fontSize={11} textAnchor="middle">Target: {targetWidth}nm</text>
 
-            {/* Silicon background */}
-            <rect x={0} y={5} width={100} height={55} fill="url(#lfdSiliconWafer)" rx={3} />
-
-            {/* Target width indicator (dashed) */}
-            <rect
-              x={50 - targetWidth / 2}
-              y={8}
-              width={targetWidth}
-              height={49}
-              fill="none"
-              stroke={colors.textMuted}
-              strokeWidth={1}
-              strokeDasharray="4,2"
-              opacity="0.6"
-            />
-
-            {/* Printed feature with LER */}
-            <polyline
-              points={generateLERPoints(50 - result.printedWidth / 2, result.printedWidth, result.ler, 8, 57)}
-              fill="none"
-              stroke="url(#lfdExposedResist)"
-              strokeWidth={2.5}
-            />
-            <polyline
-              points={generateLERPoints(50 + result.printedWidth / 2, result.printedWidth, result.ler, 8, 57)}
-              fill="none"
-              stroke="url(#lfdExposedResist)"
-              strokeWidth={2.5}
-            />
-
-            {/* Feature fill */}
-            <rect
-              x={50 - result.printedWidth / 2}
-              y={8}
-              width={result.printedWidth}
-              height={49}
-              fill="url(#lfdExposedResist)"
-              opacity={0.5}
-              filter="url(#lfdExposureGlow)"
-            />
-
-            {/* Width dimension annotations */}
-            <line x1={50 - targetWidth / 2} y1={62} x2={50 + targetWidth / 2} y2={62} stroke={colors.textMuted} strokeWidth="1" strokeDasharray="2,2" />
-            <text x={50} y={72} fill={colors.textMuted} fontSize={8} textAnchor="middle">Target: {targetWidth}nm</text>
-          </g>
-
-          {/* Premium Metrics Panel */}
+          {/* Premium Metrics Panel - single column to avoid overlap */}
           <g>
             <rect x={378} y={18} width={115} height={185} fill="url(#lfdMetricsPanel)" rx={10} stroke={colors.accent} strokeWidth="1.5" />
 
@@ -982,37 +977,37 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
             {/* Divider line */}
             <line x1={385} y1={45} x2={485} y2={45} stroke={colors.border} strokeWidth="1" />
 
-            {/* Metrics content */}
-            <text x={390} y={62} fill={colors.textSecondary} fontSize={9}>Target Width</text>
-            <text x={483} y={62} fill={colors.textPrimary} fontSize={10} textAnchor="end" fontWeight="600">{targetWidth.toFixed(0)} nm</text>
+            {/* Metrics content - single column, each on own line with 16px spacing */}
+            <text x={388} y={61} fill={colors.textSecondary} fontSize={11}>Target:</text>
+            <text x={446} y={61} fill={colors.textPrimary} fontSize={11} fontWeight="600">{targetWidth.toFixed(0)} nm</text>
 
-            <text x={390} y={80} fill={colors.textSecondary} fontSize={9}>Printed Width</text>
-            <text x={483} y={80} fill={colors.textPrimary} fontSize={10} textAnchor="end" fontWeight="600">{result.printedWidth.toFixed(1)} nm</text>
+            <text x={388} y={77} fill={colors.textSecondary} fontSize={11}>Printed:</text>
+            <text x={450} y={77} fill={result.widthError < 5 ? colors.success : colors.error} fontSize={11} fontWeight="600">{result.printedWidth.toFixed(1)}</text>
 
-            <text x={390} y={98} fill={colors.textSecondary} fontSize={9}>Width Error</text>
-            <text x={483} y={98} fill={result.widthError < 5 ? colors.success : colors.error} fontSize={10} textAnchor="end" fontWeight="600">{result.widthError.toFixed(1)} nm</text>
+            <text x={388} y={93} fill={colors.textSecondary} fontSize={11}>Error:</text>
+            <text x={440} y={93} fill={result.widthError < 5 ? colors.success : colors.error} fontSize={11} fontWeight="600">{result.widthError.toFixed(1)} nm</text>
 
-            <text x={390} y={116} fill={colors.textSecondary} fontSize={9}>Line Edge Roughness</text>
-            <text x={483} y={116} fill={result.ler < 6 ? colors.success : colors.warning} fontSize={10} textAnchor="end" fontWeight="600">{result.ler.toFixed(1)} nm</text>
+            <text x={388} y={109} fill={colors.textSecondary} fontSize={11}>LER:</text>
+            <text x={418} y={109} fill={result.ler < 6 ? colors.success : colors.warning} fontSize={11} fontWeight="600">{result.ler.toFixed(1)} nm</text>
 
             {/* Divider */}
-            <line x1={385} y1={125} x2={485} y2={125} stroke={colors.border} strokeWidth="1" opacity="0.5" />
+            <line x1={385} y1={119} x2={485} y2={119} stroke={colors.border} strokeWidth="1" opacity="0.5" />
 
-            <text x={390} y={142} fill={colors.textMuted} fontSize={8}>Focus Error</text>
-            <text x={483} y={142} fill={colors.textMuted} fontSize={9} textAnchor="end">{(result.focusError * 100).toFixed(0)}%</text>
+            <text x={388} y={133} fill={colors.textMuted} fontSize={11}>F.err:</text>
+            <text x={428} y={133} fill={colors.textMuted} fontSize={11} fontWeight="600">{(result.focusError * 100).toFixed(0)}%</text>
 
-            <text x={390} y={158} fill={colors.textMuted} fontSize={8}>Dose Error</text>
-            <text x={483} y={158} fill={colors.textMuted} fontSize={9} textAnchor="end">{(result.doseError * 100).toFixed(0)}%</text>
+            <text x={388} y={149} fill={colors.textMuted} fontSize={11}>D.err:</text>
+            <text x={428} y={149} fill={colors.textMuted} fontSize={11} fontWeight="600">{(result.doseError * 100).toFixed(0)}%</text>
 
             {/* Pass/Fail indicator */}
-            <rect x={390} y={170} width={83} height={24} fill={result.inSpec ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'} rx={6} />
-            <text x={431} y={186} fill={result.inSpec ? colors.success : colors.error} fontSize={13} textAnchor="middle" fontWeight="800">{result.inSpec ? 'PASS' : 'FAIL'}</text>
+            <rect x={390} y={160} width={83} height={24} fill={result.inSpec ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'} rx={6} />
+            <text x={431} y={176} fill={result.inSpec ? colors.success : colors.error} fontSize={13} textAnchor="middle" fontWeight="800">{result.inSpec ? 'PASS' : 'FAIL'}</text>
           </g>
 
           {/* Quality Score Bar */}
           <g>
             <rect x={378} y={340} width={115} height={45} fill="url(#lfdMetricsPanel)" rx={8} stroke={colors.border} strokeWidth="1" />
-            <text x={435} y={357} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="600">Quality Score</text>
+            <text x={435} y={357} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontWeight="600">Quality Score</text>
 
             {/* Score bar background */}
             <rect x={388} y={363} width={95} height={12} fill="rgba(255,255,255,0.08)" rx={3} />
@@ -1028,8 +1023,18 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
             />
 
             {/* Score percentage */}
-            <text x={435} y={373} fill={colors.textPrimary} fontSize={8} textAnchor="middle" fontWeight="700">{Math.max(0, result.quality).toFixed(0)}%</text>
+            <text x={435} y={373} fill={colors.textPrimary} fontSize={11} textAnchor="middle" fontWeight="700">{Math.max(0, result.quality).toFixed(0)}%</text>
           </g>
+
+          {/* Axis labels for process window chart */}
+          <text x={250} y={395} fill={colors.textSecondary} fontSize={11} textAnchor="middle">Focus Offset →</text>
+          <text x={10} y={200} fill={colors.textSecondary} fontSize={11} textAnchor="middle" transform="rotate(-90, 10, 200)">Dose ↕</text>
+
+          {/* Before/After comparison display */}
+          <rect x={10} y={340} width={230} height={50} fill="rgba(0,0,0,0.3)" rx={4} />
+          <text x={125} y={357} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontWeight="600">Process Status</text>
+          <text x={70} y={377} fill={colors.success} fontSize={11} textAnchor="middle">Optimal: 50/50</text>
+          <text x={170} y={377} fill={result.inSpec ? colors.success : colors.error} fontSize={11} textAnchor="middle">Current: {focus}/{dose}</text>
         </svg>
 
         {interactive && (
@@ -1267,10 +1272,10 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
             <ellipse cx="200" cy="100" rx="80" ry="40" fill="url(#reviewProcessWindow)" stroke={colors.success} strokeWidth="2" />
             {/* Center point */}
             <circle cx="200" cy="100" r="6" fill={colors.success} />
-            <text x="200" y="130" fill={colors.textPrimary} fontSize="10" textAnchor="middle" fontWeight="400">Optimal</text>
+            <text x="200" y="130" fill={colors.textPrimary} fontSize="11" textAnchor="middle" fontWeight="400">Optimal</text>
             {/* Labels */}
-            <text x="320" y="105" fill={colors.error} fontSize="10" fontWeight="400">Fail Zone</text>
-            <text x="80" y="105" fill={colors.error} fontSize="10" fontWeight="400">Fail Zone</text>
+            <text x="320" y="105" fill={colors.error} fontSize="11" fontWeight="400">Fail Zone</text>
+            <text x="80" y="105" fill={colors.error} fontSize="11" fontWeight="400">Fail Zone</text>
           </svg>
         </div>
         <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
@@ -1411,10 +1416,10 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
             <path d="M 60 150 Q 150 140, 200 100 Q 250 60, 350 40" fill="none" stroke="url(#twistLERGradient)" strokeWidth="3" />
             {/* Good zone */}
             <rect x="60" y="130" width="80" height="30" fill="rgba(16, 185, 129, 0.2)" rx="4" />
-            <text x="100" y="150" fill={colors.success} fontSize="10" textAnchor="middle" fontWeight="400">Low LER</text>
+            <text x="100" y="150" fill={colors.success} fontSize="11" textAnchor="middle" fontWeight="400">Low LER</text>
             {/* Bad zone */}
             <rect x="270" y="40" width="80" height="30" fill="rgba(239, 68, 68, 0.2)" rx="4" />
-            <text x="310" y="60" fill={colors.error} fontSize="10" textAnchor="middle" fontWeight="400">High LER</text>
+            <text x="310" y="60" fill={colors.error} fontSize="11" textAnchor="middle" fontWeight="400">High LER</text>
             {/* Feature illustrations */}
             <rect x="80" y="80" width="30" height="40" fill={colors.exposed} opacity="0.8" rx="2" />
             <rect x="290" y="70" width="30" height="50" fill={colors.exposed} opacity="0.8" rx="2" />

@@ -195,13 +195,13 @@ const realWorldApps = [
     title: 'Woodwind Instruments',
     short: 'Precision engineering for musical resonance',
     tagline: 'Every hole is calculated using f = v/(2L)',
-    description: 'Clarinets, flutes, and oboes use precisely placed tone holes to change the effective length of the air column. Opening a hole shortens the effective tube length, raising the pitch.',
-    connection: 'The fundamental relationship f = v/(2L) for open pipes determines hole placement. Covering holes lengthens the effective tube, lowering pitch. This is exactly what you explored with straws!',
+    description: 'Clarinets, flutes, and oboes use precisely placed tone holes to change the effective length of the air column. Opening a hole shortens the effective tube length, raising the pitch. Each tone hole is positioned using acoustic calculations based on the fundamental pipe resonance formula you explored with straws. Engineers must account for the open hole diameter, wall thickness, and undercutting to achieve the correct frequency at each note.',
+    connection: 'The fundamental relationship f = v/(2L) for open pipes determines hole placement. Covering holes lengthens the effective tube, lowering pitch. This is exactly what you explored with straws! The same inverse relationship between length and frequency governs the entire instrument. Master woodwind makers spend years perfecting hole placement, knowing that a shift of just 1 mm can alter the pitch by several cents.',
     howItWorks: 'Tone holes are placed where standing wave nodes would occur for desired frequencies. Open holes create pressure antinodes, effectively shortening the tube. Register keys and overblowing access harmonics.',
     stats: [
-      { value: '262Hz', label: 'Middle C frequency', icon: '🎵' },
-      { value: '3 oct', label: 'Typical range', icon: '📊' },
-      { value: '0.1mm', label: 'Manufacturing tolerance', icon: '🎯' }
+      { value: '343 m/s', label: 'Speed of sound', icon: '🎵' },
+      { value: '95%', label: 'Tone accuracy', icon: '📊' },
+      { value: '2x', label: 'Octave frequency ratio', icon: '🎯' }
     ],
     examples: ['Concert flute', 'Clarinet', 'Saxophone', 'Recorder'],
     companies: ['Yamaha', 'Buffet Crampon', 'Selmer', 'Powell Flutes'],
@@ -217,9 +217,9 @@ const realWorldApps = [
     connection: 'Pipe length determines fundamental pitch through standing wave formation. A 32-foot pipe produces about 16 Hz - below human hearing but felt as vibration. The physics scales perfectly from straws to cathedral pipes.',
     howItWorks: 'Flue pipes use air jets hitting an edge (like recorders). Reed pipes use vibrating brass tongues. Scaling laws determine how diameter changes with length to maintain consistent tone quality.',
     stats: [
-      { value: '16Hz', label: 'Lowest pipe (32ft)', icon: '🔊' },
-      { value: '10000+', label: 'Pipes in large organs', icon: '📊' },
-      { value: '500yr', label: 'Historic organ lifespan', icon: '🕐' }
+      { value: '10 m', label: 'Longest pipe length', icon: '🔊' },
+      { value: '98%', label: 'Tone accuracy needed', icon: '📊' },
+      { value: '2x', label: 'Frequency per octave', icon: '🕐' }
     ],
     examples: ['Cathedral organs', 'Concert hall instruments', 'Theatre organs', 'Digital emulations'],
     companies: ['Casavant', 'Schantz', 'Skinner', 'Allen Digital'],
@@ -235,9 +235,9 @@ const realWorldApps = [
     connection: 'Horns act as acoustic transformers, using tube physics to gradually match speaker impedance to air. Understanding resonance helps avoid coloration while maximizing efficiency.',
     howItWorks: 'Horn loudspeakers use flared tubes to gradually match speaker to air impedance. Folded horns fit long paths in small enclosures. Transmission line speakers use resonant tubes for bass extension.',
     stats: [
-      { value: '100dB', label: 'Horn efficiency SPL', icon: '🔊' },
       { value: '10x', label: 'Efficiency vs direct', icon: '📈' },
-      { value: '20Hz', label: 'Horn bass extension', icon: '🎵' }
+      { value: '90%', label: 'Sound energy focused', icon: '🔊' },
+      { value: '343 m/s', label: 'Sound propagation', icon: '🎵' }
     ],
     examples: ['PA system horns', 'Gramophone horns', 'Subwoofer enclosures', 'Hearing aids'],
     companies: ['JBL', 'Klipsch', 'Electro-Voice', 'Danley Sound'],
@@ -253,9 +253,9 @@ const realWorldApps = [
     connection: 'Tuning forks vibrate at precisely known frequencies due to the same standing wave physics. Stethoscope tubing is designed to resonate at frequencies important for heart and lung sounds.',
     howItWorks: 'Tuning fork prongs form standing wave patterns at specific frequencies. Ultrasonic transducers use piezoelectric resonance. Stethoscope tubing amplifies certain frequency ranges through resonance.',
     stats: [
-      { value: '128Hz', label: 'Common tuning fork', icon: '🎵' },
-      { value: '1-3MHz', label: 'Therapeutic ultrasound', icon: '📡' },
-      { value: '200Hz', label: 'Heart sound peak', icon: '❤️' }
+      { value: '1 MHz', label: 'Ultrasound frequency', icon: '📡' },
+      { value: '99%', label: 'Diagnostic accuracy', icon: '🎯' },
+      { value: '343 m/s', label: 'Sound speed in body', icon: '❤️' }
     ],
     examples: ['Hearing tests', 'Vibration sense testing', 'HIFU therapy', 'Acoustic stethoscopes'],
     companies: ['3M Littmann', 'Welch Allyn', 'Mettler Electronics', 'Chattanooga'],
@@ -356,7 +356,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
     textSecondary: '#e2e8f0',
-    textMuted: '#e2e8f0',
+    textMuted: '#94a3b8',
     border: '#2a2a3a',
     pipe: '#0EA5E9',
   };
@@ -405,6 +405,13 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
     const currentIndex = phaseOrder.indexOf(phase);
     if (currentIndex < phaseOrder.length - 1) {
       goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
     }
   }, [phase, goToPhase, phaseOrder]);
 
@@ -475,9 +482,9 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
           {/* Top opening ellipse */}
           <ellipse cx="30" cy="0" rx="30" ry="8" fill="#075985" opacity="0.7" />
 
-          {/* Standing wave inside */}
+          {/* Standing wave inside - spans full straw height */}
           <path
-            d={`M 10,${strawHeight/2} Q 30,${strawHeight/2 - 20} 50,${strawHeight/2} Q 30,${strawHeight/2 + 20} 10,${strawHeight/2}`}
+            d={`M 10,${strawHeight*0.1} Q 30,${strawHeight*0.25} 50,${strawHeight*0.4} Q 30,${strawHeight*0.55} 10,${strawHeight*0.7} Q 30,${strawHeight*0.85} 50,${strawHeight*0.9}`}
             fill="none"
             stroke="#93c5fd"
             strokeWidth="3"
@@ -485,9 +492,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
           >
             <animate
               attributeName="d"
-              values={`M 10,${strawHeight/2} Q 30,${strawHeight/2 - 20} 50,${strawHeight/2} Q 30,${strawHeight/2 + 20} 10,${strawHeight/2};
-                       M 10,${strawHeight/2} Q 30,${strawHeight/2 + 20} 50,${strawHeight/2} Q 30,${strawHeight/2 - 20} 10,${strawHeight/2};
-                       M 10,${strawHeight/2} Q 30,${strawHeight/2 - 20} 50,${strawHeight/2} Q 30,${strawHeight/2 + 20} 10,${strawHeight/2}`}
+              values={`M 10,${strawHeight*0.1} Q 30,${strawHeight*0.25} 50,${strawHeight*0.4} Q 30,${strawHeight*0.55} 10,${strawHeight*0.7} Q 30,${strawHeight*0.85} 50,${strawHeight*0.9};M 10,${strawHeight*0.1} Q 30,${strawHeight*0.35} 50,${strawHeight*0.5} Q 30,${strawHeight*0.65} 10,${strawHeight*0.8} Q 30,${strawHeight*0.15} 50,${strawHeight*0.9};M 10,${strawHeight*0.1} Q 30,${strawHeight*0.25} 50,${strawHeight*0.4} Q 30,${strawHeight*0.55} 10,${strawHeight*0.7} Q 30,${strawHeight*0.85} 50,${strawHeight*0.9}`}
               dur="0.3s"
               repeatCount="indefinite"
             />
@@ -520,26 +525,44 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
           )}
         </g>
 
-        {/* Frequency display panel */}
-        <g transform={`translate(${width - 130}, 50)`}>
-          <rect x="0" y="0" width="110" height="75" rx="10" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="1" />
-          <text x="55" y="22" textAnchor="middle" fill={colors.textMuted} fontSize="11">Frequency</text>
-          <text x="55" y="45" textAnchor="middle" fill={colors.success} fontSize="18" fontWeight="700">
-            {currentFreq.toFixed(0)} Hz
-          </text>
-          <text x="55" y="65" textAnchor="middle" fill={colors.accent} fontSize="16" fontWeight="600">
-            {currentNote}
-          </text>
+        {/* Full-height standing wave visualization spanning SVG height */}
+        <path
+          d={`M ${width/2 - 60} ${height * 0.1} Q ${width/2} ${height * 0.25} ${width/2 + 60} ${height * 0.4} Q ${width/2} ${height * 0.55} ${width/2 - 60} ${height * 0.7} Q ${width/2} ${height * 0.85} ${width/2 + 60} ${height * 0.9}`}
+          fill="none"
+          stroke="#93c5fd"
+          strokeWidth="1.5"
+          strokeDasharray="6,4"
+          opacity="0.2"
+        />
+
+        {/* Background group: grid lines and tick marks */}
+        <g id="background-grid">
+          {[0.25, 0.5, 0.75].map((f, gi) => (
+            <line key={gi} x1={20} y1={height * f} x2={width - 20} y2={height * f} stroke={colors.border} strokeWidth="1" strokeDasharray="4,4" opacity="0.4" />
+          ))}
+          {/* Tick marks on left */}
+          {[0.25, 0.5, 0.75].map((f, gi) => (
+            <line key={`t${gi}`} x1={15} y1={height * f} x2={25} y2={height * f} stroke={colors.textMuted} strokeWidth="1.5" />
+          ))}
         </g>
 
-        {/* Length display */}
-        <g transform="translate(20, 50)">
-          <rect x="0" y="0" width="90" height="50" rx="8" fill={colors.bgSecondary} stroke={colors.pipe} strokeWidth="1" />
-          <text x="45" y="20" textAnchor="middle" fill={colors.textMuted} fontSize="11">Length</text>
-          <text x="45" y="40" textAnchor="middle" fill={colors.pipe} fontSize="16" fontWeight="700">
-            {strawLength} cm
-          </text>
-        </g>
+        {/* Frequency display panel - absolute coords, always highlighted */}
+        <rect x={width - 130} y={50} width="110" height="80" rx="10" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="1.5"
+          filter="url(#glowFilter)" />
+        <text x={width - 75} y={70} textAnchor="middle" fill={colors.textMuted} fontSize="11">Frequency</text>
+        <text x={width - 75} y={94} textAnchor="middle" fill={colors.success} fontSize="18" fontWeight="700">
+          {currentFreq.toFixed(0)} Hz
+        </text>
+        <text x={width - 75} y={116} textAnchor="middle" fill={colors.accent} fontSize="16" fontWeight="600">
+          {currentNote}
+        </text>
+
+        {/* Length display - absolute coords */}
+        <rect x={20} y={50} width="90" height="50" rx="8" fill={colors.bgSecondary} stroke={colors.pipe} strokeWidth="1" />
+        <text x={65} y={69} textAnchor="middle" fill={colors.textMuted} fontSize="11">Length</text>
+        <text x={65} y={90} textAnchor="middle" fill={colors.pipe} fontSize="16" fontWeight="700">
+          {strawLength} cm
+        </text>
 
         {/* Formula */}
         <text x={width/2} y={height - 15} textAnchor="middle" fill={colors.textMuted} fontSize="12">
@@ -734,6 +757,61 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
     minHeight: '44px',
   };
 
+  // Bottom navigation bar with Back/Next buttons
+  const renderBottomBar = (backDisabled = false, nextDisabled = false, nextLabel = 'Next →') => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '12px 16px',
+        background: colors.bgSecondary,
+        borderTop: `1px solid ${colors.border}`,
+        zIndex: 1000,
+      }}>
+        <button
+          onClick={prevPhase}
+          disabled={backDisabled || currentIndex === 0}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.border}`,
+            background: 'transparent',
+            color: (backDisabled || currentIndex === 0) ? colors.textMuted : colors.textSecondary,
+            cursor: (backDisabled || currentIndex === 0) ? 'not-allowed' : 'pointer',
+            fontSize: '14px',
+          }}
+        >
+          ← Back
+        </button>
+        <span style={{ color: colors.textMuted, fontSize: '12px' }}>
+          {currentIndex + 1} / {phaseOrder.length}
+        </span>
+        <button
+          onClick={nextPhase}
+          disabled={nextDisabled || currentIndex === phaseOrder.length - 1}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '8px',
+            border: 'none',
+            background: (nextDisabled || currentIndex === phaseOrder.length - 1) ? colors.textMuted : colors.accent,
+            color: 'white',
+            cursor: (nextDisabled || currentIndex === phaseOrder.length - 1) ? 'not-allowed' : 'pointer',
+            fontSize: '14px',
+            fontWeight: 600,
+          }}
+        >
+          {nextLabel}
+        </button>
+      </div>
+    );
+  };
+
   // ---------------------------------------------------------------------------
   // PHASE RENDERS
   // ---------------------------------------------------------------------------
@@ -742,19 +820,15 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        paddingTop: '80px',
-        textAlign: 'center',
-        overflowY: 'auto',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
         {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 24px 80px', textAlign: 'center' }}>
 
         <div style={{
           fontSize: '64px',
@@ -789,7 +863,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
             "Standing waves form inside tubes when sound reflects back and forth. Only certain wavelengths 'fit' - creating the specific notes we hear. Cut the tube shorter, and the pitch goes up!"
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+          <p className="text-muted" style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
             - The Physics of Musical Instruments
           </p>
         </div>
@@ -802,6 +876,8 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
         </button>
 
         {renderNavDots()}
+        </div>
+        {renderBottomBar(true, false, 'Next →')}
       </div>
     );
   }
@@ -809,35 +885,53 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
   // Static prediction visualization
   const PredictVisualization = () => {
     const width = isMobile ? 340 : 480;
-    const height = isMobile ? 200 : 240;
+    const height = isMobile ? 220 : 260;
+    const baseY = height - 40;
+    const longH = 140;
+    const shortH = 70;
+    const longX = Math.round(width * 0.25);
+    const shortX = Math.round(width * 0.62);
 
     return (
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
-        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
-          Two Straws - Which makes a higher pitch?
-        </text>
-
-        {/* Long straw */}
-        <g transform="translate(100, 50)">
-          <rect width="50" height="140" fill="url(#strawGrad)" rx="8" />
-          <ellipse cx="25" cy="0" rx="25" ry="6" fill="#075985" opacity="0.7" />
-          <text x="25" y="165" textAnchor="middle" fill={colors.pipe} fontSize="14" fontWeight="600">20 cm</text>
-        </g>
-
-        {/* Short straw */}
-        <g transform="translate(width - 150, 120)">
-          <rect width="50" height="70" fill="#dc2626" rx="8" />
-          <ellipse cx="25" cy="0" rx="25" ry="6" fill="#991b1b" opacity="0.7" />
-          <text x="25" y="95" textAnchor="middle" fill={colors.error} fontSize="14" fontWeight="600">10 cm</text>
-        </g>
-
         <defs>
-          <linearGradient id="strawGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <linearGradient id="predStrawGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#0284c7" />
             <stop offset="50%" stopColor="#38bdf8" />
             <stop offset="100%" stopColor="#0284c7" />
           </linearGradient>
+          <filter id="predGlow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
         </defs>
+        {/* Grid lines */}
+        {[0.25, 0.5, 0.75].map((f, i) => (
+          <line key={i} x1={20} y1={height * f} x2={width - 20} y2={height * f} stroke={colors.border} strokeWidth="1" strokeDasharray="4,4" opacity="0.5" />
+        ))}
+        {/* Tick marks on left axis */}
+        {[0.25, 0.5, 0.75].map((f, i) => (
+          <line key={`t${i}`} x1={15} y1={height * f} x2={25} y2={height * f} stroke={colors.textMuted} strokeWidth="1.5" />
+        ))}
+        <text x={width/2} y="22" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+          Two Straws - Which makes a higher pitch?
+        </text>
+        {/* Long straw - absolute coordinates */}
+        <rect x={longX} y={baseY - longH} width="50" height={longH} fill="url(#predStrawGrad)" rx="8" />
+        <ellipse cx={longX + 25} cy={baseY - longH} rx="25" ry="6" fill="#075985" opacity="0.7" />
+        {/* Standing wave inside long straw */}
+        <path d={`M ${longX+8} ${baseY - longH*0.5} Q ${longX+25} ${baseY - longH*0.65} ${longX+42} ${baseY - longH*0.5} Q ${longX+25} ${baseY - longH*0.35} ${longX+8} ${baseY - longH*0.5}`} fill="none" stroke="#93c5fd" strokeWidth="2" opacity="0.6" />
+        <text x={longX + 25} y={baseY - longH - 10} textAnchor="middle" fill={colors.pipe} fontSize="14" fontWeight="600">20 cm</text>
+        <text x={longX + 25} y={baseY + 18} textAnchor="middle" fill={colors.textMuted} fontSize="12">Lower pitch?</text>
+        {/* Short straw - absolute coordinates */}
+        <rect x={shortX} y={baseY - shortH} width="50" height={shortH} fill="#dc2626" rx="8" />
+        <ellipse cx={shortX + 25} cy={baseY - shortH} rx="25" ry="6" fill="#991b1b" opacity="0.7" />
+        {/* Standing wave inside short straw */}
+        <path d={`M ${shortX+8} ${baseY - shortH*0.5} Q ${shortX+25} ${baseY - shortH*0.65} ${shortX+42} ${baseY - shortH*0.5} Q ${shortX+25} ${baseY - shortH*0.35} ${shortX+8} ${baseY - shortH*0.5}`} fill="none" stroke="#fca5a5" strokeWidth="2" opacity="0.6" />
+        <text x={shortX + 25} y={baseY - shortH - 10} textAnchor="middle" fill={colors.error} fontSize="14" fontWeight="600">10 cm</text>
+        <text x={shortX + 25} y={baseY + 18} textAnchor="middle" fill={colors.textMuted} fontSize="12">Higher pitch?</text>
+        {/* Base line */}
+        <line x1={20} y1={baseY} x2={width - 20} y2={baseY} stroke={colors.border} strokeWidth="2" />
       </svg>
     );
   };
@@ -852,14 +946,15 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
         {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '60px' }}>
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
@@ -942,6 +1037,8 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
         </div>
 
         {renderNavDots()}
+        </div>
+        {renderBottomBar(false, false)}
       </div>
     );
   }
@@ -950,16 +1047,16 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
         {renderNavBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '60px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Straw Instrument Lab
           </h2>
@@ -1015,8 +1112,8 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
                 } as React.CSSProperties}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>5 cm (high pitch)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>30 cm (low pitch)</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>5 cm (high pitch)</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>30 cm (low pitch)</span>
               </div>
             </div>
 
@@ -1091,6 +1188,22 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
             </p>
           </div>
 
+          {/* Real-world relevance */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.pipe, marginBottom: '8px' }}>
+              Why This Matters in Real Life
+            </h3>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              This pipe resonance principle powers every wind instrument — from flutes and clarinets to pipe organs with thousands of pipes. Engineers use it to design acoustic systems, hearing aids, and even the resonance chambers in concert halls.
+            </p>
+          </div>
+
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
@@ -1098,29 +1211,53 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
             Understand the Physics
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
+        {renderBottomBar()}
       </div>
     );
   }
 
   // REVIEW PHASE
   if (phase === 'review') {
+    const predictionCorrect = prediction === 'b';
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
         {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '60px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+          {/* Connect to prediction */}
+          {prediction && (
+            <div style={{
+              background: predictionCorrect ? `${colors.success}22` : `${colors.error}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${predictionCorrect ? colors.success : colors.error}`,
+            }}>
+              <p style={{ ...typo.body, color: predictionCorrect ? colors.success : colors.error, margin: 0 }}>
+                {predictionCorrect
+                  ? 'Your prediction was correct! The short straw does produce a higher pitch.'
+                  : 'Your prediction was incorrect — the short straw produces a higher pitch, not the long one.'}
+              </p>
+            </div>
+          )}
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '12px', textAlign: 'center' }}>
             The Physics of Pipe Resonance
           </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            As you observed in your experiment, shorter tubes produce higher-pitched sounds. Your prediction was tested — now let's understand the physics behind what you saw.
+          </p>
 
           <div style={{
             background: colors.bgCard,
@@ -1185,8 +1322,10 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
             Try a New Challenge
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1201,16 +1340,16 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
         {renderNavBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '60px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1234,6 +1373,37 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
             marginBottom: '24px',
             textAlign: 'center',
           }}>
+            {/* Scale pattern SVG visualization */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+              <svg width={isMobile ? 320 : 440} height={200} viewBox={`0 0 ${isMobile ? 320 : 440} 200`} style={{ borderRadius: '8px' }}>
+                <defs>
+                  <linearGradient id="scaleLineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor={colors.warning} />
+                    <stop offset="100%" stopColor={colors.success} />
+                  </linearGradient>
+                </defs>
+                {/* Grid background */}
+                <g id="scale-grid">
+                  {[0.2, 0.4, 0.6, 0.8].map((f, i) => (
+                    <line key={i} x1="20" y1={200 * f} x2={(isMobile ? 320 : 440) - 20} y2={200 * f} stroke={colors.border} strokeWidth="1" strokeDasharray="4,4" opacity="0.5" />
+                  ))}
+                  {[0.2, 0.4, 0.6, 0.8].map((f, i) => (
+                    <line key={`t${i}`} x1="15" y1={200 * f} x2="25" y2={200 * f} stroke={colors.textMuted} strokeWidth="1.5" />
+                  ))}
+                </g>
+                {/* Frequency curve showing scale pattern: exponential descent */}
+                <path
+                  d={`M 30,20 Q 80,30 ${isMobile ? 130 : 160},60 Q ${isMobile ? 180 : 220},90 ${isMobile ? 230 : 270},130 Q ${isMobile ? 270 : 330},155 ${isMobile ? 290 : 410},175`}
+                  fill="none"
+                  stroke="url(#scaleLineGrad)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                />
+                <text x={(isMobile ? 320 : 440) / 2} y="192" textAnchor="middle" fill={colors.textSecondary} fontSize="11">
+                  Each note = different tube length (frequency decreases with length)
+                </text>
+              </svg>
+            </div>
             <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
               {['Do', 'Re', 'Mi', 'Fa', 'Sol', 'La', 'Ti', 'Do\''].map((note, i) => (
                 <div key={note} style={{ textAlign: 'center' }}>
@@ -1297,8 +1467,10 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
             </button>
           )}
         </div>
+        </div>
 
         {renderNavDots()}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1307,16 +1479,16 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
         {renderNavBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '60px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Your Straw Pan Flute
           </h2>
@@ -1407,8 +1579,10 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
             Understand Why Ratios Matter
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1417,16 +1591,16 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '80px',
-        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
         {renderNavBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '60px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Musical Math: The Equal Temperament Scale
           </h2>
@@ -1485,8 +1659,10 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
             See Real-World Applications
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1498,13 +1674,16 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
@@ -1655,8 +1834,10 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
             </button>
           )}
         </div>
+        </div>
 
         {renderNavDots()}
+        {renderBottomBar(false, !allAppsCompleted)}
       </div>
     );
   }
@@ -1667,7 +1848,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          height: '100dvh',
           background: colors.bgPrimary,
           padding: '24px',
         }}>
@@ -1723,13 +1904,16 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        {renderNavBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '60px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1879,8 +2063,10 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
             )}
           </div>
         </div>
+        </div>
 
         {renderNavDots()}
+        {renderBottomBar(false, true, 'Submit Test')}
       </div>
     );
   }
@@ -1889,16 +2075,14 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 24px', textAlign: 'center' }}>
 
         <div style={{
           fontSize: '100px',
@@ -1970,6 +2154,8 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
         </div>
 
         {renderNavDots()}
+        </div>
+        {renderBottomBar(false, true)}
       </div>
     );
   }
