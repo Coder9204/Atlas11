@@ -177,7 +177,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
    const [guidedMode, setGuidedMode] = useState(true);
    const [isMobile, setIsMobile] = useState(false);
    // Slider state for wave frequency control
-   const [waveFrequency, setWaveFrequency] = useState(50);
+   const [waveFrequency, setWaveFrequency] = useState(25);
 
    // Test state
    const [testIndex, setTestIndex] = useState(0);
@@ -309,7 +309,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
    // Test questions - 10 comprehensive questions
    const testQuestions = [
       {
-         scenario: 'A seismograph station records an earthquake. The seismograph shows two distinct wave arrivals separated by 8 seconds.',
+         scenario: 'A seismograph station 50 km from an earthquake epicenter records the seismic event. The seismograph clearly shows two distinct wave arrivals separated by 8 seconds. The first arrival is a sharp, brief jolt; the second arrival causes stronger, more sustained shaking of the ground and nearby structures. Seismologists analyze both wave types to locate the epicenter and estimate the magnitude of the earthquake.',
          question: 'Which seismic wave arrives first at a monitoring station?',
          options: [
             { text: 'S-wave (Secondary)', correct: false },
@@ -960,7 +960,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                {/* Wave type icon */}
                <circle cx="510" cy="80" r="18"
                   fill={waveType === 'p' ? 'url(#pswPWaveGrad)' : 'url(#pswSWaveGrad)'}
-                  filter="url(#pswParticleGlow)" />
+               />
 
                {/* Direction arrows inside circle */}
                <text x="510" y="86" textAnchor="middle"
@@ -972,6 +972,10 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                <rect x="40" y="170" width="100" height="30" rx="6" fill="#18181b" stroke="#3f3f46" strokeWidth="1" opacity="0.9" />
                <text x="90" y="182" textAnchor="middle" fill="rgba(148,163,184,0.7)" fontSize="11" fontWeight="600">FREQUENCY</text>
                <text x="90" y="196" textAnchor="middle" fill="#fafafa" fontSize="12" fontWeight="700">{waveFrequency} Hz</text>
+
+               {/* Frequency indicator bar - moves with waveFrequency slider */}
+               <rect x="150" y="205" width="400" height="6" rx="3" fill="#27272a" />
+               <rect x="150" y="205" width={waveFrequency * 4} height="6" rx="3" fill={waveType === 'p' ? '#fb923c' : '#a78bfa'} />
 
                {/* SVG Legend */}
                <rect x="150" y="195" width="10" height="10" rx="2" fill="#fb923c" />
@@ -1132,6 +1136,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             position: 'relative',
             overflow: 'hidden',
          }}>
+            {renderProgressBar()}
             {/* Premium background glow circles */}
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom right, #0f172a, #0a1628, #0f172a)' }} />
             <div style={{ position: 'absolute', top: 0, left: '25%', width: 384, height: 384, background: 'rgba(249, 115, 22, 0.05)', borderRadius: '50%', filter: 'blur(64px)' }} />
@@ -1147,6 +1152,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                justifyContent: 'center',
                padding: isMobile ? '32px 20px' : '48px 32px',
                textAlign: 'center',
+               overflowY: 'auto',
             }}>
                {/* Icon */}
                <div style={{
@@ -1517,6 +1523,9 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                            <div style={{ fontSize: typo.small, color: design.colors.textSecondary }}>
                               Compression • Faster • Works in all media
                            </div>
+                           <div style={{ fontSize: typo.label, color: '#22c55e', fontWeight: 600, marginTop: '4px' }}>
+                              ✓ Passes liquids
+                           </div>
                         </div>
                         <div style={{
                            padding: '12px',
@@ -1534,6 +1543,9 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                            </div>
                            <div style={{ fontSize: typo.small, color: design.colors.textSecondary }}>
                               Shear • Slower • Solids only
+                           </div>
+                           <div style={{ fontSize: typo.label, color: '#ef4444', fontWeight: 600, marginTop: '4px' }}>
+                              ✗ Blocked by liquids
                            </div>
                         </div>
                      </div>
@@ -1565,6 +1577,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                            step={1}
                            value={waveFrequency}
                            onChange={(e) => setWaveFrequency(parseInt(e.target.value))}
+                           onInput={(e) => setWaveFrequency(parseInt((e.target as HTMLInputElement).value))}
                            style={{
                               width: '100%',
                               height: '20px',
@@ -1648,15 +1661,25 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                      true
                   )}
 
+                  {/* Observation guidance */}
+                  <div style={{ marginTop: '12px', padding: '12px 16px', borderRadius: design.radius.md, background: design.colors.bgTertiary, border: `1px solid ${design.colors.border}` }}>
+                     <p style={{ fontSize: '14px', color: '#e2e8f0', fontWeight: 600, marginBottom: '4px' }}>
+                        What to Observe:
+                     </p>
+                     <p style={{ fontSize: '14px', color: '#e2e8f0', fontWeight: 400 }}>
+                        Watch how the particles move when you send a wave. This visualization shows particle motion direction: P-waves compress horizontally, S-waves shear vertically. Notice the frequency indicator bar on the bottom tracking your slider position.
+                     </p>
+                  </div>
+
                   {/* Cause & Effect explanation */}
                   <div style={{ marginTop: '12px', padding: '12px 16px', borderRadius: design.radius.md, background: design.colors.bgTertiary, border: `1px solid ${design.colors.border}` }}>
                      <p style={{ fontSize: '14px', color: '#e2e8f0', fontWeight: 600, marginBottom: '4px' }}>
                         Cause &amp; Effect:
                      </p>
-                     <p style={{ fontSize: '14px', color: design.colors.textSecondary, fontWeight: 400 }}>
+                     <p style={{ fontSize: '14px', color: '#e2e8f0', fontWeight: 400 }}>
                         {waveType === 'p'
-                           ? 'P-waves compress particles parallel to motion. Higher frequency = faster oscillation. They travel through ALL materials.'
-                           : 'S-waves shear particles perpendicular to motion. Higher frequency = faster side-to-side motion. Blocked by liquids!'}
+                           ? 'When you increase frequency, particles oscillate faster. Higher frequency causes more rapid compression cycles. P-waves used in earthquake early warning technology and industry applications — they travel through ALL materials.'
+                           : 'When you increase frequency, S-waves shear faster side-to-side. Higher frequency affects perpendicular particle motion. This matters for engineering — S-waves are blocked by liquids, which is why they are used in industry for oil exploration!'}
                      </p>
                   </div>
 
@@ -1668,8 +1691,8 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                         background: design.colors.bgTertiary,
                         border: `1px solid ${design.colors.border}`,
                      }}>
-                        <p style={{ fontSize: '14px', color: design.colors.textSecondary, fontWeight: 400 }}>
-                           💡 Adjust the frequency slider and try both wave types!
+                        <p style={{ fontSize: '14px', color: '#e2e8f0', fontWeight: 400 }}>
+                           💡 Observe the particles! Adjust the frequency slider and try both wave types. Watch how motion direction differs between P and S waves.
                         </p>
                      </div>
                   )}
@@ -1734,11 +1757,22 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   fontSize: isMobile ? '24px' : '28px',
                   fontWeight: 800,
                   color: design.colors.textPrimary,
-                  marginBottom: '24px',
+                  marginBottom: '12px',
                   letterSpacing: '-0.02em',
                }}>
                   Two Types of Seismic Motion
                </h2>
+
+               <p style={{
+                  fontSize: '15px',
+                  color: design.colors.textSecondary,
+                  marginBottom: '20px',
+                  lineHeight: 1.6,
+                  maxWidth: '560px',
+                  fontWeight: 400,
+               }}>
+                  As you observed in the experiment, your prediction was tested by sending waves through different media. The results reveal a fundamental difference between these two wave types.
+               </p>
 
                <div style={{ display: 'grid', gap: '16px', maxWidth: '560px' }}>
                   {concepts.map((c, i) => (
@@ -2658,7 +2692,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   </div>
                </div>
             </div>
-            {renderBottomNav('twist_review', 'test', 'Take the Quiz →', completedApps.size < realWorldApps.length)}
+            {renderBottomNav('twist_review', 'test', 'Continue to Knowledge Test →', completedApps.size < realWorldApps.length)}
          </div>
       );
    }

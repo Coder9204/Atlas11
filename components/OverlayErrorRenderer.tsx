@@ -480,7 +480,7 @@ const OverlayErrorRenderer: React.FC<OverlayErrorRendererProps> = ({
             fontWeight: 700,
             fontSize: '14px',
             background: canNext ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)` : colors.bgCardLight,
-            color: canNext ? colors.textPrimary : 'rgba(200,210,220,0.4)',
+            color: canNext ? 'white' : 'rgba(200,210,220,0.4)',
             border: 'none',
             cursor: canNext ? 'pointer' : 'not-allowed',
             opacity: canNext ? 1 : 0.4,
@@ -561,18 +561,18 @@ const OverlayErrorRenderer: React.FC<OverlayErrorRendererProps> = ({
           </defs>
 
           {/* Grid lines - cross-section region */}
-          <g opacity="0.25" stroke={colors.border} strokeWidth="0.5" strokeDasharray="4 4">
-            <line x1="30" y1="80" x2="250" y2="80" />
-            <line x1="30" y1="120" x2="250" y2="120" />
-            <line x1="30" y1="160" x2="250" y2="160" />
-            <line x1="30" y1="200" x2="250" y2="200" />
-            <line x1="70" y1="70" x2="70" y2="240" />
-            <line x1="130" y1="70" x2="130" y2="240" />
-            <line x1="190" y1="70" x2="190" y2="240" />
+          <g opacity="0.25" stroke={colors.border} strokeWidth="0.5">
+            <line x1="30" y1="80" x2="250" y2="80" strokeDasharray="4 4" />
+            <line x1="30" y1="120" x2="250" y2="120" strokeDasharray="4 4" />
+            <line x1="30" y1="160" x2="250" y2="160" strokeDasharray="4 4" />
+            <line x1="30" y1="200" x2="250" y2="200" strokeDasharray="4 4" />
+            <line x1="70" y1="70" x2="70" y2="240" strokeDasharray="4 4" />
+            <line x1="130" y1="70" x2="130" y2="240" strokeDasharray="4 4" />
+            <line x1="190" y1="70" x2="190" y2="240" strokeDasharray="4 4" />
           </g>
 
           {/* Cross-section title */}
-          <text x={130} y={20} fill={colors.textPrimary} fontSize={13} textAnchor="middle" fontWeight="bold">Cross-Section View</text>
+          <text x={130} y={58} fill={colors.textPrimary} fontSize={13} textAnchor="middle" fontWeight="bold">Cross-Section View</text>
 
           {/* Axis labels */}
           <text x={130} y={335} fill={colors.textMuted} fontSize={11} textAnchor="middle">X Overlay Error (nm)</text>
@@ -580,21 +580,21 @@ const OverlayErrorRenderer: React.FC<OverlayErrorRendererProps> = ({
 
           {/* Silicon substrate */}
           <rect x={30} y={200} width={200} height={35} fill={colors.silicon} />
-          <text x={130} y={222} fill={colors.textMuted} fontSize={10} textAnchor="middle">Silicon Substrate</text>
+          <text x={130} y={222} fill={colors.textMuted} fontSize={11} textAnchor="middle">Silicon Substrate</text>
 
           {/* M1 contacts (reference/baseline - stationary) */}
           <rect x={60} y={170} width={50} height={30} fill="url(#metalGrad1)" rx={2} />
           <rect x={140} y={170} width={50} height={30} fill="url(#metalGrad1)" rx={2} />
-          <text x={85} y={189} fill={colors.textPrimary} fontSize={9} textAnchor="middle" fontWeight="600">M1</text>
-          <text x={165} y={189} fill={colors.textPrimary} fontSize={9} textAnchor="middle" fontWeight="600">M1</text>
+          <text x={85} y={185} fill={colors.textPrimary} fontSize={11} textAnchor="middle" fontWeight="600">M1</text>
+          <text x={165} y={185} fill={colors.textPrimary} fontSize={11} textAnchor="middle" fontWeight="600">M1</text>
 
           {/* Reference marker - baseline perfect alignment */}
           <line x1={80} y1={130} x2={80} y2={168} stroke="rgba(100,200,100,0.4)" strokeWidth={1} strokeDasharray="3 3" />
-          <text x={80} y={128} fill="rgba(100,200,100,0.7)" fontSize={9} textAnchor="middle">Ideal</text>
 
           {/* Dielectric layer */}
           <rect x={30} y={130} width={200} height={40} fill="url(#crosshatch)" opacity={0.5} />
-          <text x={30} y={126} fill={colors.textMuted} fontSize={9}>Dielectric</text>
+          {/* Dielectric label - positioned right of the layer to avoid axis label overlap */}
+          <text x={242} y={154} fill={colors.textMuted} fontSize={11} textAnchor="start">Dielectric</text>
 
           {/* Vias (shifted) */}
           <rect x={75 + effectiveShiftX * scale} y={130 + effectiveShiftY * scale} width={viaSize * 0.8} height={40} fill={colors.via} opacity={result.isOpen ? 0.3 : 0.9} filter="url(#viaGlow)" rx={1} />
@@ -603,8 +603,8 @@ const OverlayErrorRenderer: React.FC<OverlayErrorRendererProps> = ({
           {/* M2 upper metal */}
           <rect x={50 + effectiveShiftX * scale} y={100} width={70} height={30} fill="url(#metalGrad2)" rx={2} />
           <rect x={150 + effectiveShiftX * scale} y={100} width={70} height={30} fill="url(#metalGrad2)" rx={2} />
-          <text x={85 + effectiveShiftX * scale} y={119} fill={colors.textPrimary} fontSize={9} textAnchor="middle" fontWeight="600">M2</text>
-          <text x={185 + effectiveShiftX * scale} y={119} fill={colors.textPrimary} fontSize={9} textAnchor="middle" fontWeight="600">M2</text>
+          <text x={85 + effectiveShiftX * scale} y={95} fill={colors.textPrimary} fontSize={11} textAnchor="middle" fontWeight="600">M2</text>
+          <text x={185 + effectiveShiftX * scale} y={95} fill={colors.textPrimary} fontSize={11} textAnchor="middle" fontWeight="600">M2</text>
 
           {/* Open/Short indicators */}
           {result.isOpen && (
@@ -622,8 +622,8 @@ const OverlayErrorRenderer: React.FC<OverlayErrorRendererProps> = ({
           )}
 
           {/* Top-down view */}
-          <text x={380} y={20} fill={colors.textPrimary} fontSize={13} textAnchor="middle" fontWeight="bold">Top-Down View</text>
-          <text x={380} y={35} fill={colors.textMuted} fontSize={10} textAnchor="middle">Via alignment to contact pad</text>
+          <text x={380} y={58} fill={colors.textPrimary} fontSize={13} textAnchor="middle" fontWeight="bold">Top-Down View</text>
+          <text x={380} y={72} fill={colors.textMuted} fontSize={11} textAnchor="middle">Via alignment to contact pad</text>
 
           {/* Grid in top-down region */}
           <g opacity="0.2" stroke={colors.border} strokeWidth="0.5" strokeDasharray="4 4">
@@ -664,27 +664,25 @@ const OverlayErrorRenderer: React.FC<OverlayErrorRendererProps> = ({
             <line x1={380} y1={145} x2={380 + effectiveShiftX * scale * 2} y2={145 + effectiveShiftY * scale * 2} stroke={colors.accent} strokeWidth={2} markerEnd="url(#arrowhead)" />
           )}
 
-          {/* Legend */}
-          <g transform="translate(300, 243)">
-            <circle cx={10} cy={8} r={6} fill={colors.metal1} />
-            <text x={20} y={12} fill={colors.textSecondary} fontSize={10} fontWeight="500">M1 Contact (fixed)</text>
-            <circle cx={110} cy={8} r={5} fill={colors.via} />
-            <text x={120} y={12} fill={colors.textSecondary} fontSize={10} fontWeight="500">Via (shifted)</text>
-          </g>
+          {/* Legend - absolute positioned to avoid transform coordinate confusion */}
+          <circle cx={310} cy={251} r={6} fill={colors.metal1} />
+          <text x={320} y={255} fill={colors.textSecondary} fontSize={11} fontWeight="500">M1 Contact</text>
+          <circle cx={410} cy={251} r={5} fill={colors.via} />
+          <text x={420} y={255} fill={colors.textSecondary} fontSize={11} fontWeight="500">Via</text>
 
           {/* Metrics panel */}
           <rect x={30} y={260} width={200} height={70} fill="rgba(0,0,0,0.7)" rx={8} stroke={colors.accent} strokeWidth={1} />
-          <text x={38} y={276} fill={colors.textSecondary} fontSize={10} fontWeight="700">OVERLAY METRICS</text>
-          <text x={38} y={293} fill={colors.textPrimary} fontSize={10}>X: {overlayX}nm, Y: {overlayY}nm → Total: {calculateOverlayResult().totalOverlay.toFixed(1)}nm</text>
-          <text x={38} y={308} fill={calculateOverlayResult().withinBudget ? colors.success : colors.error} fontSize={10}>Budget: {calculateOverlayResult().overlayBudget.toFixed(0)}nm {calculateOverlayResult().withinBudget ? '✓ OK' : '✗ EXCEEDED'}</text>
-          <text x={38} y={323} fill={calculateOverlayResult().overlapPercent > 30 ? colors.success : colors.error} fontSize={10}>Overlap: {calculateOverlayResult().overlapPercent.toFixed(0)}% (need &gt;30%)</text>
+          <text x={38} y={276} fill={colors.textSecondary} fontSize={11} fontWeight="700">OVERLAY METRICS</text>
+          <text x={38} y={291} fill={colors.textPrimary} fontSize={11}>X: {overlayX}nm  Y: {overlayY}nm</text>
+          <text x={38} y={306} fill={calculateOverlayResult().withinBudget ? colors.success : colors.error} fontSize={11}>Budget: {calculateOverlayResult().overlayBudget.toFixed(0)}nm {calculateOverlayResult().withinBudget ? 'OK' : 'EXCEEDED'}</text>
+          <text x={38} y={322} fill={calculateOverlayResult().overlapPercent > 30 ? colors.success : colors.error} fontSize={11}>Overlap: {calculateOverlayResult().overlapPercent.toFixed(0)}%</text>
 
           {/* Status badge */}
           <rect x={295} y={265} width={170} height={50} fill={result.status === 'OK' ? 'rgba(74, 222, 128, 0.15)' : 'rgba(248, 113, 113, 0.15)'} rx={8} stroke={result.status === 'OK' ? colors.success : colors.error} strokeWidth={2} />
           <text x={380} y={297} fill={result.status === 'OK' ? colors.success : colors.error} fontSize={22} fontWeight="bold" textAnchor="middle">{result.status}</text>
 
           {showSelfAligned && useSelfAligned && (
-            <text x={380} y={328} fill={colors.accent} fontSize={10} textAnchor="middle">Self-Aligned: 90% error reduction active</text>
+            <text x={380} y={328} fill={colors.accent} fontSize={11} textAnchor="middle">Self-Aligned active</text>
           )}
         </svg>
       </div>
@@ -733,15 +731,15 @@ const OverlayErrorRenderer: React.FC<OverlayErrorRendererProps> = ({
           {/* Y-axis */}
           <line x1={60} y1={20} x2={60} y2={190} stroke={colors.textMuted} strokeWidth={1} />
           <text x={14} y={105} fill={colors.textMuted} fontSize={11} textAnchor="middle" transform="rotate(-90 14 105)">Contact Overlap %</text>
-          <text x={55} y={190} fill={colors.textMuted} fontSize={9} textAnchor="end">0%</text>
-          <text x={55} y={105} fill={colors.textMuted} fontSize={9} textAnchor="end">50%</text>
-          <text x={55} y={22} fill={colors.textMuted} fontSize={9} textAnchor="end">100%</text>
+          <text x={55} y={190} fill={colors.textMuted} fontSize={11} textAnchor="end">0%</text>
+          <text x={55} y={105} fill={colors.textMuted} fontSize={11} textAnchor="end">50%</text>
+          <text x={55} y={22} fill={colors.textMuted} fontSize={11} textAnchor="end">100%</text>
 
           {/* X-axis */}
           <line x1={60} y1={190} x2={480} y2={190} stroke={colors.textMuted} strokeWidth={1} />
           <text x={270} y={210} fill={colors.textMuted} fontSize={11} textAnchor="middle">Overlay Error X (nm)</text>
           {[0, 5, 10, 15, 20].map((v, i) => (
-            <text key={v} x={60 + i * 85} y={203} fill={colors.textMuted} fontSize={9} textAnchor="middle">{v}</text>
+            <text key={v} x={60 + i * 85} y={203} fill={colors.textMuted} fontSize={11} textAnchor="middle">{v}</text>
           ))}
 
           {/* Without self-aligned - steep drop */}
@@ -752,23 +750,30 @@ const OverlayErrorRenderer: React.FC<OverlayErrorRendererProps> = ({
             strokeWidth={2.5}
             filter="url(#twistGlow)"
           />
-          <text x={485} y={188} fill={colors.error} fontSize={10}>Standard</text>
+          <text x={485} y={188} fill={colors.error} fontSize={11}>Standard</text>
 
           {/* With self-aligned - gentle slope */}
           {(() => {
             const reduction = twistSelfAlignedReduction / 100;
-            // At reduction=0.9, slope is 10% of standard
-            const endY = 22 + (188 - 22) * (1 - reduction) * 0.85;
+            // Ensure SA path always uses at least 30% vertical space for visibility
+            const minRange = 60; // at least 60 units out of 220 = 27%
+            const naturalRange = (188 - 22) * (1 - reduction) * 0.85;
+            const effectiveRange = Math.max(naturalRange, minRange);
+            const endY = 22 + effectiveRange;
+            const p1 = 22 + effectiveRange * (1 / 5);
+            const p2 = 22 + effectiveRange * (2 / 5);
+            const p3 = 22 + effectiveRange * (3 / 5);
+            const p4 = 22 + effectiveRange * (4 / 5);
             return (
               <>
                 <path
-                  d={`M 60 22 L 145 ${22 + (30 * (1 - reduction))} L 230 ${22 + (60 * (1 - reduction))} L 315 ${22 + (90 * (1 - reduction))} L 400 ${22 + (120 * (1 - reduction))} L 480 ${endY.toFixed(0)}`}
+                  d={`M 60 22 L 145 ${p1.toFixed(0)} L 230 ${p2.toFixed(0)} L 315 ${p3.toFixed(0)} L 400 ${p4.toFixed(0)} L 480 ${endY.toFixed(0)}`}
                   fill="none"
                   stroke={colors.success}
                   strokeWidth={2.5}
                   filter="url(#twistGlow)"
                 />
-                <text x={485} y={Math.max(18, endY - 2)} fill={colors.success} fontSize={10}>SA ({twistSelfAlignedReduction}%)</text>
+                <text x={485} y={Math.max(18, endY - 2)} fill={colors.success} fontSize={11}>SA ({twistSelfAlignedReduction}%)</text>
               </>
             );
           })()}
@@ -777,14 +782,18 @@ const OverlayErrorRenderer: React.FC<OverlayErrorRendererProps> = ({
           {(() => {
             const xPos = 60 + twistOverlayX * 21;
             const standardY = 22 + (twistOverlayX / 20) * 166;
-            const saY = 22 + (twistOverlayX / 20) * 166 * (1 - twistSelfAlignedReduction / 100) * 0.85;
+            const reduction = twistSelfAlignedReduction / 100;
+            const minRange = 60;
+            const naturalRange = (188 - 22) * (1 - reduction) * 0.85;
+            const effectiveRange = Math.max(naturalRange, minRange);
+            const saY = 22 + (twistOverlayX / 20) * effectiveRange;
             return (
               <>
                 <line x1={xPos} y1={20} x2={xPos} y2={190} stroke={colors.accent} strokeWidth={1} strokeDasharray="4 4" opacity={0.6} />
                 <circle cx={xPos} cy={standardY} r={6} fill={colors.error} filter="url(#twistGlow)" />
                 <circle cx={xPos} cy={saY} r={6} fill={colors.success} filter="url(#twistGlow)" />
-                <text x={xPos + 8} y={Math.min(190, standardY + 4)} fill={colors.error} fontSize={9}>{Math.max(0, 100 - (twistOverlayX / 20) * 95).toFixed(0)}%</text>
-                <text x={xPos + 8} y={Math.max(16, saY + 4)} fill={colors.success} fontSize={9}>{Math.max(0, 100 - (twistOverlayX / 20) * 95 * (1 - twistSelfAlignedReduction / 100) * 0.85).toFixed(0)}%</text>
+                <text x={xPos + 8} y={Math.min(190, standardY + 4)} fill={colors.error} fontSize={11}>{Math.max(0, 100 - (twistOverlayX / 20) * 95).toFixed(0)}%</text>
+                <text x={xPos + 8} y={Math.max(16, saY + 4)} fill={colors.success} fontSize={11}>{Math.max(0, 100 - (twistOverlayX / 20) * 95 * (1 - twistSelfAlignedReduction / 100) * 0.85).toFixed(0)}%</text>
               </>
             );
           })()}
@@ -1212,46 +1221,26 @@ const OverlayErrorRenderer: React.FC<OverlayErrorRendererProps> = ({
             <div style={{ background: 'rgba(6, 182, 212, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
               <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 700 }}>{app.question}</p>
             </div>
-            {!transferCompleted.has(index) ? (
-              <button
-                onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: '6px',
-                  border: `1px solid ${colors.accent}`,
-                  background: 'transparent',
-                  color: colors.accent,
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  transition: buttonTransition,
-                }}
-              >
-                Reveal Answer
-              </button>
-            ) : (
-              <>
-                <div style={{ background: 'rgba(74, 222, 128, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '8px' }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 400, lineHeight: 1.6 }}>{app.answer}</p>
-                </div>
-                <button
-                  onClick={() => {}}
-                  style={{
-                    padding: '8px 20px',
-                    borderRadius: '6px',
-                    border: `1px solid ${colors.success}`,
-                    background: 'rgba(74, 222, 128, 0.1)',
-                    color: colors.success,
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    transition: buttonTransition,
-                  }}
-                >
-                  Got It
-                </button>
-              </>
-            )}
+            <div style={{ background: 'rgba(74, 222, 128, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '8px' }}>
+              <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 400, lineHeight: 1.6 }}>{app.answer}</p>
+            </div>
+            <button
+              onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+              disabled={transferCompleted.has(index)}
+              style={{
+                padding: '8px 20px',
+                borderRadius: '6px',
+                border: `1px solid ${transferCompleted.has(index) ? colors.success : colors.accent}`,
+                background: transferCompleted.has(index) ? 'rgba(74, 222, 128, 0.1)' : 'transparent',
+                color: transferCompleted.has(index) ? colors.success : colors.accent,
+                cursor: transferCompleted.has(index) ? 'default' : 'pointer',
+                fontSize: '13px',
+                fontWeight: 600,
+                transition: buttonTransition,
+              }}
+            >
+              {transferCompleted.has(index) ? 'Complete' : 'Got It'}
+            </button>
           </div>
         ))}
       </div>,
@@ -1309,6 +1298,11 @@ const OverlayErrorRenderer: React.FC<OverlayErrorRendererProps> = ({
               }}
             />
           ))}
+        </div>
+        <div style={{ background: 'rgba(6, 182, 212, 0.08)', padding: '12px 16px', borderRadius: '8px', marginBottom: '12px', borderLeft: `3px solid ${colors.accent}` }}>
+          <p style={{ color: colors.textMuted, fontSize: '13px', lineHeight: 1.6 }}>
+            Overlay error is the misalignment between successive lithography layers in semiconductor manufacturing. In modern chips with 15+ metal layers connected by vias and contacts, precise layer-to-layer alignment is critical. Overlay errors cause opens (missed contacts with high resistance) or shorts (unintended connections). At 5nm process nodes, overlay must be controlled to under 1.5nm across 300mm wafers — less than 10 atomic spacings.
+          </p>
         </div>
         <div style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px', marginBottom: '16px' }}>
           <p style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 600, marginBottom: '6px' }}>Question {currentTestQuestion + 1} of {testQuestions.length}</p>

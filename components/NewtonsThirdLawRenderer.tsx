@@ -931,7 +931,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
               {/* Balloon */}
               <g transform={`translate(${balloonX}, 100)`}>
                 <ellipse cx={displaySize / 2} cy="0" rx={displaySize} ry={displaySize * 0.8} fill="url(#balloonGrad)" />
-                <path d={`M0,${displaySize * 0.15} Q-8,${displaySize * 0.3} -12,${displaySize * 0.5} L-12,${-displaySize * 0.5} Q-8,${-displaySize * 0.3} 0,${-displaySize * 0.15}`} fill="#dc2626" />
+                <rect x={-12} y={-displaySize * 0.5} width={12} height={displaySize} fill="#dc2626" rx="2" />
 
                 {/* Force arrows when launched */}
                 {isLaunched && airRemaining > 0 && (
@@ -945,7 +945,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
               </g>
 
               {/* Force magnitude curve */}
-              <path d={`M50,${170 - forceMagnitude * 3} Q200,${170 - forceMagnitude * 8} 350,${170 - forceMagnitude * 10} Q500,${170 - forceMagnitude * 8} 650,${170 - forceMagnitude * 3}`} fill="none" stroke="#22d3ee" strokeWidth="1.5" strokeDasharray="6 3" opacity="0.4" />
+              <path d={`M50,${180 - forceMagnitude * 3} Q200,${120 - forceMagnitude * 8} 350,${20 + forceMagnitude * 5} Q500,${120 - forceMagnitude * 8} 650,${180 - forceMagnitude * 3}`} fill="none" stroke="#22d3ee" strokeWidth="1.5" strokeDasharray="6 3" opacity="0.4" />
 
               {/* Educational labels */}
               <text x="350" y="25" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">Balloon Rocket Simulation</text>
@@ -1312,13 +1312,13 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
               {/* Small balloon */}
               <g transform={`translate(${smallBalloonX}, 50)`}>
                 <ellipse cx="10" cy="0" rx="15" ry="12" fill="#3b82f6" />
-                <path d="M0,4 Q-4,7 -8,10 L-8,-10 Q-4,-7 0,-4" fill="#1d4ed8" />
+                <rect x={-8} y={-10} width={8} height={20} fill="#1d4ed8" rx="2" />
               </g>
 
               {/* Large balloon */}
               <g transform={`translate(${largeBalloonX}, 140)`}>
                 <ellipse cx="15" cy="0" rx="25" ry="20" fill="#ef4444" />
-                <path d="M0,6 Q-6,10 -12,16 L-12,-16 Q-6,-10 0,-6" fill="#b91c1c" />
+                <rect x={-12} y={-16} width={12} height={32} fill="#b91c1c" rx="2" />
               </g>
 
               {/* Winner indicator */}
@@ -1722,18 +1722,52 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
             <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
               {passed ? 'Excellent!' : 'Keep Learning!'}
             </h2>
-            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
+              You scored:
+            </p>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '8px 0' }}>
               {testScore} / 10
             </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '24px' }}>
               {passed ? "You've mastered Newton's Third Law!" : 'Review the concepts and try again.'}
             </p>
-            <button
-              onClick={() => { passed ? nextPhase() : goToPhase('hook'); }}
-              style={primaryButtonStyle}
-            >
-              {passed ? 'Complete Lesson' : 'Review and Try Again'}
-            </button>
+
+            {/* Answer Review */}
+            <div style={{ textAlign: 'left', marginBottom: '24px', maxHeight: '300px', overflowY: 'auto', border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '12px' }}>
+              <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px', textAlign: 'center' }}>Answer Review</h3>
+              {testQuestions.map((q, i) => {
+                const correctId = q.options.find(o => o.correct)?.id;
+                const userAnswer = testAnswers[i];
+                const isCorrect = userAnswer === correctId;
+                return (
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'center', gap: '8px', padding: '8px',
+                    borderRadius: '8px', marginBottom: '6px',
+                    background: isCorrect ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
+                    border: `1px solid ${isCorrect ? colors.success : colors.error}`,
+                  }}>
+                    <span style={{ fontSize: '16px' }}>{isCorrect ? '✓' : '✗'}</span>
+                    <span style={{ ...typo.small, color: colors.textPrimary }}>Question {i + 1}: {isCorrect ? 'Correct' : 'Incorrect'}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Navigation buttons */}
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => goToPhase('hook')}
+                style={{ ...primaryButtonStyle, background: colors.bgCard, color: colors.textPrimary, border: `2px solid ${colors.border}` }}
+              >
+                Play Again
+              </button>
+              <button
+                onClick={() => { passed ? nextPhase() : goToPhase('hook'); }}
+                style={primaryButtonStyle}
+              >
+                {passed ? 'Go to Dashboard' : 'Review and Try Again'}
+              </button>
+            </div>
           </div>
           </div>
           {renderNavDots()}

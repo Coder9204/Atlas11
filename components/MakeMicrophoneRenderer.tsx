@@ -638,10 +638,9 @@ export default function MakeMicrophoneRenderer({
                 Magnet
               </text>
 
-              {/* Field lines */}
+              {/* Field lines - global SVG coords for proper vertical utilization */}
               <path
-                d="M 195 -20 C 175 -25, 175 25, 195 20"
-                transform={`translate(0, ${height/2})`}
+                d={`M 195 ${height/2 - Math.round(height * 0.13)} C 175 ${height/2 - Math.round(height * 0.15)}, 175 ${height/2 + Math.round(height * 0.15)}, 195 ${height/2 + Math.round(height * 0.13)}`}
                 fill="none"
                 stroke="#FCA5A5"
                 strokeWidth="1"
@@ -1988,9 +1987,14 @@ export default function MakeMicrophoneRenderer({
             alignItems: 'center',
             marginBottom: '24px',
           }}>
-            <span style={{ ...typo.small, color: colors.textSecondary }}>
-              Question {currentQuestion + 1} of 10
-            </span>
+            <div>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>
+                Question {currentQuestion + 1} of 10
+              </span>
+              <span style={{ ...typo.small, color: colors.textMuted, marginLeft: '12px' }}>
+                {testAnswers.filter(a => a !== null).length} / 10 answered
+              </span>
+            </div>
             <div style={{ display: 'flex', gap: '6px' }}>
               {testQuestions.map((_, i) => (
                 <div key={i} style={{
@@ -2035,6 +2039,24 @@ export default function MakeMicrophoneRenderer({
                   const newAnswers = [...testAnswers];
                   newAnswers[currentQuestion] = opt.id;
                   setTestAnswers(newAnswers);
+                  // Auto-advance: move to next question or submit on last question
+                  if (currentQuestion < 9) {
+                    setCurrentQuestion(currentQuestion + 1);
+                  } else {
+                    const score = newAnswers.reduce((acc, ans, i) => {
+                      const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                      return acc + (ans === correct ? 1 : 0);
+                    }, 0);
+                    setTestScore(score);
+                    setTestSubmitted(true);
+                    if (score >= 7) {
+                      playSound('complete');
+                      onCorrectAnswer?.();
+                    } else {
+                      playSound('failure');
+                      onIncorrectAnswer?.();
+                    }
+                  }
                 }}
                 style={{
                   background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
@@ -2087,7 +2109,8 @@ export default function MakeMicrophoneRenderer({
             )}
             {currentQuestion < 9 ? (
               <button
-                onClick={() => setCurrentQuestion(currentQuestion + 1)}
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
                 style={{
                   flex: 1,
                   padding: '14px',
@@ -2095,7 +2118,7 @@ export default function MakeMicrophoneRenderer({
                   border: 'none',
                   background: testAnswers[currentQuestion] ? colors.accent : colors.border,
                   color: 'white',
-                  cursor: 'pointer',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
                 }}
               >

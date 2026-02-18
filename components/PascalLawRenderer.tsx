@@ -330,8 +330,8 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#CBD5E1',
+    textMuted: '#94A3B8',
     border: '#2a2a3a',
     fluid: '#EF4444',
     piston: '#64748B',
@@ -635,8 +635,8 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
         />
 
         {/* Force bar chart paths */}
-        <path
-          d={`M 40 ${height - 10} L 90 ${height - 10} L 90 ${height * 0.75} L 40 ${height * 0.75} Z`}
+        <rect
+          x="40" y={height * 0.75} width="50" height={height * 0.25 - 10}
           fill="#22c55e"
           opacity="0.3"
         />
@@ -645,18 +645,18 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
           fill="#ef4444"
           opacity="0.3"
         />
-        <path
-          d={`M 40 ${height * 0.05} L ${width - 40} ${height * 0.05} L ${width - 40} ${height * 0.08} L 40 ${height * 0.08} Z`}
+        <rect
+          x="40" y={height * 0.05} width={width - 80} height={height * 0.03}
           fill={colors.border}
           opacity="0.5"
         />
         <path
-          d={`M ${width/2 - 5} ${height * 0.12} L ${width/2 + 5} ${height * 0.12} L ${width/2} ${height * 0.18} Z`}
+          d={`M ${width/2 - 5} ${height * 0.12} L ${width/2 + 5} ${height * 0.12} L ${width/2} ${height * 0.45} Z`}
           fill={colors.accent}
           opacity="0.7"
         />
         <path
-          d={`M 90 ${height * 0.72} C 120 ${height * 0.68} ${width - 120} ${height * 0.68} ${width - 100} ${height * 0.72}`}
+          d={`M 90 ${height * 0.42} C 120 ${height * 0.38} ${width - 120} ${height * 0.38} ${width - 100} ${height * 0.42} S ${width - 80} ${height * 0.68} ${width - 100} ${height * 0.72}`}
           fill="none"
           stroke={colors.textMuted}
           strokeWidth="1"
@@ -1005,7 +1005,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
               Hydraulic Force Lab
             </h2>
             <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-              Adjust the piston areas and see how force gets multiplied!
+              This visualization demonstrates how hydraulic force multiplication works. Adjust the piston areas and observe how force gets multiplied!
             </p>
 
             {/* Observation guidance */}
@@ -1242,8 +1242,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
             The Physics of Pascal's Law
           </h2>
 
-          {prediction && (
-            <div style={{
+          <div style={{
               background: `${colors.success}22`,
               border: `1px solid ${colors.success}44`,
               borderRadius: '12px',
@@ -1253,10 +1252,11 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
               <p style={{ ...typo.small, color: colors.success, margin: 0, fontWeight: 600 }}>
                 {prediction === 'b'
                   ? '✓ Your prediction was correct! Pressure transmits equally throughout the fluid.'
-                  : `Your prediction suggested: "${options?.find?.((o: {id: string, text: string}) => o.id === prediction)?.text || prediction}". Let\'s see what actually happens.`}
+                  : prediction
+                    ? `Your prediction suggested: "${options?.find?.((o: {id: string, text: string}) => o.id === prediction)?.text || prediction}". Let\'s see what actually happened in the experiment.`
+                    : 'In this experiment, you observed that pressure transmits equally throughout the fluid. Your prediction will be compared here after you make one.'}
               </p>
             </div>
-          )}
 
           <div style={{
             background: colors.bgCard,
