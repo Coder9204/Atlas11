@@ -276,6 +276,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
   // Test state
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [checkedQuestions, setCheckedQuestions] = useState<boolean[]>(Array(10).fill(false));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
 
@@ -424,14 +425,14 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
           </filter>
         </defs>
 
-        {/* Interactive position indicator - moves with fileIndex slider */}
+        {/* Interactive position indicator - moves with fileIndex slider; color changes with defense state */}
         <circle
           cx={fileSystem.length > 1 ? Math.round(40 + (fileIndex / (fileSystem.length - 1)) * (width - 80)) : width / 2}
           cy={Math.round(height * 0.08)}
           r="9"
-          fill={attackTriggered && !attackBlocked ? colors.danger : attackBlocked ? colors.safe : '#3B82F6'}
-          stroke="white"
-          strokeWidth="2"
+          fill={attackTriggered && !attackBlocked ? colors.danger : (attackBlocked || hasSafeFolder) ? colors.safe : '#3B82F6'}
+          stroke={hasSafeFolder ? colors.safe : 'white'}
+          strokeWidth={hasSafeFolder ? 3 : 2}
           filter="url(#glow)"
         />
 
@@ -441,13 +442,13 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
         </text>
 
         {/* Y-axis label */}
-        <text x="15" y={height/2} textAnchor="middle" fill={colors.textMuted} fontSize="10" fontWeight="600" transform={`rotate(-90, 15, ${height/2})`}>
-          Y-Axis: Access Level
+        <text x="15" y={height/2} textAnchor="middle" fill={colors.textMuted} fontSize="12" fontWeight="600" transform={`rotate(-90, 15, ${height/2})`}>
+          Pressure Level
         </text>
 
         {/* X-axis label */}
-        <text x={width/2} y={height - 10} textAnchor="middle" fill={colors.textMuted} fontSize="10" fontWeight="600">
-          X-Axis: File Location
+        <text x={width/2} y={height - 10} textAnchor="middle" fill={colors.textMuted} fontSize="12" fontWeight="600">
+          File Position
         </text>
 
         {/* Grid lines */}
@@ -469,7 +470,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
               strokeWidth="2"
               strokeDasharray="6,3"
             />
-            <text x="100" y="68" textAnchor="middle" fill="#10B981" fontSize="10" fontWeight="600">
+            <text x="100" y="68" textAnchor="middle" fill="#10B981" fontSize="11" fontWeight="600">
               SAFE ZONE: /work/
             </text>
           </g>
@@ -478,8 +479,12 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
         {/* Files */}
         {fileSystem.map((file, i) => {
           const isInSafe = file.path.startsWith('/work/');
+          const safeFiles = fileSystem.filter(f => f.path.startsWith('/work/'));
+          const unsafeFiles = fileSystem.filter(f => !f.path.startsWith('/work/'));
+          const safeIdx = safeFiles.findIndex(f => f.path === file.path);
+          const unsafeIdx = unsafeFiles.findIndex(f => f.path === file.path);
           const x = isInSafe ? 45 : 250;
-          const y = isInSafe ? 80 + (i % 3) * 40 : 60 + (i % 2) * 50;
+          const y = isInSafe ? 60 + safeIdx * 40 : 60 + unsafeIdx * 50;
           const isSelected = selectedFile === file.path;
           const isBlocked = showDefenses && hasSafeFolder && !isInSafe && isSelected;
 
@@ -502,7 +507,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
                 x={x}
                 y={y}
                 width="120"
-                height="28"
+                height="36"
                 rx="6"
                 fill={isSelected
                   ? file.type === 'malicious' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(59, 130, 246, 0.3)'
@@ -514,16 +519,16 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
                 filter={isSelected ? 'url(#glow)' : undefined}
               />
               {/* File icon */}
-              <rect x={x + 8} y={y + 6} width="12" height="16" rx="2" fill={
+              <rect x={x + 8} y={y + 4} width="12" height="16" rx="2" fill={
                 file.type === 'malicious' ? colors.danger :
                 file.type === 'sensitive' ? colors.warning : colors.textMuted
               } opacity="0.6" />
               {/* File label */}
-              <text x={x + 28} y={y + 18} fill={colors.textPrimary} fontSize="11">
+              <text x={x + 28} y={y + 14} fill={colors.textPrimary} fontSize="11">
                 {file.label}
               </text>
               {/* Type badge */}
-              <text x={x + 115} y={y + 18} textAnchor="end" fill={
+              <text x={x + 115} y={y + 28} textAnchor="end" fill={
                 file.type === 'malicious' ? colors.danger :
                 file.type === 'sensitive' ? colors.warning : colors.textMuted
               } fontSize="11" fontWeight="500">
@@ -577,7 +582,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
             <animate attributeName="opacity" values="1;0.5;1" dur="1.5s" repeatCount="indefinite" />
           </circle>
           {/* Label */}
-          <text x="0" y="55" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="600">
+          <text x="-1" y="55" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="600">
             AI AGENT
           </text>
         </g>
@@ -600,32 +605,32 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
 
         {/* Status panel */}
         <g transform={`translate(${width - 130}, 180)`}>
-          <rect x="0" y="0" width="110" height="90" rx="8" fill={colors.bgSecondary} stroke={colors.border} />
-          <text x="55" y="18" textAnchor="middle" fill={colors.textMuted} fontSize="10" fontWeight="600">
+          <rect x="0" y="0" width="110" height="110" rx="8" fill={colors.bgSecondary} stroke={colors.border} />
+          <text x="55" y="18" textAnchor="middle" fill={colors.textMuted} fontSize="11" fontWeight="600">
             STATUS
           </text>
           {/* Attack status */}
           <circle cx="15" cy="38" r="6" fill={attackTriggered ? colors.danger : colors.textMuted} />
-          <text x="28" y="42" fill={colors.textSecondary} fontSize="10">
+          <text x="28" y="42" fill={colors.textSecondary} fontSize="11">
             {attackTriggered ? 'Attack!' : 'No attack'}
           </text>
           {/* Defense status */}
-          <circle cx="15" cy="58" r="6" fill={hasSafeFolder ? colors.safe : colors.textMuted} />
-          <text x="28" y="62" fill={colors.textSecondary} fontSize="10">
+          <circle cx="15" cy="56" r="6" fill={hasSafeFolder ? colors.safe : colors.textMuted} />
+          <text x="28" y="60" fill={colors.textSecondary} fontSize="11">
             {hasSafeFolder ? 'Protected' : 'No defense'}
           </text>
           {/* Outcome */}
           <rect
             x="5"
-            y="70"
+            y="84"
             width="100"
-            height="16"
+            height="20"
             rx="4"
             fill={attackTriggered
               ? attackBlocked ? colors.safe : colors.danger
               : colors.bgCard}
           />
-          <text x="55" y="81" textAnchor="middle" fill="white" fontSize="9" fontWeight="600">
+          <text x="55" y="96" textAnchor="middle" fill="white" fontSize="11" fontWeight="600">
             {attackTriggered
               ? attackBlocked ? 'BLOCKED' : 'COMPROMISED'
               : 'MONITORING'}
@@ -678,13 +683,13 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
         </text>
 
         {/* Y-axis label */}
-        <text x="12" y={height/2} textAnchor="middle" fill={colors.textMuted} fontSize="9" fontWeight="600" transform={`rotate(-90, 12, ${height/2})`}>
-          Y-Axis: Trust
+        <text x="12" y={height/2} textAnchor="middle" fill={colors.textMuted} fontSize="12" fontWeight="600" transform={`rotate(-90, 12, ${height/2})`}>
+          Pressure Level
         </text>
 
         {/* X-axis label */}
-        <text x={width/2} y={height - 10} textAnchor="middle" fill={colors.textMuted} fontSize="9" fontWeight="600">
-          X-Axis: Permission Type
+        <text x={width/2} y={height - 10} textAnchor="middle" fill={colors.textMuted} fontSize="12" fontWeight="600">
+          Permission Position
         </text>
 
         {/* Grid lines */}
@@ -787,12 +792,12 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
           onClick={() => goToPhase(p)}
           style={{
             width: phase === p ? '24px' : '8px',
-            height: '8px',
             borderRadius: '4px',
             border: 'none',
             background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
             cursor: 'pointer',
             transition: 'all 0.3s ease',
+            padding: '4px 0',
           }}
           aria-label={phaseLabels[p]}
         />
@@ -852,6 +857,65 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
             cursor: canGoNext ? 'pointer' : 'not-allowed',
             fontWeight: 600,
             fontSize: '15px',
+          }}
+        >
+          Next →
+        </button>
+      </div>
+    );
+  };
+
+  // Test phase nav bar with Next disabled
+  const renderTestNavBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgSecondary,
+        borderTop: `1px solid ${colors.border}`,
+        padding: '8px 16px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 200,
+      }}>
+        <button
+          onClick={() => { playSound('click'); if (canGoBack) goToPhase(phaseOrder[currentIndex - 1]); }}
+          disabled={!canGoBack}
+          aria-label="Back"
+          style={{
+            minHeight: '44px',
+            padding: '10px 20px',
+            borderRadius: '10px',
+            border: `1px solid ${colors.border}`,
+            background: canGoBack ? colors.bgCard : 'transparent',
+            color: canGoBack ? colors.textSecondary : colors.border,
+            cursor: canGoBack ? 'pointer' : 'not-allowed',
+            fontWeight: 600,
+            fontSize: '15px',
+          }}
+        >
+          ← Back
+        </button>
+        {renderNavDots()}
+        <button
+          disabled={true}
+          aria-label="Next →"
+          style={{
+            minHeight: '44px',
+            padding: '10px 20px',
+            borderRadius: '10px',
+            border: 'none',
+            background: colors.border,
+            color: 'white',
+            cursor: 'not-allowed',
+            fontWeight: 600,
+            fontSize: '15px',
+            opacity: 0.5,
           }}
         >
           Next →
@@ -941,6 +1005,9 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
             </p>
           </div>
 
+          <p style={{ fontSize: '12px', color: 'rgba(156, 163, 175, 0.7)', marginBottom: '16px' }}>
+            Used by security engineers in AI agent design and deployment
+          </p>
           <button
             onClick={() => { playSound('click'); nextPhase(); }}
             style={primaryButtonStyle}
@@ -1090,7 +1157,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
               marginBottom: '16px',
             }}>
               <p style={{ ...typo.small, color: colors.accent, margin: 0, fontWeight: 600 }}>
-                🔍 What to watch: Notice how malicious files (red) can compromise the agent. The attack status changes when you select dangerous content.
+                🔍 What to observe: When you increase the file index toward dangerous files, the threat level increases because the agent processes all content — including malicious instructions. This is why AI agent security matters in real-world applications: when an agent reads a file, it cannot distinguish legitimate content from injected commands. Higher pressure from untrusted inputs leads to greater attack risk. This concept is important for engineers designing AI-powered tools used in industry and technology.
               </p>
             </div>
 
@@ -1194,7 +1261,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
                 marginBottom: '8px',
                 fontWeight: 600,
               }}>
-                Select File to Access: {fileSystem[fileIndex].label}
+                File Position / Pressure: {fileSystem[fileIndex].label} — Threat Index: {fileIndex + 1}/{fileSystem.length}
               </label>
               <input
                 type="range"
@@ -1235,8 +1302,8 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
                 justifyContent: 'space-between',
                 marginTop: '4px',
               }}>
-                <span style={{ fontSize: '11px', color: '#C8C8D0' }}>Safe files</span>
-                <span style={{ fontSize: '11px', color: '#C8C8D0' }}>Dangerous files</span>
+                <span style={{ fontSize: '11px', color: '#C8C8D0' }}>Low Risk (min)</span>
+                <span style={{ fontSize: '11px', color: '#C8C8D0' }}>High Risk (max)</span>
               </div>
             </div>
           </div>
@@ -1285,7 +1352,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Understanding Prompt Injection
+            Understanding Prompt Injection — As You Observed in the Experiment
           </h2>
 
           {/* Prediction result */}
@@ -1298,10 +1365,10 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
               marginBottom: '24px',
             }}>
               <p style={{ ...typo.small, color: predictionCorrect ? colors.safe : colors.warning, margin: 0, fontWeight: 600 }}>
-                {predictionCorrect ? '✓ Your prediction was correct!' : '⟳ Your prediction was close - here is the key insight:'}
+                {predictionCorrect ? '✓ Your prediction was correct! As you observed in the experiment:' : '⟳ As you observed in the experiment — here is the key insight:'}
               </p>
               <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '8px', margin: '8px 0 0' }}>
-                Therefore: AI agents CAN be tricked because they process all text as potential instructions - therefore we need systematic defenses. The key insight is that because LLMs treat all text as instructions, the principle of least privilege and sandboxing are essential.
+                Therefore: AI agents CAN be tricked because they process all text as potential instructions — therefore we need systematic defenses. As you saw, because LLMs treat all text as instructions, the principle of least privilege and sandboxing are essential.
               </p>
             </div>
           )}
@@ -1425,6 +1492,28 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
             </p>
             <div style={{ marginTop: '16px', fontSize: '14px', color: colors.safe, fontFamily: 'monospace' }}>
               /work/* = ALLOWED | /home/* = BLOCKED | /tmp/* = BLOCKED
+            </div>
+            <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center' }}>
+              <svg width="320" height="160" viewBox="0 0 320 160" style={{ background: colors.bgSecondary, borderRadius: '8px' }}>
+                <defs>
+                  <filter id="predictGlow">
+                    <feGaussianBlur stdDeviation="2" result="blur" />
+                    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                  </filter>
+                </defs>
+                <text x="160" y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="600">Safe Folder Defense Boundary</text>
+                <text x="8" y="85" textAnchor="middle" fill={colors.textMuted} fontSize="12" fontWeight="600" transform="rotate(-90, 8, 85)">Pressure Level</text>
+                <text x="160" y="155" textAnchor="middle" fill={colors.textMuted} fontSize="12">File Position</text>
+                <rect x="20" y="35" width="120" height="80" rx="6" fill="rgba(16,185,129,0.15)" stroke={colors.safe} strokeWidth="2" strokeDasharray="6,3" />
+                <text x="80" y="52" textAnchor="middle" fill={colors.safe} fontSize="11" fontWeight="600">/work/ ALLOWED</text>
+                <rect x="170" y="35" width="120" height="80" rx="6" fill="rgba(239,68,68,0.1)" stroke={colors.danger} strokeWidth="2" strokeDasharray="6,3" />
+                <text x="230" y="52" textAnchor="middle" fill={colors.danger} fontSize="11" fontWeight="600">/home/ BLOCKED</text>
+                <circle cx="80" cy="90" r="10" fill={colors.safe} filter="url(#predictGlow)" />
+                <text x="80" y="94" textAnchor="middle" fill="white" fontSize="9" fontWeight="600">✓</text>
+                <circle cx="230" cy="90" r="10" fill={colors.danger} />
+                <line x1="225" y1="85" x2="235" y2="95" stroke="white" strokeWidth="2" strokeLinecap="round" />
+                <line x1="235" y1="85" x2="225" y2="95" stroke="white" strokeWidth="2" strokeLinecap="round" />
+              </svg>
             </div>
           </div>
 
@@ -1599,16 +1688,16 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
                 marginBottom: '8px',
                 fontWeight: 600,
               }}>
-                Defense Level: {hasSafeFolder ? 'Safe Folder Active (/work/ only)' : 'No Defense'}
+                Defense Pressure Level: {hasSafeFolder ? 'Safe Folder Active (/work/ only)' : 'No Defense (min)'}
               </label>
               <input
                 type="range"
                 min="0"
-                max="1"
+                max="100"
                 step="1"
-                value={hasSafeFolder ? 1 : 0}
+                value={hasSafeFolder ? 100 : 0}
                 onChange={(e) => {
-                  const enabled = e.target.value === '1';
+                  const enabled = parseInt(e.target.value) >= 50;
                   setHasSafeFolder(enabled);
                   playSound('click');
                   if (enabled && attackTriggered) {
@@ -1645,8 +1734,8 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
                 justifyContent: 'space-between',
                 marginTop: '4px',
               }}>
-                <span style={{ fontSize: '11px', color: '#C8C8D0' }}>No defense</span>
-                <span style={{ fontSize: '11px', color: '#C8C8D0' }}>Safe folder enabled</span>
+                <span style={{ fontSize: '11px', color: '#C8C8D0' }}>No defense (min)</span>
+                <span style={{ fontSize: '11px', color: '#C8C8D0' }}>Safe folder (max)</span>
               </div>
             </div>
 
@@ -1659,7 +1748,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
                 marginBottom: '8px',
                 fontWeight: 600,
               }}>
-                Select File to Access: {fileSystem[fileIndex].label}
+                File Position / Pressure: {fileSystem[fileIndex].label} — Threat Index: {fileIndex + 1}/{fileSystem.length}
               </label>
               <input
                 type="range"
@@ -1709,8 +1798,8 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
                 justifyContent: 'space-between',
                 marginTop: '4px',
               }}>
-                <span style={{ fontSize: '11px', color: '#C8C8D0' }}>Safe files</span>
-                <span style={{ fontSize: '11px', color: '#C8C8D0' }}>Dangerous files</span>
+                <span style={{ fontSize: '11px', color: '#C8C8D0' }}>Low Risk (min)</span>
+                <span style={{ fontSize: '11px', color: '#C8C8D0' }}>High Risk (max)</span>
               </div>
             </div>
           </div>
@@ -1976,6 +2065,14 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
               ))}
             </div>
 
+            {/* How it works detailed */}
+            <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', marginTop: '12px' }}>
+              <h4 style={{ ...typo.small, color: colors.textSecondary, marginBottom: '6px', fontWeight: 600 }}>Technical Details:</h4>
+              <p style={{ ...typo.small, color: colors.textMuted, margin: 0 }}>
+                {app.howItWorks} Defense strategy: {app.futureImpact}
+              </p>
+            </div>
+
             {/* Got it button for each app */}
             <div style={{ marginTop: '16px' }}>
               <button
@@ -2174,6 +2271,51 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
             ))}
           </div>
 
+          {/* Check Answer */}
+          {testAnswers[currentQuestion] !== null && !checkedQuestions[currentQuestion] && (
+            <button
+              onClick={() => {
+                const next = [...checkedQuestions];
+                next[currentQuestion] = true;
+                setCheckedQuestions(next);
+              }}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                const next = [...checkedQuestions];
+                next[currentQuestion] = true;
+                setCheckedQuestions(next);
+              }}
+              style={{
+                width: '100%',
+                padding: '14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: colors.accent,
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: 600,
+                marginBottom: '12px',
+              }}
+            >
+              Check Answer
+            </button>
+          )}
+
+          {checkedQuestions[currentQuestion] && (
+            <div style={{
+              background: testQuestions[currentQuestion].options.find(o => o.correct)?.id === testAnswers[currentQuestion]
+                ? `${colors.safe}22` : `${colors.danger}22`,
+              border: `1px solid ${testQuestions[currentQuestion].options.find(o => o.correct)?.id === testAnswers[currentQuestion] ? colors.safe : colors.danger}`,
+              borderRadius: '10px',
+              padding: '12px',
+              marginBottom: '12px',
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {testQuestions[currentQuestion].explanation}
+              </p>
+            </div>
+          )}
+
           {/* Navigation */}
           <div style={{ display: 'flex', gap: '12px' }}>
             {currentQuestion > 0 && (
@@ -2187,58 +2329,64 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
                   background: 'transparent',
                   color: colors.textSecondary,
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 Previous
               </button>
             )}
             {currentQuestion < 9 ? (
-              <button
-                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
-                disabled={!testAnswers[currentQuestion]}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
-                  color: 'white',
-                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Next
-              </button>
+              checkedQuestions[currentQuestion] ? (
+                <button
+                  onClick={() => setCurrentQuestion(currentQuestion + 1)}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: colors.accent,
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    minHeight: '44px',
+                  }}
+                >
+                  Next Question →
+                </button>
+              ) : null
             ) : (
-              <button
-                onClick={() => {
-                  const score = testAnswers.reduce((acc, ans, i) => {
-                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
-                    return acc + (ans === correct ? 1 : 0);
-                  }, 0);
-                  setTestScore(score);
-                  setTestSubmitted(true);
-                  playSound(score >= 7 ? 'complete' : 'failure');
-                }}
-                disabled={testAnswers.some(a => a === null)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
-                  color: 'white',
-                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Submit Test
-              </button>
+              checkedQuestions[currentQuestion] ? (
+                <button
+                  onClick={() => {
+                    const score = testAnswers.reduce((acc, ans, i) => {
+                      const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                      return acc + (ans === correct ? 1 : 0);
+                    }, 0);
+                    setTestScore(score);
+                    setTestSubmitted(true);
+                    playSound(score >= 7 ? 'complete' : 'failure');
+                  }}
+                  disabled={testAnswers.some(a => a === null)}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                    color: 'white',
+                    cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                    fontWeight: 600,
+                    minHeight: '44px',
+                  }}
+                >
+                  Submit Test
+                </button>
+              ) : null
             )}
           </div>
         </div>
 
-        {renderNavBar()}
+        {renderTestNavBar()}
       </div>
     );
   }
@@ -2268,11 +2416,11 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
         <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
         <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
-          Security Expert!
+          Security Expert! You Mastered It!
         </h1>
 
         <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You now understand prompt injection - one of the most critical security challenges for AI agents.
+          Congratulations! You have learned and mastered prompt injection — one of the most critical security challenges for AI agents. Great work completing this lesson!
         </p>
 
         <div style={{

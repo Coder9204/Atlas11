@@ -102,7 +102,7 @@ const phaseLabels: Record<PVPhase, string> = {
   play: 'Play',
   review: 'Review',
   twist_predict: 'Twist',
-  twist_play: 'Explore',
+  twist_play: 'Interact',
   twist_review: 'Explain',
   transfer: 'Apply',
   test: 'Test',
@@ -519,8 +519,8 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
             }} />
             {!isMobile && (
               <span style={{
-                fontSize: '9px',
-                color: isActive ? colors.accent : colors.textMuted,
+                fontSize: '11px',
+                color: isActive ? colors.accent : colors.textSecondary,
                 marginTop: '4px',
               }}>
                 {phaseLabels[p]}
@@ -534,7 +534,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
 
   const renderVisualization = (interactive: boolean, showAdaptive: boolean = false) => {
     const width = 700;
-    const height = 560;
+    const height = 480;
     const sim = runMonteCarloSimulation();
 
     // Histogram rendering - make it taller for better perceptibility
@@ -611,7 +611,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #0a0f1a 0%, #030712 100%)', borderRadius: '12px', maxWidth: '750px', maxHeight: '560px' }}
+          style={{ background: 'linear-gradient(180deg, #0a0f1a 0%, #030712 100%)', borderRadius: '12px', maxWidth: '750px', maxHeight: '480px' }}
         >
           <defs>
             {/* === PREMIUM BACKGROUND GRADIENTS === */}
@@ -1009,7 +1009,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
           {/* Histogram x-axis labels - abs */}
           <text x="330" y={265 + 48 + histogramHeight + 16} fill="#94a3b8" fontSize="11">{sim.minDelay.toFixed(2)} ns</text>
           <text x="630" y={265 + 48 + histogramHeight + 16} fill="#94a3b8" fontSize="11" textAnchor="end">{sim.maxDelay.toFixed(2)} ns</text>
-          <text x="480" y={265 + 48 + histogramHeight + 32} fill="#94a3b8" fontSize="11" textAnchor="middle">Path Delay (ns)</text>
+          <text x="480" y={265 + 48 + histogramHeight + 32} fill="#94a3b8" fontSize="11" textAnchor="middle">Path Delay / Clock Frequency (ns)</text>
 
           {/* Histogram y-axis rotate label */}
           <text x="282" y={265 + 48 + histogramHeight / 2} fill="#94a3b8" fontSize="11" textAnchor="middle" transform={`rotate(-90, 282, ${265 + 48 + histogramHeight / 2})`}>Count</text>
@@ -1092,8 +1092,8 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
   const renderControls = (showAdaptiveControls: boolean = false) => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: '600' }}>
-          Vth Variation (sigma): <strong style={{ color: colors.textPrimary }}>{vthVariation} mV</strong>
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+          Threshold Voltage (Vth) — controls transistor speed variation: <strong style={{ color: colors.textPrimary }}>{vthVariation} mV</strong>
         </label>
         <input
           type="range"
@@ -1107,8 +1107,8 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
       </div>
 
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: '600' }}>
-          Line Width Variation (sigma): <strong style={{ color: colors.textPrimary }}>{lineWidthVariation}%</strong>
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+          Line Width Variation — controls resistance and current density: <strong style={{ color: colors.textPrimary }}>{lineWidthVariation}%</strong>
         </label>
         <input
           type="range"
@@ -1122,8 +1122,8 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
       </div>
 
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: '600' }}>
-          Target Clock: <strong style={{ color: colors.textPrimary }}>{targetClock} MHz</strong>
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+          Target Clock Frequency — controls timing margin and power: <strong style={{ color: colors.textPrimary }}>{targetClock} MHz</strong>
         </label>
         <input
           type="range"
@@ -1269,7 +1269,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Process Variation
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px', fontWeight: '400' }}>
               If transistors are "the same design," why do chips vary?
             </p>
           </div>
@@ -1302,7 +1302,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomBar(false, true, 'Start Exploring')}
       </div>
     );
   }
@@ -1356,7 +1356,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
+        {renderBottomBar(true, true, 'Continue to Lab')}
       </div>
     );
   }
@@ -1391,6 +1391,13 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
               <li>Notice: a few slow paths dominate the failures!</li>
             </ul>
           </div>
+          <div style={{ background: 'rgba(16,185,129,0.1)', margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: '3px solid #10b981' }}>
+            <p style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: '400' }}>
+              <strong>Why this matters in industry:</strong> Process variation is why Intel, AMD, and TSMC test every chip
+              and sort them into performance tiers — the same design produces both premium and budget chips.
+              Understanding variation is essential for modern semiconductor engineering and real-world chip design.
+            </p>
+          </div>
         </div>
         {renderBottomBar(true, true, 'Continue to Review')}
       </div>
@@ -1416,8 +1423,8 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
             <p style={{ color: colors.textPrimary }}>
-              A few statistically slow paths dominate timing failures. Even with millions of paths,
-              only the 3-sigma outliers matter for yield. Design must close timing at these corners.
+              As you observed in the experiment, a few statistically slow paths dominate timing failures. This means even with millions of paths,
+              only the 3-sigma outliers matter for yield — because random variation follows a Gaussian distribution: Delay = Base × (1 + Vth_shift/200). Design must close timing at these corners.
             </p>
           </div>
 
@@ -1620,7 +1627,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
             </p>
           </div>
 
-          {transferApplications.map((app, index) => (
+          {realWorldApps.map((app, index) => (
             <div
               key={index}
               style={{
@@ -1632,12 +1639,20 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
+                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.icon} {app.title}</h3>
+                {transferCompleted.has(index) && <span style={{ color: colors.success }}>✅ Complete</span>}
               </div>
               <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                {app.stats.map((stat, si) => (
+                  <div key={si} style={{ background: 'rgba(245,158,11,0.1)', padding: '8px 12px', borderRadius: '8px', textAlign: 'center' }}>
+                    <div style={{ color: colors.accent, fontSize: '18px', fontWeight: 'bold' }}>{stat.icon} {stat.value}</div>
+                    <div style={{ color: colors.textSecondary, fontSize: '11px' }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
               <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
+                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.tagline}</p>
               </div>
               {!transferCompleted.has(index) ? (
                 <button
@@ -1653,11 +1668,11 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >
-                  Reveal Answer
+                  Got It — Show Details
                 </button>
               ) : (
                 <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.connection} {app.howItWorks}</p>
                 </div>
               )}
             </div>
@@ -1718,7 +1733,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <span style={{ color: colors.textSecondary, fontWeight: '600', fontSize: '16px' }}>Question {currentTestQuestion + 1} of {testQuestions.length}</span>
             </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
@@ -1734,6 +1749,11 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
                   }}
                 />
               ))}
+            </div>
+                    <div style={{ background: 'rgba(245,158,11,0.08)', padding: '16px', borderRadius: '12px', marginBottom: '12px', borderLeft: '3px solid rgba(245,158,11,0.4)' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6, fontStyle: 'italic' }}>
+                A semiconductor fab measures thousands of chips after manufacturing. Engineers observe that despite using identical design files, the chips show a spread of performance. Some run at 4.2GHz, most at 3.8GHz, and a few only reach 3.4GHz. Understanding the root cause is critical for maximizing yield and profit.
+              </p>
             </div>
             <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
               <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
@@ -1821,7 +1841,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered process variation physics</p>
           </div>

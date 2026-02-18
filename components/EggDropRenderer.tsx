@@ -436,7 +436,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
                   borderRadius: '6px',
                   border: 'none',
                   cursor: 'pointer',
-                  background: idx < currentIndex ? design.colors.success : p === phase ? design.colors.accentPrimary : design.colors.bgElevated,
+                  background: idx < currentIndex ? design.colors.success : p === phase ? design.colors.accentPrimary : 'rgba(148,163,184,0.7)',
                   transition: 'all 0.3s ease',
                   padding: 0
                 }}
@@ -527,6 +527,16 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
 
           {/* Sky background */}
           <rect x="0" y="0" width="400" height="350" fill="url(#skyGrad)" />
+
+          {/* Decorative trajectory path */}
+          <path
+            d={`M 50,${50} Q 200,${30} 350,${50}`}
+            fill="none"
+            stroke="#94a3b8"
+            strokeWidth="1"
+            strokeDasharray="4,4"
+            opacity="0.3"
+          />
 
           {/* Grid lines for reference */}
           {[0, 1, 2, 3, 4].map(i => (
@@ -1725,6 +1735,18 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
               <span style={{ fontSize: '14px', fontWeight: 600, color: design.colors.accentPrimary }}>
                 Question {testIndex + 1} of 10
               </span>
+            </div>
+
+            <div style={{
+              padding: design.spacing.md,
+              borderRadius: design.radius.md,
+              background: design.colors.bgCard,
+              border: `1px solid ${design.colors.border}`,
+              marginBottom: design.spacing.lg
+            }}>
+              <p style={{ fontSize: '13px', color: design.colors.textSecondary, lineHeight: 1.6, margin: 0 }}>
+                <strong style={{ color: design.colors.accentPrimary }}>Scenario:</strong> Apply your understanding of the impulse-momentum theorem (F = Δp/Δt) to real engineering and physics situations. Consider how extending collision time reduces peak impact forces.
+              </p>
             </div>
 
             <h3 style={{ fontSize: '20px', fontWeight: 700, color: design.colors.textPrimary, marginBottom: design.spacing.xl, lineHeight: 1.5 }}>

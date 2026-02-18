@@ -673,7 +673,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
 
         {/* PUE Gauge */}
         <g transform={`translate(${width - 100}, 50)`}>
-          <circle cx="40" cy="50" r="40" fill="#1f2937" stroke="#374151" strokeWidth="2" filter="url(#pueGlow)" />
+          <circle cx="40" cy="50" r="40" fill="#1f2937" stroke="#374151" strokeWidth="2" />
           <circle cx="40" cy="50" r="30" fill="none" stroke="#374151" strokeWidth="6" />
           <circle
             cx="40" cy="50" r="30"
@@ -682,18 +682,17 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             strokeWidth="6"
             strokeDasharray={`${Math.max(0, (1 - (metrics.pue - 1) / 2)) * 188} 188`}
             transform="rotate(-90, 40, 50)"
-            filter="url(#pueGlow)"
           />
-          <text x="40" y="45" textAnchor="middle" fontSize="18" fill="white" fontWeight="bold">{metrics.pue.toFixed(2)}</text>
-          <text x="40" y="60" textAnchor="middle" fontSize="11" fill={colors.textSecondary}>PUE</text>
-          <text x="40" y="100" textAnchor="middle" fontSize="11" fill={getPUEColor(metrics.pue)} fontWeight="bold">{metrics.efficiencyRating}</text>
+          <text x="40" y="25" textAnchor="middle" fontSize="18" fill="white" fontWeight="bold">{metrics.pue.toFixed(2)}</text>
+          <text x="40" y="90" textAnchor="middle" fontSize="11" fill={colors.textSecondary}>PUE</text>
+          <text x="40" y="107" textAnchor="middle" fontSize="11" fill={getPUEColor(metrics.pue)} fontWeight="bold">{metrics.efficiencyRating}</text>
         </g>
 
         {/* Outdoor temp indicator — always shown, changes based on temp value */}
         <g transform={`translate(20, ${height - 90})`}>
           <rect x="0" y="0" width={Math.max(20, Math.min(120, (outdoorTemp + 10) * 2.4))} height="12" rx="3"
             fill={outdoorTemp < 18 ? '#06b6d4' : outdoorTemp < 25 ? '#3b82f6' : '#ef4444'} opacity="0.8" />
-          <text x="0" y="25" fontSize="11" fill={colors.textSecondary}>Outdoor: {outdoorTemp}°C</text>
+          <text x="0" y="39" fontSize="11" fill={colors.textSecondary}>Outdoor: {outdoorTemp}°C</text>
         </g>
 
         {/* Formula */}
@@ -716,6 +715,15 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             </text>
           </g>
         )}
+        {/* Interactive efficiency indicator point */}
+        <circle
+          cx={20 + ((itLoad - 100) / 4900) * (width - 40)}
+          cy={height / 2 - 20}
+          r="10"
+          fill={getPUEColor(metrics.pue)}
+          filter="url(#pueGlow)"
+          opacity="0.9"
+        />
       </svg>
     );
   };
@@ -1824,8 +1832,14 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
             marginBottom: '16px',
             borderLeft: `3px solid ${colors.accent}`,
           }}>
+            <p style={{ ...typo.small, color: colors.accent, fontWeight: 600, margin: '0 0 8px 0' }}>
+              Scenario Context:
+            </p>
             <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>
               {question.scenario}
+            </p>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: '8px 0 0 0' }}>
+              Use PUE = Total Facility Power / IT Equipment Power to analyze data center efficiency.
             </p>
           </div>
 

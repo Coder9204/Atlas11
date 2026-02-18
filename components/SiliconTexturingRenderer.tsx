@@ -1005,6 +1005,12 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
               <li>Try shallow light angles - notice texturing helps more!</li>
               <li>Count the light bounces in each configuration</li>
             </ul>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', marginTop: '12px', lineHeight: 1.6, margin: '12px 0 0 0' }}>
+              When you increase the texture depth, it causes light to bounce more times before escaping, which leads to greater absorption. Higher texture density results in more internal reflections because each pyramid face redirects light back into the silicon material.
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', marginTop: '8px', lineHeight: 1.6 }}>
+              This technology is important in solar cell manufacturing. Silicon texturing enables higher efficiency by trapping up to 95% of incident light. Engineers design these pyramid structures to maximize energy conversion, making solar panels more practical and cost-effective for real-world applications in the photovoltaic industry.
+            </p>
           </div>
         </div>
         {renderBottomBar(false, true, 'Continue to Review')}

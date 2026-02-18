@@ -57,10 +57,10 @@ const testQuestions = [
     scenario: 'A building maintenance technician is reviewing the electrical panel and notices that the building uses 100 kW of real power but draws 125 kVA from the utility.',
     question: 'What is the power factor of this building?',
     options: [
-      { id: 'a', label: '0.5' },
-      { id: 'b', label: '0.8', correct: true },
-      { id: 'c', label: '1.0' },
-      { id: 'd', label: '1.25' }
+      { id: 'a', label: 'A) 0.50 — only half efficient', correct: false },
+      { id: 'b', label: 'B) 0.80 — correct ratio of 100/125', correct: true },
+      { id: 'c', label: 'C) 1.00 — perfectly in phase', correct: false },
+      { id: 'd', label: 'D) 1.25 — exceeds apparent power', correct: false }
     ],
     explanation: 'Power factor is the ratio of real power (kW) to apparent power (kVA). Here, PF = 100 kW / 125 kVA = 0.8. This means only 80% of the apparent power is doing useful work, while the remaining current is reactive power that oscillates without performing work.'
   },
@@ -68,10 +68,10 @@ const testQuestions = [
     scenario: 'An electrical engineer is explaining power consumption to a factory manager. The facility has motors drawing 500 kW real power, 300 kVAR reactive power, and the meter shows 583 kVA apparent power.',
     question: 'Which relationship correctly describes how these three types of power are related?',
     options: [
-      { id: 'a', label: 'Apparent = Real + Reactive (linear sum)' },
-      { id: 'b', label: 'Apparent = sqrt(Real^2 + Reactive^2) (vector sum)', correct: true },
-      { id: 'c', label: 'Real = Apparent x Reactive' },
-      { id: 'd', label: 'Reactive = Apparent - Real' }
+      { id: 'a', label: 'A) Apparent = Real + Reactive (linear sum)', correct: false },
+      { id: 'b', label: 'B) Apparent = sqrt(Real^2 + Reactive^2) vector sum', correct: true },
+      { id: 'c', label: 'C) Real = Apparent multiplied by Reactive', correct: false },
+      { id: 'd', label: 'D) Reactive = Apparent minus Real (subtraction)', correct: false }
     ],
     explanation: 'Real power and reactive power are 90 degrees out of phase, so they combine as vectors using the Pythagorean theorem. Apparent power = sqrt(500^2 + 300^2) = sqrt(250000 + 90000) = sqrt(340000) = 583 kVA. This is the power triangle relationship.'
   },
@@ -79,10 +79,10 @@ const testQuestions = [
     scenario: 'A manufacturing plant receives their monthly electricity bill showing a $2,400 penalty charge. Their average power factor was measured at 0.72, while the utility requires a minimum of 0.90.',
     question: 'Why do utilities penalize customers with low power factor?',
     options: [
-      { id: 'a', label: 'Low power factor wastes energy as heat in customer equipment' },
-      { id: 'b', label: 'Reactive current requires larger transformers, cables, and generators without delivering billable energy', correct: true },
-      { id: 'c', label: 'It causes voltage fluctuations that damage utility meters' },
-      { id: 'd', label: 'Government regulations mandate power factor fees' }
+      { id: 'a', label: 'A) Low power factor wastes energy as heat in equipment', correct: false },
+      { id: 'b', label: 'B) Reactive current requires larger infrastructure without delivering billable energy', correct: true },
+      { id: 'c', label: 'C) It causes voltage fluctuations that damage utility meters', correct: false },
+      { id: 'd', label: 'D) Government regulations mandate power factor fees always', correct: false }
     ],
     explanation: 'Reactive power does not consume energy but requires the same infrastructure (transformers, cables, switchgear) as real power. A 0.72 PF means the utility must provide 39% more current capacity than if PF were 1.0. This ties up utility assets without generating revenue, so penalties incentivize correction.'
   },
@@ -90,10 +90,10 @@ const testQuestions = [
     scenario: 'A plant engineer measures power factor on a 50 HP induction motor under different load conditions. At full load the PF is 0.85, but at 25% load the PF drops to 0.55.',
     question: 'Why does an induction motor have lower power factor at partial load?',
     options: [
-      { id: 'a', label: 'The motor runs hotter at light load, increasing resistance' },
-      { id: 'b', label: 'Magnetizing current stays constant while load current decreases, so reactive portion dominates', correct: true },
-      { id: 'c', label: 'Motor slip increases at partial load causing current lag' },
-      { id: 'd', label: 'Light loads cause harmonic distortion that reduces power factor' }
+      { id: 'a', label: 'A) The motor runs hotter at light load, increasing wire resistance', correct: false },
+      { id: 'b', label: 'B) Magnetizing current stays constant while load current drops, so reactive portion dominates', correct: true },
+      { id: 'c', label: 'C) Motor slip increases at partial load causing current lag', correct: false },
+      { id: 'd', label: 'D) Light loads cause harmonic distortion reducing power factor', correct: false }
     ],
     explanation: 'Induction motors require constant magnetizing current to maintain the rotating magnetic field, regardless of load. At full load, the large in-phase work current dominates. At partial load, work current drops but magnetizing current stays the same, so the ratio of reactive to real current increases, lowering power factor.'
   },
@@ -101,10 +101,10 @@ const testQuestions = [
     scenario: 'A facility has a lagging power factor of 0.75 due to numerous motors. An electrical contractor proposes installing a 200 kVAR capacitor bank to improve power factor to 0.95.',
     question: 'How do capacitors correct lagging power factor?',
     options: [
-      { id: 'a', label: 'They store energy to reduce peak demand' },
-      { id: 'b', label: 'They filter harmonics that cause power factor problems' },
-      { id: 'c', label: 'They supply leading reactive power that cancels the lagging reactive power from inductors', correct: true },
-      { id: 'd', label: 'They increase voltage to reduce current draw' }
+      { id: 'a', label: 'A) They store energy to reduce overall peak demand charges', correct: false },
+      { id: 'b', label: 'B) They filter harmonics that cause power factor problems broadly', correct: false },
+      { id: 'c', label: 'C) They supply leading reactive power that cancels lagging reactive power from inductors', correct: true },
+      { id: 'd', label: 'D) They increase voltage to reduce current draw automatically', correct: false }
     ],
     explanation: 'Capacitors draw current that leads voltage by 90 degrees, while inductors draw current that lags voltage by 90 degrees. When placed in parallel with inductive loads, capacitors supply the reactive current locally instead of drawing it from the utility. The leading and lagging currents cancel, reducing net reactive power.'
   },
@@ -112,10 +112,10 @@ const testQuestions = [
     scenario: 'A power systems engineer is analyzing two loads. Load A has current lagging voltage by 30 degrees. Load B has current leading voltage by 30 degrees.',
     question: 'Which statement correctly describes the power factor characteristic of each load?',
     options: [
-      { id: 'a', label: 'Load A is leading (capacitive), Load B is lagging (inductive)' },
-      { id: 'b', label: 'Load A is lagging (inductive), Load B is leading (capacitive)', correct: true },
-      { id: 'c', label: 'Both loads have unity power factor since the angles are equal' },
-      { id: 'd', label: 'Power factor cannot be determined from phase angle alone' }
+      { id: 'a', label: 'A) Load A is leading (capacitive), Load B is lagging (inductive)', correct: false },
+      { id: 'b', label: 'B) Load A is lagging (inductive), Load B is leading (capacitive)', correct: true },
+      { id: 'c', label: 'C) Both loads have unity power factor since the angles are equal', correct: false },
+      { id: 'd', label: 'D) Power factor cannot be determined from phase angle alone', correct: false }
     ],
     explanation: 'Lagging power factor means current lags voltage, caused by inductive loads like motors and transformers. Leading power factor means current leads voltage, caused by capacitive loads or over-corrected power factor. Load A (current lags) is inductive/lagging; Load B (current leads) is capacitive/leading.'
   },
@@ -123,10 +123,10 @@ const testQuestions = [
     scenario: 'A data center has many switch-mode power supplies and variable frequency drives. Power quality measurements show a displacement power factor of 0.98 but a true power factor of only 0.82.',
     question: 'What causes the difference between displacement power factor and true power factor?',
     options: [
-      { id: 'a', label: 'Measurement error in the power analyzer' },
-      { id: 'b', label: 'Harmonic distortion creates non-sinusoidal currents that reduce true power factor', correct: true },
-      { id: 'c', label: 'Voltage fluctuations during the measurement period' },
-      { id: 'd', label: 'Phase imbalance between the three phases' }
+      { id: 'a', label: 'A) Measurement error in the power quality analyzer instrument', correct: false },
+      { id: 'b', label: 'B) Harmonic distortion creates non-sinusoidal currents that reduce true PF', correct: true },
+      { id: 'c', label: 'C) Voltage fluctuations occurring during the measurement period', correct: false },
+      { id: 'd', label: 'D) Phase imbalance between the three electrical phases present', correct: false }
     ],
     explanation: 'Displacement power factor only considers the phase shift at the fundamental frequency (50/60 Hz). True power factor includes the effect of harmonics, which are multiples of the fundamental frequency. Non-linear loads like VFDs and SMPS draw distorted current, contributing apparent power but not real power, reducing true PF even when displacement PF is high.'
   },
@@ -134,10 +134,10 @@ const testQuestions = [
     scenario: 'A utility substation has voltage regulation problems. Engineers install a synchronous condenser, which is essentially a synchronous motor running without mechanical load.',
     question: 'How does a synchronous condenser provide reactive power support?',
     options: [
-      { id: 'a', label: 'It stores energy in a flywheel to supply power during voltage dips' },
-      { id: 'b', label: 'By adjusting field excitation, it can operate as either a capacitor or inductor to supply or absorb reactive power', correct: true },
-      { id: 'c', label: 'It generates harmonics that cancel out power factor problems' },
-      { id: 'd', label: 'Its rotating mass filters out voltage transients' }
+      { id: 'a', label: 'A) It stores energy in a flywheel to supply power during voltage dips', correct: false },
+      { id: 'b', label: 'B) By adjusting field excitation it can supply or absorb reactive power dynamically', correct: true },
+      { id: 'c', label: 'C) It generates harmonics that cancel out power factor problems', correct: false },
+      { id: 'd', label: 'D) Its rotating mass filters out voltage transients in the grid', correct: false }
     ],
     explanation: 'A synchronous condenser is a synchronous motor with no mechanical load. When over-excited (high field current), it generates leading reactive power like a capacitor. When under-excited, it absorbs reactive power like an inductor. This adjustable reactive power capability provides dynamic voltage support and power factor correction.'
   },
@@ -145,10 +145,10 @@ const testQuestions = [
     scenario: 'A three-phase industrial facility has balanced loads on each phase. Phase A shows 0.82 power factor, Phase B shows 0.82 power factor, and Phase C shows 0.82 power factor.',
     question: 'What is the overall three-phase power factor of this facility?',
     options: [
-      { id: 'a', label: 'Cannot be determined without knowing the phase sequence' },
-      { id: 'b', label: '0.82, the same as each individual phase', correct: true },
-      { id: 'c', label: '0.946 (geometric mean of the three phases)' },
-      { id: 'd', label: '2.46 (sum of the three phases)' }
+      { id: 'a', label: 'A) Cannot be determined without knowing the phase sequence', correct: false },
+      { id: 'b', label: 'B) 0.82 — the same as each individual phase power factor', correct: true },
+      { id: 'c', label: 'C) 0.946 — the geometric mean of the three individual phases', correct: false },
+      { id: 'd', label: 'D) 2.46 — the arithmetic sum of the three phase values', correct: false }
     ],
     explanation: 'For a balanced three-phase system where each phase has identical power factor, the overall three-phase power factor equals the individual phase power factor. The power triangles for each phase are identical and simply scale up. With balanced loads at 0.82 PF on each phase, the total system operates at 0.82 PF.'
   },
@@ -156,10 +156,10 @@ const testQuestions = [
     scenario: 'A pump system is being upgraded from a fixed-speed motor with direct-on-line starting to a variable frequency drive (VFD) for energy savings. The old motor had 0.87 power factor at full load.',
     question: 'How does adding a VFD typically affect the power factor seen by the utility?',
     options: [
-      { id: 'a', label: 'VFDs always improve power factor to near unity' },
-      { id: 'b', label: 'VFDs have no effect on power factor' },
-      { id: 'c', label: 'VFDs maintain high displacement PF but may reduce true PF due to harmonic distortion', correct: true },
-      { id: 'd', label: 'VFDs always reduce power factor to below 0.7' }
+      { id: 'a', label: 'A) VFDs always improve power factor to near unity automatically', correct: false },
+      { id: 'b', label: 'B) VFDs have no measurable effect on power factor at all', correct: false },
+      { id: 'c', label: 'C) VFDs maintain high displacement PF but may reduce true PF via harmonic distortion', correct: true },
+      { id: 'd', label: 'D) VFDs always reduce power factor to below 0.7 lagging', correct: false }
     ],
     explanation: 'VFDs use a rectifier front-end that typically maintains high displacement power factor (near unity for active front-end designs, or 0.95+ for 6-pulse). However, the rectifier draws non-sinusoidal current containing harmonics, which reduces true power factor. The net effect depends on VFD design and may require harmonic filters to maintain good true power factor.'
   }
@@ -278,6 +278,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
   const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
+  const [checkedQuestions, setCheckedQuestions] = useState<boolean[]>(Array(10).fill(false));
 
   // Transfer state
   const [selectedApp, setSelectedApp] = useState(0);
@@ -513,76 +514,96 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100dvh',
+        minHeight: '600px',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        paddingTop: '48px',
-        paddingBottom: '100px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
-
         <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '100px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
         }}>
-          ⚡🔌
-        </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
-
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Power Factor
-        </h1>
-
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          "A <span style={{ color: colors.error }}>1000W motor</span> and a <span style={{ color: colors.success }}>1000W heater</span> both say 1000W - but the motor actually draws <span style={{ color: colors.warning }}>25% more current</span>. Why?"
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '16px' }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '32px', marginBottom: '8px' }}>🔥</div>
-              <div style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>Heater</div>
-              <div style={{ ...typo.small, color: colors.success }}>1000W = 8.3A</div>
-              <div style={{ ...typo.small, color: colors.success }}>PF = 1.0</div>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '32px', marginBottom: '8px' }}>⚙️</div>
-              <div style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>Motor</div>
-              <div style={{ ...typo.small, color: colors.warning }}>1000W = 10.4A!</div>
-              <div style={{ ...typo.small, color: colors.warning }}>PF = 0.8</div>
-            </div>
+          <div style={{
+            fontSize: '64px',
+            marginBottom: '24px',
+            animation: 'pulse 2s infinite',
+          }}>
+            ⚡🔌
           </div>
-          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            The motor needs extra "reactive" current to create magnetic fields - current that does no work but still heats wires!
+          <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px', fontWeight: 800 }}>
+            Power Factor
+          </h1>
+
+          <p style={{
+            ...typo.body,
+            color: colors.textSecondary,
+            maxWidth: '600px',
+            marginBottom: '32px',
+            fontWeight: 400,
+          }}>
+            {"A "}
+            <span style={{ color: colors.error }}>1000W motor</span>
+            {" and a "}
+            <span style={{ color: colors.success }}>1000W heater</span>
+            {" both say 1000W - but the motor actually draws "}
+            <span style={{ color: colors.warning }}>25% more current</span>
+            {". Why?"}
           </p>
+          <p style={{ color: colors.textMuted, fontSize: '13px', marginBottom: '16px', fontWeight: 500 }}>
+            Explore how reactive power causes inductive loads to draw more current. Power factor = Real / Apparent power.
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            maxWidth: '500px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '16px' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '32px', marginBottom: '8px' }}>🔥</div>
+                <div style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>Heater</div>
+                <div style={{ ...typo.small, color: colors.success }}>1000W = 8.3A</div>
+                <div style={{ ...typo.small, color: colors.success }}>PF = 1.0</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '32px', marginBottom: '8px' }}>⚙️</div>
+                <div style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>Motor</div>
+                <div style={{ ...typo.small, color: colors.warning }}>1000W = 10.4A!</div>
+                <div style={{ ...typo.small, color: colors.warning }}>PF = 0.8</div>
+              </div>
+            </div>
+            <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+              The motor needs extra "reactive" current to create magnetic fields - current that does no work but still heats wires!
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('click'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, background: 'linear-gradient(135deg, #A855F7, #7C3AED)' }}
+          >
+            Explore Power Factor
+          </button>
+
+          {renderNavDots()}
         </div>
-
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Explore Power Factor
-        </button>
-
-        {renderNavDots()}
+        {renderNavigationBar()}
       </div>
     );
   }
@@ -597,15 +618,17 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100dvh',
+        minHeight: '600px',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '48px',
-        paddingBottom: '100px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -718,6 +741,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
             </button>
           )}
         </div>
+        </div>
 
         {renderNavDots()}
         {renderNavigationBar()}
@@ -732,15 +756,17 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100dvh',
+        minHeight: '600px',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '48px',
-        paddingBottom: '100px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Voltage & Current Waveforms
           </h2>
@@ -860,7 +886,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
                   cy={110 - Math.sin((15 / 60) * 4 * Math.PI + animationTime) * 50}
                   r="8"
                   fill={colors.voltage}
-                  filter="url(#pointGlow)"
+                  opacity="0.7"
                 />
                 <circle
                   cx={50 + 15 * 5}
@@ -879,6 +905,10 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
                 <text x="200" y="185" textAnchor="middle" fill={colors.textMuted} fontSize="11">180°</text>
                 <text x="350" y="185" textAnchor="middle" fill={colors.textMuted} fontSize="11">360°</text>
                 <text x="200" y="210" textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="600">PF = cos({currentPhaseAngle}°) = {currentPF.toFixed(2)}</text>
+                {/* Axis labels */}
+                <text x="16" y="80" fill={colors.textMuted} fontSize="11" textAnchor="middle" transform="rotate(-90,16,80)">Amplitude</text>
+                <text x="395" y="195" fill={colors.textMuted} fontSize="11" textAnchor="end">Time</text>
+                <circle cx={395} cy={110} r={2} fill="rgba(168,85,247,0.1)" />
               </g>
             </svg>
 
@@ -897,7 +927,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
             {/* Phase Angle Slider */}
             <div style={{ marginBottom: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Phase Angle (Inductive Lag)</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Phase Angle (voltage-current angle, power factor control)</span>
                 <span style={{ ...typo.small, color: getPFColor(currentPF), fontWeight: 600 }}>{phaseSlider}° → PF = {currentPF.toFixed(2)}</span>
               </div>
               <input
@@ -1024,6 +1054,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
             {hasExperimented ? 'Understand the Physics' : 'Try both load types'}
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
         {renderNavigationBar()}
@@ -1035,17 +1066,19 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100dvh',
+        minHeight: '600px',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '48px',
-        paddingBottom: '100px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            The Physics of Power Factor
+            The Physics of Power Factor — As You Observed in the Experiment
           </h2>
 
           {/* Power Triangle */}
@@ -1125,11 +1158,15 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
             <h3 style={{ ...typo.h3, color: colors.error, marginBottom: '12px' }}>
               Why Low Power Factor Costs Money
             </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '12px' }}>
+              {prediction === 'lags' ? 'You correctly predicted that current lags voltage in motors! ' : 'As you observed in the experiment, '}
+              Because motors draw reactive current, utilities must size their infrastructure for the full apparent power (kVA), not just the real power (kW). Therefore, low power factor means paying for infrastructure that delivers no useful work.
+            </p>
             <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
-              <li>Utilities charge penalties for PF below 0.9</li>
-              <li>Larger cables needed to carry reactive current</li>
-              <li>Transformers and switchgear must be oversized</li>
-              <li>More I²R losses heating up your wiring</li>
+              <li>Utilities charge penalties for PF below 0.9 — because they bear the infrastructure cost</li>
+              <li>Larger cables needed to carry reactive current — this means higher material costs</li>
+              <li>Transformers and switchgear must be oversized — therefore capital costs rise</li>
+              <li>More I²R losses heating up your wiring — this means wasted energy</li>
             </ul>
           </div>
 
@@ -1139,6 +1176,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
           >
             Discover the Solution
           </button>
+        </div>
         </div>
 
         {renderNavDots()}
@@ -1157,15 +1195,17 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100dvh',
+        minHeight: '600px',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '48px',
-        paddingBottom: '100px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1270,6 +1310,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
             </button>
           )}
         </div>
+        </div>
 
         {renderNavDots()}
         {renderNavigationBar()}
@@ -1281,15 +1322,17 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100dvh',
+        minHeight: '600px',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '48px',
-        paddingBottom: '100px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Power Factor Correction
           </h2>
@@ -1520,6 +1563,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
             {hasExploredTwist ? 'Understand the Benefits' : 'Adjust the slider'}
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
         {renderNavigationBar()}
@@ -1531,15 +1575,17 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100dvh',
+        minHeight: '600px',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '48px',
-        paddingBottom: '100px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Why Power Factor Correction Pays Off
           </h2>
@@ -1626,6 +1672,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
             See Real-World Applications
           </button>
         </div>
+        </div>
 
         {renderNavDots()}
         {renderNavigationBar()}
@@ -1640,21 +1687,29 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100dvh',
+        minHeight: '600px',
         background: colors.bgPrimary,
-        padding: '24px',
-        paddingTop: '48px',
-        paddingBottom: '100px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
           <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '16px' }}>
             Application {selectedApp + 1} of {realWorldApps.length}
           </p>
+          <div style={{ background: 'rgba(245,158,11,0.1)', padding: '12px', borderRadius: '8px', marginBottom: '16px', border: `1px solid ${colors.warning}` }}>
+            <p style={{ color: colors.warning, fontWeight: 700, marginBottom: '4px', fontSize: '13px' }}>Industry Stats:</p>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0 }}>
+              Global power factor correction market: $5B+ annually. Companies like ABB, Siemens, Schneider Electric, and Eaton supply capacitor banks. Industrial plants save 15-30% on electricity bills by correcting PF from 0.75 to 0.95. A single 500 kVAR capacitor bank costs ~$50K but saves $100K/year in penalties.
+            </p>
+          </div>
 
           {/* App selector */}
           <div style={{
@@ -1791,6 +1846,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
             </button>
           )}
         </div>
+        </div>
 
         {renderNavDots()}
         {renderNavigationBar()}
@@ -1798,21 +1854,77 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
     );
   }
 
-  // TEST PHASE
+  // TEST PHASE - bottom nav Next disabled during active quiz
+  const renderTestNavigationBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canGoBack = currentIndex > 0;
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgCard,
+        borderTop: `1px solid ${colors.border}`,
+        padding: '16px 24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 100,
+      }}>
+        <button
+          onClick={() => canGoBack && goToPhase(phaseOrder[currentIndex - 1])}
+          disabled={!canGoBack}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.border}`,
+            background: canGoBack ? colors.bgSecondary : 'transparent',
+            color: canGoBack ? colors.textPrimary : colors.textMuted,
+            cursor: canGoBack ? 'pointer' : 'not-allowed',
+            opacity: canGoBack ? 1 : 0.5,
+            fontSize: '14px',
+            fontWeight: 600,
+          }}
+        >
+          ← Back
+        </button>
+        <button
+          disabled={true}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '8px',
+            border: 'none',
+            background: colors.border,
+            color: colors.textMuted,
+            cursor: 'not-allowed',
+            opacity: 0.5,
+            fontSize: '14px',
+            fontWeight: 600,
+          }}
+        >
+          Next →
+        </button>
+      </div>
+    );
+  };
+
   if (phase === 'test') {
     if (testSubmitted) {
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          height: '100dvh',
+          minHeight: '600px',
           background: colors.bgPrimary,
-          padding: '24px',
-        paddingTop: '48px',
-        paddingBottom: '100px',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}>
           {renderProgressBar()}
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
 
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', padding: '24px', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
@@ -1853,6 +1965,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
               </button>
             )}
           </div>
+          </div>
           {renderNavDots()}
           {renderNavigationBar()}
         </div>
@@ -1860,14 +1973,20 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
     }
 
     const question = testQuestions[currentQuestion];
+    const isAnswered = testAnswers[currentQuestion] !== null;
+    const isChecked = checkedQuestions[currentQuestion];
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100dvh',
+        minHeight: '600px',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           {/* Progress */}
@@ -1914,114 +2033,145 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
             {question.question}
           </h3>
 
+          <p style={{ color: colors.textMuted, fontSize: '12px', marginBottom: '12px' }}>
+            Select the best answer. Use the power factor formula: PF = Real Power (kW) / Apparent Power (kVA) = cos(φ).
+          </p>
+
           {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-            {question.options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => {
-                  playSound('click');
-                  const newAnswers = [...testAnswers];
-                  newAnswers[currentQuestion] = opt.id;
-                  setTestAnswers(newAnswers);
-                }}
-                style={{
-                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '10px',
-                  padding: '14px 16px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
-                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '24px',
-                  marginRight: '10px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.small }}>
-                  {opt.label}
-                </span>
-              </button>
-            ))}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
+            {question.options.map(opt => {
+              const isSelected = testAnswers[currentQuestion] === opt.id;
+              const correct = question.options.find(o => o.correct)?.id;
+              const showFeedback = isChecked;
+              let bg = isSelected ? `${colors.accent}22` : colors.bgCard;
+              let borderColor = isSelected ? colors.accent : colors.border;
+              if (showFeedback && isSelected) {
+                bg = opt.correct ? `${colors.success}22` : `${colors.error}22`;
+                borderColor = opt.correct ? colors.success : colors.error;
+              }
+              if (showFeedback && opt.id === correct && !isSelected) {
+                bg = `${colors.success}11`;
+                borderColor = colors.success;
+              }
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    if (isChecked) return;
+                    playSound('click');
+                    const newAnswers = [...testAnswers];
+                    newAnswers[currentQuestion] = opt.id;
+                    setTestAnswers(newAnswers);
+                  }}
+                  style={{
+                    background: bg,
+                    border: `2px solid ${borderColor}`,
+                    borderRadius: '10px',
+                    padding: '14px 16px',
+                    textAlign: 'left',
+                    cursor: isChecked ? 'default' : 'pointer',
+                  }}
+                >
+                  <span style={{ color: colors.textPrimary, ...typo.small }}>
+                    {opt.label}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
-          {/* Navigation */}
-          <div style={{ display: 'flex', gap: '12px' }}>
-            {currentQuestion > 0 && (
-              <button
-                onClick={() => setCurrentQuestion(currentQuestion - 1)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                }}
-              >
-                Previous
-              </button>
-            )}
-            {currentQuestion < 9 ? (
-              <button
-                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
-                disabled={!testAnswers[currentQuestion]}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
-                  color: 'white',
-                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Next
-              </button>
-            ) : (
+          {/* Check Answer button */}
+          {isAnswered && !isChecked && (
+            <div style={{ marginBottom: '12px' }}>
               <button
                 onClick={() => {
-                  const score = testAnswers.reduce((acc, ans, i) => {
-                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
-                    return acc + (ans === correct ? 1 : 0);
-                  }, 0);
-                  setTestScore(score);
-                  setTestSubmitted(true);
-                  playSound(score >= 7 ? 'complete' : 'failure');
+                  const next = [...checkedQuestions];
+                  next[currentQuestion] = true;
+                  setCheckedQuestions(next);
                 }}
-                disabled={testAnswers.some(a => a === null)}
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  const next = [...checkedQuestions];
+                  next[currentQuestion] = true;
+                  setCheckedQuestions(next);
+                }}
                 style={{
-                  flex: 1,
+                  width: '100%',
                   padding: '14px',
                   borderRadius: '10px',
                   border: 'none',
-                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  background: 'linear-gradient(135deg, #A855F7, #7C3AED)',
                   color: 'white',
-                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  cursor: 'pointer',
                   fontWeight: 600,
+                  fontSize: '15px',
                 }}
               >
-                Submit Test
+                Check Answer
               </button>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* Explanation after checking */}
+          {isChecked && (
+            <div style={{ marginBottom: '12px', padding: '12px', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #86efac' }}>
+              <p style={{ fontSize: '13px', color: '#15803d', margin: 0 }}>
+                <strong>Explanation:</strong> {question.explanation}
+              </p>
+            </div>
+          )}
+
+          {/* Navigation - only show after checking */}
+          {isChecked && (
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {currentQuestion < 9 ? (
+                <button
+                  onClick={() => setCurrentQuestion(currentQuestion + 1)}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: 'linear-gradient(135deg, #A855F7, #7C3AED)',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                  }}
+                >
+                  Next Question →
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    const score = testAnswers.reduce((acc, ans, i) => {
+                      const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                      return acc + (ans === correct ? 1 : 0);
+                    }, 0);
+                    setTestScore(score);
+                    setTestSubmitted(true);
+                    playSound(score >= 7 ? 'complete' : 'failure');
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: 'linear-gradient(135deg, #10B981, #059669)',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                  }}
+                >
+                  Submit Test →
+                </button>
+              )}
+            </div>
+          )}
+        </div>
         </div>
 
         {renderNavDots()}
-        {renderNavigationBar()}
+        {renderTestNavigationBar()}
       </div>
     );
   }
@@ -2030,16 +2180,26 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100dvh',
+        minHeight: '600px',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: '60px',
+          paddingBottom: '100px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '24px',
+          textAlign: 'center',
+        }}>
 
         <div style={{
           fontSize: '100px',
@@ -2108,6 +2268,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
           >
             Return to Dashboard
           </a>
+        </div>
         </div>
 
         {renderNavDots()}

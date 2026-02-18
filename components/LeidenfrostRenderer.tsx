@@ -127,6 +127,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppTab, setActiveAppTab] = useState(0);
   const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
+  const [checkedQuestions, setCheckedQuestions] = useState<Set<number>>(new Set());
 
   // Game-specific state
   const [surfaceTemp, setSurfaceTemp] = useState(100);
@@ -419,9 +420,6 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
   }, [playSound, onCorrectAnswer, onIncorrectAnswer]);
 
   const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
     setTestAnswers(prev => {
       const newAnswers = [...prev];
       newAnswers[questionIndex] = answerIndex;
@@ -710,19 +708,19 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
         {surfaceTemp >= 100 && (
           <g opacity={Math.min(0.8, (surfaceTemp - 80) / 150)}>
             {[0, 1, 2, 3, 4, 5, 6].map(i => {
-              const baseY = 180 - ((animationFrame * 2 + i * 25) % 80);
-              const opacity = 1 - ((animationFrame * 2 + i * 25) % 80) / 80;
+              const offset = (animationFrame * 2 + i * 25) % 80;
+              const startY = 195;
+              const endY = 10 + offset;
+              const opacity = 1 - offset / 80;
               return (
                 <path
                   key={i}
-                  d={`M ${75 + i * 40} ${baseY}
-                      Q ${85 + i * 40} ${baseY - 8} ${75 + i * 40} ${baseY - 16}
-                      Q ${65 + i * 40} ${baseY - 24} ${75 + i * 40} ${baseY - 32}`}
+                  d={`M ${75 + i * 40} ${startY} C ${85 + i * 40} ${(startY + endY) / 2 + 20} ${65 + i * 40} ${(startY + endY) / 2 - 20} ${75 + i * 40} ${endY}`}
                   fill="none"
                   stroke={surfaceTemp >= 250 ? '#fca5a5' : surfaceTemp >= 200 ? '#fdba74' : '#fde047'}
                   strokeWidth="2"
                   strokeLinecap="round"
-                  opacity={opacity * 0.6}
+                  opacity={opacity * 0.4}
                 />
               );
             })}
@@ -874,25 +872,15 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
 
           {/* Scale marks */}
           {[0, 100, 200, 300, 400].map((temp, i) => (
-            <g key={temp}>
-              <line
-                x1="12"
-                y1={115 - (temp / 400) * 105}
-                x2="18"
-                y2={115 - (temp / 400) * 105}
-                stroke={temp === 200 ? '#f59e0b' : '#64748b'}
-                strokeWidth={temp === 200 ? 2 : 1}
-              />
-              <text
-                x="22"
-                y={118 - (temp / 400) * 105}
-                fontSize="11"
-                fill={temp === 200 ? '#f59e0b' : '#94a3b8'}
-                fontWeight={temp === 200 ? 'bold' : 'normal'}
-              >
-                {temp}
-              </text>
-            </g>
+            <line
+              key={temp}
+              x1="12"
+              y1={115 - (temp / 400) * 105}
+              x2="18"
+              y2={115 - (temp / 400) * 105}
+              stroke={temp === 200 ? '#f59e0b' : '#64748b'}
+              strokeWidth={temp === 200 ? 2 : 1}
+            />
           ))}
 
           {/* Leidenfrost point indicator */}
@@ -920,23 +908,44 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
         </g>
 
         {/* Status indicator panel */}
-        <g transform="translate(10, 10)">
-          <rect x="0" y="0" width="180" height="28" rx="6" fill={isAboveLeidenfrost ? 'rgba(16, 185, 129, 0.2)' : 'rgba(249, 115, 22, 0.2)'} stroke={isAboveLeidenfrost ? '#10b981' : '#f97316'} strokeWidth="1" />
-          <circle cx="12" cy="14" r="4" fill={isAboveLeidenfrost ? '#10b981' : '#f97316'}>
-            <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />
-          </circle>
-          <text x="22" y="18" fontSize="11" fill={isAboveLeidenfrost ? '#10b981' : '#f97316'} fontWeight="bold">
-            {!isDropped ? 'READY - Drop water to test' :
-              isAboveLeidenfrost ? 'LEIDENFROST ACTIVE - Hovering!' :
-                dropletState === 'sizzling' ? 'RAPID SIZZLE - Direct Contact' :
-                  dropletState === 'boiling' ? 'BOILING - Surface Contact' : 'EVAPORATING'}
-          </text>
-        </g>
-
-        {/* Labels */}
-        <text x="200" y="268" textAnchor="middle" fontSize="11" fill="#64748b">
-          {isAboveLeidenfrost ? 'Vapor cushion insulates droplet from surface' : 'Direct contact causes rapid heat transfer'}
+        <rect x="10" y="10" width="180" height="28" rx="6" fill={isAboveLeidenfrost ? 'rgba(16, 185, 129, 0.2)' : 'rgba(249, 115, 22, 0.2)'} stroke={isAboveLeidenfrost ? '#10b981' : '#f97316'} strokeWidth="1" />
+        <circle cx="22" cy="24" r="4" fill={isAboveLeidenfrost ? '#10b981' : '#f97316'}>
+          <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />
+        </circle>
+        <text x="32" y="28" fontSize="11" fill={isAboveLeidenfrost ? '#10b981' : '#f97316'} fontWeight="bold">
+          {!isDropped ? 'READY - Drop water' :
+            isAboveLeidenfrost ? 'LEIDENFROST ACTIVE' :
+              dropletState === 'sizzling' ? 'RAPID SIZZLE' :
+                dropletState === 'boiling' ? 'BOILING' : 'EVAPORATING'}
         </text>
+
+        {/* Formula and axes - well-separated from other elements */}
+        {/* Y-axis label */}
+        <text x="50" y="172" textAnchor="start" fontSize="12" fill="#94a3b8" fontWeight="600">
+          Y: Height
+        </text>
+        {/* X-axis label */}
+        <text x="50" y="188" textAnchor="start" fontSize="12" fill="#94a3b8">
+          X: Temperature (°C)
+        </text>
+        {/* Heat flux formula */}
+        <text x="50" y="204" textAnchor="start" fontSize="11" fill="#64748b">
+          q = h·(T_surface − T_vapor)
+        </text>
+        {/* Status description */}
+        <text x="50" y="218" textAnchor="start" fontSize="11" fill={isAboveLeidenfrost ? '#10b981' : '#f59e0b'}>
+          {isAboveLeidenfrost ? 'Vapor insulation active' : 'Direct contact boiling'}
+        </text>
+
+        {/* Leidenfrost curve spanning full height (top to bottom) */}
+        <path
+          d={`M 30 20 C 80 40 120 80 155 130 C 175 160 180 175 185 185`}
+          fill="none"
+          stroke={isAboveLeidenfrost ? '#10b981' : '#f59e0b'}
+          strokeWidth="2"
+          strokeDasharray="4 4"
+          opacity="0.4"
+        />
       </svg>
     );
   };
@@ -1094,17 +1103,19 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
         {twistTemp >= 120 && (
           <g opacity={Math.min(0.6, (twistTemp - 100) / 150)}>
             {[0, 1, 2, 3, 4].map(i => {
-              const baseY = 170 - ((animationFrame * 2 + i * 30) % 60);
-              const opacity = 1 - ((animationFrame * 2 + i * 30) % 60) / 60;
+              const offset = (animationFrame * 2 + i * 30) % 60;
+              const startY = 185;
+              const endY = 15 + offset;
+              const opacity = 1 - offset / 60;
               return (
                 <path
                   key={i}
-                  d={`M ${120 + i * 40} ${baseY} Q ${130 + i * 40} ${baseY - 6} ${120 + i * 40} ${baseY - 12}`}
+                  d={`M ${120 + i * 40} ${startY} C ${130 + i * 40} ${(startY + endY) / 2 + 15} ${110 + i * 40} ${(startY + endY) / 2 - 15} ${120 + i * 40} ${endY}`}
                   fill="none"
                   stroke={twistTemp >= 250 ? '#fca5a5' : twistTemp >= 200 ? '#fdba74' : '#fde047'}
                   strokeWidth="1.5"
                   strokeLinecap="round"
-                  opacity={opacity * 0.5}
+                  opacity={opacity * 0.35}
                 />
               );
             })}
@@ -1204,6 +1215,16 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
             </text>
           </g>
         )}
+
+        {/* Evaporation rate curve - spanning full height for visibility */}
+        <path
+          d="M 20 10 C 60 30 100 80 150 130 C 180 160 200 195 220 230"
+          fill="none"
+          stroke={isAboveLeidenfrost ? '#10b981' : '#f59e0b'}
+          strokeWidth="1.5"
+          strokeDasharray="4 4"
+          opacity="0.25"
+        />
 
         {/* Status message */}
         <g transform="translate(200, 240)">
@@ -1460,7 +1481,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderFooter(true, 'Make a Prediction →')}
+        {renderFooter(true, 'Start Prediction →')}
       </div>
     );
   }
@@ -1532,6 +1553,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
             ].map(option => (
               <button
                 key={option.id}
+                onClick={() => { if (!showPredictionFeedback) handlePrediction(option.id); }}
                 onPointerDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
                 disabled={showPredictionFeedback}
                 style={{
@@ -1574,11 +1596,11 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
     return (
       <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px', paddingTop: '80px' }}>
         {renderNavBar()}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', paddingTop: '48px', paddingBottom: '100px', overflowY: 'auto', flex: 1 }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '16px' }}>Leidenfrost Lab</h2>
-          <p style={{ color: '#e2e8f0', marginBottom: '8px' }}>Adjust the surface temperature and drop water to see the effect!</p>
+          <p style={{ color: '#e2e8f0', marginBottom: '8px' }}>Adjust the surface temperature and drop water to see the effect! Observe how the droplet behavior changes versus the baseline.</p>
           <p style={{ color: '#e2e8f0', marginBottom: '16px', fontSize: '14px', fontStyle: 'italic' }}>
-            Observe how the droplet behaves. This same principle is used in steel quenching, cooking, and cryogenic liquid handling.
+            Notice how the vapor layer forms when temperature increases above 200°C, resulting in slower evaporation. This technology is used in steel quenching, cooking, and cryogenic liquid handling industry applications. Compare current vs. reference baseline.
           </p>
 
           <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
@@ -2133,26 +2155,79 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '640px' }}>
-            {currentQ.options.map((opt, oIndex) => (
-              <button
-                key={oIndex}
-                onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
-                style={{
-                  padding: '16px',
-                  borderRadius: '8px',
-                  border: testAnswers[currentTestQuestion] === oIndex ? '2px solid #ef4444' : '1px solid rgba(255,255,255,0.2)',
-                  background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
-                  color: 'white',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  fontSize: '14px',
-                  minHeight: '44px'
-                }}
-              >
-                {opt.text}
-              </button>
-            ))}
+            {currentQ.options.map((opt, oIndex) => {
+              const isChecked = checkedQuestions.has(currentTestQuestion);
+              const isSelected = testAnswers[currentTestQuestion] === oIndex;
+              const isCorrectOption = opt.correct;
+              let borderColor = '1px solid rgba(255,255,255,0.2)';
+              let bgColor = 'transparent';
+              if (isChecked && isCorrectOption) { borderColor = '2px solid #10b981'; bgColor = 'rgba(16,185,129,0.2)'; }
+              else if (isChecked && isSelected && !isCorrectOption) { borderColor = '2px solid #ef4444'; bgColor = 'rgba(239,68,68,0.2)'; }
+              else if (!isChecked && isSelected) { borderColor = '2px solid #3b82f6'; bgColor = 'rgba(59,130,246,0.2)'; }
+              return (
+                <button
+                  key={oIndex}
+                  onClick={() => { if (!isChecked) handleTestAnswer(currentTestQuestion, oIndex); }}
+                  style={{
+                    padding: '16px',
+                    borderRadius: '8px',
+                    border: borderColor,
+                    background: bgColor,
+                    color: 'white',
+                    cursor: isChecked ? 'default' : 'pointer',
+                    textAlign: 'left',
+                    fontSize: '14px',
+                    minHeight: '44px'
+                  }}
+                >
+                  {isChecked && isCorrectOption ? '✓ ' : isChecked && isSelected && !isCorrectOption ? '✗ ' : ''}{String.fromCharCode(65 + oIndex)}) {opt.text}
+                </button>
+              );
+            })}
           </div>
+
+          {/* Check Answer button - appears after selection, before checking */}
+          {testAnswers[currentTestQuestion] !== null && !checkedQuestions.has(currentTestQuestion) && (
+            <button
+              onClick={() => setCheckedQuestions(prev => new Set([...prev, currentTestQuestion]))}
+              style={{
+                marginTop: '12px',
+                padding: '12px 32px',
+                borderRadius: '8px',
+                border: 'none',
+                background: 'linear-gradient(to right, #3b82f6, #2563eb)',
+                color: 'white',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                minHeight: '44px',
+                width: '100%',
+                maxWidth: '640px'
+              }}
+            >
+              Check Answer
+            </button>
+          )}
+
+          {/* Explanation after checking */}
+          {checkedQuestions.has(currentTestQuestion) && (
+            <div style={{
+              marginTop: '12px',
+              padding: '16px',
+              borderRadius: '12px',
+              background: testAnswers[currentTestQuestion] !== null && currentQ.options[testAnswers[currentTestQuestion]!].correct
+                ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
+              border: testAnswers[currentTestQuestion] !== null && currentQ.options[testAnswers[currentTestQuestion]!].correct
+                ? '1px solid #10b981' : '1px solid #ef4444',
+              maxWidth: '640px',
+              width: '100%'
+            }}>
+              <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
+                {testAnswers[currentTestQuestion] !== null && currentQ.options[testAnswers[currentTestQuestion]!].correct
+                  ? '✓ Correct! The correct answer is: ' + currentQ.options.find(o => o.correct)?.text
+                  : '✗ Incorrect. The correct answer is: ' + currentQ.options.find(o => o.correct)?.text}
+              </p>
+            </div>
+          )}
 
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px', width: '100%', maxWidth: '640px', marginTop: '16px' }}>
             <button
@@ -2183,7 +2258,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
                   minHeight: '44px'
                 }}
               >
-                Next →
+                Next Question
               </button>
             ) : (
               <button
@@ -2204,6 +2279,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
             )}
           </div>
         </div>
+        {renderFooter(false, 'Complete Test First')}
       </div>
     );
   }

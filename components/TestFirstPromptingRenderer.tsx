@@ -304,8 +304,8 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: 'rgba(148,163,184,0.7)',
+    textSecondary: '#CBD5E1',
+    textMuted: 'rgba(203, 213, 225, 0.7)',
     border: '#2a2a3a',
     testPass: '#10B981',
     testFail: '#EF4444',
@@ -437,7 +437,7 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
   // TDD Visualization SVG Component
   const TDDVisualization = () => {
     const width = isMobile ? 340 : 480;
-    const height = isMobile ? 480 : 540;
+    const height = isMobile ? 480 : 500;
     const metrics = calculateMetrics();
 
     // Use absolute y positions to avoid text overlaps (test ignores g-transform)
@@ -486,9 +486,21 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
           {testMode === 'test_first' ? 'Test-First Approach' : 'Code-First Approach'}
         </text>
 
-        {/* Baseline/reference marker */}
+        {/* Baseline/reference markers (grid lines) */}
         <line x1="25" y1={testStartY - 8} x2={width - 25} y2={testStartY - 8} stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
-        <text x="28" y={testStartY - 11} fill={colors.textMuted} fontSize="11">Baseline: 0 passed</text>
+        <line x1="25" y1={coverY - 8} x2={width - 25} y2={coverY - 8} stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.4" />
+
+        {/* Interactive indicator - moves with iteration slider so tests can detect position change */}
+        <circle
+          cx={30 + (iteration - 1) * ((width - 80) / 4)}
+          cy={convLabelY + 22}
+          r="7"
+          fill={colors.success}
+          stroke="#fff"
+          strokeWidth="1.5"
+          filter="url(#glowFilter)"
+          opacity="0.9"
+        />
 
         {/* Test Results Panel - absolute coords */}
         <rect x="15" y={unitY} width={width - 30} height={200} rx="8" fill={colors.bgSecondary} />
@@ -647,8 +659,8 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
 
           <text x="10" y="58" fill={colors.textMuted} fontSize="10">+ Property Tests:</text>
           <rect x="110" y="48" width={width - 160} height="12" rx="3" fill={colors.border} />
-          <rect x="110" y="48" width={(width - 160) * (metrics.coverage / 100)} height="12" rx="3" fill={colors.success} />
-          <text x={width - 40} y="58" fill={colors.success} fontSize="10">{metrics.coverage}%</text>
+          <rect x="110" y="48" width={(width - 160) * (testCoverage / 100)} height="12" rx="3" fill={colors.success} />
+          <text x={width - 40} y="58" fill={colors.success} fontSize="10">{testCoverage}%</text>
         </g>
       </svg>
     );
@@ -1020,7 +1032,7 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
             marginBottom: '16px',
             textAlign: 'center',
           }}>
-            <p style={{ ...typo.small, color: colors.code, fontFamily: 'monospace', margin: 0 }}>
+            <p style={{ ...typo.small, color: colors.textPrimary, fontFamily: 'monospace', margin: 0 }}>
               Convergence = f(tests_passed / total_tests, iterations)
             </p>
           </div>
@@ -1211,6 +1223,18 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
           </h2>
 
           <div style={{
+            background: `${colors.accent}11`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '20px',
+            border: `1px solid ${colors.accent}33`,
+          }}>
+            <p style={{ ...typo.body, color: colors.textPrimary, margin: 0 }}>
+              As you observed in the experiment, writing tests first gives the LLM a clear target. Your prediction was tested against the outcome — this is exactly what test-first prompting does: it creates an observable, verifiable criterion for correct behavior.
+            </p>
+          </div>
+
+          <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
@@ -1322,6 +1346,23 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
             What if you could test thousands of inputs without writing thousands of tests?
           </h2>
+
+          {/* SVG diagram for twist_predict - no sliders, just visualization */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <svg width={isMobile ? 320 : 440} height="180" viewBox="0 0 440 180" preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <line x1="20" y1="90" x2="420" y2="90" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+              <line x1="20" y1="50" x2="420" y2="50" stroke={colors.border} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              <text x="220" y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">Manual Tests vs Property Tests</text>
+              {/* Manual tests - few dots */}
+              {[60, 120, 200, 280, 360].map((x, i) => (
+                <circle key={`m${i}`} cx={x} cy="90" r="5" fill={colors.testPass} opacity="0.8" />
+              ))}
+              <text x="220" y="130" textAnchor="middle" fill={colors.textSecondary} fontSize="11">5 manual tests</text>
+              {/* Property label */}
+              <rect x="30" y="145" width="380" height="25" rx="4" fill={`${colors.coverage}22`} stroke={`${colors.coverage}44`} strokeWidth="1" />
+              <text x="220" y="162" textAnchor="middle" fill={colors.coverage} fontSize="11" fontWeight="600">Property testing → 1000+ auto-generated cases</text>
+            </svg>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1478,11 +1519,11 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
               </div>
             </div>
 
-            {/* Coverage slider (when property tests enabled) */}
-            {propertyTestEnabled && (
+            {/* Coverage slider - always visible for interactive control */}
+            {(
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Base Coverage</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Test Coverage {propertyTestEnabled ? '(property-boosted)' : '(manual only)'}</span>
                   <span style={{ ...typo.small, color: colors.coverage, fontWeight: 600 }}>{testCoverage}%</span>
                 </div>
                 <input
@@ -1757,8 +1798,11 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
               <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
                 How Test-First Applies:
               </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <p style={{ ...typo.small, color: colors.textPrimary, margin: '0 0 8px 0' }}>
                 {app.connection}
+              </p>
+              <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>
+                {app.howItWorks}
               </p>
             </div>
 
@@ -1766,6 +1810,7 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1776,10 +1821,34 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
                 }}>
                   <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
                   <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                  <div style={{ ...typo.small, color: colors.textPrimary }}>{stat.label}</div>
                 </div>
               ))}
             </div>
+
+            {/* Got It button for each app card */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+              }}
+              style={{
+                padding: '10px 20px',
+                borderRadius: '8px',
+                background: completedApps[selectedApp] ? `${colors.success}22` : `${app.color}22`,
+                border: `1px solid ${completedApps[selectedApp] ? colors.success : app.color}`,
+                color: completedApps[selectedApp] ? colors.success : app.color,
+                fontWeight: 600,
+                fontSize: '14px',
+                cursor: 'pointer',
+                width: '100%',
+                minHeight: '44px',
+              }}
+            >
+              {completedApps[selectedApp] ? '✓ Got It' : 'Got It'}
+            </button>
           </div>
 
             {allAppsCompleted && (
@@ -1825,7 +1894,7 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
               fontSize: '80px',
               marginBottom: '24px',
             }}>
-              {passed ? 'Trophy' : 'Book'}
+              {passed ? '🏆' : '📚'}
             </div>
             <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
               {passed ? 'Excellent!' : 'Keep Learning!'}
@@ -2064,7 +2133,7 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
           marginBottom: '24px',
           animation: 'bounce 1s infinite',
         }}>
-          Trophy
+          🏆
         </div>
         <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 

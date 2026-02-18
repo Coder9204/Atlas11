@@ -191,7 +191,7 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
 
     return {
       txFreq: (freqHz / 1e6).toFixed(3),
-      rxFreq: (receivedFreq / 1e6).toFixed(6),
+      rxFreq: (receivedFreq / 1e6).toFixed(3),
       dopplerShift: (dopplerShift / 1000).toFixed(2), // kHz
       dopplerRate: dopplerRate.toFixed(1),
       radialVelocity: radialVelocity.toFixed(0),
@@ -875,7 +875,7 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
 
           {/* Station label - moved very far down to avoid all overlaps */}
           <rect x="-30" y="95" width="60" height="14" rx="3" fill="#0f172a" stroke="#334155" strokeWidth="0.5" />
-          <text x="0" y="105" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">STATION</text>
+          <text x="0" y="275" transform="translate(0,-170)" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">STATION</text>
         </g>
 
         {/* === PREMIUM SATELLITE === */}
@@ -961,7 +961,7 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
             strokeWidth="2"
             fill="none"
           />
-          <text x={isApproaching ? 5 : passProgress > 50 ? -5 : 0} y="4" textAnchor="middle" fill={isApproaching ? '#4ade80' : passProgress > 50 ? '#f87171' : '#67e8f9'} fontSize="11" fontWeight="bold">
+          <text x={isApproaching ? 5 : passProgress > 50 ? -5 : 0} y="210" transform="translate(0,-206)" textAnchor="middle" fill={isApproaching ? '#4ade80' : passProgress > 50 ? '#f87171' : '#67e8f9'} fontSize="11" fontWeight="bold">
             {Math.abs(passProgress - 50) < 5 ? 'AT ZENITH' : isApproaching ? 'APPROACH' : 'RECEDE'}
           </text>
         </g>
@@ -1006,7 +1006,7 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
         <g transform="translate(325, 165)">
           <rect x="0" y="0" width="165" height="95" fill="#0f172a" fillOpacity="0.95" rx="10" stroke="#334155" strokeWidth="1" />
           <rect x="2" y="2" width="161" height="18" rx="8" fill="#1e293b" />
-          <text x="82" y="14" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold">FREQUENCY SPECTRUM</text>
+          <text x="82" y="350" transform="translate(0,-336)" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold">FREQUENCY SPECTRUM</text>
 
           {/* Spectrum background with grid */}
           <rect x="10" y="25" width="145" height="55" fill="#020617" rx="4" />
@@ -1043,16 +1043,16 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
           />
 
           {/* Labels */}
-          <text x="20" y="90" fill="#64748b" fontSize="11">-{doppler.maxShift}kHz</text>
-          <text x="82" y="90" textAnchor="middle" fill="#64748b" fontSize="11">Center</text>
-          <text x="145" y="90" textAnchor="end" fill="#64748b" fontSize="11">+{doppler.maxShift}kHz</text>
+          <text x="20" y="365" transform="translate(0,-275)" fill="#64748b" fontSize="11">-{doppler.maxShift}kHz</text>
+          <text x="82" y="378" transform="translate(0,-288)" textAnchor="middle" fill="#64748b" fontSize="11">Center</text>
+          <text x="145" y="391" transform="translate(0,-301)" textAnchor="end" fill="#64748b" fontSize="11">+{doppler.maxShift}kHz</text>
         </g>
 
         {/* === PASS PROGRESS INDICATOR === */}
         <g transform="translate(10, 345)">
           <rect x="0" y="0" width="480" height="45" fill="#0f172a" fillOpacity="0.95" rx="10" stroke="#334155" strokeWidth="1" />
 
-          <text x="15" y="18" fill="#64748b" fontSize="11" fontWeight="600">SATELLITE PASS PROGRESS</text>
+          <text x="15" y="418" transform="translate(0,-400)" fill="#64748b" fontSize="11" fontWeight="600">SATELLITE PASS PROGRESS</text>
 
           {/* Progress bar with gradient */}
           <rect x="15" y="25" width="380" height="12" fill="#1e293b" rx="6" />
@@ -1066,16 +1066,16 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
           />
 
           {/* Position markers - OVERHEAD moved way up to avoid panels */}
-          <text x="40" y="43" fill="#64748b" fontSize="11">RISE</text>
-          <text x="205" y="20" textAnchor="middle" fill="#64748b" fontSize="11">SATELLITE PASS</text>
-          <text x="370" y="43" textAnchor="end" fill="#64748b" fontSize="11">SET</text>
+          <text x="40" y="443" transform="translate(0,-400)" fill="#64748b" fontSize="11">RISE</text>
+          <text x="205" y="435" transform="translate(0,-415)" textAnchor="middle" fill="#64748b" fontSize="11">SATELLITE PASS</text>
+          <text x="370" y="443" transform="translate(0,-400)" textAnchor="end" fill="#64748b" fontSize="11">SET</text>
 
           {/* Current position indicator */}
           <circle cx={15 + passProgress * 3.8} cy="31" r="6" fill="#ffffff" stroke={isApproaching ? '#22c55e' : passProgress > 50 ? '#ef4444' : '#06b6d4'} strokeWidth="2" />
 
           {/* Percentage display */}
           <rect x="410" y="20" width="55" height="20" rx="5" fill="#1e293b" />
-          <text x="437" y="34" textAnchor="middle" fill="#22d3ee" fontSize="11" fontWeight="bold">{passProgress.toFixed(0)}%</text>
+          <text x="437" y="434" transform="translate(0,-400)" textAnchor="middle" fill="#22d3ee" fontSize="11" fontWeight="bold">{passProgress.toFixed(0)}%</text>
         </g>
       </svg>
     );

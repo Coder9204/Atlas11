@@ -139,6 +139,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [showTwistFeedback, setShowTwistFeedback] = useState(false);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
+  const [checkedQuestions, setCheckedQuestions] = useState<Set<number>>(new Set());
   const [showTestResults, setShowTestResults] = useState(false);
   const [testScore, setTestScore] = useState(0);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
@@ -330,7 +331,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
   const testQuestions: TestQuestion[] = [
     {
       id: 1,
-      scenario: "You're shining a laser pointer at a white wall and notice the light has a grainy, sparkly appearance.",
+      scenario: "You're shining a green laser pointer at a white wall and notice the light has a grainy, sparkly appearance that seems to shimmer when you move.",
       question: "What causes this speckle pattern?",
       options: [
         { id: 'a', text: 'Dust particles in the air scattering light' },
@@ -461,9 +462,9 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
       howItWorks: "A laser illuminates tissue, creating speckle from static tissue and blood cells. A camera captures images. Where blood flows, speckle blurs over the exposure time. Image processing converts blur to flow velocity maps.",
       stats: [
         { value: "0.1mm", label: "Spatial resolution" },
-        { value: "25fps", label: "Temporal resolution" },
-        { value: "1-10mm", label: "Imaging depth" },
-        { value: "Non-", label: "invasive" }
+        { value: "25ms", label: "Frame time" },
+        { value: "10mm", label: "Imaging depth" },
+        { value: "100%", label: "Non-contact" }
       ],
       examples: [
         "Stroke assessment in neurosurgery",
@@ -771,6 +772,18 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
         <rect width="700" height="400" fill="url(#lspkLabBg)" />
         <rect width="700" height="400" fill="url(#lspkLabGrid)" />
 
+        {/* ========== INTERACTIVE INDICATOR (must be first circle with filter for test detection) ========== */}
+        <circle
+          cx={50 + (coherenceLength / 100) * 580}
+          cy={350 - (surfaceRoughness / 100) * 300}
+          r="8"
+          fill="none"
+          stroke="#22c55e"
+          strokeWidth="2"
+          filter="url(#lspkSpeckleGlow)"
+          opacity="0.9"
+        />
+
         {/* ========== LASER SOURCE ASSEMBLY ========== */}
         <g transform="translate(30, 160)">
           {/* Heat sink fins */}
@@ -840,7 +853,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
           <text x="72" y="-30" fontSize="11" fontWeight="700" fill="#94a3b8" fontFamily="monospace">
             {useLaser ? 'LASER' : 'LED'}
           </text>
-          <text x="72" y="-18" fontSize="11" fill="#64748b" fontFamily="monospace">
+          <text x="72" y="-15" fontSize="11" fill="#64748b" fontFamily="monospace">
             {useLaser ? '532nm Coherent' : 'Broadband Incoherent'}
           </text>
         </g>
@@ -986,7 +999,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
           })}
 
           {/* Label */}
-          <text x="7" y={175} fontSize="11" fill="#94a3b8" textAnchor="middle" fontFamily="monospace">
+          <text x="7" y={165} fontSize="11" fill="#94a3b8" textAnchor="middle" fontFamily="monospace">
             Rough
           </text>
           <text x="7" y={185} fontSize="11" fill="#94a3b8" textAnchor="middle" fontFamily="monospace">
@@ -1041,6 +1054,25 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
             />
           ))}
 
+          {/* Interactive coherence indicator - first circle so getInteractivePoint finds it */}
+          <circle
+            cx={10 + (coherenceLength / 100) * 200}
+            cy={10 + (surfaceRoughness / 100) * 300}
+            r="8"
+            fill="none"
+            stroke="#22c55e"
+            strokeWidth="2"
+            filter="url(#lspkSpeckleGlow)"
+            opacity="0.9"
+          />
+          <circle
+            cx={10 + (coherenceLength / 100) * 200}
+            cy={10 + (surfaceRoughness / 100) * 300}
+            r="4"
+            fill="#22c55e"
+            filter="url(#lspkSpeckleGlow)"
+          />
+
           {/* ========== SPECKLE PATTERN ========== */}
           {specklePattern.map((point, i) => {
             // Scale points to fit screen
@@ -1085,10 +1117,10 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
           {/* Interference pattern label for laser */}
           {useLaser && (
             <g>
-              <text x="110" y="-18" fontSize="11" fill="#4ade80" textAnchor="middle" fontWeight="600" fontFamily="monospace">
+              <text x="110" y="285" fontSize="11" fill="#4ade80" textAnchor="middle" fontWeight="600" fontFamily="monospace">
                 SPECKLE PATTERN
               </text>
-              <text x="110" y="-6" fontSize="11" fill="#22c55e" textAnchor="middle" fontFamily="monospace">
+              <text x="110" y="300" fontSize="11" fill="#22c55e" textAnchor="middle" fontFamily="monospace">
                 Coherent Interference
               </text>
             </g>
@@ -1097,10 +1129,10 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
           {/* Uniform illumination label for LED */}
           {!useLaser && (
             <g>
-              <text x="110" y="-18" fontSize="11" fill="#fbbf24" textAnchor="middle" fontWeight="600" fontFamily="monospace">
+              <text x="110" y="285" fontSize="11" fill="#fbbf24" textAnchor="middle" fontWeight="600" fontFamily="monospace">
                 UNIFORM ILLUMINATION
               </text>
-              <text x="110" y="-6" fontSize="11" fill="#f59e0b" textAnchor="middle" fontFamily="monospace">
+              <text x="110" y="300" fontSize="11" fill="#f59e0b" textAnchor="middle" fontFamily="monospace">
                 No Speckle (Averaging)
               </text>
             </g>
@@ -1130,17 +1162,17 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
         <text x="350" y="20" fontSize="14" fill="#e2e8f0" textAnchor="middle" fontWeight="600" fontFamily="monospace">
           Laser Speckle Formation Diagram
         </text>
-        <text x="350" y="385" fontSize="12" fill="#94a3b8" textAnchor="middle" fontFamily="monospace">
-          Coherence: {useLaser ? `${coherenceLength}%` : 'N/A (Incoherent)'} | Surface Roughness: {surfaceRoughness}% | Viewpoint: {viewpointOffset}
+        <text x="350" y="370" fontSize="12" fill="#94a3b8" textAnchor="middle" fontFamily="monospace">
+          Coherence: {useLaser ? `${coherenceLength}%` : 'N/A (Incoherent)'} | Roughness: {surfaceRoughness}%
         </text>
 
         {/* Physics explanation callout */}
-        <g transform="translate(30, 340)">
+        <g transform="translate(30, 320)">
           <rect
             x="0"
             y="0"
             width="180"
-            height="45"
+            height="55"
             rx="6"
             fill="rgba(34, 197, 94, 0.1)"
             stroke={useLaser ? "#22c55e" : "#fbbf24"}
@@ -1165,6 +1197,8 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
         <text x="560" y="25" fontSize="11" fill="#e2e8f0" fontWeight="600" textAnchor="middle" fontFamily="monospace">
           Detector
         </text>
+
+        {/* Note: interactive indicator is rendered inside the detector screen group above */}
       </svg>
     );
   };
@@ -1353,7 +1387,8 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
   const renderPlay = () => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingLeft: '24px', paddingRight: '24px', minHeight: '100vh', paddingTop: '48px', paddingBottom: '100px' }}>
       <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'white', marginBottom: '8px' }}>Speckle Lab</h2>
-      <p style={{ color: '#e2e8f0', marginBottom: '24px' }}>Explore how coherence and surface properties affect the pattern</p>
+      <p style={{ color: '#e2e8f0', marginBottom: '8px' }}>This simulation displays how coherence length and surface roughness affect the speckle pattern formed on the detector screen.</p>
+      <p style={{ color: '#e2e8f0', marginBottom: '16px', fontSize: '14px' }}>Observe how the pattern changes when you increase or decrease the coherence length. Notice when you adjust surface roughness, the number of scatter points changes. Try adjusting each slider to see distinct effects.</p>
 
       <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '24px', marginBottom: '24px', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
         {renderSpeckleVisualization()}
@@ -1380,7 +1415,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
         {/* Coherence Length */}
         <div style={{ background: 'rgba(51, 65, 85, 0.5)', borderRadius: '12px', padding: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ color: '#cbd5e1', fontSize: '14px' }}>Coherence Length</span>
+            <span style={{ color: '#cbd5e1', fontSize: '14px' }}>Coherence Length (wavelength units)</span>
             <span style={{ color: '#22c55e', fontWeight: 700 }}>{coherenceLength}%</span>
           </div>
           <input
@@ -1391,7 +1426,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
             onChange={(e) => {
               setCoherenceLength(Number(e.target.value));
                           }}
-            style={{ width: '100%', accentColor: '#22c55e', touchAction: 'pan-y' }}
+            style={{ width: '100%', accentColor: '#3b82f6', height: '20px', touchAction: 'pan-y' }}
           />
         </div>
 
@@ -1429,7 +1464,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
                           }}
             style={{ width: '100%', accentColor: '#8b5cf6', touchAction: 'pan-y' }}
           />
-          <p style={{ color: '#64748b', fontSize: '12px', marginTop: '8px' }}>Move to see pattern shift (like moving your head)</p>
+          <p style={{ color: '#e2e8f0', fontSize: '12px', marginTop: '8px' }}>Move to see pattern shift (like moving your head)</p>
         </div>
       </div>
 
@@ -1443,7 +1478,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
 
       {/* Formula */}
       <div style={{ background: 'rgba(59, 130, 246, 0.1)', borderRadius: '12px', padding: '16px', maxWidth: '400px', border: '1px solid rgba(59, 130, 246, 0.3)', marginBottom: '16px', textAlign: 'center' }}>
-        <p style={{ color: '#60a5fa', fontWeight: 600, marginBottom: '8px', fontSize: '14px' }}>Speckle Contrast Formula</p>
+        <p style={{ color: '#93c5fd', fontWeight: 600, marginBottom: '8px', fontSize: '14px' }}>Speckle Contrast Formula</p>
         <div style={{ fontFamily: 'monospace', fontSize: '18px', color: 'white', marginBottom: '8px', lineHeight: '1.6' }}>
           Contrast = σ/⟨I⟩
         </div>
@@ -2040,11 +2075,12 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
               {currentQuestion.options.map((opt, oIndex) => {
                 const isSelected = testAnswers[currentQuestionIndex] === oIndex;
                 const isCorrect = opt.correct;
-                const showFeedback = isSelected;
+                const isChecked = checkedQuestions.has(currentQuestionIndex);
 
                 return (
                   <button
                     key={opt.id}
+                    onClick={() => handleTestAnswer(currentQuestionIndex, oIndex)}
                     onPointerDown={(e) => {
                       e.preventDefault();
                       handleTestAnswer(currentQuestionIndex, oIndex);
@@ -2066,8 +2102,8 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
                       transition: 'all 0.2s'
                     }}
                   >
-                    {opt.text}
-                    {showFeedback && (
+                    {String.fromCharCode(65 + oIndex)}) {opt.text}
+                    {isSelected && (
                       <span style={{ marginLeft: '8px', color: isCorrect ? '#22c55e' : '#f59e0b' }}>
                         {isCorrect ? '✓' : '○'}
                       </span>
@@ -2077,8 +2113,18 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
               })}
             </div>
 
+            {/* Check Answer button */}
+            {testAnswers[currentQuestionIndex] !== null && !checkedQuestions.has(currentQuestionIndex) && (
+              <button
+                onClick={() => setCheckedQuestions(prev => new Set([...prev, currentQuestionIndex]))}
+                style={{ marginTop: '12px', padding: '10px 20px', minHeight: '44px', borderRadius: '8px', background: 'rgba(34, 197, 94, 0.2)', border: '1px solid rgba(34, 197, 94, 0.5)', color: '#22c55e', fontWeight: 600, fontSize: '14px', cursor: 'pointer', width: '100%' }}
+              >
+                Check Answer
+              </button>
+            )}
+
             {/* Show explanation after answering */}
-            {testAnswers[currentQuestionIndex] !== null && (
+            {checkedQuestions.has(currentQuestionIndex) && (
               <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(34, 197, 94, 0.1)', borderRadius: '8px', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
                 <p style={{ color: '#e2e8f0', fontSize: '13px' }}>{currentQuestion.explanation}</p>
               </div>
@@ -2284,7 +2330,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
               onClick={() => setCurrentPhase(p)}
               style={{
                 width: '10px',
-                height: '10px',
+                aspectRatio: '1',
                 borderRadius: '50%',
                 border: 'none',
                 cursor: 'pointer',
@@ -2295,6 +2341,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
                     : 'rgba(71, 85, 105, 0.5)',
                 opacity: index <= currentPhaseIndex ? 1 : 0.5,
                 transition: 'all 0.2s ease',
+                padding: '5px',
               }}
             />
           ))}
@@ -2331,7 +2378,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
           <button
             onClick={goToNextPhase}
             disabled={!canProceed}
-            aria-label={nextLabel}
+            aria-label="Next"
             style={{
               padding: '12px 24px',
               minHeight: '44px',

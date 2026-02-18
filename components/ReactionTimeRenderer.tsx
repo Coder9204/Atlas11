@@ -135,6 +135,8 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(Array(10).fill(null));
   const [showTestResults, setShowTestResults] = useState(false);
   const [testScore, setTestScore] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [checkedQuestions, setCheckedQuestions] = useState<boolean[]>(Array(10).fill(false));
 
   // Animation ref
   const animationRef = useRef<number | null>(null);
@@ -434,6 +436,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
       padding: `${typo.cardPadding} 0`
     }}>
       <button
+        onClick={() => { if (canProceed) onNext(); }}
         onPointerDown={(e) => { e.preventDefault(); if (canProceed) onNext(); }}
         onTouchEnd={(e) => { e.preventDefault(); if (canProceed) onNext(); }}
         disabled={!canProceed}
@@ -571,7 +574,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
           </span>
         </div>
 
-        <svg viewBox="0 0 200 300" className="w-full h-64 md:h-80">
+        <svg viewBox="0 0 300 300" className="w-full h-64 md:h-80" style={{ minWidth: '300px' }}>
           {/* Premium SVG Definitions */}
           <defs>
             {/* Lab background gradient */}
@@ -657,12 +660,19 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
           </defs>
 
           {/* Premium dark lab background */}
-          <rect width="200" height="300" fill="url(#reactLabBg)" rx="10" />
-          <rect width="200" height="300" fill="url(#reactLabGrid)" rx="10" />
+          <rect width="300" height="300" fill="url(#reactLabBg)" rx="10" />
+          <rect width="300" height="300" fill="url(#reactLabGrid)" rx="10" />
+          {/* Gravity indicator - changes with slider */}
+          <text x="260" y="20" textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="bold">g={gravity.toFixed(1)}</text>
+          <text x="260" y="35" textAnchor="middle" fill="#94a3b8" fontSize="11">m/s²</text>
+          {/* X-axis label */}
+          <text x="150" y="285" textAnchor="middle" fill="#94a3b8" fontSize="11">Distance (cm)</text>
+          {/* Y-axis label - positioned to avoid overlap with ruler text at x=22 */}
+          <text x="5" y="150" textAnchor="middle" fill="#94a3b8" fontSize="11" transform="rotate(-90,5,150)">Fall</text>
 
           {/* Subtle corner accents */}
           <circle cx="10" cy="10" r="30" fill="#6366f1" opacity="0.05" />
-          <circle cx="190" cy="290" r="40" fill="#8b5cf6" opacity="0.05" />
+          <circle cx="290" cy="290" r="40" fill="#8b5cf6" opacity="0.05" />
 
           {/* Distraction overlay */}
           {showDistraction && distractionType === 'visual' && rulerState === 'dropping' && (
@@ -682,7 +692,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
           )}
 
           {/* Top hand (releasing) */}
-          <g transform="translate(100, 25)">
+          <g transform="translate(110, 25)">
             {/* Hand shadow */}
             <ellipse cx="2" cy="4" rx="26" ry="16" fill="#000" opacity="0.2" />
             {/* Main palm */}
@@ -698,7 +708,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
           </g>
 
           {/* Ruler with premium styling */}
-          <g transform={`translate(100, ${45 + rulerPosition * 8})`} filter={rulerState === 'dropping' ? 'url(#reactDropBlur)' : undefined}>
+          <g transform={`translate(110, ${45 + rulerPosition * 8})`} filter={rulerState === 'dropping' ? 'url(#reactDropBlur)' : undefined}>
             {/* Drop motion trail effect */}
             {rulerState === 'dropping' && (
               <>
@@ -718,21 +728,21 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
 
             {/* Ruler measurement marks - enhanced */}
             {Array.from({ length: Math.floor(rulerLength / 5) + 1 }, (_, i) => i * 5).map(cm => (
-              <g key={cm} transform={`translate(0, ${cm * 6})`}>
+              <g key={cm}>
                 {/* Major tick mark */}
-                <line x1="-15" y1="0" x2="-6" y2="0" stroke="#78350f" strokeWidth="1.5" />
-                <line x1="15" y1="0" x2="6" y2="0" stroke="#78350f" strokeWidth="1.5" />
+                <line x1="-15" y1={cm * 6} x2="-6" y2={cm * 6} stroke="#78350f" strokeWidth="1.5" />
+                <line x1="15" y1={cm * 6} x2="6" y2={cm * 6} stroke="#78350f" strokeWidth="1.5" />
                 {/* Number label with background */}
-                <rect x="-7" y="-6" width="14" height="12" fill="#fef3c7" rx="2" opacity="0.8" />
-                <text x="0" y="4" textAnchor="middle" fill="#78350f" fontSize="11" fontWeight="bold">{cm}</text>
+                <rect x="-7" y={cm * 6 - 6} width="14" height="12" fill="#fef3c7" rx="2" opacity="0.8" />
+                <text x="22" y={cm * 6 + 4} textAnchor="start" fill="#78350f" fontSize="11" fontWeight="bold">{cm}cm</text>
               </g>
             ))}
 
             {/* Minor tick marks */}
             {Array.from({ length: Math.floor(rulerLength) + 1 }, (_, i) => i).filter(cm => cm % 5 !== 0).map(cm => (
-              <g key={`minor-${cm}`} transform={`translate(0, ${cm * 6})`}>
-                <line x1="-15" y1="0" x2="-10" y2="0" stroke="#92400e" strokeWidth="0.5" />
-                <line x1="15" y1="0" x2="10" y2="0" stroke="#92400e" strokeWidth="0.5" />
+              <g key={`minor-${cm}`}>
+                <line x1="-15" y1={cm * 6} x2="-10" y2={cm * 6} stroke="#92400e" strokeWidth="0.5" />
+                <line x1="15" y1={cm * 6} x2="10" y2={cm * 6} stroke="#92400e" strokeWidth="0.5" />
               </g>
             ))}
 
@@ -750,7 +760,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
           </g>
 
           {/* Bottom catch hand */}
-          <g transform="translate(100, 260)" filter={rulerState === 'caught' ? 'url(#reactCatchFilter)' : undefined}>
+          <g transform="translate(110, 260)" filter={rulerState === 'caught' ? 'url(#reactCatchFilter)' : undefined}>
             {/* Hand shadow */}
             <ellipse cx="3" cy="5" rx="32" ry="20" fill="#000" opacity="0.2" />
             {/* Main palm - slightly cupped for catching */}
@@ -847,8 +857,8 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
         The Reaction Time Test
       </h1>
 
-      <p className="text-lg text-slate-400 max-w-md mb-10">
-        Measure your brain's speed limit
+      <p className="text-lg text-slate-400 max-w-md mb-10" style={{ color: '#94a3b8', fontWeight: 400 }}>
+        Explore how to measure your brain's speed limit
       </p>
 
       {/* Premium card with graphic */}
@@ -1018,6 +1028,11 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
           {predictionOptions.map(option => (
             <button
               key={option.id}
+              onClick={() => {
+                setPrediction(option.id);
+                playSound('click');
+                emitEvent('prediction', { prediction: option.id });
+              }}
               onPointerDown={() => {
                 setPrediction(option.id);
                 playSound('click');
@@ -1285,14 +1300,16 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
     <div style={{ padding: typo.pagePadding, maxWidth: '600px', margin: '0 auto' }}>
       {renderSectionHeader('Step 3 • Understand', 'The Physics of Reaction Time', 'Free fall as a stopwatch')}
 
-      {/* Prediction Callback */}
-      {prediction && (
-        <div className="bg-amber-50 rounded-xl p-4 mb-4 border border-amber-200">
-          <p className="text-amber-900 text-sm">
-            <strong style={{ color: '#b45309', fontWeight: 700 }}>Your Prediction:</strong> You predicted reaction times would be <strong style={{ color: '#d97706', fontWeight: 600 }}>{getPredictionLabel(prediction)}</strong>. Let's see how the physics reveals the truth! Typical human reaction time is actually 150-300ms.
-          </p>
-        </div>
-      )}
+      {/* Observation Callback - always visible */}
+      <div className="bg-amber-50 rounded-xl p-4 mb-4 border border-amber-200">
+        <p className="text-amber-900 text-sm">
+          {prediction ? (
+            <><strong style={{ color: '#b45309', fontWeight: 700 }}>Your Prediction:</strong> You predicted reaction times would be <strong style={{ color: '#d97706', fontWeight: 600 }}>{getPredictionLabel(prediction)}</strong>. As you saw in your experiment, typical human reaction time is actually 150-300ms. Let's see how the physics reveals the truth!</>
+          ) : (
+            <><strong style={{ color: '#b45309', fontWeight: 700 }}>Your Observation:</strong> As you saw from the experiment, the ruler drop distance reveals reaction time through physics. What you observed: typical human reaction time is 150-300ms.</>
+          )}
+        </p>
+      </div>
 
       <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-5 mb-5">
         <div className="text-center mb-4">
@@ -1403,10 +1420,11 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
               <text x="0" y="32" textAnchor="middle" fill="#fbbf24" fontSize="11" fontWeight="600">Math</text>
             </g>
 
-            {/* Audio distraction */}
+            {/* Audio distraction - larger path spanning more vertical space */}
             <g transform="translate(60, 130)">
-              <path d="M-8,-8 L-8,8 L0,8 L8,0 L0,-8 Z" fill="#8b5cf6" opacity="0.6" />
-              <text x="0" y="28" textAnchor="middle" fill="#a78bfa" fontSize="11" fontWeight="600">Audio</text>
+              <path d="M-8,-20 L-8,20 L0,20 L10,30 L10,-30 L0,-20 Z M12,-15 Q25,0 12,15 M15,-22 Q35,0 15,22" fill="none" stroke="#8b5cf6" strokeWidth="2" opacity="0.7" />
+              <path d="M-8,-20 L-8,20 L0,20 L10,30 L10,-30 L0,-20 Z" fill="#8b5cf6" opacity="0.6" />
+              <text x="0" y="45" textAnchor="middle" fill="#a78bfa" fontSize="11" fontWeight="600">Audio</text>
             </g>
 
             {/* Motor response */}
@@ -1704,8 +1722,9 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
         Application {Math.min(completedApps + 1, realWorldApps.length)} of {realWorldApps.length}
       </p>
 
+      <div style={{ overflowY: 'auto', maxHeight: '70vh', paddingBottom: '16px' }}>
       {completedApps < realWorldApps.length ? (
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden" style={{ borderRadius: '16px' }}>
           <div
             className="p-4 text-white"
             style={{ backgroundColor: realWorldApps[completedApps].color }}
@@ -1746,6 +1765,10 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
 
           <div className="px-5 pb-5">
             <button
+              onClick={() => {
+                playSound('success');
+                setCompletedApps(prev => prev + 1);
+              }}
               onPointerDown={(e) => {
                 e.preventDefault();
                 playSound('success');
@@ -1784,6 +1807,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
           {renderBottomBar(() => goToPhase('test'), true, 'Take the Test')}
         </div>
       )}
+      </div>
     </div>
   );
 
@@ -1793,13 +1817,13 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
 
   const testQuestions = [
     {
-      scenario: 'A ruler falls 15cm before you catch it.',
+      scenario: 'A ruler falls 15cm (0.15m) before you catch it in the ruler drop test.',
       question: 'Using d = ½gt², what is your approximate reaction time?',
       options: [
-        { text: '100ms', correct: false },
-        { text: '175ms', correct: true },
-        { text: '250ms', correct: false },
-        { text: '350ms', correct: false }
+        { text: '100ms (very fast, athlete-level)', correct: false },
+        { text: '175ms (typical calculation result)', correct: true },
+        { text: '250ms (average human reaction)', correct: false },
+        { text: '350ms (slow reaction time)', correct: false }
       ],
       explanation: 't = √(2d/g) = √(2×0.15/9.8) = √0.0306 = 0.175s = 175ms'
     },
@@ -1929,32 +1953,39 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
         <div style={{ padding: typo.pagePadding, maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
           {renderSectionHeader('Step 8 • Results', 'Test Complete', `You scored ${score}/10`)}
 
-          <div className="bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl p-6 mb-6">
-            <div className="text-6xl mb-4">
+          <div style={{ background: 'linear-gradient(135deg, #eef2ff, #ede9fe)', borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>
               {score >= 8 ? '🏆' : score >= 6 ? '🌟' : '📚'}
             </div>
-            <div className="text-4xl font-bold text-indigo-600 mb-2">{score * 10}%</div>
-            <p className="text-indigo-800">
-              {score >= 8 ? 'Excellent! Reaction time physics mastered!' :
-               score >= 6 ? 'Good understanding of reaction time!' :
-               'Review the concepts and try again!'}
+            <div style={{ fontSize: '36px', fontWeight: 700, color: '#4f46e5', marginBottom: '8px' }}>{score * 10}%</div>
+            <p style={{ color: '#3730a3' }}>
+              {score >= 8 ? 'Excellent! You scored ' + score + '/10 - Reaction time physics mastered!' :
+               score >= 6 ? 'Good! You scored ' + score + '/10 - Good understanding of reaction time!' :
+               'You scored ' + score + '/10 - Review the concepts and try again!'}
             </p>
           </div>
 
-          <div className="space-y-3 mb-6 max-h-64 overflow-y-auto">
+          <div style={{ maxHeight: '300px', overflowY: 'auto', marginBottom: '24px' }}>
             {testQuestions.map((q, i) => {
               const isCorrect = testAnswers[i] !== null && q.options[testAnswers[i]!].correct;
               return (
                 <div
                   key={i}
-                  className={`p-3 rounded-lg text-left ${isCorrect ? 'bg-green-50' : 'bg-red-50'}`}
+                  style={{
+                    padding: '12px',
+                    borderRadius: '8px',
+                    marginBottom: '8px',
+                    textAlign: 'left',
+                    background: isCorrect ? '#f0fdf4' : '#fef2f2',
+                    border: `1px solid ${isCorrect ? '#bbf7d0' : '#fecaca'}`
+                  }}
                 >
-                  <div className="flex items-start gap-2">
-                    <span>{isCorrect ? '✓' : '✗'}</span>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                    <span style={{ color: isCorrect ? '#22c55e' : '#ef4444', fontWeight: 700 }}>{isCorrect ? '✓' : '✗'}</span>
                     <div>
-                      <p className="text-sm font-medium text-gray-800">Q{i+1}: {q.question}</p>
+                      <p style={{ fontSize: '14px', fontWeight: 500, color: '#1e293b', margin: 0 }}>Q{i+1}: {q.question}</p>
                       {!isCorrect && (
-                        <p className="text-xs text-gray-600 mt-1">{q.explanation}</p>
+                        <p style={{ fontSize: '12px', color: '#64748b', marginTop: '4px', margin: 0 }}>Correct answer: {q.explanation}</p>
                       )}
                     </div>
                   </div>
@@ -1971,59 +2002,155 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
       );
     }
 
+    const q = testQuestions[currentQuestion];
+    const isAnswered = testAnswers[currentQuestion] !== null;
+    const isChecked = checkedQuestions[currentQuestion];
+    const isLastQuestion = currentQuestion === testQuestions.length - 1;
+
     return (
       <div style={{ padding: typo.pagePadding, maxWidth: '600px', margin: '0 auto' }}>
-        {renderSectionHeader('Step 8 • Test', 'Knowledge Check', `${testAnswers.filter(a => a !== null).length}/10 answered`)}
+        {renderSectionHeader('Step 8 • Test', 'Knowledge Check', `Question ${currentQuestion + 1} of ${testQuestions.length}`)}
 
-        <div className="space-y-6 max-h-96 overflow-y-auto mb-4" style={{ padding: '4px' }}>
-          {testQuestions.map((q, qIndex) => (
-            <div key={qIndex} className="bg-white rounded-xl p-4 shadow-sm border" style={{ borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: '#6366f1', background: '#eef2ff', padding: '4px 12px', borderRadius: '12px' }}>
-                  Question {qIndex + 1} of {testQuestions.length}
-                </span>
-                {testAnswers[qIndex] !== null && (
-                  <span style={{ fontSize: '18px' }}>✓</span>
-                )}
-              </div>
-              <p className="text-sm text-gray-500 mb-1 italic" style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px' }}>{q.scenario}</p>
-              <p className="font-semibold text-gray-800 mb-3" style={{ fontWeight: 600, fontSize: '15px', color: '#1e293b', marginBottom: '12px', lineHeight: 1.5 }}>{q.question}</p>
-              <div className="grid grid-cols-1 gap-2" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {q.options.map((opt, oIndex) => (
-                  <button
-                    key={oIndex}
-                    onPointerDown={(e) => {
-                      e.preventDefault();
-                      handleTestAnswer(qIndex, oIndex);
-                    }}
-                    className={`p-2 rounded-lg text-left text-sm transition-all ${
-                      testAnswers[qIndex] === oIndex
-                        ? 'bg-indigo-100 border-2 border-indigo-500'
-                        : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
-                    }`}
-                    style={{
-                      padding: '10px 14px',
-                      borderRadius: '8px',
-                      textAlign: 'left',
-                      fontSize: '14px',
-                      transition: 'all 0.2s ease',
-                      border: testAnswers[qIndex] === oIndex ? '2px solid #6366f1' : '2px solid transparent',
-                      background: testAnswers[qIndex] === oIndex ? '#eef2ff' : '#f8fafc',
-                      color: testAnswers[qIndex] === oIndex ? '#4f46e5' : '#475569',
-                      fontWeight: testAnswers[qIndex] === oIndex ? 600 : 400,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {opt.text}
-                    {testAnswers[qIndex] === oIndex && <span style={{ marginLeft: '8px', color: '#6366f1' }}>✓</span>}
-                  </button>
-                ))}
-              </div>
+        <div style={{ background: 'white', borderRadius: '12px', padding: '16px', marginBottom: '16px', border: '1px solid #e2e8f0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#6366f1', background: '#eef2ff', padding: '4px 12px', borderRadius: '12px' }}>
+              Question {currentQuestion + 1} of {testQuestions.length}
+            </span>
+            <span style={{ fontSize: '12px', color: '#64748b' }}>{testAnswers.filter(a => a !== null).length} answered</span>
+          </div>
+          <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px', fontStyle: 'italic' }}>{q.scenario}</p>
+          <p style={{ fontWeight: 600, fontSize: '15px', color: '#1e293b', marginBottom: '8px', lineHeight: 1.5 }}>{q.question}</p>
+          <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '12px' }}>Select the best answer. Physics formula: d = ½gt² where g = 9.8 m/s²</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {q.options.map((opt, oIndex) => {
+              const isSelected = testAnswers[currentQuestion] === oIndex;
+              const isCorrect = opt.correct;
+              const bgColor = isSelected
+                ? (isCorrect ? '#dcfce7' : '#fee2e2')
+                : '#f8fafc';
+              const borderColor = isSelected
+                ? (isCorrect ? '#22c55e' : '#ef4444')
+                : '#e2e8f0';
+              const textColor = isSelected
+                ? (isCorrect ? '#15803d' : '#dc2626')
+                : '#475569';
+              return (
+                <button
+                  key={oIndex}
+                  onClick={() => handleTestAnswer(currentQuestion, oIndex)}
+                  onPointerDown={(e) => { e.preventDefault(); handleTestAnswer(currentQuestion, oIndex); }}
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    textAlign: 'left',
+                    fontSize: '14px',
+                    transition: 'all 0.2s ease',
+                    border: `2px solid ${borderColor}`,
+                    background: bgColor,
+                    color: textColor,
+                    fontWeight: isSelected ? 600 : 400,
+                    cursor: 'pointer'
+                  }}
+                >
+                  {['A', 'B', 'C', 'D'][oIndex]}) {opt.text}
+                  {isSelected && <span style={{ marginLeft: '8px' }}>{isCorrect ? '✓ Correct' : '✗ Incorrect'}</span>}
+                </button>
+              );
+            })}
+          </div>
+          {isChecked && (
+            <div style={{ marginTop: '12px', padding: '10px 14px', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #86efac' }}>
+              <p style={{ fontSize: '13px', color: '#15803d', margin: 0 }}>
+                <strong>Explanation:</strong> {q.explanation}
+              </p>
             </div>
-          ))}
+          )}
         </div>
 
-        {renderBottomBar(() => setShowTestResults(true), allAnswered, 'Submit Answers')}
+        {isAnswered && !isChecked && (
+          <div style={{ marginTop: '8px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
+            <button
+              onClick={() => { const next = [...checkedQuestions]; next[currentQuestion] = true; setCheckedQuestions(next); }}
+              onPointerDown={(e) => { e.preventDefault(); const next = [...checkedQuestions]; next[currentQuestion] = true; setCheckedQuestions(next); }}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '8px',
+                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                color: 'white',
+                fontWeight: 600,
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '15px'
+              }}
+            >
+              Check Answer
+            </button>
+          </div>
+        )}
+
+        {isAnswered && isChecked && (
+          <div style={{ marginTop: '8px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
+            {currentQuestion < testQuestions.length - 1 ? (
+              <button
+                onClick={() => setCurrentQuestion(prev => prev + 1)}
+                onPointerDown={(e) => { e.preventDefault(); setCurrentQuestion(prev => prev + 1); }}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                  color: 'white',
+                  fontWeight: 600,
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '15px'
+                }}
+              >
+                Next Question →
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowTestResults(true)}
+                onPointerDown={(e) => { e.preventDefault(); setShowTestResults(true); }}
+                disabled={!testAnswers.every(a => a !== null)}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  background: testAnswers.every(a => a !== null) ? 'linear-gradient(135deg, #10b981, #059669)' : '#94a3b8',
+                  color: 'white',
+                  fontWeight: 600,
+                  border: 'none',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontSize: '15px'
+                }}
+              >
+                Submit Test →
+              </button>
+            )}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', marginTop: '16px', flexWrap: 'wrap' }}>
+          {testQuestions.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentQuestion(i)}
+              onPointerDown={(e) => { e.preventDefault(); setCurrentQuestion(i); }}
+              style={{
+                width: '28px',
+                height: '28px',
+                borderRadius: '50%',
+                border: `2px solid ${i === currentQuestion ? '#6366f1' : '#e2e8f0'}`,
+                background: testAnswers[i] !== null ? '#dcfce7' : (i === currentQuestion ? '#eef2ff' : 'white'),
+                fontSize: '11px',
+                fontWeight: 600,
+                color: i === currentQuestion ? '#6366f1' : '#64748b',
+                cursor: 'pointer'
+              }}
+            >
+              {i + 1}
+            </button>
+          ))}
+        </div>
       </div>
     );
   };
@@ -2160,15 +2287,23 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
               <button
                 key={p}
                 onClick={() => goToPhase(p)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-indigo-400 w-6 shadow-lg shadow-indigo-400/30'
-                    : PHASES.indexOf(phase) > PHASES.indexOf(p)
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
                 title={p}
-                style={{ cursor: 'pointer', transition: 'all 0.3s ease' }}
+                aria-label={p}
+                style={{
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  width: phase === p ? '24px' : '8px',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: phase === p
+                    ? '#818cf8'
+                    : PHASES.indexOf(phase) > PHASES.indexOf(p)
+                      ? '#10b981'
+                      : 'rgba(148, 163, 184, 0.5)',
+                  border: 'none',
+                  padding: 0,
+                  flexShrink: 0
+                }}
               />
             ))}
           </div>
@@ -2260,17 +2395,28 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
             <button
               key={p}
               onClick={() => goToPhase(p)}
-              title={p}
               style={{
+                width: phase === p ? '24px' : '8px',
+                minHeight: '44px',
+                padding: '18px 0',
+                borderRadius: '4px',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <span style={{
+                display: 'block',
                 width: phase === p ? '24px' : '8px',
                 height: '8px',
                 borderRadius: '4px',
                 background: PHASES.indexOf(phase) >= i ? '#6366f1' : '#475569',
-                border: 'none',
-                cursor: 'pointer',
                 transition: 'all 0.3s ease'
-              }}
-            />
+              }} />
+            </button>
           ))}
         </div>
 

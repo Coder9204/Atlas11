@@ -147,10 +147,10 @@ const testQuestions = [
     scenario: "Nitrogen (N2) is known for its extremely strong triple bond.",
     question: "What is the bond order of N2?",
     options: [
-      { id: 'a', label: "1" },
-      { id: 'b', label: "2" },
-      { id: 'c', label: "3", correct: true },
-      { id: 'd', label: "4" }
+      { id: 'a', label: "Bond order 1 (single bond)" },
+      { id: 'b', label: "Bond order 2 (double bond)" },
+      { id: 'c', label: "Bond order 3 (triple bond)", correct: true },
+      { id: 'd', label: "Bond order 4 (quadruple bond)" }
     ],
     explanation: "N2: 10 bonding e- - 4 antibonding e- = 6. Bond order = 6/2 = 3. This triple bond makes N2 very stable and unreactive."
   },
@@ -593,7 +593,7 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
   // Play phase state
   const [showBonding, setShowBonding] = useState(true);
   const [showAntibonding, setShowAntibonding] = useState(true);
-  const [orbitalSeparation, setOrbitalSeparation] = useState(1.5);
+  const [orbitalSeparation, setOrbitalSeparation] = useState(1.0);
 
   // Twist play state
   const [selectedMolecule, setSelectedMolecule] = useState<'O2' | 'N2'>('O2');
@@ -2168,7 +2168,7 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
                     fontWeight: 600,
                   }}
                 >
-                  Complete →
+                  Continue →
                 </button>
               )}
             </div>

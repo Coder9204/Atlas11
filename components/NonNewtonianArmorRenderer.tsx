@@ -562,7 +562,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
           zIndex: 10,
           maxWidth: isMobile ? '140px' : '180px'
         }}>
-          <p style={{ fontSize: '10px', fontWeight: 700, color: colors.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>
+          <p style={{ fontSize: '10px', fontWeight: 700, color: colors.textSecondary, marginBottom: '6px', textTransform: 'uppercase' }}>
             Legend
           </p>
           {legendItems.slice(0, isMobile ? 4 : 6).map((item, i) => (
@@ -652,6 +652,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
             <>
               <text x="20" y={bowlY + 40} fill={colors.textSecondary} fontSize="11">Slow ←</text>
               <text x={width - 60} y={bowlY + 40} fill={colors.textSecondary} fontSize="11">→ Fast</text>
+              <text x={cx} y={bowlY + 55} textAnchor="middle" fill={colors.textSecondary} fontSize="11">← Shear Rate →</text>
             </>
           )}
 
@@ -789,7 +790,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
           <span style={{ fontSize: '12px', fontWeight: 700, color: colors.textPrimary }}>
             {currentIdx + 1} <span style={{ color: colors.textMuted }}>/</span> {phaseOrder.length}
           </span>
-          <span style={{ fontSize: '10px', color: colors.textMuted, marginLeft: '4px' }}>phases</span>
+          <span style={{ fontSize: '10px', color: colors.textSecondary, marginLeft: '4px' }}>phases</span>
         </div>
         <div style={{
           padding: '4px 12px',

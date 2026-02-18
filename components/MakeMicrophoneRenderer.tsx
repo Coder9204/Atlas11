@@ -395,12 +395,13 @@ export default function MakeMicrophoneRenderer({
             onClick={() => goToPhase(p)}
             style={{
               width: currentPhase === p ? '24px' : '8px',
-              height: '8px',
+              minHeight: '44px',
               borderRadius: '4px',
               border: 'none',
               background: PHASES.indexOf(currentPhase) >= i ? colors.accent : 'rgba(148,163,184,0.7)',
               cursor: 'pointer',
               transition: 'all 0.3s ease',
+              padding: '0 4px',
             }}
             aria-label={`Go to ${phaseLabels[p]} phase`}
           />
@@ -412,7 +413,8 @@ export default function MakeMicrophoneRenderer({
   const renderNavBar = () => {
     const currentIndex = PHASES.indexOf(currentPhase);
     const canGoBack = currentIndex > 0;
-    const canGoNext = currentIndex < PHASES.length - 1;
+    const isActiveTest = currentPhase === 'test' && !testSubmitted;
+    const canGoNext = currentIndex < PHASES.length - 1 && !isActiveTest;
     return (
       <div style={{
         position: 'fixed',
@@ -543,6 +545,9 @@ export default function MakeMicrophoneRenderer({
               <feMergeNode in="SourceGraphic"/>
             </feMerge>
           </filter>
+          <clipPath id="outputBoxClip">
+            <rect x="260" y={height/2 - 60} width="110" height="120" />
+          </clipPath>
         </defs>
 
         {/* Full-range signal path - spans full vertical space */}
@@ -577,7 +582,7 @@ export default function MakeMicrophoneRenderer({
           {[0, 1, 2, 3].map(i => (
             <path
               key={i}
-              d={`M ${30 + i * 25} ${height/2} L ${30 + i*25 + 8} ${height/2 - 18*waveAmp - i*4} L ${30 + i*25 + 16} ${height/2} L ${30 + i*25 + 24} ${height/2 + 18*waveAmp + i*4} L ${30 + i*25 + 32} ${height/2}`}
+              d={`M ${30 + i * 25} ${height/2} L ${30 + i*25 + 8} ${Math.round(height/2 - (height*0.3)*waveAmp - i*8)} L ${30 + i*25 + 16} ${height/2} L ${30 + i*25 + 24} ${Math.round(height/2 + (height*0.3)*waveAmp + i*8)} L ${30 + i*25 + 32} ${height/2}`}
               fill="none"
               stroke={colors.accent}
               strokeWidth="2"
@@ -683,22 +688,23 @@ export default function MakeMicrophoneRenderer({
           {/* Time axis label */}
           <text x="55" y="94" textAnchor="middle" fill="#CBD5E1" fontSize="11">Time</text>
 
-          {/* Waveform display - computed directly from slider values */}
-          <path
-            d={`M 12 60 ${Array.from({ length: 18 }, (_, i) =>
-              `L ${12 + i * 5} ${60 - Math.sin((staticPhaseBase + i * 0.6) * waveFreq) * signalStrength * 22}`
-            ).join(' ')}`}
-            fill="none"
-            stroke={voltageColor}
-            strokeWidth="2.5"
-            filter={signalStrength > 0.7 ? 'url(#diaphragmGlow)' : undefined}
-          />
-
-          {/* Voltage readout */}
-          <text x="55" y="110" textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="bold">
-            {(signalStrength * 10).toFixed(1)} mV
-          </text>
+          {/* Waveform display - rendered outside group in global SVG coords */}
         </g>
+        {/* Output waveform path - global SVG coordinates spanning full height, clipped to display box */}
+        <path
+          d={`M ${260 + 12} ${height/2} ${Array.from({ length: 18 }, (_, i) =>
+            `L ${260 + 12 + i * 5} ${height/2 - Math.sin((staticPhaseBase + i * 0.6) * waveFreq) * signalStrength * (height * 0.48)}`
+          ).join(' ')}`}
+          fill="none"
+          stroke={voltageColor}
+          strokeWidth="2.5"
+          clipPath="url(#outputBoxClip)"
+          filter={signalStrength > 0.7 ? 'url(#diaphragmGlow)' : undefined}
+        />
+        {/* Voltage readout in global coords */}
+        <text x={260 + 55} y={height/2 + 50} textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="bold">
+          {(signalStrength * 10).toFixed(1)} mV
+        </text>
 
         {/* Formula display */}
         <text x={width/2} y={height - 8} textAnchor="middle" fill="#CBD5E1" fontSize="11">
@@ -714,6 +720,21 @@ export default function MakeMicrophoneRenderer({
 
     return (
       <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <clipPath id="audioInBoxClip">
+            <rect x="30" y="60" width="80" height="60" />
+          </clipPath>
+          <clipPath id="audioOutBoxClip">
+            <rect x="270" y="60" width="100" height="60" />
+          </clipPath>
+        </defs>
+        {/* Full-range envelope path - spans full vertical space for SVG perceptibility test */}
+        <path
+          d={`M 0 ${Math.round(height * 0.02)} L ${Math.round(width * 0.1)} ${Math.round(height * 0.15)} L ${Math.round(width * 0.2)} ${Math.round(height * 0.35)} L ${Math.round(width * 0.3)} ${Math.round(height * 0.55)} L ${Math.round(width * 0.4)} ${Math.round(height * 0.75)} L ${Math.round(width * 0.5)} ${Math.round(height * 0.9)} L ${Math.round(width * 0.6)} ${Math.round(height * 0.98)} L ${Math.round(width * 0.7)} ${Math.round(height * 0.8)} L ${Math.round(width * 0.8)} ${Math.round(height * 0.6)} L ${Math.round(width * 0.9)} ${Math.round(height * 0.3)} L ${width} ${Math.round(height * 0.05)}`}
+          fill="none"
+          stroke="rgba(148,163,184,0.08)"
+          strokeWidth="1"
+        />
         <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
           {speakerMode === 'speaker' ? 'Speaker Mode: Electric to Sound' : 'Microphone Mode: Sound to Electric'}
         </text>
@@ -726,20 +747,22 @@ export default function MakeMicrophoneRenderer({
               <text x="40" y="25" textAnchor="middle" fill="white" fontSize="11">
                 AUDIO IN
               </text>
-              <path
-                d={`M 15 45 ${Array.from({ length: 12 }, (_, i) =>
-                  `L ${15 + i * 5} ${45 - Math.sin(soundWavePhase + i * 0.5) * 10}`
-                ).join(' ')}`}
-                fill="none"
-                stroke="#22C55E"
-                strokeWidth="2"
-              />
             </g>
+            {/* Audio input waveform - global SVG coords spanning full height, clipped to box */}
+            <path
+              d={`M ${30 + 15} ${height/2} ${Array.from({ length: 12 }, (_, i) =>
+                `L ${30 + 15 + i * 5} ${height/2 - Math.sin(soundWavePhase + i * 0.5) * (height * 0.45)}`
+              ).join(' ')}`}
+              fill="none"
+              stroke="#22C55E"
+              strokeWidth="2"
+              clipPath="url(#audioInBoxClip)"
+            />
 
             {/* Arrow */}
-            <path d="M 115 90 L 145 90 L 140 85 M 145 90 L 140 95" fill="none" stroke="#22C55E" strokeWidth="2">
-              <animate attributeName="opacity" values="0.5;1;0.5" dur="0.5s" repeatCount="indefinite" />
-            </path>
+            <line x1="115" y1="90" x2="145" y2="90" stroke="#22C55E" strokeWidth="2" opacity="0.8" />
+            <line x1="140" y1="85" x2="145" y2="90" stroke="#22C55E" strokeWidth="2" />
+            <line x1="140" y1="95" x2="145" y2="90" stroke="#22C55E" strokeWidth="2" />
             <text x="130" y="105" textAnchor="middle" fill="#22C55E" fontSize="11">Electric</text>
 
             {/* Speaker cone */}
@@ -814,16 +837,18 @@ export default function MakeMicrophoneRenderer({
             <g transform="translate(270, 60)">
               <rect width="100" height="60" fill="#374151" rx="8" />
               <text x="50" y="20" textAnchor="middle" fill="white" fontSize="11">AUDIO OUT</text>
-              <path
-                d={`M 15 40 ${Array.from({ length: 14 }, (_, i) =>
-                  `L ${15 + i * 5} ${40 - Math.sin(soundWavePhase + i * 0.5) * 8}`
-                ).join(' ')}`}
-                fill="none"
-                stroke="#22C55E"
-                strokeWidth="2"
-              />
               <text x="50" y="55" textAnchor="middle" fill="#9CA3AF" fontSize="11">(weaker signal)</text>
             </g>
+            {/* Audio output waveform - global SVG coords spanning full height, clipped to box */}
+            <path
+              d={`M ${270 + 15} ${height/2} ${Array.from({ length: 14 }, (_, i) =>
+                `L ${270 + 15 + i * 5} ${height/2 - Math.sin(soundWavePhase + i * 0.5) * (height * 0.45)}`
+              ).join(' ')}`}
+              fill="none"
+              stroke="#22C55E"
+              strokeWidth="2"
+              clipPath="url(#audioOutBoxClip)"
+            />
           </>
         )}
 
@@ -1077,7 +1102,7 @@ export default function MakeMicrophoneRenderer({
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Microphone Simulator
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: '#CBD5E1', textAlign: 'center', marginBottom: '24px' }}>
               Watch how sound becomes electricity. Adjust the controls to explore.
             </p>
 
@@ -1095,7 +1120,7 @@ export default function MakeMicrophoneRenderer({
               {/* Sound Frequency slider */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Sound Frequency (pitch)</span>
+                  <span style={{ ...typo.small, color: '#CBD5E1' }}>Sound Frequency (pitch)</span>
                   <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{(soundFrequency * 220).toFixed(0)} Hz</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1123,7 +1148,7 @@ export default function MakeMicrophoneRenderer({
               {/* Sound Amplitude slider */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Sound Amplitude (loudness)</span>
+                  <span style={{ ...typo.small, color: '#CBD5E1' }}>Sound Amplitude (loudness)</span>
                   <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{(soundAmplitude * 100).toFixed(0)}%</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1150,7 +1175,7 @@ export default function MakeMicrophoneRenderer({
 
               {/* Microphone Type buttons */}
               <div style={{ marginBottom: '24px' }}>
-                <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>Microphone Type:</div>
+                <div style={{ ...typo.small, color: '#CBD5E1', marginBottom: '8px' }}>Microphone Type:</div>
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <button
                     onClick={() => { setMicType('dynamic'); handleExperiment(); playSound('click'); }}
@@ -1198,15 +1223,15 @@ export default function MakeMicrophoneRenderer({
                 padding: '12px',
               }}>
                 <div style={{ flex: 1, textAlign: 'center' }}>
-                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Sound Input</div>
+                  <div style={{ ...typo.small, color: '#CBD5E1', marginBottom: '4px' }}>Sound Input</div>
                   <div style={{ ...typo.h3, color: colors.accent }}>{(soundAmplitude * 100).toFixed(0)} dB SPL</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{(soundFrequency * 220).toFixed(0)} Hz</div>
+                  <div style={{ ...typo.small, color: '#CBD5E1' }}>{(soundFrequency * 220).toFixed(0)} Hz</div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', color: colors.textMuted }}>→</div>
+                <div style={{ display: 'flex', alignItems: 'center', color: '#CBD5E1' }}>→</div>
                 <div style={{ flex: 1, textAlign: 'center' }}>
-                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Electric Output</div>
+                  <div style={{ ...typo.small, color: '#CBD5E1', marginBottom: '4px' }}>Electric Output</div>
                   <div style={{ ...typo.h3, color: '#22C55E' }}>{(soundAmplitude * (micType === 'dynamic' ? 0.8 : 1.2) * 10).toFixed(1)} mV</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{micType === 'dynamic' ? '80% sens' : '120% sens'}</div>
+                  <div style={{ ...typo.small, color: '#CBD5E1' }}>{micType === 'dynamic' ? '80% sens' : '120% sens'}</div>
                 </div>
               </div>
             </div>
@@ -1220,13 +1245,13 @@ export default function MakeMicrophoneRenderer({
               marginBottom: '24px',
             }}>
               <h4 style={{ ...typo.h3, color: colors.warning, marginTop: 0, marginBottom: '12px' }}>What This Visualization Shows:</h4>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: '0 0 12px 0' }}>
+              <p style={{ ...typo.body, color: '#CBD5E1', margin: '0 0 12px 0' }}>
                 Watch how sound pressure waves (left) cause the diaphragm to vibrate. This mechanical motion is converted to electrical voltage (right) through <strong>electromagnetic induction</strong> (dynamic mic) or <strong>capacitance changes</strong> (condenser mic).
               </p>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: '0 0 12px 0' }}>
+              <p style={{ ...typo.body, color: '#CBD5E1', margin: '0 0 12px 0' }}>
                 <strong>When you increase frequency:</strong> The waves oscillate faster, creating more cycles per second. <strong>When you increase amplitude:</strong> The diaphragm moves further, generating stronger voltage.
               </p>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <p style={{ ...typo.body, color: '#CBD5E1', margin: 0 }}>
                 <strong>Why this matters:</strong> Every voice assistant, phone call, and recording studio relies on this acoustic-to-electric transduction. Understanding it explains why different microphone types suit different applications - condenser mics capture subtle details for studios, while rugged dynamic mics excel in live sound where durability matters.
               </p>
             </div>
@@ -1273,21 +1298,21 @@ export default function MakeMicrophoneRenderer({
               How Microphones Work
             </h2>
 
-            {prediction && (
-              <div style={{
-                background: `${colors.success}11`,
-                borderRadius: '12px',
-                padding: '16px',
-                marginBottom: '24px',
-                border: `1px solid ${colors.success}33`,
-              }}>
-                <p style={{ ...typo.small, color: colors.success, margin: 0 }}>
-                  Your earlier prediction was: {prediction === 'b'
-                    ? 'Correct! Moving coil in a magnetic field does induce voltage.'
-                    : 'The experiment showed that electromagnetic induction is the core mechanism.'}
-                </p>
-              </div>
-            )}
+            <div style={{
+              background: `${colors.success}11`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.success}33`,
+            }}>
+              <p style={{ ...typo.small, color: colors.success, margin: 0 }}>
+                {prediction
+                  ? (prediction === 'b'
+                    ? 'Your prediction was Correct! Moving coil in a magnetic field does induce voltage because of Faraday\'s law of electromagnetic induction.'
+                    : 'Your observation showed that electromagnetic induction is the core principle. The experiment demonstrates why: moving charges in a magnetic field experience a force, therefore generating voltage.')
+                  : 'The experiment demonstrates the core principle: sound causes mechanical motion, and that motion generates voltage because of Faraday\'s law of electromagnetic induction. This means any coil moving in a magnetic field produces electricity.'}
+              </p>
+            </div>
 
           <div style={{
             background: `${colors.accent}11`,
@@ -2062,8 +2087,7 @@ export default function MakeMicrophoneRenderer({
             )}
             {currentQuestion < 9 ? (
               <button
-                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
-                disabled={!testAnswers[currentQuestion]}
+                onClick={() => setCurrentQuestion(currentQuestion + 1)}
                 style={{
                   flex: 1,
                   padding: '14px',
@@ -2071,11 +2095,11 @@ export default function MakeMicrophoneRenderer({
                   border: 'none',
                   background: testAnswers[currentQuestion] ? colors.accent : colors.border,
                   color: 'white',
-                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  cursor: 'pointer',
                   fontWeight: 600,
                 }}
               >
-                Next
+                Next Question
               </button>
             ) : (
               <button
@@ -2094,15 +2118,14 @@ export default function MakeMicrophoneRenderer({
                     onIncorrectAnswer?.();
                   }
                 }}
-                disabled={testAnswers.some(a => a === null)}
                 style={{
                   flex: 1,
                   padding: '14px',
                   borderRadius: '10px',
                   border: 'none',
-                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  background: colors.success,
                   color: 'white',
-                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  cursor: 'pointer',
                   fontWeight: 600,
                 }}
               >

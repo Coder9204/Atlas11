@@ -121,7 +121,7 @@ const phaseLabels: Record<Phase, string> = {
   play: 'Experiment',
   review: 'Understanding',
   twist_predict: 'New Variable',
-  twist_play: 'Multiple Patterning',
+  twist_play: 'Explore Patterning',
   twist_review: 'Deep Insight',
   transfer: 'Real World',
   test: 'Knowledge Test',
@@ -649,7 +649,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
             </circle>
 
             {/* Label */}
-            <text x={45} y={-7} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
+            <text x={45} y={400} transform="translate(0,-407)" fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
               LIGHT SOURCE
             </text>
           </g>
@@ -728,7 +728,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
             <line x1={5} y1={28} x2={195} y2={28} stroke="#1f2937" strokeWidth="0.5" />
 
             {/* Label */}
-            <text x={100} y={-8} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
+            <text x={100} y={450} transform="translate(0,-458)" fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
               PHOTOMASK (RETICLE)
             </text>
           </g>
@@ -755,7 +755,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
 
             {/* Light path through lenses */}
             <path
-              d={`M30,12 L30,38 L10,70 L50,70 L30,38 L30,98`}
+              d={`M30,5 L30,38 L10,70 L50,70 L30,38 L30,140`}
               fill="none"
               stroke={output.isEUV ? colors.euv : colors.uv}
               strokeWidth="1"
@@ -765,12 +765,12 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
 
             {/* NA indicator */}
             <rect x={68} y={45} width={50} height={20} rx={4} fill="#111827" stroke="#334155" strokeWidth="0.5" />
-            <text x={93} y={58} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontFamily="monospace">
+            <text x={93} y={250} transform="translate(0,-192)" fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontFamily="monospace">
               NA={numericalAperture.toFixed(2)}
             </text>
 
             {/* Label */}
-            <text x={30} y={-10} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
+            <text x={30} y={505} transform="translate(0,-515)" fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
               PROJECTION OPTICS
             </text>
           </g>
@@ -865,7 +865,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
               <line x1={0} y1={0} x2={Math.max(8, featureWidth)} y2={0} stroke={colors.accent} strokeWidth="2" />
               <line x1={0} y1={-3} x2={0} y2={3} stroke={colors.accent} strokeWidth="1" />
               <line x1={Math.max(8, featureWidth)} y1={-3} x2={Math.max(8, featureWidth)} y2={3} stroke={colors.accent} strokeWidth="1" />
-              <text x={Math.max(8, featureWidth) / 2} y={-6} fill={colors.accent} fontSize={11} textAnchor="middle" fontWeight="bold" fontFamily="monospace">
+              <text x={Math.max(8, featureWidth) / 2} y={300} transform="translate(0,-306)" fill={colors.accent} fontSize={11} textAnchor="middle" fontWeight="bold" fontFamily="monospace">
                 {output.effectiveResolution.toFixed(0)}nm
               </text>
             </g>
@@ -874,8 +874,8 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
             <text x={100} y={-28} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
               WAFER WITH PHOTORESIST
             </text>
-            <text x={220} y={18} fill={colors.photoresist} fontSize={11} fontFamily="system-ui, sans-serif">Photoresist</text>
-            <text x={220} y={48} fill={colors.silicon} fontSize={11} fontFamily="system-ui, sans-serif">Silicon</text>
+            <text x={220} y={170} transform="translate(0,-152)" fill={colors.photoresist} fontSize={11} fontFamily="system-ui, sans-serif">Photoresist</text>
+            <text x={220} y={185} transform="translate(0,-137)" fill={colors.silicon} fontSize={11} fontFamily="system-ui, sans-serif">Silicon</text>
           </g>
 
           {/* ============================================ */}
@@ -943,14 +943,14 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
           {/* Technology badge */}
           <g transform="translate(400, 35)">
             <rect x={0} y={0} width={70} height={28} rx={6} fill={output.isEUV ? 'rgba(6, 182, 212, 0.2)' : 'rgba(139, 92, 246, 0.2)'} stroke={output.isEUV ? colors.euv : colors.uv} strokeWidth="1" />
-            <text x={35} y={19} fill={output.isEUV ? colors.euv : colors.uv} fontSize={14} textAnchor="middle" fontWeight="bold" fontFamily="system-ui, sans-serif">
+            <text x={35} y={200} transform="translate(0,-181)" fill={output.isEUV ? colors.euv : colors.uv} fontSize={14} textAnchor="middle" fontWeight="bold" fontFamily="system-ui, sans-serif">
               {output.isEUV ? 'EUV' : 'DUV'}
             </text>
           </g>
 
           {/* Axis labels for educational clarity */}
           <g>
-            <text x={10} y={20} fill={colors.textMuted} fontSize={12} fontFamily="system-ui, sans-serif" fontWeight="600">
+            <text x={10} y={480} transform="translate(0,-460)" fill={colors.textMuted} fontSize={12} fontFamily="system-ui, sans-serif" fontWeight="600">
               Y-axis: Light Path (top to bottom)
             </text>
             <text x={250} y={495} fill={colors.textMuted} fontSize={12} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
@@ -1344,7 +1344,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomBar(false, true, 'Next →')}
       </div>
     );
   }

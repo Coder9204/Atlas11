@@ -1560,7 +1560,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
       return (
         <div className="space-y-6">
           <h2 className="text-3xl font-bold text-center text-indigo-300">
-            Test Results
+            Test Complete! Results
           </h2>
 
           <div className={`rounded-2xl p-8 border-2 ${
@@ -1578,9 +1578,9 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
               {percentage}% Correct
             </div>
             <p className="text-center text-lg text-slate-200">
-              {percentage >= 80 ? 'Outstanding! You have mastered friction physics!' :
+              {percentage >= 80 ? 'Outstanding! Mastery achieved - excellent work!' :
                percentage >= 60 ? 'Good job! Review the concepts you missed.' :
-               'Keep learning! Review the material and try again.'}
+               'Keep learning! Review the material and try again. Good effort!'}
             </p>
           </div>
 
