@@ -841,10 +841,10 @@ const ELON_RobotLearningRenderer: React.FC<ELON_RobotLearningRendererProps> = ({
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -964,10 +964,10 @@ const ELON_RobotLearningRenderer: React.FC<ELON_RobotLearningRendererProps> = ({
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
@@ -990,8 +990,8 @@ const ELON_RobotLearningRenderer: React.FC<ELON_RobotLearningRendererProps> = ({
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}>
               <svg width="100%" height="200" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: 400 }}>
@@ -1110,10 +1110,10 @@ const ELON_RobotLearningRenderer: React.FC<ELON_RobotLearningRendererProps> = ({
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1160,10 +1160,10 @@ const ELON_RobotLearningRenderer: React.FC<ELON_RobotLearningRendererProps> = ({
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', maxHeight: '50vh', overflow: 'hidden' }}>
                 <SimToRealVisualization />
               </div>
 
@@ -1307,10 +1307,10 @@ const ELON_RobotLearningRenderer: React.FC<ELON_RobotLearningRendererProps> = ({
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '12px', textAlign: 'center' }}>
@@ -1325,8 +1325,8 @@ const ELON_RobotLearningRenderer: React.FC<ELON_RobotLearningRendererProps> = ({
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               <div style={{ ...typo.body, color: colors.textSecondary }}>
                 <p style={{ marginBottom: '16px' }}>
@@ -1442,10 +1442,10 @@ const ELON_RobotLearningRenderer: React.FC<ELON_RobotLearningRendererProps> = ({
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
@@ -1468,8 +1468,8 @@ const ELON_RobotLearningRenderer: React.FC<ELON_RobotLearningRendererProps> = ({
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}>
               <svg width="100%" height="160" viewBox="0 0 400 160" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: 400 }}>
@@ -1593,27 +1593,43 @@ const ELON_RobotLearningRenderer: React.FC<ELON_RobotLearningRendererProps> = ({
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               The Deformable Object Sim-to-Real Gap
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
               When the simulation simplifies deformable objects as rigid bodies, the policy fails in reality
             </p>
+
+            {/* Educational Explanation */}
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.accent }}>What you&apos;re seeing:</strong> The left side shows how simulation treats objects as rigid rectangles. The right side shows reality where objects deform, squish, and bend. The robot gripper trained on rigid shapes fails when encountering soft objects.
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', marginBottom: 0 }}>
+                <strong style={{ color: colors.success }}>Cause and Effect:</strong> Adjust the deformation slider to see performance drop. Higher deformation means bigger sim-to-real gap. This is why Tesla&apos;s Optimus robot needs high-fidelity physics simulation for manipulation tasks.
+              </p>
+            </div>
 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', maxHeight: '50vh', overflow: 'hidden' }}>
                 <DeformableGapVisualization />
               </div>
 
@@ -1723,10 +1739,10 @@ const ELON_RobotLearningRenderer: React.FC<ELON_RobotLearningRendererProps> = ({
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1804,10 +1820,10 @@ const ELON_RobotLearningRenderer: React.FC<ELON_RobotLearningRendererProps> = ({
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1866,7 +1882,12 @@ const ELON_RobotLearningRenderer: React.FC<ELON_RobotLearningRendererProps> = ({
                       const newCompleted = [...completedApps];
                       newCompleted[idx] = true;
                       setCompletedApps(newCompleted);
-                      setSelectedApp(idx);
+                      const nextIdx = newCompleted.findIndex(c => !c);
+                      if (nextIdx === -1) {
+                        setTimeout(() => goToPhase('test'), 400);
+                      } else {
+                        setSelectedApp(nextIdx);
+                      }
                     }}
                     style={{
                       background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
@@ -1936,8 +1957,8 @@ const ELON_RobotLearningRenderer: React.FC<ELON_RobotLearningRendererProps> = ({
           <div style={{
             flex: '1 1 0%',
             overflowY: 'auto',
-            paddingTop: '48px',
-            paddingBottom: '100px',
+            paddingTop: '44px',
+            paddingBottom: '80px',
             paddingLeft: '24px',
             paddingRight: '24px',
           }}>
@@ -2002,10 +2023,10 @@ const ELON_RobotLearningRenderer: React.FC<ELON_RobotLearningRendererProps> = ({
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -2182,10 +2203,10 @@ const ELON_RobotLearningRenderer: React.FC<ELON_RobotLearningRendererProps> = ({
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
