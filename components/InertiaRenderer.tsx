@@ -298,6 +298,25 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
   const [testScore, setTestScore] = useState(0);
   const [testSubmitted, setTestSubmitted] = useState(false);
 
+  // Responsive detection
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  // Responsive typography
+  const typo = {
+    h1: isMobile ? '26px' : '36px',
+    h2: isMobile ? '20px' : '24px',
+    h3: isMobile ? '16px' : '18px',
+    body: isMobile ? '14px' : '16px',
+    small: isMobile ? '12px' : '14px',
+    label: isMobile ? '11px' : '13px',
+  };
+
   // Design System
   const colors = {
     primary: '#f59e0b',
@@ -471,8 +490,8 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
   // Shared styles
   const cardStyle: React.CSSProperties = {
     background: colors.bgCard,
-    borderRadius: '16px',
-    padding: '24px',
+    borderRadius: isMobile ? '12px' : '16px',
+    padding: isMobile ? '16px' : '24px',
     border: `1px solid ${colors.border}`,
     boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
   };
@@ -603,17 +622,17 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
     ];
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '48px 24px', textAlign: 'center' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: `${colors.primary}15`, border: `1px solid ${colors.primary}30`, borderRadius: '9999px', marginBottom: '32px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: isMobile ? '400px' : '500px', padding: isMobile ? '24px 16px' : '48px 24px', textAlign: 'center' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: `${colors.primary}15`, border: `1px solid ${colors.primary}30`, borderRadius: '9999px', marginBottom: isMobile ? '20px' : '32px' }}>
           <span style={{ width: '8px', height: '8px', background: colors.primary, borderRadius: '9999px' }} />
-          <span style={{ fontSize: '13px', fontWeight: 600, color: colors.primary, letterSpacing: '0.05em' }}>PHYSICS EXPLORATION</span>
+          <span style={{ fontSize: typo.label, fontWeight: 600, color: colors.primary, letterSpacing: '0.05em' }}>PHYSICS EXPLORATION</span>
         </div>
 
-        <h1 style={{ fontSize: '36px', fontWeight: 800, color: '#ffffff', marginBottom: '16px', lineHeight: 1.1 }}>
+        <h1 style={{ fontSize: typo.h1, fontWeight: 800, color: '#ffffff', marginBottom: '16px', lineHeight: 1.1 }}>
           {hookContent[hookStep].title}
         </h1>
 
-        <p style={{ fontSize: '18px', color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px', lineHeight: 1.7 }}>
+        <p style={{ fontSize: typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: isMobile ? '20px' : '32px', lineHeight: 1.7 }}>
           {hookContent[hookStep].content}
         </p>
 
@@ -662,15 +681,15 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
     ];
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 24px' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#ffffff', marginBottom: '8px' }}>Make Your Prediction</h2>
-        <p style={{ fontSize: '16px', color: colors.textSecondary, marginBottom: '24px', textAlign: 'center' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: isMobile ? '20px 16px' : '32px 24px' }}>
+        <h2 style={{ fontSize: typo.h2, fontWeight: 700, color: '#ffffff', marginBottom: '8px' }}>Make Your Prediction</h2>
+        <p style={{ fontSize: typo.body, color: colors.textSecondary, marginBottom: '20px', textAlign: 'center' }}>
           If you push a light object and a heavy object with the same force, what happens?
         </p>
 
         {/* SVG visualization for predict phase */}
-        <div style={{ marginBottom: '24px' }}>
-          <svg width="360" height="180" viewBox="0 0 360 180">
+        <div style={{ marginBottom: '20px', width: '100%', maxWidth: '420px' }}>
+          <svg width="100%" viewBox="0 0 360 180" preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="predBg" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#1e293b" />
@@ -807,162 +826,177 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
     const yTicks = [0, 0.25, 0.5, 0.75, 1.0].map(frac => Math.round(frac * yMax));
 
     return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 24px' }}>
-      <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#ffffff', marginBottom: '8px' }}>Inertia Experiment</h2>
-      <p style={{ fontSize: '16px', color: colors.textSecondary, marginBottom: '8px' }}>Adjust force and observe how mass affects acceleration!</p>
-      <p style={{ fontSize: '14px', color: colors.textMuted, marginBottom: '16px', maxWidth: '480px', textAlign: 'center' }}>
-        This is important in real-world engineering: F = ma shows that acceleration equals force divided by mass. More mass means more inertia and less acceleration for the same applied force.
-      </p>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: isMobile ? '16px 12px' : '24px 24px' }}>
+      <h2 style={{ fontSize: typo.h2, fontWeight: 700, color: '#ffffff', marginBottom: '4px' }}>Inertia Experiment</h2>
+      <p style={{ fontSize: typo.small, color: colors.textSecondary, marginBottom: '12px', textAlign: 'center' }}>Adjust force and observe how mass affects acceleration</p>
 
-      <div style={{ ...cardStyle, marginBottom: '16px', padding: '16px' }}>
-        <svg width="400" height="295" viewBox="0 0 400 295">
-          <defs>
-            <linearGradient id="inerChartBg" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1e293b" />
-              <stop offset="100%" stopColor="#0f172a" />
-            </linearGradient>
-            <linearGradient id="inerCurveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={selectedMass === 'light' ? '#3b82f6' : '#f97316'} />
-              <stop offset="100%" stopColor={selectedMass === 'light' ? '#60a5fa' : '#fb923c'} />
-            </linearGradient>
-            <radialGradient id="inerPointGrad" cx="35%" cy="35%" r="65%">
-              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.4" />
-              <stop offset="100%" stopColor={selectedMass === 'light' ? '#3b82f6' : '#f97316'} />
-            </radialGradient>
-            <filter id="inerPointGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
-          {/* Background */}
-          <rect width="400" height="295" fill="url(#inerChartBg)" rx="8" />
-
-          {/* Title - fontWeight 700 and fontSize 14 for test detection */}
-          <g>
-            <text x="220" y="20" textAnchor="middle" fill="#e2e8f0" fontSize="14" fontWeight="700">Acceleration vs Force Chart</text>
-          </g>
-
-          {/* Grid lines - horizontal dashed */}
-          <g>
-            {[0.25, 0.5, 0.75, 1.0].map((frac, i) => {
-              const gy = chartBottom - frac * chartH;
-              return <line key={`hg${i}`} x1={chartLeft} y1={gy} x2={chartRight} y2={gy} stroke="#334155" strokeWidth="1" strokeDasharray="4 4" />;
-            })}
-            {/* Grid lines - vertical dashed */}
-            {[0.25, 0.5, 0.75, 1.0].map((frac, i) => {
-              const gx = chartLeft + frac * chartW;
-              return <line key={`vg${i}`} x1={gx} y1={chartTop} x2={gx} y2={chartBottom} stroke="#334155" strokeWidth="1" strokeDasharray="4 4" />;
-            })}
-          </g>
-
-          {/* Axes */}
-          <g>
-            <line x1={chartLeft} y1={chartTop} x2={chartLeft} y2={chartBottom} stroke="#64748b" strokeWidth="2" />
-            <line x1={chartLeft} y1={chartBottom} x2={chartRight} y2={chartBottom} stroke="#64748b" strokeWidth="2" />
-          </g>
-
-          {/* Axis labels */}
-          <g>
-            <text x="8" y="18" textAnchor="start" fill="#94a3b8" fontSize="11" transform="rotate(-90, 8, 18)">Accel (m/s²)</text>
-            <text x={chartLeft + chartW / 2} y="260" textAnchor="middle" fill="#94a3b8" fontSize="11">Applied Force (N)</text>
-          </g>
-
-          {/* Y-axis tick labels - skip 0 at origin to avoid overlap */}
-          <g>
-            {yTicks.map((v, i) => (
-              i > 0 ? <text key={`yt${v}`} x={chartLeft - 6} y={chartBottom - (i / 4) * chartH + 4} textAnchor="end" fill="#64748b" fontSize="11">{v}</text> : null
-            ))}
-          </g>
-          {/* X-axis tick labels - skip 0 at origin to avoid overlap */}
-          <g>
-            {[25, 50, 75, 100].map((v) => (
-              <text key={`xt${v}`} x={chartLeft + (v / 100) * chartW} y={chartBottom + 14} textAnchor="middle" fill="#64748b" fontSize="11">{v}</text>
-            ))}
-          </g>
-
-          {/* Reference curve (dashed) */}
-          <path d={refCurvePath} fill="none" stroke="#6366f1" strokeWidth="2" strokeDasharray="6 3" opacity="0.6" />
-
-          {/* Current mass curve */}
-          <path d={curvePath} fill="none" stroke="url(#inerCurveGrad)" strokeWidth="2.5" />
-
-          {/* Interactive point - circle with filter for test detection */}
-          <circle cx={pointX} cy={clampedPointY} r="8" fill="url(#inerPointGrad)" stroke="#ffffff" strokeWidth="2" filter="url(#inerPointGlow)" />
-
-          {/* Legend */}
-          <g>
-            <line x1={chartLeft + 5} y1="275" x2={chartLeft + 25} y2="275" stroke={selectedMass === 'light' ? '#3b82f6' : '#f97316'} strokeWidth="2" />
-            <text x={chartLeft + 29} y="278" fill="#94a3b8" fontSize="11">current ({mass} kg)</text>
-            <line x1={chartLeft + 140} y1="275" x2={chartLeft + 160} y2="275" stroke="#6366f1" strokeWidth="2" strokeDasharray="6 3" />
-            <text x={chartLeft + 164} y="278" fill="#94a3b8" fontSize="11">reference ({referenceMass} kg baseline)</text>
-          </g>
-        </svg>
+      {/* Educational context - collapsible on mobile */}
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(245,158,11,0.1), rgba(99,102,241,0.1))',
+        borderRadius: '12px', padding: isMobile ? '12px' : '14px', marginBottom: '16px',
+        width: '100%', maxWidth: '700px', border: '1px solid rgba(245,158,11,0.2)',
+      }}>
+        <p style={{ fontSize: typo.small, color: colors.textSecondary, lineHeight: 1.5, margin: 0 }}>
+          <strong style={{ color: colors.primary }}>Important in real-world engineering:</strong> F = ma shows that acceleration equals force divided by mass. More mass means more inertia and less acceleration for the same force.
+        </p>
       </div>
 
-      {/* Derived values display */}
-      <div style={{ display: 'flex', flexDirection: 'row', gap: '12px', marginBottom: '16px', width: '100%', maxWidth: '420px' }}>
-        <div style={{ ...cardStyle, flex: 1, padding: '12px', textAlign: 'center' }}>
-          <div style={{ fontSize: '12px', color: colors.textMuted, marginBottom: '4px' }}>Force</div>
-          <div style={{ fontSize: '20px', fontWeight: 700, color: colors.primary }}>{appliedForce.toFixed(1)} N</div>
-        </div>
-        <div style={{ ...cardStyle, flex: 1, padding: '12px', textAlign: 'center' }}>
-          <div style={{ fontSize: '12px', color: colors.textMuted, marginBottom: '4px' }}>Acceleration</div>
-          <div style={{ fontSize: '20px', fontWeight: 700, color: '#22c55e' }}>{acceleration.toFixed(2)} m/s²</div>
-        </div>
-        <div style={{ ...cardStyle, flex: 1, padding: '12px', textAlign: 'center' }}>
-          <div style={{ fontSize: '12px', color: colors.textMuted, marginBottom: '4px' }}>Displacement (2s)</div>
-          <div style={{ fontSize: '20px', fontWeight: 700, color: '#6366f1' }}>{displacement.toFixed(2)} m</div>
-        </div>
-      </div>
+      {/* Side-by-side layout on desktop, stacked on mobile */}
+      <div style={{
+        display: 'flex', flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px', width: '100%', maxWidth: '700px',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        {/* Left: SVG visualization */}
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          <div style={{ ...cardStyle, padding: isMobile ? '12px' : '16px', marginBottom: 0 }}>
+            <svg width="100%" viewBox="0 0 400 295" preserveAspectRatio="xMidYMid meet" style={{ display: 'block', maxHeight: isMobile ? '45vh' : 'none' }}>
+              <defs>
+                <linearGradient id="inerChartBg" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#1e293b" />
+                  <stop offset="100%" stopColor="#0f172a" />
+                </linearGradient>
+                <linearGradient id="inerCurveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor={selectedMass === 'light' ? '#3b82f6' : '#f97316'} />
+                  <stop offset="100%" stopColor={selectedMass === 'light' ? '#60a5fa' : '#fb923c'} />
+                </linearGradient>
+                <radialGradient id="inerPointGrad" cx="35%" cy="35%" r="65%">
+                  <stop offset="0%" stopColor="#ffffff" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor={selectedMass === 'light' ? '#3b82f6' : '#f97316'} />
+                </radialGradient>
+                <filter id="inerPointGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
 
-      <div style={{ width: '100%', maxWidth: '420px' }}>
-        {/* Force slider */}
-        <div style={{ ...cardStyle, marginBottom: '16px', padding: '16px' }}>
-          <h4 style={{ fontSize: '14px', color: '#ffffff', fontWeight: 600, marginBottom: '8px' }}>Applied Force: {appliedForce.toFixed(0)} N</h4>
-          <input
-            type="range"
-            min="1"
-            max="100"
-            value={appliedForce}
-            onChange={(e) => setAppliedForce(Number(e.target.value))}
-            style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.primary, cursor: 'pointer' }}
-          />
-        </div>
+              {/* Background */}
+              <rect width="400" height="295" fill="url(#inerChartBg)" rx="8" />
 
-        {/* Mass selector */}
-        <div style={{ ...cardStyle, marginBottom: '16px', padding: '16px' }}>
-          <h4 style={{ fontSize: '14px', color: '#ffffff', fontWeight: 600, marginBottom: '8px' }}>Select Object Mass</h4>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {(['light', 'heavy'] as const).map(m => (
-              <button
-                key={m}
-                onClick={() => setSelectedMass(m)}
-                style={{
-                  flex: 1, padding: '12px', borderRadius: '10px', border: 'none', fontWeight: 600,
-                  cursor: 'pointer', transition: 'all 0.3s ease',
-                  background: selectedMass === m ? colors.primary : colors.bgCardLight,
-                  color: selectedMass === m ? '#ffffff' : colors.textSecondary,
-                  zIndex: 10, position: 'relative' as const,
-                }}
-              >
-                {m === 'light' ? 'Light (1 kg)' : 'Heavy (10 kg)'}
-              </button>
-            ))}
+              {/* Title - fontWeight 700 and fontSize 14 for test detection */}
+              <g>
+                <text x="220" y="20" textAnchor="middle" fill="#e2e8f0" fontSize="14" fontWeight="700">Acceleration vs Force Chart</text>
+              </g>
+
+              {/* Grid lines - horizontal dashed */}
+              <g>
+                {[0.25, 0.5, 0.75, 1.0].map((frac, i) => {
+                  const gy = chartBottom - frac * chartH;
+                  return <line key={`hg${i}`} x1={chartLeft} y1={gy} x2={chartRight} y2={gy} stroke="#334155" strokeWidth="1" strokeDasharray="4 4" />;
+                })}
+                {/* Grid lines - vertical dashed */}
+                {[0.25, 0.5, 0.75, 1.0].map((frac, i) => {
+                  const gx = chartLeft + frac * chartW;
+                  return <line key={`vg${i}`} x1={gx} y1={chartTop} x2={gx} y2={chartBottom} stroke="#334155" strokeWidth="1" strokeDasharray="4 4" />;
+                })}
+              </g>
+
+              {/* Axes */}
+              <g>
+                <line x1={chartLeft} y1={chartTop} x2={chartLeft} y2={chartBottom} stroke="#64748b" strokeWidth="2" />
+                <line x1={chartLeft} y1={chartBottom} x2={chartRight} y2={chartBottom} stroke="#64748b" strokeWidth="2" />
+              </g>
+
+              {/* Axis labels */}
+              <g>
+                <text x="8" y="18" textAnchor="start" fill="#94a3b8" fontSize="11" transform="rotate(-90, 8, 18)">Accel (m/s²)</text>
+                <text x={chartLeft + chartW / 2} y="260" textAnchor="middle" fill="#94a3b8" fontSize="11">Applied Force (N)</text>
+              </g>
+
+              {/* Y-axis tick labels - skip 0 at origin to avoid overlap */}
+              <g>
+                {yTicks.map((v, i) => (
+                  i > 0 ? <text key={`yt${v}`} x={chartLeft - 6} y={chartBottom - (i / 4) * chartH + 4} textAnchor="end" fill="#64748b" fontSize="11">{v}</text> : null
+                ))}
+              </g>
+              {/* X-axis tick labels - skip 0 at origin to avoid overlap */}
+              <g>
+                {[25, 50, 75, 100].map((v) => (
+                  <text key={`xt${v}`} x={chartLeft + (v / 100) * chartW} y={chartBottom + 14} textAnchor="middle" fill="#64748b" fontSize="11">{v}</text>
+                ))}
+              </g>
+
+              {/* Reference curve (dashed) */}
+              <path d={refCurvePath} fill="none" stroke="#6366f1" strokeWidth="2" strokeDasharray="6 3" opacity="0.6" />
+
+              {/* Current mass curve */}
+              <path d={curvePath} fill="none" stroke="url(#inerCurveGrad)" strokeWidth="2.5" />
+
+              {/* Interactive point - circle with filter for test detection */}
+              <circle cx={pointX} cy={clampedPointY} r="8" fill="url(#inerPointGrad)" stroke="#ffffff" strokeWidth="2" filter="url(#inerPointGlow)" />
+
+              {/* Legend */}
+              <g>
+                <line x1={chartLeft + 5} y1="275" x2={chartLeft + 25} y2="275" stroke={selectedMass === 'light' ? '#3b82f6' : '#f97316'} strokeWidth="2" />
+                <text x={chartLeft + 29} y="278" fill="#94a3b8" fontSize="11">current ({mass} kg)</text>
+                <line x1={chartLeft + 140} y1="275" x2={chartLeft + 160} y2="275" stroke="#6366f1" strokeWidth="2" strokeDasharray="6 3" />
+                <text x={chartLeft + 164} y="278" fill="#94a3b8" fontSize="11">reference ({referenceMass} kg baseline)</text>
+              </g>
+            </svg>
           </div>
         </div>
 
-        <div style={{ textAlign: 'center', fontSize: '13px', color: colors.textMuted, marginBottom: '12px' }}>
-          Compare current acceleration vs reference baseline to see how inertia scales with mass.
+        {/* Right: Controls panel */}
+        <div style={{ width: isMobile ? '100%' : '260px', flexShrink: 0 }}>
+          {/* Derived values display */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '12px' }}>
+            <div style={{ ...cardStyle, padding: '10px 6px', textAlign: 'center' }}>
+              <div style={{ fontSize: '11px', color: colors.textMuted, marginBottom: '2px' }}>Force</div>
+              <div style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: 700, color: colors.primary }}>{appliedForce.toFixed(0)} N</div>
+            </div>
+            <div style={{ ...cardStyle, padding: '10px 6px', textAlign: 'center' }}>
+              <div style={{ fontSize: '11px', color: colors.textMuted, marginBottom: '2px' }}>Accel</div>
+              <div style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: 700, color: '#22c55e' }}>{acceleration.toFixed(1)} m/s²</div>
+            </div>
+            <div style={{ ...cardStyle, padding: '10px 6px', textAlign: 'center' }}>
+              <div style={{ fontSize: '11px', color: colors.textMuted, marginBottom: '2px' }}>Disp (2s)</div>
+              <div style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: 700, color: '#6366f1' }}>{displacement.toFixed(1)} m</div>
+            </div>
+          </div>
+
+          {/* Force slider */}
+          <div style={{ ...cardStyle, marginBottom: '12px', padding: isMobile ? '14px' : '16px' }}>
+            <h4 style={{ fontSize: typo.small, color: '#ffffff', fontWeight: 600, marginBottom: '8px' }}>Applied Force: {appliedForce.toFixed(0)} N</h4>
+            <input
+              type="range"
+              min="1"
+              max="100"
+              value={appliedForce}
+              onChange={(e) => setAppliedForce(Number(e.target.value))}
+              style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: colors.primary, cursor: 'pointer' }}
+            />
+          </div>
+
+          {/* Mass selector */}
+          <div style={{ ...cardStyle, marginBottom: '12px', padding: isMobile ? '14px' : '16px' }}>
+            <h4 style={{ fontSize: typo.small, color: '#ffffff', fontWeight: 600, marginBottom: '8px' }}>Select Object Mass</h4>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {(['light', 'heavy'] as const).map(m => (
+                <button
+                  key={m}
+                  onClick={() => setSelectedMass(m)}
+                  style={{
+                    flex: 1, padding: '10px', borderRadius: '10px', border: 'none', fontWeight: 600,
+                    cursor: 'pointer', transition: 'all 0.3s ease', fontSize: typo.small,
+                    background: selectedMass === m ? colors.primary : colors.bgCardLight,
+                    color: selectedMass === m ? '#ffffff' : colors.textSecondary,
+                    zIndex: 10, position: 'relative' as const,
+                  }}
+                >
+                  {m === 'light' ? 'Light (1 kg)' : 'Heavy (10 kg)'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button onClick={() => goToPhase('review')} style={{ ...primaryBtnStyle, width: '100%', padding: '12px 24px', fontSize: typo.small }}>
+            Understand Results
+          </button>
         </div>
       </div>
-
-      <button onClick={() => goToPhase('review')} style={{ ...primaryBtnStyle, marginTop: '24px' }}>
-        Understand Results
-      </button>
     </div>
     );
   };
@@ -985,12 +1019,12 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
     ];
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 24px' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#ffffff', marginBottom: '24px' }}>Understanding Inertia</h2>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: isMobile ? '20px 16px' : '32px 24px' }}>
+        <h2 style={{ fontSize: typo.h2, fontWeight: 700, color: '#ffffff', marginBottom: '20px' }}>Understanding Inertia</h2>
 
-        <div style={{ ...cardStyle, maxWidth: '520px', width: '100%', marginBottom: '24px' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: 700, color: colors.primary, marginBottom: '16px' }}>{reviewContent[reviewStep].title}</h3>
-          <p style={{ fontSize: '16px', color: colors.textSecondary, whiteSpace: 'pre-line', lineHeight: 1.7 }}>{reviewContent[reviewStep].content}</p>
+        <div style={{ ...cardStyle, maxWidth: '520px', width: '100%', marginBottom: '20px', padding: isMobile ? '16px' : '24px' }}>
+          <h3 style={{ fontSize: typo.h3, fontWeight: 700, color: colors.primary, marginBottom: '12px' }}>{reviewContent[reviewStep].title}</h3>
+          <p style={{ fontSize: typo.body, color: colors.textSecondary, whiteSpace: 'pre-line', lineHeight: 1.7 }}>{reviewContent[reviewStep].content}</p>
           {reviewContent[reviewStep].title === "What is Inertia?" && wasCorrect && (
             <div style={{ marginTop: '16px', padding: '12px', background: `${colors.success}20`, border: `1px solid ${colors.success}40`, borderRadius: '12px' }}>
               <p style={{ fontSize: '14px', color: colors.success }}>✓ Great prediction! You correctly understood that heavier objects are harder to move.</p>
@@ -1043,15 +1077,15 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
     ];
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 24px' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: 700, color: colors.accent, marginBottom: '8px' }}>The Twist: Sudden Stop</h2>
-        <p style={{ fontSize: '16px', color: colors.textSecondary, marginBottom: '24px', textAlign: 'center', maxWidth: '460px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: isMobile ? '20px 16px' : '32px 24px' }}>
+        <h2 style={{ fontSize: typo.h2, fontWeight: 700, color: colors.accent, marginBottom: '8px' }}>The Twist: Sudden Stop</h2>
+        <p style={{ fontSize: typo.body, color: colors.textSecondary, marginBottom: '20px', textAlign: 'center', maxWidth: '460px' }}>
           A car is moving fast and suddenly crashes into a wall. What happens to the passenger inside?
         </p>
 
         {/* SVG for twist predict */}
-        <div style={{ marginBottom: '24px' }}>
-          <svg width="360" height="160" viewBox="0 0 360 160">
+        <div style={{ marginBottom: '20px', width: '100%', maxWidth: '420px' }}>
+          <svg width="100%" viewBox="0 0 360 160" preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="twPredBg" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#1e293b" />
@@ -1145,12 +1179,26 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
   };
 
   const renderTwistPlay = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 24px' }}>
-      <h2 style={{ fontSize: '24px', fontWeight: 700, color: colors.accent, marginBottom: '8px' }}>Car Crash Simulation</h2>
-      <p style={{ fontSize: '16px', color: colors.textSecondary, marginBottom: '24px' }}>See how inertia affects passengers during a sudden stop!</p>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: isMobile ? '16px 12px' : '24px 24px' }}>
+      <h2 style={{ fontSize: typo.h2, fontWeight: 700, color: colors.accent, marginBottom: '4px' }}>Car Crash Simulation</h2>
+      <p style={{ fontSize: typo.small, color: colors.textSecondary, marginBottom: '12px' }}>See how inertia affects passengers during a sudden stop!</p>
 
-      <div style={{ ...cardStyle, marginBottom: '24px', padding: '16px' }}>
-        <svg width="400" height="180">
+      {/* Educational panel for twist_play */}
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(124,58,237,0.1))',
+        borderRadius: '12px', padding: isMobile ? '12px' : '14px', marginBottom: '16px',
+        width: '100%', maxWidth: '700px', border: '1px solid rgba(99,102,241,0.25)',
+      }}>
+        <p style={{ fontSize: typo.small, color: colors.textSecondary, lineHeight: 1.5, margin: 0 }}>
+          <strong style={{ color: colors.accent }}>What you're seeing:</strong> The passenger's body has inertia — it resists changes to its motion. When the car stops suddenly, the passenger keeps moving forward at the original speed.
+        </p>
+        <p style={{ fontSize: typo.small, color: colors.textSecondary, lineHeight: 1.5, margin: '8px 0 0 0' }}>
+          <strong style={{ color: '#22c55e' }}>Cause and Effect:</strong> Toggle the seatbelt on/off and crash to see how an external force (the belt) counteracts the passenger's inertia.
+        </p>
+      </div>
+
+      <div style={{ ...cardStyle, marginBottom: '16px', padding: isMobile ? '12px' : '16px', width: '100%', maxWidth: '700px' }}>
+        <svg width="100%" viewBox="0 0 400 180" preserveAspectRatio="xMidYMid meet" style={{ display: 'block', maxHeight: isMobile ? '40vh' : 'none' }}>
           <defs>
             <linearGradient id="inerTwistBgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#1e293b" />
@@ -1394,12 +1442,12 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
     ];
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 24px' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: 700, color: colors.accent, marginBottom: '24px' }}>The Physics of Safety</h2>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: isMobile ? '20px 16px' : '32px 24px' }}>
+        <h2 style={{ fontSize: typo.h2, fontWeight: 700, color: colors.accent, marginBottom: '20px' }}>The Physics of Safety</h2>
 
-        <div style={{ ...cardStyle, maxWidth: '520px', width: '100%', marginBottom: '24px' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: 700, color: colors.accent, marginBottom: '16px' }}>{twistReviewContent[twistReviewStep].title}</h3>
-          <p style={{ fontSize: '16px', color: colors.textSecondary, whiteSpace: 'pre-line', lineHeight: 1.7 }}>{twistReviewContent[twistReviewStep].content}</p>
+        <div style={{ ...cardStyle, maxWidth: '520px', width: '100%', marginBottom: '20px', padding: isMobile ? '16px' : '24px' }}>
+          <h3 style={{ fontSize: typo.h3, fontWeight: 700, color: colors.accent, marginBottom: '12px' }}>{twistReviewContent[twistReviewStep].title}</h3>
+          <p style={{ fontSize: typo.body, color: colors.textSecondary, whiteSpace: 'pre-line', lineHeight: 1.7 }}>{twistReviewContent[twistReviewStep].content}</p>
         </div>
 
         <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
@@ -1443,9 +1491,9 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
     const allAppsCompleted = completedApps.size >= realWorldApps.length;
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 16px' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#ffffff', marginBottom: '8px' }}>Inertia in the Real World</h2>
-        <p style={{ fontSize: '14px', color: colors.textSecondary, marginBottom: '24px', textAlign: 'center' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: isMobile ? '16px 12px' : '24px 16px' }}>
+        <h2 style={{ fontSize: typo.h2, fontWeight: 700, color: '#ffffff', marginBottom: '6px' }}>Inertia in the Real World</h2>
+        <p style={{ fontSize: typo.small, color: colors.textSecondary, marginBottom: '16px', textAlign: 'center' }}>
           Explore all {realWorldApps.length} applications to unlock the quiz
         </p>
 
@@ -1607,18 +1655,18 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
       const passed = percentage >= 70;
 
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '32px 24px', textAlign: 'center' }}>
-          <div style={{ fontSize: '72px', marginBottom: '24px' }}>{passed ? '🎉' : '📚'}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: isMobile ? '400px' : '500px', padding: isMobile ? '20px 16px' : '32px 24px', textAlign: 'center' }}>
+          <div style={{ fontSize: isMobile ? '56px' : '72px', marginBottom: '20px' }}>{passed ? '🎉' : '📚'}</div>
 
-          <h2 style={{ fontSize: '28px', fontWeight: 700, color: '#ffffff', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: '#ffffff', marginBottom: '12px' }}>
             {passed ? 'Excellent Work!' : 'Keep Learning!'}
           </h2>
 
-          <div style={{ fontSize: '48px', fontWeight: 800, marginBottom: '16px' }}>
+          <div style={{ fontSize: isMobile ? '36px' : '48px', fontWeight: 800, marginBottom: '12px' }}>
             <span style={{ color: colors.primary }}>{testScore}/{testQuestions.length}</span>
           </div>
 
-          <p style={{ fontSize: '18px', color: colors.textSecondary, marginBottom: '32px', lineHeight: 1.6 }}>
+          <p style={{ fontSize: typo.body, color: colors.textSecondary, marginBottom: '24px', lineHeight: 1.6 }}>
             Score: {percentage}% - {passed ? 'You have mastered the Law of Inertia!' : 'Review the material and try again.'}
           </p>
 
@@ -1653,12 +1701,12 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
     const isConfirmed = confirmedQuestions.has(currentQuestion);
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', maxWidth: '520px', marginBottom: '16px' }}>
-          <span style={{ fontSize: '13px', color: colors.textSecondary, background: colors.bgCardLight, padding: '6px 12px', borderRadius: '9999px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: isMobile ? '16px 12px' : '32px 24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', maxWidth: '520px', marginBottom: '12px' }}>
+          <span style={{ fontSize: typo.label, color: colors.textSecondary, background: colors.bgCardLight, padding: '6px 12px', borderRadius: '9999px' }}>
             Question {currentQuestion + 1} of {testQuestions.length}
           </span>
-          <span style={{ fontSize: '13px', fontWeight: 700, color: colors.success, background: `${colors.success}20`, padding: '6px 12px', borderRadius: '9999px' }}>
+          <span style={{ fontSize: typo.label, fontWeight: 700, color: colors.success, background: `${colors.success}20`, padding: '6px 12px', borderRadius: '9999px' }}>
             Score: {testScore}
           </span>
         </div>
@@ -1797,7 +1845,7 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
     return (
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        minHeight: '500px', padding: '48px 24px', textAlign: 'center', position: 'relative', overflow: 'hidden',
+        minHeight: isMobile ? '400px' : '500px', padding: isMobile ? '24px 16px' : '48px 24px', textAlign: 'center', position: 'relative', overflow: 'hidden',
       }}>
         <style>{`@keyframes confetti { 0% { transform: translateY(0) rotate(0); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }`}</style>
         {Array.from({ length: 50 }).map((_, i) => (
@@ -1825,10 +1873,10 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
           <span style={{ fontSize: '56px' }}>🏆</span>
         </div>
 
-        <h1 style={{ fontSize: '36px', fontWeight: 800, color: '#ffffff', marginBottom: '8px' }}>Congratulations!</h1>
-        <h2 style={{ fontSize: '24px', fontWeight: 700, color: colors.primary, marginBottom: '16px' }}>Inertia Master</h2>
+        <h1 style={{ fontSize: typo.h1, fontWeight: 800, color: '#ffffff', marginBottom: '8px' }}>Congratulations!</h1>
+        <h2 style={{ fontSize: typo.h2, fontWeight: 700, color: colors.primary, marginBottom: '12px' }}>Inertia Master</h2>
 
-        <p style={{ fontSize: '18px', color: colors.textSecondary, marginBottom: '32px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: typo.body, color: colors.textSecondary, marginBottom: '24px', lineHeight: 1.6 }}>
           Final Score: <span style={{ color: colors.success, fontWeight: 700 }}>{testScore}/{testQuestions.length}</span> ({percentage}%)
         </p>
 
@@ -1917,7 +1965,7 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
       </div>
 
       {/* Main content */}
-      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%', overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%', overflowY: 'auto', paddingBottom: '80px', paddingTop: '44px' }}>
         {renderPhase()}
       </div>
 
