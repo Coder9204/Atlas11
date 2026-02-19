@@ -647,7 +647,7 @@ const ELON_SpaceCommsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =>
         {renderProgressBar()}
         <div style={{
           flex: '1 1 0%', overflowY: 'auto',
-          paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px',
+          paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px',
         }}>
           {children}
         </div>
@@ -953,7 +953,7 @@ const ELON_SpaceCommsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =>
 
         <div style={{
           background: colors.bgCard, borderRadius: '16px',
-          padding: isMobile ? '20px' : '32px', border: `1px solid ${colors.border}`, marginBottom: '24px',
+          padding: isMobile ? '16px' : '24px', border: `1px solid ${colors.border}`, marginBottom: '20px',
         }}>
           <h2 style={{ ...typo.h3, color: colors.accent, marginBottom: '16px' }}>
             The Deep Space Challenge
@@ -1023,7 +1023,7 @@ const ELON_SpaceCommsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =>
 
         <div style={{
           background: colors.bgCard, borderRadius: '16px',
-          padding: isMobile ? '20px' : '32px', border: `1px solid ${colors.border}`, marginBottom: '24px',
+          padding: isMobile ? '16px' : '24px', border: `1px solid ${colors.border}`, marginBottom: '20px',
         }}>
           <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '16px' }}>
             The Scenario
@@ -1116,9 +1116,9 @@ const ELON_SpaceCommsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =>
 
         {/* Visualization */}
         <div style={{
-          background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '24px',
+          background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '20px',
         }} data-distance={distanceLog.toFixed(2)} data-antenna={antennaDiameter} data-power={transmitPower}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
             {renderSpaceSVG(distanceKm, currentDataRate, currentFSPL, antennaDiameter)}
           </div>
 
@@ -1367,7 +1367,7 @@ const ELON_SpaceCommsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =>
 
         <div style={{
           background: colors.bgCard, borderRadius: '16px',
-          padding: isMobile ? '20px' : '32px', border: `1px solid ${colors.border}`, marginBottom: '24px',
+          padding: isMobile ? '16px' : '24px', border: `1px solid ${colors.border}`, marginBottom: '20px',
         }}>
           <h3 style={{ ...typo.h3, color: colors.laser, marginBottom: '16px' }}>
             From Radio to Laser
@@ -1457,11 +1457,17 @@ const ELON_SpaceCommsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =>
           </button>
         </div>
 
+        {/* Educational panel */}
+        <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> This visualization compares RF radio (X-band) and optical laser communication links across deep space distances. Toggle between the two modes and watch how the data rate and signal cone change dramatically.</p>
+          <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you switch from RF to optical, the shorter laser wavelength produces enormously more antenna gain from the same aperture, boosting data rates by 10-100x. Increasing distance weakens both links, but optical maintains a significant advantage.</p>
+        </div>
+
         {/* SVG for current mode */}
         <div style={{
-          background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '24px',
+          background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '20px',
         }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', maxHeight: '50vh', overflow: 'hidden' }}>
             {renderSpaceSVG(
               twistDistKm,
               useOptical ? opticalRate : rfRate,
@@ -1638,7 +1644,7 @@ const ELON_SpaceCommsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =>
                   key={i}
                   onClick={() => { playSound('click'); setSelectedApp(i); emitEvent('selection_made', { app: app.title }); }}
                   style={{
-                    background: colors.bgCard, borderRadius: '16px', padding: '24px',
+                    background: colors.bgCard, borderRadius: '16px', padding: '16px',
                     border: `2px solid ${completedApps[i] ? colors.success : app.color}44`,
                     cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s ease', position: 'relative',
                   }}
@@ -1792,7 +1798,14 @@ const ELON_SpaceCommsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =>
                     newCompleted[selectedApp] = true;
                     setCompletedApps(newCompleted);
                     emitEvent('button_clicked', { action: 'app_completed', app: app.title });
-                    setSelectedApp(null);
+                    // Auto-advance to next uncompleted app, or test if all done
+                    const nextUncompleted = newCompleted.findIndex((c) => !c);
+                    if (nextUncompleted === -1) {
+                      setSelectedApp(null);
+                      setTimeout(() => goToPhase('test'), 400);
+                    } else {
+                      setSelectedApp(nextUncompleted);
+                    }
                   }}
                   style={{
                     width: '100%', padding: '16px', background: app.color, color: '#FFFFFF',
@@ -1996,7 +2009,7 @@ const ELON_SpaceCommsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =>
         </p>
 
         <div style={{
-          background: colors.bgCard, borderRadius: '16px', padding: '24px',
+          background: colors.bgCard, borderRadius: '16px', padding: '16px',
           marginBottom: '32px', textAlign: 'left',
         }}>
           <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '20px' }}>
@@ -2024,7 +2037,7 @@ const ELON_SpaceCommsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =>
         {/* Memorable takeaway */}
         <div style={{
           background: `linear-gradient(135deg, ${colors.bgCard}, ${colors.accent}11)`,
-          borderRadius: '16px', padding: '24px', border: `1px solid ${colors.accent}33`,
+          borderRadius: '16px', padding: '16px', border: `1px solid ${colors.accent}33`,
           marginBottom: '32px',
         }}>
           <p style={{ ...typo.h3, color: colors.accent, marginBottom: '8px' }}>

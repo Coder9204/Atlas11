@@ -830,10 +830,10 @@ const ELON_CapitalStackRenderer: React.FC<ELON_CapitalStackRendererProps> = ({ o
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -868,7 +868,7 @@ const ELON_CapitalStackRenderer: React.FC<ELON_CapitalStackRendererProps> = ({ o
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             marginBottom: '32px',
             maxWidth: '500px',
             border: `1px solid ${colors.border}`,
@@ -934,10 +934,10 @@ const ELON_CapitalStackRenderer: React.FC<ELON_CapitalStackRendererProps> = ({ o
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
@@ -960,8 +960,8 @@ const ELON_CapitalStackRenderer: React.FC<ELON_CapitalStackRendererProps> = ({ o
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}>
               <svg width="100%" height="200" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: 400 }}>
@@ -1092,10 +1092,10 @@ const ELON_CapitalStackRenderer: React.FC<ELON_CapitalStackRendererProps> = ({ o
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1145,10 +1145,10 @@ const ELON_CapitalStackRenderer: React.FC<ELON_CapitalStackRendererProps> = ({ o
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px', maxHeight: '50vh', overflow: 'hidden' }}>
                 <CapitalStackVisualization />
               </div>
 
@@ -1247,10 +1247,10 @@ const ELON_CapitalStackRenderer: React.FC<ELON_CapitalStackRendererProps> = ({ o
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '12px', textAlign: 'center' }}>
@@ -1265,8 +1265,8 @@ const ELON_CapitalStackRenderer: React.FC<ELON_CapitalStackRendererProps> = ({ o
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               <div style={{ ...typo.body, color: colors.textSecondary }}>
                 <p style={{ marginBottom: '16px' }}>
@@ -1383,10 +1383,10 @@ const ELON_CapitalStackRenderer: React.FC<ELON_CapitalStackRendererProps> = ({ o
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
@@ -1409,8 +1409,8 @@ const ELON_CapitalStackRenderer: React.FC<ELON_CapitalStackRendererProps> = ({ o
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}>
               <svg width="100%" height="140" viewBox="0 0 400 140" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: 400 }}>
@@ -1524,10 +1524,10 @@ const ELON_CapitalStackRenderer: React.FC<ELON_CapitalStackRendererProps> = ({ o
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1540,12 +1540,18 @@ const ELON_CapitalStackRenderer: React.FC<ELON_CapitalStackRendererProps> = ({ o
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               {/* SVG Visualization with shock */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px', maxHeight: '50vh', overflow: 'hidden' }}>
                 <CapitalStackVisualization showShock={true} forceShock={true} />
+              </div>
+
+              {/* Educational panel */}
+              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you&apos;re seeing:</strong> The capital stack visualization now reflects an interest rate shock scenario, showing how rising rates cascade through each tranche of the financing structure and compress equity returns.</p>
+                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> As you increase the shock magnitude or leverage ratio, watch how DSCR drops toward covenant minimums and equity IRR compresses — demonstrating the refinancing risk that highly leveraged projects face in rising rate environments.</p>
               </div>
 
               {/* Rate shock toggle */}
@@ -1696,10 +1702,10 @@ const ELON_CapitalStackRenderer: React.FC<ELON_CapitalStackRendererProps> = ({ o
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1775,10 +1781,10 @@ const ELON_CapitalStackRenderer: React.FC<ELON_CapitalStackRendererProps> = ({ o
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1796,7 +1802,7 @@ const ELON_CapitalStackRenderer: React.FC<ELON_CapitalStackRendererProps> = ({ o
               <div key={idx} style={{
                 background: colors.bgCard,
                 borderRadius: '16px',
-                padding: '24px',
+                padding: '16px',
                 marginBottom: '16px',
                 borderLeft: `4px solid ${app.color}`,
               }}>
@@ -1837,7 +1843,13 @@ const ELON_CapitalStackRenderer: React.FC<ELON_CapitalStackRendererProps> = ({ o
                       const newCompleted = [...completedApps];
                       newCompleted[idx] = true;
                       setCompletedApps(newCompleted);
-                      setSelectedApp(idx);
+                      // Auto-advance to next uncompleted app, or go to test if all done
+                      const nextUncompleted = newCompleted.findIndex(c => !c);
+                      if (nextUncompleted === -1) {
+                        setTimeout(() => goToPhase('test'), 400);
+                      } else {
+                        setSelectedApp(nextUncompleted);
+                      }
                     }}
                     style={{
                       background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
@@ -1907,10 +1919,10 @@ const ELON_CapitalStackRenderer: React.FC<ELON_CapitalStackRendererProps> = ({ o
           <div style={{
             flex: '1 1 0%',
             overflowY: 'auto',
-            paddingTop: '48px',
-            paddingBottom: '100px',
-            paddingLeft: '24px',
-            paddingRight: '24px',
+            paddingTop: '44px',
+            paddingBottom: '80px',
+            paddingLeft: '16px',
+            paddingRight: '16px',
           }}>
             <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
               <div style={{ fontSize: '80px', marginBottom: '24px' }}>
@@ -1973,10 +1985,10 @@ const ELON_CapitalStackRenderer: React.FC<ELON_CapitalStackRendererProps> = ({ o
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -2153,10 +2165,10 @@ const ELON_CapitalStackRenderer: React.FC<ELON_CapitalStackRendererProps> = ({ o
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -2179,7 +2191,7 @@ const ELON_CapitalStackRenderer: React.FC<ELON_CapitalStackRendererProps> = ({ o
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             marginBottom: '32px',
             maxWidth: '400px',
           }}>

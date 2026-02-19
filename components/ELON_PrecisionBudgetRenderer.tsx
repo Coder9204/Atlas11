@@ -929,10 +929,10 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
         style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}
       >
         {children}
@@ -992,7 +992,7 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
             borderRadius: '16px',
             padding: isMobile ? '20px' : '32px',
             border: `1px solid ${colors.border}`,
-            marginBottom: '24px',
+            marginBottom: '20px',
           }}
         >
           <h2 style={{ ...typo.h3, color: colors.accent, marginBottom: '16px' }}>
@@ -1070,13 +1070,13 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
             borderRadius: '16px',
             padding: isMobile ? '20px' : '32px',
             border: `1px solid ${colors.border}`,
-            marginBottom: '24px',
+            marginBottom: '20px',
           }}
         >
           <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '16px' }}>
             The Scenario
           </h3>
-          <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '20px' }}>
             A Mars mission fuel calculation has <strong style={{ color: colors.warning }}>12 estimation steps</strong>,
             each with <strong style={{ color: colors.warning }}>5% uncertainty</strong>.
             What is the total uncertainty in the final answer?
@@ -1085,14 +1085,14 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
         </div>
 
         {/* Static preview SVG */}
-        <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', border: `1px solid ${colors.border}`, marginBottom: '24px' }}>
+        <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', border: `1px solid ${colors.border}`, marginBottom: '20px' }}>
           {renderErrorSVG(
             Array.from({length: 12}, (_, i) => Math.pow(1.05, i + 1)),
             12, 1.05, 'multiplicative', 640, 400
           )}
         </div>
 
-        <div style={{ background: colors.bgCard, borderRadius: '16px', padding: isMobile ? '20px' : '32px', border: `1px solid ${colors.border}`, marginBottom: '24px' }}>
+        <div style={{ background: colors.bgCard, borderRadius: '16px', padding: isMobile ? '20px' : '32px', border: `1px solid ${colors.border}`, marginBottom: '20px' }}>
           <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '16px' }}>What Do You Think?</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {predictOptions.map((opt) => (
@@ -1304,9 +1304,11 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
           style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: isMobile ? '12px' : '24px',
+            padding: isMobile ? '12px' : '16px',
             border: `1px solid ${colors.border}`,
             marginBottom: '20px',
+            maxHeight: '50vh',
+            overflow: 'hidden',
           }}
         >
           {renderErrorSVG(
@@ -1334,7 +1336,7 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
           style={{
             background: `linear-gradient(135deg, ${colors.bgCard}, ${getErrorColor(totalError)}11)`,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             border: `1px solid ${getErrorColor(totalError)}44`,
             textAlign: 'center',
           }}
@@ -1405,9 +1407,9 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
             style={{
               background: isCorrect ? `${colors.success}11` : `${colors.error}11`,
               borderRadius: '16px',
-              padding: '24px',
+              padding: '16px',
               border: `1px solid ${isCorrect ? colors.success : colors.error}44`,
-              marginBottom: '24px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}
           >
@@ -1436,7 +1438,7 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
               borderRadius: '16px',
               padding: isMobile ? '20px' : '32px',
               border: `1px solid ${colors.border}`,
-              marginBottom: '24px',
+              marginBottom: '20px',
             }}
           >
             <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '16px' }}>
@@ -1548,7 +1550,7 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
             borderRadius: '16px',
             padding: isMobile ? '20px' : '32px',
             border: `1px solid ${colors.warning}44`,
-            marginBottom: '24px',
+            marginBottom: '20px',
           }}
         >
           <span style={{ fontSize: '36px' }}>🔄</span>
@@ -1567,7 +1569,7 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
         </div>
 
         {/* Static preview SVG showing 3-step chain */}
-        <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', border: `1px solid ${colors.border}`, marginBottom: '24px' }}>
+        <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', border: `1px solid ${colors.border}`, marginBottom: '20px' }}>
           {renderErrorSVG(
             Array.from({length: 3}, (_, i) => Math.pow(1.10, i + 1)),
             3, 1.10, 'multiplicative', 640, 300
@@ -1634,6 +1636,12 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
             Phase 6 of 10 — Twist Exploration
           </p>
 
+          {/* Educational panel */}
+          <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> A side-by-side comparison of short versus long estimation chains, showing how dramatically total error grows as you add more steps to the calculation pipeline.</p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you increase the per-step error or chain length using the sliders below, watch how the long chain's total error explodes exponentially while the short chain remains relatively contained.</p>
+          </div>
+
           {/* Per step error slider */}
           <div
             style={{
@@ -1697,7 +1705,7 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
           </div>
 
           {/* Side-by-side comparison */}
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
             {/* Long chain */}
             <div
               style={{
@@ -1749,7 +1757,7 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
             style={{
               background: `linear-gradient(135deg, ${colors.bgCard}, ${colors.warning}11)`,
               borderRadius: '16px',
-              padding: '24px',
+              padding: '16px',
               border: `1px solid ${colors.warning}44`,
               textAlign: 'center',
             }}
@@ -1799,9 +1807,9 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
             style={{
               background: isCorrect ? `${colors.success}11` : `${colors.error}11`,
               borderRadius: '16px',
-              padding: '24px',
+              padding: '16px',
               border: `1px solid ${isCorrect ? colors.success : colors.error}44`,
-              marginBottom: '24px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}
           >
@@ -1826,7 +1834,7 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
               borderRadius: '16px',
               padding: isMobile ? '20px' : '32px',
               border: `1px solid ${colors.border}`,
-              marginBottom: '24px',
+              marginBottom: '20px',
             }}
           >
             <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '16px' }}>
@@ -1946,7 +1954,7 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
                   style={{
                     background: colors.bgCard,
                     borderRadius: '16px',
-                    padding: '24px',
+                    padding: '16px',
                     border: `2px solid ${completedApps[i] ? colors.success : app.color}44`,
                     cursor: 'pointer',
                     textAlign: 'left',
@@ -2183,7 +2191,14 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
                     newCompleted[selectedApp] = true;
                     setCompletedApps(newCompleted);
                     emitEvent('button_clicked', { action: 'app_completed', app: app.title });
-                    setSelectedApp(null);
+                    // Auto-advance to next uncompleted app, or to test if all done
+                    const nextUncompleted = newCompleted.findIndex((c) => !c);
+                    if (nextUncompleted === -1) {
+                      setSelectedApp(null);
+                      setTimeout(() => goToPhase('test'), 400);
+                    } else {
+                      setSelectedApp(nextUncompleted);
+                    }
                   }}
                   style={{
                     width: '100%',
@@ -2272,7 +2287,7 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
             style={{
               display: 'flex',
               gap: '6px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               flexWrap: 'wrap',
               justifyContent: 'center',
             }}
@@ -2500,7 +2515,7 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
               style={{
                 background: testScore >= 7 ? `${colors.success}11` : `${colors.warning}11`,
                 borderRadius: '16px',
-                padding: '24px',
+                padding: '16px',
                 border: `1px solid ${testScore >= 7 ? colors.success : colors.warning}44`,
                 textAlign: 'center',
               }}
@@ -2558,9 +2573,9 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
           style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             border: `1px solid ${colors.border}`,
-            marginBottom: '24px',
+            marginBottom: '20px',
           }}
         >
           <div
@@ -2599,7 +2614,7 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
             padding: isMobile ? '20px' : '32px',
             border: `1px solid ${colors.border}`,
             textAlign: 'left',
-            marginBottom: '24px',
+            marginBottom: '20px',
           }}
         >
           <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '20px' }}>
@@ -2635,7 +2650,7 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
           style={{
             background: `linear-gradient(135deg, ${colors.bgCard}, ${colors.accent}11)`,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             border: `1px solid ${colors.accent}33`,
           }}
         >

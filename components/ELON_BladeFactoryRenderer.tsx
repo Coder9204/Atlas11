@@ -912,10 +912,10 @@ const ELON_BladeFactoryRenderer: React.FC<BladeFactoryRendererProps> = ({ onGame
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -948,8 +948,8 @@ const ELON_BladeFactoryRenderer: React.FC<BladeFactoryRendererProps> = ({ onGame
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '32px',
+            padding: '16px',
+            marginBottom: '20px',
             maxWidth: '500px',
             border: `1px solid ${colors.border}`,
           }}>
@@ -1014,10 +1014,10 @@ const ELON_BladeFactoryRenderer: React.FC<BladeFactoryRendererProps> = ({ onGame
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
@@ -1040,8 +1040,8 @@ const ELON_BladeFactoryRenderer: React.FC<BladeFactoryRendererProps> = ({ onGame
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}>
               <svg width="100%" height="200" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: 400 }}>
@@ -1168,10 +1168,10 @@ const ELON_BladeFactoryRenderer: React.FC<BladeFactoryRendererProps> = ({ onGame
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1196,7 +1196,7 @@ const ELON_BladeFactoryRenderer: React.FC<BladeFactoryRendererProps> = ({ onGame
               background: colors.bgCard,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.border}`,
             }}>
               <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
@@ -1219,10 +1219,10 @@ const ELON_BladeFactoryRenderer: React.FC<BladeFactoryRendererProps> = ({ onGame
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
                 <TurbineVisualization />
               </div>
 
@@ -1352,10 +1352,10 @@ const ELON_BladeFactoryRenderer: React.FC<BladeFactoryRendererProps> = ({ onGame
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '12px', textAlign: 'center' }}>
@@ -1370,8 +1370,8 @@ const ELON_BladeFactoryRenderer: React.FC<BladeFactoryRendererProps> = ({ onGame
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               <div style={{ ...typo.body, color: colors.textSecondary }}>
                 <p style={{ marginBottom: '16px' }}>
@@ -1482,10 +1482,10 @@ const ELON_BladeFactoryRenderer: React.FC<BladeFactoryRendererProps> = ({ onGame
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
@@ -1508,8 +1508,8 @@ const ELON_BladeFactoryRenderer: React.FC<BladeFactoryRendererProps> = ({ onGame
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}>
               <svg width="100%" height="140" viewBox="0 0 400 140" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: 400 }}>
@@ -1631,10 +1631,10 @@ const ELON_BladeFactoryRenderer: React.FC<BladeFactoryRendererProps> = ({ onGame
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1647,12 +1647,22 @@ const ELON_BladeFactoryRenderer: React.FC<BladeFactoryRendererProps> = ({ onGame
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
                 <OffshoreVisualization />
+              </div>
+
+              {/* Educational panel */}
+              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}>
+                  <strong style={{ color: colors.accent }}>What you're seeing:</strong> This offshore logistics visualization maps how distance from shore and wave conditions affect turbine installation costs, corrosion, and energy gains in real time.
+                </p>
+                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}>
+                  <strong style={{ color: colors.success }}>Cause and Effect:</strong> Moving the distance slider farther offshore increases wind speed bonus but drives up logistics cost and installation complexity; raising wave height accelerates corrosion and narrows safe installation windows.
+                </p>
               </div>
 
               {/* Offshore distance slider */}
@@ -1781,10 +1791,10 @@ const ELON_BladeFactoryRenderer: React.FC<BladeFactoryRendererProps> = ({ onGame
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1860,10 +1870,10 @@ const ELON_BladeFactoryRenderer: React.FC<BladeFactoryRendererProps> = ({ onGame
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1881,7 +1891,7 @@ const ELON_BladeFactoryRenderer: React.FC<BladeFactoryRendererProps> = ({ onGame
               <div key={idx} style={{
                 background: colors.bgCard,
                 borderRadius: '16px',
-                padding: '24px',
+                padding: '16px',
                 marginBottom: '16px',
                 borderLeft: `4px solid ${app.color}`,
               }}>
@@ -1923,6 +1933,11 @@ const ELON_BladeFactoryRenderer: React.FC<BladeFactoryRendererProps> = ({ onGame
                       newCompleted[idx] = true;
                       setCompletedApps(newCompleted);
                       setSelectedApp(idx);
+                      // Auto-advance: find next uncompleted app, or go to test if all done
+                      const nextUncompleted = newCompleted.findIndex(c => !c);
+                      if (nextUncompleted === -1) {
+                        setTimeout(() => goToPhase('test'), 400);
+                      }
                     }}
                     style={{
                       background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
@@ -1992,10 +2007,10 @@ const ELON_BladeFactoryRenderer: React.FC<BladeFactoryRendererProps> = ({ onGame
           <div style={{
             flex: '1 1 0%',
             overflowY: 'auto',
-            paddingTop: '48px',
-            paddingBottom: '100px',
-            paddingLeft: '24px',
-            paddingRight: '24px',
+            paddingTop: '44px',
+            paddingBottom: '80px',
+            paddingLeft: '16px',
+            paddingRight: '16px',
           }}>
             <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
               <div style={{ fontSize: '80px', marginBottom: '24px' }}>
@@ -2058,10 +2073,10 @@ const ELON_BladeFactoryRenderer: React.FC<BladeFactoryRendererProps> = ({ onGame
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -2238,10 +2253,10 @@ const ELON_BladeFactoryRenderer: React.FC<BladeFactoryRendererProps> = ({ onGame
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -2264,8 +2279,8 @@ const ELON_BladeFactoryRenderer: React.FC<BladeFactoryRendererProps> = ({ onGame
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '32px',
+            padding: '16px',
+            marginBottom: '20px',
             maxWidth: '400px',
           }}>
             <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>

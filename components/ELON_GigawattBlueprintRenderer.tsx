@@ -759,10 +759,10 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -771,7 +771,7 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
         }}>
           <div style={{
             fontSize: '64px',
-            marginBottom: '24px',
+            marginBottom: '20px',
             animation: 'pulse 2s infinite',
           }}>
             {'\u{26A1}\u{1F3ED}'}
@@ -797,7 +797,7 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             marginBottom: '32px',
             maxWidth: '500px',
             border: `1px solid ${colors.border}`,
@@ -865,17 +865,17 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
               background: `${colors.accent}22`,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.accent}44`,
             }}>
               <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
@@ -883,11 +883,11 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
               </p>
             </div>
 
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '20px' }}>
               When designing a GW-scale integrated campus with a fixed budget, what is the most important budget allocation principle?
             </h2>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
               {options.map(opt => (
                 <button
                   key={opt.id}
@@ -988,16 +988,16 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Design Your GW-Scale Campus
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '20px' }}>
               Adjust the total budget and observe how subsystem allocations change. Watch the site plan update in real-time. When you increase the budget, more power capacity becomes available because each subsystem allocation scales proportionally. Total campus power is calculated as P = DC_Power × PUE + Manufacturing_Baseload. Self-sufficiency is defined as the ratio of on-site generation to total consumption. Higher budgets result in greater solar overcapacity, which leads to improved energy independence.
             </p>
 
@@ -1005,8 +1005,8 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
               border: `1px solid ${colors.border}`,
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -1041,7 +1041,7 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
             </div>
 
             {/* SVG Visualization */}
-            <div style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
               <SitePlanVisualization />
             </div>
 
@@ -1050,7 +1050,7 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
               display: 'grid',
               gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
               gap: '12px',
-              marginBottom: '24px',
+              marginBottom: '20px',
             }}>
               <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', borderLeft: `4px solid ${colors.solar}` }}>
                 <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Solar Farm</div>
@@ -1083,7 +1083,7 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
-              marginBottom: '24px',
+              marginBottom: '20px',
             }}>
               <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
                 <div style={{ ...typo.small, color: colors.textMuted }}>Self-Sufficiency</div>
@@ -1178,13 +1178,13 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '20px', textAlign: 'center' }}>
               Understanding Integrated Campus Economics: As You Observed
             </h2>
 
@@ -1282,17 +1282,17 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
               background: `${colors.error}22`,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.error}44`,
             }}>
               <p style={{ ...typo.small, color: colors.error, margin: 0, fontWeight: 700 }}>
@@ -1303,11 +1303,11 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
               </p>
             </div>
 
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '20px' }}>
               How will relocating to a tropical developing nation affect your campus design?
             </h2>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
               {twistOptions.map(opt => (
                 <button
                   key={opt.id}
@@ -1417,25 +1417,30 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Tropical Location Impact
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '20px' }}>
               Toggle the tropical location to see how cooling, grid reliability, and solar output change your campus design.
             </p>
+
+            <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+              <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The campus site plan dynamically recalculates all power flows and subsystem allocations when you toggle between temperate and tropical locations, revealing how PUE changes cascade through the entire energy system.</p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you switch to a tropical site, the higher PUE (1.4 vs 1.1) increases cooling overhead by 30%, which raises total campus power demand and reduces effective compute capacity -- requiring more solar and storage to maintain self-sufficiency.</p>
+            </div>
 
             {/* Tropical toggle */}
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
               border: `1px solid ${tropicalLocation ? colors.error : colors.border}`,
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -1499,7 +1504,7 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
             </div>
 
             {/* SVG with tropical flag */}
-            <div style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
               <SitePlanVisualization showTropical={true} />
             </div>
 
@@ -1615,13 +1620,13 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '20px', textAlign: 'center' }}>
               Climate and Infrastructure: The Hidden Variables
             </h2>
 
@@ -1694,10 +1699,10 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1715,7 +1720,7 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
               <div key={idx} style={{
                 background: colors.bgCard,
                 borderRadius: '16px',
-                padding: '24px',
+                padding: '16px',
                 marginBottom: '16px',
                 borderLeft: `4px solid ${app.color}`,
               }}>
@@ -1757,6 +1762,13 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
                       newCompleted[idx] = true;
                       setCompletedApps(newCompleted);
                       setSelectedApp(idx);
+                      // Auto-advance to next uncompleted app, or to test phase if all done
+                      const nextUncompleted = newCompleted.findIndex((c, i) => !c && i > idx);
+                      const anyUncompleted = newCompleted.findIndex(c => !c);
+                      if (nextUncompleted === -1 && anyUncompleted === -1) {
+                        // All apps completed
+                        setTimeout(() => goToPhase('test'), 400);
+                      }
                     }}
                     style={{
                       background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
@@ -1826,13 +1838,13 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
           <div style={{
             flex: '1 1 0%',
             overflowY: 'auto',
-            paddingTop: '48px',
-            paddingBottom: '100px',
-            paddingLeft: '24px',
-            paddingRight: '24px',
+            paddingTop: '44px',
+            paddingBottom: '80px',
+            paddingLeft: '16px',
+            paddingRight: '16px',
           }}>
             <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-              <div style={{ fontSize: '80px', marginBottom: '24px' }}>
+              <div style={{ fontSize: '80px', marginBottom: '20px' }}>
                 {passed ? '\uD83C\uDFC6' : '\uD83D\uDCDA'}
               </div>
               <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
@@ -1848,7 +1860,7 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
               </p>
 
               {/* Show answers review */}
-              <div style={{ textAlign: 'left', marginBottom: '24px' }}>
+              <div style={{ textAlign: 'left', marginBottom: '20px' }}>
                 {testQuestions.map((q, i) => {
                   const correctId = q.options.find(o => o.correct)?.id;
                   const isCorrect = testAnswers[i] === correctId;
@@ -1920,16 +1932,16 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Knowledge Test: Gigawatt Blueprint
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '20px' }}>
               Apply your understanding of integrated energy systems, site selection, capital budgeting, and multi-objective optimization to real-world GW-scale campus design scenarios.
             </p>
 
@@ -1938,7 +1950,7 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              marginBottom: '24px',
+              marginBottom: '20px',
             }}>
               <span style={{ ...typo.h3, color: colors.accent }}>
                 Q{currentQuestion + 1} of 10
@@ -1974,7 +1986,7 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
             </h3>
 
             {/* Options */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
               {question.options.map(opt => (
                 <button
                   key={opt.id}
@@ -2110,17 +2122,17 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           textAlign: 'center',
         }}>
-          <div style={{ fontSize: '100px', marginBottom: '24px', animation: 'bounce 1s infinite' }}>
+          <div style={{ fontSize: '100px', marginBottom: '20px', animation: 'bounce 1s infinite' }}>
             {'\uD83C\uDFC6'}
           </div>
           <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
@@ -2136,7 +2148,7 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             marginBottom: '32px',
             maxWidth: '500px',
           }}>

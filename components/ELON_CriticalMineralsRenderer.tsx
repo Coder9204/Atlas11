@@ -848,10 +848,10 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -860,7 +860,7 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
         }}>
           <div style={{
             fontSize: '64px',
-            marginBottom: '24px',
+            marginBottom: '20px',
             animation: 'pulse 2s infinite',
           }}>
             {'\u{1F30D}\u{1F517}'}
@@ -884,7 +884,7 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             marginBottom: '32px',
             maxWidth: '500px',
             border: `1px solid ${colors.border}`,
@@ -950,17 +950,17 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
               background: `${colors.accent}22`,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.accent}44`,
             }}>
               <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
@@ -968,7 +968,7 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
               </p>
             </div>
 
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '20px' }}>
               What percentage of global rare earth element processing occurs in China?
             </h2>
 
@@ -976,8 +976,8 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}>
               <svg width="100%" height="200" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: 400 }}>
@@ -1109,10 +1109,10 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1137,7 +1137,7 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
               background: colors.bgCard,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.border}`,
             }}>
               <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
@@ -1162,10 +1162,10 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
                 <SupplyChainVisualization />
               </div>
 
@@ -1292,10 +1292,10 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '12px', textAlign: 'center' }}>
@@ -1310,8 +1310,8 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               <div style={{ ...typo.body, color: colors.textSecondary }}>
                 <p style={{ marginBottom: '16px' }}>
@@ -1330,8 +1330,8 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
               background: `${colors.accent}11`,
               border: `1px solid ${colors.accent}33`,
               borderRadius: '12px',
-              padding: '20px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
                 Why Processing Matters More Than Mining
@@ -1344,8 +1344,8 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
             <div style={{
               background: colors.bgCard,
               borderRadius: '12px',
-              padding: '20px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '12px' }}>
                 Concentration Across Key Minerals
@@ -1424,17 +1424,17 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
               background: `${colors.warning}22`,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.warning}44`,
             }}>
               <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
@@ -1442,7 +1442,7 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
               </p>
             </div>
 
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '20px' }}>
               If China imposed a rare earth export ban (as threatened in 2010 and 2019), what would happen?
             </h2>
 
@@ -1450,8 +1450,8 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}>
               <svg width="100%" height="120" viewBox="0 0 400 120" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: 400 }}>
@@ -1567,28 +1567,34 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Export Ban Impact Simulator
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '20px' }}>
               Toggle the export ban to see how supply chain concentration amplifies disruption
             </p>
 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
                 <ExportBanVisualization />
+              </div>
+
+              {/* Educational panel */}
+              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The export ban scenario shows how a single country halting mineral exports can devastate global supply chains, with recovery timelines stretching years as alternative processing capacity is built.</p>
+                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you toggle the export ban or change the demand growth rate, observe how price spikes multiply and recovery timelines lengthen for minerals with higher processing concentration (HHI).</p>
               </div>
 
               {/* Mineral selector */}
@@ -1727,30 +1733,30 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '20px', textAlign: 'center' }}>
               The Hidden Fragility: Supply Chain Concentration
             </h2>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-              <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', border: `1px solid ${colors.border}` }}>
+              <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
                 <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>The 2010 Embargo Lesson</h3>
                 <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
                   When China restricted rare earth exports to Japan in 2010, neodymium prices spiked from ~$40/kg to over $500/kg -- a 12x increase. The embargo lasted only weeks, but it took years for prices to normalize. This single event triggered billions in investment in alternative supply chains that are still being built today.
                 </p>
               </div>
-              <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', border: `1px solid ${colors.border}` }}>
+              <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
                 <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>Why Alternatives Take So Long</h3>
                 <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
                   New mines require 7-15 years from discovery to production. Processing facilities handle radioactive thorium byproducts, requiring extensive environmental permits and community acceptance. The specialized expertise exists primarily in China, built over decades of state investment.
                 </p>
               </div>
-              <div style={{ background: `${colors.success}11`, borderRadius: '12px', padding: '20px', border: `1px solid ${colors.success}33` }}>
+              <div style={{ background: `${colors.success}11`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.success}33` }}>
                 <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>Strategies for Resilience</h3>
                 <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
                   Nations are pursuing four strategies: (1) diversifying supply sources, (2) building domestic processing, (3) developing substitutes and alternative chemistries, and (4) investing in recycling and urban mining. No single strategy is sufficient; all four are needed simultaneously.
@@ -1806,10 +1812,10 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1827,7 +1833,7 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
               <div key={idx} style={{
                 background: colors.bgCard,
                 borderRadius: '16px',
-                padding: '24px',
+                padding: '16px',
                 marginBottom: '16px',
                 borderLeft: `4px solid ${app.color}`,
               }}>
@@ -1869,6 +1875,11 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
                       newCompleted[idx] = true;
                       setCompletedApps(newCompleted);
                       setSelectedApp(idx);
+                      // Auto-advance to next uncompleted app, or to test if all done
+                      const nextUncompleted = newCompleted.findIndex((c, i) => !c && i !== idx);
+                      if (nextUncompleted === -1 && newCompleted.every(c => c)) {
+                        setTimeout(() => goToPhase('test'), 400);
+                      }
                     }}
                     style={{
                       background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
@@ -1938,13 +1949,13 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
           <div style={{
             flex: '1 1 0%',
             overflowY: 'auto',
-            paddingTop: '48px',
-            paddingBottom: '100px',
-            paddingLeft: '24px',
-            paddingRight: '24px',
+            paddingTop: '44px',
+            paddingBottom: '80px',
+            paddingLeft: '16px',
+            paddingRight: '16px',
           }}>
             <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-              <div style={{ fontSize: '80px', marginBottom: '24px' }}>
+              <div style={{ fontSize: '80px', marginBottom: '20px' }}>
                 {passed ? '\u{1F3C6}' : '\u{1F4DA}'}
               </div>
               <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
@@ -2004,10 +2015,10 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -2184,10 +2195,10 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -2210,7 +2221,7 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             marginBottom: '32px',
             maxWidth: '400px',
           }}>

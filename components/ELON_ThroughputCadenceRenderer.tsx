@@ -994,10 +994,10 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -1006,7 +1006,7 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
         }}>
           <div style={{
             fontSize: '64px',
-            marginBottom: '24px',
+            marginBottom: '20px',
             animation: 'pulse 2s infinite',
           }}>
             {'\u{1F3ED}\u26A1'}
@@ -1030,7 +1030,7 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             marginBottom: '32px',
             maxWidth: '500px',
             border: `1px solid ${colors.border}`,
@@ -1096,17 +1096,17 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
               background: `${colors.accent}22`,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.accent}44`,
             }}>
               <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
@@ -1114,7 +1114,7 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
               </p>
             </div>
 
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '20px' }}>
               A factory has 5 stations in sequence. Four run at 100 units/hr but one runs at 50 units/hr. What is the total throughput?
             </h2>
 
@@ -1122,8 +1122,8 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}>
               <svg width="100%" height="160" viewBox="0 0 440 160" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: 440 }}>
@@ -1244,10 +1244,10 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1272,7 +1272,7 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
               background: colors.bgCard,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.border}`,
             }}>
               <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
@@ -1295,10 +1295,10 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
                 <FactoryFloorVisualization />
               </div>
 
@@ -1404,16 +1404,16 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '12px', textAlign: 'center' }}>
               The Theory of Constraints
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '20px' }}>
               {prediction === 'c'
                 ? 'Correct! Your prediction was right -- as you observed in the simulator, throughput equals the bottleneck speed of 50 units/hr regardless of how fast other stations run.'
                 : 'As you observed in the simulator, the line throughput is always limited by the slowest station. Even with four stations at 100 units/hr, the bottleneck at 50 units/hr constrains everything.'}
@@ -1422,8 +1422,8 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               <div style={{ ...typo.body, color: colors.textSecondary }}>
                 <p style={{ marginBottom: '16px' }}>
@@ -1443,7 +1443,7 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
               border: `1px solid ${colors.accent}33`,
               borderRadius: '12px',
               padding: '20px',
-              marginBottom: '24px',
+              marginBottom: '20px',
             }}>
               <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
                 Little's Law: The Fundamental Equation
@@ -1457,7 +1457,7 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
               background: colors.bgCard,
               borderRadius: '12px',
               padding: '20px',
-              marginBottom: '24px',
+              marginBottom: '20px',
             }}>
               <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '12px' }}>
                 Key Throughput Concepts
@@ -1537,17 +1537,17 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
               background: `${colors.warning}22`,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.warning}44`,
             }}>
               <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
@@ -1555,7 +1555,7 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
               </p>
             </div>
 
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '20px' }}>
               Two factories have the same average cycle time, but one has high variability (random delays, inconsistent processing). What happens to the high-variability factory?
             </h2>
 
@@ -1563,8 +1563,8 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}>
               <svg width="100%" height="140" viewBox="0 0 440 140" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: 440 }}>
@@ -1688,28 +1688,34 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Variability Explorer
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '20px' }}>
               See how variability and utilization interact to create the "hockey stick" queue explosion
             </p>
 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
                 <VariabilityVisualization />
+              </div>
+
+              {/* Educational panel */}
+              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The hockey stick curve shows how queue time explodes as utilization approaches 100%. Higher variability (CV) shifts the curve upward, meaning queues grow even faster.</p>
+                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you increase utilization or CV with the sliders, watch the marker climb the curve -- small changes near 90%+ utilization cause massive queue time increases, revealing why factories must leave capacity slack.</p>
               </div>
 
               {/* Utilization slider */}
@@ -1849,13 +1855,13 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '20px', textAlign: 'center' }}>
               The Hidden Throughput Killer: Variability
             </h2>
 
@@ -1929,10 +1935,10 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1941,7 +1947,7 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
             <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
               Explore each application to continue
             </p>
-            <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '24px', fontWeight: 600 }}>
+            <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '20px', fontWeight: 600 }}>
               Application {completedApps.filter(c => c).length + 1} of {realWorldApps.length}
             </p>
 
@@ -1950,7 +1956,7 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
               <div key={idx} style={{
                 background: colors.bgCard,
                 borderRadius: '16px',
-                padding: '24px',
+                padding: '16px',
                 marginBottom: '16px',
                 borderLeft: `4px solid ${app.color}`,
               }}>
@@ -1991,7 +1997,14 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
                       const newCompleted = [...completedApps];
                       newCompleted[idx] = true;
                       setCompletedApps(newCompleted);
-                      setSelectedApp(idx);
+                      // Auto-advance to next uncompleted app, or test phase if all done
+                      const nextUncompleted = newCompleted.findIndex(c => !c);
+                      if (nextUncompleted === -1) {
+                        // All apps completed — auto-advance to test
+                        setTimeout(() => goToPhase('test'), 400);
+                      } else {
+                        setSelectedApp(nextUncompleted);
+                      }
                     }}
                     style={{
                       background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
@@ -2061,13 +2074,13 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
           <div style={{
             flex: '1 1 0%',
             overflowY: 'auto',
-            paddingTop: '48px',
-            paddingBottom: '100px',
-            paddingLeft: '24px',
-            paddingRight: '24px',
+            paddingTop: '44px',
+            paddingBottom: '80px',
+            paddingLeft: '16px',
+            paddingRight: '16px',
           }}>
             <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-              <div style={{ fontSize: '80px', marginBottom: '24px' }}>
+              <div style={{ fontSize: '80px', marginBottom: '20px' }}>
                 {passed ? '\u{1F3C6}' : '\u{1F4DA}'}
               </div>
               <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
@@ -2127,16 +2140,16 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Knowledge Test: Throughput Cadence
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '20px' }}>
               Apply your understanding of Little's Law, Theory of Constraints, line balancing, takt time, and Kingman's formula to real-world manufacturing scenarios. Consider bottleneck effects, variability impact, and the relationship between WIP, throughput, and cycle time.
             </p>
             {/* Progress */}
@@ -2144,7 +2157,7 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              marginBottom: '24px',
+              marginBottom: '20px',
             }}>
               <span style={{ ...typo.h3, color: colors.accent }}>
                 Q{currentQuestion + 1} of 10
@@ -2180,7 +2193,7 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
             </h3>
 
             {/* Options */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
               {question.options.map(opt => (
                 <button
                   key={opt.id}
@@ -2307,17 +2320,17 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           textAlign: 'center',
         }}>
-          <div style={{ fontSize: '100px', marginBottom: '24px', animation: 'bounce 1s infinite' }}>
+          <div style={{ fontSize: '100px', marginBottom: '20px', animation: 'bounce 1s infinite' }}>
             {'\u{1F3C6}'}
           </div>
           <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
@@ -2333,7 +2346,7 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             marginBottom: '32px',
             maxWidth: '400px',
           }}>

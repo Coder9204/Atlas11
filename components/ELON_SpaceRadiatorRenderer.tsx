@@ -645,16 +645,16 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
-            <div style={{ fontSize: '80px', marginBottom: '24px' }}>{'\u2604\uFE0F'}</div>
+            <div style={{ fontSize: '80px', marginBottom: '20px' }}>{'\u2604\uFE0F'}</div>
             <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
               Space Radiator
             </h1>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '24px', maxWidth: '600px', margin: '0 auto 24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '20px', maxWidth: '600px', margin: '0 auto 20px' }}>
               In the vacuum of space, there is no air for convection. The only way to reject waste heat is through thermal radiation — governed by the Stefan-Boltzmann law where power scales with T⁴. How do spacecraft designers balance radiator temperature, area, and mass to keep systems alive?
             </p>
-            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '24px', textAlign: 'left' }}>
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '20px', textAlign: 'left' }}>
               <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>The Challenge</h3>
               <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '12px' }}>
                 A spacecraft generates 100 kW of waste heat from electronics, life support, and power systems. You must design a radiator system that rejects this heat to the 3K void of space.
@@ -686,15 +686,15 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Make Your Prediction
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '20px' }}>
               If you increase the radiator operating temperature from 300K to 450K, what happens to the required radiator area for 100 kW heat rejection?
             </p>
-            <div style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: '20px' }}>
               <RadiatorVisualization />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -745,15 +745,17 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Adjust Radiator Temperature
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '20px' }}>
               Slide to change the radiator operating temperature and observe how the required area changes with T⁴. Notice how even small temperature increases dramatically reduce radiator size. Watch the operating point move along the curve as you adjust — this relationship is critical for real-world spacecraft design like the ISS with its 1,120 m² of radiators.
             </p>
-            <RadiatorVisualization />
+            <div style={{ maxHeight: '50vh', overflow: 'hidden' }}>
+              <RadiatorVisualization />
+            </div>
             <div style={{ marginTop: '24px', background: colors.bgCard, borderRadius: '12px', padding: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>Radiator Temperature</span>
@@ -818,7 +820,7 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
               Understanding Radiator Physics
@@ -829,7 +831,7 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
                 {prediction === 'b' ? 'Correct! Your prediction was right — the area decreases dramatically (~80%) due to the T⁴ relationship.' : 'As you saw, the T⁴ relationship is more powerful than most people initially predict — area decreases by about 80% when temperature increases from 300K to 450K.'}
               </p>
             </div>
-            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '16px', borderLeft: `4px solid ${colors.accent}` }}>
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '16px', borderLeft: `4px solid ${colors.accent}` }}>
               <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>The T⁴ Power Law</h3>
               <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '12px' }}>
                 The Stefan-Boltzmann law (Q = εσAT⁴) means radiated power increases with the fourth power of temperature. Doubling temperature from 250K to 500K increases heat rejection per square meter by 2⁴ = 16 times.
@@ -838,13 +840,13 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
                 This is why spacecraft designers push for the highest radiator temperature their systems can tolerate. A small temperature increase yields a dramatic reduction in radiator area and mass.
               </p>
             </div>
-            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '16px', borderLeft: `4px solid ${colors.success}` }}>
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '16px', borderLeft: `4px solid ${colors.success}` }}>
               <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>Mass Budget Impact</h3>
               <p style={{ ...typo.body, color: colors.textSecondary }}>
                 Radiator panels typically mass 2-5 kg/m². For a large spacecraft with MW-scale heat rejection, radiators can be 30-50% of total vehicle mass. The T⁴ law makes radiator temperature the single most impactful design variable for high-power spacecraft.
               </p>
             </div>
-            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.warning}` }}>
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', borderLeft: `4px solid ${colors.warning}` }}>
               <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '12px' }}>The Temperature Tradeoff</h3>
               <p style={{ ...typo.body, color: colors.textSecondary }}>
                 Higher radiator temperatures mean smaller radiators, but they also reduce the temperature difference available for power conversion (Carnot efficiency). There is an optimal radiator temperature that minimizes total system mass by balancing these two competing effects.
@@ -872,15 +874,15 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               New Variable: Eclipse Entry
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '20px' }}>
               Your spacecraft enters Earth's shadow every orbit (~35 minutes of darkness per 90-minute orbit). Solar panels go dark, internal power generation drops 30%, but radiators still emit heat to space. What happens?
             </p>
-            <div style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: '20px' }}>
               <RadiatorVisualization showEclipse={true} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -931,7 +933,7 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Eclipse Thermal Challenge
@@ -957,7 +959,13 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
                 {eclipseMode ? '\u{1F311} Eclipse Mode ON' : '\u{2600}\uFE0F Sunlight Mode'}
               </button>
             </div>
-            <RadiatorVisualization showEclipse={eclipseMode} />
+            <div style={{ maxHeight: '50vh', overflow: 'hidden' }}>
+              <RadiatorVisualization showEclipse={eclipseMode} />
+            </div>
+            <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px', marginTop: '16px' }}>
+              <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The chart shows how radiator area changes with temperature during eclipse conditions. When eclipse mode is active, the curve shifts because the spacecraft generates 30% less internal heat while radiators continue emitting to deep space.</p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> Toggling eclipse mode reduces the heat load from 100 kW to 70 kW, shrinking the required radiator area. Adjusting temperature shows how the T&#x2074; law compounds with eclipse conditions to change the thermal balance.</p>
+            </div>
             <div style={{ marginTop: '24px', background: colors.bgCard, borderRadius: '12px', padding: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>Radiator Temperature</span>
@@ -1026,12 +1034,12 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
               Eclipse Thermal Management
             </h2>
-            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '16px', borderLeft: `4px solid ${colors.cold}` }}>
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '16px', borderLeft: `4px solid ${colors.cold}` }}>
               <h3 style={{ ...typo.h3, color: colors.cold, marginBottom: '12px' }}>The Eclipse Challenge</h3>
               <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '12px' }}>
                 During eclipse, the spacecraft loses solar power but radiators keep radiating. Internal heat generation drops ~30%, but the radiator system was sized for full heat load. This creates a net energy deficit — the spacecraft cools.
@@ -1040,13 +1048,13 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
                 Critical components like batteries, propellant lines, and optics can be damaged by cold. Electric heaters must activate during eclipse to maintain minimum temperatures, consuming precious battery power.
               </p>
             </div>
-            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '16px', borderLeft: `4px solid ${colors.warning}` }}>
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '16px', borderLeft: `4px solid ${colors.warning}` }}>
               <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '12px' }}>Design Solutions</h3>
               <p style={{ ...typo.body, color: colors.textSecondary }}>
                 Engineers use louvers (mechanical shutters) on radiators to reduce heat rejection during eclipse, MLI blankets to insulate cold-sensitive components, and thermal mass (phase-change materials) to buffer temperature swings. The thermal control system must handle both the hot case (full sun) and cold case (deep eclipse).
               </p>
             </div>
-            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.accent}` }}>
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', borderLeft: `4px solid ${colors.accent}` }}>
               <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>Thermal Cycling Fatigue</h3>
               <p style={{ ...typo.body, color: colors.textSecondary }}>
                 LEO satellites experience ~5,800 eclipse cycles per year. The repeated thermal expansion and contraction causes fatigue in structural joints, solder connections, and adhesive bonds. Materials must be tested for 30,000+ thermal cycles for a 15-year mission.
@@ -1076,7 +1084,7 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1084,7 +1092,7 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
             <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
               Explore each application to continue
             </p>
-            <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '24px', fontWeight: 600 }}>
+            <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '20px', fontWeight: 600 }}>
               Application {completedApps.filter(c => c).length + 1} of {realWorldApps.length}
             </p>
 
@@ -1092,7 +1100,7 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
               <div key={idx} style={{
                 background: colors.bgCard,
                 borderRadius: '16px',
-                padding: '24px',
+                padding: '16px',
                 marginBottom: '16px',
                 borderLeft: `4px solid ${app.color}`,
               }}>
@@ -1134,6 +1142,12 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
                       newCompleted[idx] = true;
                       setCompletedApps(newCompleted);
                       setSelectedApp(idx);
+                      // Auto-advance: find next uncompleted app or go to test
+                      const nextUncompleted = newCompleted.findIndex(c => !c);
+                      if (nextUncompleted === -1) {
+                        // All apps completed — auto-advance to test
+                        setTimeout(() => goToPhase('test'), 400);
+                      }
                     }}
                     style={{
                       background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
@@ -1193,9 +1207,9 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
       return (
         <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {renderProgressBar()}
-          <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+          <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
             <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-              <div style={{ fontSize: '80px', marginBottom: '24px' }}>
+              <div style={{ fontSize: '80px', marginBottom: '20px' }}>
                 {passed ? '\uD83C\uDFC6' : '\uD83D\uDCDA'}
               </div>
               <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
@@ -1245,15 +1259,15 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Knowledge Test: Space Radiator
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '20px' }}>
               Apply your understanding of spacecraft thermal control, radiator physics, Stefan-Boltzmann radiation, and eclipse thermal management to real-world space engineering scenarios. Consider the relationship between temperature, area, emissivity, and heat rejection as you work through each problem.
             </p>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <span style={{ ...typo.h3, color: colors.accent }}>
                 Q{currentQuestion + 1} of 10
               </span>
@@ -1279,7 +1293,7 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
               {question.question}
             </h3>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
               {question.options.map(opt => (
                 <button
                   key={opt.id}
@@ -1406,17 +1420,17 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           textAlign: 'center',
         }}>
-          <div style={{ fontSize: '100px', marginBottom: '24px', animation: 'bounce 1s infinite' }}>
+          <div style={{ fontSize: '100px', marginBottom: '20px', animation: 'bounce 1s infinite' }}>
             {'\uD83C\uDFC6'}
           </div>
           <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
@@ -1432,7 +1446,7 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             marginBottom: '32px',
             maxWidth: '400px',
           }}>

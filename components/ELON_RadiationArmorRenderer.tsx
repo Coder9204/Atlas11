@@ -876,10 +876,10 @@ const ELON_RadiationArmorRenderer: React.FC<ELON_RadiationArmorRendererProps> = 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -914,8 +914,8 @@ const ELON_RadiationArmorRenderer: React.FC<ELON_RadiationArmorRendererProps> = 
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '32px',
+            padding: '16px',
+            marginBottom: '20px',
             maxWidth: '500px',
             border: `1px solid ${colors.border}`,
           }}>
@@ -980,17 +980,17 @@ const ELON_RadiationArmorRenderer: React.FC<ELON_RadiationArmorRendererProps> = 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
               background: `${colors.accent}22`,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.accent}44`,
             }}>
               <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
@@ -1006,8 +1006,8 @@ const ELON_RadiationArmorRenderer: React.FC<ELON_RadiationArmorRendererProps> = 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}>
               <svg width="100%" height="200" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: 400 }}>
@@ -1142,10 +1142,10 @@ const ELON_RadiationArmorRenderer: React.FC<ELON_RadiationArmorRendererProps> = 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1170,7 +1170,7 @@ const ELON_RadiationArmorRenderer: React.FC<ELON_RadiationArmorRendererProps> = 
               background: colors.bgCard,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.border}`,
             }}>
               <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
@@ -1193,10 +1193,10 @@ const ELON_RadiationArmorRenderer: React.FC<ELON_RadiationArmorRendererProps> = 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
                 <ShieldingVisualization />
               </div>
 
@@ -1327,10 +1327,10 @@ const ELON_RadiationArmorRenderer: React.FC<ELON_RadiationArmorRendererProps> = 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '12px', textAlign: 'center' }}>
@@ -1345,8 +1345,8 @@ const ELON_RadiationArmorRenderer: React.FC<ELON_RadiationArmorRendererProps> = 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               <div style={{ ...typo.body, color: colors.textSecondary }}>
                 <p style={{ marginBottom: '16px' }}>
@@ -1366,7 +1366,7 @@ const ELON_RadiationArmorRenderer: React.FC<ELON_RadiationArmorRendererProps> = 
               border: `1px solid ${colors.accent}33`,
               borderRadius: '12px',
               padding: '20px',
-              marginBottom: '24px',
+              marginBottom: '20px',
             }}>
               <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
                 Why Hydrogen-Rich Materials Win
@@ -1380,7 +1380,7 @@ const ELON_RadiationArmorRenderer: React.FC<ELON_RadiationArmorRendererProps> = 
               background: colors.bgCard,
               borderRadius: '12px',
               padding: '20px',
-              marginBottom: '24px',
+              marginBottom: '20px',
             }}>
               <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '12px' }}>
                 Three Types of Space Radiation
@@ -1457,17 +1457,17 @@ const ELON_RadiationArmorRenderer: React.FC<ELON_RadiationArmorRendererProps> = 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
               background: `${colors.warning}22`,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.warning}44`,
             }}>
               <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
@@ -1483,8 +1483,8 @@ const ELON_RadiationArmorRenderer: React.FC<ELON_RadiationArmorRendererProps> = 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}>
               <svg width="100%" height="140" viewBox="0 0 400 140" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: 400 }}>
@@ -1606,10 +1606,10 @@ const ELON_RadiationArmorRenderer: React.FC<ELON_RadiationArmorRendererProps> = 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1622,12 +1622,18 @@ const ELON_RadiationArmorRenderer: React.FC<ELON_RadiationArmorRendererProps> = 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
                 <StormShelterVisualization />
+              </div>
+
+              {/* Educational panel */}
+              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The storm shelter cross-section shows how concentrated polyethylene shielding inside the hull dramatically reduces radiation dose during a solar particle event, compared to hull-only protection.</p>
+                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> Increasing the shelter thickness adds hydrogen-rich material that fragments incoming solar protons, reducing the dose rate inside the shelter -- but at the cost of additional mass per square meter of shelter wall.</p>
               </div>
 
               {/* Solar event toggle */}
@@ -1759,10 +1765,10 @@ const ELON_RadiationArmorRenderer: React.FC<ELON_RadiationArmorRendererProps> = 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1838,10 +1844,10 @@ const ELON_RadiationArmorRenderer: React.FC<ELON_RadiationArmorRendererProps> = 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1859,7 +1865,7 @@ const ELON_RadiationArmorRenderer: React.FC<ELON_RadiationArmorRendererProps> = 
               <div key={idx} style={{
                 background: colors.bgCard,
                 borderRadius: '16px',
-                padding: '24px',
+                padding: '16px',
                 marginBottom: '16px',
                 borderLeft: `4px solid ${app.color}`,
               }}>
@@ -1901,6 +1907,14 @@ const ELON_RadiationArmorRenderer: React.FC<ELON_RadiationArmorRendererProps> = 
                       newCompleted[idx] = true;
                       setCompletedApps(newCompleted);
                       setSelectedApp(idx);
+                      // Auto-advance to next uncompleted app or test phase
+                      const nextUncompleted = newCompleted.findIndex((c, i) => !c && i !== idx);
+                      if (nextUncompleted === -1) {
+                        // All apps completed — advance to test
+                        setTimeout(() => goToPhase('test'), 400);
+                      } else {
+                        setSelectedApp(nextUncompleted);
+                      }
                     }}
                     style={{
                       background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
@@ -1970,10 +1984,10 @@ const ELON_RadiationArmorRenderer: React.FC<ELON_RadiationArmorRendererProps> = 
           <div style={{
             flex: '1 1 0%',
             overflowY: 'auto',
-            paddingTop: '48px',
-            paddingBottom: '100px',
-            paddingLeft: '24px',
-            paddingRight: '24px',
+            paddingTop: '44px',
+            paddingBottom: '80px',
+            paddingLeft: '16px',
+            paddingRight: '16px',
           }}>
             <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
               <div style={{ fontSize: '80px', marginBottom: '24px' }}>
@@ -2036,10 +2050,10 @@ const ELON_RadiationArmorRenderer: React.FC<ELON_RadiationArmorRendererProps> = 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -2216,10 +2230,10 @@ const ELON_RadiationArmorRenderer: React.FC<ELON_RadiationArmorRendererProps> = 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -2242,8 +2256,8 @@ const ELON_RadiationArmorRenderer: React.FC<ELON_RadiationArmorRendererProps> = 
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '32px',
+            padding: '16px',
+            marginBottom: '20px',
             maxWidth: '400px',
           }}>
             <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>

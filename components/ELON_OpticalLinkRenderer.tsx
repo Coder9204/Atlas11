@@ -821,10 +821,10 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -833,7 +833,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
         }}>
           <div style={{
             fontSize: '64px',
-            marginBottom: '24px',
+            marginBottom: '20px',
             animation: 'pulse 2s infinite',
           }}>
             {'\uD83D\uDD26\uD83C\uDF10'}
@@ -859,7 +859,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             marginBottom: '32px',
             maxWidth: '500px',
             border: `1px solid ${colors.border}`,
@@ -925,17 +925,17 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
               background: `${colors.accent}22`,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.accent}44`,
             }}>
               <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
@@ -943,7 +943,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
               </p>
             </div>
 
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '20px' }}>
               A laser launches +6 dBm of optical power into a 200km single-mode fiber. What happens to the signal along the way?
             </h2>
 
@@ -951,8 +951,8 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}>
               <svg width="100%" height="200" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: 400 }}>
@@ -1074,10 +1074,10 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1100,7 +1100,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
               background: colors.bgCard,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.border}`,
             }}>
               <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
@@ -1121,10 +1121,10 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
                 <OpticalLinkVisualization />
               </div>
 
@@ -1221,16 +1221,16 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '12px', textAlign: 'center' }}>
               The Physics of Optical Loss
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '20px' }}>
               {prediction === 'b'
                 ? 'Correct! Your prediction was right — optical power decreases at 0.2 dB/km in standard single-mode fiber, requiring amplifiers for distances beyond about 100km. This attenuation is caused by Rayleigh scattering and material absorption in the silica glass.'
                 : 'As you observed in the simulator, the optical signal loses power continuously along the fiber at 0.2 dB/km. Over 200km, that is 40 dB of loss — the signal becomes 10,000 times weaker. Without amplifiers, the signal would be completely undetectable.'}
@@ -1239,8 +1239,8 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               <div style={{ ...typo.body, color: colors.textSecondary }}>
                 <p style={{ marginBottom: '16px' }}>
@@ -1263,7 +1263,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
               border: `1px solid ${colors.accent}33`,
               borderRadius: '12px',
               padding: '20px',
-              marginBottom: '24px',
+              marginBottom: '20px',
             }}>
               <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
                 Wavelength Windows
@@ -1277,7 +1277,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
               background: colors.bgCard,
               borderRadius: '12px',
               padding: '20px',
-              marginBottom: '24px',
+              marginBottom: '20px',
             }}>
               <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '12px' }}>
                 Loss Budget Components
@@ -1357,17 +1357,17 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
               background: `${colors.warning}22`,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.warning}44`,
             }}>
               <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
@@ -1375,15 +1375,15 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
               </p>
             </div>
 
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '20px' }}>
               Increasing from 1 to 96 DWDM wavelength channels on the same fiber — what happens to total capacity?
             </h2>
 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}>
               <svg width="100%" height="140" viewBox="0 0 400 140" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: 400 }}>
@@ -1501,26 +1501,31 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               DWDM Channel Scaling
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '20px' }}>
               Add DWDM channels to multiply capacity — but watch for nonlinear effects at high channel counts.
             </p>
+
+            <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+              <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The visualization shows how adding more DWDM wavelength channels increases total fiber capacity, while the power chart reveals growing nonlinear penalties at higher channel counts.</p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you increase the DWDM channel count, total throughput rises but four-wave mixing and cross-phase modulation degrade per-channel OSNR, creating a diminishing-returns curve that limits practical capacity.</p>
+            </div>
 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
                 <OpticalLinkVisualization showDwdm={true} />
               </div>
 
@@ -1655,13 +1660,13 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '20px', textAlign: 'center' }}>
               DWDM: Capacity Meets Nonlinearity
             </h2>
 
@@ -1734,10 +1739,10 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1746,7 +1751,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
             <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
               Explore each application to continue
             </p>
-            <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '24px', fontWeight: 600 }}>
+            <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '20px', fontWeight: 600 }}>
               Application {completedApps.filter(c => c).length + 1} of {realWorldApps.length}
             </p>
 
@@ -1754,7 +1759,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
               <div key={idx} style={{
                 background: colors.bgCard,
                 borderRadius: '16px',
-                padding: '24px',
+                padding: '16px',
                 marginBottom: '16px',
                 borderLeft: `4px solid ${app.color}`,
               }}>
@@ -1796,6 +1801,14 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
                       newCompleted[idx] = true;
                       setCompletedApps(newCompleted);
                       setSelectedApp(idx);
+                      // Auto-advance to next uncompleted app or to test phase
+                      const nextUncompleted = newCompleted.findIndex((c, i) => !c && i !== idx);
+                      if (nextUncompleted === -1) {
+                        // All apps completed, auto-advance to test
+                        setTimeout(() => goToPhase('test'), 400);
+                      } else {
+                        setSelectedApp(nextUncompleted);
+                      }
                     }}
                     style={{
                       background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
@@ -1871,7 +1884,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
             paddingRight: '24px',
           }}>
             <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-              <div style={{ fontSize: '80px', marginBottom: '24px' }}>
+              <div style={{ fontSize: '80px', marginBottom: '20px' }}>
                 {passed ? '\uD83C\uDFC6' : '\uD83D\uDCDA'}
               </div>
               <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
@@ -1931,23 +1944,23 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Knowledge Test: Optical Link
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '20px' }}>
               Apply your understanding of optical loss budgets, fiber attenuation, EDFA amplification, OSNR, coherent detection, DWDM, and the Shannon limit to real-world optical networking scenarios. Consider how each component contributes to overall system performance.
             </p>
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              marginBottom: '24px',
+              marginBottom: '20px',
             }}>
               <span style={{ ...typo.h3, color: colors.accent }}>
                 Q{currentQuestion + 1} of 10
@@ -1980,7 +1993,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
               {question.question}
             </h3>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
               {question.options.map(opt => (
                 <button
                   key={opt.id}
@@ -2107,17 +2120,17 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           textAlign: 'center',
         }}>
-          <div style={{ fontSize: '100px', marginBottom: '24px', animation: 'bounce 1s infinite' }}>
+          <div style={{ fontSize: '100px', marginBottom: '20px', animation: 'bounce 1s infinite' }}>
             {'\uD83C\uDFC6'}
           </div>
           <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
@@ -2133,7 +2146,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             marginBottom: '32px',
             maxWidth: '400px',
           }}>

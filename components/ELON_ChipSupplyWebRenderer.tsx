@@ -918,10 +918,10 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -930,7 +930,7 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
         }}>
           <div style={{
             fontSize: '64px',
-            marginBottom: '24px',
+            marginBottom: '20px',
             animation: 'pulse 2s infinite',
           }}>
             {'\u{1F310}\u{1F527}'}
@@ -954,7 +954,7 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             marginBottom: '32px',
             maxWidth: '500px',
             border: `1px solid ${colors.border}`,
@@ -973,7 +973,7 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
             gap: '12px',
             maxWidth: '500px',
             width: '100%',
-            marginBottom: '24px',
+            marginBottom: '20px',
           }}>
             {[
               { value: '1,000+', label: 'Process steps' },
@@ -1045,17 +1045,17 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
               background: `${colors.accent}22`,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.accent}44`,
             }}>
               <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
@@ -1071,8 +1071,8 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}>
               <svg width="100%" height="200" viewBox="0 0 420 200" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: 420 }}>
@@ -1202,10 +1202,10 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1225,11 +1225,11 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px', maxHeight: '50vh', overflow: 'hidden' }}>
                 <SupplyChainVisualization />
               </div>
 
@@ -1310,8 +1310,8 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
                 Single Points of Failure at {techNode}nm
@@ -1401,10 +1401,10 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1416,7 +1416,7 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
               border: `1px solid ${colors.accent}33`,
               borderRadius: '12px',
               padding: '20px',
-              marginBottom: '24px',
+              marginBottom: '20px',
             }}>
               <div style={{ ...typo.body, color: colors.textSecondary }}>
                 <p style={{ marginBottom: '16px' }}>
@@ -1435,7 +1435,7 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
               background: colors.bgCard,
               borderRadius: '12px',
               padding: '20px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.border}`,
             }}>
               <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
@@ -1450,7 +1450,7 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
               background: colors.bgCard,
               borderRadius: '12px',
               padding: '20px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.border}`,
             }}>
               <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '12px' }}>
@@ -1482,7 +1482,7 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
               background: `${colors.success}11`,
               borderRadius: '12px',
               padding: '20px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.success}33`,
             }}>
               <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
@@ -1545,17 +1545,17 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
               background: `${colors.warning}22`,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.warning}44`,
             }}>
               <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
@@ -1571,8 +1571,8 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}>
               <svg width="100%" height="140" viewBox="0 0 420 140" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: 420 }}>
@@ -1688,10 +1688,10 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1704,12 +1704,18 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               {/* Disruption Cascade SVG */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px', maxHeight: '50vh', overflow: 'hidden' }}>
                 <DisruptionVisualization />
+              </div>
+
+              {/* Educational panel */}
+              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you&apos;re seeing:</strong> This cascade visualization maps how a single disruption at ASML propagates through the entire semiconductor supply chain, halting all advanced chip production worldwide.</p>
+                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you select different nodes to disrupt, observe how the number of affected downstream stages and the severity of impact changes based on that node&apos;s substitutability.</p>
               </div>
 
               {/* Interactive disruption selector */}
@@ -1744,7 +1750,7 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
               </div>
 
               {/* Network with disruption overlay */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px', maxHeight: '50vh', overflow: 'hidden' }}>
                 <SupplyChainVisualization showDisruption={true} />
               </div>
 
@@ -1832,10 +1838,10 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1912,10 +1918,10 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1933,7 +1939,7 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
               <div key={idx} style={{
                 background: colors.bgCard,
                 borderRadius: '16px',
-                padding: '24px',
+                padding: '16px',
                 marginBottom: '16px',
                 borderLeft: `4px solid ${app.color}`,
               }}>
@@ -1974,7 +1980,15 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
                       const newCompleted = [...completedApps];
                       newCompleted[idx] = true;
                       setCompletedApps(newCompleted);
-                      setSelectedApp(idx);
+                      // Auto-advance to next uncompleted app, or go to test if all done
+                      const nextUncompleted = newCompleted.findIndex((c, i) => !c && i !== idx);
+                      if (nextUncompleted !== -1) {
+                        setSelectedApp(nextUncompleted);
+                      } else if (newCompleted.every(c => c)) {
+                        setTimeout(() => goToPhase('test'), 400);
+                      } else {
+                        setSelectedApp(idx);
+                      }
                     }}
                     style={{
                       background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
@@ -2110,10 +2124,10 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -2127,7 +2141,7 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              marginBottom: '24px',
+              marginBottom: '20px',
             }}>
               <span style={{ ...typo.h3, color: colors.accent }}>
                 Q{currentQuestion + 1} of 10
@@ -2290,10 +2304,10 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -2316,7 +2330,7 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             marginBottom: '32px',
             maxWidth: '400px',
           }}>

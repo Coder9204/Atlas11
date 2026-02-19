@@ -819,10 +819,10 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -831,7 +831,7 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
         }}>
           <div style={{
             fontSize: '64px',
-            marginBottom: '24px',
+            marginBottom: '20px',
             animation: 'pulse 2s infinite',
           }}>
             {'\u{1F6E1}\uFE0F\u{1F504}'}
@@ -857,8 +857,8 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '32px',
+            padding: '16px',
+            marginBottom: '20px',
             maxWidth: '500px',
             border: `1px solid ${colors.border}`,
           }}>
@@ -923,17 +923,17 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
               background: `${colors.accent}22`,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.accent}44`,
             }}>
               <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
@@ -941,7 +941,7 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
               </p>
             </div>
 
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '20px' }}>
               A single server has 99% uptime (down ~3.6 days/year). What happens when you add an identical backup server in parallel?
             </h2>
 
@@ -949,8 +949,8 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}>
               <svg width="100%" height="200" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: 400 }}>
@@ -1084,10 +1084,10 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1112,7 +1112,7 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
               background: colors.bgCard,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.border}`,
             }}>
               <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
@@ -1134,10 +1134,10 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
                 <ReliabilityVisualization />
               </div>
 
@@ -1261,16 +1261,16 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '12px', textAlign: 'center' }}>
               The Mathematics of Redundancy
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '20px' }}>
               {prediction === 'c'
                 ? 'Correct! Your prediction was right — parallel redundancy dramatically improves availability because BOTH components must fail simultaneously for downtime. Two 99% servers in parallel yield 99.99% uptime.'
                 : 'As you observed in the experiment, adding parallel redundancy dramatically improves system availability. Two 99% servers in parallel give 99.99% uptime because both must fail at the same time.'}
@@ -1279,8 +1279,8 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               <div style={{ ...typo.body, color: colors.textSecondary }}>
                 <p style={{ marginBottom: '16px' }}>
@@ -1308,8 +1308,8 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
               background: `${colors.accent}11`,
               border: `1px solid ${colors.accent}33`,
               borderRadius: '12px',
-              padding: '20px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
                 The Nines of Availability
@@ -1322,8 +1322,8 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
             <div style={{
               background: colors.bgCard,
               borderRadius: '12px',
-              padding: '20px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '12px' }}>
                 Availability Tiers
@@ -1403,17 +1403,17 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
               background: `${colors.warning}22`,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.warning}44`,
             }}>
               <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
@@ -1421,7 +1421,7 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
               </p>
             </div>
 
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '20px' }}>
               Real systems need periodic maintenance — firmware updates, hardware replacements, software patches. During maintenance, a component goes offline...
             </h2>
 
@@ -1429,8 +1429,8 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}>
               <svg width="100%" height="140" viewBox="0 0 400 140" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: 400 }}>
@@ -1551,27 +1551,33 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Maintenance Windows vs Uptime
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '20px' }}>
               Components need periodic service — firmware updates, hardware swaps, security patches. How do maintenance windows affect your availability target?
             </p>
+
+            {/* Educational panel */}
+            <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+              <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The reliability block diagram now includes maintenance windows. When maintenance is active, one component in a redundancy group goes offline, visually highlighted in yellow, reducing effective parallel paths.</p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> Increasing maintenance hours directly subtracts from system uptime. Raising redundancy level compensates by ensuring spare capacity remains even during service windows.</p>
+            </div>
 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               {/* SVG Visualization with maintenance */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
                 <ReliabilityVisualization showMaintenance={true} />
               </div>
 
@@ -1731,30 +1737,30 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '20px', textAlign: 'center' }}>
               Maintenance, Common-Mode Failure, and Blast Radius
             </h2>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-              <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', border: `1px solid ${colors.border}` }}>
+              <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
                 <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>Concurrent Maintainability</h3>
                 <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
                   Tier III and IV data centers require "concurrent maintainability" — the ability to take any component offline for service while maintaining full N redundancy for the remaining system. This means a 2N+1 design: during maintenance on one component, you still have N+1 redundancy. Without concurrent maintainability, every maintenance window becomes a period of reduced resilience where a single additional failure could cause downtime.
                 </p>
               </div>
-              <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', border: `1px solid ${colors.border}` }}>
+              <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
                 <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>Common-Mode Failure</h3>
                 <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
                   Parallel redundancy only protects against independent failures. A common-mode failure — such as a software bug, network misconfiguration, or environmental event — can defeat all redundant copies simultaneously. The AWS us-east-1 outage is a perfect example: the network control plane was a shared dependency that, when it failed, brought down all services regardless of their individual redundancy. Design diversity (different software, different vendors, different data centers) is the countermeasure.
                 </p>
               </div>
-              <div style={{ background: `${colors.success}11`, borderRadius: '12px', padding: '20px', border: `1px solid ${colors.success}33` }}>
+              <div style={{ background: `${colors.success}11`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.success}33` }}>
                 <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>Blast Radius Containment</h3>
                 <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
                   The most important reliability concept beyond redundancy is blast radius containment: limiting the scope of any single failure. Cell-based architectures partition systems into independent "cells" where a failure in one cell cannot propagate to others. If each cell serves 1% of users, even a total cell failure only affects 1% of traffic. Combined with automated failover, this provides high availability without requiring perfect components — because nothing is perfect.
@@ -1810,10 +1816,10 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1822,7 +1828,7 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
             <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
               Explore each application to continue
             </p>
-            <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '24px', fontWeight: 600 }}>
+            <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '20px', fontWeight: 600 }}>
               Application {completedApps.filter(c => c).length + 1} of {realWorldApps.length}
             </p>
 
@@ -1831,7 +1837,7 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
               <div key={idx} style={{
                 background: colors.bgCard,
                 borderRadius: '16px',
-                padding: '24px',
+                padding: '16px',
                 marginBottom: '16px',
                 borderLeft: `4px solid ${app.color}`,
               }}>
@@ -1873,6 +1879,11 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
                       newCompleted[idx] = true;
                       setCompletedApps(newCompleted);
                       setSelectedApp(idx);
+                      // Auto-advance to next uncompleted app, or to test if all done
+                      const nextUncompleted = newCompleted.findIndex((c, i) => !c && i !== idx);
+                      if (nextUncompleted === -1 && newCompleted.every(c => c)) {
+                        setTimeout(() => goToPhase('test'), 400);
+                      }
                     }}
                     style={{
                       background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
@@ -1942,13 +1953,13 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
           <div style={{
             flex: '1 1 0%',
             overflowY: 'auto',
-            paddingTop: '48px',
-            paddingBottom: '100px',
-            paddingLeft: '24px',
-            paddingRight: '24px',
+            paddingTop: '44px',
+            paddingBottom: '80px',
+            paddingLeft: '16px',
+            paddingRight: '16px',
           }}>
             <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-              <div style={{ fontSize: '80px', marginBottom: '24px' }}>
+              <div style={{ fontSize: '80px', marginBottom: '20px' }}>
                 {passed ? '\uD83C\uDFC6' : '\uD83D\uDCDA'}
               </div>
               <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
@@ -2008,16 +2019,16 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Knowledge Test: Uptime Architect
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '20px' }}>
               Apply your understanding of series and parallel reliability, MTBF/MTTR calculations, common-mode failure, and blast radius containment to real-world reliability engineering scenarios. Consider how redundancy, maintenance, and design diversity interact as you work through each problem.
             </p>
             {/* Progress */}
@@ -2025,7 +2036,7 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              marginBottom: '24px',
+              marginBottom: '20px',
             }}>
               <span style={{ ...typo.h3, color: colors.accent }}>
                 Q{currentQuestion + 1} of 10
@@ -2061,7 +2072,7 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
             </h3>
 
             {/* Options */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
               {question.options.map(opt => (
                 <button
                   key={opt.id}
@@ -2188,17 +2199,17 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           textAlign: 'center',
         }}>
-          <div style={{ fontSize: '100px', marginBottom: '24px', animation: 'bounce 1s infinite' }}>
+          <div style={{ fontSize: '100px', marginBottom: '20px', animation: 'bounce 1s infinite' }}>
             {'\uD83C\uDFC6'}
           </div>
           <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
@@ -2214,8 +2225,8 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '32px',
+            padding: '16px',
+            marginBottom: '20px',
             maxWidth: '400px',
           }}>
             <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>

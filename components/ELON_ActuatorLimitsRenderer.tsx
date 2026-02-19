@@ -796,10 +796,10 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -808,7 +808,7 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
         }}>
           <div style={{
             fontSize: '64px',
-            marginBottom: '24px',
+            marginBottom: '20px',
             animation: 'pulse 2s infinite',
           }}>
             🦾⚡
@@ -832,7 +832,7 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             marginBottom: '32px',
             maxWidth: '500px',
             border: `1px solid ${colors.border}`,
@@ -921,17 +921,17 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
               background: `${colors.accent}22`,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.accent}44`,
             }}>
               <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
@@ -939,7 +939,7 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
               </p>
             </div>
 
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '20px' }}>
               A robot arm holds a light payload. You increase the load from 1 kg to 20 kg. What happens on the motor&apos;s torque-speed curve?
             </h2>
 
@@ -947,8 +947,8 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}>
               <svg width="100%" height="180" viewBox="0 0 400 180" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: 400 }}>
@@ -1070,10 +1070,10 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1098,7 +1098,7 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
               background: colors.bgCard,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.border}`,
             }}>
               <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
@@ -1120,10 +1120,10 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
                 <ActuatorVisualization />
               </div>
 
@@ -1224,16 +1224,16 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '12px', textAlign: 'center' }}>
               The Physics of Actuator Limits
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '20px' }}>
               {prediction === 'c'
                 ? 'Correct! Increasing load mass demands more torque, sliding the operating point along the torque-speed curve toward stall — exactly as you predicted.'
                 : 'As you observed in the simulator, increasing load mass demands more torque from the motor. The operating point slides along the linear torque-speed curve toward stall, where speed drops to zero and thermal load spikes.'}
@@ -1242,8 +1242,8 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               <div style={{ ...typo.body, color: colors.textSecondary }}>
                 <p style={{ marginBottom: '16px' }}>
@@ -1263,7 +1263,7 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
               border: `1px solid ${colors.accent}33`,
               borderRadius: '12px',
               padding: '20px',
-              marginBottom: '24px',
+              marginBottom: '20px',
             }}>
               <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
                 Why Stall is Dangerous
@@ -1277,7 +1277,7 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
               background: colors.bgCard,
               borderRadius: '12px',
               padding: '20px',
-              marginBottom: '24px',
+              marginBottom: '20px',
             }}>
               <h3 style={{ ...typo.h3, color: colors.power, marginBottom: '12px' }}>
                 The Power Curve
@@ -1358,17 +1358,17 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
               background: `${colors.warning}22`,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.warning}44`,
             }}>
               <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
@@ -1376,7 +1376,7 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
               </p>
             </div>
 
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '20px' }}>
               What if we add a 50:1 gear reduction between the motor and the joint? The motor can only produce 50 N-m stall torque, but the joint needs up to 100 N-m. What tradeoffs does gear reduction introduce?
             </h2>
 
@@ -1384,8 +1384,8 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}>
               <svg width="100%" height="150" viewBox="0 0 400 150" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: 400 }}>
@@ -1510,28 +1510,38 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Gear Reduction Explorer
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '20px' }}>
               Toggle gear reduction on/off and adjust load mass to see how gears transform the torque-speed operating envelope
             </p>
 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               {/* Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
                 <ActuatorVisualization />
+              </div>
+
+              {/* Educational panel */}
+              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}>
+                  <strong style={{ color: colors.accent }}>What you're seeing:</strong> The torque-speed curve reshapes dramatically when you toggle the 50:1 gear reduction -- the operating envelope stretches along the torque axis while compressing along the speed axis, showing the fundamental energy conservation tradeoff.
+                </p>
+                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}>
+                  <strong style={{ color: colors.success }}>Cause and Effect:</strong> Enabling gear reduction multiplies the motor stall torque by 50 (letting it handle heavier loads without overloading), but divides maximum speed by 50 and introduces 0.3 degrees of backlash that degrades positioning precision.
+                </p>
               </div>
 
               {/* Gear reduction toggle */}
@@ -1655,13 +1665,13 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '20px', textAlign: 'center' }}>
               Gear Reduction: The Fundamental Tradeoff
             </h2>
 
@@ -1753,10 +1763,10 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1765,7 +1775,7 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
             <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
               Explore each application to continue
             </p>
-            <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '24px', fontWeight: 600 }}>
+            <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '20px', fontWeight: 600 }}>
               Application {completedApps.filter(c => c).length + 1} of {realWorldApps.length}
             </p>
 
@@ -1774,7 +1784,7 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
               <div key={idx} style={{
                 background: colors.bgCard,
                 borderRadius: '16px',
-                padding: '24px',
+                padding: '16px',
                 marginBottom: '16px',
                 borderLeft: `4px solid ${app.color}`,
               }}>
@@ -1816,6 +1826,17 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
                       newCompleted[idx] = true;
                       setCompletedApps(newCompleted);
                       setSelectedApp(idx);
+                      // Auto-advance to next uncompleted app or go to test
+                      const nextUncompleted = newCompleted.findIndex((c, i) => !c && i > idx);
+                      const anyUncompleted = newCompleted.findIndex(c => !c);
+                      if (newCompleted.every(c => c)) {
+                        setTimeout(() => goToPhase('test'), 400);
+                      } else if (nextUncompleted !== -1) {
+                        // Scroll to next uncompleted app
+                        setSelectedApp(nextUncompleted);
+                      } else if (anyUncompleted !== -1) {
+                        setSelectedApp(anyUncompleted);
+                      }
                     }}
                     style={{
                       background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
@@ -1885,13 +1906,13 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
           <div style={{
             flex: '1 1 0%',
             overflowY: 'auto',
-            paddingTop: '48px',
-            paddingBottom: '100px',
-            paddingLeft: '24px',
-            paddingRight: '24px',
+            paddingTop: '44px',
+            paddingBottom: '80px',
+            paddingLeft: '16px',
+            paddingRight: '16px',
           }}>
             <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-              <div style={{ fontSize: '80px', marginBottom: '24px' }}>
+              <div style={{ fontSize: '80px', marginBottom: '20px' }}>
                 {passed ? '🏆' : '📚'}
               </div>
               <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
@@ -1951,16 +1972,16 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Knowledge Test: Actuator Limits
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '20px' }}>
               Apply your understanding of actuator physics, torque-speed curves, gear reduction tradeoffs, and robotic manipulation to real-world engineering scenarios.
             </p>
             {/* Progress */}
@@ -1968,7 +1989,7 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              marginBottom: '24px',
+              marginBottom: '20px',
             }}>
               <span style={{ ...typo.h3, color: colors.accent }}>
                 Q{currentQuestion + 1} of 10
@@ -2004,7 +2025,7 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
             </h3>
 
             {/* Options */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
               {question.options.map(opt => (
                 <button
                   key={opt.id}
@@ -2131,17 +2152,17 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           textAlign: 'center',
         }}>
-          <div style={{ fontSize: '100px', marginBottom: '24px', animation: 'bounce 1s infinite' }}>
+          <div style={{ fontSize: '100px', marginBottom: '20px', animation: 'bounce 1s infinite' }}>
             🏆
           </div>
           <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
@@ -2157,7 +2178,7 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
+            padding: '16px',
             marginBottom: '32px',
             maxWidth: '400px',
           }}>

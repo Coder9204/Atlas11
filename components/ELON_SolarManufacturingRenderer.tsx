@@ -804,10 +804,10 @@ const ELON_SolarManufacturingRenderer: React.FC<ELON_SolarManufacturingRendererP
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -840,8 +840,8 @@ const ELON_SolarManufacturingRenderer: React.FC<ELON_SolarManufacturingRendererP
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '32px',
+            padding: '16px',
+            marginBottom: '20px',
             maxWidth: '500px',
             border: `1px solid ${colors.border}`,
           }}>
@@ -906,10 +906,10 @@ const ELON_SolarManufacturingRenderer: React.FC<ELON_SolarManufacturingRendererP
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
@@ -932,8 +932,8 @@ const ELON_SolarManufacturingRenderer: React.FC<ELON_SolarManufacturingRendererP
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}>
               <svg width="100%" height="200" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: 400 }}>
@@ -1048,10 +1048,10 @@ const ELON_SolarManufacturingRenderer: React.FC<ELON_SolarManufacturingRendererP
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1099,10 +1099,10 @@ const ELON_SolarManufacturingRenderer: React.FC<ELON_SolarManufacturingRendererP
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px', maxHeight: '50vh', overflow: 'hidden' }}>
                 <ManufacturingPipelineSVG />
               </div>
 
@@ -1228,10 +1228,10 @@ const ELON_SolarManufacturingRenderer: React.FC<ELON_SolarManufacturingRendererP
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '12px', textAlign: 'center' }}>
@@ -1246,8 +1246,8 @@ const ELON_SolarManufacturingRenderer: React.FC<ELON_SolarManufacturingRendererP
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               <div style={{ ...typo.body, color: colors.textSecondary }}>
                 <p style={{ marginBottom: '16px' }}>
@@ -1366,10 +1366,10 @@ const ELON_SolarManufacturingRenderer: React.FC<ELON_SolarManufacturingRendererP
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
@@ -1392,8 +1392,8 @@ const ELON_SolarManufacturingRenderer: React.FC<ELON_SolarManufacturingRendererP
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}>
               <svg width="100%" height="140" viewBox="0 0 400 140" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: 400 }}>
@@ -1505,10 +1505,10 @@ const ELON_SolarManufacturingRenderer: React.FC<ELON_SolarManufacturingRendererP
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1521,12 +1521,18 @@ const ELON_SolarManufacturingRenderer: React.FC<ELON_SolarManufacturingRendererP
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px', maxHeight: '50vh', overflow: 'hidden' }}>
                 <TechComparisonSVG />
+              </div>
+
+              {/* Educational panel */}
+              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> This chart compares three competing solar cell architectures — PERC, TOPCon, and HJT — showing their efficiency ceilings, open-circuit voltage, and manufacturing complexity side by side.</p>
+                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you switch between technologies, notice how higher efficiency comes with tradeoffs in process complexity and cost — HJT has fewer steps but requires expensive equipment, while TOPCon adds steps to existing PERC lines.</p>
               </div>
 
               {/* Technology selector */}
@@ -1657,10 +1663,10 @@ const ELON_SolarManufacturingRenderer: React.FC<ELON_SolarManufacturingRendererP
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1737,10 +1743,10 @@ const ELON_SolarManufacturingRenderer: React.FC<ELON_SolarManufacturingRendererP
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1758,7 +1764,7 @@ const ELON_SolarManufacturingRenderer: React.FC<ELON_SolarManufacturingRendererP
               <div key={idx} style={{
                 background: colors.bgCard,
                 borderRadius: '16px',
-                padding: '24px',
+                padding: '16px',
                 marginBottom: '16px',
                 borderLeft: `4px solid ${app.color}`,
               }}>
@@ -1800,6 +1806,22 @@ const ELON_SolarManufacturingRenderer: React.FC<ELON_SolarManufacturingRendererP
                       newCompleted[idx] = true;
                       setCompletedApps(newCompleted);
                       setSelectedApp(idx);
+                      // Auto-advance to next uncompleted app, or to test if all done
+                      const nextUncompleted = newCompleted.findIndex((c, i) => !c && i > idx);
+                      if (nextUncompleted === -1) {
+                        // Check if all are now completed
+                        if (newCompleted.every(c => c)) {
+                          setTimeout(() => goToPhase('test'), 400);
+                        } else {
+                          // Find first uncompleted from beginning
+                          const firstUncompleted = newCompleted.findIndex(c => !c);
+                          if (firstUncompleted !== -1) {
+                            setSelectedApp(firstUncompleted);
+                          }
+                        }
+                      } else {
+                        setSelectedApp(nextUncompleted);
+                      }
                     }}
                     style={{
                       background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
@@ -1935,10 +1957,10 @@ const ELON_SolarManufacturingRenderer: React.FC<ELON_SolarManufacturingRendererP
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -2115,10 +2137,10 @@ const ELON_SolarManufacturingRenderer: React.FC<ELON_SolarManufacturingRendererP
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -2141,8 +2163,8 @@ const ELON_SolarManufacturingRenderer: React.FC<ELON_SolarManufacturingRendererP
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '32px',
+            padding: '16px',
+            marginBottom: '20px',
             maxWidth: '400px',
           }}>
             <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
