@@ -753,49 +753,71 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
             <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '20px' }}>
               Slide to change the radiator operating temperature and observe how the required area changes with T⁴. Notice how even small temperature increases dramatically reduce radiator size. Watch the operating point move along the curve as you adjust — this relationship is critical for real-world spacecraft design like the ISS with its 1,120 m² of radiators.
             </p>
-            <div style={{ maxHeight: '50vh', overflow: 'hidden' }}>
-              <RadiatorVisualization />
-            </div>
-            <div style={{ marginTop: '24px', background: colors.bgCard, borderRadius: '12px', padding: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Radiator Temperature</span>
-                <span style={{ ...typo.h3, color: colors.accent }}>{radiatorTemp}K ({(radiatorTemp - 273).toFixed(0)}°C)</span>
-              </div>
-              <input
-                type="range"
-                min={250}
-                max={500}
-                value={radiatorTemp}
-                onChange={(e) => {
-                  const v = Number(e.target.value);
-                  setRadiatorTemp(v);
-                  if (onGameEvent) {
-                    onGameEvent({ eventType: 'slider_changed', gameType: 'space-radiator', gameTitle: 'Space Radiator', details: { radiatorTemp: v }, timestamp: Date.now() });
-                  }
-                }}
-                onInput={(e) => {
-                  const v = Number((e.target as HTMLInputElement).value);
-                  setRadiatorTemp(v);
-                }}
-                style={sliderStyle(colors.accent, radiatorTemp, 250, 500)}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>250K (cold, huge area)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>500K (hot, compact)</span>
-              </div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginTop: '16px' }}>
-              <div style={{ background: colors.bgCard, borderRadius: '10px', padding: '16px', textAlign: 'center' }}>
-                <div style={{ ...typo.h3, color: colors.hot }}>{effectiveArea.toFixed(1)} m²</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Radiator Area</div>
-              </div>
-              <div style={{ background: colors.bgCard, borderRadius: '10px', padding: '16px', textAlign: 'center' }}>
-                <div style={{ ...typo.h3, color: colors.warm }}>{(heatRejected / 1000).toFixed(0)} kW</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Heat Rejected</div>
-              </div>
-              <div style={{ background: colors.bgCard, borderRadius: '10px', padding: '16px', textAlign: 'center' }}>
-                <div style={{ ...typo.h3, color: colors.cool }}>{(effectiveArea * 2.5).toFixed(0)} kg</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Est. Mass (2.5 kg/m²)</div>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '16px',
+              marginBottom: '20px',
+            }}>
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+              }}>
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ maxHeight: '50vh', overflow: 'hidden' }}>
+                    <RadiatorVisualization />
+                  </div>
+                </div>
+
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Radiator Temperature</span>
+                      <span style={{ ...typo.h3, color: colors.accent }}>{radiatorTemp}K ({(radiatorTemp - 273).toFixed(0)}°C)</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={250}
+                      max={500}
+                      value={radiatorTemp}
+                      onChange={(e) => {
+                        const v = Number(e.target.value);
+                        setRadiatorTemp(v);
+                        if (onGameEvent) {
+                          onGameEvent({ eventType: 'slider_changed', gameType: 'space-radiator', gameTitle: 'Space Radiator', details: { radiatorTemp: v }, timestamp: Date.now() });
+                        }
+                      }}
+                      onInput={(e) => {
+                        const v = Number((e.target as HTMLInputElement).value);
+                        setRadiatorTemp(v);
+                      }}
+                      style={sliderStyle(colors.accent, radiatorTemp, 250, 500)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>250K (cold, huge area)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>500K (hot, compact)</span>
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.hot }}>{effectiveArea.toFixed(1)} m²</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Radiator Area</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.warm }}>{(heatRejected / 1000).toFixed(0)} kW</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Heat Rejected</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.cool }}>{(effectiveArea * 2.5).toFixed(0)} kg</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Est. Mass (2.5 kg/m²)</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -941,75 +963,97 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
             <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
               Toggle eclipse mode to see how shadow entry changes the thermal balance.
             </p>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-              <button
-                onClick={() => setEclipseMode(!eclipseMode)}
-                style={{
-                  background: eclipseMode ? colors.cold : colors.warm,
-                  color: 'white',
-                  border: 'none',
-                  padding: '12px 28px',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  fontWeight: 700,
-                  fontSize: '16px',
-                  minHeight: '44px',
-                }}
-              >
-                {eclipseMode ? '\u{1F311} Eclipse Mode ON' : '\u{2600}\uFE0F Sunlight Mode'}
-              </button>
-            </div>
-            <div style={{ maxHeight: '50vh', overflow: 'hidden' }}>
-              <RadiatorVisualization showEclipse={eclipseMode} />
-            </div>
-            <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px', marginTop: '16px' }}>
-              <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The chart shows how radiator area changes with temperature during eclipse conditions. When eclipse mode is active, the curve shifts because the spacecraft generates 30% less internal heat while radiators continue emitting to deep space.</p>
-              <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> Toggling eclipse mode reduces the heat load from 100 kW to 70 kW, shrinking the required radiator area. Adjusting temperature shows how the T&#x2074; law compounds with eclipse conditions to change the thermal balance.</p>
-            </div>
-            <div style={{ marginTop: '24px', background: colors.bgCard, borderRadius: '12px', padding: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Radiator Temperature</span>
-                <span style={{ ...typo.h3, color: colors.accent }}>{radiatorTemp}K</span>
-              </div>
-              <input
-                type="range"
-                min={250}
-                max={500}
-                value={radiatorTemp}
-                onChange={(e) => {
-                  const v = Number(e.target.value);
-                  setRadiatorTemp(v);
-                  if (onGameEvent) {
-                    onGameEvent({ eventType: 'slider_changed', gameType: 'space-radiator', gameTitle: 'Space Radiator', details: { radiatorTemp: v, eclipse: eclipseMode }, timestamp: Date.now() });
-                  }
-                }}
-                onInput={(e) => {
-                  const v = Number((e.target as HTMLInputElement).value);
-                  setRadiatorTemp(v);
-                }}
-                style={sliderStyle(eclipseMode ? colors.cold : colors.accent, radiatorTemp, 250, 500)}
-              />
-            </div>
-            {eclipseMode && (
-              <div style={{ background: `${colors.cold}15`, borderRadius: '12px', padding: '16px', marginTop: '16px', border: `1px solid ${colors.cold}` }}>
-                <p style={{ ...typo.body, color: colors.cold, fontWeight: 600, marginBottom: '8px' }}>Eclipse Impact:</p>
-                <p style={{ ...typo.small, color: colors.textSecondary }}>
-                  Heat generation drops to 70 kW (30% reduction from solar panel shutdown). Radiators continue rejecting heat at the same rate, causing net cooling. Heaters must activate to prevent critical components from freezing below -40°C.
-                </p>
-              </div>
-            )}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginTop: '16px' }}>
-              <div style={{ background: colors.bgCard, borderRadius: '10px', padding: '16px', textAlign: 'center' }}>
-                <div style={{ ...typo.h3, color: eclipseMode ? colors.cold : colors.hot }}>{effectiveArea.toFixed(1)} m²</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Radiator Area</div>
-              </div>
-              <div style={{ background: colors.bgCard, borderRadius: '10px', padding: '16px', textAlign: 'center' }}>
-                <div style={{ ...typo.h3, color: colors.warning }}>{eclipseMode ? '70' : '100'} kW</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Heat Generated</div>
-              </div>
-              <div style={{ background: colors.bgCard, borderRadius: '10px', padding: '16px', textAlign: 'center' }}>
-                <div style={{ ...typo.h3, color: eclipseMode ? colors.error : colors.success }}>{eclipseMode ? 'COOLING' : 'BALANCED'}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Thermal State</div>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '16px',
+              marginBottom: '20px',
+            }}>
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+              }}>
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ maxHeight: '50vh', overflow: 'hidden' }}>
+                    <RadiatorVisualization showEclipse={eclipseMode} />
+                  </div>
+                  <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginTop: '16px' }}>
+                    <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The chart shows how radiator area changes with temperature during eclipse conditions. When eclipse mode is active, the curve shifts because the spacecraft generates 30% less internal heat while radiators continue emitting to deep space.</p>
+                    <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> Toggling eclipse mode reduces the heat load from 100 kW to 70 kW, shrinking the required radiator area. Adjusting temperature shows how the T&#x2074; law compounds with eclipse conditions to change the thermal balance.</p>
+                  </div>
+                </div>
+
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                    <button
+                      onClick={() => setEclipseMode(!eclipseMode)}
+                      style={{
+                        background: eclipseMode ? colors.cold : colors.warm,
+                        color: 'white',
+                        border: 'none',
+                        padding: '12px 28px',
+                        borderRadius: '10px',
+                        cursor: 'pointer',
+                        fontWeight: 700,
+                        fontSize: '16px',
+                        minHeight: '44px',
+                      }}
+                    >
+                      {eclipseMode ? '\u{1F311} Eclipse Mode ON' : '\u{2600}\uFE0F Sunlight Mode'}
+                    </button>
+                  </div>
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Radiator Temperature</span>
+                      <span style={{ ...typo.h3, color: colors.accent }}>{radiatorTemp}K</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={250}
+                      max={500}
+                      value={radiatorTemp}
+                      onChange={(e) => {
+                        const v = Number(e.target.value);
+                        setRadiatorTemp(v);
+                        if (onGameEvent) {
+                          onGameEvent({ eventType: 'slider_changed', gameType: 'space-radiator', gameTitle: 'Space Radiator', details: { radiatorTemp: v, eclipse: eclipseMode }, timestamp: Date.now() });
+                        }
+                      }}
+                      onInput={(e) => {
+                        const v = Number((e.target as HTMLInputElement).value);
+                        setRadiatorTemp(v);
+                      }}
+                      style={sliderStyle(eclipseMode ? colors.cold : colors.accent, radiatorTemp, 250, 500)}
+                    />
+                  </div>
+                  {eclipseMode && (
+                    <div style={{ background: `${colors.cold}15`, borderRadius: '12px', padding: '16px', marginBottom: '16px', border: `1px solid ${colors.cold}` }}>
+                      <p style={{ ...typo.body, color: colors.cold, fontWeight: 600, marginBottom: '8px' }}>Eclipse Impact:</p>
+                      <p style={{ ...typo.small, color: colors.textSecondary }}>
+                        Heat generation drops to 70 kW (30% reduction from solar panel shutdown). Radiators continue rejecting heat at the same rate, causing net cooling. Heaters must activate to prevent critical components from freezing below -40°C.
+                      </p>
+                    </div>
+                  )}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: eclipseMode ? colors.cold : colors.hot }}>{effectiveArea.toFixed(1)} m²</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Radiator Area</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.warning }}>{eclipseMode ? '70' : '100'} kW</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Heat Generated</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: eclipseMode ? colors.error : colors.success }}>{eclipseMode ? 'COOLING' : 'BALANCED'}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Thermal State</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

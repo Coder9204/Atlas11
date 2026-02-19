@@ -1114,144 +1114,158 @@ const ELON_SpaceCommsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =>
           </p>
         </div>
 
-        {/* Visualization */}
+        {/* Visualization - side by side on desktop */}
         <div style={{
           background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '20px',
         }} data-distance={distanceLog.toFixed(2)} data-antenna={antennaDiameter} data-power={transmitPower}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-            {renderSpaceSVG(distanceKm, currentDataRate, currentFSPL, antennaDiameter)}
-          </div>
-
-          {/* Distance slider (log scale) */}
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>Distance (log scale)</span>
-              <span style={{ ...typo.small, color: colors.signal, fontWeight: 600 }}>
-                {formatDistance(distanceKm)}
-              </span>
-            </div>
-            <input
-              ref={distSliderRef}
-              type="range"
-              min="2.6"
-              max="10.4"
-              step="0.01"
-              value={distanceLog}
-              onInput={(e) => { setDistanceLog(parseFloat((e.target as HTMLInputElement).value)); }}
-              onChange={(e) => {
-                const v = parseFloat(e.target.value);
-                setDistanceLog(v);
-                emitEvent('slider_changed', { distance: Math.pow(10, v) });
-              }}
-              style={sliderStyle(colors.signal, distanceLog, 2.6, 10.4)}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-              <span style={{ ...typo.small, color: colors.textMuted }}>LEO (400km)</span>
-              <span style={{ ...typo.small, color: colors.textMuted }}>Voyager (24B km)</span>
-            </div>
-            {/* Preset buttons */}
-            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '12px' }}>
-              {distancePresets.map((preset) => (
-                <button
-                  key={preset.name}
-                  onClick={() => { playSound('click'); setDistanceLog(Math.log10(preset.distanceKm)); }}
-                  style={{
-                    padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600,
-                    background: Math.abs(distanceLog - Math.log10(preset.distanceKm)) < 0.1 ? `${colors.accent}33` : colors.bgSecondary,
-                    color: Math.abs(distanceLog - Math.log10(preset.distanceKm)) < 0.1 ? colors.accent : colors.textMuted,
-                    border: `1px solid ${colors.border}`, cursor: 'pointer',
-                  }}
-                >
-                  {preset.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Antenna diameter slider */}
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>Ground Antenna Diameter</span>
-              <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                {antennaDiameter}m ({calcAntennaGain(antennaDiameter, wavelength).toFixed(1)} dBi)
-              </span>
-            </div>
-            <input
-              type="range"
-              min="3"
-              max="100"
-              step="1"
-              value={antennaDiameter}
-              onInput={(e) => {
-                setAntennaDiameter(parseInt((e.target as HTMLInputElement).value));
-                emitEvent("slider_changed", { antennaDiameter: parseInt((e.target as HTMLInputElement).value) });
-              }}
-              onChange={(e) => {
-                setAntennaDiameter(parseInt(e.target.value));
-                emitEvent('slider_changed', { antennaDiameter: parseInt(e.target.value) });
-              }}
-              style={sliderStyle(colors.accent, antennaDiameter, 3, 100)}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-              <span style={{ ...typo.small, color: colors.textMuted }}>3m (small)</span>
-              <span style={{ ...typo.small, color: colors.textMuted }}>100m (Arecibo-class)</span>
-            </div>
-          </div>
-
-          {/* Transmit power slider */}
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>Transmit Power</span>
-              <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>
-                {transmitPower}W ({(10 * Math.log10(transmitPower)).toFixed(1)} dBW)
-              </span>
-            </div>
-            <input
-              type="range"
-              min="1"
-              max="400"
-              step="1"
-              value={transmitPower}
-              onInput={(e) => {
-                setTransmitPower(parseInt((e.target as HTMLInputElement).value));
-                emitEvent("slider_changed", { transmitPower: parseInt((e.target as HTMLInputElement).value) });
-              }}
-              onChange={(e) => {
-                setTransmitPower(parseInt(e.target.value));
-                emitEvent('slider_changed', { transmitPower: parseInt(e.target.value) });
-              }}
-              style={sliderStyle(colors.warning, transmitPower, 1, 400)}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-              <span style={{ ...typo.small, color: colors.textMuted }}>1W (CubeSat)</span>
-              <span style={{ ...typo.small, color: colors.textMuted }}>400W (high power)</span>
-            </div>
-          </div>
-
-          {/* Link budget breakdown */}
           <div style={{
-            background: colors.bgSecondary, borderRadius: '12px', padding: '16px',
-            border: `1px solid ${colors.border}`,
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            <h4 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px', fontSize: '16px' }}>
-              Link Budget Breakdown
-            </h4>
-            {[
-              { label: 'Transmit Power', value: `${(10 * Math.log10(transmitPower)).toFixed(1)} dBW`, color: colors.warning },
-              { label: 'Spacecraft Antenna Gain', value: `${calcAntennaGain(3.7, wavelength).toFixed(1)} dBi`, color: colors.accent },
-              { label: 'Free-Space Path Loss', value: `-${currentFSPL.toFixed(1)} dB`, color: colors.error },
-              { label: 'Ground Antenna Gain', value: `+${calcAntennaGain(antennaDiameter, wavelength).toFixed(1)} dBi`, color: colors.success },
-              { label: 'Coding Gain', value: '+7.5 dB', color: colors.signal },
-              { label: 'Achievable Data Rate', value: formatDataRate(currentDataRate), color: colors.textPrimary },
-            ].map((item, i) => (
-              <div key={i} style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '8px 0', borderBottom: i < 5 ? `1px solid ${colors.border}` : 'none',
-              }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>{item.label}</span>
-                <span style={{ ...typo.small, color: item.color, fontWeight: 700, fontFamily: 'monospace' }}>{item.value}</span>
+            {/* Left: SVG visualization */}
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                {renderSpaceSVG(distanceKm, currentDataRate, currentFSPL, antennaDiameter)}
               </div>
-            ))}
+            </div>
+
+            {/* Right: Controls panel */}
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Distance slider (log scale) */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Distance (log scale)</span>
+                  <span style={{ ...typo.small, color: colors.signal, fontWeight: 600 }}>
+                    {formatDistance(distanceKm)}
+                  </span>
+                </div>
+                <input
+                  ref={distSliderRef}
+                  type="range"
+                  min="2.6"
+                  max="10.4"
+                  step="0.01"
+                  value={distanceLog}
+                  onInput={(e) => { setDistanceLog(parseFloat((e.target as HTMLInputElement).value)); }}
+                  onChange={(e) => {
+                    const v = parseFloat(e.target.value);
+                    setDistanceLog(v);
+                    emitEvent('slider_changed', { distance: Math.pow(10, v) });
+                  }}
+                  style={sliderStyle(colors.signal, distanceLog, 2.6, 10.4)}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>LEO (400km)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Voyager (24B km)</span>
+                </div>
+                {/* Preset buttons */}
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '12px' }}>
+                  {distancePresets.map((preset) => (
+                    <button
+                      key={preset.name}
+                      onClick={() => { playSound('click'); setDistanceLog(Math.log10(preset.distanceKm)); }}
+                      style={{
+                        padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600,
+                        background: Math.abs(distanceLog - Math.log10(preset.distanceKm)) < 0.1 ? `${colors.accent}33` : colors.bgSecondary,
+                        color: Math.abs(distanceLog - Math.log10(preset.distanceKm)) < 0.1 ? colors.accent : colors.textMuted,
+                        border: `1px solid ${colors.border}`, cursor: 'pointer',
+                      }}
+                    >
+                      {preset.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Antenna diameter slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Ground Antenna Diameter</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                    {antennaDiameter}m ({calcAntennaGain(antennaDiameter, wavelength).toFixed(1)} dBi)
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="3"
+                  max="100"
+                  step="1"
+                  value={antennaDiameter}
+                  onInput={(e) => {
+                    setAntennaDiameter(parseInt((e.target as HTMLInputElement).value));
+                    emitEvent("slider_changed", { antennaDiameter: parseInt((e.target as HTMLInputElement).value) });
+                  }}
+                  onChange={(e) => {
+                    setAntennaDiameter(parseInt(e.target.value));
+                    emitEvent('slider_changed', { antennaDiameter: parseInt(e.target.value) });
+                  }}
+                  style={sliderStyle(colors.accent, antennaDiameter, 3, 100)}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>3m (small)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>100m (Arecibo-class)</span>
+                </div>
+              </div>
+
+              {/* Transmit power slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Transmit Power</span>
+                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>
+                    {transmitPower}W ({(10 * Math.log10(transmitPower)).toFixed(1)} dBW)
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="400"
+                  step="1"
+                  value={transmitPower}
+                  onInput={(e) => {
+                    setTransmitPower(parseInt((e.target as HTMLInputElement).value));
+                    emitEvent("slider_changed", { transmitPower: parseInt((e.target as HTMLInputElement).value) });
+                  }}
+                  onChange={(e) => {
+                    setTransmitPower(parseInt(e.target.value));
+                    emitEvent('slider_changed', { transmitPower: parseInt(e.target.value) });
+                  }}
+                  style={sliderStyle(colors.warning, transmitPower, 1, 400)}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>1W (CubeSat)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>400W (high power)</span>
+                </div>
+              </div>
+
+              {/* Link budget breakdown */}
+              <div style={{
+                background: colors.bgSecondary, borderRadius: '12px', padding: '16px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <h4 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px', fontSize: '16px' }}>
+                  Link Budget Breakdown
+                </h4>
+                {[
+                  { label: 'Transmit Power', value: `${(10 * Math.log10(transmitPower)).toFixed(1)} dBW`, color: colors.warning },
+                  { label: 'Spacecraft Antenna Gain', value: `${calcAntennaGain(3.7, wavelength).toFixed(1)} dBi`, color: colors.accent },
+                  { label: 'Free-Space Path Loss', value: `-${currentFSPL.toFixed(1)} dB`, color: colors.error },
+                  { label: 'Ground Antenna Gain', value: `+${calcAntennaGain(antennaDiameter, wavelength).toFixed(1)} dBi`, color: colors.success },
+                  { label: 'Coding Gain', value: '+7.5 dB', color: colors.signal },
+                  { label: 'Achievable Data Rate', value: formatDataRate(currentDataRate), color: colors.textPrimary },
+                ].map((item, i) => (
+                  <div key={i} style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    padding: '8px 0', borderBottom: i < 5 ? `1px solid ${colors.border}` : 'none',
+                  }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>{item.label}</span>
+                    <span style={{ ...typo.small, color: item.color, fontWeight: 700, fontFamily: 'monospace' }}>{item.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1463,71 +1477,83 @@ const ELON_SpaceCommsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =>
           <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you switch from RF to optical, the shorter laser wavelength produces enormously more antenna gain from the same aperture, boosting data rates by 10-100x. Increasing distance weakens both links, but optical maintains a significant advantage.</p>
         </div>
 
-        {/* SVG for current mode */}
+        {/* SVG for current mode - side by side on desktop */}
         <div style={{
           background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '20px',
         }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', maxHeight: '50vh', overflow: 'hidden' }}>
-            {renderSpaceSVG(
-              twistDistKm,
-              useOptical ? opticalRate : rfRate,
-              calcFSPL(twistDistKm, useOptical ? laserWavelength : wavelength),
-              useOptical ? 5.1 : 70,
-              useOptical
-            )}
-          </div>
-
-          {/* Distance slider */}
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>Distance</span>
-              <span style={{ ...typo.small, color: colors.signal, fontWeight: 600 }}>
-                {formatDistance(twistDistKm)}
-              </span>
-            </div>
-            <input
-              type="range" min="5" max="10.4" step="0.01" value={twistDistance}
-              onInput={(e) => { setTwistDistance(parseFloat((e.target as HTMLInputElement).value)); emitEvent("slider_changed", { twistDistance: parseFloat((e.target as HTMLInputElement).value) }); }}
-              onChange={(e) => { setTwistDistance(parseFloat(e.target.value)); emitEvent('slider_changed', { twistDistance: parseFloat(e.target.value) }); }}
-              style={sliderStyle(useOptical ? colors.laser : colors.accent, twistDistance, 5, 10.4)}
-            />
-          </div>
-
-          {/* Comparison table */}
           <div style={{
-            display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            <div style={{
-              background: `${colors.accent}11`, borderRadius: '12px', padding: '16px',
-              border: `1px solid ${colors.accent}33`, textAlign: 'center',
-            }}>
-              <p style={{ ...typo.small, color: colors.accent, fontWeight: 700, marginBottom: '8px' }}>RF (X-band)</p>
-              <p style={{ ...typo.h2, color: colors.textPrimary, margin: '8px 0' }}>{formatDataRate(rfRate)}</p>
-              <p style={{ ...typo.small, color: colors.textMuted }}>70m DSN dish</p>
-              <p style={{ ...typo.small, color: colors.textMuted }}>Works in all weather</p>
-              <p style={{ ...typo.small, color: colors.textMuted }}>Beam: ~0.06 degrees</p>
+            {/* Left: SVG visualization */}
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                {renderSpaceSVG(
+                  twistDistKm,
+                  useOptical ? opticalRate : rfRate,
+                  calcFSPL(twistDistKm, useOptical ? laserWavelength : wavelength),
+                  useOptical ? 5.1 : 70,
+                  useOptical
+                )}
+              </div>
             </div>
-            <div style={{
-              background: `${colors.laser}11`, borderRadius: '12px', padding: '16px',
-              border: `1px solid ${colors.laser}33`, textAlign: 'center',
-            }}>
-              <p style={{ ...typo.small, color: colors.laser, fontWeight: 700, marginBottom: '8px' }}>Optical (Laser)</p>
-              <p style={{ ...typo.h2, color: colors.textPrimary, margin: '8px 0' }}>{formatDataRate(opticalRate)}</p>
-              <p style={{ ...typo.small, color: colors.textMuted }}>5.1m telescope</p>
-              <p style={{ ...typo.small, color: colors.warning }}>Fails in clouds/rain</p>
-              <p style={{ ...typo.small, color: colors.textMuted }}>Beam: micro-arc-seconds</p>
-            </div>
-          </div>
 
-          {/* Multiplier */}
-          <div style={{
-            background: colors.bgSecondary, borderRadius: '12px', padding: '16px', marginTop: '16px',
-            textAlign: 'center', border: `1px solid ${colors.border}`,
-          }}>
-            <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Optical advantage at this distance:</p>
-            <p style={{ ...typo.h2, color: colors.laser, margin: 0 }}>
-              {(opticalRate / rfRate).toFixed(0)}x faster
-            </p>
+            {/* Right: Controls panel */}
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Distance slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Distance</span>
+                  <span style={{ ...typo.small, color: colors.signal, fontWeight: 600 }}>
+                    {formatDistance(twistDistKm)}
+                  </span>
+                </div>
+                <input
+                  type="range" min="5" max="10.4" step="0.01" value={twistDistance}
+                  onInput={(e) => { setTwistDistance(parseFloat((e.target as HTMLInputElement).value)); emitEvent("slider_changed", { twistDistance: parseFloat((e.target as HTMLInputElement).value) }); }}
+                  onChange={(e) => { setTwistDistance(parseFloat(e.target.value)); emitEvent('slider_changed', { twistDistance: parseFloat(e.target.value) }); }}
+                  style={sliderStyle(useOptical ? colors.laser : colors.accent, twistDistance, 5, 10.4)}
+                />
+              </div>
+
+              {/* Comparison table */}
+              <div style={{
+                display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px',
+              }}>
+                <div style={{
+                  background: `${colors.accent}11`, borderRadius: '12px', padding: '12px',
+                  border: `1px solid ${colors.accent}33`, textAlign: 'center',
+                }}>
+                  <p style={{ ...typo.small, color: colors.accent, fontWeight: 700, marginBottom: '8px' }}>RF (X-band)</p>
+                  <p style={{ ...typo.h2, color: colors.textPrimary, margin: '8px 0' }}>{formatDataRate(rfRate)}</p>
+                  <p style={{ ...typo.small, color: colors.textMuted }}>70m DSN dish</p>
+                  <p style={{ ...typo.small, color: colors.textMuted }}>Works in all weather</p>
+                </div>
+                <div style={{
+                  background: `${colors.laser}11`, borderRadius: '12px', padding: '12px',
+                  border: `1px solid ${colors.laser}33`, textAlign: 'center',
+                }}>
+                  <p style={{ ...typo.small, color: colors.laser, fontWeight: 700, marginBottom: '8px' }}>Optical (Laser)</p>
+                  <p style={{ ...typo.h2, color: colors.textPrimary, margin: '8px 0' }}>{formatDataRate(opticalRate)}</p>
+                  <p style={{ ...typo.small, color: colors.textMuted }}>5.1m telescope</p>
+                  <p style={{ ...typo.small, color: colors.warning }}>Fails in clouds/rain</p>
+                </div>
+              </div>
+
+              {/* Multiplier */}
+              <div style={{
+                background: colors.bgSecondary, borderRadius: '12px', padding: '16px',
+                textAlign: 'center', border: `1px solid ${colors.border}`,
+              }}>
+                <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Optical advantage at this distance:</p>
+                <p style={{ ...typo.h2, color: colors.laser, margin: 0 }}>
+                  {(opticalRate / rfRate).toFixed(0)}x faster
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

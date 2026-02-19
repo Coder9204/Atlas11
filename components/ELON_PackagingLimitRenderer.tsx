@@ -1046,6 +1046,15 @@ const ELON_PackagingLimitRenderer: React.FC<ELON_PackagingLimitRendererProps> = 
               padding: '16px',
               marginBottom: '20px',
             }}>
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+              }}>
+                {/* Left: SVG visualizations */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                             {/* Bandwidth Density vs Pitch Chart */}
               <div style={{ marginTop: '16px', marginBottom: '16px' }}>
                 <svg
@@ -1142,10 +1151,13 @@ const ELON_PackagingLimitRenderer: React.FC<ELON_PackagingLimitRendererProps> = 
               </div>
 
     
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
                 <PackagingVisualization />
               </div>
+                </div>
 
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
           {/* Interconnect pitch slider */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1174,7 +1186,7 @@ const ELON_PackagingLimitRenderer: React.FC<ELON_PackagingLimitRendererProps> = 
               {/* Stats grid */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
+                gridTemplateColumns: 'repeat(1, 1fr)',
                 gap: '12px',
               }}>
                 <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
@@ -1192,6 +1204,8 @@ const ELON_PackagingLimitRenderer: React.FC<ELON_PackagingLimitRendererProps> = 
                     ${currentCost.toFixed(0)}
                   </div>
                   <div style={{ ...typo.small, color: colors.textMuted }}>Cost per Package</div>
+                </div>
+              </div>
                 </div>
               </div>
             </div>
@@ -1548,11 +1562,23 @@ const ELON_PackagingLimitRenderer: React.FC<ELON_PackagingLimitRendererProps> = 
               padding: '16px',
               marginBottom: '20px',
             }}>
-              {/* SVG Visualization with HBM */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <PackagingVisualization showHBM={true} />
-              </div>
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+              }}>
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  {/* SVG Visualization with HBM */}
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <PackagingVisualization showHBM={true} />
+                  </div>
+                </div>
 
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
               {/* Educational panel */}
               <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
                 <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you&apos;re seeing:</strong> The cross-section above shows how HBM memory stacks are arranged around the GPU die on a silicon interposer. As you add more stacks, the interposer must grow to accommodate them, visualized by the expanding package width.</p>
@@ -1644,6 +1670,8 @@ const ELON_PackagingLimitRenderer: React.FC<ELON_PackagingLimitRendererProps> = 
                   </p>
                 </div>
               )}
+                </div>
+              </div>
             </div>
           </div>
         </div>

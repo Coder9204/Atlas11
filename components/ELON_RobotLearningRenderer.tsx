@@ -1156,109 +1156,130 @@ const ELON_RobotLearningRenderer: React.FC<ELON_RobotLearningRendererProps> = ({
               This visualization demonstrates the sim-to-real transfer pipeline. Observe how the blue (sim) and green (real) performance bars respond as you adjust domain randomization. The Reality Gap is defined as the performance difference between simulation and physical deployment, calculated as sim performance minus real performance. Adjust the sliders to minimize this gap.
             </p>
 
-            {/* Main visualization */}
+            {/* Main visualization - side by side on desktop */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <SimToRealVisualization />
-              </div>
-
-              {/* Domain Randomization Range slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Domain Randomization Range (friction, mass, gravity)</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {domainRandomization}%
-                    {domainRandomization < 20 ? ' (Narrow — underfitting to sim)' :
-                     domainRandomization > 80 ? ' (Wide — overfitting tradeoff)' :
-                     ' (Balanced)'}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={domainRandomization}
-                  onChange={(e) => setDomainRandomization(parseInt(e.target.value))}
-                  onInput={(e) => setDomainRandomization(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Domain Randomization Range"
-                  style={sliderStyle(colors.accent, domainRandomization, 0, 100)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.error }}>Narrow (overfit)</span>
-                  <span style={{ ...typo.small, color: colors.success }}>Optimal</span>
-                  <span style={{ ...typo.small, color: colors.warning }}>Wide (underfit)</span>
-                </div>
-              </div>
-
-              {/* Simulation Episodes slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Simulation Episodes (time to train)</span>
-                  <span style={{ ...typo.small, color: '#60A5FA', fontWeight: 600 }}>
-                    {(simEpisodes / 1000).toFixed(0)}K episodes
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="1000"
-                  max="1000000"
-                  step="1000"
-                  value={simEpisodes}
-                  onChange={(e) => setSimEpisodes(parseInt(e.target.value))}
-                  onInput={(e) => setSimEpisodes(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Simulation Episodes"
-                  style={sliderStyle('#60A5FA', simEpisodes, 1000, 1000000)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>1K</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>500K</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>1M</span>
-                </div>
-              </div>
-
-              {/* Stats grid */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: '#60A5FA' }}>{simPerf.toFixed(1)}%</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Sim Performance</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.success }}>{realPerf.toFixed(1)}%</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Real Performance</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: simToRealGap > 30 ? colors.error : colors.warning }}>
-                    {simToRealGap.toFixed(1)}%
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                  marginBottom: '12px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <SimToRealVisualization />
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Reality Gap</div>
+                </div>
+
+                {/* Insight card */}
+                <div style={{
+                  background: `${colors.accent}11`,
+                  border: `1px solid ${colors.accent}33`,
+                  borderRadius: '12px',
+                  padding: '16px',
+                }}>
+                  <p style={{ ...typo.small, color: colors.accent, fontWeight: 600, marginBottom: '4px' }}>Observation:</p>
+                  <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                    {domainRandomization < 20
+                      ? 'With minimal randomization, sim performance is high but real-world transfer is poor. The policy has memorized sim-specific details.'
+                      : domainRandomization > 80
+                      ? 'With extreme randomization, the task becomes too hard in simulation. The policy struggles to learn anything useful.'
+                      : 'Moderate randomization trades some sim performance for dramatically better real-world transfer. This is the sweet spot!'}
+                  </p>
                 </div>
               </div>
-            </div>
 
-            {/* Insight card */}
-            <div style={{
-              background: `${colors.accent}11`,
-              border: `1px solid ${colors.accent}33`,
-              borderRadius: '12px',
-              padding: '16px',
-            }}>
-              <p style={{ ...typo.small, color: colors.accent, fontWeight: 600, marginBottom: '4px' }}>Observation:</p>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                {domainRandomization < 20
-                  ? 'With minimal randomization, sim performance is high but real-world transfer is poor. The policy has memorized sim-specific details.'
-                  : domainRandomization > 80
-                  ? 'With extreme randomization, the task becomes too hard in simulation. The policy struggles to learn anything useful.'
-                  : 'Moderate randomization trades some sim performance for dramatically better real-world transfer. This is the sweet spot!'}
-              </p>
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Domain Randomization Range slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Domain Randomization Range (friction, mass, gravity)</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {domainRandomization}%
+                        {domainRandomization < 20 ? ' (Narrow — underfitting to sim)' :
+                         domainRandomization > 80 ? ' (Wide — overfitting tradeoff)' :
+                         ' (Balanced)'}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={domainRandomization}
+                      onChange={(e) => setDomainRandomization(parseInt(e.target.value))}
+                      onInput={(e) => setDomainRandomization(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Domain Randomization Range"
+                      style={sliderStyle(colors.accent, domainRandomization, 0, 100)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.error }}>Narrow (overfit)</span>
+                      <span style={{ ...typo.small, color: colors.success }}>Optimal</span>
+                      <span style={{ ...typo.small, color: colors.warning }}>Wide (underfit)</span>
+                    </div>
+                  </div>
+
+                  {/* Simulation Episodes slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Simulation Episodes (time to train)</span>
+                      <span style={{ ...typo.small, color: '#60A5FA', fontWeight: 600 }}>
+                        {(simEpisodes / 1000).toFixed(0)}K episodes
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1000"
+                      max="1000000"
+                      step="1000"
+                      value={simEpisodes}
+                      onChange={(e) => setSimEpisodes(parseInt(e.target.value))}
+                      onInput={(e) => setSimEpisodes(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Simulation Episodes"
+                      style={sliderStyle('#60A5FA', simEpisodes, 1000, 1000000)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>1K</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>500K</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>1M</span>
+                    </div>
+                  </div>
+
+                  {/* Stats grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '12px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: '#60A5FA' }}>{simPerf.toFixed(1)}%</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Sim Performance</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.success }}>{realPerf.toFixed(1)}%</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Real Performance</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: simToRealGap > 30 ? colors.error : colors.warning }}>
+                        {simToRealGap.toFixed(1)}%
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Reality Gap</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1622,74 +1643,94 @@ const ELON_RobotLearningRenderer: React.FC<ELON_RobotLearningRendererProps> = ({
               </p>
             </div>
 
+            {/* Side-by-side layout on desktop */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <DeformableGapVisualization />
-              </div>
-
-              {/* Explanation cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px' }}>
-                  <h4 style={{ ...typo.small, color: '#60A5FA', marginBottom: '8px', fontWeight: 600 }}>In Simulation</h4>
-                  <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                    All objects are rigid bodies with fixed shapes. The gripper applies force, the object does not deform. The policy learns exact grasp points.
-                  </p>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px' }}>
-                  <h4 style={{ ...typo.small, color: '#FB923C', marginBottom: '8px', fontWeight: 600 }}>In Reality</h4>
-                  <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                    Deformable objects change shape under grip force. The grasp points shift, the object slips, and the expected contact geometry is wrong.
-                  </p>
-                </div>
-              </div>
-
-              {/* Impact stats */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
-                marginBottom: '20px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.success }}>95%</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Sim (rigid)</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.error }}>35%</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Real (deformable)</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.warning }}>60%</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Performance Drop</div>
-                </div>
-              </div>
-
-              {/* Missing physics warning */}
-              <div style={{
-                background: `${colors.error}22`,
-                border: `1px solid ${colors.error}`,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
-                  The root cause is missing physics:
-                </p>
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                 <div style={{
-                  ...typo.h3,
-                  color: colors.error,
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
                 }}>
-                  Domain Randomization Cannot Fix Missing Physics Models
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <DeformableGapVisualization />
+                  </div>
                 </div>
-                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-                  No amount of randomizing rigid body parameters will teach a policy about deformation. The simulation must include deformable body physics to close this gap.
-                </p>
+              </div>
+
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Explanation cards */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px' }}>
+                      <h4 style={{ ...typo.small, color: '#60A5FA', marginBottom: '8px', fontWeight: 600 }}>In Simulation</h4>
+                      <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                        All objects are rigid bodies with fixed shapes. The gripper applies force, the object does not deform. The policy learns exact grasp points.
+                      </p>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px' }}>
+                      <h4 style={{ ...typo.small, color: '#FB923C', marginBottom: '8px', fontWeight: 600 }}>In Reality</h4>
+                      <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                        Deformable objects change shape under grip force. The grasp points shift, the object slips, and the expected contact geometry is wrong.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Impact stats */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '12px',
+                    marginBottom: '20px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.success }}>95%</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Sim (rigid)</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.error }}>35%</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Real (deformable)</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.warning }}>60%</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Performance Drop</div>
+                    </div>
+                  </div>
+
+                  {/* Missing physics warning */}
+                  <div style={{
+                    background: `${colors.error}22`,
+                    border: `1px solid ${colors.error}`,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
+                      The root cause is missing physics:
+                    </p>
+                    <div style={{
+                      ...typo.h3,
+                      color: colors.error,
+                    }}>
+                      Domain Randomization Cannot Fix Missing Physics Models
+                    </div>
+                    <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+                      No amount of randomizing rigid body parameters will teach a policy about deformation. The simulation must include deformable body physics to close this gap.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

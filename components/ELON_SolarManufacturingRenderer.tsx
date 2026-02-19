@@ -1095,90 +1095,103 @@ const ELON_SolarManufacturingRenderer: React.FC<ELON_SolarManufacturingRendererP
               This visualization shows the complete manufacturing pipeline from quartz sand to finished module. Adjust the wafer thickness slider to see how thinner wafers change kerf loss, material utilization, breakage risk, and cost per watt. Try different cell technologies to compare their efficiency ceilings.
             </p>
 
-            {/* Main visualization */}
+            {/* Main visualization - side by side on desktop */}
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
               padding: '16px',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <ManufacturingPipelineSVG />
-              </div>
-
-              {/* Cell technology selector */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Cell Technology</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {cellTech} ({cellEfficiency.toFixed(1)}% efficiency)
-                  </span>
-                </div>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {(['PERC', 'TOPCon', 'HJT'] as const).map((tech) => (
-                    <button
-                      key={tech}
-                      onClick={() => { playSound('click'); setCellTech(tech); }}
-                      style={{
-                        padding: '8px 16px',
-                        borderRadius: '8px',
-                        border: cellTech === tech ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
-                        background: cellTech === tech ? `${colors.accent}22` : colors.bgSecondary,
-                        color: colors.textPrimary,
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        minHeight: '44px',
-                      }}
-                    >
-                      {tech}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Wafer thickness slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Wafer Thickness</span>
-                  <span style={{ ...typo.small, color: colors.silicon, fontWeight: 600 }}>
-                    {waferThickness}μm {waferThickness <= 120 ? '(ultra-thin!)' : waferThickness <= 150 ? '(thin)' : '(standard)'}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="80"
-                  max="180"
-                  step="5"
-                  value={waferThickness}
-                  onChange={(e) => setWaferThickness(parseInt(e.target.value))}
-                  onInput={(e) => setWaferThickness(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Wafer Thickness"
-                  style={sliderStyle(colors.silicon, waferThickness, 80, 180)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.success }}>80μm (future)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>130μm</span>
-                  <span style={{ ...typo.small, color: colors.silicon }}>180μm (current)</span>
-                </div>
-              </div>
-
-              {/* Stats grid */}
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
               }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.error }}>{kerfLossPercent.toFixed(1)}%</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Kerf Loss</div>
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <ManufacturingPipelineSVG />
+                  </div>
                 </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.success }}>{cellEfficiency.toFixed(1)}%</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Cell Efficiency</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.solar }}>${costPerWatt}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Cost/Watt</div>
+
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Cell technology selector */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Cell Technology</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {cellTech} ({cellEfficiency.toFixed(1)}% efficiency)
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {(['PERC', 'TOPCon', 'HJT'] as const).map((tech) => (
+                        <button
+                          key={tech}
+                          onClick={() => { playSound('click'); setCellTech(tech); }}
+                          style={{
+                            padding: '8px 16px',
+                            borderRadius: '8px',
+                            border: cellTech === tech ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
+                            background: cellTech === tech ? `${colors.accent}22` : colors.bgSecondary,
+                            color: colors.textPrimary,
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            minHeight: '44px',
+                          }}
+                        >
+                          {tech}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Wafer thickness slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Wafer Thickness</span>
+                      <span style={{ ...typo.small, color: colors.silicon, fontWeight: 600 }}>
+                        {waferThickness}μm {waferThickness <= 120 ? '(ultra-thin!)' : waferThickness <= 150 ? '(thin)' : '(standard)'}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="80"
+                      max="180"
+                      step="5"
+                      value={waferThickness}
+                      onChange={(e) => setWaferThickness(parseInt(e.target.value))}
+                      onInput={(e) => setWaferThickness(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Wafer Thickness"
+                      style={sliderStyle(colors.silicon, waferThickness, 80, 180)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.success }}>80μm (future)</span>
+                      <span style={{ ...typo.small, color: colors.silicon }}>180μm (current)</span>
+                    </div>
+                  </div>
+
+                  {/* Stats grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '8px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.error }}>{kerfLossPercent.toFixed(1)}%</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Kerf Loss</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.success }}>{cellEfficiency.toFixed(1)}%</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Cell Efficiency</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.solar }}>${costPerWatt}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Cost/Watt</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1524,96 +1537,109 @@ const ELON_SolarManufacturingRenderer: React.FC<ELON_SolarManufacturingRendererP
               padding: '16px',
               marginBottom: '20px',
             }}>
-              {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <TechComparisonSVG />
-              </div>
-
-              {/* Educational panel */}
-              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> This chart compares three competing solar cell architectures — PERC, TOPCon, and HJT — showing their efficiency ceilings, open-circuit voltage, and manufacturing complexity side by side.</p>
-                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you switch between technologies, notice how higher efficiency comes with tradeoffs in process complexity and cost — HJT has fewer steps but requires expensive equipment, while TOPCon adds steps to existing PERC lines.</p>
-              </div>
-
-              {/* Technology selector */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Select Technology</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {twistTech} — {currentTwist.eff}% peak efficiency
-                  </span>
-                </div>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {(['PERC', 'TOPCon', 'HJT'] as const).map((tech) => (
-                    <button
-                      key={tech}
-                      onClick={() => { playSound('click'); setTwistTech(tech); }}
-                      style={{
-                        padding: '10px 20px',
-                        borderRadius: '8px',
-                        border: twistTech === tech ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
-                        background: twistTech === tech ? `${colors.accent}22` : colors.bgSecondary,
-                        color: colors.textPrimary,
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: twistTech === tech ? 700 : 400,
-                        minHeight: '44px',
-                        flex: 1,
-                      }}
-                    >
-                      {tech}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Detailed comparison grid */}
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-                marginBottom: '20px',
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
               }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{currentTwist.eff}%</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Peak Efficiency</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.success }}>{currentTwist.voc}mV</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Open-Circuit Voltage</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.warning }}>{currentTwist.steps}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Process Steps</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.silicon }}>{currentTwist.tempCoeff}%/°C</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Temp Coefficient</div>
-                </div>
-              </div>
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <TechComparisonSVG />
+                  </div>
 
-              {/* Technology description */}
-              <div style={{
-                background: `${colors.accent}11`,
-                border: `1px solid ${colors.accent}33`,
-                borderRadius: '12px',
-                padding: '16px',
-              }}>
-                {twistTech === 'PERC' && (
-                  <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                    <strong style={{ color: colors.accent }}>PERC</strong> (Passivated Emitter and Rear Cell) is the workhorse of solar: rear dielectric passivation reduces recombination, boosting efficiency to ~24%. Mature, proven, but approaching its theoretical limit.
-                  </p>
-                )}
-                {twistTech === 'TOPCon' && (
-                  <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                    <strong style={{ color: colors.accent }}>TOPCon</strong> (Tunnel Oxide Passivated Contact) adds an ultra-thin oxide + poly-Si layer for carrier-selective contacts. More complex (10 steps) but raises the ceiling to 26%+. The current industry transition target.
-                  </p>
-                )}
-                {twistTech === 'HJT' && (
-                  <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                    <strong style={{ color: colors.accent }}>HJT</strong> (Heterojunction) deposits amorphous silicon at low temperature (&lt;200°C). Fewest steps (6), highest Voc (745mV), best temperature coefficient. But requires expensive equipment and indium-tin-oxide (ITO) contacts.
-                  </p>
-                )}
+                  {/* Educational panel */}
+                  <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginTop: '16px' }}>
+                    <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> This chart compares three competing solar cell architectures — PERC, TOPCon, and HJT — showing their efficiency ceilings, open-circuit voltage, and manufacturing complexity side by side.</p>
+                    <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you switch between technologies, notice how higher efficiency comes with tradeoffs in process complexity and cost — HJT has fewer steps but requires expensive equipment, while TOPCon adds steps to existing PERC lines.</p>
+                  </div>
+                </div>
+
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Technology selector */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Select Technology</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {twistTech} — {currentTwist.eff}% peak efficiency
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {(['PERC', 'TOPCon', 'HJT'] as const).map((tech) => (
+                        <button
+                          key={tech}
+                          onClick={() => { playSound('click'); setTwistTech(tech); }}
+                          style={{
+                            padding: '10px 20px',
+                            borderRadius: '8px',
+                            border: twistTech === tech ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
+                            background: twistTech === tech ? `${colors.accent}22` : colors.bgSecondary,
+                            color: colors.textPrimary,
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            fontWeight: twistTech === tech ? 700 : 400,
+                            minHeight: '44px',
+                            flex: 1,
+                          }}
+                        >
+                          {tech}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Detailed comparison grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '8px',
+                    marginBottom: '16px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>{currentTwist.eff}%</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Peak Efficiency</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.success }}>{currentTwist.voc}mV</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Open-Circuit Voltage</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.warning }}>{currentTwist.steps}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Process Steps</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.silicon }}>{currentTwist.tempCoeff}%/°C</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Temp Coefficient</div>
+                    </div>
+                  </div>
+
+                  {/* Technology description */}
+                  <div style={{
+                    background: `${colors.accent}11`,
+                    border: `1px solid ${colors.accent}33`,
+                    borderRadius: '12px',
+                    padding: '16px',
+                  }}>
+                    {twistTech === 'PERC' && (
+                      <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                        <strong style={{ color: colors.accent }}>PERC</strong> (Passivated Emitter and Rear Cell) is the workhorse of solar: rear dielectric passivation reduces recombination, boosting efficiency to ~24%. Mature, proven, but approaching its theoretical limit.
+                      </p>
+                    )}
+                    {twistTech === 'TOPCon' && (
+                      <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                        <strong style={{ color: colors.accent }}>TOPCon</strong> (Tunnel Oxide Passivated Contact) adds an ultra-thin oxide + poly-Si layer for carrier-selective contacts. More complex (10 steps) but raises the ceiling to 26%+. The current industry transition target.
+                      </p>
+                    )}
+                    {twistTech === 'HJT' && (
+                      <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                        <strong style={{ color: colors.accent }}>HJT</strong> (Heterojunction) deposits amorphous silicon at low temperature (&lt;200°C). Fewest steps (6), highest Voc (745mV), best temperature coefficient. But requires expensive equipment and indium-tin-oxide (ITO) contacts.
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>

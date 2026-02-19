@@ -1189,95 +1189,108 @@ const ELON_RadiationArmorRenderer: React.FC<ELON_RadiationArmorRendererProps> = 
               This visualization shows a cross-section of spacecraft shielding. Watch how radiation particles interact with the shield — some are stopped, some scatter, and some penetrate. Adjust the shield thickness slider and compare aluminum vs polyethylene to see the dose reduction curve with its diminishing returns.
             </p>
 
-            {/* Main visualization */}
+            {/* Main visualization - side by side on desktop */}
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
               padding: '16px',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <ShieldingVisualization />
-              </div>
-
-              {/* Material selector */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Shield Material</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {shieldMaterial === 'aluminum' ? 'Aluminum (Al)' : 'Polyethylene (HDPE)'}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {(['aluminum', 'polyethylene'] as const).map((mat) => (
-                    <button
-                      key={mat}
-                      onClick={() => { playSound('click'); setShieldMaterial(mat); }}
-                      style={{
-                        padding: '8px 16px',
-                        borderRadius: '8px',
-                        border: shieldMaterial === mat ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
-                        background: shieldMaterial === mat ? `${colors.accent}22` : colors.bgSecondary,
-                        color: colors.textPrimary,
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        minHeight: '44px',
-                      }}
-                    >
-                      {mat === 'aluminum' ? 'Aluminum (Z=13)' : 'Polyethylene (H-rich)'}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Shield thickness slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Shield Thickness</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {shieldThickness} g/cm{'\u00B2'}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="50"
-                  value={shieldThickness}
-                  onChange={(e) => setShieldThickness(parseInt(e.target.value))}
-                  onInput={(e) => setShieldThickness(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Shield Thickness"
-                  style={sliderStyle(colors.accent, shieldThickness, 1, 50)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>1 g/cm{'\u00B2'} (minimal)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>25 (ISS-level)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>50 (heavy)</span>
-                </div>
-              </div>
-
-              {/* Stats grid */}
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
               }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: currentDose > 1.0 ? colors.error : currentDose > 0.5 ? colors.warning : colors.success }}>
-                    {currentDose.toFixed(2)}
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <ShieldingVisualization />
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>mSv/day</div>
                 </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>
-                    {doseReduction > 0 ? `-${doseReduction.toFixed(0)}%` : '0%'}
+
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Material selector */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Shield Material</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {shieldMaterial === 'aluminum' ? 'Aluminum (Al)' : 'Polyethylene (HDPE)'}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {(['aluminum', 'polyethylene'] as const).map((mat) => (
+                        <button
+                          key={mat}
+                          onClick={() => { playSound('click'); setShieldMaterial(mat); }}
+                          style={{
+                            padding: '8px 16px',
+                            borderRadius: '8px',
+                            border: shieldMaterial === mat ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
+                            background: shieldMaterial === mat ? `${colors.accent}22` : colors.bgSecondary,
+                            color: colors.textPrimary,
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            minHeight: '44px',
+                          }}
+                        >
+                          {mat === 'aluminum' ? 'Aluminum (Z=13)' : 'Polyethylene (H-rich)'}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Dose reduction</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.warning }}>
-                    {massPenalty.toFixed(1)}
+
+                  {/* Shield thickness slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Shield Thickness</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {shieldThickness} g/cm{'\u00B2'}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="50"
+                      value={shieldThickness}
+                      onChange={(e) => setShieldThickness(parseInt(e.target.value))}
+                      onInput={(e) => setShieldThickness(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Shield Thickness"
+                      style={sliderStyle(colors.accent, shieldThickness, 1, 50)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>1 g/cm{'\u00B2'} (minimal)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>50 (heavy)</span>
+                    </div>
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>kg/m{'\u00B2'} mass</div>
+
+                  {/* Stats grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '8px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: currentDose > 1.0 ? colors.error : currentDose > 0.5 ? colors.warning : colors.success }}>
+                        {currentDose.toFixed(2)}
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>mSv/day</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>
+                        {doseReduction > 0 ? `-${doseReduction.toFixed(0)}%` : '0%'}
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Dose reduction</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.warning }}>
+                        {massPenalty.toFixed(1)}
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>kg/m{'\u00B2'} mass</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1619,103 +1632,117 @@ const ELON_RadiationArmorRenderer: React.FC<ELON_RadiationArmorRendererProps> = 
               Design additional shielding for a dedicated storm shelter to protect crew during a solar particle event
             </p>
 
+            {/* Twist visualization - side by side on desktop */}
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
               padding: '16px',
               marginBottom: '20px',
             }}>
-              {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <StormShelterVisualization />
-              </div>
-
-              {/* Educational panel */}
-              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The storm shelter cross-section shows how concentrated polyethylene shielding inside the hull dramatically reduces radiation dose during a solar particle event, compared to hull-only protection.</p>
-                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> Increasing the shelter thickness adds hydrogen-rich material that fragments incoming solar protons, reducing the dose rate inside the shelter -- but at the cost of additional mass per square meter of shelter wall.</p>
-              </div>
-
-              {/* Solar event toggle */}
-              <div style={{ marginBottom: '20px' }}>
-                <button
-                  onClick={() => { playSound('click'); setSolarEventActive(!solarEventActive); }}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: `2px solid ${solarEventActive ? colors.error : colors.border}`,
-                    background: solarEventActive ? `${colors.error}22` : colors.bgSecondary,
-                    color: solarEventActive ? colors.error : colors.textSecondary,
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    fontSize: '14px',
-                    minHeight: '44px',
-                  }}
-                >
-                  {solarEventActive ? '\u26A0\uFE0F SOLAR PARTICLE EVENT ACTIVE — 1000x flux' : 'Simulate Solar Particle Event'}
-                </button>
-              </div>
-
-              {/* Storm shelter thickness slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Extra Shelter Shielding (polyethylene)</span>
-                  <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>+{stormShelterThickness} g/cm{'\u00B2'}</span>
-                </div>
-                <input
-                  type="range"
-                  min="5"
-                  max="50"
-                  value={stormShelterThickness}
-                  onChange={(e) => setStormShelterThickness(parseInt(e.target.value))}
-                  onInput={(e) => setStormShelterThickness(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Storm shelter extra thickness"
-                  style={sliderStyle(colors.success, stormShelterThickness, 5, 50)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>5 g/cm{'\u00B2'} (light)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>50 g/cm{'\u00B2'} (heavy)</span>
-                </div>
-              </div>
-
-              {/* Results */}
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-                marginBottom: '20px',
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
               }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.error }}>{speDose.toFixed(0)} mSv/d</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Hull Only (during SPE)</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.success }}>{shelterDose.toFixed(1)} mSv/d</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>In Storm Shelter</div>
-                </div>
-              </div>
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <StormShelterVisualization />
+                  </div>
 
-              {/* Mass and event info */}
-              <div style={{
-                background: shelterDose < 50 ? `${colors.success}22` : `${colors.warning}22`,
-                border: `1px solid ${shelterDose < 50 ? colors.success : colors.warning}`,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
-                  72-hour SPE total dose in shelter:
-                </p>
-                <div style={{
-                  ...typo.h2,
-                  color: shelterDose * 3 < 150 ? colors.success : shelterDose * 3 < 500 ? colors.warning : colors.error
-                }}>
-                  {(shelterDose * 3).toFixed(0)} mSv
+                  {/* Educational panel */}
+                  <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginTop: '16px' }}>
+                    <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The storm shelter cross-section shows how concentrated polyethylene shielding inside the hull dramatically reduces radiation dose during a solar particle event, compared to hull-only protection.</p>
+                    <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> Increasing the shelter thickness adds hydrogen-rich material that fragments incoming solar protons, reducing the dose rate inside the shelter -- but at the cost of additional mass per square meter of shelter wall.</p>
+                  </div>
                 </div>
-                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-                  Shelter mass penalty: {shelterMass.toFixed(1)} kg/m{'\u00B2'} | NASA career limit: ~1000 mSv
-                </p>
+
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Solar event toggle */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <button
+                      onClick={() => { playSound('click'); setSolarEventActive(!solarEventActive); }}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        borderRadius: '8px',
+                        border: `2px solid ${solarEventActive ? colors.error : colors.border}`,
+                        background: solarEventActive ? `${colors.error}22` : colors.bgSecondary,
+                        color: solarEventActive ? colors.error : colors.textSecondary,
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        fontSize: '14px',
+                        minHeight: '44px',
+                      }}
+                    >
+                      {solarEventActive ? '\u26A0\uFE0F SOLAR PARTICLE EVENT ACTIVE — 1000x flux' : 'Simulate Solar Particle Event'}
+                    </button>
+                  </div>
+
+                  {/* Storm shelter thickness slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Extra Shelter Shielding (polyethylene)</span>
+                      <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>+{stormShelterThickness} g/cm{'\u00B2'}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="5"
+                      max="50"
+                      value={stormShelterThickness}
+                      onChange={(e) => setStormShelterThickness(parseInt(e.target.value))}
+                      onInput={(e) => setStormShelterThickness(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Storm shelter extra thickness"
+                      style={sliderStyle(colors.success, stormShelterThickness, 5, 50)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>5 g/cm{'\u00B2'} (light)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>50 g/cm{'\u00B2'} (heavy)</span>
+                    </div>
+                  </div>
+
+                  {/* Results */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '8px',
+                    marginBottom: '16px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.error }}>{speDose.toFixed(0)} mSv/d</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Hull Only (during SPE)</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.success }}>{shelterDose.toFixed(1)} mSv/d</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>In Storm Shelter</div>
+                    </div>
+                  </div>
+
+                  {/* Mass and event info */}
+                  <div style={{
+                    background: shelterDose < 50 ? `${colors.success}22` : `${colors.warning}22`,
+                    border: `1px solid ${shelterDose < 50 ? colors.success : colors.warning}`,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
+                      72-hour SPE total dose in shelter:
+                    </p>
+                    <div style={{
+                      ...typo.h2,
+                      color: shelterDose * 3 < 150 ? colors.success : shelterDose * 3 < 500 ? colors.warning : colors.error
+                    }}>
+                      {(shelterDose * 3).toFixed(0)} mSv
+                    </div>
+                    <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+                      Shelter mass penalty: {shelterMass.toFixed(1)} kg/m{'\u00B2'} | NASA career limit: ~1000 mSv
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

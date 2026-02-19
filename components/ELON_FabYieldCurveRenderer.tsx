@@ -1185,96 +1185,116 @@ const ELON_FabYieldCurveRenderer: React.FC<ELON_FabYieldCurveRendererProps> = ({
               Try adjusting the defect density slider and observe how yield changes exponentially. Watch the green (good) and red (defective) dies on the 300mm wafer as you experiment with different settings. Notice how increasing die size makes larger chips dramatically more expensive.
             </p>
 
-            {/* Main visualization */}
+            {/* Main visualization — side-by-side on desktop */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <WaferVisualization dd={defectDensity} dW={dieWidth} dH={dieHeight} />
-              </div>
-
-              {/* Defect Density slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Defect Density</span>
-                  <span style={{ ...typo.small, color: defectDensity > 0.3 ? colors.error : colors.success, fontWeight: 600 }}>
-                    {defectDensity.toFixed(2)} defects/cm²
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="100"
-                  value={defectDensity * 100}
-                  onChange={(e) => { setDefectDensity(parseInt(e.target.value) / 100); setDefectSeed(Math.floor(Math.random() * 10000)); }}
-                  onInput={(e) => { setDefectDensity(parseInt((e.target as HTMLInputElement).value) / 100); }}
-                  aria-label="Defect Density"
-                  style={sliderStyle(colors.accent, defectDensity * 100, 1, 100)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.success }}>0.01/cm² (mature)</span>
-                  <span style={{ ...typo.small, color: colors.error }}>1.0/cm² (new process)</span>
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <WaferVisualization dd={defectDensity} dW={dieWidth} dH={dieHeight} />
+                  </div>
                 </div>
               </div>
 
-              {/* Die Size sliders */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ ...typo.small, color: colors.textSecondary }}>Die Width</span>
-                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{dieWidth}mm</span>
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Defect Density slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Defect Density</span>
+                      <span style={{ ...typo.small, color: defectDensity > 0.3 ? colors.error : colors.success, fontWeight: 600 }}>
+                        {defectDensity.toFixed(2)} defects/cm²
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="100"
+                      value={defectDensity * 100}
+                      onChange={(e) => { setDefectDensity(parseInt(e.target.value) / 100); setDefectSeed(Math.floor(Math.random() * 10000)); }}
+                      onInput={(e) => { setDefectDensity(parseInt((e.target as HTMLInputElement).value) / 100); }}
+                      aria-label="Defect Density"
+                      style={sliderStyle(colors.accent, defectDensity * 100, 1, 100)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.success }}>0.01/cm² (mature)</span>
+                      <span style={{ ...typo.small, color: colors.error }}>1.0/cm² (new process)</span>
+                    </div>
                   </div>
-                  <input
-                    type="range"
-                    min="5"
-                    max="40"
-                    value={dieWidth}
-                    onChange={(e) => setDieWidth(parseInt(e.target.value))}
-                    onInput={(e) => setDieWidth(parseInt((e.target as HTMLInputElement).value))}
-                    aria-label="Die width"
-                    style={sliderStyle(colors.accent, dieWidth, 5, 40)}
-                  />
-                </div>
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ ...typo.small, color: colors.textSecondary }}>Die Height</span>
-                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{dieHeight}mm</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="5"
-                    max="40"
-                    value={dieHeight}
-                    onChange={(e) => setDieHeight(parseInt(e.target.value))}
-                    onInput={(e) => setDieHeight(parseInt((e.target as HTMLInputElement).value))}
-                    aria-label="Die height"
-                    style={sliderStyle(colors.accent, dieHeight, 5, 40)}
-                  />
-                </div>
-              </div>
 
-              {/* Stats grid */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: yieldPercent > 70 ? colors.success : yieldPercent > 40 ? colors.warning : colors.error }}>{yieldPercent.toFixed(1)}%</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Yield</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{goodDies}/{diesPerWafer}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Good/Total Dies</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.warning }}>
-                    ${costPerGoodDie < 100000 ? costPerGoodDie.toFixed(0) : '∞'}
+                  {/* Die Size sliders */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                        <span style={{ ...typo.small, color: colors.textSecondary }}>Die Width</span>
+                        <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{dieWidth}mm</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="5"
+                        max="40"
+                        value={dieWidth}
+                        onChange={(e) => setDieWidth(parseInt(e.target.value))}
+                        onInput={(e) => setDieWidth(parseInt((e.target as HTMLInputElement).value))}
+                        aria-label="Die width"
+                        style={sliderStyle(colors.accent, dieWidth, 5, 40)}
+                      />
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                        <span style={{ ...typo.small, color: colors.textSecondary }}>Die Height</span>
+                        <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{dieHeight}mm</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="5"
+                        max="40"
+                        value={dieHeight}
+                        onChange={(e) => setDieHeight(parseInt(e.target.value))}
+                        onInput={(e) => setDieHeight(parseInt((e.target as HTMLInputElement).value))}
+                        aria-label="Die height"
+                        style={sliderStyle(colors.accent, dieHeight, 5, 40)}
+                      />
+                    </div>
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Cost/Good Die</div>
+
+                  {/* Stats grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(1, 1fr)',
+                    gap: '12px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: yieldPercent > 70 ? colors.success : yieldPercent > 40 ? colors.warning : colors.error }}>{yieldPercent.toFixed(1)}%</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Yield</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>{goodDies}/{diesPerWafer}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Good/Total Dies</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.warning }}>
+                        ${costPerGoodDie < 100000 ? costPerGoodDie.toFixed(0) : '∞'}
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Cost/Good Die</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1616,116 +1636,137 @@ const ELON_FabYieldCurveRenderer: React.FC<ELON_FabYieldCurveRendererProps> = ({
               Compare standard die vs doubled die at the same defect density
             </p>
 
+            {/* Main visualization — side-by-side on desktop */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <TwistVisualization />
-              </div>
-
-              {/* Educational panel */}
-              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The bar chart compares yield between a standard die and a doubled die at the same defect density, showing how the exponential penalty of Y = e^(-D x A) devastates larger dies.</p>
-                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you increase die dimensions or defect density, watch how the doubled die's yield drops much faster than the standard die — this is the exponential area penalty that drives the chiplet revolution.</p>
-              </div>
-
-              {/* Defect density slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Defect Density</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{twistDefectDensity.toFixed(2)} defects/cm²</span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="100"
-                  value={twistDefectDensity * 100}
-                  onChange={(e) => setTwistDefectDensity(parseInt(e.target.value) / 100)}
-                  onInput={(e) => setTwistDefectDensity(parseInt((e.target as HTMLInputElement).value) / 100)}
-                  aria-label="Twist defect density"
-                  style={sliderStyle(colors.accent, twistDefectDensity * 100, 1, 100)}
-                />
-              </div>
-
-              {/* Die size sliders */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ ...typo.small, color: colors.textSecondary }}>Base Die Width</span>
-                    <span style={{ ...typo.small, color: colors.goodDie, fontWeight: 600 }}>{twistDieWidth}mm</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="5"
-                    max="30"
-                    value={twistDieWidth}
-                    onChange={(e) => setTwistDieWidth(parseInt(e.target.value))}
-                    onInput={(e) => setTwistDieWidth(parseInt((e.target as HTMLInputElement).value))}
-                    aria-label="Base die width"
-                    style={sliderStyle(colors.goodDie, twistDieWidth, 5, 30)}
-                  />
-                </div>
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ ...typo.small, color: colors.textSecondary }}>Base Die Height</span>
-                    <span style={{ ...typo.small, color: colors.goodDie, fontWeight: 600 }}>{twistDieHeight}mm</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="5"
-                    max="30"
-                    value={twistDieHeight}
-                    onChange={(e) => setTwistDieHeight(parseInt(e.target.value))}
-                    onInput={(e) => setTwistDieHeight(parseInt((e.target as HTMLInputElement).value))}
-                    aria-label="Base die height"
-                    style={sliderStyle(colors.goodDie, twistDieHeight, 5, 30)}
-                  />
-                </div>
-              </div>
-
-              {/* Comparison results */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-                marginBottom: '20px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center', borderLeft: `3px solid ${colors.goodDie}` }}>
-                  <div style={{ ...typo.small, color: colors.goodDie, fontWeight: 600, marginBottom: '4px' }}>Standard ({smallArea}mm²)</div>
-                  <div style={{ ...typo.h3, color: colors.textPrimary }}>{smallYield.toFixed(1)}% yield</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{smallGoodCount} good dies</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center', borderLeft: `3px solid ${colors.badDie}` }}>
-                  <div style={{ ...typo.small, color: colors.badDie, fontWeight: 600, marginBottom: '4px' }}>Doubled ({bigArea}mm²)</div>
-                  <div style={{ ...typo.h3, color: colors.textPrimary }}>{bigYield.toFixed(1)}% yield</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{bigGoodCount} good dies</div>
-                </div>
-              </div>
-
-              {/* Impact warning */}
-              <div style={{
-                background: `${colors.warning}22`,
-                border: `1px solid ${colors.warning}`,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
-                  Doubling die dimensions (4x area) impact:
-                </p>
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                 <div style={{
-                  ...typo.h2,
-                  color: colors.warning
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
                 }}>
-                  {smallGoodCount > 0 ? ((bigGoodCount / smallGoodCount) * 100).toFixed(0) : 0}% of original good dies
+                  {/* SVG Visualization */}
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <TwistVisualization />
+                  </div>
+
+                  {/* Educational panel */}
+                  <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginTop: '16px' }}>
+                    <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The bar chart compares yield between a standard die and a doubled die at the same defect density, showing how the exponential penalty of Y = e^(-D x A) devastates larger dies.</p>
+                    <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you increase die dimensions or defect density, watch how the doubled die's yield drops much faster than the standard die — this is the exponential area penalty that drives the chiplet revolution.</p>
+                  </div>
                 </div>
-                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-                  Yield drops from {smallYield.toFixed(1)}% to {bigYield.toFixed(1)}% — plus fewer die sites per wafer
-                </p>
+              </div>
+
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Defect density slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Defect Density</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{twistDefectDensity.toFixed(2)} defects/cm²</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="100"
+                      value={twistDefectDensity * 100}
+                      onChange={(e) => setTwistDefectDensity(parseInt(e.target.value) / 100)}
+                      onInput={(e) => setTwistDefectDensity(parseInt((e.target as HTMLInputElement).value) / 100)}
+                      aria-label="Twist defect density"
+                      style={sliderStyle(colors.accent, twistDefectDensity * 100, 1, 100)}
+                    />
+                  </div>
+
+                  {/* Die size sliders */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                        <span style={{ ...typo.small, color: colors.textSecondary }}>Base Die Width</span>
+                        <span style={{ ...typo.small, color: colors.goodDie, fontWeight: 600 }}>{twistDieWidth}mm</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="5"
+                        max="30"
+                        value={twistDieWidth}
+                        onChange={(e) => setTwistDieWidth(parseInt(e.target.value))}
+                        onInput={(e) => setTwistDieWidth(parseInt((e.target as HTMLInputElement).value))}
+                        aria-label="Base die width"
+                        style={sliderStyle(colors.goodDie, twistDieWidth, 5, 30)}
+                      />
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                        <span style={{ ...typo.small, color: colors.textSecondary }}>Base Die Height</span>
+                        <span style={{ ...typo.small, color: colors.goodDie, fontWeight: 600 }}>{twistDieHeight}mm</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="5"
+                        max="30"
+                        value={twistDieHeight}
+                        onChange={(e) => setTwistDieHeight(parseInt(e.target.value))}
+                        onInput={(e) => setTwistDieHeight(parseInt((e.target as HTMLInputElement).value))}
+                        aria-label="Base die height"
+                        style={sliderStyle(colors.goodDie, twistDieHeight, 5, 30)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Comparison results */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(1, 1fr)',
+                    gap: '12px',
+                    marginBottom: '20px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center', borderLeft: `3px solid ${colors.goodDie}` }}>
+                      <div style={{ ...typo.small, color: colors.goodDie, fontWeight: 600, marginBottom: '4px' }}>Standard ({smallArea}mm²)</div>
+                      <div style={{ ...typo.h3, color: colors.textPrimary }}>{smallYield.toFixed(1)}% yield</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>{smallGoodCount} good dies</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center', borderLeft: `3px solid ${colors.badDie}` }}>
+                      <div style={{ ...typo.small, color: colors.badDie, fontWeight: 600, marginBottom: '4px' }}>Doubled ({bigArea}mm²)</div>
+                      <div style={{ ...typo.h3, color: colors.textPrimary }}>{bigYield.toFixed(1)}% yield</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>{bigGoodCount} good dies</div>
+                    </div>
+                  </div>
+
+                  {/* Impact warning */}
+                  <div style={{
+                    background: `${colors.warning}22`,
+                    border: `1px solid ${colors.warning}`,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
+                      Doubling die dimensions (4x area) impact:
+                    </p>
+                    <div style={{
+                      ...typo.h2,
+                      color: colors.warning
+                    }}>
+                      {smallGoodCount > 0 ? ((bigGoodCount / smallGoodCount) * 100).toFixed(0) : 0}% of original good dies
+                    </div>
+                    <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+                      Yield drops from {smallYield.toFixed(1)}% to {bigYield.toFixed(1)}% — plus fewer die sites per wafer
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

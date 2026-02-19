@@ -1276,53 +1276,69 @@ const ELON_MiningBottleneckRenderer: React.FC<ELON_MiningBottleneckRendererProps
               padding: '16px',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <GanttChartVisualization />
-              </div>
-
-              {/* Permitting Speed slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Permitting Speed</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {permittingSpeed} years ({permittingSpeed <= 2 ? 'Fast-tracked' : permittingSpeed <= 4 ? 'Average' : 'Slow bureaucracy'})
-                  </span>
+              {/* Side by side layout: SVG left, controls right on desktop */}
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+                marginBottom: '20px',
+              }}>
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <GanttChartVisualization />
+                  </div>
                 </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="5"
-                  step="0.5"
-                  value={permittingSpeed}
-                  onChange={(e) => setPermittingSpeed(parseFloat(e.target.value))}
-                  onInput={(e) => setPermittingSpeed(parseFloat((e.target as HTMLInputElement).value))}
-                  aria-label="Permitting Speed"
-                  style={sliderStyle(colors.accent, permittingSpeed, 1, 5)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.success }}>1yr (fast-track)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>3yr (typical)</span>
-                  <span style={{ ...typo.small, color: colors.error }}>5yr (complex)</span>
-                </div>
-              </div>
 
-              {/* Toggle cash flow */}
-              <div style={{ marginBottom: '20px' }}>
-                <button
-                  onClick={() => setShowCashFlow(!showCashFlow)}
-                  style={{
-                    background: showCashFlow ? `${colors.accent}22` : colors.bgSecondary,
-                    border: `1px solid ${showCashFlow ? colors.accent : colors.border}`,
-                    borderRadius: '8px',
-                    padding: '8px 16px',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    minHeight: '44px',
-                  }}
-                >
-                  {showCashFlow ? 'Hide' : 'Show'} Cash Flow Curve
-                </button>
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Permitting Speed slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Permitting Speed</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {permittingSpeed} years ({permittingSpeed <= 2 ? 'Fast-tracked' : permittingSpeed <= 4 ? 'Average' : 'Slow bureaucracy'})
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="5"
+                      step="0.5"
+                      value={permittingSpeed}
+                      onChange={(e) => setPermittingSpeed(parseFloat(e.target.value))}
+                      onInput={(e) => setPermittingSpeed(parseFloat((e.target as HTMLInputElement).value))}
+                      aria-label="Permitting Speed"
+                      style={sliderStyle(colors.accent, permittingSpeed, 1, 5)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.success }}>1yr (fast-track)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>3yr (typical)</span>
+                      <span style={{ ...typo.small, color: colors.error }}>5yr (complex)</span>
+                    </div>
+                  </div>
+
+                  {/* Toggle cash flow */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <button
+                      onClick={() => setShowCashFlow(!showCashFlow)}
+                      style={{
+                        background: showCashFlow ? `${colors.accent}22` : colors.bgSecondary,
+                        border: `1px solid ${showCashFlow ? colors.accent : colors.border}`,
+                        borderRadius: '8px',
+                        padding: '8px 16px',
+                        color: colors.textPrimary,
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        minHeight: '44px',
+                      }}
+                    >
+                      {showCashFlow ? 'Hide' : 'Show'} Cash Flow Curve
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {/* Stats grid */}
@@ -1678,60 +1694,75 @@ const ELON_MiningBottleneckRenderer: React.FC<ELON_MiningBottleneckRendererProps
               padding: '16px',
               marginBottom: '20px',
             }}>
-              {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <TwistVisualization />
-              </div>
-
-              {/* Educational panel */}
-              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you&apos;re seeing:</strong> The comparison chart shows how a normal mine timeline stretches dramatically when the deposit sits on environmentally sensitive or indigenous land, adding years of mandatory consultation and potential court battles.</p>
-                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> As you increase the consultation period and court challenge duration with the sliders below, watch how the total project timeline and cancellation risk escalate — revealing why many sensitive-area mining projects are ultimately abandoned.</p>
-              </div>
-
-              {/* Consultation years slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Indigenous Consultation Period</span>
-                  <span style={{ ...typo.small, color: '#DC2626', fontWeight: 600 }}>{consultationYears} years</span>
+              {/* Side by side layout: SVG left, controls right on desktop */}
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+                marginBottom: '20px',
+              }}>
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <TwistVisualization />
+                  </div>
                 </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="10"
-                  step="1"
-                  value={consultationYears}
-                  onChange={(e) => setConsultationYears(parseInt(e.target.value))}
-                  onInput={(e) => setConsultationYears(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Consultation period"
-                  style={sliderStyle('#DC2626', consultationYears, 1, 10)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.success }}>1yr (cooperative)</span>
-                  <span style={{ ...typo.small, color: colors.error }}>10yr (contested)</span>
-                </div>
-              </div>
 
-              {/* Court challenge years slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Court Challenge Duration</span>
-                  <span style={{ ...typo.small, color: '#991B1B', fontWeight: 600 }}>{courtChallengeYears} years</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="8"
-                  step="1"
-                  value={courtChallengeYears}
-                  onChange={(e) => setCourtChallengeYears(parseInt(e.target.value))}
-                  onInput={(e) => setCourtChallengeYears(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Court challenge duration"
-                  style={sliderStyle('#991B1B', courtChallengeYears, 0, 8)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.success }}>0yr (no challenge)</span>
-                  <span style={{ ...typo.small, color: colors.error }}>8yr (Supreme Court)</span>
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Educational panel */}
+                  <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+                    <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you&apos;re seeing:</strong> The comparison chart shows how a normal mine timeline stretches dramatically when the deposit sits on environmentally sensitive or indigenous land, adding years of mandatory consultation and potential court battles.</p>
+                    <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> As you increase the consultation period and court challenge duration with the sliders below, watch how the total project timeline and cancellation risk escalate — revealing why many sensitive-area mining projects are ultimately abandoned.</p>
+                  </div>
+
+                  {/* Consultation years slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Indigenous Consultation Period</span>
+                      <span style={{ ...typo.small, color: '#DC2626', fontWeight: 600 }}>{consultationYears} years</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="10"
+                      step="1"
+                      value={consultationYears}
+                      onChange={(e) => setConsultationYears(parseInt(e.target.value))}
+                      onInput={(e) => setConsultationYears(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Consultation period"
+                      style={sliderStyle('#DC2626', consultationYears, 1, 10)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.success }}>1yr (cooperative)</span>
+                      <span style={{ ...typo.small, color: colors.error }}>10yr (contested)</span>
+                    </div>
+                  </div>
+
+                  {/* Court challenge years slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Court Challenge Duration</span>
+                      <span style={{ ...typo.small, color: '#991B1B', fontWeight: 600 }}>{courtChallengeYears} years</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="8"
+                      step="1"
+                      value={courtChallengeYears}
+                      onChange={(e) => setCourtChallengeYears(parseInt(e.target.value))}
+                      onInput={(e) => setCourtChallengeYears(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Court challenge duration"
+                      style={sliderStyle('#991B1B', courtChallengeYears, 0, 8)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.success }}>0yr (no challenge)</span>
+                      <span style={{ ...typo.small, color: colors.error }}>8yr (Supreme Court)</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 

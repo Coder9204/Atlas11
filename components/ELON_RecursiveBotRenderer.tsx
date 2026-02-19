@@ -1237,87 +1237,99 @@ const ELON_RecursiveBotRenderer: React.FC<ELON_RecursiveBotRendererProps> = ({ o
               Try adjusting the automation slider and observe how robot arms replace human workers on the assembly line. Notice how when you increase the automation level, the cost curve shifts downward at high volumes. When you increase annual volume, Wright&apos;s law leads to lower per-unit costs because each doubling of production yields a 15% cost reduction.
             </p>
 
-            {/* Main visualization */}
+            {/* Main visualization - side by side on desktop */}
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
               padding: '16px',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <AssemblyLineVisualization />
-              </div>
-
-              {/* Automation Level slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Automation Level</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {automationLevel}% {automationLevel > 80 ? '(Robots Build Robots)' : automationLevel > 50 ? '(Hybrid)' : '(Human Assembly)'}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="30"
-                  max="95"
-                  value={automationLevel}
-                  onChange={(e) => setAutomationLevel(parseInt(e.target.value))}
-                  onInput={(e) => setAutomationLevel(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Automation Level"
-                  style={sliderStyle(colors.accent, automationLevel, 30, 95)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.error }}>30% Human</span>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>60% Hybrid</span>
-                  <span style={{ ...typo.small, color: colors.success }}>95% Recursive</span>
-                </div>
-              </div>
-
-              {/* Annual Volume slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Annual Production Volume</span>
-                  <span style={{ ...typo.small, color: colors.factory, fontWeight: 600 }}>
-                    {annualVolume.toLocaleString()} units/year
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="100"
-                  max="100000"
-                  step="100"
-                  value={annualVolume}
-                  onChange={(e) => setAnnualVolume(parseInt(e.target.value))}
-                  onInput={(e) => setAnnualVolume(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Annual Volume"
-                  style={sliderStyle(colors.factory, annualVolume, 100, 100000)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.error }}>100/yr</span>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>10K/yr</span>
-                  <span style={{ ...typo.small, color: colors.success }}>100K/yr</span>
-                </div>
-              </div>
-
-              {/* Stats grid */}
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
               }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>${unitCost.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Cost / Unit</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.success }}>${(setupCost / 1000000).toFixed(1)}M</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Setup Cost</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: unitCost < 20000 ? colors.success : colors.warning }}>
-                    {breakEven > 999999 ? '∞' : breakEven.toLocaleString()}
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <AssemblyLineVisualization />
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Break-even Vol</div>
+                </div>
+
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Automation Level slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Automation Rate</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {automationLevel}% {automationLevel > 80 ? '(Robots Build Robots)' : automationLevel > 50 ? '(Hybrid)' : '(Human Assembly)'}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="30"
+                      max="95"
+                      value={automationLevel}
+                      onChange={(e) => setAutomationLevel(parseInt(e.target.value))}
+                      onInput={(e) => setAutomationLevel(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Automation Level"
+                      style={sliderStyle(colors.accent, automationLevel, 30, 95)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.error }}>30% Human</span>
+                      <span style={{ ...typo.small, color: colors.success }}>95% Recursive</span>
+                    </div>
+                  </div>
+
+                  {/* Annual Volume slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Annual Production Volume</span>
+                      <span style={{ ...typo.small, color: colors.factory, fontWeight: 600 }}>
+                        {annualVolume.toLocaleString()} units/year
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="100"
+                      max="100000"
+                      step="100"
+                      value={annualVolume}
+                      onChange={(e) => setAnnualVolume(parseInt(e.target.value))}
+                      onInput={(e) => setAnnualVolume(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Annual Volume"
+                      style={sliderStyle(colors.factory, annualVolume, 100, 100000)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.error }}>100/yr</span>
+                      <span style={{ ...typo.small, color: colors.success }}>100K/yr</span>
+                    </div>
+                  </div>
+
+                  {/* Stats grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '8px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>${unitCost.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Cost / Unit</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.success }}>${(setupCost / 1000000).toFixed(1)}M</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Setup Cost</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: unitCost < 20000 ? colors.success : colors.warning }}>
+                        {breakEven > 999999 ? '∞' : breakEven.toLocaleString()}
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Break-even Vol</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1661,77 +1673,91 @@ const ELON_RecursiveBotRenderer: React.FC<ELON_RecursiveBotRendererProps> = ({ o
               See how going from 100 to 100,000 units/year transforms which automation investments become viable
             </p>
 
+            {/* Twist visualization - side by side on desktop */}
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
               padding: '16px',
               marginBottom: '20px',
             }}>
-              {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <VolumeImpactVisualization />
-              </div>
-
-              {/* Educational panel */}
-              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you are seeing:</strong> This bar chart shows how the cost per robot unit drops dramatically as annual production volume increases, following Wright's law. Higher volumes spread fixed automation costs across more units.</p>
-                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you increase the automation level slider, the break-even volume shifts and per-unit costs change at each volume tier, revealing when heavy automation investment becomes worthwhile.</p>
-              </div>
-
-              {/* Automation level slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Automation Level</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{automationLevel}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="30"
-                  max="95"
-                  value={automationLevel}
-                  onChange={(e) => setAutomationLevel(parseInt(e.target.value))}
-                  onInput={(e) => setAutomationLevel(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Automation level"
-                  style={sliderStyle(colors.accent, automationLevel, 30, 95)}
-                />
-              </div>
-
-              {/* Comparison grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-                <div style={{ background: `${colors.error}11`, borderRadius: '12px', padding: '16px', textAlign: 'center', border: `1px solid ${colors.error}33` }}>
-                  <div style={{ ...typo.small, color: colors.error, marginBottom: '4px', fontWeight: 600 }}>At 100 units/yr</div>
-                  <div style={{ ...typo.h3, color: colors.textPrimary }}>${costAt100.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/unit</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Setup adds ${setupPerUnitAt100.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/unit</div>
-                </div>
-                <div style={{ background: `${colors.success}11`, borderRadius: '12px', padding: '16px', textAlign: 'center', border: `1px solid ${colors.success}33` }}>
-                  <div style={{ ...typo.small, color: colors.success, marginBottom: '4px', fontWeight: 600 }}>At 100,000 units/yr</div>
-                  <div style={{ ...typo.h3, color: colors.textPrimary }}>${costAt100K.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/unit</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Setup adds ${setupPerUnitAt100K.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/unit</div>
-                </div>
-              </div>
-
-              {/* Cost reduction highlight */}
               <div style={{
-                background: costReduction > 70 ? `${colors.success}22` : `${colors.warning}22`,
-                border: `1px solid ${costReduction > 70 ? colors.success : colors.warning}`,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
               }}>
-                <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
-                  Cost reduction from volume scaling:
-                </p>
-                <div style={{
-                  ...typo.h2,
-                  color: costReduction > 70 ? colors.success : colors.warning
-                }}>
-                  {costReduction.toFixed(0)}% cheaper
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <VolumeImpactVisualization />
+                  </div>
+
+                  {/* Educational panel */}
+                  <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginTop: '16px' }}>
+                    <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you are seeing:</strong> This bar chart shows how the cost per robot unit drops dramatically as annual production volume increases, following Wright's law. Higher volumes spread fixed automation costs across more units.</p>
+                    <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you increase the automation level slider, the break-even volume shifts and per-unit costs change at each volume tier, revealing when heavy automation investment becomes worthwhile.</p>
+                  </div>
                 </div>
-                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-                  {annualVolume >= breakEven
-                    ? 'Automation investment has paid off at this volume!'
-                    : `Need ${breakEven.toLocaleString()} units to break even on automation.`}
-                </p>
+
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Automation level slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Automation Level</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{automationLevel}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="30"
+                      max="95"
+                      value={automationLevel}
+                      onChange={(e) => setAutomationLevel(parseInt(e.target.value))}
+                      onInput={(e) => setAutomationLevel(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Automation level"
+                      style={sliderStyle(colors.accent, automationLevel, 30, 95)}
+                    />
+                  </div>
+
+                  {/* Comparison grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+                    <div style={{ background: `${colors.error}11`, borderRadius: '12px', padding: '12px', textAlign: 'center', border: `1px solid ${colors.error}33` }}>
+                      <div style={{ ...typo.small, color: colors.error, marginBottom: '4px', fontWeight: 600 }}>At 100 units/yr</div>
+                      <div style={{ ...typo.h3, color: colors.textPrimary }}>${costAt100.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/unit</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Setup adds ${setupPerUnitAt100.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/unit</div>
+                    </div>
+                    <div style={{ background: `${colors.success}11`, borderRadius: '12px', padding: '12px', textAlign: 'center', border: `1px solid ${colors.success}33` }}>
+                      <div style={{ ...typo.small, color: colors.success, marginBottom: '4px', fontWeight: 600 }}>At 100,000 units/yr</div>
+                      <div style={{ ...typo.h3, color: colors.textPrimary }}>${costAt100K.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/unit</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Setup adds ${setupPerUnitAt100K.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/unit</div>
+                    </div>
+                  </div>
+
+                  {/* Cost reduction highlight */}
+                  <div style={{
+                    background: costReduction > 70 ? `${colors.success}22` : `${colors.warning}22`,
+                    border: `1px solid ${costReduction > 70 ? colors.success : colors.warning}`,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
+                      Cost reduction from volume scaling:
+                    </p>
+                    <div style={{
+                      ...typo.h2,
+                      color: costReduction > 70 ? colors.success : colors.warning
+                    }}>
+                      {costReduction.toFixed(0)}% cheaper
+                    </div>
+                    <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+                      {annualVolume >= breakEven
+                        ? 'Automation investment has paid off at this volume!'
+                        : `Need ${breakEven.toLocaleString()} units to break even on automation.`}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

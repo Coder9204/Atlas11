@@ -1251,91 +1251,111 @@ const ELON_ConstraintCascadeRenderer: React.FC<ConstraintCascadeRendererProps> =
               Formula: Cascade Depth = `log(N) × Connectivity` where N = number of variables. The relationship is proportional: tighter constraints produce deeper cascades.
             </p>
 
-            {/* Main visualization */}
+            {/* Main visualization - side by side on desktop */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <CascadeVisualization constraintIdx={selectedConstraint} tightness={constraintTightness} />
-              </div>
-
-              {/* Constraint type selector */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Constraint Type</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {currentConstraint.name} ({currentConstraint.nodes.length} variables)
-                  </span>
-                </div>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {constraintTypes.map((ct, i) => (
-                    <button
-                      key={ct.name}
-                      onClick={() => { playSound('click'); setSelectedConstraint(i); }}
-                      style={{
-                        padding: '8px 16px',
-                        borderRadius: '8px',
-                        border: selectedConstraint === i ? `2px solid ${ct.color}` : `1px solid ${colors.border}`,
-                        background: selectedConstraint === i ? `${ct.color}22` : colors.bgSecondary,
-                        color: colors.textPrimary,
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        minHeight: '44px',
-                      }}
-                    >
-                      {ct.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Constraint tightness slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Constraint Tightness</span>
-                  <span style={{ ...typo.small, color: constraintTightness > 50 ? colors.hot : colors.cold, fontWeight: 600 }}>
-                    {constraintTightness}% ({constraintTightness > 70 ? 'Very Tight' : constraintTightness > 40 ? 'Moderate' : 'Loose'})
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="100"
-                  value={constraintTightness}
-                  onChange={(e) => setConstraintTightness(parseInt(e.target.value))}
-                  onInput={(e) => setConstraintTightness(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Constraint Tightness"
-                  style={sliderStyle(colors.accent, constraintTightness, 1, 100)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.cold }}>1% Loose</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>50% Moderate</span>
-                  <span style={{ ...typo.small, color: colors.hot }}>100% Maximum</span>
-                </div>
-              </div>
-
-              {/* Stats grid */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{cascadeDepth}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Cascade Depth</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.success }}>{affectedNodes}/{currentConstraint.nodes.length}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Nodes Affected</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: constraintTightness > 50 ? colors.hot : colors.cold }}>
-                    {constraintTightness}%
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <CascadeVisualization constraintIdx={selectedConstraint} tightness={constraintTightness} />
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Tightness</div>
+                </div>
+              </div>
+
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Constraint type selector */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Constraint Type</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {currentConstraint.name} ({currentConstraint.nodes.length} variables)
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {constraintTypes.map((ct, i) => (
+                        <button
+                          key={ct.name}
+                          onClick={() => { playSound('click'); setSelectedConstraint(i); }}
+                          style={{
+                            padding: '8px 16px',
+                            borderRadius: '8px',
+                            border: selectedConstraint === i ? `2px solid ${ct.color}` : `1px solid ${colors.border}`,
+                            background: selectedConstraint === i ? `${ct.color}22` : colors.bgSecondary,
+                            color: colors.textPrimary,
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            minHeight: '44px',
+                          }}
+                        >
+                          {ct.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Constraint tightness slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Constraint Tightness</span>
+                      <span style={{ ...typo.small, color: constraintTightness > 50 ? colors.hot : colors.cold, fontWeight: 600 }}>
+                        {constraintTightness}% ({constraintTightness > 70 ? 'Very Tight' : constraintTightness > 40 ? 'Moderate' : 'Loose'})
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="100"
+                      value={constraintTightness}
+                      onChange={(e) => setConstraintTightness(parseInt(e.target.value))}
+                      onInput={(e) => setConstraintTightness(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Constraint Tightness"
+                      style={sliderStyle(colors.accent, constraintTightness, 1, 100)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.cold }}>1% Loose</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>50% Moderate</span>
+                      <span style={{ ...typo.small, color: colors.hot }}>100% Maximum</span>
+                    </div>
+                  </div>
+
+                  {/* Stats grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '12px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>{cascadeDepth}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Cascade Depth</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.success }}>{affectedNodes}/{currentConstraint.nodes.length}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Nodes Affected</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: constraintTightness > 50 ? colors.hot : colors.cold }}>
+                        {constraintTightness}%
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Tightness</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1699,107 +1719,127 @@ const ELON_ConstraintCascadeRenderer: React.FC<ConstraintCascadeRendererProps> =
               </p>
             </div>
 
+            {/* Side-by-side layout on desktop */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <TwistCascadeVisualization />
-              </div>
-
-              {/* Constraint type selector */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Primary Constraint</span>
-                  <span style={{ ...typo.small, color: constraintTypes[twistConstraintType].color, fontWeight: 600 }}>
-                    {constraintTypes[twistConstraintType].name}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {constraintTypes.map((ct, i) => (
-                    <button
-                      key={ct.name}
-                      onClick={() => { playSound('click'); setTwistConstraintType(i); }}
-                      style={{
-                        padding: '10px 20px',
-                        borderRadius: '8px',
-                        border: twistConstraintType === i ? `2px solid ${ct.color}` : `1px solid ${colors.border}`,
-                        background: twistConstraintType === i ? `${ct.color}22` : colors.bgSecondary,
-                        color: colors.textPrimary,
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: twistConstraintType === i ? 700 : 400,
-                        minHeight: '44px',
-                      }}
-                    >
-                      {ct.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Description of current constraint type */}
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                marginBottom: '20px',
-                borderLeft: `4px solid ${constraintTypes[twistConstraintType].color}`,
-              }}>
-                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                  <strong style={{ color: constraintTypes[twistConstraintType].color }}>
-                    {constraintTypes[twistConstraintType].name} Constraint:
-                  </strong>{' '}
-                  {constraintTypes[twistConstraintType].description}. The cascade flows through{' '}
-                  {constraintTypes[twistConstraintType].nodes.join(' \u2192 ')}.
-                </p>
-              </div>
-
-              {/* Comparison grid */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-                marginBottom: '20px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: constraintTypes[twistConstraintType].color }}>
-                    {constraintTypes[twistConstraintType].nodes.length}
-                  </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Total Variables</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>
-                    {constraintTypes[twistConstraintType].edges.length}
-                  </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Dependencies</div>
-                </div>
-              </div>
-
-              {/* Key insight */}
-              <div style={{
-                background: `${colors.warning}22`,
-                border: `1px solid ${colors.warning}`,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
-                  Key Insight:
-                </p>
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                 <div style={{
-                  ...typo.body,
-                  color: colors.warning,
-                  fontWeight: 600,
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
                 }}>
-                  Switching the primary constraint completely reshapes the dependency tree
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <TwistCascadeVisualization />
+                  </div>
                 </div>
-                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-                  Different root constraints activate different cascade paths and critical nodes
-                </p>
+              </div>
+
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Constraint type selector */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Primary Constraint</span>
+                      <span style={{ ...typo.small, color: constraintTypes[twistConstraintType].color, fontWeight: 600 }}>
+                        {constraintTypes[twistConstraintType].name}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {constraintTypes.map((ct, i) => (
+                        <button
+                          key={ct.name}
+                          onClick={() => { playSound('click'); setTwistConstraintType(i); }}
+                          style={{
+                            padding: '10px 20px',
+                            borderRadius: '8px',
+                            border: twistConstraintType === i ? `2px solid ${ct.color}` : `1px solid ${colors.border}`,
+                            background: twistConstraintType === i ? `${ct.color}22` : colors.bgSecondary,
+                            color: colors.textPrimary,
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            fontWeight: twistConstraintType === i ? 700 : 400,
+                            minHeight: '44px',
+                          }}
+                        >
+                          {ct.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Description of current constraint type */}
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    marginBottom: '20px',
+                    borderLeft: `4px solid ${constraintTypes[twistConstraintType].color}`,
+                  }}>
+                    <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                      <strong style={{ color: constraintTypes[twistConstraintType].color }}>
+                        {constraintTypes[twistConstraintType].name} Constraint:
+                      </strong>{' '}
+                      {constraintTypes[twistConstraintType].description}. The cascade flows through{' '}
+                      {constraintTypes[twistConstraintType].nodes.join(' \u2192 ')}.
+                    </p>
+                  </div>
+
+                  {/* Comparison grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px',
+                    marginBottom: '20px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: constraintTypes[twistConstraintType].color }}>
+                        {constraintTypes[twistConstraintType].nodes.length}
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Total Variables</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>
+                        {constraintTypes[twistConstraintType].edges.length}
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Dependencies</div>
+                    </div>
+                  </div>
+
+                  {/* Key insight */}
+                  <div style={{
+                    background: `${colors.warning}22`,
+                    border: `1px solid ${colors.warning}`,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
+                      Key Insight:
+                    </p>
+                    <div style={{
+                      ...typo.body,
+                      color: colors.warning,
+                      fontWeight: 600,
+                    }}>
+                      Switching the primary constraint completely reshapes the dependency tree
+                    </div>
+                    <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+                      Different root constraints activate different cascade paths and critical nodes
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

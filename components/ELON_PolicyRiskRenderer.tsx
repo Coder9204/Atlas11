@@ -1159,93 +1159,107 @@ const ELON_PolicyRiskRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =>
               padding: '16px',
               marginBottom: '20px',
             }}>
-              {/* SVG Decision Tree */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <DecisionTreeVisualization />
-              </div>
-
-              {/* Policy Stability Index slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Policy Stability Rate (Reversal Frequency Coefficient)</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{stabilityIndex}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="1"
-                  value={stabilityIndex}
-                  onChange={(e) => setStabilityIndex(parseInt(e.target.value))}
-                  onInput={(e) => setStabilityIndex(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Policy Stability Index"
-                  style={sliderStyle(colors.accent, stabilityIndex, 0, 100)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.hostile }}>Volatile (50% reversal)</span>
-                  <span style={{ ...typo.small, color: colors.favorable }}>Stable (bipartisan)</span>
-                </div>
-              </div>
-
-              {/* Results grid */}
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-                marginBottom: '20px',
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
               }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>${adjustedNPV.toFixed(1)}M</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Risk-Adjusted NPV</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.warning }}>${expectedValue.toFixed(1)}M</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Scenario Expected Value</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.hostile }}>+{discountPremium}%</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Policy Risk Premium</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.favorable }}>{(100 - (adjustedNPV / baseProjectNPV) * 100).toFixed(0)}%</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>NPV Reduction</div>
-                </div>
-              </div>
-
-              {/* Formula */}
-              <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px 16px', marginBottom: '12px' }}>
-                <p style={{ ...typo.small, color: colors.textSecondary, fontWeight: 600 }}>NPV Equation:</p>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>
-                  NPV = Sum[CF x Survival] / (1+r+rho)^n = {adjustedNPV.toFixed(1)}M
-                </p>
-                <p style={{ ...typo.small, color: colors.textMuted }}>
-                  r=8% base rate, premium={discountPremium}%, reversal rate = {((1-stabilityIndex/100)*50).toFixed(1)}%/yr
-                </p>
-              </div>
-              {/* Scenario breakdown table */}
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-              }}>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>Scenario Breakdown</h3>
-                {scenarios.map(sc => (
-                  <div key={sc.name} style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '8px 0',
-                    borderBottom: `1px solid ${colors.border}`,
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: sc.color }} />
-                      <span style={{ ...typo.small, color: colors.textPrimary }}>{sc.name}</span>
-                    </div>
-                    <span style={{ ...typo.small, color: sc.color, fontWeight: 600 }}>
-                      {(sc.probability * 100).toFixed(0)}% &#x2192; ${(sc.npvMultiplier * baseProjectNPV).toFixed(0)}M
-                    </span>
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  {/* SVG Decision Tree */}
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <DecisionTreeVisualization />
                   </div>
-                ))}
+                </div>
+
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Policy Stability Index slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Policy Stability Rate (Reversal Frequency Coefficient)</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{stabilityIndex}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={stabilityIndex}
+                      onChange={(e) => setStabilityIndex(parseInt(e.target.value))}
+                      onInput={(e) => setStabilityIndex(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Policy Stability Index"
+                      style={sliderStyle(colors.accent, stabilityIndex, 0, 100)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.hostile }}>Volatile (50% reversal)</span>
+                      <span style={{ ...typo.small, color: colors.favorable }}>Stable (bipartisan)</span>
+                    </div>
+                  </div>
+
+                  {/* Results grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px',
+                    marginBottom: '20px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>${adjustedNPV.toFixed(1)}M</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Risk-Adjusted NPV</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.warning }}>${expectedValue.toFixed(1)}M</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Scenario Expected Value</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.hostile }}>+{discountPremium}%</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Policy Risk Premium</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.favorable }}>{(100 - (adjustedNPV / baseProjectNPV) * 100).toFixed(0)}%</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>NPV Reduction</div>
+                    </div>
+                  </div>
+
+                  {/* Formula */}
+                  <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px 16px', marginBottom: '12px' }}>
+                    <p style={{ ...typo.small, color: colors.textSecondary, fontWeight: 600 }}>NPV Equation:</p>
+                    <p style={{ ...typo.small, color: colors.textPrimary }}>
+                      NPV = Sum[CF x Survival] / (1+r+rho)^n = {adjustedNPV.toFixed(1)}M
+                    </p>
+                    <p style={{ ...typo.small, color: colors.textMuted }}>
+                      r=8% base rate, premium={discountPremium}%, reversal rate = {((1-stabilityIndex/100)*50).toFixed(1)}%/yr
+                    </p>
+                  </div>
+                  {/* Scenario breakdown table */}
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                  }}>
+                    <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>Scenario Breakdown</h3>
+                    {scenarios.map(sc => (
+                      <div key={sc.name} style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '8px 0',
+                        borderBottom: `1px solid ${colors.border}`,
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: sc.color }} />
+                          <span style={{ ...typo.small, color: colors.textPrimary }}>{sc.name}</span>
+                        </div>
+                        <span style={{ ...typo.small, color: sc.color, fontWeight: 600 }}>
+                          {(sc.probability * 100).toFixed(0)}% &#x2192; ${(sc.npvMultiplier * baseProjectNPV).toFixed(0)}M
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1583,11 +1597,23 @@ const ELON_PolicyRiskRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =>
               padding: '16px',
               marginBottom: '20px',
             }}>
-              {/* Election SVG */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <ElectionEventVisualization />
-              </div>
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+              }}>
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  {/* Election SVG */}
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <ElectionEventVisualization />
+                  </div>
+                </div>
 
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
               {/* Educational panel */}
               <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
                 <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you&apos;re seeing:</strong> The visualization compares policy scenario probabilities and expected project values before and after an election event, showing how a regime change redistributes risk across favorable, neutral, hostile, and reversal outcomes.</p>
@@ -1662,6 +1688,8 @@ const ELON_PolicyRiskRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =>
                   </div>
                 </div>
               )}
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -1001,7 +1001,7 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
               Adjust the total budget and observe how subsystem allocations change. Watch the site plan update in real-time. When you increase the budget, more power capacity becomes available because each subsystem allocation scales proportionally. Total campus power is calculated as P = DC_Power × PUE + Manufacturing_Baseload. Self-sufficiency is defined as the ratio of on-site generation to total consumption. Higher budgets result in greater solar overcapacity, which leads to improved energy independence.
             </p>
 
-            {/* Total Budget Slider */}
+            {/* Side by side layout: SVG left, controls right on desktop */}
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
@@ -1009,40 +1009,54 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
               marginBottom: '20px',
               border: `1px solid ${colors.border}`,
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <span style={{ ...typo.h3, color: colors.accent }}>Total Budget</span>
-                <span style={{ ...typo.h2, color: colors.textPrimary }}>${totalBudget}B</span>
-              </div>
-              <input
-                type="range"
-                min={2}
-                max={20}
-                step={0.5}
-                value={totalBudget}
-                onChange={(e) => {
-                  const val = parseFloat(e.target.value);
-                  setTotalBudget(val);
-                  if (onGameEvent) {
-                    onGameEvent({
-                      eventType: 'slider_changed',
-                      gameType: 'gigawatt-blueprint',
-                      gameTitle: 'Gigawatt Blueprint',
-                      details: { totalBudget: val },
-                      timestamp: Date.now()
-                    });
-                  }
-                }}
-                style={sliderStyle(colors.accent, totalBudget, 2, 20)}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>$2B (Minimal)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>$20B (Maximum)</span>
-              </div>
-            </div>
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+              }}>
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ maxHeight: '50vh', overflow: 'hidden' }}>
+                    <SitePlanVisualization />
+                  </div>
+                </div>
 
-            {/* SVG Visualization */}
-            <div style={{ marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-              <SitePlanVisualization />
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Total Budget Slider */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <span style={{ ...typo.h3, color: colors.accent }}>Total Budget</span>
+                    <span style={{ ...typo.h2, color: colors.textPrimary }}>${totalBudget}B</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={2}
+                    max={20}
+                    step={0.5}
+                    value={totalBudget}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      setTotalBudget(val);
+                      if (onGameEvent) {
+                        onGameEvent({
+                          eventType: 'slider_changed',
+                          gameType: 'gigawatt-blueprint',
+                          gameTitle: 'Gigawatt Blueprint',
+                          details: { totalBudget: val },
+                          timestamp: Date.now()
+                        });
+                      }
+                    }}
+                    style={sliderStyle(colors.accent, totalBudget, 2, 20)}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>$2B (Minimal)</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>$20B (Maximum)</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Subsystem Breakdown */}
@@ -1435,7 +1449,7 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
               <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you switch to a tropical site, the higher PUE (1.4 vs 1.1) increases cooling overhead by 30%, which raises total campus power demand and reduces effective compute capacity -- requiring more solar and storage to maintain self-sufficiency.</p>
             </div>
 
-            {/* Tropical toggle */}
+            {/* Side by side layout: SVG left, controls right on desktop */}
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
@@ -1443,69 +1457,82 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
               marginBottom: '20px',
               border: `1px solid ${tropicalLocation ? colors.error : colors.border}`,
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <span style={{ ...typo.h3, color: tropicalLocation ? colors.error : colors.textPrimary }}>
-                  {tropicalLocation ? 'Tropical Developing Nation (32C, 85% humidity)' : 'Temperate US Location (18C)'}
-                </span>
-                <button
-                  onClick={() => {
-                    setTropicalLocation(!tropicalLocation);
-                    playSound('click');
-                    if (onGameEvent) {
-                      onGameEvent({
-                        eventType: 'value_changed',
-                        gameType: 'gigawatt-blueprint',
-                        gameTitle: 'Gigawatt Blueprint',
-                        details: { tropicalLocation: !tropicalLocation },
-                        timestamp: Date.now()
-                      });
-                    }
-                  }}
-                  style={{
-                    background: tropicalLocation ? colors.error : colors.border,
-                    border: 'none',
-                    borderRadius: '20px',
-                    width: '56px',
-                    height: '28px',
-                    cursor: 'pointer',
-                    position: 'relative' as const,
-                    transition: 'all 0.3s ease',
-                  }}
-                >
-                  <div style={{
-                    width: '22px',
-                    height: '22px',
-                    borderRadius: '50%',
-                    background: 'white',
-                    position: 'absolute' as const,
-                    top: '3px',
-                    left: tropicalLocation ? '31px' : '3px',
-                    transition: 'left 0.3s ease',
-                  }} />
-                </button>
-              </div>
-
-              {/* Budget slider stays available */}
-              <div style={{ marginBottom: '16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.accent }}>Total Budget</span>
-                  <span style={{ ...typo.h3, color: colors.textPrimary }}>${totalBudget}B</span>
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+              }}>
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ maxHeight: '50vh', overflow: 'hidden' }}>
+                    <SitePlanVisualization showTropical={true} />
+                  </div>
                 </div>
-                <input
-                  type="range"
-                  min={2}
-                  max={20}
-                  step={0.5}
-                  value={totalBudget}
-                  onChange={(e) => setTotalBudget(parseFloat(e.target.value))}
-                  style={sliderStyle(colors.accent, totalBudget, 2, 20)}
-                />
-              </div>
-            </div>
 
-            {/* SVG with tropical flag */}
-            <div style={{ marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-              <SitePlanVisualization showTropical={true} />
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <span style={{ ...typo.h3, color: tropicalLocation ? colors.error : colors.textPrimary }}>
+                      {tropicalLocation ? 'Tropical Developing Nation (32C, 85% humidity)' : 'Temperate US Location (18C)'}
+                    </span>
+                    <button
+                      onClick={() => {
+                        setTropicalLocation(!tropicalLocation);
+                        playSound('click');
+                        if (onGameEvent) {
+                          onGameEvent({
+                            eventType: 'value_changed',
+                            gameType: 'gigawatt-blueprint',
+                            gameTitle: 'Gigawatt Blueprint',
+                            details: { tropicalLocation: !tropicalLocation },
+                            timestamp: Date.now()
+                          });
+                        }
+                      }}
+                      style={{
+                        background: tropicalLocation ? colors.error : colors.border,
+                        border: 'none',
+                        borderRadius: '20px',
+                        width: '56px',
+                        height: '28px',
+                        cursor: 'pointer',
+                        position: 'relative' as const,
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      <div style={{
+                        width: '22px',
+                        height: '22px',
+                        borderRadius: '50%',
+                        background: 'white',
+                        position: 'absolute' as const,
+                        top: '3px',
+                        left: tropicalLocation ? '31px' : '3px',
+                        transition: 'left 0.3s ease',
+                      }} />
+                    </button>
+                  </div>
+
+                  {/* Budget slider stays available */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.accent }}>Total Budget</span>
+                      <span style={{ ...typo.h3, color: colors.textPrimary }}>${totalBudget}B</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={2}
+                      max={20}
+                      step={0.5}
+                      value={totalBudget}
+                      onChange={(e) => setTotalBudget(parseFloat(e.target.value))}
+                      style={sliderStyle(colors.accent, totalBudget, 2, 20)}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Side-by-side comparison */}

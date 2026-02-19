@@ -1291,70 +1291,90 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
               This visualization shows a factory floor from above with 5 stations in sequence. Watch how units flow through and where queues build up. Adjust the bottleneck speed slider to see how it affects the entire line's throughput.
             </p>
 
-            {/* Main visualization */}
+            {/* Main visualization - side by side on desktop */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <FactoryFloorVisualization />
-              </div>
-
-              {/* Bottleneck speed slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Bottleneck Station Speed (S3)</span>
-                  <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>
-                    {bottleneckSpeed} units/hr
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="10"
-                  max="100"
-                  value={bottleneckSpeed}
-                  onChange={(e) => {
-                    setBottleneckSpeed(parseInt(e.target.value));
-                    setWipCounts([0, 0, 0, 0, 0]);
-                    setUnitsProduced(0);
-                    setSimTime(0);
-                  }}
-                  onInput={(e) => {
-                    setBottleneckSpeed(parseInt((e.target as HTMLInputElement).value));
-                  }}
-                  aria-label="Bottleneck Station Speed"
-                  style={sliderStyle(colors.error, bottleneckSpeed, 10, 100)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.error }}>10 u/hr (severe)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>50 (default)</span>
-                  <span style={{ ...typo.small, color: colors.success }}>100 u/hr (balanced)</span>
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <FactoryFloorVisualization />
+                  </div>
                 </div>
               </div>
 
-              {/* Stats grid */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{lineThoughput} u/hr</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Line Throughput</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.cold }}>
-                    {bottleneckSpeed < 100 ? ((100 - bottleneckSpeed)).toFixed(0) : '0'}%
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Bottleneck speed slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Bottleneck Station Speed (S3)</span>
+                      <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>
+                        {bottleneckSpeed} units/hr
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="10"
+                      max="100"
+                      value={bottleneckSpeed}
+                      onChange={(e) => {
+                        setBottleneckSpeed(parseInt(e.target.value));
+                        setWipCounts([0, 0, 0, 0, 0]);
+                        setUnitsProduced(0);
+                        setSimTime(0);
+                      }}
+                      onInput={(e) => {
+                        setBottleneckSpeed(parseInt((e.target as HTMLInputElement).value));
+                      }}
+                      aria-label="Bottleneck Station Speed"
+                      style={sliderStyle(colors.error, bottleneckSpeed, 10, 100)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.error }}>10 u/hr (severe)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>50 (default)</span>
+                      <span style={{ ...typo.small, color: colors.success }}>100 u/hr (balanced)</span>
+                    </div>
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Capacity Lost</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: bottleneckSpeed >= 100 ? colors.success : colors.error }}>
-                    {bottleneckSpeed >= 100 ? 'Balanced' : 'Constrained'}
+
+                  {/* Stats grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '12px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>{lineThoughput} u/hr</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Line Throughput</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.cold }}>
+                        {bottleneckSpeed < 100 ? ((100 - bottleneckSpeed)).toFixed(0) : '0'}%
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Capacity Lost</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: bottleneckSpeed >= 100 ? colors.success : colors.error }}>
+                        {bottleneckSpeed >= 100 ? 'Balanced' : 'Constrained'}
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Line Status</div>
+                    </div>
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Line Status</div>
                 </div>
               </div>
             </div>
@@ -1701,111 +1721,132 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
               See how variability and utilization interact to create the "hockey stick" queue explosion
             </p>
 
+            {/* Side-by-side layout on desktop */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <VariabilityVisualization />
-              </div>
-
-              {/* Educational panel */}
-              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The hockey stick curve shows how queue time explodes as utilization approaches 100%. Higher variability (CV) shifts the curve upward, meaning queues grow even faster.</p>
-                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you increase utilization or CV with the sliders, watch the marker climb the curve -- small changes near 90%+ utilization cause massive queue time increases, revealing why factories must leave capacity slack.</p>
-              </div>
-
-              {/* Utilization slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Utilization</span>
-                  <span style={{ ...typo.small, color: utilizationPct > 85 ? colors.error : colors.accent, fontWeight: 600 }}>
-                    {utilizationPct}%
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="10"
-                  max="98"
-                  value={utilizationPct}
-                  onChange={(e) => setUtilizationPct(parseInt(e.target.value))}
-                  onInput={(e) => setUtilizationPct(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Utilization percentage"
-                  style={sliderStyle(colors.accent, utilizationPct, 10, 98)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.success }}>10% (idle)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>~80% (typical)</span>
-                  <span style={{ ...typo.small, color: colors.error }}>98% (overloaded)</span>
-                </div>
-              </div>
-
-              {/* Variability (CV) slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Coefficient of Variation (CV)</span>
-                  <span style={{ ...typo.small, color: variabilityCV > 0.8 ? colors.error : colors.cold, fontWeight: 600 }}>
-                    {variabilityCV.toFixed(2)}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="5"
-                  max="200"
-                  value={variabilityCV * 100}
-                  onChange={(e) => setVariabilityCV(parseInt(e.target.value) / 100)}
-                  onInput={(e) => setVariabilityCV(parseInt((e.target as HTMLInputElement).value) / 100)}
-                  aria-label="Coefficient of variation"
-                  style={sliderStyle(colors.cold, variabilityCV * 100, 5, 200)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.success }}>0.05 (robotic)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>0.50 (moderate)</span>
-                  <span style={{ ...typo.small, color: colors.error }}>2.0 (chaotic)</span>
-                </div>
-              </div>
-
-              {/* Results */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-                marginBottom: '20px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{Math.min(highCVQueueTime, 999).toFixed(1)} min</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Queue Time (current CV)</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.cold }}>{lowCVQueueTime.toFixed(1)} min</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Queue Time (low CV=0.2)</div>
-                </div>
-              </div>
-
-              {/* Impact warning */}
-              <div style={{
-                background: highCVQueueTime > 50 ? `${colors.error}22` : `${colors.warning}22`,
-                border: `1px solid ${highCVQueueTime > 50 ? colors.error : colors.warning}`,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
-                  Variability multiplier at current settings:
-                </p>
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                 <div style={{
-                  ...typo.h2,
-                  color: queueRatio > 5 ? colors.error : colors.warning
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                  marginBottom: '12px',
                 }}>
-                  {queueRatio.toFixed(1)}x longer queues
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <VariabilityVisualization />
+                  </div>
                 </div>
-                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-                  vs. a low-variability (CV=0.2) factory at the same utilization
-                  {queueRatio > 10 && ' -- VARIABILITY IS DESTROYING THROUGHPUT!'}
-                </p>
+
+                {/* Educational panel */}
+                <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px' }}>
+                  <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The hockey stick curve shows how queue time explodes as utilization approaches 100%. Higher variability (CV) shifts the curve upward, meaning queues grow even faster.</p>
+                  <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you increase utilization or CV with the sliders, watch the marker climb the curve -- small changes near 90%+ utilization cause massive queue time increases, revealing why factories must leave capacity slack.</p>
+                </div>
+              </div>
+
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Utilization slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Utilization</span>
+                      <span style={{ ...typo.small, color: utilizationPct > 85 ? colors.error : colors.accent, fontWeight: 600 }}>
+                        {utilizationPct}%
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="10"
+                      max="98"
+                      value={utilizationPct}
+                      onChange={(e) => setUtilizationPct(parseInt(e.target.value))}
+                      onInput={(e) => setUtilizationPct(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Utilization percentage"
+                      style={sliderStyle(colors.accent, utilizationPct, 10, 98)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.success }}>10% (idle)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>~80% (typical)</span>
+                      <span style={{ ...typo.small, color: colors.error }}>98% (overloaded)</span>
+                    </div>
+                  </div>
+
+                  {/* Variability (CV) slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Coefficient of Variation (CV)</span>
+                      <span style={{ ...typo.small, color: variabilityCV > 0.8 ? colors.error : colors.cold, fontWeight: 600 }}>
+                        {variabilityCV.toFixed(2)}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="5"
+                      max="200"
+                      value={variabilityCV * 100}
+                      onChange={(e) => setVariabilityCV(parseInt(e.target.value) / 100)}
+                      onInput={(e) => setVariabilityCV(parseInt((e.target as HTMLInputElement).value) / 100)}
+                      aria-label="Coefficient of variation"
+                      style={sliderStyle(colors.cold, variabilityCV * 100, 5, 200)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.success }}>0.05 (robotic)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>0.50 (moderate)</span>
+                      <span style={{ ...typo.small, color: colors.error }}>2.0 (chaotic)</span>
+                    </div>
+                  </div>
+
+                  {/* Results */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px',
+                    marginBottom: '20px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>{Math.min(highCVQueueTime, 999).toFixed(1)} min</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Queue Time (current CV)</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.cold }}>{lowCVQueueTime.toFixed(1)} min</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Queue Time (low CV=0.2)</div>
+                    </div>
+                  </div>
+
+                  {/* Impact warning */}
+                  <div style={{
+                    background: highCVQueueTime > 50 ? `${colors.error}22` : `${colors.warning}22`,
+                    border: `1px solid ${highCVQueueTime > 50 ? colors.error : colors.warning}`,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
+                      Variability multiplier at current settings:
+                    </p>
+                    <div style={{
+                      ...typo.h2,
+                      color: queueRatio > 5 ? colors.error : colors.warning
+                    }}>
+                      {queueRatio.toFixed(1)}x longer queues
+                    </div>
+                    <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+                      vs. a low-variability (CV=0.2) factory at the same utilization
+                      {queueRatio > 10 && ' -- VARIABILITY IS DESTROYING THROUGHPUT!'}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

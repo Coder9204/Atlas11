@@ -1215,95 +1215,109 @@ const ELON_BladeFactoryRenderer: React.FC<BladeFactoryRendererProps> = ({ onGame
               This visualization shows a wind turbine cross-section with animated blade rotation. Watch the force arrows on the blade tips: lift (green), drag (red), centrifugal (orange), and gravity (blue). Adjust the rotor diameter slider to see how power, mass, and swept area change with size.
             </p>
 
-            {/* Main visualization */}
+            {/* Main visualization - side by side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <TurbineVisualization />
-              </div>
-
-              {/* Rotor diameter slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Rotor Diameter</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {rotorDiameter}m ({(rotorDiameter / 2).toFixed(0)}m blades)
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="80"
-                  max="260"
-                  step="5"
-                  value={rotorDiameter}
-                  onChange={(e) => setRotorDiameter(parseInt(e.target.value))}
-                  onInput={(e) => setRotorDiameter(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Rotor Diameter"
-                  style={sliderStyle(colors.accent, rotorDiameter, 80, 260)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>80m (2MW)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>170m (9MW)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>260m (15MW+)</span>
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <TurbineVisualization />
+                  </div>
                 </div>
               </div>
 
-              {/* Stats grid */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
-                marginBottom: '12px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{power.toFixed(1)} MW</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Power ({'\u221D'} d{'\u00B2'})</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.error }}>{bladeMass.toFixed(0)} t</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Blade Mass ({'\u221D'} d{'\u00B3'})</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.success }}>{sweptArea.toFixed(0)} m{'\u00B2'}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Swept Area</div>
-                </div>
-              </div>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.warning }}>{(capacityFactor * 100).toFixed(0)}%</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Capacity Factor</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: '#3B82F6' }}>{tipSpeed.toFixed(0)} m/s</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Tip Speed</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.textPrimary }}>{rpm.toFixed(1)} RPM</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Rotation Speed</div>
-                </div>
-              </div>
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '300px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Rotor diameter slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Rotor Diameter</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {rotorDiameter}m ({(rotorDiameter / 2).toFixed(0)}m blades)
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="80"
+                      max="260"
+                      step="5"
+                      value={rotorDiameter}
+                      onChange={(e) => setRotorDiameter(parseInt(e.target.value))}
+                      onInput={(e) => setRotorDiameter(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Rotor Diameter"
+                      style={sliderStyle(colors.accent, rotorDiameter, 80, 260)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>80m (2MW)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>170m (9MW)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>260m (15MW+)</span>
+                    </div>
+                  </div>
 
-              {/* Betz limit note */}
-              <div style={{
-                background: `${colors.accent}11`,
-                border: `1px solid ${colors.accent}33`,
-                borderRadius: '8px',
-                padding: '12px',
-                marginTop: '16px',
-                textAlign: 'center',
-              }}>
-                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                  <strong style={{ color: colors.accent }}>Betz Limit:</strong> Max extractable power = 59.3% of wind energy through swept area.
-                  At {rotorDiameter}m: theoretical max = {(power / 0.45 * 0.593).toFixed(1)} MW (current efficiency ~{(0.45 / 0.593 * 100).toFixed(0)}% of Betz)
-                </p>
+                  {/* Stats grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '8px',
+                    marginBottom: '8px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>{power.toFixed(1)} MW</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Power ({'\u221D'} d{'\u00B2'})</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.error }}>{bladeMass.toFixed(0)} t</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Blade Mass ({'\u221D'} d{'\u00B3'})</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.success }}>{sweptArea.toFixed(0)} m{'\u00B2'}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Swept Area</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.warning }}>{(capacityFactor * 100).toFixed(0)}%</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Capacity Factor</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: '#3B82F6' }}>{tipSpeed.toFixed(0)} m/s</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Tip Speed</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.textPrimary }}>{rpm.toFixed(1)} RPM</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Rotation Speed</div>
+                    </div>
+                  </div>
+
+                  {/* Betz limit note */}
+                  <div style={{
+                    background: `${colors.accent}11`,
+                    border: `1px solid ${colors.accent}33`,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    marginTop: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                      <strong style={{ color: colors.accent }}>Betz Limit:</strong> Max extractable power = 59.3% of wind energy through swept area.
+                      At {rotorDiameter}m: theoretical max = {(power / 0.45 * 0.593).toFixed(1)} MW (current efficiency ~{(0.45 / 0.593 * 100).toFixed(0)}% of Betz)
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1644,104 +1658,124 @@ const ELON_BladeFactoryRenderer: React.FC<BladeFactoryRendererProps> = ({ onGame
               Balance the benefits of stronger offshore wind against marine logistics and corrosion challenges
             </p>
 
+            {/* Educational panel */}
+            <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+              <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}>
+                <strong style={{ color: colors.accent }}>What you're seeing:</strong> This offshore logistics visualization maps how distance from shore and wave conditions affect turbine installation costs, corrosion, and energy gains in real time.
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}>
+                <strong style={{ color: colors.success }}>Cause and Effect:</strong> Moving the distance slider farther offshore increases wind speed bonus but drives up logistics cost and installation complexity; raising wave height accelerates corrosion and narrows safe installation windows.
+              </p>
+            </div>
+
+            {/* Side by side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <OffshoreVisualization />
-              </div>
-
-              {/* Educational panel */}
-              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}>
-                  <strong style={{ color: colors.accent }}>What you're seeing:</strong> This offshore logistics visualization maps how distance from shore and wave conditions affect turbine installation costs, corrosion, and energy gains in real time.
-                </p>
-                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}>
-                  <strong style={{ color: colors.success }}>Cause and Effect:</strong> Moving the distance slider farther offshore increases wind speed bonus but drives up logistics cost and installation complexity; raising wave height accelerates corrosion and narrows safe installation windows.
-                </p>
-              </div>
-
-              {/* Offshore distance slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Distance from Shore</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{offshoreDistance} km</span>
-                </div>
-                <input
-                  type="range"
-                  min="10"
-                  max="200"
-                  step="5"
-                  value={offshoreDistance}
-                  onChange={(e) => setOffshoreDistance(parseInt(e.target.value))}
-                  onInput={(e) => setOffshoreDistance(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Distance from shore"
-                  style={sliderStyle(colors.accent, offshoreDistance, 10, 200)}
-                />
-              </div>
-
-              {/* Wave height slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Significant Wave Height</span>
-                  <span style={{ ...typo.small, color: '#3B82F6', fontWeight: 600 }}>{waveHeight.toFixed(1)}m</span>
-                </div>
-                <input
-                  type="range"
-                  min="0.5"
-                  max="6"
-                  step="0.5"
-                  value={waveHeight}
-                  onChange={(e) => setWaveHeight(parseFloat(e.target.value))}
-                  onInput={(e) => setWaveHeight(parseFloat((e.target as HTMLInputElement).value))}
-                  aria-label="Wave height"
-                  style={sliderStyle('#3B82F6', waveHeight, 0.5, 6)}
-                />
-              </div>
-
-              {/* Results */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-                marginBottom: '20px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.success }}>+{((windBonus - 1) * 100).toFixed(0)}%</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Wind Speed Bonus</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.error }}>{corrFactor.toFixed(2)}x</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Corrosion Factor</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.warning }}>{logisticsCost.toFixed(0)}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Logistics Cost (units)</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: '#3B82F6' }}>{installDays} days</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Install Window Needed</div>
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <OffshoreVisualization />
+                  </div>
                 </div>
               </div>
 
-              {/* Trade-off summary */}
-              <div style={{
-                background: `${colors.warning}22`,
-                border: `1px solid ${colors.warning}`,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
-                  Offshore Trade-off Summary:
-                </p>
-                <p style={{ ...typo.body, color: colors.textPrimary, margin: 0, fontWeight: 600 }}>
-                  No blade size limit + {((windBonus - 1) * 100).toFixed(0)}% more wind, but {corrFactor.toFixed(2)}x corrosion + {logisticsCost.toFixed(0)} logistics cost
-                </p>
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '300px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Offshore distance slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Distance from Shore</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{offshoreDistance} km</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="10"
+                      max="200"
+                      step="5"
+                      value={offshoreDistance}
+                      onChange={(e) => setOffshoreDistance(parseInt(e.target.value))}
+                      onInput={(e) => setOffshoreDistance(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Distance from shore"
+                      style={sliderStyle(colors.accent, offshoreDistance, 10, 200)}
+                    />
+                  </div>
+
+                  {/* Wave height slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Significant Wave Height</span>
+                      <span style={{ ...typo.small, color: '#3B82F6', fontWeight: 600 }}>{waveHeight.toFixed(1)}m</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.5"
+                      max="6"
+                      step="0.5"
+                      value={waveHeight}
+                      onChange={(e) => setWaveHeight(parseFloat(e.target.value))}
+                      onInput={(e) => setWaveHeight(parseFloat((e.target as HTMLInputElement).value))}
+                      aria-label="Wave height"
+                      style={sliderStyle('#3B82F6', waveHeight, 0.5, 6)}
+                    />
+                  </div>
+
+                  {/* Results */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '8px',
+                    marginBottom: '16px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.success }}>+{((windBonus - 1) * 100).toFixed(0)}%</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Wind Speed Bonus</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.error }}>{corrFactor.toFixed(2)}x</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Corrosion Factor</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.warning }}>{logisticsCost.toFixed(0)}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Logistics Cost (units)</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: '#3B82F6' }}>{installDays} days</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Install Window Needed</div>
+                    </div>
+                  </div>
+
+                  {/* Trade-off summary */}
+                  <div style={{
+                    background: `${colors.warning}22`,
+                    border: `1px solid ${colors.warning}`,
+                    borderRadius: '12px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
+                      Offshore Trade-off Summary:
+                    </p>
+                    <p style={{ ...typo.body, color: colors.textPrimary, margin: 0, fontWeight: 600 }}>
+                      No blade size limit + {((windBonus - 1) * 100).toFixed(0)}% more wind, but {corrFactor.toFixed(2)}x corrosion + {logisticsCost.toFixed(0)} logistics cost
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

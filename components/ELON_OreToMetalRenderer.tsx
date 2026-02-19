@@ -1164,77 +1164,97 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
               This visualization shows the mass flow through each processing stage. When ore grade decreases, more rock must be processed because the metal concentration is lower — this leads to higher energy use and more waste. The ore-to-metal ratio is calculated as 100 / (grade x recovery). Observe how the flow widths and cost numbers change as you try adjusting the slider to different grade values.
             </p>
 
-            {/* Main visualization */}
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <OreProcessVisualization />
-              </div>
-
-              {/* Ore Grade slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Ore Grade</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {oreGrade.toFixed(1)}% Cu
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0.2"
-                  max="2.0"
-                  step="0.1"
-                  value={oreGrade}
-                  onChange={(e) => setOreGrade(parseFloat(e.target.value))}
-                  onInput={(e) => setOreGrade(parseFloat((e.target as HTMLInputElement).value))}
-                  aria-label="Ore Grade"
-                  style={sliderStyle(colors.accent, oreGrade, 0.2, 2.0)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.error }}>0.2% (future)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>1.0% (typical)</span>
-                  <span style={{ ...typo.small, color: colors.success }}>2.0% (high)</span>
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', overflow: 'hidden' }}>
+                    <OreProcessVisualization />
+                  </div>
                 </div>
               </div>
 
-              {/* Stats grid */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
-                marginBottom: '16px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{oreRequired.toFixed(0)}t</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Ore per t Cu</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.error }}>{energyPerTonne.toFixed(0)} GJ</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Energy per t Cu</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.warning }}>{wasteRatio.toFixed(0)}:1</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Waste Ratio</div>
-                </div>
-              </div>
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Ore Grade slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Ore Grade</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {oreGrade.toFixed(1)}% Cu
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.2"
+                      max="2.0"
+                      step="0.1"
+                      value={oreGrade}
+                      onChange={(e) => setOreGrade(parseFloat(e.target.value))}
+                      onInput={(e) => setOreGrade(parseFloat((e.target as HTMLInputElement).value))}
+                      aria-label="Ore Grade"
+                      style={sliderStyle(colors.accent, oreGrade, 0.2, 2.0)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.error }}>0.2% (future)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>1.0% (typical)</span>
+                      <span style={{ ...typo.small, color: colors.success }}>2.0% (high)</span>
+                    </div>
+                  </div>
 
-              {/* Additional stats row */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.success }}>${costPerTonne.toFixed(0)}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Cost per t Cu</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: '#3B82F6' }}>{(oreRequired * 2.5).toFixed(0)} m{'\u00B3'}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Water per t Cu</div>
+                  {/* Stats grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '12px',
+                    marginBottom: '16px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>{oreRequired.toFixed(0)}t</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Ore per t Cu</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.error }}>{energyPerTonne.toFixed(0)} GJ</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Energy per t Cu</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.warning }}>{wasteRatio.toFixed(0)}:1</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Waste Ratio</div>
+                    </div>
+                  </div>
+
+                  {/* Additional stats row */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.success }}>${costPerTonne.toFixed(0)}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Cost per t Cu</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: '#3B82F6' }}>{(oreRequired * 2.5).toFixed(0)} m{'\u00B3'}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Water per t Cu</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1590,99 +1610,119 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
               Explore the tradeoff between energy use and processing time
             </p>
 
+            {/* Educational panel */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
               padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}>
+                <strong style={{ color: colors.accent }}>What you're seeing:</strong> The visualization compares conventional smelting at 1250C against bioleaching, where bacteria dissolve copper from ore at ambient temperature over months rather than hours.
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}>
+                <strong style={{ color: colors.success }}>Cause and Effect:</strong> As you shift the slider toward bioleaching, energy consumption drops dramatically (up to 90%) but processing time extends from hours to months — revealing the fundamental speed-vs-efficiency tradeoff in metallurgy.
+              </p>
+            </div>
+
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <BioleachVisualization />
-              </div>
-
-              {/* Educational panel */}
-              <div style={{
-                background: `${colors.accent}11`,
-                border: `1px solid ${colors.accent}33`,
-                borderRadius: '12px',
-                padding: '16px',
-                marginBottom: '16px',
-              }}>
-                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}>
-                  <strong style={{ color: colors.accent }}>What you're seeing:</strong> The visualization compares conventional smelting at 1250C against bioleaching, where bacteria dissolve copper from ore at ambient temperature over months rather than hours.
-                </p>
-                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}>
-                  <strong style={{ color: colors.success }}>Cause and Effect:</strong> As you shift the slider toward bioleaching, energy consumption drops dramatically (up to 90%) but processing time extends from hours to months — revealing the fundamental speed-vs-efficiency tradeoff in metallurgy.
-                </p>
-              </div>
-
-              {/* Bioleach proportion slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Processing Method</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {bioleachProgress}% Bioleaching / {100 - bioleachProgress}% Smelting
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  value={bioleachProgress}
-                  onChange={(e) => setBioleachProgress(parseInt(e.target.value))}
-                  onInput={(e) => setBioleachProgress(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Bioleaching proportion"
-                  style={sliderStyle(colors.success, bioleachProgress, 0, 100)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.error }}>100% Smelting</span>
-                  <span style={{ ...typo.small, color: colors.success }}>100% Bioleaching</span>
-                </div>
-              </div>
-
-              {/* Results */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-                marginBottom: '20px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{Math.round(blendEnergy)}%</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Relative Energy Use</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.success }}>
-                    {blendTimeDays < 1 ? `${(blendTimeDays * 24).toFixed(0)} hrs` : `${blendTimeDays.toFixed(0)} days`}
-                  </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Processing Time</div>
-                </div>
-              </div>
-
-              {/* Tradeoff insight */}
-              <div style={{
-                background: bioleachProgress > 50 ? `${colors.success}22` : `${colors.warning}22`,
-                border: `1px solid ${bioleachProgress > 50 ? colors.success : colors.warning}`,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
-                  The Fundamental Tradeoff:
-                </p>
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                 <div style={{
-                  ...typo.body,
-                  color: bioleachProgress > 50 ? colors.success : colors.warning,
-                  fontWeight: 600,
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
                 }}>
-                  {bioleachProgress === 0 && 'Maximum speed (4 hours) but maximum energy consumption'}
-                  {bioleachProgress > 0 && bioleachProgress <= 25 && 'Mostly smelting — fast but energy-intensive'}
-                  {bioleachProgress > 25 && bioleachProgress <= 50 && 'Mixed approach — moderate time and energy savings'}
-                  {bioleachProgress > 50 && bioleachProgress <= 75 && 'Bioleach-dominated — significant energy savings but weeks of processing'}
-                  {bioleachProgress > 75 && bioleachProgress < 100 && 'Mostly bioleaching — 90%+ energy reduction but months-long processing'}
-                  {bioleachProgress === 100 && '90% less energy but 6+ months — bacteria work slowly but cheaply'}
+                  <div style={{ display: 'flex', justifyContent: 'center', overflow: 'hidden' }}>
+                    <BioleachVisualization />
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Bioleach proportion slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Processing Method</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {bioleachProgress}% Bioleaching / {100 - bioleachProgress}% Smelting
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="5"
+                      value={bioleachProgress}
+                      onChange={(e) => setBioleachProgress(parseInt(e.target.value))}
+                      onInput={(e) => setBioleachProgress(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Bioleaching proportion"
+                      style={sliderStyle(colors.success, bioleachProgress, 0, 100)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.error }}>100% Smelting</span>
+                      <span style={{ ...typo.small, color: colors.success }}>100% Bioleaching</span>
+                    </div>
+                  </div>
+
+                  {/* Results */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px',
+                    marginBottom: '20px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>{Math.round(blendEnergy)}%</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Relative Energy Use</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.success }}>
+                        {blendTimeDays < 1 ? `${(blendTimeDays * 24).toFixed(0)} hrs` : `${blendTimeDays.toFixed(0)} days`}
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Processing Time</div>
+                    </div>
+                  </div>
+
+                  {/* Tradeoff insight */}
+                  <div style={{
+                    background: bioleachProgress > 50 ? `${colors.success}22` : `${colors.warning}22`,
+                    border: `1px solid ${bioleachProgress > 50 ? colors.success : colors.warning}`,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
+                      The Fundamental Tradeoff:
+                    </p>
+                    <div style={{
+                      ...typo.body,
+                      color: bioleachProgress > 50 ? colors.success : colors.warning,
+                      fontWeight: 600,
+                    }}>
+                      {bioleachProgress === 0 && 'Maximum speed (4 hours) but maximum energy consumption'}
+                      {bioleachProgress > 0 && bioleachProgress <= 25 && 'Mostly smelting — fast but energy-intensive'}
+                      {bioleachProgress > 25 && bioleachProgress <= 50 && 'Mixed approach — moderate time and energy savings'}
+                      {bioleachProgress > 50 && bioleachProgress <= 75 && 'Bioleach-dominated — significant energy savings but weeks of processing'}
+                      {bioleachProgress > 75 && bioleachProgress < 100 && 'Mostly bioleaching — 90%+ energy reduction but months-long processing'}
+                      {bioleachProgress === 100 && '90% less energy but 6+ months — bacteria work slowly but cheaply'}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

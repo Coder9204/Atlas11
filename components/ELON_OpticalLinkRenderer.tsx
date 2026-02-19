@@ -1124,34 +1124,51 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
               padding: '16px',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <OpticalLinkVisualization />
+              {/* Side by side layout: SVG left, controls right on desktop */}
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+                marginBottom: '20px',
+              }}>
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <OpticalLinkVisualization />
+                  </div>
+                </div>
+
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Fiber Distance</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {fiberLengthKm >= 1000 ? `${(fiberLengthKm / 1000).toFixed(1)}k km` : `${fiberLengthKm} km`}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="10000"
+                      value={fiberLengthKm}
+                      onChange={(e) => setFiberLengthKm(parseInt(e.target.value))}
+                      onInput={(e) => setFiberLengthKm(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Fiber Length in Kilometers"
+                      style={sliderStyle(colors.accent, fiberLengthKm, 1, 10000)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>100m (Data Center)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>500km</span>
+                      <span style={{ ...typo.small, color: colors.accent }}>10,000km (Subsea)</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Fiber Length</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {fiberLengthKm >= 1000 ? `${(fiberLengthKm / 1000).toFixed(1)}k km` : `${fiberLengthKm} km`}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="10000"
-                  value={fiberLengthKm}
-                  onChange={(e) => setFiberLengthKm(parseInt(e.target.value))}
-                  onInput={(e) => setFiberLengthKm(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Fiber Length in Kilometers"
-                  style={sliderStyle(colors.accent, fiberLengthKm, 1, 10000)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>100m (Data Center)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>500km</span>
-                  <span style={{ ...typo.small, color: colors.accent }}>10,000km (Subsea)</span>
-                </div>
-              </div>
-
+              {/* Power stats grid */}
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(3, 1fr)',
@@ -1525,49 +1542,65 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
               padding: '16px',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <OpticalLinkVisualization showDwdm={true} />
-              </div>
+              {/* Side by side layout: SVG left, controls right on desktop */}
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+                marginBottom: '20px',
+              }}>
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <OpticalLinkVisualization showDwdm={true} />
+                  </div>
+                </div>
 
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>DWDM Channels</span>
-                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{dwdmChannels} channels</span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="96"
-                  value={dwdmChannels}
-                  onChange={(e) => setDwdmChannels(parseInt(e.target.value))}
-                  onInput={(e) => setDwdmChannels(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="DWDM Channel Count"
-                  style={sliderStyle(colors.warning, dwdmChannels, 1, 96)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>1 (Single)</span>
-                  <span style={{ ...typo.small, color: colors.warning }}>48</span>
-                  <span style={{ ...typo.small, color: colors.warning }}>96 (Dense)</span>
-                </div>
-              </div>
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>DWDM Channels</span>
+                      <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{dwdmChannels} channels</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="96"
+                      value={dwdmChannels}
+                      onChange={(e) => setDwdmChannels(parseInt(e.target.value))}
+                      onInput={(e) => setDwdmChannels(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="DWDM Channel Count"
+                      style={sliderStyle(colors.warning, dwdmChannels, 1, 96)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>1 (Single)</span>
+                      <span style={{ ...typo.small, color: colors.warning }}>48</span>
+                      <span style={{ ...typo.small, color: colors.warning }}>96 (Dense)</span>
+                    </div>
+                  </div>
 
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Fiber Length</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {fiberLengthKm >= 1000 ? `${(fiberLengthKm / 1000).toFixed(1)}k km` : `${fiberLengthKm} km`}
-                  </span>
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Fiber Length</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {fiberLengthKm >= 1000 ? `${(fiberLengthKm / 1000).toFixed(1)}k km` : `${fiberLengthKm} km`}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="10000"
+                      value={fiberLengthKm}
+                      onChange={(e) => setFiberLengthKm(parseInt(e.target.value))}
+                      onInput={(e) => setFiberLengthKm(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Fiber Length in Kilometers"
+                      style={sliderStyle(colors.accent, fiberLengthKm, 1, 10000)}
+                    />
+                  </div>
                 </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="10000"
-                  value={fiberLengthKm}
-                  onChange={(e) => setFiberLengthKm(parseInt(e.target.value))}
-                  onInput={(e) => setFiberLengthKm(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Fiber Length in Kilometers"
-                  style={sliderStyle(colors.accent, fiberLengthKm, 1, 10000)}
-                />
               </div>
 
               <div style={{

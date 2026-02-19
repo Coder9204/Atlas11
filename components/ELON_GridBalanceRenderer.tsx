@@ -1138,86 +1138,106 @@ const ELON_GridBalanceRenderer: React.FC<ELON_GridBalanceRendererProps> = ({ onG
               </p>
             </div>
 
-            {/* Main visualization */}
+            {/* Main visualization - side by side on desktop */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <GridVisualization />
-              </div>
-
-              {/* Renewable penetration slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Renewable Penetration</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {renewablePct}%
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={renewablePct}
-                  onChange={(e) => setRenewablePct(parseInt(e.target.value))}
-                  onInput={(e) => setRenewablePct(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Renewable Penetration Percentage"
-                  style={sliderStyle(colors.accent, renewablePct, 0, 100)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>0% (All Fossil)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>50%</span>
-                  <span style={{ ...typo.small, color: colors.success }}>100% (All Renewable)</span>
-                </div>
-              </div>
-
-              {/* Time of day slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Time of Day</span>
-                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>
-                    {timeOfDay}:00
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="24"
-                  value={timeOfDay}
-                  onChange={(e) => setTimeOfDay(parseInt(e.target.value))}
-                  onInput={(e) => setTimeOfDay(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Time of Day"
-                  style={sliderStyle(colors.warning, timeOfDay, 0, 24)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>Midnight</span>
-                  <span style={{ ...typo.small, color: colors.solar }}>Noon</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>Midnight</span>
-                </div>
-              </div>
-
-              {/* Stats grid */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.success }}>{currentSupply.toFixed(1)} GW</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Supply</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.error }}>{currentDemand.toFixed(1)} GW</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Demand</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: Math.abs(currentFreq - 60) > 0.2 ? colors.error : colors.frequency }}>
-                    {currentFreq.toFixed(3)} Hz
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <GridVisualization />
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Frequency</div>
+                </div>
+              </div>
+
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Renewable penetration slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Renewable Penetration</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {renewablePct}%
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={renewablePct}
+                      onChange={(e) => setRenewablePct(parseInt(e.target.value))}
+                      onInput={(e) => setRenewablePct(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Renewable Penetration Percentage"
+                      style={sliderStyle(colors.accent, renewablePct, 0, 100)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>0% (All Fossil)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>50%</span>
+                      <span style={{ ...typo.small, color: colors.success }}>100% (All Renewable)</span>
+                    </div>
+                  </div>
+
+                  {/* Time of day slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Time of Day</span>
+                      <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>
+                        {timeOfDay}:00
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="24"
+                      value={timeOfDay}
+                      onChange={(e) => setTimeOfDay(parseInt(e.target.value))}
+                      onInput={(e) => setTimeOfDay(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Time of Day"
+                      style={sliderStyle(colors.warning, timeOfDay, 0, 24)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>Midnight</span>
+                      <span style={{ ...typo.small, color: colors.solar }}>Noon</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>Midnight</span>
+                    </div>
+                  </div>
+
+                  {/* Stats grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '12px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.success }}>{currentSupply.toFixed(1)} GW</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Supply</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.error }}>{currentDemand.toFixed(1)} GW</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Demand</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: Math.abs(currentFreq - 60) > 0.2 ? colors.error : colors.frequency }}>
+                        {currentFreq.toFixed(3)} Hz
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Frequency</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1581,123 +1601,143 @@ const ELON_GridBalanceRenderer: React.FC<ELON_GridBalanceRendererProps> = ({ onG
               </p>
             </div>
 
+            {/* Side-by-side layout on desktop */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              {/* SVG Visualization with battery */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <GridVisualization showBattery={true} />
-              </div>
-
-              {/* Load spike toggle */}
-              <div style={{ marginBottom: '20px' }}>
-                <button
-                  onClick={() => { playSound('click'); setLoadSpike(!loadSpike); }}
-                  style={{
-                    width: '100%',
-                    padding: '14px',
-                    borderRadius: '10px',
-                    border: `2px solid ${loadSpike ? colors.error : colors.border}`,
-                    background: loadSpike ? `${colors.error}22` : colors.bgSecondary,
-                    color: loadSpike ? colors.error : colors.textSecondary,
-                    cursor: 'pointer',
-                    fontWeight: 700,
-                    fontSize: '16px',
-                    minHeight: '44px',
-                  }}
-                >
-                  {loadSpike ? '\u26A1 2GW Load Spike ACTIVE — Data Center Online' : 'Click to Activate 2GW Load Spike'}
-                </button>
-              </div>
-
-              {/* Battery capacity slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Battery Storage Capacity</span>
-                  <span style={{ ...typo.small, color: colors.battery, fontWeight: 600 }}>{batteryCapacity} GW</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="8"
-                  step="0.5"
-                  value={batteryCapacity}
-                  onChange={(e) => setBatteryCapacity(parseFloat(e.target.value))}
-                  onInput={(e) => setBatteryCapacity(parseFloat((e.target as HTMLInputElement).value))}
-                  aria-label="Battery Storage Capacity"
-                  style={sliderStyle(colors.battery, batteryCapacity, 0, 8)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>0 GW (No Storage)</span>
-                  <span style={{ ...typo.small, color: colors.battery }}>8 GW</span>
-                </div>
-              </div>
-
-              {/* Time of day slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Time of Day</span>
-                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{timeOfDay}:00</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="24"
-                  value={timeOfDay}
-                  onChange={(e) => setTimeOfDay(parseInt(e.target.value))}
-                  onInput={(e) => setTimeOfDay(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Time of Day"
-                  style={sliderStyle(colors.warning, timeOfDay, 0, 24)}
-                />
-              </div>
-
-              {/* Comparison Results */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-                marginBottom: '20px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Without Battery</div>
-                  <div style={{ ...typo.h3, color: Math.abs(freqWithout - 60) > 0.2 ? colors.error : colors.frequency }}>
-                    {freqWithout.toFixed(3)} Hz
-                  </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>
-                    {'\u0394'}f = {(freqWithout - 60).toFixed(3)} Hz
-                  </div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>With {batteryCapacity}GW Battery</div>
-                  <div style={{ ...typo.h3, color: Math.abs(freqWith - 60) > 0.2 ? colors.error : colors.battery }}>
-                    {freqWith.toFixed(3)} Hz
-                  </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>
-                    {'\u0394'}f = {(freqWith - 60).toFixed(3)} Hz
-                  </div>
-                </div>
-              </div>
-
-              {/* Improvement indicator */}
-              {loadSpike && batteryCapacity > 0 && (
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                 <div style={{
-                  background: `${colors.success}22`,
-                  border: `1px solid ${colors.success}`,
-                  borderRadius: '12px',
+                  background: colors.bgCard,
+                  borderRadius: '16px',
                   padding: '16px',
-                  textAlign: 'center',
                 }}>
-                  <p style={{ ...typo.body, color: colors.success, fontWeight: 700, margin: 0 }}>
-                    Battery reduces frequency deviation by {Math.abs(((Math.abs(freqWith - 60) - Math.abs(freqWithout - 60)) / Math.abs(freqWithout - 60)) * 100).toFixed(0)}%
-                  </p>
-                  <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
-                    Batteries respond in milliseconds, injecting stored energy to compensate for the sudden load increase
-                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <GridVisualization showBattery={true} />
+                  </div>
                 </div>
-              )}
+              </div>
+
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Load spike toggle */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <button
+                      onClick={() => { playSound('click'); setLoadSpike(!loadSpike); }}
+                      style={{
+                        width: '100%',
+                        padding: '14px',
+                        borderRadius: '10px',
+                        border: `2px solid ${loadSpike ? colors.error : colors.border}`,
+                        background: loadSpike ? `${colors.error}22` : colors.bgSecondary,
+                        color: loadSpike ? colors.error : colors.textSecondary,
+                        cursor: 'pointer',
+                        fontWeight: 700,
+                        fontSize: '16px',
+                        minHeight: '44px',
+                      }}
+                    >
+                      {loadSpike ? '\u26A1 2GW Load Spike ACTIVE — Data Center Online' : 'Click to Activate 2GW Load Spike'}
+                    </button>
+                  </div>
+
+                  {/* Battery capacity slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Battery Storage Capacity</span>
+                      <span style={{ ...typo.small, color: colors.battery, fontWeight: 600 }}>{batteryCapacity} GW</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="8"
+                      step="0.5"
+                      value={batteryCapacity}
+                      onChange={(e) => setBatteryCapacity(parseFloat(e.target.value))}
+                      onInput={(e) => setBatteryCapacity(parseFloat((e.target as HTMLInputElement).value))}
+                      aria-label="Battery Storage Capacity"
+                      style={sliderStyle(colors.battery, batteryCapacity, 0, 8)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>0 GW (No Storage)</span>
+                      <span style={{ ...typo.small, color: colors.battery }}>8 GW</span>
+                    </div>
+                  </div>
+
+                  {/* Time of day slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Time of Day</span>
+                      <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{timeOfDay}:00</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="24"
+                      value={timeOfDay}
+                      onChange={(e) => setTimeOfDay(parseInt(e.target.value))}
+                      onInput={(e) => setTimeOfDay(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Time of Day"
+                      style={sliderStyle(colors.warning, timeOfDay, 0, 24)}
+                    />
+                  </div>
+
+                  {/* Comparison Results */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px',
+                    marginBottom: '20px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Without Battery</div>
+                      <div style={{ ...typo.h3, color: Math.abs(freqWithout - 60) > 0.2 ? colors.error : colors.frequency }}>
+                        {freqWithout.toFixed(3)} Hz
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>
+                        {'\u0394'}f = {(freqWithout - 60).toFixed(3)} Hz
+                      </div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>With {batteryCapacity}GW Battery</div>
+                      <div style={{ ...typo.h3, color: Math.abs(freqWith - 60) > 0.2 ? colors.error : colors.battery }}>
+                        {freqWith.toFixed(3)} Hz
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>
+                        {'\u0394'}f = {(freqWith - 60).toFixed(3)} Hz
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Improvement indicator */}
+                  {loadSpike && batteryCapacity > 0 && (
+                    <div style={{
+                      background: `${colors.success}22`,
+                      border: `1px solid ${colors.success}`,
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'center',
+                    }}>
+                      <p style={{ ...typo.body, color: colors.success, fontWeight: 700, margin: 0 }}>
+                        Battery reduces frequency deviation by {Math.abs(((Math.abs(freqWith - 60) - Math.abs(freqWithout - 60)) / Math.abs(freqWithout - 60)) * 100).toFixed(0)}%
+                      </p>
+                      <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
+                        Batteries respond in milliseconds, injecting stored energy to compensate for the sudden load increase
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>

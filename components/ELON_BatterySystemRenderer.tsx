@@ -1175,93 +1175,113 @@ const ELON_BatterySystemRenderer: React.FC<ELON_BatterySystemRendererProps> = ({
               This visualization shows a cutaway of a battery pack — from individual cells to modules to the container. Adjust the C-rate slider to see how faster discharge affects efficiency, temperature, and degradation. Watch the SOC meter and temperature heatmap respond in real time.
             </p>
 
-            {/* Main visualization */}
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <BatteryVisualization />
-              </div>
-
-              {/* Chemistry selector */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Cell Chemistry</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {chemistry === 'NMC' ? 'NMC (Nickel-Manganese-Cobalt)' : 'LFP (Lithium Iron Phosphate)'}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  {(['NMC', 'LFP'] as const).map((chem) => (
-                    <button
-                      key={chem}
-                      onClick={() => { playSound('click'); setChemistry(chem); }}
-                      style={{
-                        padding: '8px 16px',
-                        borderRadius: '8px',
-                        border: chemistry === chem ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
-                        background: chemistry === chem ? `${colors.accent}22` : colors.bgSecondary,
-                        color: colors.textPrimary,
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        minHeight: '44px',
-                        flex: 1,
-                      }}
-                    >
-                      {chem}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* C-rate slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>C-Rate</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {cRate.toFixed(2)}C ({dischargeMinutes.toFixed(0)} min discharge)
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0.25"
-                  max="4"
-                  step="0.05"
-                  value={cRate}
-                  onChange={(e) => setCRate(parseFloat(e.target.value))}
-                  onInput={(e) => setCRate(parseFloat((e.target as HTMLInputElement).value))}
-                  aria-label="C-Rate"
-                  style={sliderStyle(colors.accent, cRate, 0.25, 4)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.success }}>0.25C (4hr)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>1C (1hr)</span>
-                  <span style={{ ...typo.small, color: colors.hot }}>4C (15min)</span>
-                </div>
-              </div>
-
-              {/* Stats grid */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: efficiency > 88 ? colors.success : efficiency > 84 ? colors.warning : colors.hot }}>{efficiency.toFixed(1)}%</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Round-Trip Eff.</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: cellTemp > 45 ? colors.hot : cellTemp > 35 ? colors.warning : colors.success }}>{cellTemp.toFixed(0)}°C</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Cell Temp</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: degradation > 3 ? colors.hot : degradation > 2 ? colors.warning : colors.success }}>
-                    {cycleLife.toLocaleString()}
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', overflow: 'hidden' }}>
+                    <BatteryVisualization />
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Cycle Life</div>
+                </div>
+              </div>
+
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Chemistry selector */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Cell Chemistry</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {chemistry === 'NMC' ? 'NMC (Nickel-Manganese-Cobalt)' : 'LFP (Lithium Iron Phosphate)'}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      {(['NMC', 'LFP'] as const).map((chem) => (
+                        <button
+                          key={chem}
+                          onClick={() => { playSound('click'); setChemistry(chem); }}
+                          style={{
+                            padding: '8px 16px',
+                            borderRadius: '8px',
+                            border: chemistry === chem ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
+                            background: chemistry === chem ? `${colors.accent}22` : colors.bgSecondary,
+                            color: colors.textPrimary,
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            minHeight: '44px',
+                            flex: 1,
+                          }}
+                        >
+                          {chem}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* C-rate slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>C-Rate</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {cRate.toFixed(2)}C ({dischargeMinutes.toFixed(0)} min discharge)
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.25"
+                      max="4"
+                      step="0.05"
+                      value={cRate}
+                      onChange={(e) => setCRate(parseFloat(e.target.value))}
+                      onInput={(e) => setCRate(parseFloat((e.target as HTMLInputElement).value))}
+                      aria-label="C-Rate"
+                      style={sliderStyle(colors.accent, cRate, 0.25, 4)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.success }}>0.25C (4hr)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>1C (1hr)</span>
+                      <span style={{ ...typo.small, color: colors.hot }}>4C (15min)</span>
+                    </div>
+                  </div>
+
+                  {/* Stats grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '12px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: efficiency > 88 ? colors.success : efficiency > 84 ? colors.warning : colors.hot }}>{efficiency.toFixed(1)}%</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Round-Trip Eff.</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: cellTemp > 45 ? colors.hot : cellTemp > 35 ? colors.warning : colors.success }}>{cellTemp.toFixed(0)}°C</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Cell Temp</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: degradation > 3 ? colors.hot : degradation > 2 ? colors.warning : colors.success }}>
+                        {cycleLife.toLocaleString()}
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Cycle Life</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1601,87 +1621,107 @@ const ELON_BatterySystemRenderer: React.FC<ELON_BatterySystemRendererProps> = ({
               Adjust C-rate to see how each chemistry responds differently to stress
             </p>
 
+            {/* Educational panel */}
+            <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+              <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}>
+                <strong style={{ color: colors.accent }}>What you're seeing:</strong> The side-by-side comparison shows how NMC and LFP chemistries respond differently to the same C-rate stress, revealing dramatic differences in cycle life, degradation rate, and thermal runaway thresholds.
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}>
+                <strong style={{ color: colors.success }}>Cause and Effect:</strong> As you increase the C-rate slider, watch how LFP maintains a much longer cycle life and lower degradation rate than NMC — the gap widens at higher stress levels, showing why LFP dominates grid storage despite its larger physical footprint.
+              </p>
+            </div>
+
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <ChemistryComparisonVisualization />
-              </div>
-
-              {/* Educational panel */}
-              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}>
-                  <strong style={{ color: colors.accent }}>What you're seeing:</strong> The side-by-side comparison shows how NMC and LFP chemistries respond differently to the same C-rate stress, revealing dramatic differences in cycle life, degradation rate, and thermal runaway thresholds.
-                </p>
-                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}>
-                  <strong style={{ color: colors.success }}>Cause and Effect:</strong> As you increase the C-rate slider, watch how LFP maintains a much longer cycle life and lower degradation rate than NMC — the gap widens at higher stress levels, showing why LFP dominates grid storage despite its larger physical footprint.
-                </p>
-              </div>
-
-              {/* C-rate slider for twist */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>C-Rate</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{twistCRate.toFixed(2)}C</span>
-                </div>
-                <input
-                  type="range"
-                  min="0.25"
-                  max="4"
-                  step="0.05"
-                  value={twistCRate}
-                  onChange={(e) => setTwistCRate(parseFloat(e.target.value))}
-                  onInput={(e) => setTwistCRate(parseFloat((e.target as HTMLInputElement).value))}
-                  aria-label="C-Rate for chemistry comparison"
-                  style={sliderStyle(colors.accent, twistCRate, 0.25, 4)}
-                />
-              </div>
-
-              {/* Comparison results */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '16px',
-                marginBottom: '20px',
-              }}>
-                <div style={{ background: 'rgba(59, 130, 246, 0.1)', borderRadius: '12px', padding: '16px', textAlign: 'center', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
-                  <div style={{ ...typo.h3, color: '#60A5FA' }}>NMC</div>
-                  <div style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>{twistNmcCycles.toLocaleString()} cycles</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{twistNmcDeg.toFixed(1)}%/yr degradation</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Runaway: ~150°C</div>
-                </div>
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', borderRadius: '12px', padding: '16px', textAlign: 'center', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-                  <div style={{ ...typo.h3, color: '#34D399' }}>LFP</div>
-                  <div style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>{twistLfpCycles.toLocaleString()} cycles</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{twistLfpDeg.toFixed(1)}%/yr degradation</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Runaway: ~270°C</div>
-                </div>
-              </div>
-
-              {/* Key insight */}
-              <div style={{
-                background: `${colors.warning}22`,
-                border: `1px solid ${colors.warning}`,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
-                  LFP pack is 30% larger for the same energy, but:
-                </p>
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                 <div style={{
-                  ...typo.h3,
-                  color: colors.success,
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
                 }}>
-                  {Math.round(twistLfpCycles / twistNmcCycles * 10) / 10}x longer cycle life
+                  <div style={{ display: 'flex', justifyContent: 'center', overflow: 'hidden' }}>
+                    <ChemistryComparisonVisualization />
+                  </div>
                 </div>
-                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-                  LFP total lifetime energy throughput is {Math.round((twistLfpCycles / twistNmcCycles) / 1.3 * 100)}% of NMC per unit volume — often better economics over 20 years
-                </p>
+              </div>
+
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* C-rate slider for twist */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>C-Rate</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{twistCRate.toFixed(2)}C</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.25"
+                      max="4"
+                      step="0.05"
+                      value={twistCRate}
+                      onChange={(e) => setTwistCRate(parseFloat(e.target.value))}
+                      onInput={(e) => setTwistCRate(parseFloat((e.target as HTMLInputElement).value))}
+                      aria-label="C-Rate for chemistry comparison"
+                      style={sliderStyle(colors.accent, twistCRate, 0.25, 4)}
+                    />
+                  </div>
+
+                  {/* Comparison results */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '16px',
+                    marginBottom: '20px',
+                  }}>
+                    <div style={{ background: 'rgba(59, 130, 246, 0.1)', borderRadius: '12px', padding: '16px', textAlign: 'center', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                      <div style={{ ...typo.h3, color: '#60A5FA' }}>NMC</div>
+                      <div style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>{twistNmcCycles.toLocaleString()} cycles</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>{twistNmcDeg.toFixed(1)}%/yr degradation</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Runaway: ~150°C</div>
+                    </div>
+                    <div style={{ background: 'rgba(16, 185, 129, 0.1)', borderRadius: '12px', padding: '16px', textAlign: 'center', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                      <div style={{ ...typo.h3, color: '#34D399' }}>LFP</div>
+                      <div style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>{twistLfpCycles.toLocaleString()} cycles</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>{twistLfpDeg.toFixed(1)}%/yr degradation</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Runaway: ~270°C</div>
+                    </div>
+                  </div>
+
+                  {/* Key insight */}
+                  <div style={{
+                    background: `${colors.warning}22`,
+                    border: `1px solid ${colors.warning}`,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
+                      LFP pack is 30% larger for the same energy, but:
+                    </p>
+                    <div style={{
+                      ...typo.h3,
+                      color: colors.success,
+                    }}>
+                      {Math.round(twistLfpCycles / twistNmcCycles * 10) / 10}x longer cycle life
+                    </div>
+                    <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+                      LFP total lifetime energy throughput is {Math.round((twistLfpCycles / twistNmcCycles) / 1.3 * 100)}% of NMC per unit volume — often better economics over 20 years
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

@@ -1172,63 +1172,79 @@ const ELON_FuelDeliveryRenderer: React.FC<FuelDeliveryRendererProps> = ({ onGame
               padding: '16px',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <FuelFlowVisualization />
-              </div>
+              {/* Side by side layout: SVG left, controls right on desktop */}
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+                marginBottom: '20px',
+              }}>
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <FuelFlowVisualization />
+                  </div>
+                </div>
 
-              {/* Fuel type selector */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Selected Fuel</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {currentFuel.name} — {currentFuel.transportMode}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {fuelTypes.map((fuel, i) => (
-                    <button
-                      key={fuel.name}
-                      onClick={() => { playSound('click'); setSelectedFuel(i); }}
-                      style={{
-                        padding: '8px 16px',
-                        borderRadius: '8px',
-                        border: selectedFuel === i ? `2px solid ${fuel.color}` : `1px solid ${colors.border}`,
-                        background: selectedFuel === i ? `${fuel.color}22` : colors.bgSecondary,
-                        color: colors.textPrimary,
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        minHeight: '44px',
-                      }}
-                    >
-                      {fuel.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Fuel type selector */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Selected Fuel</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {currentFuel.name} — {currentFuel.transportMode}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {fuelTypes.map((fuel, i) => (
+                        <button
+                          key={fuel.name}
+                          onClick={() => { playSound('click'); setSelectedFuel(i); }}
+                          style={{
+                            padding: '8px 16px',
+                            borderRadius: '8px',
+                            border: selectedFuel === i ? `2px solid ${fuel.color}` : `1px solid ${colors.border}`,
+                            background: selectedFuel === i ? `${fuel.color}22` : colors.bgSecondary,
+                            color: colors.textPrimary,
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            minHeight: '44px',
+                          }}
+                        >
+                          {fuel.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-              {/* Transport Distance slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Transport Distance</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {transportDistance} miles
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="50"
-                  max="5000"
-                  step="50"
-                  value={transportDistance}
-                  onChange={(e) => setTransportDistance(parseInt(e.target.value))}
-                  onInput={(e) => setTransportDistance(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Transport Distance"
-                  style={sliderStyle(colors.accent, transportDistance, 50, 5000)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>50 mi</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>2500 mi</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>5000 mi</span>
+                  {/* Transport Distance slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Transport Distance</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {transportDistance} miles
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="50"
+                      max="5000"
+                      step="50"
+                      value={transportDistance}
+                      onChange={(e) => setTransportDistance(parseInt(e.target.value))}
+                      onInput={(e) => setTransportDistance(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Transport Distance"
+                      style={sliderStyle(colors.accent, transportDistance, 50, 5000)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>50 mi</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>2500 mi</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>5000 mi</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1635,45 +1651,60 @@ const ELON_FuelDeliveryRenderer: React.FC<FuelDeliveryRendererProps> = ({ onGame
               padding: '16px',
               marginBottom: '20px',
             }}>
-              {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <DisruptionVisualization />
-              </div>
-
-              {/* Disruption severity slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Disruption Severity</span>
-                  <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>{disruptionSeverity}% supply cut</span>
+              {/* Side by side layout: SVG left, controls right on desktop */}
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+                marginBottom: '20px',
+              }}>
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <DisruptionVisualization />
+                  </div>
                 </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={disruptionSeverity}
-                  onChange={(e) => setDisruptionSeverity(parseInt(e.target.value))}
-                  onInput={(e) => setDisruptionSeverity(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Disruption severity"
-                  style={sliderStyle(colors.error, disruptionSeverity, 0, 100)}
-                />
-              </div>
 
-              {/* Reserve days slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Strategic Reserve (days)</span>
-                  <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{reserveDays} days</span>
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Disruption severity slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Disruption Severity</span>
+                      <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>{disruptionSeverity}% supply cut</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={disruptionSeverity}
+                      onChange={(e) => setDisruptionSeverity(parseInt(e.target.value))}
+                      onInput={(e) => setDisruptionSeverity(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Disruption severity"
+                      style={sliderStyle(colors.error, disruptionSeverity, 0, 100)}
+                    />
+                  </div>
+
+                  {/* Reserve days slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Strategic Reserve (days)</span>
+                      <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{reserveDays} days</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="90"
+                      value={reserveDays}
+                      onChange={(e) => setReserveDays(parseInt(e.target.value))}
+                      onInput={(e) => setReserveDays(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Strategic reserve days"
+                      style={sliderStyle(colors.success, reserveDays, 0, 90)}
+                    />
+                  </div>
                 </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="90"
-                  value={reserveDays}
-                  onChange={(e) => setReserveDays(parseInt(e.target.value))}
-                  onInput={(e) => setReserveDays(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Strategic reserve days"
-                  style={sliderStyle(colors.success, reserveDays, 0, 90)}
-                />
               </div>
 
               {/* Results */}

@@ -1295,81 +1295,93 @@ const ELON_SolarDeploymentRenderer: React.FC<SolarDeploymentRendererProps> = ({ 
               padding: '16px',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <SolarFarmVisualization />
-              </div>
-
-              {/* GCR slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Ground Coverage Ratio</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    GCR: {gcr.toFixed(2)} — {gcr < 0.35 ? 'Wide spacing' : gcr < 0.55 ? 'Optimal range' : 'Tight — shading risk'}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="20"
-                  max="80"
-                  value={gcr * 100}
-                  onChange={(e) => setGcr(parseInt(e.target.value) / 100)}
-                  onInput={(e) => setGcr(parseInt((e.target as HTMLInputElement).value) / 100)}
-                  aria-label="Ground Coverage Ratio"
-                  style={sliderStyle(colors.accent, gcr * 100, 20, 80)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.success }}>0.20 (wide)</span>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>0.40 (typical)</span>
-                  <span style={{ ...typo.small, color: colors.error }}>0.80 (tight)</span>
-                </div>
-              </div>
-
-              {/* Tilt angle slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Tilt Angle</span>
-                  <span style={{ ...typo.small, color: colors.sky, fontWeight: 600 }}>
-                    {tiltAngle}° {Math.abs(tiltAngle - 30) < 5 ? '(near optimal)' : ''}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="5"
-                  max="60"
-                  value={tiltAngle}
-                  onChange={(e) => setTiltAngle(parseInt(e.target.value))}
-                  onInput={(e) => setTiltAngle(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Tilt Angle"
-                  style={sliderStyle(colors.sky, tiltAngle, 5, 60)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>5° (flat)</span>
-                  <span style={{ ...typo.small, color: colors.sky }}>30° (optimal ~lat)</span>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>60° (steep)</span>
-                </div>
-              </div>
-
-              {/* Stats grid */}
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
               }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{energyYield.toFixed(0)}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>kWh/kWp/yr</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: parseFloat(shadingLossPercent) > 10 ? colors.error : colors.success }}>
-                    {shadingLossPercent}%
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <SolarFarmVisualization />
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Shading Loss</div>
                 </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.sky }}>
-                    {capacityDensity.toFixed(2)}
+
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* GCR slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Ground Coverage Ratio</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        GCR: {gcr.toFixed(2)} — {gcr < 0.35 ? 'Wide spacing' : gcr < 0.55 ? 'Optimal range' : 'Tight — shading risk'}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="20"
+                      max="80"
+                      value={gcr * 100}
+                      onChange={(e) => setGcr(parseInt(e.target.value) / 100)}
+                      onInput={(e) => setGcr(parseInt((e.target as HTMLInputElement).value) / 100)}
+                      aria-label="Ground Coverage Ratio"
+                      style={sliderStyle(colors.accent, gcr * 100, 20, 80)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.success }}>0.20 (wide)</span>
+                      <span style={{ ...typo.small, color: colors.error }}>0.80 (tight)</span>
+                    </div>
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>MW/acre</div>
+
+                  {/* Tilt angle slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Tilt Angle</span>
+                      <span style={{ ...typo.small, color: colors.sky, fontWeight: 600 }}>
+                        {tiltAngle}° {Math.abs(tiltAngle - 30) < 5 ? '(near optimal)' : ''}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="5"
+                      max="60"
+                      value={tiltAngle}
+                      onChange={(e) => setTiltAngle(parseInt(e.target.value))}
+                      onInput={(e) => setTiltAngle(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Tilt Angle"
+                      style={sliderStyle(colors.sky, tiltAngle, 5, 60)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>5° (flat)</span>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>60° (steep)</span>
+                    </div>
+                  </div>
+
+                  {/* Stats grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '8px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>{energyYield.toFixed(0)}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>kWh/kWp/yr</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: parseFloat(shadingLossPercent) > 10 ? colors.error : colors.success }}>
+                        {shadingLossPercent}%
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Shading Loss</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.sky }}>
+                        {capacityDensity.toFixed(2)}
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>MW/acre</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1716,95 +1728,108 @@ const ELON_SolarDeploymentRenderer: React.FC<SolarDeploymentRendererProps> = ({ 
               padding: '16px',
               marginBottom: '20px',
             }}>
-              {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <TrackingVisualization />
-              </div>
-
-              {/* Educational panel */}
-              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The left panel stays fixed at your chosen tilt angle while the right panel dynamically tracks the sun across the sky, always staying perpendicular to capture maximum energy.</p>
-                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you toggle tracking on, the right panel rotates to follow the sun, boosting energy capture by 15-25%. Adjusting the base tilt angle changes the fixed panel's performance while the tracker compensates automatically.</p>
-              </div>
-
-              {/* Tracking toggle */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <span style={{ ...typo.body, color: colors.textSecondary }}>Single-Axis Tracking</span>
-                  <button
-                    onClick={() => { playSound('click'); setTrackingEnabled(!trackingEnabled); }}
-                    style={{
-                      padding: '10px 24px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      background: trackingEnabled ? colors.success : colors.border,
-                      color: 'white',
-                      cursor: 'pointer',
-                      fontWeight: 600,
-                      minHeight: '44px',
-                      transition: 'all 0.2s',
-                    }}
-                  >
-                    {trackingEnabled ? 'ON — Tracking Active' : 'OFF — Fixed Tilt'}
-                  </button>
-                </div>
-              </div>
-
-              {/* Tilt angle slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Base Tilt Angle</span>
-                  <span style={{ ...typo.small, color: colors.sky, fontWeight: 600 }}>{tiltAngle}°</span>
-                </div>
-                <input
-                  type="range"
-                  min="5"
-                  max="60"
-                  value={tiltAngle}
-                  onChange={(e) => setTiltAngle(parseInt(e.target.value))}
-                  onInput={(e) => setTiltAngle(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Tilt Angle"
-                  style={sliderStyle(colors.sky, tiltAngle, 5, 60)}
-                />
-              </div>
-
-              {/* Results */}
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-                marginBottom: '20px',
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
               }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: '#3B82F6' }}>{energyYield.toFixed(0)} kWh/kWp</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Fixed-Tilt Annual</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.success }}>{energyYieldTracking.toFixed(0)} kWh/kWp</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Tracking Annual</div>
-                </div>
-              </div>
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <TrackingVisualization />
+                  </div>
 
-              {/* Tracking gain highlight */}
-              <div style={{
-                background: trackingEnabled ? `${colors.success}22` : `${colors.warning}22`,
-                border: `1px solid ${trackingEnabled ? colors.success : colors.warning}`,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
-                  Tracking Energy Gain:
-                </p>
-                <div style={{
-                  ...typo.h2,
-                  color: trackingEnabled ? colors.success : colors.warning
-                }}>
-                  +{trackingGain}% Annual Energy
+                  {/* Educational panel */}
+                  <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginTop: '16px' }}>
+                    <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The left panel stays fixed at your chosen tilt angle while the right panel dynamically tracks the sun across the sky, always staying perpendicular to capture maximum energy.</p>
+                    <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you toggle tracking on, the right panel rotates to follow the sun, boosting energy capture by 15-25%. Adjusting the base tilt angle changes the fixed panel's performance while the tracker compensates automatically.</p>
+                  </div>
                 </div>
-                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-                  Added cost: tracker hardware, motors, maintenance
-                </p>
+
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Tracking toggle */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                      <span style={{ ...typo.body, color: colors.textSecondary }}>Single-Axis Tracking</span>
+                      <button
+                        onClick={() => { playSound('click'); setTrackingEnabled(!trackingEnabled); }}
+                        style={{
+                          padding: '10px 24px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: trackingEnabled ? colors.success : colors.border,
+                          color: 'white',
+                          cursor: 'pointer',
+                          fontWeight: 600,
+                          minHeight: '44px',
+                          transition: 'all 0.2s',
+                        }}
+                      >
+                        {trackingEnabled ? 'ON — Tracking Active' : 'OFF — Fixed Tilt'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Tilt angle slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Base Tilt Angle</span>
+                      <span style={{ ...typo.small, color: colors.sky, fontWeight: 600 }}>{tiltAngle}°</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="5"
+                      max="60"
+                      value={tiltAngle}
+                      onChange={(e) => setTiltAngle(parseInt(e.target.value))}
+                      onInput={(e) => setTiltAngle(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Tilt Angle"
+                      style={sliderStyle(colors.sky, tiltAngle, 5, 60)}
+                    />
+                  </div>
+
+                  {/* Results */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '8px',
+                    marginBottom: '16px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: '#3B82F6' }}>{energyYield.toFixed(0)} kWh/kWp</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Fixed-Tilt Annual</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.success }}>{energyYieldTracking.toFixed(0)} kWh/kWp</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Tracking Annual</div>
+                    </div>
+                  </div>
+
+                  {/* Tracking gain highlight */}
+                  <div style={{
+                    background: trackingEnabled ? `${colors.success}22` : `${colors.warning}22`,
+                    border: `1px solid ${trackingEnabled ? colors.success : colors.warning}`,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
+                      Tracking Energy Gain:
+                    </p>
+                    <div style={{
+                      ...typo.h2,
+                      color: trackingEnabled ? colors.success : colors.warning
+                    }}>
+                      +{trackingGain}% Annual Energy
+                    </div>
+                    <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+                      Added cost: tracker hardware, motors, maintenance
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

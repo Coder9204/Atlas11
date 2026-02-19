@@ -1130,88 +1130,108 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
               Try moving the redundancy slider and observe how the block diagram changes. When you increase redundancy, notice how parallel paths appear and the system uptime jumps dramatically. Higher redundancy causes the failure probability to shrink exponentially because both parallel components must fail simultaneously.
             </p>
 
-            {/* Main visualization */}
+            {/* Main visualization - side by side on desktop */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <ReliabilityVisualization />
-              </div>
-
-              {/* Redundancy level slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Redundancy Level</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {redundancyLabels[redundancyLevel]}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="4"
-                  value={redundancyLevel}
-                  onChange={(e) => setRedundancyLevel(parseInt(e.target.value))}
-                  onInput={(e) => setRedundancyLevel(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Redundancy Level"
-                  style={sliderStyle(colors.accent, redundancyLevel, 1, 4)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>N (None)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>N+1</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>2N</span>
-                  <span style={{ ...typo.small, color: colors.success }}>2N+1</span>
-                </div>
-              </div>
-
-              {/* Component reliability slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Component Reliability</span>
-                  <span style={{ ...typo.small, color: colors.component, fontWeight: 600 }}>
-                    {componentReliability}%
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="90"
-                  max="100"
-                  step="0.1"
-                  value={componentReliability}
-                  onChange={(e) => setComponentReliability(parseFloat(e.target.value))}
-                  onInput={(e) => setComponentReliability(parseFloat((e.target as HTMLInputElement).value))}
-                  aria-label="Component Reliability Percentage"
-                  style={sliderStyle(colors.component, componentReliability, 90, 100)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.error }}>90% (Low)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>95%</span>
-                  <span style={{ ...typo.small, color: colors.success }}>100% (Perfect)</span>
-                </div>
-              </div>
-
-              {/* Stats grid */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: currentUptime >= 99.99 ? colors.success : currentUptime >= 99 ? colors.warning : colors.error }}>
-                    {currentUptime.toFixed(4)}%
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <ReliabilityVisualization />
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>System Uptime</div>
                 </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{currentClass}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Availability Class</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.error }}>{currentDowntime}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Annual Downtime</div>
+              </div>
+
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Redundancy level slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Redundancy Level</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {redundancyLabels[redundancyLevel]}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="4"
+                      value={redundancyLevel}
+                      onChange={(e) => setRedundancyLevel(parseInt(e.target.value))}
+                      onInput={(e) => setRedundancyLevel(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Redundancy Level"
+                      style={sliderStyle(colors.accent, redundancyLevel, 1, 4)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>N (None)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>N+1</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>2N</span>
+                      <span style={{ ...typo.small, color: colors.success }}>2N+1</span>
+                    </div>
+                  </div>
+
+                  {/* Component reliability slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Component Reliability</span>
+                      <span style={{ ...typo.small, color: colors.component, fontWeight: 600 }}>
+                        {componentReliability}%
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="90"
+                      max="100"
+                      step="0.1"
+                      value={componentReliability}
+                      onChange={(e) => setComponentReliability(parseFloat(e.target.value))}
+                      onInput={(e) => setComponentReliability(parseFloat((e.target as HTMLInputElement).value))}
+                      aria-label="Component Reliability Percentage"
+                      style={sliderStyle(colors.component, componentReliability, 90, 100)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.error }}>90% (Low)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>95%</span>
+                      <span style={{ ...typo.small, color: colors.success }}>100% (Perfect)</span>
+                    </div>
+                  </div>
+
+                  {/* Stats grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '12px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: currentUptime >= 99.99 ? colors.success : currentUptime >= 99 ? colors.warning : colors.error }}>
+                        {currentUptime.toFixed(4)}%
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>System Uptime</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>{currentClass}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Availability Class</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.error }}>{currentDowntime}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Annual Downtime</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1570,125 +1590,145 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
               <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> Increasing maintenance hours directly subtracts from system uptime. Raising redundancy level compensates by ensuring spare capacity remains even during service windows.</p>
             </div>
 
+            {/* Side-by-side layout on desktop */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              {/* SVG Visualization with maintenance */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <ReliabilityVisualization showMaintenance={true} />
-              </div>
-
-              {/* Maintenance toggle */}
-              <div style={{ marginBottom: '20px' }}>
-                <button
-                  onClick={() => { playSound('click'); setMaintenanceActive(!maintenanceActive); }}
-                  style={{
-                    width: '100%',
-                    padding: '14px',
-                    borderRadius: '10px',
-                    border: `2px solid ${maintenanceActive ? colors.maintenance : colors.border}`,
-                    background: maintenanceActive ? `${colors.maintenance}22` : colors.bgSecondary,
-                    color: maintenanceActive ? colors.maintenance : colors.textSecondary,
-                    cursor: 'pointer',
-                    fontWeight: 700,
-                    fontSize: '16px',
-                    minHeight: '44px',
-                  }}
-                >
-                  {maintenanceActive ? '\u{1F527} Maintenance Windows ACTIVE — Planned Downtime Enabled' : 'Click to Enable Maintenance Windows'}
-                </button>
-              </div>
-
-              {/* Maintenance hours slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Annual Maintenance Hours</span>
-                  <span style={{ ...typo.small, color: colors.maintenance, fontWeight: 600 }}>{maintenanceInterval} hours/year</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="168"
-                  step="1"
-                  value={maintenanceInterval}
-                  onChange={(e) => setMaintenanceInterval(parseInt(e.target.value))}
-                  onInput={(e) => setMaintenanceInterval(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Annual Maintenance Hours"
-                  style={sliderStyle(colors.maintenance, maintenanceInterval, 0, 168)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>0hr (No Maintenance)</span>
-                  <span style={{ ...typo.small, color: colors.maintenance }}>168hr (1 week)</span>
-                </div>
-              </div>
-
-              {/* Redundancy slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Redundancy Level</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {['', 'N', 'N+1', '2N', '2N+1'][redundancyLevel]}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="4"
-                  value={redundancyLevel}
-                  onChange={(e) => setRedundancyLevel(parseInt(e.target.value))}
-                  onInput={(e) => setRedundancyLevel(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Redundancy Level"
-                  style={sliderStyle(colors.accent, redundancyLevel, 1, 4)}
-                />
-              </div>
-
-              {/* Comparison Results */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-                marginBottom: '20px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Without Maintenance</div>
-                  <div style={{ ...typo.h3, color: uptimeWithout >= 99.99 ? colors.success : colors.warning }}>
-                    {uptimeWithout.toFixed(4)}%
-                  </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>
-                    Downtime: {getDowntimePerYear(uptimeWithout)}/yr
-                  </div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>With {maintenanceInterval}hr Maintenance</div>
-                  <div style={{ ...typo.h3, color: uptimeWith >= 99.99 ? colors.success : maintenanceActive ? colors.maintenance : colors.warning }}>
-                    {maintenanceActive ? uptimeWith.toFixed(4) : uptimeWithout.toFixed(4)}%
-                  </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>
-                    Downtime: {getDowntimePerYear(maintenanceActive ? uptimeWith : uptimeWithout)}/yr
-                  </div>
-                </div>
-              </div>
-
-              {/* Impact indicator */}
-              {maintenanceActive && maintenanceInterval > 0 && (
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                 <div style={{
-                  background: `${colors.warning}22`,
-                  border: `1px solid ${colors.warning}`,
-                  borderRadius: '12px',
+                  background: colors.bgCard,
+                  borderRadius: '16px',
                   padding: '16px',
-                  textAlign: 'center',
                 }}>
-                  <p style={{ ...typo.body, color: colors.warning, fontWeight: 700, margin: 0 }}>
-                    Maintenance reduces uptime by {(uptimeWithout - uptimeWith).toFixed(4)} percentage points
-                  </p>
-                  <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
-                    This is why Tier IV requires "concurrent maintainability" — the ability to service any component without reducing redundancy below N
-                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <ReliabilityVisualization showMaintenance={true} />
+                  </div>
                 </div>
-              )}
+              </div>
+
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Maintenance toggle */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <button
+                      onClick={() => { playSound('click'); setMaintenanceActive(!maintenanceActive); }}
+                      style={{
+                        width: '100%',
+                        padding: '14px',
+                        borderRadius: '10px',
+                        border: `2px solid ${maintenanceActive ? colors.maintenance : colors.border}`,
+                        background: maintenanceActive ? `${colors.maintenance}22` : colors.bgSecondary,
+                        color: maintenanceActive ? colors.maintenance : colors.textSecondary,
+                        cursor: 'pointer',
+                        fontWeight: 700,
+                        fontSize: '16px',
+                        minHeight: '44px',
+                      }}
+                    >
+                      {maintenanceActive ? '\u{1F527} Maintenance Windows ACTIVE — Planned Downtime Enabled' : 'Click to Enable Maintenance Windows'}
+                    </button>
+                  </div>
+
+                  {/* Maintenance hours slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Annual Maintenance Hours</span>
+                      <span style={{ ...typo.small, color: colors.maintenance, fontWeight: 600 }}>{maintenanceInterval} hours/year</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="168"
+                      step="1"
+                      value={maintenanceInterval}
+                      onChange={(e) => setMaintenanceInterval(parseInt(e.target.value))}
+                      onInput={(e) => setMaintenanceInterval(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Annual Maintenance Hours"
+                      style={sliderStyle(colors.maintenance, maintenanceInterval, 0, 168)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>0hr (No Maintenance)</span>
+                      <span style={{ ...typo.small, color: colors.maintenance }}>168hr (1 week)</span>
+                    </div>
+                  </div>
+
+                  {/* Redundancy slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Redundancy Level</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {['', 'N', 'N+1', '2N', '2N+1'][redundancyLevel]}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="4"
+                      value={redundancyLevel}
+                      onChange={(e) => setRedundancyLevel(parseInt(e.target.value))}
+                      onInput={(e) => setRedundancyLevel(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Redundancy Level"
+                      style={sliderStyle(colors.accent, redundancyLevel, 1, 4)}
+                    />
+                  </div>
+
+                  {/* Comparison Results */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px',
+                    marginBottom: '20px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Without Maintenance</div>
+                      <div style={{ ...typo.h3, color: uptimeWithout >= 99.99 ? colors.success : colors.warning }}>
+                        {uptimeWithout.toFixed(4)}%
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>
+                        Downtime: {getDowntimePerYear(uptimeWithout)}/yr
+                      </div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>With {maintenanceInterval}hr Maintenance</div>
+                      <div style={{ ...typo.h3, color: uptimeWith >= 99.99 ? colors.success : maintenanceActive ? colors.maintenance : colors.warning }}>
+                        {maintenanceActive ? uptimeWith.toFixed(4) : uptimeWithout.toFixed(4)}%
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>
+                        Downtime: {getDowntimePerYear(maintenanceActive ? uptimeWith : uptimeWithout)}/yr
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Impact indicator */}
+                  {maintenanceActive && maintenanceInterval > 0 && (
+                    <div style={{
+                      background: `${colors.warning}22`,
+                      border: `1px solid ${colors.warning}`,
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'center',
+                    }}>
+                      <p style={{ ...typo.body, color: colors.warning, fontWeight: 700, margin: 0 }}>
+                        Maintenance reduces uptime by {(uptimeWithout - uptimeWith).toFixed(4)} percentage points
+                      </p>
+                      <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
+                        This is why Tier IV requires "concurrent maintainability" — the ability to service any component without reducing redundancy below N
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>

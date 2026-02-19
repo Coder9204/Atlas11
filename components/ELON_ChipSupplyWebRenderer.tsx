@@ -1222,87 +1222,108 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
               Try moving the slider and notice how energy, time, and rate of production shift at each level.
             </p>
 
+            {/* Main visualization — side-by-side on desktop */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <SupplyChainVisualization />
-              </div>
-
-              {/* Technology node slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Technology Node</span>
-                  <span style={{ ...typo.small, color: concentration.color, fontWeight: 600 }}>{techNode}nm</span>
-                </div>
-                <input
-                  type="range"
-                  min="2"
-                  max="28"
-                  step="1"
-                  value={techNode}
-                  onChange={(e) => setTechNode(parseInt(e.target.value))}
-                  onInput={(e) => setTechNode(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Technology node in nanometers"
-                  style={sliderStyle(concentration.color, techNode, 2, 28)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.error }}>2nm (cutting edge)</span>
-                  <span style={{ ...typo.small, color: colors.success }}>28nm (mature)</span>
-                </div>
-              </div>
-
-              {/* Concentration stats */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
-                marginBottom: '20px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: concentration.color }}>{concentration.fabCount}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Capable Fabs</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: concentration.color }}>{concentration.risk}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Risk Level</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: techNode <= 7 ? colors.error : colors.success }}>
-                    {techNode <= 7 ? 'YES' : 'NO'}
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* SVG Visualization */}
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <SupplyChainVisualization />
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Requires EUV</div>
                 </div>
               </div>
 
-              {/* Key insight */}
-              <div style={{
-                background: `${concentration.color}15`,
-                border: `1px solid ${concentration.color}44`,
-                borderRadius: '12px',
-                padding: '16px',
-              }}>
-                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                  {techNode <= 3 && (
-                    <><strong style={{ color: colors.error }}>Extreme concentration:</strong> Only TSMC can manufacture at this node. A single point of failure for the entire global tech industry.</>
-                  )}
-                  {techNode > 3 && techNode <= 5 && (
-                    <><strong style={{ color: '#F97316' }}>Very high concentration:</strong> Only TSMC and Samsung compete at this node. Both require ASML EUV machines that have zero substitutes.</>
-                  )}
-                  {techNode > 5 && techNode <= 7 && (
-                    <><strong style={{ color: colors.warning }}>High concentration:</strong> Three companies (TSMC, Samsung, Intel) operate at this node. All depend on ASML for EUV lithography.</>
-                  )}
-                  {techNode > 7 && techNode <= 14 && (
-                    <><strong style={{ color: colors.success }}>Moderate distribution:</strong> Multiple foundries can manufacture at this node using DUV lithography. Supply chain risk is manageable.</>
-                  )}
-                  {techNode > 14 && (
-                    <><strong style={{ color: '#22C55E' }}>Low concentration:</strong> Many fabs worldwide produce at 28nm. This mature node has a robust, diversified supply chain with multiple alternatives at every stage.</>
-                  )}
-                </p>
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Technology node slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Technology Node</span>
+                      <span style={{ ...typo.small, color: concentration.color, fontWeight: 600 }}>{techNode}nm</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="2"
+                      max="28"
+                      step="1"
+                      value={techNode}
+                      onChange={(e) => setTechNode(parseInt(e.target.value))}
+                      onInput={(e) => setTechNode(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Technology node in nanometers"
+                      style={sliderStyle(concentration.color, techNode, 2, 28)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.error }}>2nm (cutting edge)</span>
+                      <span style={{ ...typo.small, color: colors.success }}>28nm (mature)</span>
+                    </div>
+                  </div>
+
+                  {/* Concentration stats */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(1, 1fr)',
+                    gap: '12px',
+                    marginBottom: '20px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: concentration.color }}>{concentration.fabCount}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Capable Fabs</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: concentration.color }}>{concentration.risk}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Risk Level</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: techNode <= 7 ? colors.error : colors.success }}>
+                        {techNode <= 7 ? 'YES' : 'NO'}
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Requires EUV</div>
+                    </div>
+                  </div>
+
+                  {/* Key insight */}
+                  <div style={{
+                    background: `${concentration.color}15`,
+                    border: `1px solid ${concentration.color}44`,
+                    borderRadius: '12px',
+                    padding: '16px',
+                  }}>
+                    <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                      {techNode <= 3 && (
+                        <><strong style={{ color: colors.error }}>Extreme concentration:</strong> Only TSMC can manufacture at this node. A single point of failure for the entire global tech industry.</>
+                      )}
+                      {techNode > 3 && techNode <= 5 && (
+                        <><strong style={{ color: '#F97316' }}>Very high concentration:</strong> Only TSMC and Samsung compete at this node. Both require ASML EUV machines that have zero substitutes.</>
+                      )}
+                      {techNode > 5 && techNode <= 7 && (
+                        <><strong style={{ color: colors.warning }}>High concentration:</strong> Three companies (TSMC, Samsung, Intel) operate at this node. All depend on ASML for EUV lithography.</>
+                      )}
+                      {techNode > 7 && techNode <= 14 && (
+                        <><strong style={{ color: colors.success }}>Moderate distribution:</strong> Multiple foundries can manufacture at this node using DUV lithography. Supply chain risk is manageable.</>
+                      )}
+                      {techNode > 14 && (
+                        <><strong style={{ color: '#22C55E' }}>Low concentration:</strong> Many fabs worldwide produce at 28nm. This mature node has a robust, diversified supply chain with multiple alternatives at every stage.</>
+                      )}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1701,95 +1722,116 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
               Click a node to disrupt it and see the cascade effect through the supply chain
             </p>
 
+            {/* Main visualization — side-by-side on desktop */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              {/* Disruption Cascade SVG */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <DisruptionVisualization />
-              </div>
-
-              {/* Educational panel */}
-              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you&apos;re seeing:</strong> This cascade visualization maps how a single disruption at ASML propagates through the entire semiconductor supply chain, halting all advanced chip production worldwide.</p>
-                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you select different nodes to disrupt, observe how the number of affected downstream stages and the severity of impact changes based on that node&apos;s substitutability.</p>
-              </div>
-
-              {/* Interactive disruption selector */}
-              <div style={{ marginBottom: '20px' }}>
-                <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '12px', fontWeight: 600 }}>
-                  Select a node to disrupt:
-                </p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {supplyNodes.filter(n => ['euv', 'fab', 'eda', 'photomask', 'wafer', 'neon'].includes(n.id)).map(node => (
-                    <button
-                      key={node.id}
-                      onClick={() => {
-                        playSound('click');
-                        setDisruptedNode(disruptedNode === node.id ? null : node.id);
-                      }}
-                      style={{
-                        background: disruptedNode === node.id ? `${colors.error}33` : colors.bgSecondary,
-                        border: `2px solid ${disruptedNode === node.id ? colors.error : colors.border}`,
-                        borderRadius: '8px',
-                        padding: '8px 14px',
-                        cursor: 'pointer',
-                        color: disruptedNode === node.id ? colors.error : colors.textSecondary,
-                        fontSize: '13px',
-                        fontWeight: disruptedNode === node.id ? 700 : 500,
-                        minHeight: '44px',
-                      }}
-                    >
-                      {node.flag} {node.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Network with disruption overlay */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <SupplyChainVisualization showDisruption={true} />
-              </div>
-
-              {/* Disruption impact details */}
-              {disruptedNode && (
+              {/* Left: SVG visualizations */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                 <div style={{
-                  background: `${colors.error}15`,
-                  border: `1px solid ${colors.error}44`,
-                  borderRadius: '12px',
+                  background: colors.bgCard,
+                  borderRadius: '16px',
                   padding: '16px',
                 }}>
-                  {(() => {
-                    const node = supplyNodes.find(n => n.id === disruptedNode);
-                    if (!node) return null;
-                    const downstream = supplyEdges.filter(e => e.from === disruptedNode).map(e => supplyNodes.find(n => n.id === e.to)?.name).filter(Boolean);
-                    return (
-                      <>
-                        <p style={{ ...typo.body, color: colors.error, fontWeight: 700, marginBottom: '8px' }}>
-                          {node.flag} {node.name} Disrupted
-                        </p>
-                        <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
-                          <strong>Substitutes available:</strong> {node.substitutes <= 1 ? 'NONE - sole source' : `${node.substitutes} (with significant ramp-up time)`}
-                        </p>
-                        <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
-                          <strong>Directly affected:</strong> {downstream.join(', ') || 'End of chain'}
-                        </p>
-                        <p style={{ ...typo.small, color: colors.textMuted }}>
-                          {disruptedNode === 'euv' && 'ASML is the SOLE manufacturer of EUV lithography. Zero alternatives exist. All sub-7nm chip production would halt globally within months as existing machines break down.'}
-                          {disruptedNode === 'fab' && 'TSMC produces 90% of advanced logic chips. Loss would devastate every major tech company and military system worldwide.'}
-                          {disruptedNode === 'eda' && 'Without EDA tools, no new chip designs can be completed. The Synopsys/Cadence duopoly means Chinese companies cut off from US EDA cannot design advanced chips.'}
-                          {disruptedNode === 'photomask' && 'Photomask production is concentrated in Japan. Each advanced mask set costs $20M+ and takes weeks to produce.'}
-                          {disruptedNode === 'wafer' && 'Japan controls 60%+ of silicon wafer production. Shin-Etsu and SUMCO dominate the market for 300mm wafers.'}
-                          {disruptedNode === 'neon' && 'Neon gas is essential for DUV lithography. The Russia-Ukraine conflict spiked neon prices 10x before alternative sources ramped.'}
-                        </p>
-                      </>
-                    );
-                  })()}
+                  {/* Disruption Cascade SVG */}
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <DisruptionVisualization />
+                  </div>
+
+                  {/* Network with disruption overlay */}
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <SupplyChainVisualization showDisruption={true} />
+                  </div>
+
+                  {/* Educational panel */}
+                  <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginTop: '16px' }}>
+                    <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you&apos;re seeing:</strong> This cascade visualization maps how a single disruption at ASML propagates through the entire semiconductor supply chain, halting all advanced chip production worldwide.</p>
+                    <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you select different nodes to disrupt, observe how the number of affected downstream stages and the severity of impact changes based on that node&apos;s substitutability.</p>
+                  </div>
                 </div>
-              )}
+              </div>
+
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Interactive disruption selector */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '12px', fontWeight: 600 }}>
+                      Select a node to disrupt:
+                    </p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                      {supplyNodes.filter(n => ['euv', 'fab', 'eda', 'photomask', 'wafer', 'neon'].includes(n.id)).map(node => (
+                        <button
+                          key={node.id}
+                          onClick={() => {
+                            playSound('click');
+                            setDisruptedNode(disruptedNode === node.id ? null : node.id);
+                          }}
+                          style={{
+                            background: disruptedNode === node.id ? `${colors.error}33` : colors.bgSecondary,
+                            border: `2px solid ${disruptedNode === node.id ? colors.error : colors.border}`,
+                            borderRadius: '8px',
+                            padding: '8px 14px',
+                            cursor: 'pointer',
+                            color: disruptedNode === node.id ? colors.error : colors.textSecondary,
+                            fontSize: '13px',
+                            fontWeight: disruptedNode === node.id ? 700 : 500,
+                            minHeight: '44px',
+                          }}
+                        >
+                          {node.flag} {node.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Disruption impact details */}
+                  {disruptedNode && (
+                    <div style={{
+                      background: `${colors.error}15`,
+                      border: `1px solid ${colors.error}44`,
+                      borderRadius: '12px',
+                      padding: '16px',
+                    }}>
+                      {(() => {
+                        const node = supplyNodes.find(n => n.id === disruptedNode);
+                        if (!node) return null;
+                        const downstream = supplyEdges.filter(e => e.from === disruptedNode).map(e => supplyNodes.find(n => n.id === e.to)?.name).filter(Boolean);
+                        return (
+                          <>
+                            <p style={{ ...typo.body, color: colors.error, fontWeight: 700, marginBottom: '8px' }}>
+                              {node.flag} {node.name} Disrupted
+                            </p>
+                            <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
+                              <strong>Substitutes available:</strong> {node.substitutes <= 1 ? 'NONE - sole source' : `${node.substitutes} (with significant ramp-up time)`}
+                            </p>
+                            <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
+                              <strong>Directly affected:</strong> {downstream.join(', ') || 'End of chain'}
+                            </p>
+                            <p style={{ ...typo.small, color: colors.textMuted }}>
+                              {disruptedNode === 'euv' && 'ASML is the SOLE manufacturer of EUV lithography. Zero alternatives exist. All sub-7nm chip production would halt globally within months as existing machines break down.'}
+                              {disruptedNode === 'fab' && 'TSMC produces 90% of advanced logic chips. Loss would devastate every major tech company and military system worldwide.'}
+                              {disruptedNode === 'eda' && 'Without EDA tools, no new chip designs can be completed. The Synopsys/Cadence duopoly means Chinese companies cut off from US EDA cannot design advanced chips.'}
+                              {disruptedNode === 'photomask' && 'Photomask production is concentrated in Japan. Each advanced mask set costs $20M+ and takes weeks to produce.'}
+                              {disruptedNode === 'wafer' && 'Japan controls 60%+ of silicon wafer production. Shin-Etsu and SUMCO dominate the market for 300mm wafers.'}
+                              {disruptedNode === 'neon' && 'Neon gas is essential for DUV lithography. The Russia-Ukraine conflict spiked neon prices 10x before alternative sources ramped.'}
+                            </p>
+                          </>
+                        );
+                      })()}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>

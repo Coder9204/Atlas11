@@ -1131,87 +1131,107 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
               This visualization displays the complete thermal resistance chain. Watch how junction temperature changes as you adjust the sliders — observe how higher ambient temperature causes PUE to worsen and free cooling hours to decrease.
             </p>
 
-            {/* Main visualization */}
+            {/* Main visualization — side-by-side on desktop */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <CoolingChainVisualization />
-              </div>
-
-              {/* Ambient Temperature slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Ambient Temperature</span>
-                  <span style={{ ...typo.small, color: ambientTemp > 30 ? colors.hot : ambientTemp < 5 ? colors.cold : colors.accent, fontWeight: 600 }}>
-                    {ambientTemp}°C
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="-10"
-                  max="45"
-                  value={ambientTemp}
-                  onChange={(e) => setAmbientTemp(parseInt(e.target.value))}
-                  onInput={(e) => setAmbientTemp(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Ambient Temperature"
-                  style={sliderStyle(colors.accent, ambientTemp, -10, 45)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.cold }}>-10°C (Nordic)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>15°C (Temperate)</span>
-                  <span style={{ ...typo.small, color: colors.hot }}>45°C (Desert)</span>
-                </div>
-              </div>
-
-              {/* GPU Power slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>GPU Power per Chip</span>
-                  <span style={{ ...typo.small, color: gpuPower > 700 ? colors.hot : colors.accent, fontWeight: 600 }}>
-                    {gpuPower}W {gpuPower > 700 ? '(Liquid Required)' : '(Air Feasible)'}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="100"
-                  max="1000"
-                  step="50"
-                  value={gpuPower}
-                  onChange={(e) => setGpuPower(parseInt(e.target.value))}
-                  onInput={(e) => setGpuPower(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="GPU Power"
-                  style={sliderStyle(colors.warning, gpuPower, 100, 1000)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.success }}>100W</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>500W</span>
-                  <span style={{ ...typo.small, color: colors.hot }}>1000W</span>
-                </div>
-              </div>
-
-              {/* Stats grid */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.cold }}>{freeCoolingHours}h</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Free Cooling</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: pue < 1.2 ? colors.success : pue < 1.5 ? colors.warning : colors.error }}>{pue.toFixed(2)}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>PUE</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: junctionTemp > 105 ? colors.error : junctionTemp > 90 ? colors.warning : colors.success }}>
-                    {Math.min(junctionTemp, 150).toFixed(0)}°C
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <CoolingChainVisualization />
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>T_junction</div>
+                </div>
+              </div>
+
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Ambient Temperature slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Ambient Temperature</span>
+                      <span style={{ ...typo.small, color: ambientTemp > 30 ? colors.hot : ambientTemp < 5 ? colors.cold : colors.accent, fontWeight: 600 }}>
+                        {ambientTemp}°C
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="-10"
+                      max="45"
+                      value={ambientTemp}
+                      onChange={(e) => setAmbientTemp(parseInt(e.target.value))}
+                      onInput={(e) => setAmbientTemp(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Ambient Temperature"
+                      style={sliderStyle(colors.accent, ambientTemp, -10, 45)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.cold }}>-10°C (Nordic)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>15°C (Temperate)</span>
+                      <span style={{ ...typo.small, color: colors.hot }}>45°C (Desert)</span>
+                    </div>
+                  </div>
+
+                  {/* GPU Power slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>GPU Power per Chip</span>
+                      <span style={{ ...typo.small, color: gpuPower > 700 ? colors.hot : colors.accent, fontWeight: 600 }}>
+                        {gpuPower}W {gpuPower > 700 ? '(Liquid Required)' : '(Air Feasible)'}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="100"
+                      max="1000"
+                      step="50"
+                      value={gpuPower}
+                      onChange={(e) => setGpuPower(parseInt(e.target.value))}
+                      onInput={(e) => setGpuPower(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="GPU Power"
+                      style={sliderStyle(colors.warning, gpuPower, 100, 1000)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.success }}>100W</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>500W</span>
+                      <span style={{ ...typo.small, color: colors.hot }}>1000W</span>
+                    </div>
+                  </div>
+
+                  {/* Stats grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(1, 1fr)',
+                    gap: '12px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.cold }}>{freeCoolingHours}h</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Free Cooling</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: pue < 1.2 ? colors.success : pue < 1.5 ? colors.warning : colors.error }}>{pue.toFixed(2)}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>PUE</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: junctionTemp > 105 ? colors.error : junctionTemp > 90 ? colors.warning : colors.success }}>
+                        {Math.min(junctionTemp, 150).toFixed(0)}°C
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>T_junction</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1546,71 +1566,92 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
               See why doubling GPU power forces a fundamental change in cooling approach
             </p>
 
+            {/* Main visualization — side-by-side on desktop */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <TwistVisualization />
-              </div>
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* SVG Visualization */}
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <TwistVisualization />
+                  </div>
 
-              {/* Educational panel */}
-              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The chart compares air cooling vs direct liquid cooling for a 1000W GPU. Air cooling produces dangerously high junction temperatures that exceed the 105°C thermal limit, while liquid cooling keeps temps safe by slashing thermal resistance.</p>
-                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you raise the ambient temperature slider, both junction temperatures climb, but air cooling crosses the failure threshold much sooner. Lowering ambient temp shows how free cooling and climate selection can buy significant thermal headroom.</p>
-              </div>
-
-              {/* Ambient temp slider for twist */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Ambient Temperature</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{twistAmbientTemp}°C</span>
-                </div>
-                <input
-                  type="range"
-                  min="-10"
-                  max="45"
-                  value={twistAmbientTemp}
-                  onChange={(e) => setTwistAmbientTemp(parseInt(e.target.value))}
-                  onInput={(e) => setTwistAmbientTemp(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Twist Ambient Temperature"
-                  style={sliderStyle(colors.accent, twistAmbientTemp, -10, 45)}
-                />
-              </div>
-
-              {/* Results */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-                marginBottom: '20px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.error }}>{airJTemp.toFixed(0)}°C</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Air Junction Temp</div>
-                  <div style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>FAILS</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.success }}>{liquidJTemp.toFixed(0)}°C</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Liquid Junction Temp</div>
-                  <div style={{ ...typo.small, color: liquidJTemp > 105 ? colors.error : colors.success, fontWeight: 600 }}>{liquidJTemp > 105 ? 'MARGINAL' : 'SAFE'}</div>
+                  {/* Educational panel */}
+                  <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginTop: '16px' }}>
+                    <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The chart compares air cooling vs direct liquid cooling for a 1000W GPU. Air cooling produces dangerously high junction temperatures that exceed the 105°C thermal limit, while liquid cooling keeps temps safe by slashing thermal resistance.</p>
+                    <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you raise the ambient temperature slider, both junction temperatures climb, but air cooling crosses the failure threshold much sooner. Lowering ambient temp shows how free cooling and climate selection can buy significant thermal headroom.</p>
+                  </div>
                 </div>
               </div>
 
-              {/* Key insight */}
-              <div style={{
-                background: `${colors.error}22`,
-                border: `1px solid ${colors.error}`,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                  <strong style={{ color: colors.error }}>At 1000W per GPU:</strong> Air cooling produces {airJTemp.toFixed(0)}°C junction temperature — {(airJTemp - 105).toFixed(0)}°C above the thermal limit. Direct liquid cooling reduces this to {liquidJTemp.toFixed(0)}°C by cutting thermal resistance from 0.40 to 0.18 °C/W.
-                </p>
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Ambient temp slider for twist */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Ambient Temperature</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{twistAmbientTemp}°C</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="-10"
+                      max="45"
+                      value={twistAmbientTemp}
+                      onChange={(e) => setTwistAmbientTemp(parseInt(e.target.value))}
+                      onInput={(e) => setTwistAmbientTemp(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Twist Ambient Temperature"
+                      style={sliderStyle(colors.accent, twistAmbientTemp, -10, 45)}
+                    />
+                  </div>
+
+                  {/* Results */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(1, 1fr)',
+                    gap: '12px',
+                    marginBottom: '20px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.error }}>{airJTemp.toFixed(0)}°C</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Air Junction Temp</div>
+                      <div style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>FAILS</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.success }}>{liquidJTemp.toFixed(0)}°C</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Liquid Junction Temp</div>
+                      <div style={{ ...typo.small, color: liquidJTemp > 105 ? colors.error : colors.success, fontWeight: 600 }}>{liquidJTemp > 105 ? 'MARGINAL' : 'SAFE'}</div>
+                    </div>
+                  </div>
+
+                  {/* Key insight */}
+                  <div style={{
+                    background: `${colors.error}22`,
+                    border: `1px solid ${colors.error}`,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                      <strong style={{ color: colors.error }}>At 1000W per GPU:</strong> Air cooling produces {airJTemp.toFixed(0)}°C junction temperature — {(airJTemp - 105).toFixed(0)}°C above the thermal limit. Direct liquid cooling reduces this to {liquidJTemp.toFixed(0)}°C by cutting thermal resistance from 0.40 to 0.18 °C/W.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

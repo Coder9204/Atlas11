@@ -1117,63 +1117,84 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
               Drag the Load Mass slider to see how payload affects the joint&apos;s operating point on the torque-speed curve. The arm visualization above the plot shows the physical effect — heavier loads cause the arm to droop as the motor approaches its limits.
             </p>
 
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <ActuatorVisualization />
-              </div>
-
-              {/* Load Mass slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Load Mass</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {loadMass.toFixed(1)} kg {isOverloaded ? '(OVERLOADED!)' : isNearStall ? '(Near Stall!)' : ''}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0.5"
-                  max="25"
-                  step="0.5"
-                  value={loadMass}
-                  onChange={(e) => setLoadMass(parseFloat(e.target.value))}
-                  onInput={(e) => setLoadMass(parseFloat((e.target as HTMLInputElement).value))}
-                  aria-label="Load Mass"
-                  style={sliderStyle(colors.accent, loadMass, 0.5, 25)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.success }}>0.5 kg (Light)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>12.5 kg</span>
-                  <span style={{ ...typo.small, color: colors.error }}>25 kg (Heavy)</span>
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', overflow: 'hidden' }}>
+                    <ActuatorVisualization />
+                  </div>
                 </div>
               </div>
 
-              {/* Stats grid */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: '12px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '14px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.torque }}>{torqueRequired.toFixed(1)}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Torque (N-m)</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '14px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.speed }}>{isOverloaded ? 0 : operatingSpeed.toFixed(0)}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Speed (rpm)</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '14px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.power }}>{isOverloaded ? 0 : powerOutput.toFixed(0)}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Power (W)</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '14px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: thermalLoad > 80 ? colors.error : colors.thermal }}>{thermalLoad.toFixed(0)}%</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Thermal Load</div>
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Load Mass slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Load Mass</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {loadMass.toFixed(1)} kg {isOverloaded ? '(OVERLOADED!)' : isNearStall ? '(Near Stall!)' : ''}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.5"
+                      max="25"
+                      step="0.5"
+                      value={loadMass}
+                      onChange={(e) => setLoadMass(parseFloat(e.target.value))}
+                      onInput={(e) => setLoadMass(parseFloat((e.target as HTMLInputElement).value))}
+                      aria-label="Load Mass"
+                      style={sliderStyle(colors.accent, loadMass, 0.5, 25)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.success }}>0.5 kg (Light)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>12.5 kg</span>
+                      <span style={{ ...typo.small, color: colors.error }}>25 kg (Heavy)</span>
+                    </div>
+                  </div>
+
+                  {/* Stats grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '14px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.torque }}>{torqueRequired.toFixed(1)}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Torque (N-m)</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '14px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.speed }}>{isOverloaded ? 0 : operatingSpeed.toFixed(0)}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Speed (rpm)</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '14px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.power }}>{isOverloaded ? 0 : powerOutput.toFixed(0)}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Power (W)</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '14px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: thermalLoad > 80 ? colors.error : colors.thermal }}>{thermalLoad.toFixed(0)}%</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Thermal Load</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1523,99 +1544,119 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
               Toggle gear reduction on/off and adjust load mass to see how gears transform the torque-speed operating envelope
             </p>
 
+            {/* Educational panel */}
+            <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+              <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}>
+                <strong style={{ color: colors.accent }}>What you're seeing:</strong> The torque-speed curve reshapes dramatically when you toggle the 50:1 gear reduction -- the operating envelope stretches along the torque axis while compressing along the speed axis, showing the fundamental energy conservation tradeoff.
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}>
+                <strong style={{ color: colors.success }}>Cause and Effect:</strong> Enabling gear reduction multiplies the motor stall torque by 50 (letting it handle heavier loads without overloading), but divides maximum speed by 50 and introduces 0.3 degrees of backlash that degrades positioning precision.
+              </p>
+            </div>
+
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              {/* Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <ActuatorVisualization />
-              </div>
-
-              {/* Educational panel */}
-              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}>
-                  <strong style={{ color: colors.accent }}>What you're seeing:</strong> The torque-speed curve reshapes dramatically when you toggle the 50:1 gear reduction -- the operating envelope stretches along the torque axis while compressing along the speed axis, showing the fundamental energy conservation tradeoff.
-                </p>
-                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}>
-                  <strong style={{ color: colors.success }}>Cause and Effect:</strong> Enabling gear reduction multiplies the motor stall torque by 50 (letting it handle heavier loads without overloading), but divides maximum speed by 50 and introduces 0.3 degrees of backlash that degrades positioning precision.
-                </p>
-              </div>
-
-              {/* Gear reduction toggle */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <span style={{ ...typo.body, color: colors.textSecondary }}>Gear Reduction (50:1)</span>
-                  <button
-                    onClick={() => { playSound('click'); setGearReduction(!gearReduction); }}
-                    style={{
-                      background: gearReduction ? colors.warning : colors.bgSecondary,
-                      color: gearReduction ? 'white' : colors.textMuted,
-                      border: `2px solid ${gearReduction ? colors.warning : colors.border}`,
-                      padding: '10px 24px',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      fontWeight: 700,
-                      minHeight: '44px',
-                      transition: 'all 0.2s',
-                    }}
-                  >
-                    {gearReduction ? 'ON — 50:1 Geared' : 'OFF — Direct Drive'}
-                  </button>
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', overflow: 'hidden' }}>
+                    <ActuatorVisualization />
+                  </div>
                 </div>
               </div>
 
-              {/* Load mass slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Load Mass</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{loadMass.toFixed(1)} kg</span>
-                </div>
-                <input
-                  type="range"
-                  min="0.5"
-                  max="25"
-                  step="0.5"
-                  value={loadMass}
-                  onChange={(e) => setLoadMass(parseFloat(e.target.value))}
-                  onInput={(e) => setLoadMass(parseFloat((e.target as HTMLInputElement).value))}
-                  aria-label="Load Mass"
-                  style={sliderStyle(colors.accent, loadMass, 0.5, 25)}
-                />
-              </div>
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Gear reduction toggle */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                      <span style={{ ...typo.body, color: colors.textSecondary }}>Gear Reduction (50:1)</span>
+                      <button
+                        onClick={() => { playSound('click'); setGearReduction(!gearReduction); }}
+                        style={{
+                          background: gearReduction ? colors.warning : colors.bgSecondary,
+                          color: gearReduction ? 'white' : colors.textMuted,
+                          border: `2px solid ${gearReduction ? colors.warning : colors.border}`,
+                          padding: '10px 24px',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          fontWeight: 700,
+                          minHeight: '44px',
+                          transition: 'all 0.2s',
+                        }}
+                      >
+                        {gearReduction ? 'ON — 50:1 Geared' : 'OFF — Direct Drive'}
+                      </button>
+                    </div>
+                  </div>
 
-              {/* Comparison grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-                <div style={{ background: `${colors.speed}11`, borderRadius: '12px', padding: '16px', textAlign: 'center', border: `1px solid ${colors.speed}33` }}>
-                  <div style={{ ...typo.small, color: colors.speed, marginBottom: '4px', fontWeight: 600 }}>Direct Drive</div>
-                  <div style={{ ...typo.h3, color: colors.textPrimary }}>Max {directTorqueLimit} N-m</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>at {directSpeedLimit} rpm no-load</div>
-                  <div style={{ ...typo.small, color: colors.success, marginTop: '4px' }}>0 backlash</div>
-                </div>
-                <div style={{ background: `${colors.warning}11`, borderRadius: '12px', padding: '16px', textAlign: 'center', border: `1px solid ${colors.warning}33` }}>
-                  <div style={{ ...typo.small, color: colors.warning, marginBottom: '4px', fontWeight: 600 }}>50:1 Geared</div>
-                  <div style={{ ...typo.h3, color: colors.textPrimary }}>Max {gearedTorqueLimit} N-m</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>at {gearedSpeedLimit} rpm no-load</div>
-                  <div style={{ ...typo.small, color: colors.error, marginTop: '4px' }}>0.3° backlash</div>
-                </div>
-              </div>
+                  {/* Load mass slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Load Mass</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{loadMass.toFixed(1)} kg</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.5"
+                      max="25"
+                      step="0.5"
+                      value={loadMass}
+                      onChange={(e) => setLoadMass(parseFloat(e.target.value))}
+                      onInput={(e) => setLoadMass(parseFloat((e.target as HTMLInputElement).value))}
+                      aria-label="Load Mass"
+                      style={sliderStyle(colors.accent, loadMass, 0.5, 25)}
+                    />
+                  </div>
 
-              {/* Key insight */}
-              <div style={{
-                background: isOverloaded ? `${colors.error}22` : `${colors.success}22`,
-                border: `1px solid ${isOverloaded ? colors.error : colors.success}`,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                  {gearReduction
-                    ? `With 50:1 gears: ${effectiveTorque} N-m max torque, ${effectiveSpeed} rpm max speed. Backlash = ${backlashDeg}°. ${isOverloaded ? 'Still overloaded!' : `Handling ${loadMass} kg with ${thermalLoad.toFixed(0)}% thermal load.`}`
-                    : `Direct drive: ${effectiveTorque} N-m max torque, ${effectiveSpeed} rpm max speed. ${isOverloaded ? `Cannot handle ${loadMass} kg — need gear reduction!` : `Handling ${loadMass} kg at ${operatingSpeed.toFixed(0)} rpm.`}`
-                  }
-                </p>
+                  {/* Comparison grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                    <div style={{ background: `${colors.speed}11`, borderRadius: '12px', padding: '16px', textAlign: 'center', border: `1px solid ${colors.speed}33` }}>
+                      <div style={{ ...typo.small, color: colors.speed, marginBottom: '4px', fontWeight: 600 }}>Direct Drive</div>
+                      <div style={{ ...typo.h3, color: colors.textPrimary }}>Max {directTorqueLimit} N-m</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>at {directSpeedLimit} rpm no-load</div>
+                      <div style={{ ...typo.small, color: colors.success, marginTop: '4px' }}>0 backlash</div>
+                    </div>
+                    <div style={{ background: `${colors.warning}11`, borderRadius: '12px', padding: '16px', textAlign: 'center', border: `1px solid ${colors.warning}33` }}>
+                      <div style={{ ...typo.small, color: colors.warning, marginBottom: '4px', fontWeight: 600 }}>50:1 Geared</div>
+                      <div style={{ ...typo.h3, color: colors.textPrimary }}>Max {gearedTorqueLimit} N-m</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>at {gearedSpeedLimit} rpm no-load</div>
+                      <div style={{ ...typo.small, color: colors.error, marginTop: '4px' }}>0.3° backlash</div>
+                    </div>
+                  </div>
+
+                  {/* Key insight */}
+                  <div style={{
+                    background: isOverloaded ? `${colors.error}22` : `${colors.success}22`,
+                    border: `1px solid ${isOverloaded ? colors.error : colors.success}`,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                      {gearReduction
+                        ? `With 50:1 gears: ${effectiveTorque} N-m max torque, ${effectiveSpeed} rpm max speed. Backlash = ${backlashDeg}°. ${isOverloaded ? 'Still overloaded!' : `Handling ${loadMass} kg with ${thermalLoad.toFixed(0)}% thermal load.`}`
+                        : `Direct drive: ${effectiveTorque} N-m max torque, ${effectiveSpeed} rpm max speed. ${isOverloaded ? `Cannot handle ${loadMass} kg — need gear reduction!` : `Handling ${loadMass} kg at ${operatingSpeed.toFixed(0)} rpm.`}`
+                      }
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

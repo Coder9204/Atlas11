@@ -1158,91 +1158,111 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
               This visualization shows how minerals flow from mines through processing to manufacturing. Watch how the HHI concentration index changes for different minerals. Adjust the demand growth slider to see when supply deficits emerge.
             </p>
 
-            {/* Main visualization */}
+            {/* Main visualization — side-by-side on desktop */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <SupplyChainVisualization />
-              </div>
-
-              {/* Mineral selector */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Mineral</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {currentMineral.name} (Processing HHI: {processingHHI.toFixed(0)})
-                  </span>
-                </div>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {mineralFlows.map((mineral, i) => (
-                    <button
-                      key={mineral.name}
-                      onClick={() => { playSound('click'); setSelectedMineral(i); }}
-                      style={{
-                        padding: '8px 16px',
-                        borderRadius: '8px',
-                        border: selectedMineral === i ? `2px solid ${mineral.color}` : `1px solid ${colors.border}`,
-                        background: selectedMineral === i ? `${mineral.color}22` : colors.bgSecondary,
-                        color: colors.textPrimary,
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        minHeight: '44px',
-                      }}
-                    >
-                      {mineral.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Demand growth slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Demand Growth Rate</span>
-                  <span style={{ ...typo.small, color: demandGrowthRate > 15 ? colors.hot : colors.accent, fontWeight: 600 }}>
-                    {demandGrowthRate}%/yr (Deficit in ~{deficitYear < 20 ? deficitYear : '>20'} years)
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="5"
-                  max="20"
-                  value={demandGrowthRate}
-                  onChange={(e) => setDemandGrowthRate(parseInt(e.target.value))}
-                  onInput={(e) => setDemandGrowthRate(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Demand Growth Rate"
-                  style={sliderStyle(colors.accent, demandGrowthRate, 5, 20)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.success }}>5%/yr</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>12%/yr</span>
-                  <span style={{ ...typo.small, color: colors.hot }}>20%/yr</span>
-                </div>
-              </div>
-
-              {/* Stats grid */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: miningHHI > 2500 ? colors.error : colors.success }}>{miningHHI.toFixed(0)}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Mining HHI</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: processingHHI > 2500 ? colors.error : colors.success }}>{processingHHI.toFixed(0)}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Processing HHI</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: deficitYear < 10 ? colors.hot : colors.warning }}>
-                    ~{deficitYear < 20 ? deficitYear : '>20'}yr
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <SupplyChainVisualization />
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>To Deficit</div>
+                </div>
+              </div>
+
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Mineral selector */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Mineral</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {currentMineral.name} (Processing HHI: {processingHHI.toFixed(0)})
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {mineralFlows.map((mineral, i) => (
+                        <button
+                          key={mineral.name}
+                          onClick={() => { playSound('click'); setSelectedMineral(i); }}
+                          style={{
+                            padding: '8px 16px',
+                            borderRadius: '8px',
+                            border: selectedMineral === i ? `2px solid ${mineral.color}` : `1px solid ${colors.border}`,
+                            background: selectedMineral === i ? `${mineral.color}22` : colors.bgSecondary,
+                            color: colors.textPrimary,
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            minHeight: '44px',
+                          }}
+                        >
+                          {mineral.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Demand growth slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Demand Growth Rate</span>
+                      <span style={{ ...typo.small, color: demandGrowthRate > 15 ? colors.hot : colors.accent, fontWeight: 600 }}>
+                        {demandGrowthRate}%/yr (Deficit in ~{deficitYear < 20 ? deficitYear : '>20'} years)
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="5"
+                      max="20"
+                      value={demandGrowthRate}
+                      onChange={(e) => setDemandGrowthRate(parseInt(e.target.value))}
+                      onInput={(e) => setDemandGrowthRate(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Demand Growth Rate"
+                      style={sliderStyle(colors.accent, demandGrowthRate, 5, 20)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.success }}>5%/yr</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>12%/yr</span>
+                      <span style={{ ...typo.small, color: colors.hot }}>20%/yr</span>
+                    </div>
+                  </div>
+
+                  {/* Stats grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(1, 1fr)',
+                    gap: '12px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: miningHHI > 2500 ? colors.error : colors.success }}>{miningHHI.toFixed(0)}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Mining HHI</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: processingHHI > 2500 ? colors.error : colors.success }}>{processingHHI.toFixed(0)}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Processing HHI</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: deficitYear < 10 ? colors.hot : colors.warning }}>
+                        ~{deficitYear < 20 ? deficitYear : '>20'}yr
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>To Deficit</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1580,111 +1600,132 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
               Toggle the export ban to see how supply chain concentration amplifies disruption
             </p>
 
+            {/* Main visualization — side-by-side on desktop */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <ExportBanVisualization />
-              </div>
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* SVG Visualization */}
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <ExportBanVisualization />
+                  </div>
 
-              {/* Educational panel */}
-              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The export ban scenario shows how a single country halting mineral exports can devastate global supply chains, with recovery timelines stretching years as alternative processing capacity is built.</p>
-                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you toggle the export ban or change the demand growth rate, observe how price spikes multiply and recovery timelines lengthen for minerals with higher processing concentration (HHI).</p>
-              </div>
-
-              {/* Mineral selector */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Mineral</span>
-                  <span style={{ ...typo.small, color: currentMineral.color, fontWeight: 600 }}>{currentMineral.name}</span>
+                  {/* Educational panel */}
+                  <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginTop: '16px' }}>
+                    <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The export ban scenario shows how a single country halting mineral exports can devastate global supply chains, with recovery timelines stretching years as alternative processing capacity is built.</p>
+                    <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you toggle the export ban or change the demand growth rate, observe how price spikes multiply and recovery timelines lengthen for minerals with higher processing concentration (HHI).</p>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {mineralFlows.map((mineral, i) => (
+              </div>
+
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Mineral selector */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Mineral</span>
+                      <span style={{ ...typo.small, color: currentMineral.color, fontWeight: 600 }}>{currentMineral.name}</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {mineralFlows.map((mineral, i) => (
+                        <button
+                          key={mineral.name}
+                          onClick={() => { playSound('click'); setSelectedMineral(i); }}
+                          style={{
+                            padding: '8px 16px',
+                            borderRadius: '8px',
+                            border: selectedMineral === i ? `2px solid ${mineral.color}` : `1px solid ${colors.border}`,
+                            background: selectedMineral === i ? `${mineral.color}22` : colors.bgSecondary,
+                            color: colors.textPrimary,
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            minHeight: '44px',
+                          }}
+                        >
+                          {mineral.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Export ban toggle */}
+                  <div style={{ marginBottom: '20px' }}>
                     <button
-                      key={mineral.name}
-                      onClick={() => { playSound('click'); setSelectedMineral(i); }}
+                      onClick={() => { playSound(exportBanActive ? 'click' : 'failure'); setExportBanActive(!exportBanActive); }}
                       style={{
-                        padding: '8px 16px',
-                        borderRadius: '8px',
-                        border: selectedMineral === i ? `2px solid ${mineral.color}` : `1px solid ${colors.border}`,
-                        background: selectedMineral === i ? `${mineral.color}22` : colors.bgSecondary,
-                        color: colors.textPrimary,
+                        width: '100%',
+                        padding: '16px',
+                        borderRadius: '12px',
+                        border: `2px solid ${exportBanActive ? colors.error : colors.success}`,
+                        background: exportBanActive ? `${colors.error}22` : `${colors.success}11`,
+                        color: exportBanActive ? colors.error : colors.success,
                         cursor: 'pointer',
-                        fontSize: '14px',
+                        fontSize: '16px',
+                        fontWeight: 700,
                         minHeight: '44px',
+                        transition: 'all 0.3s ease',
                       }}
                     >
-                      {mineral.name}
+                      {exportBanActive ? 'EXPORT BAN ACTIVE - Click to Lift' : 'Click to Impose Export Ban'}
                     </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Export ban toggle */}
-              <div style={{ marginBottom: '20px' }}>
-                <button
-                  onClick={() => { playSound(exportBanActive ? 'click' : 'failure'); setExportBanActive(!exportBanActive); }}
-                  style={{
-                    width: '100%',
-                    padding: '16px',
-                    borderRadius: '12px',
-                    border: `2px solid ${exportBanActive ? colors.error : colors.success}`,
-                    background: exportBanActive ? `${colors.error}22` : `${colors.success}11`,
-                    color: exportBanActive ? colors.error : colors.success,
-                    cursor: 'pointer',
-                    fontSize: '16px',
-                    fontWeight: 700,
-                    minHeight: '44px',
-                    transition: 'all 0.3s ease',
-                  }}
-                >
-                  {exportBanActive ? 'EXPORT BAN ACTIVE - Click to Lift' : 'Click to Impose Export Ban'}
-                </button>
-              </div>
-
-              {/* Demand growth slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Demand Growth Rate</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{demandGrowthRate}%/yr</span>
-                </div>
-                <input
-                  type="range"
-                  min="5"
-                  max="20"
-                  value={demandGrowthRate}
-                  onChange={(e) => setDemandGrowthRate(parseInt(e.target.value))}
-                  onInput={(e) => setDemandGrowthRate(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Demand Growth Rate"
-                  style={sliderStyle(colors.accent, demandGrowthRate, 5, 20)}
-                />
-              </div>
-
-              {/* Impact summary */}
-              {exportBanActive && (
-                <div style={{
-                  background: `${colors.error}22`,
-                  border: `1px solid ${colors.error}`,
-                  borderRadius: '12px',
-                  padding: '16px',
-                  textAlign: 'center',
-                }}>
-                  <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
-                    With {Object.entries(currentMineral.processingShare).sort((a, b) => b[1] - a[1])[0][1]}% processing offline:
-                  </p>
-                  <div style={{ ...typo.h2, color: colors.error }}>
-                    Supply Crisis
                   </div>
-                  <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-                    No quick substitutes for many applications. Recovery requires building new processing facilities: 5-10 years.
-                  </p>
+
+                  {/* Demand growth slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Demand Growth Rate</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{demandGrowthRate}%/yr</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="5"
+                      max="20"
+                      value={demandGrowthRate}
+                      onChange={(e) => setDemandGrowthRate(parseInt(e.target.value))}
+                      onInput={(e) => setDemandGrowthRate(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Demand Growth Rate"
+                      style={sliderStyle(colors.accent, demandGrowthRate, 5, 20)}
+                    />
+                  </div>
+
+                  {/* Impact summary */}
+                  {exportBanActive && (
+                    <div style={{
+                      background: `${colors.error}22`,
+                      border: `1px solid ${colors.error}`,
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'center',
+                    }}>
+                      <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
+                        With {Object.entries(currentMineral.processingShare).sort((a, b) => b[1] - a[1])[0][1]}% processing offline:
+                      </p>
+                      <div style={{ ...typo.h2, color: colors.error }}>
+                        Supply Crisis
+                      </div>
+                      <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+                        No quick substitutes for many applications. Recovery requires building new processing facilities: 5-10 years.
+                      </p>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </div>

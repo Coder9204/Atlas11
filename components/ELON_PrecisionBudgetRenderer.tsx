@@ -1169,209 +1169,223 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
           This concept is important in real-world engineering and technology design. Try adjusting the sliders below to observe how errors compound through estimation chains. Notice how small per-step changes lead to dramatic differences in total uncertainty.
         </p>
 
-        {/* Estimation Precision Slider */}
-        <div
-          style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: isMobile ? '20px' : '28px',
-            border: `1px solid ${colors.border}`,
-            marginBottom: '20px',
-          }}
-        >
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '4px' }}>
-            Estimation Precision
-          </h3>
-          <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '16px' }}>
-            How accurate is each estimation step?
-          </p>
-
-          <input type="range" min="0" max="100" value={perStepErrorPct}
-            onChange={(e) => setPerStepErrorPct(parseInt(e.target.value))}
-            onInput={(e) => setPerStepErrorPct(parseInt((e.target as HTMLInputElement).value))}
-            style={sliderStyle}
-          />
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              marginTop: '8px',
-            }}
-          >
-            <span style={{ ...typo.small, color: colors.success }}>Precise (1.01x)</span>
-            <span
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
+        }}>
+          {/* Left: SVG visualization */}
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+            {/* SVG Visualization */}
+            <div
               style={{
-                ...typo.body,
-                color: getErrorColor(perStepError),
-                fontWeight: 700,
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: isMobile ? '12px' : '16px',
+                border: `1px solid ${colors.border}`,
+                marginBottom: '20px',
+                maxHeight: '50vh',
+                overflow: 'hidden',
               }}
             >
-              {perStepError < 2
-                ? `±${((perStepError - 1) * 100).toFixed(0)}% per step`
-                : `${perStepError.toFixed(1)}x per step`}
-            </span>
-            <span style={{ ...typo.small, color: colors.error }}>Rough (10x)</span>
-          </div>
-        </div>
+              {renderErrorSVG(
+                (() => {
+                  const errs: number[] = [];
+                  for (let i = 1; i <= numSteps; i++) {
+                    errs.push(getErrorForMode(i, perStepError, selectedMaterial));
+                  }
+                  return errs;
+                })(),
+                numSteps,
+                perStepError,
+                selectedMaterial,
+                isMobile ? 360 : 640,
+                isMobile ? 280 : 400
+              )}
+            </div>
 
-        {/* Number of Steps Slider */}
-        <div
-          style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: isMobile ? '20px' : '28px',
-            border: `1px solid ${colors.border}`,
-            marginBottom: '20px',
-          }}
-        >
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '4px' }}>
-            Estimation Chain Length
-          </h3>
-          <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '16px' }}>
-            How many chained estimates? ({numSteps} steps)
-          </p>
+            <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '12px' }}>
+              Equation: Total Error = (per-step error)^steps — varies as the number of estimation steps increases
+            </p>
 
-          <input type="range" min="1" max="12" value={numSteps}
-            onChange={(e) => setNumSteps(parseInt(e.target.value))}
-            onInput={(e) => setNumSteps(parseInt((e.target as HTMLInputElement).value))}
-            style={sliderStyle}
-          />
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              marginTop: '8px',
-            }}
-          >
-            <span style={{ ...typo.small, color: colors.success }}>1 step</span>
-            <span style={{ ...typo.body, color: colors.accent, fontWeight: 700 }}>
-              {numSteps} steps
-            </span>
-            <span style={{ ...typo.small, color: colors.error }}>12 steps</span>
-          </div>
-        </div>
-
-        {/* Error Model Selector */}
-        <div
-          style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: isMobile ? '20px' : '28px',
-            border: `1px solid ${colors.border}`,
-            marginBottom: '20px',
-          }}
-        >
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>
-            Error Propagation Model
-          </h3>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {[
-              { key: 'multiplicative', label: 'Multiplicative', desc: 'Errors multiply (worst case)' },
-              { key: 'additive', label: 'Additive', desc: 'Errors add linearly' },
-              { key: 'rss', label: 'RSS', desc: 'Root sum of squares' },
-            ].map((m) => (
-              <button
-                key={m.key}
-                onClick={() => {
-                  playSound('click');
-                  setSelectedMaterial(m.key as typeof selectedMaterial);
-                  emitEvent('selection_made', { model: m.key });
-                }}
+            {/* Total Error Display */}
+            <div
+              style={{
+                background: `linear-gradient(135deg, ${colors.bgCard}, ${getErrorColor(totalError)}11)`,
+                borderRadius: '16px',
+                padding: '16px',
+                border: `1px solid ${getErrorColor(totalError)}44`,
+                textAlign: 'center',
+              }}
+            >
+              <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>
+                Total Compounded Uncertainty
+              </p>
+              <p
                 style={{
-                  flex: 1,
-                  minWidth: isMobile ? '100%' : '150px',
-                  padding: '12px 16px',
-                  background: selectedMaterial === m.key ? `${colors.accent}22` : colors.bgSecondary,
-                  border: `2px solid ${selectedMaterial === m.key ? colors.accent : colors.border}`,
-                  borderRadius: '10px',
-                  color: selectedMaterial === m.key ? colors.accent : colors.textSecondary,
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  transition: 'all 0.2s ease',
+                  fontSize: isMobile ? '36px' : '48px',
+                  fontWeight: 800,
+                  color: getErrorColor(totalError),
+                  marginBottom: '8px',
                 }}
               >
-                <div style={{ fontWeight: 700, fontSize: '15px', marginBottom: '4px' }}>
-                  {m.label}
-                </div>
-                <div style={{ fontSize: '12px', color: colors.textMuted }}>{m.desc}</div>
-              </button>
-            ))}
+                {totalError < 10
+                  ? totalError < 2
+                    ? `${((totalError - 1) * 100).toFixed(0)}%`
+                    : `${totalError.toFixed(2)}x`
+                  : `${totalError.toFixed(0)}x`}
+              </p>
+              <p style={{ ...typo.small, color: colors.textSecondary }}>
+                {selectedMaterial === 'multiplicative'
+                  ? `(${perStepError.toFixed(2)})^${numSteps} = ${totalError.toFixed(3)}`
+                  : selectedMaterial === 'additive'
+                  ? `1 + ${numSteps} x ${(perStepError - 1).toFixed(2)} = ${totalError.toFixed(3)}`
+                  : `1 + sqrt(${numSteps}) x ${(perStepError - 1).toFixed(2)} = ${totalError.toFixed(3)}`}
+              </p>
+              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+                Your estimate could be off by a factor of{' '}
+                <strong style={{ color: getErrorColor(totalError) }}>
+                  {totalError.toFixed(1)}
+                </strong>{' '}
+                in either direction
+              </p>
+            </div>
           </div>
-        </div>
 
-        {/* SVG Visualization */}
-        <div
-          style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: isMobile ? '12px' : '16px',
-            border: `1px solid ${colors.border}`,
-            marginBottom: '20px',
-            maxHeight: '50vh',
-            overflow: 'hidden',
-          }}
-        >
-          {renderErrorSVG(
-            (() => {
-              const errs: number[] = [];
-              for (let i = 1; i <= numSteps; i++) {
-                errs.push(getErrorForMode(i, perStepError, selectedMaterial));
-              }
-              return errs;
-            })(),
-            numSteps,
-            perStepError,
-            selectedMaterial,
-            isMobile ? 360 : 640,
-            isMobile ? 280 : 400
-          )}
-        </div>
+          {/* Right: Controls panel */}
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            {/* Estimation Precision Slider */}
+            <div
+              style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: isMobile ? '20px' : '28px',
+                border: `1px solid ${colors.border}`,
+                marginBottom: '20px',
+              }}
+            >
+              <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '4px' }}>
+                Estimation Precision
+              </h3>
+              <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '16px' }}>
+                How accurate is each estimation step?
+              </p>
 
-        <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '12px' }}>
-          Equation: Total Error = (per-step error)^steps — varies as the number of estimation steps increases
-        </p>
+              <input type="range" min="0" max="100" value={perStepErrorPct}
+                onChange={(e) => setPerStepErrorPct(parseInt(e.target.value))}
+                onInput={(e) => setPerStepErrorPct(parseInt((e.target as HTMLInputElement).value))}
+                style={sliderStyle}
+              />
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginTop: '8px',
+                }}
+              >
+                <span style={{ ...typo.small, color: colors.success }}>Precise (1.01x)</span>
+                <span
+                  style={{
+                    ...typo.body,
+                    color: getErrorColor(perStepError),
+                    fontWeight: 700,
+                  }}
+                >
+                  {perStepError < 2
+                    ? `±${((perStepError - 1) * 100).toFixed(0)}% per step`
+                    : `${perStepError.toFixed(1)}x per step`}
+                </span>
+                <span style={{ ...typo.small, color: colors.error }}>Rough (10x)</span>
+              </div>
+            </div>
 
-        {/* Total Error Display */}
-        <div
-          style={{
-            background: `linear-gradient(135deg, ${colors.bgCard}, ${getErrorColor(totalError)}11)`,
-            borderRadius: '16px',
-            padding: '16px',
-            border: `1px solid ${getErrorColor(totalError)}44`,
-            textAlign: 'center',
-          }}
-        >
-          <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>
-            Total Compounded Uncertainty
-          </p>
-          <p
-            style={{
-              fontSize: isMobile ? '36px' : '48px',
-              fontWeight: 800,
-              color: getErrorColor(totalError),
-              marginBottom: '8px',
-            }}
-          >
-            {totalError < 10
-              ? totalError < 2
-                ? `${((totalError - 1) * 100).toFixed(0)}%`
-                : `${totalError.toFixed(2)}x`
-              : `${totalError.toFixed(0)}x`}
-          </p>
-          <p style={{ ...typo.small, color: colors.textSecondary }}>
-            {selectedMaterial === 'multiplicative'
-              ? `(${perStepError.toFixed(2)})^${numSteps} = ${totalError.toFixed(3)}`
-              : selectedMaterial === 'additive'
-              ? `1 + ${numSteps} x ${(perStepError - 1).toFixed(2)} = ${totalError.toFixed(3)}`
-              : `1 + sqrt(${numSteps}) x ${(perStepError - 1).toFixed(2)} = ${totalError.toFixed(3)}`}
-          </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            Your estimate could be off by a factor of{' '}
-            <strong style={{ color: getErrorColor(totalError) }}>
-              {totalError.toFixed(1)}
-            </strong>{' '}
-            in either direction
-          </p>
+            {/* Number of Steps Slider */}
+            <div
+              style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: isMobile ? '20px' : '28px',
+                border: `1px solid ${colors.border}`,
+                marginBottom: '20px',
+              }}
+            >
+              <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '4px' }}>
+                Estimation Chain Length
+              </h3>
+              <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '16px' }}>
+                How many chained estimates? ({numSteps} steps)
+              </p>
+
+              <input type="range" min="1" max="12" value={numSteps}
+                onChange={(e) => setNumSteps(parseInt(e.target.value))}
+                onInput={(e) => setNumSteps(parseInt((e.target as HTMLInputElement).value))}
+                style={sliderStyle}
+              />
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginTop: '8px',
+                }}
+              >
+                <span style={{ ...typo.small, color: colors.success }}>1 step</span>
+                <span style={{ ...typo.body, color: colors.accent, fontWeight: 700 }}>
+                  {numSteps} steps
+                </span>
+                <span style={{ ...typo.small, color: colors.error }}>12 steps</span>
+              </div>
+            </div>
+
+            {/* Error Model Selector */}
+            <div
+              style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: isMobile ? '20px' : '28px',
+                border: `1px solid ${colors.border}`,
+                marginBottom: '20px',
+              }}
+            >
+              <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>
+                Error Propagation Model
+              </h3>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {[
+                  { key: 'multiplicative', label: 'Multiplicative', desc: 'Errors multiply (worst case)' },
+                  { key: 'additive', label: 'Additive', desc: 'Errors add linearly' },
+                  { key: 'rss', label: 'RSS', desc: 'Root sum of squares' },
+                ].map((m) => (
+                  <button
+                    key={m.key}
+                    onClick={() => {
+                      playSound('click');
+                      setSelectedMaterial(m.key as typeof selectedMaterial);
+                      emitEvent('selection_made', { model: m.key });
+                    }}
+                    style={{
+                      flex: 1,
+                      minWidth: isMobile ? '100%' : '150px',
+                      padding: '12px 16px',
+                      background: selectedMaterial === m.key ? `${colors.accent}22` : colors.bgSecondary,
+                      border: `2px solid ${selectedMaterial === m.key ? colors.accent : colors.border}`,
+                      borderRadius: '10px',
+                      color: selectedMaterial === m.key ? colors.accent : colors.textSecondary,
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, fontSize: '15px', marginBottom: '4px' }}>
+                      {m.label}
+                    </div>
+                    <div style={{ fontSize: '12px', color: colors.textMuted }}>{m.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </PhaseWrapper>
@@ -1642,136 +1656,150 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
             <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you increase the per-step error or chain length using the sliders below, watch how the long chain's total error explodes exponentially while the short chain remains relatively contained.</p>
           </div>
 
-          {/* Per step error slider */}
-          <div
-            style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: isMobile ? '20px' : '28px',
-              border: `1px solid ${colors.border}`,
-              marginBottom: '20px',
-            }}
-          >
-            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '4px' }}>
-              Per-Step Error
-            </h3>
-            <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '16px' }}>
-              Same error rate for both chains
-            </p>
-            <input type="range" min="1" max="500" step="1" value={Math.round(twistPerStepError * 100)}
-              onChange={(e) => setTwistPerStepErrorPct(parseInt(e.target.value))}
-            onInput={(e) => setTwistPerStepErrorPct(parseInt((e.target as HTMLInputElement).value))}
-              style={sliderStyle}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
-              <span style={{ ...typo.small, color: colors.success }}>1.01x</span>
-              <span style={{ ...typo.body, fontWeight: 700, color: getErrorColor(twistPerStepError) }}>
-                {twistPerStepError < 2
-                  ? `±${((twistPerStepError - 1) * 100).toFixed(0)}% each`
-                  : `${twistPerStepError.toFixed(1)}x each`}
-              </span>
-              <span style={{ ...typo.small, color: colors.error }}>5x</span>
-            </div>
-          </div>
-
-          {/* Long chain steps slider */}
-          <div
-            style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: isMobile ? '20px' : '28px',
-              border: `1px solid ${colors.border}`,
-              marginBottom: '20px',
-            }}
-          >
-            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '4px' }}>
-              Long Chain Length
-            </h3>
-            <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '16px' }}>
-              Comparing 3 steps vs {twistSteps} steps
-            </p>
-            <input type="range" min="4" max="20" step="1" value={twistSteps}
-              onChange={(e) => setTwistSteps(parseInt(e.target.value))}
-            onInput={(e) => setTwistSteps(parseInt((e.target as HTMLInputElement).value))}
-              style={sliderStyle}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
-              <span style={{ ...typo.small, color: colors.success }}>4 steps</span>
-              <span style={{ ...typo.body, fontWeight: 700, color: colors.accent }}>
-                {twistSteps} steps
-              </span>
-              <span style={{ ...typo.small, color: colors.error }}>20 steps</span>
-            </div>
-          </div>
-
-          {/* Side-by-side comparison */}
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-            {/* Long chain */}
-            <div
-              style={{
-                background: colors.bgCard,
-                borderRadius: '12px',
-                padding: '16px',
-                border: `1px solid ${colors.error}44`,
-              }}
-            >
-              <h4 style={{ ...typo.h3, color: colors.error, marginBottom: '12px', textAlign: 'center' }}>
-                {twistSteps}-Step Chain
-              </h4>
-              {renderErrorSVG(longChainErrors, twistSteps, twistPerStepError, 'multiplicative', 280, 220)}
-              <div style={{ textAlign: 'center', marginTop: '8px' }}>
-                <span style={{ fontSize: '28px', fontWeight: 800, color: getErrorColor(longTotal) }}>
-                  {longTotal < 2
-                    ? `${((longTotal - 1) * 100).toFixed(0)}%`
-                    : longTotal < 1000
-                    ? `${longTotal.toFixed(1)}x`
-                    : `${longTotal.toExponential(1)}`}
-                </span>
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+          }}>
+            {/* Left: SVG visualizations */}
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* Side-by-side comparison */}
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
+                {/* Long chain */}
+                <div
+                  style={{
+                    background: colors.bgCard,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    border: `1px solid ${colors.error}44`,
+                  }}
+                >
+                  <h4 style={{ ...typo.h3, color: colors.error, marginBottom: '12px', textAlign: 'center' }}>
+                    {twistSteps}-Step Chain
+                  </h4>
+                  {renderErrorSVG(longChainErrors, twistSteps, twistPerStepError, 'multiplicative', 280, 220)}
+                  <div style={{ textAlign: 'center', marginTop: '8px' }}>
+                    <span style={{ fontSize: '28px', fontWeight: 800, color: getErrorColor(longTotal) }}>
+                      {longTotal < 2
+                        ? `${((longTotal - 1) * 100).toFixed(0)}%`
+                        : longTotal < 1000
+                        ? `${longTotal.toFixed(1)}x`
+                        : `${longTotal.toExponential(1)}`}
+                    </span>
+                  </div>
+                </div>
+                {/* Short chain */}
+                <div
+                  style={{
+                    background: colors.bgCard,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    border: `1px solid ${colors.success}44`,
+                  }}
+                >
+                  <h4 style={{ ...typo.h3, color: colors.success, marginBottom: '12px', textAlign: 'center' }}>
+                    3-Step Chain
+                  </h4>
+                  {renderErrorSVG(shortChainErrors, 3, twistPerStepError, 'multiplicative', 280, 220)}
+                  <div style={{ textAlign: 'center', marginTop: '8px' }}>
+                    <span style={{ fontSize: '28px', fontWeight: 800, color: getErrorColor(shortTotal) }}>
+                      {shortTotal < 2
+                        ? `${((shortTotal - 1) * 100).toFixed(0)}%`
+                        : `${shortTotal.toFixed(1)}x`}
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-            {/* Short chain */}
-            <div
-              style={{
-                background: colors.bgCard,
-                borderRadius: '12px',
-                padding: '16px',
-                border: `1px solid ${colors.success}44`,
-              }}
-            >
-              <h4 style={{ ...typo.h3, color: colors.success, marginBottom: '12px', textAlign: 'center' }}>
-                3-Step Chain
-              </h4>
-              {renderErrorSVG(shortChainErrors, 3, twistPerStepError, 'multiplicative', 280, 220)}
-              <div style={{ textAlign: 'center', marginTop: '8px' }}>
-                <span style={{ fontSize: '28px', fontWeight: 800, color: getErrorColor(shortTotal) }}>
-                  {shortTotal < 2
-                    ? `${((shortTotal - 1) * 100).toFixed(0)}%`
-                    : `${shortTotal.toFixed(1)}x`}
-                </span>
+
+              {/* Growth ratio */}
+              <div
+                style={{
+                  background: `linear-gradient(135deg, ${colors.bgCard}, ${colors.warning}11)`,
+                  borderRadius: '16px',
+                  padding: '16px',
+                  border: `1px solid ${colors.warning}44`,
+                  textAlign: 'center',
+                }}
+              >
+                <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>
+                  Error Growth Ratio (long / short)
+                </p>
+                <p style={{ fontSize: '32px', fontWeight: 800, color: colors.warning }}>
+                  {(longTotal / shortTotal).toFixed(1)}x more error
+                </p>
+                <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '8px' }}>
+                  Going from 3 to {twistSteps} steps multiplies the total error by{' '}
+                  {(longTotal / shortTotal).toFixed(1)}
+                </p>
               </div>
             </div>
 
-          {/* Growth ratio */}
-          <div
-            style={{
-              background: `linear-gradient(135deg, ${colors.bgCard}, ${colors.warning}11)`,
-              borderRadius: '16px',
-              padding: '16px',
-              border: `1px solid ${colors.warning}44`,
-              textAlign: 'center',
-            }}
-          >
-            <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>
-              Error Growth Ratio (long / short)
-            </p>
-            <p style={{ fontSize: '32px', fontWeight: 800, color: colors.warning }}>
-              {(longTotal / shortTotal).toFixed(1)}x more error
-            </p>
-            <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '8px' }}>
-              Going from 3 to {twistSteps} steps multiplies the total error by{' '}
-              {(longTotal / shortTotal).toFixed(1)}
-            </p>
+            {/* Right: Controls panel */}
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Per step error slider */}
+              <div
+                style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: isMobile ? '20px' : '28px',
+                  border: `1px solid ${colors.border}`,
+                  marginBottom: '20px',
+                }}
+              >
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '4px' }}>
+                  Per-Step Error
+                </h3>
+                <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '16px' }}>
+                  Same error rate for both chains
+                </p>
+                <input type="range" min="1" max="500" step="1" value={Math.round(twistPerStepError * 100)}
+                  onChange={(e) => setTwistPerStepErrorPct(parseInt(e.target.value))}
+                onInput={(e) => setTwistPerStepErrorPct(parseInt((e.target as HTMLInputElement).value))}
+                  style={sliderStyle}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.success }}>1.01x</span>
+                  <span style={{ ...typo.body, fontWeight: 700, color: getErrorColor(twistPerStepError) }}>
+                    {twistPerStepError < 2
+                      ? `±${((twistPerStepError - 1) * 100).toFixed(0)}% each`
+                      : `${twistPerStepError.toFixed(1)}x each`}
+                  </span>
+                  <span style={{ ...typo.small, color: colors.error }}>5x</span>
+                </div>
+              </div>
+
+              {/* Long chain steps slider */}
+              <div
+                style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: isMobile ? '20px' : '28px',
+                  border: `1px solid ${colors.border}`,
+                  marginBottom: '20px',
+                }}
+              >
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '4px' }}>
+                  Long Chain Length
+                </h3>
+                <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '16px' }}>
+                  Comparing 3 steps vs {twistSteps} steps
+                </p>
+                <input type="range" min="4" max="20" step="1" value={twistSteps}
+                  onChange={(e) => setTwistSteps(parseInt(e.target.value))}
+                onInput={(e) => setTwistSteps(parseInt((e.target as HTMLInputElement).value))}
+                  style={sliderStyle}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.success }}>4 steps</span>
+                  <span style={{ ...typo.body, fontWeight: 700, color: colors.accent }}>
+                    {twistSteps} steps
+                  </span>
+                  <span style={{ ...typo.small, color: colors.error }}>20 steps</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </PhaseWrapper>

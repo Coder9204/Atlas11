@@ -1141,63 +1141,83 @@ const ELON_CapitalStackRenderer: React.FC<ELON_CapitalStackRendererProps> = ({ o
               WACC = {'\u03A3'}(w{'\u1D62'} {'\u00D7'} r{'\u1D62'}) | DSCR = (Revenue {'\u2212'} OpEx) / Debt Service | Equity IRR = Cash to Equity / Equity{'\u00B2'}
             </p>
 
-            {/* Main visualization */}
+            {/* Main visualization — side-by-side on desktop */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <CapitalStackVisualization />
-              </div>
-
-              {/* Debt-to-Equity Ratio slider — controls leverage concentration */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Debt Concentration Rate (Leverage Ratio)</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {debtToEquity}% Debt
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="85"
-                  value={debtToEquity}
-                  onChange={(e) => setDebtToEquity(parseInt(e.target.value))}
-                  onInput={(e) => setDebtToEquity(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Debt Concentration Rate"
-                  style={sliderStyle(colors.accent, debtToEquity, 0, 85)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>0% (All Equity)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>42%</span>
-                  <span style={{ ...typo.small, color: colors.error }}>85% (Max Leverage)</span>
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <CapitalStackVisualization />
+                  </div>
                 </div>
               </div>
 
-              {/* Stats grid */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: '12px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '14px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{baseWACC.toFixed(1)}%</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>WACC</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '14px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: dscr < 1.2 ? colors.error : colors.success }}>{dscr.toFixed(2)}x</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>DSCR</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '14px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.irr }}>{equityIRR.toFixed(1)}%</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Equity IRR</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '14px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: bankruptcyRisk > 50 ? colors.error : bankruptcyRisk > 20 ? colors.warning : colors.success }}>{bankruptcyRisk.toFixed(0)}%</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Default Risk</div>
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Debt-to-Equity Ratio slider — controls leverage concentration */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Debt Concentration Rate (Leverage Ratio)</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {debtToEquity}% Debt
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="85"
+                      value={debtToEquity}
+                      onChange={(e) => setDebtToEquity(parseInt(e.target.value))}
+                      onInput={(e) => setDebtToEquity(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Debt Concentration Rate"
+                      style={sliderStyle(colors.accent, debtToEquity, 0, 85)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>0% (All Equity)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>42%</span>
+                      <span style={{ ...typo.small, color: colors.error }}>85% (Max Leverage)</span>
+                    </div>
+                  </div>
+
+                  {/* Stats grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '14px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>{baseWACC.toFixed(1)}%</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>WACC</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '14px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: dscr < 1.2 ? colors.error : colors.success }}>{dscr.toFixed(2)}x</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>DSCR</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '14px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.irr }}>{equityIRR.toFixed(1)}%</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Equity IRR</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '14px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: bankruptcyRisk > 50 ? colors.error : bankruptcyRisk > 20 ? colors.warning : colors.success }}>{bankruptcyRisk.toFixed(0)}%</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Default Risk</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1537,123 +1557,144 @@ const ELON_CapitalStackRenderer: React.FC<ELON_CapitalStackRendererProps> = ({ o
               Apply a rate shock and see how leveraged projects face refinancing risk. Adjust leverage and shock magnitude.
             </p>
 
+            {/* Main visualization — side-by-side on desktop */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              {/* SVG Visualization with shock */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <CapitalStackVisualization showShock={true} forceShock={true} />
-              </div>
-
-              {/* Educational panel */}
-              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you&apos;re seeing:</strong> The capital stack visualization now reflects an interest rate shock scenario, showing how rising rates cascade through each tranche of the financing structure and compress equity returns.</p>
-                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> As you increase the shock magnitude or leverage ratio, watch how DSCR drops toward covenant minimums and equity IRR compresses — demonstrating the refinancing risk that highly leveraged projects face in rising rate environments.</p>
-              </div>
-
-              {/* Rate shock toggle */}
-              <div style={{ marginBottom: '20px' }}>
-                <button
-                  onClick={() => { playSound('click'); setRateShock(!rateShock); }}
-                  style={{
-                    width: '100%',
-                    padding: '14px',
-                    borderRadius: '10px',
-                    border: `2px solid ${rateShock ? colors.error : colors.border}`,
-                    background: rateShock ? `${colors.error}22` : colors.bgSecondary,
-                    color: rateShock ? colors.error : colors.textSecondary,
-                    cursor: 'pointer',
-                    fontWeight: 700,
-                    fontSize: '16px',
-                    minHeight: '44px',
-                  }}
-                >
-                  {rateShock ? '\u26A0\uFE0F Interest Rate Shock ACTIVE — Refinancing Crisis' : 'Click to Activate Interest Rate Shock'}
-                </button>
-              </div>
-
-              {/* Debt-to-Equity slider — controls leverage concentration */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Debt Concentration Rate (Leverage Ratio)</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{debtToEquity}% Debt</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="85"
-                  value={debtToEquity}
-                  onChange={(e) => setDebtToEquity(parseInt(e.target.value))}
-                  onInput={(e) => setDebtToEquity(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Debt Concentration Rate"
-                  style={sliderStyle(colors.accent, debtToEquity, 0, 85)}
-                />
-              </div>
-
-              {/* Shock magnitude slider — controls interest rate intensity */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Interest Rate Shock Intensity</span>
-                  <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>+{shockBps} bps</span>
-                </div>
-                <input
-                  type="range"
-                  min="50"
-                  max="500"
-                  step="25"
-                  value={shockBps}
-                  onChange={(e) => setShockBps(parseInt(e.target.value))}
-                  onInput={(e) => setShockBps(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Interest Rate Shock Intensity"
-                  style={sliderStyle(colors.error, shockBps, 50, 500)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>+50bps (Mild)</span>
-                  <span style={{ ...typo.small, color: colors.error }}>+500bps (Severe)</span>
-                </div>
-              </div>
-
-              {/* Comparison Results */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-                marginBottom: '20px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Before Shock</div>
-                  <div style={{ ...typo.h3, color: colors.seniorDebt }}>{baseWACC.toFixed(1)}% WACC</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>DSCR: {dscr.toFixed(2)}x | IRR: {equityIRR.toFixed(1)}%</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>After +{shockBps}bps Shock</div>
-                  <div style={{ ...typo.h3, color: shockedDSCR < 1.2 ? colors.error : colors.warning }}>{shockedWACC.toFixed(1)}% WACC</div>
-                  <div style={{ ...typo.small, color: shockedDSCR < 1.0 ? colors.error : colors.textMuted }}>DSCR: {shockedDSCR.toFixed(2)}x | IRR: {shockedEquityIRR.toFixed(1)}%</div>
-                </div>
-              </div>
-
-              {/* Warning indicator */}
-              {rateShock && shockedDSCR < 1.2 && (
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                 <div style={{
-                  background: `${colors.error}22`,
-                  border: `1px solid ${colors.error}`,
-                  borderRadius: '12px',
+                  background: colors.bgCard,
+                  borderRadius: '16px',
                   padding: '16px',
-                  textAlign: 'center',
                 }}>
-                  <p style={{ ...typo.body, color: colors.error, fontWeight: 700, margin: 0 }}>
-                    {shockedDSCR < 1.0
-                      ? 'CRITICAL: DSCR below 1.0x — project cannot service debt! Technical default triggered.'
-                      : 'WARNING: DSCR below 1.2x covenant minimum — cash sweep activated, distributions locked.'}
-                  </p>
-                  <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
-                    Additional annual debt cost: ${((shockedDebtService - (debtPct / 100 * 500 * seniorDebtCost / 100 + mezzPct / 100 * 500 * mezzCost / 100))).toFixed(1)}M
-                  </p>
+                  {/* SVG Visualization with shock */}
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <CapitalStackVisualization showShock={true} forceShock={true} />
+                  </div>
+
+                  {/* Educational panel */}
+                  <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginTop: '16px' }}>
+                    <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you&apos;re seeing:</strong> The capital stack visualization now reflects an interest rate shock scenario, showing how rising rates cascade through each tranche of the financing structure and compress equity returns.</p>
+                    <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> As you increase the shock magnitude or leverage ratio, watch how DSCR drops toward covenant minimums and equity IRR compresses — demonstrating the refinancing risk that highly leveraged projects face in rising rate environments.</p>
+                  </div>
                 </div>
-              )}
+              </div>
+
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Rate shock toggle */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <button
+                      onClick={() => { playSound('click'); setRateShock(!rateShock); }}
+                      style={{
+                        width: '100%',
+                        padding: '14px',
+                        borderRadius: '10px',
+                        border: `2px solid ${rateShock ? colors.error : colors.border}`,
+                        background: rateShock ? `${colors.error}22` : colors.bgSecondary,
+                        color: rateShock ? colors.error : colors.textSecondary,
+                        cursor: 'pointer',
+                        fontWeight: 700,
+                        fontSize: '16px',
+                        minHeight: '44px',
+                      }}
+                    >
+                      {rateShock ? '\u26A0\uFE0F Interest Rate Shock ACTIVE — Refinancing Crisis' : 'Click to Activate Interest Rate Shock'}
+                    </button>
+                  </div>
+
+                  {/* Debt-to-Equity slider — controls leverage concentration */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Debt Concentration Rate (Leverage Ratio)</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{debtToEquity}% Debt</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="85"
+                      value={debtToEquity}
+                      onChange={(e) => setDebtToEquity(parseInt(e.target.value))}
+                      onInput={(e) => setDebtToEquity(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Debt Concentration Rate"
+                      style={sliderStyle(colors.accent, debtToEquity, 0, 85)}
+                    />
+                  </div>
+
+                  {/* Shock magnitude slider — controls interest rate intensity */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Interest Rate Shock Intensity</span>
+                      <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>+{shockBps} bps</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="50"
+                      max="500"
+                      step="25"
+                      value={shockBps}
+                      onChange={(e) => setShockBps(parseInt(e.target.value))}
+                      onInput={(e) => setShockBps(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Interest Rate Shock Intensity"
+                      style={sliderStyle(colors.error, shockBps, 50, 500)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>+50bps (Mild)</span>
+                      <span style={{ ...typo.small, color: colors.error }}>+500bps (Severe)</span>
+                    </div>
+                  </div>
+
+                  {/* Comparison Results */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(1, 1fr)',
+                    gap: '12px',
+                    marginBottom: '20px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Before Shock</div>
+                      <div style={{ ...typo.h3, color: colors.seniorDebt }}>{baseWACC.toFixed(1)}% WACC</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>DSCR: {dscr.toFixed(2)}x | IRR: {equityIRR.toFixed(1)}%</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>After +{shockBps}bps Shock</div>
+                      <div style={{ ...typo.h3, color: shockedDSCR < 1.2 ? colors.error : colors.warning }}>{shockedWACC.toFixed(1)}% WACC</div>
+                      <div style={{ ...typo.small, color: shockedDSCR < 1.0 ? colors.error : colors.textMuted }}>DSCR: {shockedDSCR.toFixed(2)}x | IRR: {shockedEquityIRR.toFixed(1)}%</div>
+                    </div>
+                  </div>
+
+                  {/* Warning indicator */}
+                  {rateShock && shockedDSCR < 1.2 && (
+                    <div style={{
+                      background: `${colors.error}22`,
+                      border: `1px solid ${colors.error}`,
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'center',
+                    }}>
+                      <p style={{ ...typo.body, color: colors.error, fontWeight: 700, margin: 0 }}>
+                        {shockedDSCR < 1.0
+                          ? 'CRITICAL: DSCR below 1.0x — project cannot service debt! Technical default triggered.'
+                          : 'WARNING: DSCR below 1.2x covenant minimum — cash sweep activated, distributions locked.'}
+                      </p>
+                      <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
+                        Additional annual debt cost: ${((shockedDebtService - (debtPct / 100 * 500 * seniorDebtCost / 100 + mezzPct / 100 * 500 * mezzCost / 100))).toFixed(1)}M
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>

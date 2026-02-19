@@ -630,7 +630,7 @@ const ELON_TPSTurnaroundRenderer: React.FC<Props> = ({ onGameEvent, gamePhase })
           Turnaround Gantt Chart — {totalDays.toFixed(1)} Days Total
         </text>
         <text x={width / 2} y={35} fill={colors.textMuted} fontSize="11" textAnchor="middle">
-          Inspection Depth: {inspectionDepth}% | Cost: ${getCostPerFlight().toFixed(1)}M/flight
+          Inspection Time & Depth: {inspectionDepth}% | Cost: ${getCostPerFlight().toFixed(1)}M/flight
         </text>
 
         {/* Task bars */}
@@ -1182,7 +1182,7 @@ const ELON_TPSTurnaroundRenderer: React.FC<Props> = ({ onGameEvent, gamePhase })
                 <strong style={{ color: colors.textPrimary }}>Critical Path</strong> is defined as the longest sequence of dependent tasks that determines the minimum project duration. It is calculated by summing the durations along each dependency chain and finding the maximum.
               </p>
               <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
-                <strong style={{ color: colors.accent }}>Inspection Depth</strong> ranges from minimal walk-around checks to full teardown with component-level inspection.
+                <strong style={{ color: colors.accent }}>Inspection Time & Depth</strong> ranges from minimal walk-around checks to full teardown with component-level inspection.
               </p>
               <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
                 <strong style={{ color: colors.hot }}>Parallel Tasks</strong> are tasks that can happen simultaneously, shortening total turnaround below the sum of all task durations.
@@ -1193,66 +1193,92 @@ const ELON_TPSTurnaroundRenderer: React.FC<Props> = ({ onGameEvent, gamePhase })
               Adjust the inspection thoroughness slider to see how inspection depth affects the turnaround Gantt chart, total time, and cost per flight. Watch how parallel tasks compress the timeline compared to serial processing. The cost per flight is calculated as: C = B/N + T × R, where B is build cost, N is number of flights, T is turnaround days, and R is daily overhead rate.
             </p>
 
-            {/* Main Gantt visualization */}
+            {/* Main Gantt visualization - side by side on desktop */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <GanttVisualization />
-              </div>
-
-              {/* Inspection depth slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Inspection Thoroughness</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {inspectionDepth}% — {inspectionDepth < 25 ? 'Minimal (launch-day)' : inspectionDepth < 50 ? 'Standard check' : inspectionDepth < 75 ? 'Detailed inspection' : 'Full teardown (6-month refurb)'}
-                  </span>
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                  marginBottom: '12px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <GanttVisualization />
+                  </div>
                 </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={inspectionDepth}
-                  onChange={(e) => setInspectionDepth(parseInt(e.target.value))}
-                  onInput={(e) => setInspectionDepth(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Inspection Thoroughness"
-                  style={sliderStyle(colors.accent, inspectionDepth, 0, 100)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.success }}>Minimal</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>Standard</span>
-                  <span style={{ ...typo.small, color: colors.error }}>Full Teardown</span>
+
+                {/* Cost comparison */}
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <CostComparisonSVG />
+                  </div>
                 </div>
               </div>
 
-              {/* Stats grid */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
-                marginBottom: '16px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{getTotalTurnaroundDays().toFixed(1)}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Days Total</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.success }}>${getCostPerFlight().toFixed(1)}M</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Cost/Flight</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.cold }}>{Math.floor(365 / getTotalTurnaroundDays())}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Flights/Year</div>
-                </div>
-              </div>
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Inspection depth slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Inspection Time & Depth</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {inspectionDepth}% — {inspectionDepth < 25 ? 'Minimal (launch-day)' : inspectionDepth < 50 ? 'Standard check' : inspectionDepth < 75 ? 'Detailed inspection' : 'Full teardown (6-month refurb)'}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={inspectionDepth}
+                      onChange={(e) => setInspectionDepth(parseInt(e.target.value))}
+                      onInput={(e) => setInspectionDepth(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Inspection Time & Depth"
+                      style={sliderStyle(colors.accent, inspectionDepth, 0, 100)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.success }}>Minimal</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>Standard</span>
+                      <span style={{ ...typo.small, color: colors.error }}>Full Teardown</span>
+                    </div>
+                  </div>
 
-              {/* Cost comparison */}
-              <div style={{ display: 'flex', justifyContent: 'center' }}>
-                <CostComparisonSVG />
+                  {/* Stats grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '12px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>{getTotalTurnaroundDays().toFixed(1)}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Days Total</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.success }}>${getCostPerFlight().toFixed(1)}M</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Cost/Flight</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.cold }}>{Math.floor(365 / getTotalTurnaroundDays())}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Flights/Year</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1587,112 +1613,133 @@ const ELON_TPSTurnaroundRenderer: React.FC<Props> = ({ onGameEvent, gamePhase })
               Toggle the anomaly to see how a single engine problem cascades through the entire turnaround schedule
             </p>
 
+            {/* Side-by-side layout on desktop */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              {/* Gantt with anomaly */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <GanttVisualization />
-              </div>
-
-              {/* Educational panel */}
-              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The Gantt chart shows how an engine anomaly inserts a repair cascade into the turnaround timeline, pushing all downstream tasks and extending the critical path by weeks.</p>
-                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> Toggling the anomaly on and adjusting inspection depth reveals that deeper inspection catches more problems but each problem found extends the schedule -- the fundamental inspection-turnaround tradeoff.</p>
-              </div>
-
-              {/* Anomaly toggle */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '16px',
-                marginBottom: '20px',
-              }}>
-                <span style={{ ...typo.body, color: colors.textSecondary }}>Engine Anomaly:</span>
-                <button
-                  onClick={() => {
-                    playSound(anomalyDetected ? 'click' : 'failure');
-                    setAnomalyDetected(!anomalyDetected);
-                  }}
-                  style={{
-                    background: anomalyDetected ? colors.error : colors.success,
-                    color: 'white',
-                    border: 'none',
-                    padding: '10px 24px',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: 700,
-                    fontSize: '16px',
-                    minHeight: '44px',
-                    transition: 'all 0.3s ease',
-                  }}
-                >
-                  {anomalyDetected ? 'ANOMALY ACTIVE' : 'No Anomaly'}
-                </button>
-              </div>
-
-              {/* Inspection depth slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Inspection Thoroughness</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {inspectionDepth}%
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={inspectionDepth}
-                  onChange={(e) => setInspectionDepth(parseInt(e.target.value))}
-                  onInput={(e) => setInspectionDepth(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Inspection Thoroughness"
-                  style={sliderStyle(colors.accent, inspectionDepth, 0, 100)}
-                />
-              </div>
-
-              {/* Impact comparison */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-                marginBottom: '20px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: anomalyDetected ? colors.error : colors.success }}>
-                    {getTotalTurnaroundDays().toFixed(1)} days
-                  </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Total Turnaround</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: anomalyDetected ? colors.error : colors.success }}>
-                    ${getCostPerFlight().toFixed(1)}M
-                  </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Cost Per Flight</div>
-                </div>
-              </div>
-
-              {/* Anomaly warning */}
-              {anomalyDetected && (
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                 <div style={{
-                  background: `${colors.error}22`,
-                  border: `1px solid ${colors.error}`,
-                  borderRadius: '12px',
+                  background: colors.bgCard,
+                  borderRadius: '16px',
                   padding: '16px',
-                  textAlign: 'center',
+                  marginBottom: '12px',
                 }}>
-                  <p style={{ ...typo.body, color: colors.error, fontWeight: 700, marginBottom: '8px' }}>
-                    Cascading Schedule Impact
-                  </p>
-                  <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                    Engine removal (+3d) {'\u2192'} Repair (+5d) {'\u2192'} Reinstall (+3d) {'\u2192'} Retest (+3d) = +14 base days added to critical path. All downstream tasks (pressure test, gimbal check, static fire, payload integration, launch) are pushed back.
-                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <GanttVisualization />
+                  </div>
                 </div>
-              )}
+
+                {/* Educational panel */}
+                <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px' }}>
+                  <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The Gantt chart shows how an engine anomaly inserts a repair cascade into the turnaround timeline, pushing all downstream tasks and extending the critical path by weeks.</p>
+                  <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> Toggling the anomaly on and adjusting inspection depth reveals that deeper inspection catches more problems but each problem found extends the schedule -- the fundamental inspection-turnaround tradeoff.</p>
+                </div>
+              </div>
+
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Anomaly toggle */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '16px',
+                    marginBottom: '20px',
+                  }}>
+                    <span style={{ ...typo.body, color: colors.textSecondary }}>Engine Anomaly:</span>
+                    <button
+                      onClick={() => {
+                        playSound(anomalyDetected ? 'click' : 'failure');
+                        setAnomalyDetected(!anomalyDetected);
+                      }}
+                      style={{
+                        background: anomalyDetected ? colors.error : colors.success,
+                        color: 'white',
+                        border: 'none',
+                        padding: '10px 24px',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontWeight: 700,
+                        fontSize: '16px',
+                        minHeight: '44px',
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      {anomalyDetected ? 'ANOMALY ACTIVE' : 'No Anomaly'}
+                    </button>
+                  </div>
+
+                  {/* Inspection depth slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Inspection Time & Depth</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {inspectionDepth}%
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={inspectionDepth}
+                      onChange={(e) => setInspectionDepth(parseInt(e.target.value))}
+                      onInput={(e) => setInspectionDepth(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Inspection Time & Depth"
+                      style={sliderStyle(colors.accent, inspectionDepth, 0, 100)}
+                    />
+                  </div>
+
+                  {/* Impact comparison */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px',
+                    marginBottom: '20px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: anomalyDetected ? colors.error : colors.success }}>
+                        {getTotalTurnaroundDays().toFixed(1)} days
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Total Turnaround</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: anomalyDetected ? colors.error : colors.success }}>
+                        ${getCostPerFlight().toFixed(1)}M
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Cost Per Flight</div>
+                    </div>
+                  </div>
+
+                  {/* Anomaly warning */}
+                  {anomalyDetected && (
+                    <div style={{
+                      background: `${colors.error}22`,
+                      border: `1px solid ${colors.error}`,
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'center',
+                    }}>
+                      <p style={{ ...typo.body, color: colors.error, fontWeight: 700, marginBottom: '8px' }}>
+                        Cascading Schedule Impact
+                      </p>
+                      <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                        Engine removal (+3d) {'\u2192'} Repair (+5d) {'\u2192'} Reinstall (+3d) {'\u2192'} Retest (+3d) = +14 base days added to critical path. All downstream tasks (pressure test, gimbal check, static fire, payload integration, launch) are pushed back.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>

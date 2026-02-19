@@ -1105,63 +1105,79 @@ const ELON_FacilityPowerRenderer: React.FC<ELON_FacilityPowerRendererProps> = ({
               padding: '16px',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <PowerFlowVisualization />
-              </div>
+              {/* Side by side layout: SVG left, controls right on desktop */}
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+                marginBottom: '20px',
+              }}>
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <PowerFlowVisualization />
+                  </div>
+                </div>
 
-              {/* Cooling mode selector */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Cooling Mode</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {coolingMode === 'air' ? 'Air Cooling (PUE 1.4)' : 'Liquid Cooling (PUE 1.05)'}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  {(['air', 'liquid'] as const).map(mode => (
-                    <button
-                      key={mode}
-                      onClick={() => { playSound('click'); setCoolingMode(mode); }}
-                      style={{
-                        padding: '8px 16px',
-                        borderRadius: '8px',
-                        border: coolingMode === mode ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
-                        background: coolingMode === mode ? `${colors.accent}22` : colors.bgSecondary,
-                        color: colors.textPrimary,
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        minHeight: '44px',
-                        flex: 1,
-                      }}
-                    >
-                      {mode === 'air' ? 'Air Cooling' : 'Liquid Cooling'}
-                    </button>
-                  ))}
-                </div>
-              </div>
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Cooling mode selector */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Cooling Mode</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {coolingMode === 'air' ? 'Air Cooling (PUE 1.4)' : 'Liquid Cooling (PUE 1.05)'}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      {(['air', 'liquid'] as const).map(mode => (
+                        <button
+                          key={mode}
+                          onClick={() => { playSound('click'); setCoolingMode(mode); }}
+                          style={{
+                            padding: '8px 16px',
+                            borderRadius: '8px',
+                            border: coolingMode === mode ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
+                            background: coolingMode === mode ? `${colors.accent}22` : colors.bgSecondary,
+                            color: colors.textPrimary,
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            minHeight: '44px',
+                            flex: 1,
+                          }}
+                        >
+                          {mode === 'air' ? 'Air Cooling' : 'Liquid Cooling'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-              {/* IT Load slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>IT Load</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {itLoad}MW
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="100"
-                  value={itLoad}
-                  onChange={(e) => setItLoad(parseInt(e.target.value))}
-                  onInput={(e) => setItLoad(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="IT Load"
-                  style={sliderStyle(colors.accent, itLoad, 1, 100)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>1MW</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>50MW</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>100MW</span>
+                  {/* IT Load slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>IT Load Power</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {itLoad}MW
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="100"
+                      value={itLoad}
+                      onChange={(e) => setItLoad(parseInt(e.target.value))}
+                      onInput={(e) => setItLoad(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="IT Load"
+                      style={sliderStyle(colors.accent, itLoad, 1, 100)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>1MW</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>50MW</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>100MW</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1526,37 +1542,52 @@ const ELON_FacilityPowerRenderer: React.FC<ELON_FacilityPowerRendererProps> = ({
               padding: '16px',
               marginBottom: '20px',
             }}>
-              {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <CoolingComparisonVisualization />
-              </div>
-
-              {/* Educational panel */}
-              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The bar chart compares total facility power under air cooling (PUE 1.4) versus liquid cooling (PUE 1.05), revealing how much energy each approach wastes on cooling overhead.</p>
-                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> As you increase the IT load slider, the absolute megawatt savings from liquid cooling grow proportionally -- a small PUE difference at scale translates to millions of dollars in annual energy cost reduction.</p>
-              </div>
-
-              {/* IT Load slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>IT Load</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{twistItLoad}MW</span>
+              {/* Side by side layout: SVG left, controls right on desktop */}
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+                marginBottom: '20px',
+              }}>
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <CoolingComparisonVisualization />
+                  </div>
                 </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="100"
-                  value={twistItLoad}
-                  onChange={(e) => setTwistItLoad(parseInt(e.target.value))}
-                  onInput={(e) => setTwistItLoad(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="IT Load for comparison"
-                  style={sliderStyle(colors.accent, twistItLoad, 1, 100)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>1MW</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>50MW</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>100MW</span>
+
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Educational panel */}
+                  <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+                    <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The bar chart compares total facility power under air cooling (PUE 1.4) versus liquid cooling (PUE 1.05), revealing how much energy each approach wastes on cooling overhead.</p>
+                    <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> As you increase the IT load slider, the absolute megawatt savings from liquid cooling grow proportionally -- a small PUE difference at scale translates to millions of dollars in annual energy cost reduction.</p>
+                  </div>
+
+                  {/* IT Load slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>IT Load Power</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{twistItLoad}MW</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="100"
+                      value={twistItLoad}
+                      onChange={(e) => setTwistItLoad(parseInt(e.target.value))}
+                      onInput={(e) => setTwistItLoad(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="IT Load for comparison"
+                      style={sliderStyle(colors.accent, twistItLoad, 1, 100)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>1MW</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>50MW</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>100MW</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 

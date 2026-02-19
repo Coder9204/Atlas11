@@ -1026,7 +1026,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
         <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
-          <div style={{ maxWidth: '640px', margin: '0 auto' }}>
+          <div style={{ maxWidth: isMobile ? '640px' : '800px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <div style={{
                 display: 'inline-flex',
@@ -1048,142 +1048,155 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
               </p>
             </div>
 
-            {/* Slider */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
-              border: `1px solid ${colors.border}`,
-              marginBottom: '20px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ ...typo.h3, color: colors.textPrimary }}>Structural Mass Fraction</span>
-                <span style={{
-                  ...typo.h2,
-                  color: massFraction < 0.06 ? colors.success : massFraction < 0.10 ? colors.accent : colors.error,
-                  fontFamily: 'monospace',
+              {/* Left: SVG visualizations */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                {/* Delta-V Chart */}
+                <div style={{background:colors.bgCard,borderRadius:"16px",padding:"20px",border:"1px solid "+colors.border,textAlign:"center",marginBottom:"20px"}}>
+                  <div style={{...typo.h3,color:colors.textPrimary,marginBottom:"12px"}}>Delta-V vs Mass Fraction</div>
+                  {renderDeltaVChart()}
+                </div>
+
+                {/* Rocket SVG */}
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '20px',
+                  border: `1px solid ${colors.border}`,
+                  textAlign: 'center',
+                  marginBottom: '20px',
+                  overflow: 'hidden',
                 }}>
-                  {massFraction.toFixed(3)}
-                </span>
-              </div>
-              <input
-                type="range"
-                min={0.03}
-                max={0.15}
-                step={0.001}
-                value={massFraction}
-                onChange={(e) => {
-                  const val = parseFloat(e.target.value);
-                  setMassFraction(val);
-                  emitEvent('slider_changed', { massFraction: val });
-                }}
-                style={sliderStyle}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
-                <span style={{ ...typo.caption, color: colors.success }}>0.03 (Carbon Fiber)</span>
-                <span style={{ ...typo.caption, color: colors.error }}>0.15 (Heavy Steel)</span>
-              </div>
-
-              {/* Material indicator */}
-              <div style={{
-                marginTop: '16px',
-                padding: '12px 16px',
-                background: `${getMaterialColor()}15`,
-                borderRadius: '8px',
-                border: `1px solid ${getMaterialColor()}40`,
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}>
-                <span style={{ ...typo.body, color: getMaterialColor(), fontWeight: '600' }}>
-                  Material: {getMaterialName()}
-                </span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>
-                  Isp: {isp}s (RP-1/LOX)
-                </span>
-              </div>
-            </div>
-
-            {/* Delta-V Chart */}
-            <div style={{background:colors.bgCard,borderRadius:"16px",padding:"20px",border:"1px solid "+colors.border,textAlign:"center",marginBottom:"20px"}}>
-              <div style={{...typo.h3,color:colors.textPrimary,marginBottom:"12px"}}>Delta-V vs Mass Fraction</div>
-              {renderDeltaVChart()}
-            </div>
-
-            {/* Rocket SVG */}
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-              textAlign: 'center',
-              marginBottom: '20px',
-              maxHeight: '50vh',
-              overflow: 'hidden',
-            }}>
-              <div style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>Rocket Cross-Section</div>
-              {renderRocketSVG()}
-            </div>
-
-            {/* Stats */}
-            {renderStats()}
-
-            {/* Payload feasibility */}
-            <div style={{
-              marginTop: '16px',
-              padding: '16px',
-              background: payloadFraction > 0.02 ? `${colors.success}15` : payloadFraction > 0 ? `${colors.warning}15` : `${colors.error}15`,
-              borderRadius: '12px',
-              border: `1px solid ${payloadFraction > 0.02 ? colors.success : payloadFraction > 0 ? colors.warning : colors.error}40`,
-            }}>
-              <div style={{ ...typo.h3, color: payloadFraction > 0.02 ? colors.success : payloadFraction > 0 ? colors.warning : colors.error, marginBottom: '4px' }}>
-                {payloadFraction > 0.05 ? 'Excellent Payload Capacity' :
-                 payloadFraction > 0.02 ? 'Good Payload Capacity' :
-                 payloadFraction > 0 ? 'Marginal -- Very Little Payload' :
-                 'No Payload Capacity!'}
-              </div>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                {payloadFraction > 0.02 ?
-                  `With a mass fraction of ${massFraction.toFixed(3)}, this rocket achieves ${(deltaV/1000).toFixed(2)} km/s of delta-v and can carry ${(payloadFraction * 100).toFixed(1)}% of its mass as payload.` :
-                  `A structural mass fraction of ${massFraction.toFixed(3)} leaves almost no room for payload. The structure is too heavy for this propellant combination.`
-                }
-              </p>
-            </div>
-
-            {/* Tsiolkovsky equation display */}
-            <div style={{
-              marginTop: '16px',
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>Tsiolkovsky Rocket Equation</div>
-              <div style={{
-                textAlign: 'center',
-                padding: '16px',
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                fontFamily: 'monospace',
-                color: colors.accent,
-                fontSize: '18px',
-                fontWeight: '700',
-                marginBottom: '12px',
-              }}>
-                {'\u0394'}v = I_sp {'\u00D7'} g {'\u00D7'} ln(m_0 / m_f)
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                <div style={{ ...typo.small, color: colors.textMuted }}>
-                  <strong style={{ color: colors.textSecondary }}>I_sp:</strong> {isp} s
+                  <div style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>Rocket Cross-Section</div>
+                  {renderRocketSVG()}
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>
-                  <strong style={{ color: colors.textSecondary }}>g:</strong> 9.81 m/s{'\u00B2'}
+              </div>
+
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '300px', flexShrink: 0 }}>
+                {/* Slider */}
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                  border: `1px solid ${colors.border}`,
+                  marginBottom: '20px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ ...typo.h3, color: colors.textPrimary }}>Structural Mass Fraction</span>
+                    <span style={{
+                      ...typo.h2,
+                      color: massFraction < 0.06 ? colors.success : massFraction < 0.10 ? colors.accent : colors.error,
+                      fontFamily: 'monospace',
+                    }}>
+                      {massFraction.toFixed(3)}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0.03}
+                    max={0.15}
+                    step={0.001}
+                    value={massFraction}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      setMassFraction(val);
+                      emitEvent('slider_changed', { massFraction: val });
+                    }}
+                    style={sliderStyle}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
+                    <span style={{ ...typo.caption, color: colors.success }}>0.03 (Carbon Fiber)</span>
+                    <span style={{ ...typo.caption, color: colors.error }}>0.15 (Heavy Steel)</span>
+                  </div>
+
+                  {/* Material indicator */}
+                  <div style={{
+                    marginTop: '16px',
+                    padding: '12px 16px',
+                    background: `${getMaterialColor()}15`,
+                    borderRadius: '8px',
+                    border: `1px solid ${getMaterialColor()}40`,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}>
+                    <span style={{ ...typo.body, color: getMaterialColor(), fontWeight: '600' }}>
+                      Material: {getMaterialName()}
+                    </span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>
+                      Isp: {isp}s (RP-1/LOX)
+                    </span>
+                  </div>
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>
-                  <strong style={{ color: colors.textSecondary }}>Mass Ratio:</strong> {massRatio.toFixed(3)}
+
+                {/* Stats */}
+                {renderStats()}
+
+                {/* Payload feasibility */}
+                <div style={{
+                  marginTop: '16px',
+                  padding: '16px',
+                  background: payloadFraction > 0.02 ? `${colors.success}15` : payloadFraction > 0 ? `${colors.warning}15` : `${colors.error}15`,
+                  borderRadius: '12px',
+                  border: `1px solid ${payloadFraction > 0.02 ? colors.success : payloadFraction > 0 ? colors.warning : colors.error}40`,
+                }}>
+                  <div style={{ ...typo.h3, color: payloadFraction > 0.02 ? colors.success : payloadFraction > 0 ? colors.warning : colors.error, marginBottom: '4px' }}>
+                    {payloadFraction > 0.05 ? 'Excellent Payload Capacity' :
+                     payloadFraction > 0.02 ? 'Good Payload Capacity' :
+                     payloadFraction > 0 ? 'Marginal -- Very Little Payload' :
+                     'No Payload Capacity!'}
+                  </div>
+                  <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                    {payloadFraction > 0.02 ?
+                      `With a mass fraction of ${massFraction.toFixed(3)}, this rocket achieves ${(deltaV/1000).toFixed(2)} km/s of delta-v and can carry ${(payloadFraction * 100).toFixed(1)}% of its mass as payload.` :
+                      `A structural mass fraction of ${massFraction.toFixed(3)} leaves almost no room for payload. The structure is too heavy for this propellant combination.`
+                    }
+                  </p>
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>
-                  <strong style={{ color: colors.textSecondary }}>{'\u0394'}v:</strong> {(deltaV/1000).toFixed(2)} km/s
+
+                {/* Tsiolkovsky equation display */}
+                <div style={{
+                  marginTop: '16px',
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '20px',
+                  border: `1px solid ${colors.border}`,
+                }}>
+                  <div style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>Tsiolkovsky Rocket Equation</div>
+                  <div style={{
+                    textAlign: 'center',
+                    padding: '16px',
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    fontFamily: 'monospace',
+                    color: colors.accent,
+                    fontSize: '18px',
+                    fontWeight: '700',
+                    marginBottom: '12px',
+                  }}>
+                    {'\u0394'}v = I_sp {'\u00D7'} g {'\u00D7'} ln(m_0 / m_f)
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>
+                      <strong style={{ color: colors.textSecondary }}>I_sp:</strong> {isp} s
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>
+                      <strong style={{ color: colors.textSecondary }}>g:</strong> 9.81 m/s{'\u00B2'}
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>
+                      <strong style={{ color: colors.textSecondary }}>Mass Ratio:</strong> {massRatio.toFixed(3)}
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>
+                      <strong style={{ color: colors.textSecondary }}>{'\u0394'}v:</strong> {(deltaV/1000).toFixed(2)} km/s
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1482,7 +1495,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
         <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
-          <div style={{ maxWidth: '640px', margin: '0 auto' }}>
+          <div style={{ maxWidth: isMobile ? '640px' : '800px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <div style={{
                 display: 'inline-flex',
@@ -1519,155 +1532,168 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
               </p>
             </div>
 
-            {/* Propellant toggle */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '16px',
-              border: `1px solid ${colors.border}`,
-              marginBottom: '16px',
               display: 'flex',
-              justifyContent: 'center',
-              gap: '12px',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
             }}>
-              <button
-                onClick={() => { setUseLH2(false); playSound('click'); }}
-                style={{
-                  padding: '10px 20px',
-                  borderRadius: '8px',
-                  border: `2px solid ${!useLH2 ? colors.accent : colors.border}`,
-                  background: !useLH2 ? `${colors.accent}20` : 'transparent',
-                  color: !useLH2 ? colors.accent : colors.textMuted,
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                  fontSize: '14px',
-                }}
-              >
-                RP-1/LOX (Isp 340s)
-              </button>
-              <button
-                onClick={() => { setUseLH2(true); playSound('click'); }}
-                style={{
-                  padding: '10px 20px',
-                  borderRadius: '8px',
-                  border: `2px solid ${useLH2 ? colors.carbon : colors.border}`,
-                  background: useLH2 ? `${colors.carbon}20` : 'transparent',
-                  color: useLH2 ? colors.carbon : colors.textMuted,
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                  fontSize: '14px',
-                }}
-              >
-                LH2/LOX (Isp 450s)
-              </button>
-            </div>
-
-            {/* Slider */}
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
-              border: `1px solid ${colors.border}`,
-              marginBottom: '20px',
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ ...typo.h3, color: colors.textPrimary }}>Structural Mass Fraction</span>
-                <span style={{
-                  ...typo.h2,
-                  color: massFraction < 0.06 ? colors.success : massFraction < 0.10 ? colors.accent : colors.error,
-                  fontFamily: 'monospace',
-                }}>
-                  {massFraction.toFixed(3)}
-                </span>
-              </div>
-              <input
-                type="range"
-                min={0.03}
-                max={0.15}
-                step={0.001}
-                value={massFraction}
-                onChange={(e) => {
-                  const val = parseFloat(e.target.value);
-                  setMassFraction(val);
-                  emitEvent('slider_changed', { massFraction: val, propellant: useLH2 ? 'LH2' : 'RP-1' });
-                }}
-                style={sliderStyle}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
-                <span style={{ ...typo.caption, color: colors.success }}>0.03 (Carbon Fiber)</span>
-                <span style={{ ...typo.caption, color: colors.error }}>0.15 (Heavy Steel)</span>
-              </div>
-
-              <div style={{
-                marginTop: '16px',
-                padding: '12px 16px',
-                background: `${getMaterialColor()}15`,
-                borderRadius: '8px',
-                border: `1px solid ${getMaterialColor()}40`,
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}>
-                <span style={{ ...typo.body, color: getMaterialColor(), fontWeight: '600' }}>
-                  {getMaterialName()}
-                </span>
-                <span style={{ ...typo.small, color: useLH2 ? colors.carbon : colors.accent }}>
-                  Isp: {isp}s ({useLH2 ? 'LH2/LOX' : 'RP-1/LOX'})
-                </span>
-              </div>
-            </div>
-
-            {/* Rocket SVG - now with larger tanks */}
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-              textAlign: 'center',
-              marginBottom: '20px',
-              maxHeight: '50vh',
-              overflow: 'hidden',
-            }}>
-              <div style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '8px' }}>
-                {useLH2 ? 'LH2/LOX Rocket (Larger Tanks!)' : 'RP-1/LOX Rocket'}
-              </div>
-              {renderRocketSVG()}
-              {useLH2 && (
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                {/* Rocket SVG - now with larger tanks */}
                 <div style={{
-                  marginTop: '8px',
-                  padding: '8px 12px',
-                  background: `${colors.warning}15`,
-                  borderRadius: '8px',
-                  border: `1px solid ${colors.warning}30`,
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '20px',
+                  border: `1px solid ${colors.border}`,
+                  textAlign: 'center',
+                  marginBottom: '20px',
+                  overflow: 'hidden',
                 }}>
-                  <span style={{ ...typo.caption, color: colors.warning }}>
-                    LH2 tank is ~12x larger by volume -- notice the extended fuel section
-                  </span>
+                  <div style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '8px' }}>
+                    {useLH2 ? 'LH2/LOX Rocket (Larger Tanks!)' : 'RP-1/LOX Rocket'}
+                  </div>
+                  {renderRocketSVG()}
+                  {useLH2 && (
+                    <div style={{
+                      marginTop: '8px',
+                      padding: '8px 12px',
+                      background: `${colors.warning}15`,
+                      borderRadius: '8px',
+                      border: `1px solid ${colors.warning}30`,
+                    }}>
+                      <span style={{ ...typo.caption, color: colors.warning }}>
+                        LH2 tank is ~12x larger by volume -- notice the extended fuel section
+                      </span>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-
-            {/* Stats */}
-            {renderStats()}
-
-            {/* LH2 specific warnings */}
-            {useLH2 && (
-              <div style={{
-                marginTop: '16px',
-                padding: '16px',
-                background: `${colors.warning}10`,
-                borderRadius: '12px',
-                border: `1px solid ${colors.warning}30`,
-              }}>
-                <div style={{ ...typo.h3, color: colors.warning, marginBottom: '8px' }}>Hydrogen Challenges</div>
-                <ul style={{ ...typo.small, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
-                  <li style={{ marginBottom: '4px' }}>Tank walls must withstand -253{'\u00B0'}C without brittle fracture</li>
-                  <li style={{ marginBottom: '4px' }}>Foam insulation adds ~15% to tank structural mass</li>
-                  <li style={{ marginBottom: '4px' }}>Hydrogen permeates through many materials, requiring special liners</li>
-                  <li>Larger tanks increase aerodynamic drag and require more structural stiffening</li>
-                </ul>
               </div>
-            )}
+
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '300px', flexShrink: 0 }}>
+                {/* Propellant toggle */}
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  border: `1px solid ${colors.border}`,
+                  marginBottom: '16px',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  gap: '12px',
+                }}>
+                  <button
+                    onClick={() => { setUseLH2(false); playSound('click'); }}
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: '8px',
+                      border: `2px solid ${!useLH2 ? colors.accent : colors.border}`,
+                      background: !useLH2 ? `${colors.accent}20` : 'transparent',
+                      color: !useLH2 ? colors.accent : colors.textMuted,
+                      cursor: 'pointer',
+                      fontWeight: '600',
+                      fontSize: '14px',
+                    }}
+                  >
+                    RP-1/LOX (Isp 340s)
+                  </button>
+                  <button
+                    onClick={() => { setUseLH2(true); playSound('click'); }}
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: '8px',
+                      border: `2px solid ${useLH2 ? colors.carbon : colors.border}`,
+                      background: useLH2 ? `${colors.carbon}20` : 'transparent',
+                      color: useLH2 ? colors.carbon : colors.textMuted,
+                      cursor: 'pointer',
+                      fontWeight: '600',
+                      fontSize: '14px',
+                    }}
+                  >
+                    LH2/LOX (Isp 450s)
+                  </button>
+                </div>
+
+                {/* Slider */}
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                  border: `1px solid ${colors.border}`,
+                  marginBottom: '20px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ ...typo.h3, color: colors.textPrimary }}>Structural Mass Fraction</span>
+                    <span style={{
+                      ...typo.h2,
+                      color: massFraction < 0.06 ? colors.success : massFraction < 0.10 ? colors.accent : colors.error,
+                      fontFamily: 'monospace',
+                    }}>
+                      {massFraction.toFixed(3)}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0.03}
+                    max={0.15}
+                    step={0.001}
+                    value={massFraction}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      setMassFraction(val);
+                      emitEvent('slider_changed', { massFraction: val, propellant: useLH2 ? 'LH2' : 'RP-1' });
+                    }}
+                    style={sliderStyle}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
+                    <span style={{ ...typo.caption, color: colors.success }}>0.03 (Carbon Fiber)</span>
+                    <span style={{ ...typo.caption, color: colors.error }}>0.15 (Heavy Steel)</span>
+                  </div>
+
+                  <div style={{
+                    marginTop: '16px',
+                    padding: '12px 16px',
+                    background: `${getMaterialColor()}15`,
+                    borderRadius: '8px',
+                    border: `1px solid ${getMaterialColor()}40`,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}>
+                    <span style={{ ...typo.body, color: getMaterialColor(), fontWeight: '600' }}>
+                      {getMaterialName()}
+                    </span>
+                    <span style={{ ...typo.small, color: useLH2 ? colors.carbon : colors.accent }}>
+                      Isp: {isp}s ({useLH2 ? 'LH2/LOX' : 'RP-1/LOX'})
+                    </span>
+                  </div>
+                </div>
+
+                {/* Stats */}
+                {renderStats()}
+
+                {/* LH2 specific warnings */}
+                {useLH2 && (
+                  <div style={{
+                    marginTop: '16px',
+                    padding: '16px',
+                    background: `${colors.warning}10`,
+                    borderRadius: '12px',
+                    border: `1px solid ${colors.warning}30`,
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.warning, marginBottom: '8px' }}>Hydrogen Challenges</div>
+                    <ul style={{ ...typo.small, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
+                      <li style={{ marginBottom: '4px' }}>Tank walls must withstand -253{'\u00B0'}C without brittle fracture</li>
+                      <li style={{ marginBottom: '4px' }}>Foam insulation adds ~15% to tank structural mass</li>
+                      <li style={{ marginBottom: '4px' }}>Hydrogen permeates through many materials, requiring special liners</li>
+                      <li>Larger tanks increase aerodynamic drag and require more structural stiffening</li>
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
         <NavigationBar>

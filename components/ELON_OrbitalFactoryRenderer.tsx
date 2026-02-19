@@ -1216,64 +1216,78 @@ const ELON_OrbitalFactoryRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }
               padding: '16px',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <OrbitalFactoryVisualization />
-              </div>
-
-              {/* Gravity slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Gravitational Acceleration Force</span>
-                  <span style={{ ...typo.small, color: gravityLevel < 0.1 ? colors.success : gravityLevel < 0.5 ? colors.warning : colors.error, fontWeight: 600 }}>
-                    {gravityLevel.toFixed(2)}g ({gravityLevel < 0.01 ? 'Perfect Microgravity' : gravityLevel < 0.1 ? 'Low Gravity' : gravityLevel < 0.5 ? 'Partial Gravity' : 'Near-Earth Gravity'})
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={gravityLevel * 100}
-                  onChange={(e) => setGravityLevel(parseInt(e.target.value) / 100)}
-                  onInput={(e) => setGravityLevel(parseInt((e.target as HTMLInputElement).value) / 100)}
-                  aria-label="Gravity Level"
-                  style={sliderStyle(colors.accent, gravityLevel * 100, 0, 100)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.success }}>0g (Perfect)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>0.5g (Mars)</span>
-                  <span style={{ ...typo.small, color: colors.error }}>1g (Earth)</span>
-                </div>
-              </div>
-
-              {/* Stats grid */}
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: '12px',
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
               }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: crystalQuality > 80 ? colors.success : crystalQuality > 40 ? colors.warning : colors.error }}>
-                    {crystalQuality.toFixed(0)}%
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: isMobile ? '0' : '0', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <OrbitalFactoryVisualization />
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Crystal Quality</div>
                 </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: fiberAttenuation < 1 ? colors.success : fiberAttenuation < 5 ? colors.warning : colors.error }}>
-                    {fiberAttenuation.toFixed(2)}
+
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Gravity slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Gravitational Acceleration Force</span>
+                      <span style={{ ...typo.small, color: gravityLevel < 0.1 ? colors.success : gravityLevel < 0.5 ? colors.warning : colors.error, fontWeight: 600 }}>
+                        {gravityLevel.toFixed(2)}g ({gravityLevel < 0.01 ? 'Perfect Microgravity' : gravityLevel < 0.1 ? 'Low Gravity' : gravityLevel < 0.5 ? 'Partial Gravity' : 'Near-Earth Gravity'})
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={gravityLevel * 100}
+                      onChange={(e) => setGravityLevel(parseInt(e.target.value) / 100)}
+                      onInput={(e) => setGravityLevel(parseInt((e.target as HTMLInputElement).value) / 100)}
+                      aria-label="Gravity Level"
+                      style={sliderStyle(colors.accent, gravityLevel * 100, 0, 100)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.success }}>0g (Perfect)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>0.5g (Mars)</span>
+                      <span style={{ ...typo.small, color: colors.error }}>1g (Earth)</span>
+                    </div>
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>dB/km Loss</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: alloyHomogeneity > 80 ? colors.success : alloyHomogeneity > 40 ? colors.warning : colors.error }}>
-                    {alloyHomogeneity.toFixed(0)}%
+
+                  {/* Stats grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: crystalQuality > 80 ? colors.success : crystalQuality > 40 ? colors.warning : colors.error }}>
+                        {crystalQuality.toFixed(0)}%
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Crystal Quality</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: fiberAttenuation < 1 ? colors.success : fiberAttenuation < 5 ? colors.warning : colors.error }}>
+                        {fiberAttenuation.toFixed(2)}
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>dB/km Loss</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: alloyHomogeneity > 80 ? colors.success : alloyHomogeneity > 40 ? colors.warning : colors.error }}>
+                        {alloyHomogeneity.toFixed(0)}%
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Alloy Homogeneity</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>
+                        {sphereRoundness.toFixed(4)}%
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Sphere Roundness</div>
+                    </div>
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Alloy Homogeneity</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>
-                    {sphereRoundness.toFixed(4)}%
-                  </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Sphere Roundness</div>
                 </div>
               </div>
             </div>
@@ -1666,78 +1680,92 @@ const ELON_OrbitalFactoryRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }
               padding: '16px',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <VibrationVisualization />
-              </div>
-
-              {/* Vibration slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Vibration Level (g-jitter)</span>
-                  <span style={{ ...typo.small, color: vibrationLevel < 0.2 ? colors.success : vibrationLevel < 0.5 ? colors.warning : colors.error, fontWeight: 600 }}>
-                    {(vibrationLevel * 1000).toFixed(1)} × 10⁻³g
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={vibrationLevel * 100}
-                  onChange={(e) => setVibrationLevel(parseInt(e.target.value) / 100)}
-                  onInput={(e) => setVibrationLevel(parseInt((e.target as HTMLInputElement).value) / 100)}
-                  aria-label="Vibration Level"
-                  style={sliderStyle(colors.warning, vibrationLevel * 100, 0, 100)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.success }}>0 (Isolated)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>ISS typical</span>
-                  <span style={{ ...typo.small, color: colors.error }}>High (crew activity)</span>
-                </div>
-              </div>
-
-              {/* Gravity slider (maintained from play phase) */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Base Gravity Level</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {gravityLevel.toFixed(2)}g
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={gravityLevel * 100}
-                  onChange={(e) => setGravityLevel(parseInt(e.target.value) / 100)}
-                  onInput={(e) => setGravityLevel(parseInt((e.target as HTMLInputElement).value) / 100)}
-                  aria-label="Gravity Level"
-                  style={sliderStyle(colors.accent, gravityLevel * 100, 0, 100)}
-                />
-              </div>
-
-              {/* Combined stats */}
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
               }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.warning }}>
-                    {(vibrationLevel * 1000).toFixed(1)}
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <VibrationVisualization />
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>G-jitter (×10⁻³g)</div>
                 </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: calculateVibrationImpact(vibrationLevel) > 60 ? colors.success : colors.error }}>
-                    {calculateVibrationImpact(vibrationLevel).toFixed(0)}%
+
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Vibration slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Vibration Level (g-jitter)</span>
+                      <span style={{ ...typo.small, color: vibrationLevel < 0.2 ? colors.success : vibrationLevel < 0.5 ? colors.warning : colors.error, fontWeight: 600 }}>
+                        {(vibrationLevel * 1000).toFixed(1)} × 10⁻³g
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={vibrationLevel * 100}
+                      onChange={(e) => setVibrationLevel(parseInt(e.target.value) / 100)}
+                      onInput={(e) => setVibrationLevel(parseInt((e.target as HTMLInputElement).value) / 100)}
+                      aria-label="Vibration Level"
+                      style={sliderStyle(colors.warning, vibrationLevel * 100, 0, 100)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.success }}>0 (Isolated)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>ISS typical</span>
+                      <span style={{ ...typo.small, color: colors.error }}>High (crew activity)</span>
+                    </div>
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Vibration Quality</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: (calculateVibrationImpact(vibrationLevel) * crystalQuality / 100) > 60 ? colors.success : colors.error }}>
-                    {(calculateVibrationImpact(vibrationLevel) * crystalQuality / 100).toFixed(0)}%
+
+                  {/* Gravity slider (maintained from play phase) */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Base Gravity Level</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {gravityLevel.toFixed(2)}g
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={gravityLevel * 100}
+                      onChange={(e) => setGravityLevel(parseInt(e.target.value) / 100)}
+                      onInput={(e) => setGravityLevel(parseInt((e.target as HTMLInputElement).value) / 100)}
+                      aria-label="Gravity Level"
+                      style={sliderStyle(colors.accent, gravityLevel * 100, 0, 100)}
+                    />
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Combined Quality</div>
+
+                  {/* Combined stats */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(1, 1fr)',
+                    gap: '12px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.warning }}>
+                        {(vibrationLevel * 1000).toFixed(1)}
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>G-jitter (×10⁻³g)</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: calculateVibrationImpact(vibrationLevel) > 60 ? colors.success : colors.error }}>
+                        {calculateVibrationImpact(vibrationLevel).toFixed(0)}%
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Vibration Quality</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: (calculateVibrationImpact(vibrationLevel) * crystalQuality / 100) > 60 ? colors.success : colors.error }}>
+                        {(calculateVibrationImpact(vibrationLevel) * crystalQuality / 100).toFixed(0)}%
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Combined Quality</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

@@ -1144,120 +1144,140 @@ const ELON_TransformerTimelineRenderer: React.FC<ELON_TransformerTimelineRendere
               Adjust the transmission voltage slider and watch how losses change. The visualization shows the complete path from generator to your home, with heat glow indicating where power is wasted.
             </p>
 
-            {/* Main visualization */}
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <TransmissionVisualization />
-              </div>
-
-              {/* Grid stage selector */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Grid Stage</span>
-                  <span style={{ ...typo.small, color: gridStages[selectedStage].color, fontWeight: 600 }}>
-                    {gridStages[selectedStage].name} ({gridStages[selectedStage].voltage}{gridStages[selectedStage].unit})
-                  </span>
-                </div>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {gridStages.map((stage, i) => (
-                    <button
-                      key={stage.name}
-                      onClick={() => { playSound('click'); setSelectedStage(i); }}
-                      style={{
-                        padding: '8px 12px',
-                        borderRadius: '8px',
-                        border: selectedStage === i ? `2px solid ${stage.color}` : `1px solid ${colors.border}`,
-                        background: selectedStage === i ? `${stage.color}22` : colors.bgSecondary,
-                        color: colors.textPrimary,
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        minHeight: '44px',
-                      }}
-                    >
-                      {stage.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Transmission Voltage slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Transmission Voltage</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {transmissionVoltage} kV
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="69"
-                  max="765"
-                  step="1"
-                  value={transmissionVoltage}
-                  onChange={(e) => setTransmissionVoltage(parseInt(e.target.value))}
-                  onInput={(e) => setTransmissionVoltage(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Transmission Voltage"
-                  style={sliderStyle(colors.accent, transmissionVoltage, 69, 765)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>69kV</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>345kV</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>765kV</span>
-                </div>
-              </div>
-
-              {/* Distance slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Distance</span>
-                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>
-                    {distance} miles
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="10"
-                  max="500"
-                  step="10"
-                  value={distance}
-                  onChange={(e) => setDistance(parseInt(e.target.value))}
-                  onInput={(e) => setDistance(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Distance"
-                  style={sliderStyle(colors.warning, distance, 10, 500)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>10 mi</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>250 mi</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>500 mi</span>
-                </div>
-              </div>
-
-              {/* Stats grid */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{transmissionVoltage}kV</div>
-                  <div style={{ ...typo.small, color: colors.textSecondary }}>Voltage</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: lossPercent > 20 ? colors.error : lossPercent > 10 ? colors.warning : colors.success }}>
-                    {lossPercent.toFixed(1)}%
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', overflow: 'hidden' }}>
+                    <TransmissionVisualization />
                   </div>
-                  <div style={{ ...typo.small, color: colors.textSecondary }}>Power Lost</div>
                 </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.success }}>
-                    {(1000 / (transmissionVoltage * 1000)).toFixed(1)}A
+              </div>
+
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '300px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Grid stage selector */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Grid Stage</span>
+                      <span style={{ ...typo.small, color: gridStages[selectedStage].color, fontWeight: 600 }}>
+                        {gridStages[selectedStage].name} ({gridStages[selectedStage].voltage}{gridStages[selectedStage].unit})
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {gridStages.map((stage, i) => (
+                        <button
+                          key={stage.name}
+                          onClick={() => { playSound('click'); setSelectedStage(i); }}
+                          style={{
+                            padding: '8px 12px',
+                            borderRadius: '8px',
+                            border: selectedStage === i ? `2px solid ${stage.color}` : `1px solid ${colors.border}`,
+                            background: selectedStage === i ? `${stage.color}22` : colors.bgSecondary,
+                            color: colors.textPrimary,
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            minHeight: '44px',
+                          }}
+                        >
+                          {stage.name}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div style={{ ...typo.small, color: colors.textSecondary }}>Current (1GW)</div>
+
+                  {/* Transmission Voltage slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Transmission Voltage</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {transmissionVoltage} kV
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="69"
+                      max="765"
+                      step="1"
+                      value={transmissionVoltage}
+                      onChange={(e) => setTransmissionVoltage(parseInt(e.target.value))}
+                      onInput={(e) => setTransmissionVoltage(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Transmission Voltage"
+                      style={sliderStyle(colors.accent, transmissionVoltage, 69, 765)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>69kV</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>345kV</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>765kV</span>
+                    </div>
+                  </div>
+
+                  {/* Distance slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Distance</span>
+                      <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>
+                        {distance} miles
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="10"
+                      max="500"
+                      step="10"
+                      value={distance}
+                      onChange={(e) => setDistance(parseInt(e.target.value))}
+                      onInput={(e) => setDistance(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Distance"
+                      style={sliderStyle(colors.warning, distance, 10, 500)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>10 mi</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>250 mi</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>500 mi</span>
+                    </div>
+                  </div>
+
+                  {/* Stats grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '12px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>{transmissionVoltage}kV</div>
+                      <div style={{ ...typo.small, color: colors.textSecondary }}>Voltage</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: lossPercent > 20 ? colors.error : lossPercent > 10 ? colors.warning : colors.success }}>
+                        {lossPercent.toFixed(1)}%
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textSecondary }}>Power Lost</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.success }}>
+                        {(1000 / (transmissionVoltage * 1000)).toFixed(1)}A
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textSecondary }}>Current (1GW)</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1594,126 +1614,146 @@ const ELON_TransformerTimelineRenderer: React.FC<ELON_TransformerTimelineRendere
               </p>
             </div>
 
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <HVDCVisualization />
-              </div>
-
-              {/* Distance slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Distance</span>
-                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{twistDistance} miles</span>
-                </div>
-                <input
-                  type="range"
-                  min="50"
-                  max="500"
-                  step="10"
-                  value={twistDistance}
-                  onChange={(e) => setTwistDistance(parseInt(e.target.value))}
-                  onInput={(e) => setTwistDistance(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Distance"
-                  style={sliderStyle(colors.warning, twistDistance, 50, 500)}
-                />
-              </div>
-
-              {/* Voltage slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Voltage</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{twistVoltage} kV</span>
-                </div>
-                <input
-                  type="range"
-                  min="345"
-                  max="1100"
-                  step="5"
-                  value={twistVoltage}
-                  onChange={(e) => setTwistVoltage(parseInt(e.target.value))}
-                  onInput={(e) => setTwistVoltage(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Voltage"
-                  style={sliderStyle(colors.accent, twistVoltage, 345, 1100)}
-                />
-              </div>
-
-              {/* AC/DC toggle */}
-              <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
-                <button
-                  onClick={() => { playSound('click'); setUseHVDC(false); }}
-                  style={{
-                    flex: 1,
-                    padding: '12px',
-                    borderRadius: '10px',
-                    border: !useHVDC ? `2px solid #F59E0B` : `1px solid ${colors.border}`,
-                    background: !useHVDC ? 'rgba(245,158,11,0.15)' : colors.bgSecondary,
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    minHeight: '44px',
-                  }}
-                >
-                  AC Transmission
-                </button>
-                <button
-                  onClick={() => { playSound('click'); setUseHVDC(true); }}
-                  style={{
-                    flex: 1,
-                    padding: '12px',
-                    borderRadius: '10px',
-                    border: useHVDC ? `2px solid #3B82F6` : `1px solid ${colors.border}`,
-                    background: useHVDC ? 'rgba(59,130,246,0.15)' : colors.bgSecondary,
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    minHeight: '44px',
-                  }}
-                >
-                  HVDC Transmission
-                </button>
-              </div>
-
-              {/* Results */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-                marginBottom: '20px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: '#F59E0B' }}>{acLoss.toFixed(1)}%</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>AC Loss</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: '#3B82F6' }}>{dcLoss.toFixed(1)}%</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>HVDC Loss</div>
-                </div>
-              </div>
-
-              {/* HVDC advantages */}
-              <div style={{
-                background: useHVDC ? 'rgba(59,130,246,0.1)' : 'rgba(245,158,11,0.1)',
-                border: `1px solid ${useHVDC ? 'rgba(59,130,246,0.3)' : 'rgba(245,158,11,0.3)'}`,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
-                  {useHVDC
-                    ? 'HVDC eliminates reactive power, skin effect, and capacitive charging. Only 2 conductors needed (vs 3 for AC).'
-                    : 'AC suffers from reactive losses, skin effect, and capacitive charging that worsen with distance.'}
-                </p>
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                 <div style={{
-                  ...typo.h3,
-                  color: useHVDC ? '#3B82F6' : '#F59E0B'
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
                 }}>
-                  {useHVDC ? `Saving ${(acLoss - dcLoss).toFixed(1)}% vs AC` : `${acLoss.toFixed(1)}% total loss`}
+                  <div style={{ display: 'flex', justifyContent: 'center', overflow: 'hidden' }}>
+                    <HVDCVisualization />
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '300px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Distance slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Distance</span>
+                      <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{twistDistance} miles</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="50"
+                      max="500"
+                      step="10"
+                      value={twistDistance}
+                      onChange={(e) => setTwistDistance(parseInt(e.target.value))}
+                      onInput={(e) => setTwistDistance(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Distance"
+                      style={sliderStyle(colors.warning, twistDistance, 50, 500)}
+                    />
+                  </div>
+
+                  {/* Voltage slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Voltage</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{twistVoltage} kV</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="345"
+                      max="1100"
+                      step="5"
+                      value={twistVoltage}
+                      onChange={(e) => setTwistVoltage(parseInt(e.target.value))}
+                      onInput={(e) => setTwistVoltage(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Voltage"
+                      style={sliderStyle(colors.accent, twistVoltage, 345, 1100)}
+                    />
+                  </div>
+
+                  {/* AC/DC toggle */}
+                  <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
+                    <button
+                      onClick={() => { playSound('click'); setUseHVDC(false); }}
+                      style={{
+                        flex: 1,
+                        padding: '12px',
+                        borderRadius: '10px',
+                        border: !useHVDC ? `2px solid #F59E0B` : `1px solid ${colors.border}`,
+                        background: !useHVDC ? 'rgba(245,158,11,0.15)' : colors.bgSecondary,
+                        color: colors.textPrimary,
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        minHeight: '44px',
+                      }}
+                    >
+                      AC Transmission
+                    </button>
+                    <button
+                      onClick={() => { playSound('click'); setUseHVDC(true); }}
+                      style={{
+                        flex: 1,
+                        padding: '12px',
+                        borderRadius: '10px',
+                        border: useHVDC ? `2px solid #3B82F6` : `1px solid ${colors.border}`,
+                        background: useHVDC ? 'rgba(59,130,246,0.15)' : colors.bgSecondary,
+                        color: colors.textPrimary,
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        minHeight: '44px',
+                      }}
+                    >
+                      HVDC Transmission
+                    </button>
+                  </div>
+
+                  {/* Results */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px',
+                    marginBottom: '20px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: '#F59E0B' }}>{acLoss.toFixed(1)}%</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>AC Loss</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: '#3B82F6' }}>{dcLoss.toFixed(1)}%</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>HVDC Loss</div>
+                    </div>
+                  </div>
+
+                  {/* HVDC advantages */}
+                  <div style={{
+                    background: useHVDC ? 'rgba(59,130,246,0.1)' : 'rgba(245,158,11,0.1)',
+                    border: `1px solid ${useHVDC ? 'rgba(59,130,246,0.3)' : 'rgba(245,158,11,0.3)'}`,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
+                      {useHVDC
+                        ? 'HVDC eliminates reactive power, skin effect, and capacitive charging. Only 2 conductors needed (vs 3 for AC).'
+                        : 'AC suffers from reactive losses, skin effect, and capacitive charging that worsen with distance.'}
+                    </p>
+                    <div style={{
+                      ...typo.h3,
+                      color: useHVDC ? '#3B82F6' : '#F59E0B'
+                    }}>
+                      {useHVDC ? `Saving ${(acLoss - dcLoss).toFixed(1)}% vs AC` : `${acLoss.toFixed(1)}% total loss`}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

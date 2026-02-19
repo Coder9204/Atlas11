@@ -1186,94 +1186,114 @@ const ELON_ClusterCommsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) 
               This visualization shows a fat-tree network topology. Watch how changing bisection bandwidth affects congestion and all-reduce time. Data packets flow between GPU nodes through switches — observe how they congest at the core when bandwidth is low.
             </p>
 
-            {/* Main visualization */}
+            {/* Main visualization — side-by-side on desktop */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <NetworkVisualization />
-              </div>
-
-              {/* Bisection bandwidth slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Network Bisection Bandwidth</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {bisectionRatio <= 0.25 ? '1:4 oversubscribed' : bisectionRatio <= 0.5 ? '1:2 oversubscribed' : bisectionRatio < 1 ? `${(bisectionRatio * 100).toFixed(0)}% bisection` : 'Full bisection'}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0.25"
-                  max="1.0"
-                  step="0.05"
-                  value={bisectionRatio}
-                  onChange={(e) => setBisectionRatio(parseFloat(e.target.value))}
-                  onInput={(e) => setBisectionRatio(parseFloat((e.target as HTMLInputElement).value))}
-                  aria-label="Network Bisection Bandwidth"
-                  style={sliderStyle(colors.accent, bisectionRatio, 0.25, 1.0)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.hot }}>1:4 Oversubscribed</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>1:2</span>
-                  <span style={{ ...typo.small, color: colors.success }}>Full Bisection</span>
-                </div>
-              </div>
-
-              {/* GPU count selector */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>GPU Count</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {gpuCount} GPUs
-                  </span>
-                </div>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {[64, 128, 256, 512, 1024, 2048].map(count => (
-                    <button
-                      key={count}
-                      onClick={() => { playSound('click'); setGpuCount(count); }}
-                      style={{
-                        padding: '8px 16px',
-                        borderRadius: '8px',
-                        border: gpuCount === count ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
-                        background: gpuCount === count ? `${colors.accent}22` : colors.bgSecondary,
-                        color: colors.textPrimary,
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        minHeight: '44px',
-                      }}
-                    >
-                      {count}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Stats grid */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{allReduceTime.toFixed(2)}s</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>All-Reduce Time</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: commRatio > 0.4 ? colors.hot : colors.success }}>
-                    {(commRatio * 100).toFixed(0)}%
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <NetworkVisualization />
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Comm Ratio</div>
                 </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: congestion > 0.5 ? colors.hot : congestion > 0.3 ? colors.warning : colors.success }}>
-                    {(congestion * 100).toFixed(0)}%
+              </div>
+
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Bisection bandwidth slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Network Bisection Bandwidth</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {bisectionRatio <= 0.25 ? '1:4 oversubscribed' : bisectionRatio <= 0.5 ? '1:2 oversubscribed' : bisectionRatio < 1 ? `${(bisectionRatio * 100).toFixed(0)}% bisection` : 'Full bisection'}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.25"
+                      max="1.0"
+                      step="0.05"
+                      value={bisectionRatio}
+                      onChange={(e) => setBisectionRatio(parseFloat(e.target.value))}
+                      onInput={(e) => setBisectionRatio(parseFloat((e.target as HTMLInputElement).value))}
+                      aria-label="Network Bisection Bandwidth"
+                      style={sliderStyle(colors.accent, bisectionRatio, 0.25, 1.0)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.hot }}>1:4 Oversubscribed</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>1:2</span>
+                      <span style={{ ...typo.small, color: colors.success }}>Full Bisection</span>
+                    </div>
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Congestion</div>
+
+                  {/* GPU count selector */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>GPU Count</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {gpuCount} GPUs
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {[64, 128, 256, 512, 1024, 2048].map(count => (
+                        <button
+                          key={count}
+                          onClick={() => { playSound('click'); setGpuCount(count); }}
+                          style={{
+                            padding: '8px 16px',
+                            borderRadius: '8px',
+                            border: gpuCount === count ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
+                            background: gpuCount === count ? `${colors.accent}22` : colors.bgSecondary,
+                            color: colors.textPrimary,
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            minHeight: '44px',
+                          }}
+                        >
+                          {count}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Stats grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(1, 1fr)',
+                    gap: '12px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>{allReduceTime.toFixed(2)}s</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>All-Reduce Time</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: commRatio > 0.4 ? colors.hot : colors.success }}>
+                        {(commRatio * 100).toFixed(0)}%
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Comm Ratio</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: congestion > 0.5 ? colors.hot : congestion > 0.3 ? colors.warning : colors.success }}>
+                        {(congestion * 100).toFixed(0)}%
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Congestion</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1623,103 +1643,124 @@ const ELON_ClusterCommsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) 
               Adjust message size and cluster scale to see when each strategy wins
             </p>
 
+            {/* Main visualization — side-by-side on desktop */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <TwistVisualization />
-              </div>
-
-              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> Ring all-reduce sends data around a single ring of all GPUs, while hierarchical all-reduce first reduces locally via fast NVLink, then syncs across nodes over InfiniBand.</p>
-                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> Increasing the cluster size widens the gap in favor of hierarchical, because local NVLink reduction shrinks the data that must traverse the slower inter-node fabric.</p>
-              </div>
-
-              {/* Message size slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Gradient Message Size</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{messageSize} MB</span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="2000"
-                  step="10"
-                  value={messageSize}
-                  onChange={(e) => setMessageSize(parseInt(e.target.value))}
-                  onInput={(e) => setMessageSize(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Gradient message size"
-                  style={sliderStyle(colors.accent, messageSize, 1, 2000)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.cold }}>1 MB (small model)</span>
-                  <span style={{ ...typo.small, color: colors.hot }}>2000 MB (giant model)</span>
-                </div>
-              </div>
-
-              {/* Cluster size slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Cluster Size</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{clusterSize} GPUs</span>
-                </div>
-                <input
-                  type="range"
-                  min="16"
-                  max="4096"
-                  step="16"
-                  value={clusterSize}
-                  onChange={(e) => setClusterSize(parseInt(e.target.value))}
-                  onInput={(e) => setClusterSize(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Cluster size"
-                  style={sliderStyle(colors.accent, clusterSize, 16, 4096)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.cold }}>16 GPUs</span>
-                  <span style={{ ...typo.small, color: colors.hot }}>4096 GPUs</span>
-                </div>
-              </div>
-
-              {/* Results */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-                marginBottom: '20px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: '#3B82F6' }}>{ringT.toFixed(3)}s</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Ring All-Reduce</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: '#10B981' }}>{hierT.toFixed(3)}s</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Hierarchical All-Reduce</div>
-                </div>
-              </div>
-
-              {/* Insight */}
-              <div style={{
-                background: `${hierT < ringT ? colors.success : colors.cold}22`,
-                border: `1px solid ${hierT < ringT ? colors.success : colors.cold}`,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
-                  {hierT < ringT
-                    ? 'Hierarchical wins here — NVLink handles local reduction, minimizing slow inter-node traffic.'
-                    : 'Ring is competitive here — with small clusters or large messages, the ring bandwidth-optimality shines.'}
-                </p>
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                 <div style={{
-                  ...typo.h3,
-                  color: hierT < ringT ? colors.success : colors.cold
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
                 }}>
-                  {hierT < ringT ? 'Hierarchical' : 'Ring'} is {Math.abs(ringT / Math.max(hierT, 0.0001)).toFixed(1)}x {hierT < ringT ? 'faster' : 'the better choice'}
+                  {/* SVG Visualization */}
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <TwistVisualization />
+                  </div>
+
+                  <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginTop: '16px' }}>
+                    <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> Ring all-reduce sends data around a single ring of all GPUs, while hierarchical all-reduce first reduces locally via fast NVLink, then syncs across nodes over InfiniBand.</p>
+                    <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> Increasing the cluster size widens the gap in favor of hierarchical, because local NVLink reduction shrinks the data that must traverse the slower inter-node fabric.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                }}>
+                  {/* Message size slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Gradient Message Size</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{messageSize} MB</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="2000"
+                      step="10"
+                      value={messageSize}
+                      onChange={(e) => setMessageSize(parseInt(e.target.value))}
+                      onInput={(e) => setMessageSize(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Gradient message size"
+                      style={sliderStyle(colors.accent, messageSize, 1, 2000)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.cold }}>1 MB (small model)</span>
+                      <span style={{ ...typo.small, color: colors.hot }}>2000 MB (giant model)</span>
+                    </div>
+                  </div>
+
+                  {/* Cluster size slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Cluster Size</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{clusterSize} GPUs</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="16"
+                      max="4096"
+                      step="16"
+                      value={clusterSize}
+                      onChange={(e) => setClusterSize(parseInt(e.target.value))}
+                      onInput={(e) => setClusterSize(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Cluster size"
+                      style={sliderStyle(colors.accent, clusterSize, 16, 4096)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.cold }}>16 GPUs</span>
+                      <span style={{ ...typo.small, color: colors.hot }}>4096 GPUs</span>
+                    </div>
+                  </div>
+
+                  {/* Results */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(1, 1fr)',
+                    gap: '12px',
+                    marginBottom: '20px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: '#3B82F6' }}>{ringT.toFixed(3)}s</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Ring All-Reduce</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: '#10B981' }}>{hierT.toFixed(3)}s</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Hierarchical All-Reduce</div>
+                    </div>
+                  </div>
+
+                  {/* Insight */}
+                  <div style={{
+                    background: `${hierT < ringT ? colors.success : colors.cold}22`,
+                    border: `1px solid ${hierT < ringT ? colors.success : colors.cold}`,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
+                      {hierT < ringT
+                        ? 'Hierarchical wins here — NVLink handles local reduction, minimizing slow inter-node traffic.'
+                        : 'Ring is competitive here — with small clusters or large messages, the ring bandwidth-optimality shines.'}
+                    </p>
+                    <div style={{
+                      ...typo.h3,
+                      color: hierT < ringT ? colors.success : colors.cold
+                    }}>
+                      {hierT < ringT ? 'Hierarchical' : 'Ring'} is {Math.abs(ringT / Math.max(hierT, 0.0001)).toFixed(1)}x {hierT < ringT ? 'faster' : 'the better choice'}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

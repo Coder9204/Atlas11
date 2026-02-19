@@ -1113,54 +1113,68 @@ const ELON_OrbitDesignerRenderer: React.FC<ELON_OrbitDesignerRendererProps> = ({
               padding: '16px',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <OrbitVisualization />
-              </div>
-
-              {/* Orbital altitude slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Orbital Altitude</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {orbitalAltitude.toLocaleString()} km
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="200"
-                  max="35786"
-                  step="10"
-                  value={orbitalAltitude}
-                  onChange={(e) => setOrbitalAltitude(parseInt(e.target.value))}
-                  onInput={(e) => setOrbitalAltitude(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Orbital Altitude"
-                  style={sliderStyle(colors.accent, orbitalAltitude, 200, 35786)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>200 km (1-month life)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>GEO (permanent)</span>
-                </div>
-              </div>
-
-              {/* Stats grid */}
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
               }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.satellite }}>{currentVelocity.toFixed(2)} km/s</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Velocity</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>
-                    {currentPeriod > 7200 ? `${(currentPeriod / 3600).toFixed(1)} hr` : `${(currentPeriod / 60).toFixed(1)} min`}
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <OrbitVisualization />
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Period</div>
                 </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.success }}>{currentDeltaV.toFixed(2)} km/s</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Delta-v from LEO</div>
+
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Orbital altitude slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Orbital Altitude</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {orbitalAltitude.toLocaleString()} km
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="200"
+                      max="35786"
+                      step="10"
+                      value={orbitalAltitude}
+                      onChange={(e) => setOrbitalAltitude(parseInt(e.target.value))}
+                      onInput={(e) => setOrbitalAltitude(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Orbital Altitude"
+                      style={sliderStyle(colors.accent, orbitalAltitude, 200, 35786)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>200 km (1-month life)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>GEO (permanent)</span>
+                    </div>
+                  </div>
+
+                  {/* Stats grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(1, 1fr)',
+                    gap: '12px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.satellite }}>{currentVelocity.toFixed(2)} km/s</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Velocity</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>
+                        {currentPeriod > 7200 ? `${(currentPeriod / 3600).toFixed(1)} hr` : `${(currentPeriod / 60).toFixed(1)} min`}
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Period</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.success }}>{currentDeltaV.toFixed(2)} km/s</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Delta-v from LEO</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1511,104 +1525,118 @@ const ELON_OrbitDesignerRenderer: React.FC<ELON_OrbitDesignerRendererProps> = ({
               padding: '16px',
               marginBottom: '20px',
             }}>
-              {/* SVG Visualization with inclination */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <OrbitVisualization showInclination={true} />
-              </div>
-
-              {/* Educational panel */}
-              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The orbital plane tilts as you increase inclination, changing the satellite's ground track from a narrow equatorial band to full polar coverage spanning all latitudes.</p>
-                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> Raising inclination expands latitude coverage but requires expensive plane-change maneuvers; adjusting altitude simultaneously changes the orbital period, velocity, and coverage footprint size.</p>
-              </div>
-
-              {/* Inclination slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Orbital Inclination</span>
-                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{twistInclination} deg</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="98"
-                  step="1"
-                  value={twistInclination}
-                  onChange={(e) => setTwistInclination(parseInt(e.target.value))}
-                  onInput={(e) => setTwistInclination(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Orbital Inclination"
-                  style={sliderStyle(colors.warning, twistInclination, 0, 98)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>0 deg Equatorial</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>51.6 deg ISS</span>
-                  <span style={{ ...typo.small, color: colors.warning }}>98 deg Sun-Sync</span>
-                </div>
-              </div>
-
-              {/* Altitude slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Orbital Altitude</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{orbitalAltitude.toLocaleString()} km</span>
-                </div>
-                <input
-                  type="range"
-                  min="200"
-                  max="35786"
-                  step="10"
-                  value={orbitalAltitude}
-                  onChange={(e) => setOrbitalAltitude(parseInt(e.target.value))}
-                  onInput={(e) => setOrbitalAltitude(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Orbital Altitude"
-                  style={sliderStyle(colors.accent, orbitalAltitude, 200, 35786)}
-                />
-              </div>
-
-              {/* Comparison Results */}
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-                marginBottom: '20px',
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
               }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Coverage Pattern</div>
-                  <div style={{ ...typo.h3, color: colors.warning, fontSize: isMobile ? '14px' : '16px' }}>
-                    {twistCoverage}
-                  </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>
-                    Lat range: +/-{twistInclination} deg
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  {/* SVG Visualization with inclination */}
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <OrbitVisualization showInclination={true} />
                   </div>
                 </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Orbital Parameters</div>
-                  <div style={{ ...typo.h3, color: colors.satellite, fontSize: isMobile ? '14px' : '16px' }}>
-                    {currentVelocity.toFixed(2)} km/s
+
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Educational panel */}
+                  <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+                    <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The orbital plane tilts as you increase inclination, changing the satellite's ground track from a narrow equatorial band to full polar coverage spanning all latitudes.</p>
+                    <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> Raising inclination expands latitude coverage but requires expensive plane-change maneuvers; adjusting altitude simultaneously changes the orbital period, velocity, and coverage footprint size.</p>
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>
-                    Period: {currentPeriod > 7200 ? `${(currentPeriod / 3600).toFixed(1)} hr` : `${(currentPeriod / 60).toFixed(1)} min`}
+
+                  {/* Inclination slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Orbital Inclination</span>
+                      <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{twistInclination} deg</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="98"
+                      step="1"
+                      value={twistInclination}
+                      onChange={(e) => setTwistInclination(parseInt(e.target.value))}
+                      onInput={(e) => setTwistInclination(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Orbital Inclination"
+                      style={sliderStyle(colors.warning, twistInclination, 0, 98)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>0 deg Equatorial</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>51.6 deg ISS</span>
+                      <span style={{ ...typo.small, color: colors.warning }}>98 deg Sun-Sync</span>
+                    </div>
                   </div>
+
+                  {/* Altitude slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Orbital Altitude</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{orbitalAltitude.toLocaleString()} km</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="200"
+                      max="35786"
+                      step="10"
+                      value={orbitalAltitude}
+                      onChange={(e) => setOrbitalAltitude(parseInt(e.target.value))}
+                      onInput={(e) => setOrbitalAltitude(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Orbital Altitude"
+                      style={sliderStyle(colors.accent, orbitalAltitude, 200, 35786)}
+                    />
+                  </div>
+
+                  {/* Comparison Results */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(1, 1fr)',
+                    gap: '12px',
+                    marginBottom: '20px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Coverage Pattern</div>
+                      <div style={{ ...typo.h3, color: colors.warning, fontSize: isMobile ? '14px' : '16px' }}>
+                        {twistCoverage}
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>
+                        Lat range: +/-{twistInclination} deg
+                      </div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Orbital Parameters</div>
+                      <div style={{ ...typo.h3, color: colors.satellite, fontSize: isMobile ? '14px' : '16px' }}>
+                        {currentVelocity.toFixed(2)} km/s
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>
+                        Period: {currentPeriod > 7200 ? `${(currentPeriod / 3600).toFixed(1)} hr` : `${(currentPeriod / 60).toFixed(1)} min`}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sun-synchronous indicator */}
+                  {twistInclination >= 96 && twistInclination <= 100 && orbitalAltitude >= 400 && orbitalAltitude <= 900 && (
+                    <div style={{
+                      background: `${colors.success}22`,
+                      border: `1px solid ${colors.success}`,
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'center',
+                    }}>
+                      <p style={{ ...typo.body, color: colors.success, fontWeight: 700, margin: 0 }}>
+                        Sun-Synchronous Orbit Achieved!
+                      </p>
+                      <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
+                        J2 perturbation precesses the orbital plane at 0.9856 deg/day, matching Earth's orbital rate around the Sun. Consistent lighting for Earth observation.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
-
-              {/* Sun-synchronous indicator */}
-              {twistInclination >= 96 && twistInclination <= 100 && orbitalAltitude >= 400 && orbitalAltitude <= 900 && (
-                <div style={{
-                  background: `${colors.success}22`,
-                  border: `1px solid ${colors.success}`,
-                  borderRadius: '12px',
-                  padding: '16px',
-                  textAlign: 'center',
-                }}>
-                  <p style={{ ...typo.body, color: colors.success, fontWeight: 700, margin: 0 }}>
-                    Sun-Synchronous Orbit Achieved!
-                  </p>
-                  <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
-                    J2 perturbation precesses the orbital plane at 0.9856 deg/day, matching Earth's orbital rate around the Sun. Consistent lighting for Earth observation.
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         </div>

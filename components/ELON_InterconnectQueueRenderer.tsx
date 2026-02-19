@@ -1239,62 +1239,79 @@ const ELON_InterconnectQueueRenderer: React.FC<ELON_InterconnectQueueRendererPro
               padding: '16px',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <QueuePipelineVisualization />
-              </div>
+              {/* Side by side layout: SVG left, controls right on desktop */}
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+                marginBottom: '20px',
+              }}>
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <QueuePipelineVisualization />
+                  </div>
+                </div>
 
-              {/* Approval Rate slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Approval Processing Rate</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {approvalRate} months avg ({(approvalRate / 12).toFixed(1)} years)
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="6"
-                  max="60"
-                  step="1"
-                  value={approvalRate}
-                  onChange={(e) => setApprovalRate(parseInt(e.target.value))}
-                  onInput={(e) => setApprovalRate(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Approval Processing Rate"
-                  style={sliderStyle(colors.accent, approvalRate, 6, 60)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.approved }}>6mo (fast-track)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>3yr (current avg)</span>
-                  <span style={{ ...typo.small, color: colors.queue }}>5yr (slow)</span>
-                </div>
-              </div>
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Approval Rate slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Approval Processing Rate</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {approvalRate} months avg ({(approvalRate / 12).toFixed(1)} years)
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="6"
+                      max="60"
+                      step="1"
+                      value={approvalRate}
+                      onChange={(e) => setApprovalRate(parseInt(e.target.value))}
+                      onInput={(e) => setApprovalRate(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Approval Processing Rate"
+                      style={sliderStyle(colors.accent, approvalRate, 6, 60)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.approved }}>6mo (fast-track)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>3yr (current avg)</span>
+                      <span style={{ ...typo.small, color: colors.queue }}>5yr (slow)</span>
+                    </div>
+                  </div>
 
-              {/* Queue stages pipeline */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px', fontWeight: 600 }}>
-                  Queue Process Stages
-                </div>
-                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                  {['Application', 'Feasibility', 'System Impact', 'Facilities', 'Construction'].map((stage, i) => (
-                    <React.Fragment key={stage}>
-                      <div style={{
-                        flex: 1,
-                        background: `${[colors.queue, '#F97316', colors.accent, '#3B82F6', colors.approved][i]}22`,
-                        border: `1px solid ${[colors.queue, '#F97316', colors.accent, '#3B82F6', colors.approved][i]}44`,
-                        borderRadius: '8px',
-                        padding: '8px 4px',
-                        textAlign: 'center',
-                      }}>
-                        <div style={{ ...typo.small, color: [colors.queue, '#F97316', colors.accent, '#3B82F6', colors.approved][i], fontWeight: 600, fontSize: '11px' }}>
-                          {stage}
-                        </div>
-                        <div style={{ ...typo.small, color: colors.textMuted, fontSize: '10px' }}>
-                          ~{Math.round(approvalRate / 5 * (i === 0 ? 0.5 : i === 4 ? 2 : 1))}mo
-                        </div>
-                      </div>
-                      {i < 4 && <span style={{ color: colors.textMuted, fontSize: '16px' }}>{'\u2192'}</span>}
-                    </React.Fragment>
-                  ))}
+                  {/* Queue stages pipeline */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px', fontWeight: 600 }}>
+                      Queue Process Stages
+                    </div>
+                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      {['Application', 'Feasibility', 'System Impact', 'Facilities', 'Construction'].map((stage, i) => (
+                        <React.Fragment key={stage}>
+                          <div style={{
+                            flex: 1,
+                            background: `${[colors.queue, '#F97316', colors.accent, '#3B82F6', colors.approved][i]}22`,
+                            border: `1px solid ${[colors.queue, '#F97316', colors.accent, '#3B82F6', colors.approved][i]}44`,
+                            borderRadius: '8px',
+                            padding: '8px 4px',
+                            textAlign: 'center',
+                            minWidth: '45px',
+                          }}>
+                            <div style={{ ...typo.small, color: [colors.queue, '#F97316', colors.accent, '#3B82F6', colors.approved][i], fontWeight: 600, fontSize: '11px' }}>
+                              {stage}
+                            </div>
+                            <div style={{ ...typo.small, color: colors.textMuted, fontSize: '10px' }}>
+                              ~{Math.round(approvalRate / 5 * (i === 0 ? 0.5 : i === 4 ? 2 : 1))}mo
+                            </div>
+                          </div>
+                          {i < 4 && <span style={{ color: colors.textMuted, fontSize: '16px' }}>{'\u2192'}</span>}
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1659,40 +1676,55 @@ const ELON_InterconnectQueueRenderer: React.FC<ELON_InterconnectQueueRendererPro
               padding: '16px',
               marginBottom: '20px',
             }}>
-              {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <ClusterStudyVisualization />
-              </div>
-
-              {/* Educational panel */}
-              <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The visualization compares serial study (processing projects one-by-one) with cluster study (batching nearby projects together). As you increase the cluster size, the throughput multiplier grows logarithmically.</p>
-                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you increase the cluster size slider, more projects are studied simultaneously in each batch, reducing the effective months per project and increasing the annual throughput — but with diminishing returns beyond cluster sizes of 10-15.</p>
-              </div>
-
-              {/* Cluster size slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Cluster Size (projects per batch)</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {clusterSize} {clusterSize === 1 ? '(serial)' : 'projects'}
-                  </span>
+              {/* Side by side layout: SVG left, controls right on desktop */}
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+                marginBottom: '20px',
+              }}>
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <ClusterStudyVisualization />
+                  </div>
                 </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="20"
-                  step="1"
-                  value={clusterSize}
-                  onChange={(e) => setClusterSize(parseInt(e.target.value))}
-                  onInput={(e) => setClusterSize(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Cluster size"
-                  style={sliderStyle(colors.accent, clusterSize, 1, 20)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.queue }}>1 (serial)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>10 (medium cluster)</span>
-                  <span style={{ ...typo.small, color: colors.approved }}>20 (large cluster)</span>
+
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Educational panel */}
+                  <div style={{ background: `${colors.accent}11`, border: `1px solid ${colors.accent}33`, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+                    <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}><strong style={{ color: colors.accent }}>What you're seeing:</strong> The visualization compares serial study (processing projects one-by-one) with cluster study (batching nearby projects together). As you increase the cluster size, the throughput multiplier grows logarithmically.</p>
+                    <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}><strong style={{ color: colors.success }}>Cause and Effect:</strong> When you increase the cluster size slider, more projects are studied simultaneously in each batch, reducing the effective months per project and increasing the annual throughput — but with diminishing returns beyond cluster sizes of 10-15.</p>
+                  </div>
+
+                  {/* Cluster size slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Cluster Size (projects per batch)</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {clusterSize} {clusterSize === 1 ? '(serial)' : 'projects'}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="20"
+                      step="1"
+                      value={clusterSize}
+                      onChange={(e) => setClusterSize(parseInt(e.target.value))}
+                      onInput={(e) => setClusterSize(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Cluster size"
+                      style={sliderStyle(colors.accent, clusterSize, 1, 20)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.queue }}>1 (serial)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>10 (medium cluster)</span>
+                      <span style={{ ...typo.small, color: colors.approved }}>20 (large cluster)</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 

@@ -1196,66 +1196,80 @@ const ELON_PowerPlantPickerRenderer: React.FC<ELON_PowerPlantPickerRendererProps
               padding: '16px',
               marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <LCOEVisualization showCarbon={false} />
-              </div>
-
-              {/* Gas price slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Natural Gas Price</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    ${gasPrice.toFixed(1)}/MMBtu
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="2"
-                  max="15"
-                  step="0.5"
-                  value={gasPrice}
-                  onChange={(e) => setGasPrice(parseFloat(e.target.value))}
-                  onInput={(e) => setGasPrice(parseFloat((e.target as HTMLInputElement).value))}
-                  aria-label="Natural Gas Price"
-                  style={sliderStyle(colors.accent, gasPrice, 2, 15)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.success }}>$2.00 (cheap)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>$8.50 (avg)</span>
-                  <span style={{ ...typo.small, color: colors.error }}>$15.00 (crisis)</span>
-                </div>
-              </div>
-
-              {/* Stats grid */}
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
               }}>
-                {(() => {
-                  const cheapest = lcoeData.reduce((min, d, i) => d.total < min.total ? { ...d, i } : min, { ...lcoeData[0], i: 0 });
-                  const gasLcoe = lcoeData[2];
-                  return (
-                    <>
-                      <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                        <div style={{ ...typo.h3, color: plantTypes[cheapest.i].color }}>
-                          {plantTypes[cheapest.i].shortName}
-                        </div>
-                        <div style={{ ...typo.small, color: colors.textMuted }}>Cheapest Source</div>
-                      </div>
-                      <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                        <div style={{ ...typo.h3, color: colors.accent }}>${cheapest.total.toFixed(0)}/MWh</div>
-                        <div style={{ ...typo.small, color: colors.textMuted }}>Lowest LCOE</div>
-                      </div>
-                      <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                        <div style={{ ...typo.h3, color: gasLcoe.total > 55 ? colors.error : colors.success }}>
-                          ${gasLcoe.total.toFixed(0)}/MWh
-                        </div>
-                        <div style={{ ...typo.small, color: colors.textMuted }}>Gas CC LCOE</div>
-                      </div>
-                    </>
-                  );
-                })()}
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <LCOEVisualization showCarbon={false} />
+                  </div>
+                </div>
+
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Gas price slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Natural Gas Energy Price Rate</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        ${gasPrice.toFixed(1)}/MMBtu
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="2"
+                      max="15"
+                      step="0.5"
+                      value={gasPrice}
+                      onChange={(e) => setGasPrice(parseFloat(e.target.value))}
+                      onInput={(e) => setGasPrice(parseFloat((e.target as HTMLInputElement).value))}
+                      aria-label="Natural Gas Price"
+                      style={sliderStyle(colors.accent, gasPrice, 2, 15)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.success }}>$2.00 (cheap)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>$8.50 (avg)</span>
+                      <span style={{ ...typo.small, color: colors.error }}>$15.00 (crisis)</span>
+                    </div>
+                  </div>
+
+                  {/* Stats grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(1, 1fr)',
+                    gap: '12px',
+                  }}>
+                    {(() => {
+                      const cheapest = lcoeData.reduce((min, d, i) => d.total < min.total ? { ...d, i } : min, { ...lcoeData[0], i: 0 });
+                      const gasLcoe = lcoeData[2];
+                      return (
+                        <>
+                          <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                            <div style={{ ...typo.h3, color: plantTypes[cheapest.i].color }}>
+                              {plantTypes[cheapest.i].shortName}
+                            </div>
+                            <div style={{ ...typo.small, color: colors.textMuted }}>Cheapest Source</div>
+                          </div>
+                          <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                            <div style={{ ...typo.h3, color: colors.accent }}>${cheapest.total.toFixed(0)}/MWh</div>
+                            <div style={{ ...typo.small, color: colors.textMuted }}>Lowest LCOE</div>
+                          </div>
+                          <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                            <div style={{ ...typo.h3, color: gasLcoe.total > 55 ? colors.error : colors.success }}>
+                              ${gasLcoe.total.toFixed(0)}/MWh
+                            </div>
+                            <div style={{ ...typo.small, color: colors.textMuted }}>Gas CC LCOE</div>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1611,104 +1625,118 @@ const ELON_PowerPlantPickerRenderer: React.FC<ELON_PowerPlantPickerRendererProps
               padding: '16px',
               marginBottom: '20px',
             }}>
-              {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
-                <LCOEVisualization showCarbon={true} />
-              </div>
-
-              {/* Gas price slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Natural Gas Price</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    ${gasPrice.toFixed(1)}/MMBtu
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="2"
-                  max="15"
-                  step="0.5"
-                  value={gasPrice}
-                  onChange={(e) => setGasPrice(parseFloat(e.target.value))}
-                  onInput={(e) => setGasPrice(parseFloat((e.target as HTMLInputElement).value))}
-                  aria-label="Natural Gas Price"
-                  style={sliderStyle(colors.accent, gasPrice, 2, 15)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.success }}>$2.00</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>$8.50</span>
-                  <span style={{ ...typo.small, color: colors.error }}>$15.00</span>
-                </div>
-              </div>
-
-              {/* Carbon price slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Carbon Price</span>
-                  <span style={{ ...typo.small, color: carbonPrice > 50 ? colors.error : colors.warning, fontWeight: 600 }}>
-                    ${carbonPrice}/ton CO{'\u2082'}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="150"
-                  step="5"
-                  value={carbonPrice}
-                  onChange={(e) => setCarbonPrice(parseInt(e.target.value))}
-                  onInput={(e) => setCarbonPrice(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Carbon Price"
-                  style={sliderStyle(colors.warning, carbonPrice, 0, 150)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>$0 (no price)</span>
-                  <span style={{ ...typo.small, color: colors.warning }}>$75 (EU ETS)</span>
-                  <span style={{ ...typo.small, color: colors.error }}>$150 (social cost)</span>
-                </div>
-              </div>
-
-              {/* Impact stats */}
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-                marginBottom: '20px',
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
               }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: '#6B7280' }}>Coal: ${coalLcoe.total.toFixed(0)}/MWh</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>+${coalLcoe.carbon.toFixed(0)} carbon cost</div>
+                {/* Left: SVG visualization */}
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  {/* SVG Visualization */}
+                  <div style={{ display: 'flex', justifyContent: 'center', maxHeight: '50vh', overflow: 'hidden' }}>
+                    <LCOEVisualization showCarbon={true} />
+                  </div>
                 </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: '#F59E0B' }}>Solar: ${solarLcoe.total.toFixed(0)}/MWh</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>$0 carbon cost</div>
-                </div>
-              </div>
 
-              {/* Carbon impact warning */}
-              <div style={{
-                background: carbonPrice > 50 ? `${colors.error}22` : `${colors.warning}22`,
-                border: `1px solid ${carbonPrice > 50 ? colors.error : colors.warning}`,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
-                  At ${carbonPrice}/ton CO{'\u2082'}:
-                </p>
-                <div style={{
-                  ...typo.h2,
-                  color: carbonPrice > 50 ? colors.error : colors.warning
-                }}>
-                  Coal LCOE is {coalLcoe.total > 0 && solarLcoe.total > 0 ? (coalLcoe.total / solarLcoe.total).toFixed(1) : '0'}x Solar
+                {/* Right: Controls panel */}
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Gas price slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Natural Gas Price</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        ${gasPrice.toFixed(1)}/MMBtu
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="2"
+                      max="15"
+                      step="0.5"
+                      value={gasPrice}
+                      onChange={(e) => setGasPrice(parseFloat(e.target.value))}
+                      onInput={(e) => setGasPrice(parseFloat((e.target as HTMLInputElement).value))}
+                      aria-label="Natural Gas Price"
+                      style={sliderStyle(colors.accent, gasPrice, 2, 15)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.success }}>$2.00</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>$8.50</span>
+                      <span style={{ ...typo.small, color: colors.error }}>$15.00</span>
+                    </div>
+                  </div>
+
+                  {/* Carbon price slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Carbon Price</span>
+                      <span style={{ ...typo.small, color: carbonPrice > 50 ? colors.error : colors.warning, fontWeight: 600 }}>
+                        ${carbonPrice}/ton CO{'\u2082'}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="150"
+                      step="5"
+                      value={carbonPrice}
+                      onChange={(e) => setCarbonPrice(parseInt(e.target.value))}
+                      onInput={(e) => setCarbonPrice(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Carbon Price"
+                      style={sliderStyle(colors.warning, carbonPrice, 0, 150)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>$0 (no price)</span>
+                      <span style={{ ...typo.small, color: colors.warning }}>$75 (EU ETS)</span>
+                      <span style={{ ...typo.small, color: colors.error }}>$150 (social cost)</span>
+                    </div>
+                  </div>
+
+                  {/* Impact stats */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(1, 1fr)',
+                    gap: '12px',
+                    marginBottom: '20px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: '#6B7280' }}>Coal: ${coalLcoe.total.toFixed(0)}/MWh</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>+${coalLcoe.carbon.toFixed(0)} carbon cost</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: '#F59E0B' }}>Solar: ${solarLcoe.total.toFixed(0)}/MWh</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>$0 carbon cost</div>
+                    </div>
+                  </div>
+
+                  {/* Carbon impact warning */}
+                  <div style={{
+                    background: carbonPrice > 50 ? `${colors.error}22` : `${colors.warning}22`,
+                    border: `1px solid ${carbonPrice > 50 ? colors.error : colors.warning}`,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
+                      At ${carbonPrice}/ton CO{'\u2082'}:
+                    </p>
+                    <div style={{
+                      ...typo.h2,
+                      color: carbonPrice > 50 ? colors.error : colors.warning
+                    }}>
+                      Coal LCOE is {coalLcoe.total > 0 && solarLcoe.total > 0 ? (coalLcoe.total / solarLcoe.total).toFixed(1) : '0'}x Solar
+                    </div>
+                    <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+                      {carbonPrice >= 100
+                        ? 'At this carbon price, coal is economically impossible. Even gas struggles.'
+                        : carbonPrice >= 50
+                        ? 'Carbon pricing makes coal significantly more expensive than renewables.'
+                        : 'Without carbon pricing, coal\'s climate costs are hidden — an implicit subsidy.'}
+                    </p>
+                  </div>
                 </div>
-                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-                  {carbonPrice >= 100
-                    ? 'At this carbon price, coal is economically impossible. Even gas struggles.'
-                    : carbonPrice >= 50
-                    ? 'Carbon pricing makes coal significantly more expensive than renewables.'
-                    : 'Without carbon pricing, coal\'s climate costs are hidden — an implicit subsidy.'}
-                </p>
               </div>
             </div>
           </div>
