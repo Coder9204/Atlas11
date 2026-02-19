@@ -1164,95 +1164,115 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
             </p>
           </div>
 
-          {/* Main visualization */}
+          {/* Main visualization - side by side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <ArrheniusCurveVisualization showPoints={true} />
-            </div>
-
-            {/* Temperature slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Temperature</span>
-                <span style={{
-                  ...typo.small,
-                  color: temperature > 80 ? colors.error : temperature > 40 ? colors.warning : colors.success,
-                  fontWeight: 600
-                }}>
-                  {temperature}°C
-                </span>
-              </div>
-              <input
-                type="range"
-                min="-20"
-                max="150"
-                value={temperature}
-                onChange={(e) => setTemperature(parseInt(e.target.value))}
-                onInput={(e) => setTemperature(parseInt((e.target as HTMLInputElement).value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  accentColor: colors.accent,
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none' as const,
-                  background: `linear-gradient(to right, ${colors.accent} 0%, ${colors.accent} ${((temperature + 20) / 170) * 100}%, ${colors.border} ${((temperature + 20) / 170) * 100}%, ${colors.border} 100%)`,
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>-20°C (Freezer)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>150°C (Hot!)</span>
-              </div>
-            </div>
-
-            {/* Molecule animation */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <MoleculeAnimation speed={speedFactor} />
-            </div>
-
-            {/* Rate display */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px',
-            }}>
+            {/* Left: SVG visualization */}
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
               }}>
-                <div style={{ ...typo.h3, color: colors.textSecondary }}>{referenceTemp}°C</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Reference Temp</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{
-                  ...typo.h3,
-                  color: rateRatio > 1 ? colors.error : colors.success
-                }}>
-                  {rateRatio.toFixed(2)}×
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <ArrheniusCurveVisualization showPoints={true} />
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Rate Multiplier</div>
+
+                {/* Molecule animation */}
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <MoleculeAnimation speed={speedFactor} />
+                </div>
               </div>
+            </div>
+
+            {/* Right: Controls panel */}
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
               }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{accelerationFactor.toFixed(1)}×</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Acceleration Factor</div>
+                {/* Temperature slider */}
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Temperature</span>
+                    <span style={{
+                      ...typo.small,
+                      color: temperature > 80 ? colors.error : temperature > 40 ? colors.warning : colors.success,
+                      fontWeight: 600
+                    }}>
+                      {temperature}°C
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="-20"
+                    max="150"
+                    value={temperature}
+                    onChange={(e) => setTemperature(parseInt(e.target.value))}
+                    onInput={(e) => setTemperature(parseInt((e.target as HTMLInputElement).value))}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      accentColor: colors.accent,
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none' as const,
+                      background: `linear-gradient(to right, ${colors.accent} 0%, ${colors.accent} ${((temperature + 20) / 170) * 100}%, ${colors.border} ${((temperature + 20) / 170) * 100}%, ${colors.border} 100%)`,
+                    }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>-20°C</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>150°C</span>
+                  </div>
+                </div>
+
+                {/* Rate display */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(1, 1fr)',
+                  gap: '12px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.textSecondary }}>{referenceTemp}°C</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Reference Temp</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{
+                      ...typo.h3,
+                      color: rateRatio > 1 ? colors.error : colors.success
+                    }}>
+                      {rateRatio.toFixed(2)}×
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Rate Multiplier</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.accent }}>{accelerationFactor.toFixed(1)}×</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Acceleration Factor</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1566,123 +1586,144 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
             </p>
           </div>
 
+          {/* Side-by-side layout for twist play */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            {/* Temperature slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🌡️ Temperature</span>
-                <span style={{
-                  ...typo.small,
-                  color: temperature > 80 ? colors.error : temperature > 40 ? colors.warning : colors.success,
-                  fontWeight: 600
+            {/* Left: SVG visualization */}
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Interactive SVG visualization that changes with activation energy and temperature */}
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <ActivationEnergyVisualization ea={activationEnergy} temp={temperature} />
+                </div>
+
+                {/* Comparison panel */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '12px',
+                  marginTop: '16px',
                 }}>
-                  {temperature}°C
-                </span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="150"
-                value={temperature}
-                onChange={(e) => setTemperature(parseInt(e.target.value))}
-                onInput={(e) => setTemperature(parseInt((e.target as HTMLInputElement).value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none' as const,
-                }}
-              />
-            </div>
-
-            {/* Activation energy slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>⚡ Activation Energy (Ea)</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{activationEnergy.toFixed(2)} eV</span>
-              </div>
-              <input
-                type="range"
-                min="0.1"
-                max="1.5"
-                step="0.05"
-                value={activationEnergy}
-                onChange={(e) => setActivationEnergy(parseFloat(e.target.value))}
-                onInput={(e) => setActivationEnergy(parseFloat((e.target as HTMLInputElement).value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none' as const,
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Low (0.1 eV)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>High (1.5 eV)</span>
-              </div>
-            </div>
-
-            {/* Comparison panel */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '16px',
-              marginBottom: '16px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-                border: `2px solid ${colors.success}`,
-              }}>
-                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>
-                  Low Ea (0.3 eV)
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '12px',
+                    textAlign: 'center',
+                    border: `2px solid ${colors.success}`,
+                  }}>
+                    <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>
+                      Low Ea (0.3 eV)
+                    </div>
+                    <div style={{ ...typo.h3, color: colors.success }}>{ratioLowEa.toFixed(2)}×</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Rate change</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '12px',
+                    textAlign: 'center',
+                    border: `2px solid ${colors.error}`,
+                  }}>
+                    <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>
+                      High Ea (0.9 eV)
+                    </div>
+                    <div style={{ ...typo.h3, color: colors.error }}>{ratioHighEa.toFixed(2)}×</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Rate change</div>
+                  </div>
                 </div>
-                <div style={{ ...typo.h3, color: colors.success }}>{ratioLowEa.toFixed(2)}×</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Rate change</div>
               </div>
+            </div>
+
+            {/* Right: Controls panel */}
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-                border: `2px solid ${colors.error}`,
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
               }}>
-                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>
-                  High Ea (0.9 eV)
+                {/* Temperature slider */}
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>🌡️ Temperature</span>
+                    <span style={{
+                      ...typo.small,
+                      color: temperature > 80 ? colors.error : temperature > 40 ? colors.warning : colors.success,
+                      fontWeight: 600
+                    }}>
+                      {temperature}°C
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="150"
+                    value={temperature}
+                    onChange={(e) => setTemperature(parseInt(e.target.value))}
+                    onInput={(e) => setTemperature(parseInt((e.target as HTMLInputElement).value))}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none' as const,
+                    }}
+                  />
                 </div>
-                <div style={{ ...typo.h3, color: colors.error }}>{ratioHighEa.toFixed(2)}×</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Rate change</div>
-              </div>
-            </div>
 
-            {/* Your selected Ea */}
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              textAlign: 'center',
-            }}>
-              <div style={{ ...typo.small, color: colors.textSecondary }}>
-                Your Ea ({activationEnergy.toFixed(2)} eV): <span style={{ color: colors.accent, fontWeight: 600 }}>
-                  {rateRatio.toFixed(2)}× rate change
-                </span> from {referenceTemp}°C to {temperature}°C
-              </div>
-            </div>
+                {/* Activation energy slider */}
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>⚡ Ea</span>
+                    <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{activationEnergy.toFixed(2)} eV</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="1.5"
+                    step="0.05"
+                    value={activationEnergy}
+                    onChange={(e) => setActivationEnergy(parseFloat(e.target.value))}
+                    onInput={(e) => setActivationEnergy(parseFloat((e.target as HTMLInputElement).value))}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none' as const,
+                    }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>Low (0.1 eV)</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>High (1.5 eV)</span>
+                  </div>
+                </div>
 
-            {/* Interactive SVG visualization that changes with activation energy and temperature */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px' }}>
-              <ActivationEnergyVisualization ea={activationEnergy} temp={temperature} />
+                {/* Your selected Ea */}
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.small, color: colors.textSecondary }}>
+                    Your Ea ({activationEnergy.toFixed(2)} eV): <span style={{ color: colors.accent, fontWeight: 600 }}>
+                      {rateRatio.toFixed(2)}× rate change
+                    </span> from {referenceTemp}°C to {temperature}°C
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

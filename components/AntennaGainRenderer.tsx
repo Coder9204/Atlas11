@@ -937,7 +937,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
         paddingRight: '24px',
       }}>
 
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: '#e2e8f0', marginBottom: '8px', textAlign: 'center' }}>
             Shape the Radiation Pattern
           </h2>
@@ -958,107 +958,127 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
             </p>
           </div>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout: SVG left, controls right */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              {renderRadiationPattern(true, true)}
-            </div>
-
-            {/* Antenna diameter slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: '#e2e8f0' }}>Antenna Diameter</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{antennaDiameter.toFixed(1)}m ({diameterInWavelengths.toFixed(1)} wavelengths)</span>
-              </div>
-              <input
-                type="range"
-                min="0.1"
-                max="3"
-                step="0.1"
-                value={antennaDiameter}
-                onChange={(e) => setAntennaDiameter(parseFloat(e.target.value))}
-                aria-label="Antenna Diameter"
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.accent} ${(antennaDiameter / 3) * 100}%, ${colors.border} ${(antennaDiameter / 3) * 100}%)`,
-                  cursor: 'pointer',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  appearance: 'none',
-                }}
-              />
-            </div>
-
-            {/* Pointing angle slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: '#e2e8f0' }}>Look Direction</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{pointingAngle.toFixed(0)} degrees off-axis</span>
-              </div>
-              <input
-                type="range"
-                min="-90"
-                max="90"
-                step="5"
-                value={pointingAngle}
-                onChange={(e) => setPointingAngle(parseFloat(e.target.value))}
-                aria-label="Look Direction"
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  appearance: 'none',
-                }}
-              />
-            </div>
-
-            {/* Stats display */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px',
-            }}>
+            {/* Left: SVG visualization */}
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
               }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{gain_dBi.toFixed(1)} dBi</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Peak Gain</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.success }}>{beamwidth.toFixed(1)} deg</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Beamwidth (3dB)</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{
-                  ...typo.h3,
-                  color: effectiveGain_dBi > gain_dBi - 3 ? colors.success : effectiveGain_dBi > gain_dBi - 10 ? colors.warning : colors.error
-                }}>
-                  {effectiveGain_dBi.toFixed(1)} dBi
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  {renderRadiationPattern(true, true)}
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Gain at Angle</div>
+              </div>
+            </div>
+
+            {/* Right: Controls panel */}
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '20px',
+              }}>
+                {/* Antenna diameter slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: '#e2e8f0' }}>Antenna Diameter</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{antennaDiameter.toFixed(1)}m ({diameterInWavelengths.toFixed(1)} wavelengths)</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="3"
+                    step="0.1"
+                    value={antennaDiameter}
+                    onChange={(e) => setAntennaDiameter(parseFloat(e.target.value))}
+                    aria-label="Antenna Diameter"
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      background: `linear-gradient(to right, ${colors.accent} ${(antennaDiameter / 3) * 100}%, ${colors.border} ${(antennaDiameter / 3) * 100}%)`,
+                      cursor: 'pointer',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none',
+                      appearance: 'none',
+                    }}
+                  />
+                </div>
+
+                {/* Pointing angle slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: '#e2e8f0' }}>Look Direction</span>
+                    <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{pointingAngle.toFixed(0)} degrees off-axis</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="-90"
+                    max="90"
+                    step="5"
+                    value={pointingAngle}
+                    onChange={(e) => setPointingAngle(parseFloat(e.target.value))}
+                    aria-label="Look Direction"
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none',
+                      appearance: 'none',
+                    }}
+                  />
+                </div>
+
+                {/* Stats display */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(1, 1fr)',
+                  gap: '12px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.accent }}>{gain_dBi.toFixed(1)} dBi</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Peak Gain</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.success }}>{beamwidth.toFixed(1)} deg</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Beamwidth (3dB)</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{
+                      ...typo.h3,
+                      color: effectiveGain_dBi > gain_dBi - 3 ? colors.success : effectiveGain_dBi > gain_dBi - 10 ? colors.warning : colors.error
+                    }}>
+                      {effectiveGain_dBi.toFixed(1)} dBi
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Gain at Angle</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1344,7 +1364,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
       }}>
         {renderNavBar()}
 
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: '#e2e8f0', marginBottom: '8px', textAlign: 'center' }}>
             Frequency & Antenna Size Relationship
           </h2>
@@ -1365,104 +1385,125 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
             </p>
           </div>
 
+          {/* Side-by-side layout: SVG left, controls right */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              {renderRadiationPattern(true, false)}
+            {/* Left: SVG visualization */}
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  {renderRadiationPattern(true, false)}
+                </div>
+              </div>
             </div>
 
-            {/* Frequency slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: '#e2e8f0' }}>Frequency</span>
-                <span style={{
-                  ...typo.small,
-                  color: colors.warning,
-                  fontWeight: 600
+            {/* Right: Controls panel */}
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '20px',
+              }}>
+                {/* Frequency slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: '#e2e8f0' }}>Frequency</span>
+                    <span style={{
+                      ...typo.small,
+                      color: colors.warning,
+                      fontWeight: 600
+                    }}>
+                      {frequency} GHz ({(wavelength * 100).toFixed(1)} cm)
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="30"
+                    value={frequency}
+                    onChange={(e) => setFrequency(parseInt(e.target.value))}
+                    aria-label="Frequency"
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none',
+                      appearance: 'none',
+                    }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: '#e2e8f0' }}>1 GHz</span>
+                    <span style={{ ...typo.small, color: '#e2e8f0' }}>30 GHz</span>
+                  </div>
+                </div>
+
+                {/* Antenna size slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: '#e2e8f0' }}>Antenna Diameter</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{antennaDiameter.toFixed(1)}m</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="3"
+                    step="0.1"
+                    value={antennaDiameter}
+                    onChange={(e) => setAntennaDiameter(parseFloat(e.target.value))}
+                    aria-label="Antenna Diameter"
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none',
+                      appearance: 'none',
+                    }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: '#e2e8f0' }}>0.1m</span>
+                    <span style={{ ...typo.small, color: '#e2e8f0' }}>3m</span>
+                  </div>
+                </div>
+
+                {/* Stats */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(1, 1fr)',
+                  gap: '12px',
                 }}>
-                  {frequency} GHz (wavelength = {(wavelength * 100).toFixed(1)} cm)
-                </span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="30"
-                value={frequency}
-                onChange={(e) => setFrequency(parseInt(e.target.value))}
-                aria-label="Frequency"
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  appearance: 'none',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: '#e2e8f0' }}>1 GHz (30cm)</span>
-                <span style={{ ...typo.small, color: '#e2e8f0' }}>30 GHz (1cm)</span>
-              </div>
-            </div>
-
-            {/* Antenna size slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: '#e2e8f0' }}>Antenna Diameter</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{antennaDiameter.toFixed(1)}m</span>
-              </div>
-              <input
-                type="range"
-                min="0.1"
-                max="3"
-                step="0.1"
-                value={antennaDiameter}
-                onChange={(e) => setAntennaDiameter(parseFloat(e.target.value))}
-                aria-label="Antenna Diameter"
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  appearance: 'none',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: '#e2e8f0' }}>0.1m</span>
-                <span style={{ ...typo.small, color: '#e2e8f0' }}>3m</span>
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '12px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{diameterInWavelengths.toFixed(1)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Diameter in Wavelengths</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.success }}>{gain_dBi.toFixed(1)} dBi</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Antenna Gain</div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.accent }}>{diameterInWavelengths.toFixed(1)}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Diameter in Wavelengths</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.success }}>{gain_dBi.toFixed(1)} dBi</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Antenna Gain</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

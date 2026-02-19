@@ -265,6 +265,15 @@ export default function CableSizingRenderer({
 
   const lastClickRef = useRef(0);
 
+  // Responsive detection
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Wire gauge to resistance (ohms per 1000 feet)
   const gaugeResistance: Record<number, number> = {
     14: 2.525,
@@ -1016,7 +1025,7 @@ export default function CableSizingRenderer({
   };
 
   const renderPlay = () => (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
+    <div style={{ maxWidth: isMobile ? '800px' : '1100px', margin: '0 auto', padding: '24px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
         <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(99, 102, 241, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <span style={{ fontSize: '20px' }}>🔬</span>
@@ -1034,120 +1043,135 @@ export default function CableSizingRenderer({
         </p>
       </div>
 
-      {/* Key physics terms definition */}
-      <div style={{ padding: '16px', marginBottom: '16px', background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(99, 102, 241, 0.1))', border: '1px solid rgba(139, 92, 246, 0.3)', borderRadius: '16px' }}>
-        <h4 style={{ fontWeight: 700, fontSize: '14px', color: '#c4b5fd', marginBottom: '8px' }}>Key Terms</h4>
-        <ul style={{ lineHeight: 1.6, color: 'rgba(148, 163, 184, 0.7)', fontSize: '13px', margin: 0, paddingLeft: '16px' }}>
-          <li><strong style={{ color: '#e2e8f0' }}>AWG (American Wire Gauge):</strong> Wire thickness standard - lower number means thicker wire with lower resistance</li>
-          <li><strong style={{ color: '#e2e8f0' }}>I² × R Loss:</strong> Power dissipated as heat in a conductor, where P = I² × R</li>
-          <li><strong style={{ color: '#e2e8f0' }}>Voltage Drop:</strong> Voltage lost along wire length, V = I × R</li>
-        </ul>
-      </div>
+      {/* Side-by-side layout: SVG left, controls right */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        {/* Left: SVG visualization */}
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          {/* Key physics terms definition */}
+          <div style={{ padding: '16px', marginBottom: '16px', background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(99, 102, 241, 0.1))', border: '1px solid rgba(139, 92, 246, 0.3)', borderRadius: '16px' }}>
+            <h4 style={{ fontWeight: 700, fontSize: '14px', color: '#c4b5fd', marginBottom: '8px' }}>Key Terms</h4>
+            <ul style={{ lineHeight: 1.6, color: 'rgba(148, 163, 184, 0.7)', fontSize: '13px', margin: 0, paddingLeft: '16px' }}>
+              <li><strong style={{ color: '#e2e8f0' }}>AWG (American Wire Gauge):</strong> Wire thickness standard - lower number means thicker wire with lower resistance</li>
+              <li><strong style={{ color: '#e2e8f0' }}>I² × R Loss:</strong> Power dissipated as heat in a conductor, where P = I² × R</li>
+              <li><strong style={{ color: '#e2e8f0' }}>Voltage Drop:</strong> Voltage lost along wire length, V = I × R</li>
+            </ul>
+          </div>
 
-      {/* Main SVG Visualization */}
-      <div style={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
-        {renderPlaySVG()}
-      </div>
+          {/* Main SVG Visualization */}
+          <div style={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', borderRadius: '16px', padding: '16px', marginBottom: isMobile ? '12px' : '16px' }}>
+            {renderPlaySVG()}
+          </div>
 
-      {/* Stats panel */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '24px', padding: '16px', backgroundColor: 'rgba(15, 23, 42, 0.8)', borderRadius: '12px', border: '1px solid #334155' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '10px', color: 'rgba(148, 163, 184, 0.7)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Cable</div>
-          <div style={{ fontSize: '16px', color: '#b87333', fontWeight: 700 }}>AWG {wireGauge}</div>
-          <div style={{ fontSize: '10px', color: 'rgba(148, 163, 184, 0.7)' }}>{cableLength}m</div>
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '10px', color: 'rgba(148, 163, 184, 0.7)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Current</div>
-          <div style={{ fontSize: '16px', color: '#fbbf24', fontWeight: 700 }}>{loadCurrent}A</div>
-          <div style={{ fontSize: '10px', color: 'rgba(148, 163, 184, 0.7)' }}>{resistance.toFixed(3)}Ω</div>
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '10px', color: 'rgba(148, 163, 184, 0.7)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Power Loss</div>
-          <div style={{ fontSize: '16px', color: powerLoss > 200 ? '#ef4444' : powerLoss > 100 ? '#f59e0b' : '#22c55e', fontWeight: 700 }}>{powerLoss.toFixed(0)}W</div>
-          <div style={{ fontSize: '10px', color: 'rgba(148, 163, 184, 0.7)' }}>I² × R loss</div>
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '10px', color: 'rgba(148, 163, 184, 0.7)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>V Drop</div>
-          <div style={{ fontSize: '16px', color: voltageDropPercent > 5 ? '#ef4444' : voltageDropPercent > 3 ? '#f59e0b' : '#22c55e', fontWeight: 700 }}>{voltageDropPercent.toFixed(1)}%</div>
-          <div style={{ fontSize: '10px', color: 'rgba(148, 163, 184, 0.7)' }}>{voltageDrop.toFixed(1)}V</div>
-        </div>
-      </div>
-
-      {/* Sliders */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
-        <div style={{ padding: '16px', borderRadius: '12px', backgroundColor: 'rgba(30, 41, 59, 0.8)', border: '1px solid #334155' }}>
-          <label style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '8px' }}>
-            Load Current: {loadCurrent} Amps
-          </label>
-          <input
-            type="range"
-            min="10"
-            max="200"
-            value={loadCurrent}
-            onChange={(e) => handleSliderChange(setLoadCurrent, parseInt(e.target.value))}
-            onInput={(e) => handleSliderChange(setLoadCurrent, parseInt((e.target as HTMLInputElement).value))}
-            style={sliderStyle}
-          />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'rgba(148, 163, 184, 0.7)', marginTop: '4px' }}>
-            <span>10A</span>
-            <span>200A</span>
+          {/* Real-world relevance */}
+          <div style={{ padding: '16px', marginBottom: isMobile ? '12px' : '0', background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(99, 102, 241, 0.1))', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '16px' }}>
+            <h4 style={{ fontWeight: 700, fontSize: '14px', color: '#93c5fd', marginBottom: '8px' }}>Real-World Relevance</h4>
+            <p style={{ color: 'rgba(148, 163, 184, 0.7)', fontSize: '14px', lineHeight: 1.6 }}>
+              Data centers spend millions on properly sized cables. A 1MW facility with poor cable sizing could waste $50,000/year in I² × R losses alone.
+              Every amp of unnecessary current means exponentially more heat and wasted electricity.
+            </p>
           </div>
         </div>
 
-        <div style={{ padding: '16px', borderRadius: '12px', backgroundColor: 'rgba(30, 41, 59, 0.8)', border: '1px solid #334155' }}>
-          <label style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '8px' }}>
-            Wire Gauge: AWG {wireGauge} ({wireGauge <= 2 ? 'thick' : wireGauge <= 6 ? 'medium' : 'thin'})
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="14"
-            step="2"
-            value={wireGauge}
-            onChange={(e) => handleSliderChange(setWireGauge, parseInt(e.target.value))}
-            onInput={(e) => handleSliderChange(setWireGauge, parseInt((e.target as HTMLInputElement).value))}
-            style={sliderStyle}
-          />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'rgba(148, 163, 184, 0.7)', marginTop: '4px' }}>
-            <span>AWG 0 (Thick)</span>
-            <span>AWG 14 (Thin)</span>
+        {/* Right: Controls panel */}
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          {/* Stats panel */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginBottom: '16px', padding: '16px', backgroundColor: 'rgba(15, 23, 42, 0.8)', borderRadius: '12px', border: '1px solid #334155' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '10px', color: 'rgba(148, 163, 184, 0.7)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Cable</div>
+              <div style={{ fontSize: '16px', color: '#b87333', fontWeight: 700 }}>AWG {wireGauge}</div>
+              <div style={{ fontSize: '10px', color: 'rgba(148, 163, 184, 0.7)' }}>{cableLength}m</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '10px', color: 'rgba(148, 163, 184, 0.7)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Current</div>
+              <div style={{ fontSize: '16px', color: '#fbbf24', fontWeight: 700 }}>{loadCurrent}A</div>
+              <div style={{ fontSize: '10px', color: 'rgba(148, 163, 184, 0.7)' }}>{resistance.toFixed(3)}Ω</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '10px', color: 'rgba(148, 163, 184, 0.7)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Power Loss</div>
+              <div style={{ fontSize: '16px', color: powerLoss > 200 ? '#ef4444' : powerLoss > 100 ? '#f59e0b' : '#22c55e', fontWeight: 700 }}>{powerLoss.toFixed(0)}W</div>
+              <div style={{ fontSize: '10px', color: 'rgba(148, 163, 184, 0.7)' }}>I² × R loss</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '10px', color: 'rgba(148, 163, 184, 0.7)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>V Drop</div>
+              <div style={{ fontSize: '16px', color: voltageDropPercent > 5 ? '#ef4444' : voltageDropPercent > 3 ? '#f59e0b' : '#22c55e', fontWeight: 700 }}>{voltageDropPercent.toFixed(1)}%</div>
+              <div style={{ fontSize: '10px', color: 'rgba(148, 163, 184, 0.7)' }}>{voltageDrop.toFixed(1)}V</div>
+            </div>
+          </div>
+
+          {/* Sliders */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+            <div style={{ padding: '12px', borderRadius: '12px', backgroundColor: 'rgba(30, 41, 59, 0.8)', border: '1px solid #334155' }}>
+              <label style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '8px' }}>
+                Load Current: {loadCurrent} Amps
+              </label>
+              <input
+                type="range"
+                min="10"
+                max="200"
+                value={loadCurrent}
+                onChange={(e) => handleSliderChange(setLoadCurrent, parseInt(e.target.value))}
+                onInput={(e) => handleSliderChange(setLoadCurrent, parseInt((e.target as HTMLInputElement).value))}
+                style={sliderStyle}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'rgba(148, 163, 184, 0.7)', marginTop: '4px' }}>
+                <span>10A</span>
+                <span>200A</span>
+              </div>
+            </div>
+
+            <div style={{ padding: '12px', borderRadius: '12px', backgroundColor: 'rgba(30, 41, 59, 0.8)', border: '1px solid #334155' }}>
+              <label style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '8px' }}>
+                Wire Gauge: AWG {wireGauge} ({wireGauge <= 2 ? 'thick' : wireGauge <= 6 ? 'medium' : 'thin'})
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="14"
+                step="2"
+                value={wireGauge}
+                onChange={(e) => handleSliderChange(setWireGauge, parseInt(e.target.value))}
+                onInput={(e) => handleSliderChange(setWireGauge, parseInt((e.target as HTMLInputElement).value))}
+                style={sliderStyle}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'rgba(148, 163, 184, 0.7)', marginTop: '4px' }}>
+                <span>AWG 0 (Thick)</span>
+                <span>AWG 14 (Thin)</span>
+              </div>
+            </div>
+
+            <div style={{ padding: '12px', borderRadius: '12px', backgroundColor: 'rgba(30, 41, 59, 0.8)', border: '1px solid #334155' }}>
+              <label style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '8px' }}>
+                Cable Length: {cableLength} meters
+              </label>
+              <input
+                type="range"
+                min="10"
+                max="200"
+                value={cableLength}
+                onChange={(e) => handleSliderChange(setCableLength, parseInt(e.target.value))}
+                onInput={(e) => handleSliderChange(setCableLength, parseInt((e.target as HTMLInputElement).value))}
+                style={sliderStyle}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'rgba(148, 163, 184, 0.7)', marginTop: '4px' }}>
+                <span>10m</span>
+                <span>200m</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Notice */}
+          <div style={{ padding: '12px', marginBottom: '0', backgroundColor: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '16px' }}>
+            <p style={{ color: '#fde68a', fontSize: '13px', lineHeight: 1.6 }}>
+              <strong>Notice:</strong> Doubling current causes 4x the power loss! Try increasing current from 50A to 100A and watch the losses jump.
+            </p>
           </div>
         </div>
-
-        <div style={{ padding: '16px', borderRadius: '12px', backgroundColor: 'rgba(30, 41, 59, 0.8)', border: '1px solid #334155' }}>
-          <label style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '8px' }}>
-            Cable Length: {cableLength} meters
-          </label>
-          <input
-            type="range"
-            min="10"
-            max="200"
-            value={cableLength}
-            onChange={(e) => handleSliderChange(setCableLength, parseInt(e.target.value))}
-            onInput={(e) => handleSliderChange(setCableLength, parseInt((e.target as HTMLInputElement).value))}
-            style={sliderStyle}
-          />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'rgba(148, 163, 184, 0.7)', marginTop: '4px' }}>
-            <span>10m</span>
-            <span>200m</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Notice */}
-      <div style={{ padding: '16px', marginBottom: '24px', backgroundColor: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '16px' }}>
-        <p style={{ color: '#fde68a', fontSize: '14px', lineHeight: 1.6 }}>
-          <strong>Notice:</strong> Doubling current causes 4x the power loss! Try increasing current from 50A to 100A and watch the losses jump.
-        </p>
-      </div>
-
-      {/* Real-world relevance */}
-      <div style={{ padding: '16px', marginBottom: '24px', background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(99, 102, 241, 0.1))', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '16px' }}>
-        <h4 style={{ fontWeight: 700, fontSize: '14px', color: '#93c5fd', marginBottom: '8px' }}>Real-World Relevance</h4>
-        <p style={{ color: 'rgba(148, 163, 184, 0.7)', fontSize: '14px', lineHeight: 1.6 }}>
-          Data centers spend millions on properly sized cables. A 1MW facility with poor cable sizing could waste $50,000/year in I² × R losses alone.
-          Every amp of unnecessary current means exponentially more heat and wasted electricity.
-        </p>
       </div>
 
       {renderBottomBar(hasExperimented, hasExperimented ? 'Continue to Review' : `Adjust sliders ${Math.max(0, 5 - experimentCount)} more times...`)}
@@ -1375,7 +1399,7 @@ export default function CableSizingRenderer({
   };
 
   const renderTwistPlay = () => (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
+    <div style={{ maxWidth: isMobile ? '800px' : '1100px', margin: '0 auto', padding: '24px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
         <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(234, 88, 12, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <span style={{ fontSize: '20px' }}>📊</span>
@@ -1393,52 +1417,67 @@ export default function CableSizingRenderer({
         </p>
       </div>
 
-      {/* Main SVG Visualization */}
-      <div style={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
-        {renderTwistPlaySVG()}
-      </div>
-
-      {/* Slider */}
-      <div style={{ padding: '16px', borderRadius: '12px', backgroundColor: 'rgba(30, 41, 59, 0.8)', border: '1px solid #334155', marginBottom: '24px' }}>
-        <label style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '8px' }}>
-          Load Power: {(loadPower / 1000).toFixed(0)} kW
-        </label>
-        <input
-          type="range"
-          min="1000"
-          max="50000"
-          step="1000"
-          value={loadPower}
-          onChange={(e) => { setLoadPower(parseInt(e.target.value)); setHasExploredTwist(true); }}
-          onInput={(e) => { setLoadPower(parseInt((e.target as HTMLInputElement).value)); setHasExploredTwist(true); }}
-          style={sliderStyle}
-        />
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'rgba(148, 163, 184, 0.7)', marginTop: '4px' }}>
-          <span>1 kW</span>
-          <span>50 kW</span>
+      {/* Side-by-side layout: SVG left, controls right */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        {/* Left: SVG visualization */}
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          {/* Main SVG Visualization */}
+          <div style={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', borderRadius: '16px', padding: '16px', marginBottom: isMobile ? '12px' : '0' }}>
+            {renderTwistPlaySVG()}
+          </div>
         </div>
-      </div>
 
-      {/* Stats comparison */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
-        <div style={{ padding: '16px', borderRadius: '12px', textAlign: 'center', backgroundColor: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
-          <div style={{ fontSize: '20px', fontWeight: 700, color: '#f59e0b' }}>208V</div>
-          <div style={{ fontSize: '14px', color: 'rgba(148, 163, 184, 0.7)' }}>{currentAt208V.toFixed(1)}A current</div>
-          <div style={{ fontSize: '18px', fontWeight: 700, color: '#f59e0b', marginTop: '4px' }}>{lossAt208V.toFixed(0)}W loss</div>
-        </div>
-        <div style={{ padding: '16px', borderRadius: '12px', textAlign: 'center', backgroundColor: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-          <div style={{ fontSize: '20px', fontWeight: 700, color: '#10b981' }}>480V</div>
-          <div style={{ fontSize: '14px', color: 'rgba(148, 163, 184, 0.7)' }}>{currentAt480V.toFixed(1)}A current</div>
-          <div style={{ fontSize: '18px', fontWeight: 700, color: '#10b981', marginTop: '4px' }}>{lossAt480V.toFixed(0)}W loss</div>
-        </div>
-      </div>
+        {/* Right: Controls panel */}
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          {/* Slider */}
+          <div style={{ padding: '12px', borderRadius: '12px', backgroundColor: 'rgba(30, 41, 59, 0.8)', border: '1px solid #334155', marginBottom: '16px' }}>
+            <label style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '8px' }}>
+              Load Power: {(loadPower / 1000).toFixed(0)} kW
+            </label>
+            <input
+              type="range"
+              min="1000"
+              max="50000"
+              step="1000"
+              value={loadPower}
+              onChange={(e) => { setLoadPower(parseInt(e.target.value)); setHasExploredTwist(true); }}
+              onInput={(e) => { setLoadPower(parseInt((e.target as HTMLInputElement).value)); setHasExploredTwist(true); }}
+              style={sliderStyle}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'rgba(148, 163, 184, 0.7)', marginTop: '4px' }}>
+              <span>1 kW</span>
+              <span>50 kW</span>
+            </div>
+          </div>
 
-      {/* Key insight */}
-      <div style={{ padding: '16px', marginBottom: '24px', backgroundColor: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '16px' }}>
-        <p style={{ color: '#6ee7b7', fontSize: '14px', lineHeight: 1.6 }}>
-          <strong>Key insight:</strong> 480V distribution saves {((1 - lossAt480V / lossAt208V) * 100).toFixed(0)}% in cable losses!
-          This is why large data centers use 480V/415V distribution before stepping down to 208V/120V at the rack.
-        </p>
+          {/* Stats comparison */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+            <div style={{ padding: '12px', borderRadius: '12px', textAlign: 'center', backgroundColor: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+              <div style={{ fontSize: '18px', fontWeight: 700, color: '#f59e0b' }}>208V</div>
+              <div style={{ fontSize: '12px', color: 'rgba(148, 163, 184, 0.7)' }}>{currentAt208V.toFixed(1)}A current</div>
+              <div style={{ fontSize: '16px', fontWeight: 700, color: '#f59e0b', marginTop: '4px' }}>{lossAt208V.toFixed(0)}W loss</div>
+            </div>
+            <div style={{ padding: '12px', borderRadius: '12px', textAlign: 'center', backgroundColor: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+              <div style={{ fontSize: '18px', fontWeight: 700, color: '#10b981' }}>480V</div>
+              <div style={{ fontSize: '12px', color: 'rgba(148, 163, 184, 0.7)' }}>{currentAt480V.toFixed(1)}A current</div>
+              <div style={{ fontSize: '16px', fontWeight: 700, color: '#10b981', marginTop: '4px' }}>{lossAt480V.toFixed(0)}W loss</div>
+            </div>
+          </div>
+
+          {/* Key insight */}
+          <div style={{ padding: '12px', marginBottom: '0', backgroundColor: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '16px' }}>
+            <p style={{ color: '#6ee7b7', fontSize: '13px', lineHeight: 1.6 }}>
+              <strong>Key insight:</strong> 480V distribution saves {((1 - lossAt480V / lossAt208V) * 100).toFixed(0)}% in cable losses!
+              This is why large data centers use 480V/415V distribution before stepping down to 208V/120V at the rack.
+            </p>
+          </div>
+        </div>
       </div>
 
       {renderBottomBar(hasExploredTwist, hasExploredTwist ? 'Continue' : 'Adjust the power slider...')}

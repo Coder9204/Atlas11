@@ -1103,157 +1103,178 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
               </p>
             </div>
 
-            {/* Main visualization */}
+            {/* Side-by-side layout: SVG left, controls right */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '24px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                {renderBatchingVisualization()}
-              </div>
-
-              {/* Batch size slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Batch Size (request rate)</span>
-                  <span data-testid="batch-size-value" style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{batchSize} requests</span>
-                </div>
-                <div>
-                  <input
-                    type="range"
-                    min="1"
-                    max="16"
-                    step="1"
-                    value={batchSize}
-                    onChange={(e) => setBatchSize(parseInt(e.target.value))}
-                    onInput={(e) => setBatchSize(parseInt((e.target as HTMLInputElement).value))}
-                    aria-label="Batch Size"
-                    style={sliderStyle}
-                  />
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                    <span style={{ ...typo.small, color: colors.textMuted }}>1 (low)</span>
-                    <span style={{ ...typo.small, color: colors.textMuted }}>16 (high)</span>
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                    {renderBatchingVisualization()}
                   </div>
-                </div>
-              </div>
 
-              {/* Request rate slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Rate (acceleration period)</span>
-                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{requestRate} req/s</span>
-                </div>
-                <input
-                  type="range"
-                  min="5"
-                  max="100"
-                  step="5"
-                  value={requestRate}
-                  onChange={(e) => setRequestRate(parseInt(e.target.value))}
-                  onInput={(e) => setRequestRate(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Request Rate"
-                  style={sliderStyle}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>5 (slow)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>100 (fast)</span>
-                </div>
-              </div>
-
-              {/* Processing time slider */}
-              <div style={{ marginBottom: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Processing Time (latency period)</span>
-                  <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{processingTime} ms</span>
-                </div>
-                <input
-                  type="range"
-                  min="20"
-                  max="200"
-                  step="10"
-                  value={processingTime}
-                  onChange={(e) => setProcessingTime(parseInt(e.target.value))}
-                  onInput={(e) => setProcessingTime(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Processing Time"
-                  style={sliderStyle}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>20 (low)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>200 (high)</span>
-                </div>
-              </div>
-
-              {/* Simulation controls */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <button
-                  onClick={() => setIsSimulationRunning(!isSimulationRunning)}
-                  style={{
-                    background: isSimulationRunning ? colors.error : colors.success,
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 32px',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    minHeight: '44px',
-                  }}
-                >
-                  {isSimulationRunning ? 'Stop Simulation' : 'Start Simulation'}
-                </button>
-              </div>
-
-              {/* Metrics display */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
-                gap: '12px',
-              }}>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '12px',
-                  padding: '16px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{metrics.throughput.toFixed(0)}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Max Throughput</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>(req/s)</div>
-                </div>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '12px',
-                  padding: '16px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.h3, color: metrics.avgLatency > 500 ? colors.error : metrics.avgLatency > 200 ? colors.warning : colors.success }}>
-                    {metrics.avgLatency.toFixed(0)}ms
-                  </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Avg Latency</div>
-                </div>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '12px',
-                  padding: '16px',
-                  textAlign: 'center',
-                }}>
+                  {/* Metrics display */}
                   <div style={{
-                    ...typo.h3,
-                    color: metrics.gpuUtilization > 70 ? colors.success : metrics.gpuUtilization > 40 ? colors.warning : colors.error
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px',
                   }}>
-                    {metrics.gpuUtilization.toFixed(0)}%
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>{metrics.throughput.toFixed(0)}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Max Throughput</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>(req/s)</div>
+                    </div>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.h3, color: metrics.avgLatency > 500 ? colors.error : metrics.avgLatency > 200 ? colors.warning : colors.success }}>
+                        {metrics.avgLatency.toFixed(0)}ms
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Avg Latency</div>
+                    </div>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{
+                        ...typo.h3,
+                        color: metrics.gpuUtilization > 70 ? colors.success : metrics.gpuUtilization > 40 ? colors.warning : colors.error
+                      }}>
+                        {metrics.gpuUtilization.toFixed(0)}%
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>GPU Utilization</div>
+                    </div>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.h3, color: colors.warning }}>{metrics.queueDepth.toFixed(1)}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Avg Queue Depth</div>
+                    </div>
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>GPU Utilization</div>
                 </div>
+              </div>
+
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
                 <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '12px',
-                  padding: '16px',
-                  textAlign: 'center',
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
                 }}>
-                  <div style={{ ...typo.h3, color: colors.warning }}>{metrics.queueDepth.toFixed(1)}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Avg Queue Depth</div>
+                  {/* Batch size slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Batch Size (request rate)</span>
+                      <span data-testid="batch-size-value" style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{batchSize} requests</span>
+                    </div>
+                    <div>
+                      <input
+                        type="range"
+                        min="1"
+                        max="16"
+                        step="1"
+                        value={batchSize}
+                        onChange={(e) => setBatchSize(parseInt(e.target.value))}
+                        onInput={(e) => setBatchSize(parseInt((e.target as HTMLInputElement).value))}
+                        aria-label="Batch Size"
+                        style={sliderStyle}
+                      />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                        <span style={{ ...typo.small, color: colors.textMuted }}>1 (low)</span>
+                        <span style={{ ...typo.small, color: colors.textMuted }}>16 (high)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Request rate slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Rate (acceleration period)</span>
+                      <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{requestRate} req/s</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="5"
+                      max="100"
+                      step="5"
+                      value={requestRate}
+                      onChange={(e) => setRequestRate(parseInt(e.target.value))}
+                      onInput={(e) => setRequestRate(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Request Rate"
+                      style={sliderStyle}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>5 (slow)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>100 (fast)</span>
+                    </div>
+                  </div>
+
+                  {/* Processing time slider */}
+                  <div style={{ marginBottom: '24px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Processing Time (latency period)</span>
+                      <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{processingTime} ms</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="20"
+                      max="200"
+                      step="10"
+                      value={processingTime}
+                      onChange={(e) => setProcessingTime(parseInt(e.target.value))}
+                      onInput={(e) => setProcessingTime(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Processing Time"
+                      style={sliderStyle}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>20 (low)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>200 (high)</span>
+                    </div>
+                  </div>
+
+                  {/* Simulation controls */}
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <button
+                      onClick={() => setIsSimulationRunning(!isSimulationRunning)}
+                      style={{
+                        background: isSimulationRunning ? colors.error : colors.success,
+                        color: 'white',
+                        border: 'none',
+                        padding: '12px 32px',
+                        borderRadius: '8px',
+                        fontSize: '16px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        minHeight: '44px',
+                        width: '100%',
+                      }}
+                    >
+                      {isSimulationRunning ? 'Stop Simulation' : 'Start Simulation'}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1473,151 +1494,172 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
               </p>
             </div>
 
+            {/* Side-by-side layout: SVG left, controls right */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '24px',
             }}>
-              {/* Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                {renderBatchingVisualization()}
-              </div>
+              {/* Left: SVG visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
+                }}>
+                  {/* Visualization */}
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                    {renderBatchingVisualization()}
+                  </div>
 
-              {/* Dynamic batching toggle */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '12px',
-                marginBottom: '24px',
-              }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Static Batching</span>
-                <button
-                  onClick={() => setDynamicBatching(!dynamicBatching)}
-                  style={{
-                    width: '60px',
-                    height: '30px',
-                    borderRadius: '15px',
-                    border: 'none',
-                    background: dynamicBatching ? colors.success : colors.border,
-                    cursor: 'pointer',
-                    position: 'relative',
-                    transition: 'background 0.3s',
-                    minHeight: '30px',
-                  }}
-                >
+                  {/* Metrics display */}
                   <div style={{
-                    width: '24px',
-                    height: '24px',
-                    borderRadius: '50%',
-                    background: 'white',
-                    position: 'absolute',
-                    top: '3px',
-                    left: dynamicBatching ? '33px' : '3px',
-                    transition: 'left 0.3s',
-                  }} />
-                </button>
-                <span style={{ ...typo.small, color: dynamicBatching ? colors.success : colors.textSecondary, fontWeight: dynamicBatching ? 600 : 400 }}>
-                  Dynamic Batching
-                </span>
-              </div>
-
-              {/* Batch timeout slider (only visible when dynamic) */}
-              {dynamicBatching && (
-                <div style={{ marginBottom: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ ...typo.small, color: colors.textSecondary }}>Max Wait Time (latency period)</span>
-                    <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{batchTimeout} ms</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="10"
-                    max="500"
-                    step="10"
-                    value={batchTimeout}
-                    onChange={(e) => setBatchTimeout(parseInt(e.target.value))}
-                    onInput={(e) => setBatchTimeout(parseInt((e.target as HTMLInputElement).value))}
-                    aria-label="Max Wait Time"
-                    style={sliderStyle}
-                  />
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                    <span style={{ ...typo.small, color: colors.textMuted }}>10 (low)</span>
-                    <span style={{ ...typo.small, color: colors.textMuted }}>500 (high)</span>
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px',
+                  }}>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '8px',
+                      padding: '12px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.h3, color: colors.success }}>{metrics.throughput.toFixed(0)} req/s</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Max Throughput</div>
+                    </div>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '8px',
+                      padding: '12px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.h3, color: metrics.avgLatency > 300 ? colors.error : metrics.avgLatency > 150 ? colors.warning : colors.success }}>
+                        {metrics.avgLatency.toFixed(0)} ms
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Avg Latency</div>
+                    </div>
                   </div>
                 </div>
-              )}
-
-              {/* Other sliders */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Max Batch Size (rate)</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{batchSize}</span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="32"
-                  step="1"
-                  value={batchSize}
-                  onChange={(e) => setBatchSize(parseInt(e.target.value))}
-                  onInput={(e) => setBatchSize(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Max Batch Size"
-                  style={sliderStyle}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>1 (low)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>32 (high)</span>
-                </div>
               </div>
 
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Rate (acceleration period)</span>
-                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{requestRate} req/s</span>
-                </div>
-                <input
-                  type="range"
-                  min="5"
-                  max="200"
-                  step="5"
-                  value={requestRate}
-                  onChange={(e) => setRequestRate(parseInt(e.target.value))}
-                  onInput={(e) => setRequestRate(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Request Rate"
-                  style={sliderStyle}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>5 (slow)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>200 (fast)</span>
-                </div>
-              </div>
-
-              {/* Metrics display */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-              }}>
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
                 <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
                 }}>
-                  <div style={{ ...typo.h3, color: colors.success }}>{metrics.throughput.toFixed(0)} req/s</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Max Throughput</div>
-                </div>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.h3, color: metrics.avgLatency > 300 ? colors.error : metrics.avgLatency > 150 ? colors.warning : colors.success }}>
-                    {metrics.avgLatency.toFixed(0)} ms
+                  {/* Dynamic batching toggle */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '12px',
+                    marginBottom: '24px',
+                  }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Static Batching</span>
+                    <button
+                      onClick={() => setDynamicBatching(!dynamicBatching)}
+                      style={{
+                        width: '60px',
+                        height: '30px',
+                        borderRadius: '15px',
+                        border: 'none',
+                        background: dynamicBatching ? colors.success : colors.border,
+                        cursor: 'pointer',
+                        position: 'relative',
+                        transition: 'background 0.3s',
+                        minHeight: '30px',
+                      }}
+                    >
+                      <div style={{
+                        width: '24px',
+                        height: '24px',
+                        borderRadius: '50%',
+                        background: 'white',
+                        position: 'absolute',
+                        top: '3px',
+                        left: dynamicBatching ? '33px' : '3px',
+                        transition: 'left 0.3s',
+                      }} />
+                    </button>
+                    <span style={{ ...typo.small, color: dynamicBatching ? colors.success : colors.textSecondary, fontWeight: dynamicBatching ? 600 : 400 }}>
+                      Dynamic Batching
+                    </span>
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Avg Latency</div>
+
+                  {/* Batch timeout slider (only visible when dynamic) */}
+                  {dynamicBatching && (
+                    <div style={{ marginBottom: '20px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                        <span style={{ ...typo.small, color: colors.textSecondary }}>Max Wait Time (latency period)</span>
+                        <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{batchTimeout} ms</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="10"
+                        max="500"
+                        step="10"
+                        value={batchTimeout}
+                        onChange={(e) => setBatchTimeout(parseInt(e.target.value))}
+                        onInput={(e) => setBatchTimeout(parseInt((e.target as HTMLInputElement).value))}
+                        aria-label="Max Wait Time"
+                        style={sliderStyle}
+                      />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                        <span style={{ ...typo.small, color: colors.textMuted }}>10 (low)</span>
+                        <span style={{ ...typo.small, color: colors.textMuted }}>500 (high)</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Other sliders */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Max Batch Size (rate)</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{batchSize}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="32"
+                      step="1"
+                      value={batchSize}
+                      onChange={(e) => setBatchSize(parseInt(e.target.value))}
+                      onInput={(e) => setBatchSize(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Max Batch Size"
+                      style={sliderStyle}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>1 (low)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>32 (high)</span>
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Rate (acceleration period)</span>
+                      <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{requestRate} req/s</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="5"
+                      max="200"
+                      step="5"
+                      value={requestRate}
+                      onChange={(e) => setRequestRate(parseInt(e.target.value))}
+                      onInput={(e) => setRequestRate(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Request Rate"
+                      style={sliderStyle}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>5 (slow)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>200 (fast)</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

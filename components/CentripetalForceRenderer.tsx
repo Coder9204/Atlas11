@@ -846,7 +846,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
     // PLAY PHASE - Interactive Circular Motion Lab
     if (phase === 'play') {
       return (
-        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Centripetal Force Lab
           </h2>
@@ -858,161 +858,186 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
             This is important in real-world applications like race track design, satellite orbits, and centrifuges used in technology and industry.
           </p>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout: SVG left, controls right */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
-            border: `1px solid ${colors.border}`,
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              {renderCircularMotionSVG({ showVec: showVectors, size: isMobile ? 280 : 320 })}
-            </div>
-
-            {/* Legend panel */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: '24px',
-              marginBottom: '20px',
-              flexWrap: 'wrap',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '16px', height: '4px', background: colors.velocity, borderRadius: '2px' }} />
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Velocity (v)</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '16px', height: '4px', background: colors.force, borderRadius: '2px' }} />
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Centripetal Force (Fc)</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '12px', height: '12px', background: '#fbbf24', borderRadius: '50%' }} />
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Center</span>
-              </div>
-            </div>
-
-            {/* Mass slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Mass (m) - controls inertia</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{mass.toFixed(1)} kg</span>
-              </div>
-              <input
-                type="range"
-                min="0.5"
-                max="3"
-                step="0.1"
-                value={mass}
-                onChange={(e) => setMass(parseFloat(e.target.value))}
-                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
-              />
-            </div>
-
-            {/* Speed slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Speed (v) - affects force quadratically</span>
-                <span style={{ ...typo.small, color: colors.velocity, fontWeight: 600 }}>{speed.toFixed(1)} m/s</span>
-              </div>
-              <input
-                type="range"
-                min="2"
-                max="12"
-                step="0.5"
-                value={speed}
-                onChange={(e) => setSpeed(parseFloat(e.target.value))}
-                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
-              />
-            </div>
-
-            {/* Radius slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Radius (r) - inversely affects force</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{(radius / 10).toFixed(1)} m</span>
-              </div>
-              <input
-                type="range"
-                min="40"
-                max="100"
-                value={radius}
-                onChange={(e) => setRadius(parseInt(e.target.value))}
-                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
-              />
-            </div>
-
-            {/* Controls */}
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '24px' }}>
-              <button
-                onClick={() => setIsAnimating(!isAnimating)}
-                style={{
-                  padding: '10px 20px',
-                  minHeight: '44px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: isAnimating ? colors.error : colors.success,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                {isAnimating ? 'Pause' : 'Play'}
-              </button>
-              <button
-                onClick={() => setShowVectors(!showVectors)}
-                style={{
-                  padding: '10px 20px',
-                  minHeight: '44px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: showVectors ? colors.accent : colors.bgSecondary,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Vectors {showVectors ? 'ON' : 'OFF'}
-              </button>
-            </div>
-
-            {/* Physics values */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}>
+            {/* Left: SVG visualization */}
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '10px',
-                padding: '14px',
-                textAlign: 'center',
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
                 border: `1px solid ${colors.border}`,
               }}>
-                <div style={{ ...typo.h3, color: isSliding ? colors.error : colors.force }}>{centripetalForce.toFixed(2)} N</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Required Fc</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '10px',
-                padding: '14px',
-                textAlign: 'center',
-                border: `1px solid ${colors.border}`,
-              }}>
-                <div style={{ ...typo.h3, color: colors.warning }}>{centripetalAccel.toFixed(2)} m/s²</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Acceleration</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '10px',
-                padding: '14px',
-                textAlign: 'center',
-                border: `1px solid ${colors.border}`,
-              }}>
-                <div style={{ ...typo.h3, color: isSliding ? colors.error : colors.success }}>
-                  {isSliding ? 'SLIDING' : 'GRIPPING'}
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                  {renderCircularMotionSVG({ showVec: showVectors, size: isMobile ? 280 : 320 })}
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Status</div>
+
+                {/* Legend panel */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  gap: '24px',
+                  flexWrap: 'wrap',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '16px', height: '4px', background: colors.velocity, borderRadius: '2px' }} />
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Velocity (v)</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '16px', height: '4px', background: colors.force, borderRadius: '2px' }} />
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Centripetal Force (Fc)</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '12px', height: '12px', background: '#fbbf24', borderRadius: '50%' }} />
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Center</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Controls panel */}
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '20px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                {/* Mass slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Mass (m)</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{mass.toFixed(1)} kg</span>
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '6px', fontSize: '12px' }}>Controls inertia — affects force</div>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="3"
+                    step="0.1"
+                    value={mass}
+                    onChange={(e) => setMass(parseFloat(e.target.value))}
+                    style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+                  />
+                </div>
+
+                {/* Speed slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Speed (v)</span>
+                    <span style={{ ...typo.small, color: colors.velocity, fontWeight: 600 }}>{speed.toFixed(1)} m/s</span>
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '6px', fontSize: '12px' }}>Affects force quadratically</div>
+                  <input
+                    type="range"
+                    min="2"
+                    max="12"
+                    step="0.5"
+                    value={speed}
+                    onChange={(e) => setSpeed(parseFloat(e.target.value))}
+                    style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+                  />
+                </div>
+
+                {/* Radius slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Radius (r)</span>
+                    <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{(radius / 10).toFixed(1)} m</span>
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '6px', fontSize: '12px' }}>Inversely affects force</div>
+                  <input
+                    type="range"
+                    min="40"
+                    max="100"
+                    value={radius}
+                    onChange={(e) => setRadius(parseInt(e.target.value))}
+                    style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+                  />
+                </div>
+
+                {/* Controls */}
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '20px' }}>
+                  <button
+                    onClick={() => setIsAnimating(!isAnimating)}
+                    style={{
+                      padding: '10px 16px',
+                      minHeight: '44px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: isAnimating ? colors.error : colors.success,
+                      color: 'white',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                    }}
+                  >
+                    {isAnimating ? 'Pause' : 'Play'}
+                  </button>
+                  <button
+                    onClick={() => setShowVectors(!showVectors)}
+                    style={{
+                      padding: '10px 16px',
+                      minHeight: '44px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: showVectors ? colors.accent : colors.bgSecondary,
+                      color: 'white',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                    }}
+                  >
+                    Vectors {showVectors ? 'ON' : 'OFF'}
+                  </button>
+                </div>
+
+                {/* Physics values */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(1, 1fr)',
+                  gap: '10px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '10px',
+                    padding: '12px',
+                    textAlign: 'center',
+                    border: `1px solid ${colors.border}`,
+                  }}>
+                    <div style={{ ...typo.h3, color: isSliding ? colors.error : colors.force }}>{centripetalForce.toFixed(2)} N</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Required Fc</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '10px',
+                    padding: '12px',
+                    textAlign: 'center',
+                    border: `1px solid ${colors.border}`,
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.warning }}>{centripetalAccel.toFixed(2)} m/s²</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Acceleration</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '10px',
+                    padding: '12px',
+                    textAlign: 'center',
+                    border: `1px solid ${colors.border}`,
+                  }}>
+                    <div style={{ ...typo.h3, color: isSliding ? colors.error : colors.success }}>
+                      {isSliding ? 'SLIDING' : 'GRIPPING'}
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Status</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1262,7 +1287,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
     // TWIST PLAY PHASE
     if (phase === 'twist_play') {
       return (
-        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Tangential Release Simulation
           </h2>
@@ -1270,72 +1295,97 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
             Watch what happens when the centripetal force suddenly disappears
           </p>
 
+          {/* Side-by-side layout: SVG left, controls right */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
-            border: `1px solid ${colors.border}`,
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              {renderStringReleaseSVG({ size: isMobile ? 280 : 320 })}
+            {/* Left: SVG visualization */}
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  {renderStringReleaseSVG({ size: isMobile ? 280 : 320 })}
+                </div>
+              </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-              {!stringBroken ? (
-                <button
-                  onClick={breakString}
-                  style={{
-                    padding: '14px 28px',
-                    minHeight: '48px',
-                    borderRadius: '10px',
-                    border: 'none',
-                    background: colors.error,
-                    color: 'white',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    fontSize: '16px',
-                  }}
-                >
-                  Break the String!
-                </button>
-              ) : (
-                <button
-                  onClick={resetTwistSim}
-                  style={{
-                    padding: '14px 28px',
-                    minHeight: '48px',
-                    borderRadius: '10px',
-                    border: 'none',
-                    background: colors.accent,
-                    color: 'white',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    fontSize: '16px',
-                  }}
-                >
-                  Reset Simulation
-                </button>
-              )}
-            </div>
-          </div>
+            {/* Right: Controls panel */}
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '20px',
+                border: `1px solid ${colors.border}`,
+                marginBottom: '16px',
+              }}>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                  {!stringBroken ? (
+                    <button
+                      onClick={breakString}
+                      style={{
+                        padding: '14px 28px',
+                        minHeight: '48px',
+                        borderRadius: '10px',
+                        border: 'none',
+                        background: colors.error,
+                        color: 'white',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        fontSize: '16px',
+                        width: '100%',
+                      }}
+                    >
+                      Break the String!
+                    </button>
+                  ) : (
+                    <button
+                      onClick={resetTwistSim}
+                      style={{
+                        padding: '14px 28px',
+                        minHeight: '48px',
+                        borderRadius: '10px',
+                        border: 'none',
+                        background: colors.accent,
+                        color: 'white',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        fontSize: '16px',
+                        width: '100%',
+                      }}
+                    >
+                      Reset Simulation
+                    </button>
+                  )}
+                </div>
+              </div>
 
-          {/* Explanation */}
-          <div style={{
-            background: `${colors.warning}11`,
-            border: `1px solid ${colors.warning}33`,
-            borderRadius: '12px',
-            padding: '20px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '12px' }}>
-              What You're Observing:
-            </h3>
-            <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
-              <li>The ball moves in a circle because the string pulls it toward the center</li>
-              <li>Velocity is always TANGENT to the circle (perpendicular to the string)</li>
-              <li>When the string breaks, there's no more centripetal force</li>
-              <li><strong style={{ color: colors.textPrimary }}>Without a force to change its direction, the ball travels in a STRAIGHT LINE!</strong></li>
-            </ul>
+              {/* Explanation */}
+              <div style={{
+                background: `${colors.warning}11`,
+                border: `1px solid ${colors.warning}33`,
+                borderRadius: '12px',
+                padding: '16px',
+              }}>
+                <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '12px', fontSize: '16px' }}>
+                  What You're Observing:
+                </h3>
+                <ul style={{ ...typo.small, color: colors.textSecondary, margin: 0, paddingLeft: '18px' }}>
+                  <li style={{ marginBottom: '6px' }}>The ball moves in a circle because the string pulls it toward the center</li>
+                  <li style={{ marginBottom: '6px' }}>Velocity is always TANGENT to the circle</li>
+                  <li style={{ marginBottom: '6px' }}>When the string breaks, there's no more centripetal force</li>
+                  <li><strong style={{ color: colors.textPrimary }}>Without a force to change its direction, the ball travels in a STRAIGHT LINE!</strong></li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       );

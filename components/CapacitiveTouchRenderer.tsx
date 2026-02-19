@@ -434,9 +434,6 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
   }, [playSound]);
 
   const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
     setTestAnswers(prev => {
       const newAnswers = [...prev];
       newAnswers[questionIndex] = answerIndex;
@@ -1801,169 +1798,197 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
           <div className="flex flex-col items-center p-6">
             <h2 className="text-2xl font-bold text-white mb-4">Capacitive Touch Simulator</h2>
 
-            {/* Interactive Visualization */}
-            <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-2xl">
-              {renderCapacitanceVisualization()}
-            </div>
-
-            {/* Range Sliders */}
-            <div className="bg-slate-800/50 rounded-2xl p-6 mb-4 w-full max-w-2xl space-y-6">
-              <h3 className="text-lg font-semibold text-cyan-400 mb-4">Adjust Parameters</h3>
-
-              {/* Finger Distance Slider */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <label className="text-slate-300 font-medium">Finger Distance from Screen</label>
-                  <span className="text-cyan-400 font-mono">{fingerDistance.toFixed(1)} mm</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="10"
-                  step="0.1"
-                  value={fingerDistance}
-                  onChange={(e) => setFingerDistance(parseFloat(e.target.value))}
-                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-                  style={{ height: '20px', touchAction: 'pan-y', zIndex: 10, accentColor: '#06b6d4', width: '100%' }}
-                />
-                <div className="flex justify-between text-xs text-slate-500">
-                  <span>0 (Min)</span>
-                  <span>10 (Max)</span>
-                </div>
-              </div>
-
-              {/* Dielectric Constant Slider */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <label className="text-slate-300 font-medium">Dielectric Constant (ε)</label>
-                  <span className="text-cyan-400 font-mono">ε = {dielectricConstant.toFixed(1)}</span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="10"
-                  step="0.1"
-                  value={dielectricConstant}
-                  onChange={(e) => setDielectricConstant(parseFloat(e.target.value))}
-                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-green-500"
-                  style={{ height: '20px', touchAction: 'pan-y', zIndex: 10, accentColor: '#22c55e', width: '100%' }}
-                />
-                <div className="flex justify-between text-xs text-slate-500">
-                  <span>1 (Min)</span>
-                  <span>10 (Max)</span>
-                </div>
-              </div>
-
-              {/* Electrode Spacing Slider */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <label className="text-slate-300 font-medium">Electrode Spacing</label>
-                  <span className="text-cyan-400 font-mono">{electrodeSpacing.toFixed(1)} mm</span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="5"
-                  step="0.1"
-                  value={electrodeSpacing}
-                  onChange={(e) => setElectrodeSpacing(parseFloat(e.target.value))}
-                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
-                  style={{ height: '20px', touchAction: 'pan-y', zIndex: 10, accentColor: '#8b5cf6', width: '100%' }}
-                />
-                <div className="flex justify-between text-xs text-slate-500">
-                  <span>1 (Min)</span>
-                  <span>5 (Max)</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Calculated Values Readout */}
-            <div style={{ background: 'rgba(30,41,59,0.5)', borderRadius: '16px', padding: '16px', marginBottom: '16px', width: '100%', maxWidth: '672px', display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '12px' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ color: '#94a3b8', fontSize: '12px', fontWeight: 400 }}>Current output</div>
-                <div style={{ color: '#22d3ee', fontSize: '18px', fontWeight: 'bold' }}>{currentCapacitance.toFixed(2)} pF</div>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ color: '#94a3b8', fontSize: '12px', fontWeight: 400 }}>Energy ratio</div>
-                <div style={{ color: '#4ade80', fontSize: '18px', fontWeight: 'bold' }}>{(currentCapacitance / 10 * 100).toFixed(0)}%</div>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ color: '#94a3b8', fontSize: '12px', fontWeight: 400 }}>Detection</div>
-                <div style={{ color: isDetected ? '#4ade80' : '#ef4444', fontSize: '18px', fontWeight: 'bold' }}>{isDetected ? 'YES' : 'NO'}</div>
-              </div>
-            </div>
-
-            {/* Touch Grid Demo */}
-            <div className="bg-slate-800/50 rounded-2xl p-6 mb-4 w-full max-w-2xl">
-              <h3 className="text-lg font-semibold text-cyan-400 mb-4">Touch Grid Demo</h3>
-              {renderTouchScreen(isFingerMode ? 'finger' : 'glove', touchPoints)}
-            </div>
-
-            {/* Control Buttons */}
-            <div className="flex justify-center gap-4 mb-6">
-              <button
-                onClick={() => { setIsFingerMode(true); setTouchPoints([]); }}
-                style={{ zIndex: 10 }}
-                className={`px-4 py-2 rounded-lg font-bold ${isFingerMode ? 'bg-cyan-600 text-white' : 'bg-slate-600 text-slate-300'}`}
-              >
-                Bare Finger
-              </button>
-              <button
-                onClick={() => setShowGrid(!showGrid)}
-                style={{ zIndex: 10 }}
-                className={`px-4 py-2 rounded-lg font-bold ${showGrid ? 'bg-green-600 text-white' : 'bg-slate-600 text-slate-300'}`}
-              >
-                {showGrid ? 'Hide' : 'Show'} Grid
-              </button>
-              <button
-                onClick={() => { setFingerDistance(5); setDielectricConstant(3.9); setElectrodeSpacing(2); }}
-                style={{ zIndex: 10 }}
-                className="px-4 py-2 rounded-lg font-bold bg-amber-600 text-white"
-              >
-                Reset Values
-              </button>
-            </div>
-
-            {/* Legend Section */}
+            {/* Side-by-side layout: SVG left, controls right */}
             <div style={{
-              background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.9))',
-              border: '1px solid #334155',
-              borderRadius: '12px',
-              padding: '16px',
-              maxWidth: '42rem',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
               width: '100%',
-              marginBottom: '16px'
+              maxWidth: '900px',
+              alignItems: isMobile ? 'center' : 'flex-start',
             }}>
-              <h4 style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '12px', fontWeight: 'bold' }}>Legend</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: 'linear-gradient(135deg, #fcd5ce, #d68878)' }} />
-                  <span style={{ color: '#e2e8f0', fontSize: '12px' }}>Finger (conductive)</span>
+              {/* Left: SVG visualizations */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                {/* Interactive Visualization */}
+                <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full">
+                  {renderCapacitanceVisualization()}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: '16px', height: '4px', background: 'linear-gradient(90deg, #3b82f6, #60a5fa)' }} />
-                  <span style={{ color: '#e2e8f0', fontSize: '12px' }}>Electrode Grid</span>
+
+                {/* Touch Grid Demo */}
+                <div className="bg-slate-800/50 rounded-2xl p-6 mb-4 w-full">
+                  <h3 className="text-lg font-semibold text-cyan-400 mb-4">Touch Grid Demo</h3>
+                  {renderTouchScreen(isFingerMode ? 'finger' : 'glove', touchPoints)}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: '16px', height: '8px', background: 'rgba(147, 197, 253, 0.3)', border: '1px solid #93c5fd' }} />
-                  <span style={{ color: '#e2e8f0', fontSize: '12px' }}>Glass Layer</span>
+
+                {/* Legend Section */}
+                <div style={{
+                  background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.9))',
+                  border: '1px solid #334155',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  width: '100%',
+                  marginBottom: '16px'
+                }}>
+                  <h4 style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '12px', fontWeight: 'bold' }}>Legend</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: 'linear-gradient(135deg, #fcd5ce, #d68878)' }} />
+                      <span style={{ color: '#e2e8f0', fontSize: '12px' }}>Finger (conductive)</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ width: '16px', height: '4px', background: 'linear-gradient(90deg, #3b82f6, #60a5fa)' }} />
+                      <span style={{ color: '#e2e8f0', fontSize: '12px' }}>Electrode Grid</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ width: '16px', height: '8px', background: 'rgba(147, 197, 253, 0.3)', border: '1px solid #93c5fd' }} />
+                      <span style={{ color: '#e2e8f0', fontSize: '12px' }}>Glass Layer</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ width: '16px', height: '2px', background: '#4ade80' }} />
+                      <span style={{ color: '#e2e8f0', fontSize: '12px' }}>Electric Field Lines</span>
+                    </div>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: '16px', height: '2px', background: '#4ade80' }} />
-                  <span style={{ color: '#e2e8f0', fontSize: '12px' }}>Electric Field Lines</span>
+              </div>
+
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Range Sliders */}
+                <div style={{ background: 'rgba(30,41,59,0.5)', borderRadius: '16px', padding: '16px', marginBottom: '12px', width: '100%' }}>
+                  <h3 style={{ color: '#67e8f9', fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>Adjust Parameters</h3>
+
+                  {/* Finger Distance Slider */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <label style={{ color: '#cbd5e1', fontSize: '13px', fontWeight: 500 }}>Finger Distance</label>
+                      <span style={{ color: '#67e8f9', fontFamily: 'monospace', fontSize: '13px' }}>{fingerDistance.toFixed(1)} mm</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="10"
+                      step="0.1"
+                      value={fingerDistance}
+                      onChange={(e) => setFingerDistance(parseFloat(e.target.value))}
+                      style={{ height: '20px', touchAction: 'pan-y', zIndex: 10, accentColor: '#06b6d4', width: '100%' }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#cbd5e1' }}>
+                      <span>0 (Min)</span>
+                      <span>10 (Max)</span>
+                    </div>
+                  </div>
+
+                  {/* Dielectric Constant Slider */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <label style={{ color: '#cbd5e1', fontSize: '13px', fontWeight: 500 }}>Dielectric (ε)</label>
+                      <span style={{ color: '#67e8f9', fontFamily: 'monospace', fontSize: '13px' }}>ε = {dielectricConstant.toFixed(1)}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="10"
+                      step="0.1"
+                      value={dielectricConstant}
+                      onChange={(e) => setDielectricConstant(parseFloat(e.target.value))}
+                      style={{ height: '20px', touchAction: 'pan-y', zIndex: 10, accentColor: '#22c55e', width: '100%' }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#cbd5e1' }}>
+                      <span>1 (Min)</span>
+                      <span>10 (Max)</span>
+                    </div>
+                  </div>
+
+                  {/* Electrode Spacing Slider */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <label style={{ color: '#cbd5e1', fontSize: '13px', fontWeight: 500 }}>Electrode Spacing</label>
+                      <span style={{ color: '#67e8f9', fontFamily: 'monospace', fontSize: '13px' }}>{electrodeSpacing.toFixed(1)} mm</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="5"
+                      step="0.1"
+                      value={electrodeSpacing}
+                      onChange={(e) => setElectrodeSpacing(parseFloat(e.target.value))}
+                      style={{ height: '20px', touchAction: 'pan-y', zIndex: 10, accentColor: '#8b5cf6', width: '100%' }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#cbd5e1' }}>
+                      <span>1 (Min)</span>
+                      <span>5 (Max)</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Calculated Values Readout */}
+                <div style={{ background: 'rgba(30,41,59,0.5)', borderRadius: '16px', padding: '16px', marginBottom: '12px', width: '100%', display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '12px' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ color: '#cbd5e1', fontSize: '12px', fontWeight: 400 }}>Current output</div>
+                    <div style={{ color: '#22d3ee', fontSize: '18px', fontWeight: 'bold' }}>{currentCapacitance.toFixed(2)} pF</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ color: '#cbd5e1', fontSize: '12px', fontWeight: 400 }}>Energy ratio</div>
+                    <div style={{ color: '#4ade80', fontSize: '18px', fontWeight: 'bold' }}>{(currentCapacitance / 10 * 100).toFixed(0)}%</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ color: '#cbd5e1', fontSize: '12px', fontWeight: 400 }}>Detection</div>
+                    <div style={{ color: isDetected ? '#4ade80' : '#ef4444', fontSize: '18px', fontWeight: 'bold' }}>{isDetected ? 'YES' : 'NO'}</div>
+                  </div>
+                </div>
+
+                {/* Control Buttons */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+                  <button
+                    onClick={() => { setIsFingerMode(true); setTouchPoints([]); }}
+                    style={{ zIndex: 10, padding: '8px 16px', borderRadius: '8px', fontWeight: 'bold', fontSize: '13px', border: 'none', cursor: 'pointer', background: isFingerMode ? '#0891b2' : '#475569', color: isFingerMode ? '#fff' : '#cbd5e1' }}
+                  >
+                    Bare Finger
+                  </button>
+                  <button
+                    onClick={() => setShowGrid(!showGrid)}
+                    style={{ zIndex: 10, padding: '8px 16px', borderRadius: '8px', fontWeight: 'bold', fontSize: '13px', border: 'none', cursor: 'pointer', background: showGrid ? '#16a34a' : '#475569', color: showGrid ? '#fff' : '#cbd5e1' }}
+                  >
+                    {showGrid ? 'Hide' : 'Show'} Grid
+                  </button>
+                  <button
+                    onClick={() => { setFingerDistance(5); setDielectricConstant(3.9); setElectrodeSpacing(2); }}
+                    style={{ zIndex: 10, padding: '8px 16px', borderRadius: '8px', fontWeight: 'bold', fontSize: '13px', border: 'none', cursor: 'pointer', background: '#d97706', color: '#fff' }}
+                  >
+                    Reset Values
+                  </button>
+                </div>
+
+                {/* Physics Explanation */}
+                <div style={{
+                  background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.4), rgba(21, 94, 117, 0.4))',
+                  borderRadius: '12px',
+                  padding: '12px',
+                  width: '100%',
+                  marginBottom: '12px'
+                }}>
+                  <p style={{ color: '#e2e8f0', textAlign: 'center', fontSize: '13px' }}>
+                    <span style={{ color: '#22d3ee', fontWeight: 'bold' }}>C = εA/d</span> - Capacitance increases when:
+                    dielectric constant (ε) increases, electrode area (A) increases, or distance (d) decreases.
+                    {isDetected ?
+                      <span style={{ color: '#4ade80', display: 'block', marginTop: '8px' }}>Touch detected! Capacitance exceeds threshold.</span> :
+                      <span style={{ color: '#f87171', display: 'block', marginTop: '8px' }}>Move finger closer to trigger detection.</span>
+                    }
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Visualization Explanation */}
+            {/* Visualization Explanation - full width below */}
             <div style={{
               background: 'linear-gradient(135deg, rgba(6, 78, 59, 0.3), rgba(21, 94, 117, 0.3))',
               border: '1px solid #10b981',
               borderRadius: '12px',
               padding: '16px',
-              maxWidth: '42rem',
+              maxWidth: '900px',
               width: '100%',
-              marginBottom: '16px'
+              marginBottom: '16px',
+              marginTop: '8px'
             }}>
               <h4 style={{ color: '#10b981', fontSize: '14px', marginBottom: '8px', fontWeight: 'bold' }}>What This Shows</h4>
               <p style={{ color: '#e2e8f0', fontSize: '13px', lineHeight: '1.5' }}>
@@ -1973,32 +1998,13 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
               </p>
             </div>
 
-            {/* Physics Explanation */}
-            <div style={{
-              background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.4), rgba(21, 94, 117, 0.4))',
-              borderRadius: '12px',
-              padding: '16px',
-              maxWidth: '42rem',
-              width: '100%',
-              marginBottom: '16px'
-            }}>
-              <p style={{ color: '#e2e8f0', textAlign: 'center', fontSize: '14px' }}>
-                <span style={{ color: '#22d3ee', fontWeight: 'bold' }}>C = εA/d</span> - Capacitance increases when:
-                dielectric constant (ε) increases, electrode area (A) increases, or distance (d) decreases.
-                {isDetected ?
-                  <span style={{ color: '#4ade80', display: 'block', marginTop: '8px' }}>Touch detected! Capacitance exceeds threshold.</span> :
-                  <span style={{ color: '#f87171', display: 'block', marginTop: '8px' }}>Move finger closer to trigger detection.</span>
-                }
-              </p>
-            </div>
-
             {/* Real-World Relevance */}
             <div style={{
               background: 'rgba(139, 92, 246, 0.1)',
               border: '1px solid rgba(139, 92, 246, 0.3)',
               borderRadius: '12px',
               padding: '16px',
-              maxWidth: '42rem',
+              maxWidth: '900px',
               width: '100%',
               marginBottom: '16px'
             }}>
@@ -2600,145 +2606,159 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
           <div className="flex flex-col items-center p-6">
             <h2 className="text-2xl font-bold text-amber-400 mb-4">Multi-Touch & Gesture Recognition</h2>
 
-            {/* Multi-Touch Grid Visualization */}
-            <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-2xl">
-              <h3 className="text-lg font-semibold text-cyan-400 mb-3">Capacitance Grid Heatmap</h3>
-              {renderMultiTouchGrid()}
-            </div>
+            {/* Side-by-side layout: SVG left, controls right */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              maxWidth: '900px',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              {/* Left: SVG visualizations */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                {/* Multi-Touch Grid Visualization */}
+                <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full">
+                  <h3 className="text-lg font-semibold text-cyan-400 mb-3">Capacitance Grid Heatmap</h3>
+                  {renderMultiTouchGrid()}
+                </div>
 
-            {/* Gesture Mode Selection */}
-            <div className="bg-slate-800/50 rounded-2xl p-6 mb-4 w-full max-w-2xl">
-              <h3 className="text-lg font-semibold text-cyan-400 mb-4">Gesture Simulation</h3>
-              <div className="flex flex-wrap justify-center gap-2 mb-4">
-                <button
-                  onClick={() => { setGestureMode('single'); setMultiTouchPoints([]); }}
-                  style={{ zIndex: 10 }}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm ${gestureMode === 'single' ? 'bg-cyan-600 text-white' : 'bg-slate-600 text-slate-300'}`}
-                >
-                  Single Touch
-                </button>
-                <button
-                  onClick={() => { setGestureMode('pinch'); setPinchScale(1); }}
-                  style={{ zIndex: 10 }}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm ${gestureMode === 'pinch' ? 'bg-amber-600 text-white' : 'bg-slate-600 text-slate-300'}`}
-                >
-                  Pinch (Zoom Out)
-                </button>
-                <button
-                  onClick={() => { setGestureMode('spread'); setPinchScale(1.5); }}
-                  style={{ zIndex: 10 }}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm ${gestureMode === 'spread' ? 'bg-green-600 text-white' : 'bg-slate-600 text-slate-300'}`}
-                >
-                  Spread (Zoom In)
-                </button>
-                <button
-                  onClick={() => { setGestureMode('rotate'); setRotationAngle(0); }}
-                  style={{ zIndex: 10 }}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm ${gestureMode === 'rotate' ? 'bg-purple-600 text-white' : 'bg-slate-600 text-slate-300'}`}
-                >
-                  Rotate
-                </button>
+                {/* Original Touch Mode Demo */}
+                <div className="bg-slate-800/50 rounded-2xl p-6 mb-4 w-full">
+                  <h3 className="text-lg font-semibold text-amber-400 mb-4">Finger vs Glove Comparison</h3>
+                  {renderTouchScreen(touchMode, touchPoints)}
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
+                    <button
+                      onClick={() => { setTouchMode('finger'); setTouchPoints([]); }}
+                      style={{ zIndex: 10, padding: '8px 16px', borderRadius: '8px', fontWeight: 'bold', fontSize: '13px', border: 'none', cursor: 'pointer', background: touchMode === 'finger' ? '#16a34a' : '#475569', color: touchMode === 'finger' ? '#fff' : '#cbd5e1' }}
+                    >
+                      Bare Finger
+                    </button>
+                    <button
+                      onClick={() => { setTouchMode('glove'); setTouchPoints([]); }}
+                      style={{ zIndex: 10, padding: '8px 16px', borderRadius: '8px', fontWeight: 'bold', fontSize: '13px', border: 'none', cursor: 'pointer', background: touchMode === 'glove' ? '#dc2626' : '#475569', color: touchMode === 'glove' ? '#fff' : '#cbd5e1' }}
+                    >
+                      Regular Glove
+                    </button>
+                    <button
+                      onClick={() => { setTouchMode('capacitiveGlove'); setTouchPoints([]); }}
+                      style={{ zIndex: 10, padding: '8px 16px', borderRadius: '8px', fontWeight: 'bold', fontSize: '13px', border: 'none', cursor: 'pointer', background: touchMode === 'capacitiveGlove' ? '#0891b2' : '#475569', color: touchMode === 'capacitiveGlove' ? '#fff' : '#cbd5e1' }}
+                    >
+                      Touch Glove
+                    </button>
+                  </div>
+                  <div className={`mt-4 p-4 rounded-lg border ${touchMode === 'glove' ? 'bg-red-900/30 border-red-600' : 'bg-green-900/30 border-green-600'}`}>
+                    <p className={`text-center ${touchMode === 'glove' ? 'text-red-300' : 'text-green-300'}`}>
+                      {touchMode === 'finger' && <><span className="font-bold">Bare Finger:</span> Conductive! Forms capacitor with screen.</>}
+                      {touchMode === 'glove' && <><span className="font-bold">Regular Glove:</span> Insulating fabric blocks capacitive coupling.</>}
+                      {touchMode === 'capacitiveGlove' && <><span className="font-bold">Touch Glove:</span> Conductive threads connect your finger to the tip!</>}
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              {/* Gesture-specific sliders */}
-              {gestureMode === 'pinch' && (
-                <div className="space-y-2 mt-4">
-                  <div className="flex justify-between items-center">
-                    <label className="text-slate-300 font-medium">Pinch Distance</label>
-                    <span className="text-amber-400 font-mono">{Math.round(pinchScale * 100)}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0.3"
-                    max="2"
-                    step="0.05"
-                    value={pinchScale}
-                    onChange={(e) => setPinchScale(parseFloat(e.target.value))}
-                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
-                    style={{ height: '20px', touchAction: 'pan-y', zIndex: 10 }}
-                  />
-                  <p className="text-xs text-slate-500 text-center">Move slider to simulate pinch-to-zoom gesture</p>
-                </div>
-              )}
-
-              {gestureMode === 'rotate' && (
-                <div className="space-y-2 mt-4">
-                  <div className="flex justify-between items-center">
-                    <label className="text-slate-300 font-medium">Rotation Angle</label>
-                    <span className="text-purple-400 font-mono">{rotationAngle}°</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="360"
-                    step="5"
-                    value={rotationAngle}
-                    onChange={(e) => setRotationAngle(parseInt(e.target.value))}
-                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
-                    style={{ height: '20px', touchAction: 'pan-y', zIndex: 10 }}
-                  />
-                  <p className="text-xs text-slate-500 text-center">Rotate two fingers to change image orientation</p>
-                </div>
-              )}
-
-              {gestureMode === 'single' && (
-                <div className="mt-4 p-3 bg-slate-700/50 rounded-lg">
-                  <p className="text-slate-300 text-sm text-center">
-                    Click on the grid above to add touch points (up to 5). Each point affects nearby capacitance cells.
-                  </p>
-                  {multiTouchPoints.length > 0 && (
+              {/* Right: Controls panel */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Gesture Mode Selection */}
+                <div style={{ background: 'rgba(30,41,59,0.5)', borderRadius: '16px', padding: '16px', marginBottom: '12px', width: '100%' }}>
+                  <h3 style={{ color: '#22d3ee', fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>Gesture Simulation</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
                     <button
-                      onClick={() => setMultiTouchPoints([])}
-                      style={{ zIndex: 10 }}
-                      className="mt-2 w-full py-2 bg-red-600 text-white rounded-lg font-medium"
+                      onClick={() => { setGestureMode('single'); setMultiTouchPoints([]); }}
+                      style={{ zIndex: 10, padding: '8px 12px', borderRadius: '8px', fontWeight: 'bold', fontSize: '13px', border: 'none', cursor: 'pointer', background: gestureMode === 'single' ? '#0891b2' : '#475569', color: gestureMode === 'single' ? '#fff' : '#cbd5e1' }}
                     >
-                      Clear All Points
+                      Single Touch
                     </button>
+                    <button
+                      onClick={() => { setGestureMode('pinch'); setPinchScale(1); }}
+                      style={{ zIndex: 10, padding: '8px 12px', borderRadius: '8px', fontWeight: 'bold', fontSize: '13px', border: 'none', cursor: 'pointer', background: gestureMode === 'pinch' ? '#d97706' : '#475569', color: gestureMode === 'pinch' ? '#fff' : '#cbd5e1' }}
+                    >
+                      Pinch (Zoom Out)
+                    </button>
+                    <button
+                      onClick={() => { setGestureMode('spread'); setPinchScale(1.5); }}
+                      style={{ zIndex: 10, padding: '8px 12px', borderRadius: '8px', fontWeight: 'bold', fontSize: '13px', border: 'none', cursor: 'pointer', background: gestureMode === 'spread' ? '#16a34a' : '#475569', color: gestureMode === 'spread' ? '#fff' : '#cbd5e1' }}
+                    >
+                      Spread (Zoom In)
+                    </button>
+                    <button
+                      onClick={() => { setGestureMode('rotate'); setRotationAngle(0); }}
+                      style={{ zIndex: 10, padding: '8px 12px', borderRadius: '8px', fontWeight: 'bold', fontSize: '13px', border: 'none', cursor: 'pointer', background: gestureMode === 'rotate' ? '#7c3aed' : '#475569', color: gestureMode === 'rotate' ? '#fff' : '#cbd5e1' }}
+                    >
+                      Rotate
+                    </button>
+                  </div>
+
+                  {/* Gesture-specific sliders */}
+                  {gestureMode === 'pinch' && (
+                    <div style={{ marginTop: '12px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                        <label style={{ color: '#cbd5e1', fontSize: '13px', fontWeight: 500 }}>Pinch Distance</label>
+                        <span style={{ color: '#fbbf24', fontFamily: 'monospace', fontSize: '13px' }}>{Math.round(pinchScale * 100)}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0.3"
+                        max="2"
+                        step="0.05"
+                        value={pinchScale}
+                        onChange={(e) => setPinchScale(parseFloat(e.target.value))}
+                        style={{ height: '20px', touchAction: 'pan-y', zIndex: 10, accentColor: '#f59e0b', width: '100%' }}
+                      />
+                      <p style={{ fontSize: '11px', color: '#cbd5e1', textAlign: 'center', marginTop: '4px' }}>Move slider to simulate pinch-to-zoom gesture</p>
+                    </div>
+                  )}
+
+                  {gestureMode === 'rotate' && (
+                    <div style={{ marginTop: '12px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                        <label style={{ color: '#cbd5e1', fontSize: '13px', fontWeight: 500 }}>Rotation Angle</label>
+                        <span style={{ color: '#a78bfa', fontFamily: 'monospace', fontSize: '13px' }}>{rotationAngle}°</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="360"
+                        step="5"
+                        value={rotationAngle}
+                        onChange={(e) => setRotationAngle(parseInt(e.target.value))}
+                        style={{ height: '20px', touchAction: 'pan-y', zIndex: 10, accentColor: '#8b5cf6', width: '100%' }}
+                      />
+                      <p style={{ fontSize: '11px', color: '#cbd5e1', textAlign: 'center', marginTop: '4px' }}>Rotate two fingers to change image orientation</p>
+                    </div>
+                  )}
+
+                  {gestureMode === 'single' && (
+                    <div style={{ marginTop: '12px', padding: '12px', background: 'rgba(51,65,85,0.5)', borderRadius: '8px' }}>
+                      <p style={{ color: '#cbd5e1', fontSize: '13px', textAlign: 'center' }}>
+                        Click on the grid above to add touch points (up to 5). Each point affects nearby capacitance cells.
+                      </p>
+                      {multiTouchPoints.length > 0 && (
+                        <button
+                          onClick={() => setMultiTouchPoints([])}
+                          style={{ zIndex: 10, marginTop: '8px', width: '100%', padding: '8px', background: '#dc2626', color: '#fff', borderRadius: '8px', fontWeight: 500, border: 'none', cursor: 'pointer' }}
+                        >
+                          Clear All Points
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
-
-            {/* Original Touch Mode Demo */}
-            <div className="bg-slate-800/50 rounded-2xl p-6 mb-4 w-full max-w-2xl">
-              <h3 className="text-lg font-semibold text-amber-400 mb-4">Finger vs Glove Comparison</h3>
-              {renderTouchScreen(touchMode, touchPoints)}
-              <div className="flex justify-center gap-2 mt-6">
-                <button
-                  onClick={() => { setTouchMode('finger'); setTouchPoints([]); }}
-                  style={{ zIndex: 10 }}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm ${touchMode === 'finger' ? 'bg-green-600 text-white' : 'bg-slate-600 text-slate-300'}`}
-                >
-                  Bare Finger
-                </button>
-                <button
-                  onClick={() => { setTouchMode('glove'); setTouchPoints([]); }}
-                  style={{ zIndex: 10 }}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm ${touchMode === 'glove' ? 'bg-red-600 text-white' : 'bg-slate-600 text-slate-300'}`}
-                >
-                  Regular Glove
-                </button>
-                <button
-                  onClick={() => { setTouchMode('capacitiveGlove'); setTouchPoints([]); }}
-                  style={{ zIndex: 10 }}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm ${touchMode === 'capacitiveGlove' ? 'bg-cyan-600 text-white' : 'bg-slate-600 text-slate-300'}`}
-                >
-                  Touch Glove
-                </button>
-              </div>
-              <div className={`mt-4 p-4 rounded-lg border ${touchMode === 'glove' ? 'bg-red-900/30 border-red-600' : 'bg-green-900/30 border-green-600'}`}>
-                <p className={`text-center ${touchMode === 'glove' ? 'text-red-300' : 'text-green-300'}`}>
-                  {touchMode === 'finger' && <><span className="font-bold">Bare Finger:</span> Conductive! Forms capacitor with screen.</>}
-                  {touchMode === 'glove' && <><span className="font-bold">Regular Glove:</span> Insulating fabric blocks capacitive coupling.</>}
-                  {touchMode === 'capacitiveGlove' && <><span className="font-bold">Touch Glove:</span> Conductive threads connect your finger to the tip!</>}
-                </p>
               </div>
             </div>
 
-            {/* How Multi-Touch Works Explanation */}
-            <div className="bg-gradient-to-r from-amber-900/40 to-orange-900/40 rounded-xl p-4 max-w-2xl w-full mb-6">
-              <h4 className="text-amber-400 font-bold mb-2">How Multi-Touch Works</h4>
-              <p className="text-slate-300 text-sm">
+            {/* How Multi-Touch Works Explanation - full width below */}
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(120, 53, 15, 0.4), rgba(154, 52, 18, 0.4))',
+              borderRadius: '12px',
+              padding: '16px',
+              maxWidth: '900px',
+              width: '100%',
+              marginBottom: '24px',
+              marginTop: '8px'
+            }}>
+              <h4 style={{ color: '#fbbf24', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>How Multi-Touch Works</h4>
+              <p style={{ color: '#cbd5e1', fontSize: '13px', lineHeight: '1.5' }}>
                 Projected Capacitive Touch (PCT) screens use a grid of X-Y electrodes. When multiple fingers touch,
                 each creates a capacitance change at different grid intersections. The controller scans all intersections
                 rapidly to track each touch point independently, enabling gestures like pinch-to-zoom and rotate.

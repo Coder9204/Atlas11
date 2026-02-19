@@ -1125,7 +1125,7 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
 
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Explore ASIC vs GPU Tradeoffs
           </h2>
@@ -1146,12 +1146,22 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
             </p>
           </div>
 
+          {/* Side-by-side layout: SVG left, Controls right */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+          }}>
+          {/* Left: SVG visualization */}
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           {/* SVG Visualization */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '16px',
-            marginBottom: '24px',
+            marginBottom: isMobile ? '0' : '24px',
             display: 'flex',
             justifyContent: 'center',
           }}>
@@ -1164,7 +1174,10 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
               animationFrame={animationFrame}
             />
           </div>
+          </div>
 
+          {/* Right: Controls panel */}
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
           {/* Sliders */}
           <div style={{
             background: colors.bgCard,
@@ -1292,6 +1305,8 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
                   : 'Low volume or changing algorithms favor general-purpose flexibility'}
             </p>
           </div>
+          </div>{/* Right: Controls panel */}
+          </div>{/* Side-by-side flex container */}
         </div>
 
         {renderNavDots()}
@@ -1551,7 +1566,7 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '40px auto 0' }}>
+        <div style={{ maxWidth: '900px', margin: '40px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             The Economics Decision Lab
           </h2>
@@ -1569,12 +1584,22 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
             </p>
           </div>
 
+          {/* Side-by-side layout: SVG left, Controls right */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+          }}>
+          {/* Left: SVG visualization */}
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           {/* SVG Visualization */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '16px',
-            marginBottom: '24px',
+            marginBottom: isMobile ? '0' : '24px',
             display: 'flex',
             justifyContent: 'center',
           }}>
@@ -1587,7 +1612,10 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
               animationFrame={animationFrame}
             />
           </div>
+          </div>{/* Left: SVG visualization */}
 
+          {/* Right: Controls panel */}
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -1597,7 +1625,7 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
             {/* Interactive scenario visualization */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+              gridTemplateColumns: '1fr',
               gap: '20px',
               marginBottom: '24px',
             }}>
@@ -1718,7 +1746,7 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
             {/* Value comparison */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)',
               gap: '12px',
             }}>
               <div style={{
@@ -1753,6 +1781,8 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
               </div>
             </div>
           </div>
+          </div>{/* Right: Controls panel */}
+          </div>{/* Side-by-side flex container */}
         </div>
 
         {renderNavDots()}

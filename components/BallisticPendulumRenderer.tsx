@@ -1042,12 +1042,29 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
               <strong style={{ color: colors.accent }}>Why This Matters:</strong> This experiment was invented in 1740 by Benjamin Robins and is still used in forensics labs and ballistics testing worldwide. Understanding momentum conservation helps engineers design safer cars, better sports equipment, and protective armor. The ballistic pendulum demonstrates why we need BOTH momentum AND energy conservation laws - each applies in different situations.
             </p>
           </div>
-          {renderVisualization()}
-          {/* Comparison display */}
-          <div style={{ margin: '0 16px 8px', padding: '10px 16px', background: 'rgba(30, 41, 59, 0.8)', borderRadius: '8px', fontSize: '13px', color: colors.textSecondary }}>
-            <span>Current: {bulletMass}g @ {bulletVelocity} m/s | Reference baseline: 10g @ 300 m/s</span>
+          {/* Side-by-side layout: SVG left, controls right */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            padding: '0 16px',
+            boxSizing: 'border-box',
+          }}>
+            {/* Left: SVG visualization */}
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {renderVisualization()}
+              {/* Comparison display */}
+              <div style={{ margin: '8px 0 0', padding: '10px 16px', background: 'rgba(30, 41, 59, 0.8)', borderRadius: '8px', fontSize: '13px', color: colors.textSecondary }}>
+                <span>Current: {bulletMass}g @ {bulletVelocity} m/s | Reference baseline: 10g @ 300 m/s</span>
+              </div>
+            </div>
+            {/* Right: Controls panel */}
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {renderControls()}
+            </div>
           </div>
-          {renderControls()}
         </div>
         {renderBottomBar(true, true, 'See What I Learned →')}
       </div>
@@ -1144,64 +1161,79 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
               👁️ <strong>Observe:</strong> Compare the bullet's initial energy to the pendulum's maximum height. Where does the missing energy go?
             </p>
           </div>
-          {/* Energy comparison SVG */}
-          <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto' }}>
-            <svg viewBox="0 0 400 280" style={{ width: '100%', height: 'auto', background: 'linear-gradient(135deg, #0a0f1a 0%, #030712 50%, #0a0f1a 100%)', borderRadius: '12px' }}>
-              <defs>
-                <linearGradient id="twistLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#030712" />
-                  <stop offset="50%" stopColor="#0a0f1a" />
-                  <stop offset="100%" stopColor="#030712" />
-                </linearGradient>
-              </defs>
-              <rect width="400" height="280" fill="url(#twistLabBg)" />
-              <text x="200" y="28" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">Energy Transfer Analysis</text>
+          {/* Side-by-side layout: SVG left, controls right */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            padding: '0 16px',
+            boxSizing: 'border-box',
+          }}>
+            {/* Left: Energy comparison SVG */}
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto' }}>
+                <svg viewBox="0 0 400 280" style={{ width: '100%', height: 'auto', background: 'linear-gradient(135deg, #0a0f1a 0%, #030712 50%, #0a0f1a 100%)', borderRadius: '12px' }}>
+                  <defs>
+                    <linearGradient id="twistLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#030712" />
+                      <stop offset="50%" stopColor="#0a0f1a" />
+                      <stop offset="100%" stopColor="#030712" />
+                    </linearGradient>
+                  </defs>
+                  <rect width="400" height="280" fill="url(#twistLabBg)" />
+                  <text x="200" y="28" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">Energy Transfer Analysis</text>
 
-              {/* KE Before bar */}
-              <text x="30" y="60" fill={colors.textSecondary} fontSize="11">KE Before</text>
-              <rect x="120" y="46" width={Math.min(240, twistKEBefore / 2)} height="20" rx="3" fill={colors.momentum} />
-              <text x={130 + Math.min(240, twistKEBefore / 2)} y="60" fill={colors.textPrimary} fontSize="11">{twistKEBefore.toFixed(1)} J</text>
+                  {/* KE Before bar */}
+                  <text x="30" y="60" fill={colors.textSecondary} fontSize="11">KE Before</text>
+                  <rect x="120" y="46" width={Math.min(240, twistKEBefore / 2)} height="20" rx="3" fill={colors.momentum} />
+                  <text x={130 + Math.min(240, twistKEBefore / 2)} y="60" fill={colors.textPrimary} fontSize="11">{twistKEBefore.toFixed(1)} J</text>
 
-              {/* KE After bar */}
-              <text x="30" y="95" fill={colors.textSecondary} fontSize="11">KE After</text>
-              <rect x="120" y="81" width={Math.max(2, Math.min(240, twistKEAfter / 2))} height="20" rx="3" fill={colors.energy} />
-              <text x={130 + Math.max(2, Math.min(240, twistKEAfter / 2))} y="95" fill={colors.textPrimary} fontSize="11">{twistKEAfter.toFixed(2)} J</text>
+                  {/* KE After bar */}
+                  <text x="30" y="95" fill={colors.textSecondary} fontSize="11">KE After</text>
+                  <rect x="120" y="81" width={Math.max(2, Math.min(240, twistKEAfter / 2))} height="20" rx="3" fill={colors.energy} />
+                  <text x={130 + Math.max(2, Math.min(240, twistKEAfter / 2))} y="95" fill={colors.textPrimary} fontSize="11">{twistKEAfter.toFixed(2)} J</text>
 
-              {/* Energy lost label */}
-              <text x="200" y="130" textAnchor="middle" fill={colors.error} fontSize="13" fontWeight="bold">
-                {twistEnergyLost.toFixed(1)}% energy lost as heat
-              </text>
+                  {/* Energy lost label */}
+                  <text x="200" y="130" textAnchor="middle" fill={colors.error} fontSize="13" fontWeight="bold">
+                    {twistEnergyLost.toFixed(1)}% energy lost as heat
+                  </text>
 
-              {/* Swing height */}
-              <text x="30" y="165" fill={colors.textSecondary} fontSize="11">Swing height</text>
-              <text x="200" y="165" fill={colors.energy} fontSize="13" fontWeight="bold">h = {(twistH * 100).toFixed(2)} cm</text>
+                  {/* Swing height */}
+                  <text x="30" y="165" fill={colors.textSecondary} fontSize="11">Swing height</text>
+                  <text x="200" y="165" fill={colors.energy} fontSize="13" fontWeight="bold">h = {(twistH * 100).toFixed(2)} cm</text>
 
-              {/* Parameters display */}
-              <text x="30" y="200" fill={colors.textSecondary} fontSize="11">Bullet: {twistBulletMass}g</text>
-              <text x="220" y="200" fill={colors.textSecondary} fontSize="11">Block: {twistPendulumMass}g</text>
+                  {/* Parameters display */}
+                  <text x="30" y="200" fill={colors.textSecondary} fontSize="11">Bullet: {twistBulletMass}g</text>
+                  <text x="220" y="200" fill={colors.textSecondary} fontSize="11">Block: {twistPendulumMass}g</text>
 
-              {/* Reference baseline */}
-              <text x="200" y="235" textAnchor="middle" fill={colors.textMuted} fontSize="11">
-                Reference: 10g bullet, 2000g block
-              </text>
-              <text x="200" y="260" textAnchor="middle" fill={colors.textSecondary} fontSize="11">
-                Current factor: {(twistBulletMass / (twistBulletMass + twistPendulumMass) * 100).toFixed(2)}% mass ratio
-              </text>
-            </svg>
-          </div>
-          {/* Twist play dedicated sliders */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px', background: colors.bgCard, borderRadius: '12px', margin: '16px' }}>
-            <div>
-              <label style={{ color: colors.textSecondary, fontSize: '13px' }}>Bullet Mass: {twistBulletMass}g</label>
-              <input type="range" min="5" max="50" value={twistBulletMass} onChange={(e) => setTwistBulletMass(Number(e.target.value))}
-                style={{ width: '100%', height: '20px', touchAction: 'pan-y' as const, accentColor: colors.accent }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: colors.textMuted, fontSize: '11px' }}>5g</span><span style={{ color: colors.textMuted, fontSize: '11px' }}>50g</span></div>
+                  {/* Reference baseline */}
+                  <text x="200" y="235" textAnchor="middle" fill={colors.textMuted} fontSize="11">
+                    Reference: 10g bullet, 2000g block
+                  </text>
+                  <text x="200" y="260" textAnchor="middle" fill={colors.textSecondary} fontSize="11">
+                    Current factor: {(twistBulletMass / (twistBulletMass + twistPendulumMass) * 100).toFixed(2)}% mass ratio
+                  </text>
+                </svg>
+              </div>
             </div>
-            <div>
-              <label style={{ color: colors.textSecondary, fontSize: '13px' }}>Pendulum Mass: {twistPendulumMass}g</label>
-              <input type="range" min="500" max="5000" value={twistPendulumMass} onChange={(e) => setTwistPendulumMass(Number(e.target.value))}
-                style={{ width: '100%', height: '20px', touchAction: 'pan-y' as const, accentColor: colors.accent }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: colors.textMuted, fontSize: '11px' }}>500g</span><span style={{ color: colors.textMuted, fontSize: '11px' }}>5000g</span></div>
+            {/* Right: Twist play dedicated sliders */}
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px', background: colors.bgCard, borderRadius: '12px' }}>
+                <div>
+                  <label style={{ color: colors.textSecondary, fontSize: '13px' }}>Bullet Mass: {twistBulletMass}g</label>
+                  <input type="range" min="5" max="50" value={twistBulletMass} onChange={(e) => setTwistBulletMass(Number(e.target.value))}
+                    style={{ width: '100%', height: '20px', touchAction: 'pan-y' as const, accentColor: colors.accent }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: colors.textMuted, fontSize: '11px' }}>5g</span><span style={{ color: colors.textMuted, fontSize: '11px' }}>50g</span></div>
+                </div>
+                <div>
+                  <label style={{ color: colors.textSecondary, fontSize: '13px' }}>Pendulum Mass: {twistPendulumMass}g</label>
+                  <input type="range" min="500" max="5000" value={twistPendulumMass} onChange={(e) => setTwistPendulumMass(Number(e.target.value))}
+                    style={{ width: '100%', height: '20px', touchAction: 'pan-y' as const, accentColor: colors.accent }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: colors.textMuted, fontSize: '11px' }}>500g</span><span style={{ color: colors.textMuted, fontSize: '11px' }}>5000g</span></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

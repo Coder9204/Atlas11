@@ -1094,86 +1094,102 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
       <h2 style={{ fontSize: '24px', fontWeight: 700, color: colors.textPrimary, marginBottom: '16px' }}>Bernoulli Flight Lab</h2>
       <p style={{ color: '#e2e8f0', marginBottom: '24px', textAlign: 'center', maxWidth: '512px' }}>Adjust airspeed and wing angle to see how pressure differences create lift!</p>
 
-      {/* SVG container with distinct background */}
-      <div style={{ background: 'linear-gradient(to bottom, rgba(30, 41, 59, 0.5), rgba(15, 23, 42, 0.5))', borderRadius: '16px', padding: '16px', border: '1px solid rgba(71, 85, 105, 0.5)', marginBottom: '24px', position: 'relative', overflow: 'hidden', maxWidth: '100%' }}>
-        {simulationMode === 'wing' ? renderWingSimulation() : renderBallSimulation()}
+      {/* Side-by-side layout: SVG left, controls right */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        maxWidth: '900px',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        {/* Left: SVG visualization */}
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          {/* SVG container with distinct background */}
+          <div style={{ background: 'linear-gradient(to bottom, rgba(30, 41, 59, 0.5), rgba(15, 23, 42, 0.5))', borderRadius: '16px', padding: '16px', border: '1px solid rgba(71, 85, 105, 0.5)', position: 'relative', overflow: 'hidden', maxWidth: '100%' }}>
+            {simulationMode === 'wing' ? renderWingSimulation() : renderBallSimulation()}
 
-        {/* Labels overlay */}
-        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', fontSize: typo.small }}>
-          {showPressure && simulationMode === 'wing' && (
-            <>
-              <div style={{ position: 'absolute', top: '25%', left: '50%', transform: 'translateX(-50%)', color: '#60a5fa', fontWeight: 600 }}>
-                LOW PRESSURE
-              </div>
-              <div style={{ position: 'absolute', top: '62%', left: '50%', transform: 'translateX(-50%)', color: '#fbbf24', fontWeight: 600 }}>
-                HIGH PRESSURE
-              </div>
-            </>
-          )}
-          {lift > 5 && simulationMode === 'wing' && (
-            <div style={{ position: 'absolute', top: `${35 - lift * 0.15}%`, left: '55%', color: '#34d399', fontWeight: 700 }}>
-              LIFT
+            {/* Labels overlay */}
+            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', fontSize: typo.small }}>
+              {showPressure && simulationMode === 'wing' && (
+                <>
+                  <div style={{ position: 'absolute', top: '25%', left: '50%', transform: 'translateX(-50%)', color: '#60a5fa', fontWeight: 600 }}>
+                    LOW PRESSURE
+                  </div>
+                  <div style={{ position: 'absolute', top: '62%', left: '50%', transform: 'translateX(-50%)', color: '#fbbf24', fontWeight: 600 }}>
+                    HIGH PRESSURE
+                  </div>
+                </>
+              )}
+              {lift > 5 && simulationMode === 'wing' && (
+                <div style={{ position: 'absolute', top: `${35 - lift * 0.15}%`, left: '55%', color: '#34d399', fontWeight: 700 }}>
+                  LIFT
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Data panel with distinct background */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px', width: '100%', maxWidth: '512px' }}>
-        <div style={{ background: colors.bgCard, borderRadius: '8px', padding: '12px', textAlign: 'center', border: `1px solid ${colors.border}` }}>
-          <div style={{ fontSize: '12px', color: '#60a5fa' }}>Airspeed</div>
-          <div style={{ fontSize: '18px', fontWeight: 700, color: colors.textPrimary }}>{airSpeed} m/s</div>
-        </div>
-        <div style={{ background: colors.bgCard, borderRadius: '8px', padding: '12px', textAlign: 'center', border: `1px solid ${colors.border}` }}>
-          <div style={{ fontSize: '12px', color: '#34d399' }}>{simulationMode === 'wing' ? 'Lift Force' : 'Magnus Force'}</div>
-          <div style={{ fontSize: '18px', fontWeight: 700, color: colors.textPrimary }}>{simulationMode === 'wing' ? `${lift.toFixed(0)}%` : `${magnusForce.toFixed(1)} N`}</div>
-        </div>
-        <div style={{ background: colors.bgCard, borderRadius: '8px', padding: '12px', textAlign: 'center', border: `1px solid ${colors.border}` }}>
-          <div style={{ fontSize: '12px', color: '#fbbf24' }}>{simulationMode === 'wing' ? 'Wing Angle' : 'Spin Rate'}</div>
-          <div style={{ fontSize: '18px', fontWeight: 700, color: colors.textPrimary }}>{simulationMode === 'wing' ? `${angleOfAttack} deg` : `${ballSpin} RPM`}</div>
-        </div>
-      </div>
-
-      {/* Controls with distinct background */}
-      <div style={{ touchAction: 'pan-y', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', width: '100%', maxWidth: '512px', marginBottom: '24px' }}>
-        <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
-          <label style={{ color: '#60a5fa', fontSize: '14px', display: 'block', marginBottom: '8px' }}>Airspeed: {airSpeed} m/s</label>
-          <input type="range" min={10} max={100} value={airSpeed} onChange={(e) => setAirSpeed(Number(e.target.value))} style={{ touchAction: 'pan-y', width: '100%', height: '20px', cursor: 'pointer', accentColor: '#3b82f6' }} />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}><span>10</span><span>100</span></div>
-        </div>
-        {simulationMode === 'wing' ? (
-          <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
-            <label style={{ color: '#fbbf24', fontSize: '14px', display: 'block', marginBottom: '8px' }}>Wing Angle: {angleOfAttack} deg {angleOfAttack > 12 && <span style={{ color: '#f472b6' }}>Near stall!</span>}</label>
-            <input type="range" min={0} max={20} value={angleOfAttack} onChange={(e) => setAngleOfAttack(Number(e.target.value))} style={{ touchAction: 'pan-y', width: '100%', height: '20px', cursor: 'pointer', accentColor: '#f59e0b' }} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}><span>0</span><span>20</span></div>
           </div>
-        ) : (
-          <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: '1px solid rgba(236, 72, 153, 0.3)' }}>
-            <label style={{ color: '#f472b6', fontSize: '14px', display: 'block', marginBottom: '8px' }}>Ball Spin: {ballSpin} RPM</label>
-            <input type="range" min={-2500} max={2500} value={ballSpin} onChange={(e) => setBallSpin(Number(e.target.value))} style={{ width: '100%', height: '20px', cursor: 'pointer', accentColor: '#ec4899' }} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}><span>-2500</span><span>2500</span></div>
-          </div>
-        )}
-      </div>
+        </div>
 
-      {/* Toggle buttons */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '24px', justifyContent: 'center' }}>
-        <button onClick={() => setShowStreamlines(!showStreamlines)} style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 500, background: showStreamlines ? '#2563eb' : colors.bgCardLight, color: colors.textPrimary, border: 'none', cursor: 'pointer' }}>
-          Streamlines {showStreamlines ? 'ON' : 'OFF'}
-        </button>
-        <button onClick={() => setShowPressure(!showPressure)} style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 500, background: showPressure ? '#4f46e5' : colors.bgCardLight, color: colors.textPrimary, border: 'none', cursor: 'pointer' }}>
-          Pressure {showPressure ? 'ON' : 'OFF'}
-        </button>
-        <button onClick={() => setSimulationMode('wing')} style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 500, background: simulationMode === 'wing' ? '#059669' : colors.bgCardLight, color: colors.textPrimary, border: 'none', cursor: 'pointer' }}>
-          Wing Mode
-        </button>
-        <button onClick={() => setSimulationMode('ball')} style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 500, background: simulationMode === 'ball' ? '#059669' : colors.bgCardLight, color: colors.textPrimary, border: 'none', cursor: 'pointer' }}>
-          Ball Mode
-        </button>
+        {/* Right: Controls panel */}
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          {/* Data panel with distinct background */}
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(1, 1fr)', gap: '8px', marginBottom: '12px', width: '100%' }}>
+            <div style={{ background: colors.bgCard, borderRadius: '8px', padding: '10px', textAlign: 'center', border: `1px solid ${colors.border}` }}>
+              <div style={{ fontSize: '12px', color: '#60a5fa' }}>Airspeed</div>
+              <div style={{ fontSize: '18px', fontWeight: 700, color: colors.textPrimary }}>{airSpeed} m/s</div>
+            </div>
+            <div style={{ background: colors.bgCard, borderRadius: '8px', padding: '10px', textAlign: 'center', border: `1px solid ${colors.border}` }}>
+              <div style={{ fontSize: '12px', color: '#34d399' }}>{simulationMode === 'wing' ? 'Lift Force' : 'Magnus Force'}</div>
+              <div style={{ fontSize: '18px', fontWeight: 700, color: colors.textPrimary }}>{simulationMode === 'wing' ? `${lift.toFixed(0)}%` : `${magnusForce.toFixed(1)} N`}</div>
+            </div>
+            <div style={{ background: colors.bgCard, borderRadius: '8px', padding: '10px', textAlign: 'center', border: `1px solid ${colors.border}` }}>
+              <div style={{ fontSize: '12px', color: '#fbbf24' }}>{simulationMode === 'wing' ? 'Wing Angle' : 'Spin Rate'}</div>
+              <div style={{ fontSize: '18px', fontWeight: 700, color: colors.textPrimary }}>{simulationMode === 'wing' ? `${angleOfAttack} deg` : `${ballSpin} RPM`}</div>
+            </div>
+          </div>
+
+          {/* Controls with distinct background */}
+          <div style={{ touchAction: 'pan-y', display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', marginBottom: '12px' }}>
+            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+              <label style={{ color: '#60a5fa', fontSize: '14px', display: 'block', marginBottom: '8px' }}>Airspeed: {airSpeed} m/s</label>
+              <input type="range" min={10} max={100} value={airSpeed} onChange={(e) => setAirSpeed(Number(e.target.value))} style={{ touchAction: 'pan-y', width: '100%', height: '20px', cursor: 'pointer', accentColor: '#3b82f6' }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}><span>10</span><span>100</span></div>
+            </div>
+            {simulationMode === 'wing' ? (
+              <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                <label style={{ color: '#fbbf24', fontSize: '14px', display: 'block', marginBottom: '8px' }}>Wing Angle: {angleOfAttack} deg {angleOfAttack > 12 && <span style={{ color: '#f472b6' }}>Near stall!</span>}</label>
+                <input type="range" min={0} max={20} value={angleOfAttack} onChange={(e) => setAngleOfAttack(Number(e.target.value))} style={{ touchAction: 'pan-y', width: '100%', height: '20px', cursor: 'pointer', accentColor: '#f59e0b' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}><span>0</span><span>20</span></div>
+              </div>
+            ) : (
+              <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: '1px solid rgba(236, 72, 153, 0.3)' }}>
+                <label style={{ color: '#f472b6', fontSize: '14px', display: 'block', marginBottom: '8px' }}>Ball Spin: {ballSpin} RPM</label>
+                <input type="range" min={-2500} max={2500} value={ballSpin} onChange={(e) => setBallSpin(Number(e.target.value))} style={{ width: '100%', height: '20px', cursor: 'pointer', accentColor: '#ec4899' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}><span>-2500</span><span>2500</span></div>
+              </div>
+            )}
+          </div>
+
+          {/* Toggle buttons */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+            <button onClick={() => setShowStreamlines(!showStreamlines)} style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 500, background: showStreamlines ? '#2563eb' : colors.bgCardLight, color: colors.textPrimary, border: 'none', cursor: 'pointer' }}>
+              Streamlines {showStreamlines ? 'ON' : 'OFF'}
+            </button>
+            <button onClick={() => setShowPressure(!showPressure)} style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 500, background: showPressure ? '#4f46e5' : colors.bgCardLight, color: colors.textPrimary, border: 'none', cursor: 'pointer' }}>
+              Pressure {showPressure ? 'ON' : 'OFF'}
+            </button>
+            <button onClick={() => setSimulationMode('wing')} style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 500, background: simulationMode === 'wing' ? '#059669' : colors.bgCardLight, color: colors.textPrimary, border: 'none', cursor: 'pointer' }}>
+              Wing Mode
+            </button>
+            <button onClick={() => setSimulationMode('ball')} style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 500, background: simulationMode === 'ball' ? '#059669' : colors.bgCardLight, color: colors.textPrimary, border: 'none', cursor: 'pointer' }}>
+              Ball Mode
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Key Observation box with cause-effect explanation */}
-      <div style={{ background: 'rgba(30, 58, 138, 0.3)', borderRadius: '12px', padding: '16px', maxWidth: '512px', border: '1px solid rgba(59, 130, 246, 0.3)', marginBottom: '24px' }}>
+      <div style={{ background: 'rgba(30, 58, 138, 0.3)', borderRadius: '12px', padding: '16px', maxWidth: '900px', width: '100%', border: '1px solid rgba(59, 130, 246, 0.3)', marginTop: '20px', marginBottom: '24px' }}>
         <h3 style={{ color: '#60a5fa', fontWeight: 600, marginBottom: '8px' }}>Key Observation</h3>
         <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.6 }}>
           Watch how faster airflow over the wing creates a low-pressure zone. When you increase airspeed, the lift force increases because the pressure difference grows larger. Higher angle of attack also causes more lift - until you stall!
@@ -1350,50 +1366,66 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
 
   // TWIST PLAY PHASE
   const renderTwistPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <p className="text-xs font-black text-amber-400 mb-2 tracking-widest">STEP 5 - TWIST LAB</p>
-      <h2 className="text-2xl font-bold text-amber-400 mb-4">Magnus Effect Lab</h2>
-      <p className="text-slate-400 mb-6 text-center max-w-lg">Adjust pitch speed and spin to see how the ball curves!</p>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
+      <p style={{ fontSize: '12px', fontWeight: 800, color: colors.warning, marginBottom: '8px', letterSpacing: '2px' }}>STEP 5 - TWIST LAB</p>
+      <h2 style={{ fontSize: '24px', fontWeight: 700, color: colors.warning, marginBottom: '16px' }}>Magnus Effect Lab</h2>
+      <p style={{ color: '#94a3b8', marginBottom: '24px', textAlign: 'center', maxWidth: '512px' }}>Adjust pitch speed and spin to see how the ball curves!</p>
 
-      <div className="bg-gradient-to-b from-slate-800/50 to-slate-900/50 rounded-2xl p-4 border border-amber-700/30 mb-6 relative overflow-hidden">
-        {renderBallSimulation()}
+      {/* Side-by-side layout: SVG left, controls right */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        maxWidth: '900px',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        {/* Left: SVG visualization */}
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          <div style={{ background: 'linear-gradient(to bottom, rgba(30, 41, 59, 0.5), rgba(15, 23, 42, 0.5))', borderRadius: '16px', padding: '16px', border: '1px solid rgba(217, 119, 6, 0.3)', position: 'relative', overflow: 'hidden' }}>
+            {renderBallSimulation()}
 
-        <div className="absolute inset-0 pointer-events-none text-xs">
-          {showStreamlines && (
-            <>
-              <div className="absolute text-blue-400 font-medium" style={{ top: '30%', left: '45%' }}>
-                Fast (Low P)
-              </div>
-              <div className="absolute text-amber-400 font-medium" style={{ top: '60%', left: '45%' }}>
-                Slow (High P)
-              </div>
-            </>
-          )}
+            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', fontSize: '12px' }}>
+              {showStreamlines && (
+                <>
+                  <div style={{ position: 'absolute', top: '30%', left: '45%', color: '#60a5fa', fontWeight: 500 }}>
+                    Fast (Low P)
+                  </div>
+                  <div style={{ position: 'absolute', top: '60%', left: '45%', color: '#fbbf24', fontWeight: 500 }}>
+                    Slow (High P)
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div className="grid md:grid-cols-2 gap-4 w-full max-w-lg mb-6">
-        <div className="bg-slate-800/50 rounded-xl p-4 border border-blue-500/30">
-          <label className="text-blue-400 text-sm block mb-2">Pitch Speed: {airSpeed} m/s</label>
-          <input type="range" min={10} max={100} value={airSpeed} onChange={(e) => setAirSpeed(Number(e.target.value))} className="w-full accent-blue-500" style={{ touchAction: 'pan-y', width: '100%', height: '20px', cursor: 'pointer', accentColor: '#3b82f6' }} />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}><span>10</span><span>100</span></div>
-        </div>
-        <div className="bg-slate-800/50 rounded-xl p-4 border border-pink-500/30">
-          <label className="text-pink-400 text-sm block mb-2">Ball Spin: {ballSpin} RPM</label>
-          <input type="range" min={-2500} max={2500} value={ballSpin} onChange={(e) => setBallSpin(Number(e.target.value))} className="w-full accent-pink-500" style={{ touchAction: 'pan-y', width: '100%', height: '20px', cursor: 'pointer', accentColor: '#ec4899' }} />
-          <div className="flex justify-between text-xs text-slate-500 mt-1">
-            <span>Backspin (up)</span>
-            <span>Topspin (down)</span>
+        {/* Right: Controls panel */}
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', marginBottom: '12px' }}>
+            <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+              <label style={{ color: '#60a5fa', fontSize: '14px', display: 'block', marginBottom: '8px' }}>Pitch Speed: {airSpeed} m/s</label>
+              <input type="range" min={10} max={100} value={airSpeed} onChange={(e) => setAirSpeed(Number(e.target.value))} style={{ touchAction: 'pan-y', width: '100%', height: '20px', cursor: 'pointer', accentColor: '#3b82f6' }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}><span>10</span><span>100</span></div>
+            </div>
+            <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(236, 72, 153, 0.3)' }}>
+              <label style={{ color: '#f472b6', fontSize: '14px', display: 'block', marginBottom: '8px' }}>Ball Spin: {ballSpin} RPM</label>
+              <input type="range" min={-2500} max={2500} value={ballSpin} onChange={(e) => setBallSpin(Number(e.target.value))} style={{ touchAction: 'pan-y', width: '100%', height: '20px', cursor: 'pointer', accentColor: '#ec4899' }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+                <span>Backspin (up)</span>
+                <span>Topspin (down)</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ background: 'rgba(131, 24, 67, 0.3)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(236, 72, 153, 0.3)' }}>
+            <h3 style={{ color: '#f472b6', fontWeight: 600, marginBottom: '8px' }}>The Magnus Effect</h3>
+            <p style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: 1.6 }}>Spin drags air faster on one side (lower pressure) and slower on the other (higher pressure). The ball is pushed from high to low pressure - creating curves that seem to defy physics!</p>
           </div>
         </div>
       </div>
 
-      <div className="bg-pink-900/30 rounded-xl p-4 max-w-lg border border-pink-700/30 mb-6">
-        <h3 className="text-pink-400 font-semibold mb-2">The Magnus Effect</h3>
-        <p className="text-slate-300 text-sm">Spin drags air faster on one side (lower pressure) and slower on the other (higher pressure). The ball is pushed from high to low pressure - creating curves that seem to defy physics!</p>
-      </div>
-
-      <button onClick={() => goToPhase('twist_review')} className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+      <button onClick={() => goToPhase('twist_review')} style={{ marginTop: '24px', padding: '12px 24px', background: 'linear-gradient(135deg, #d97706, #ea580c)', color: 'white', fontWeight: 600, borderRadius: '12px', border: 'none', cursor: 'pointer' }}>
         Review the Discovery
       </button>
     </div>
