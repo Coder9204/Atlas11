@@ -1007,10 +1007,16 @@ const OverlayErrorRenderer: React.FC<OverlayErrorRendererProps> = ({
       <div style={{ padding: '16px' }}>
         <div style={{ textAlign: 'center', marginBottom: '16px' }}>
           <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 700, fontSize: '22px' }}>Discover Overlay Errors</h2>
-          <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>Shift the layers and observe opens and shorts</p>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>Shift the layers and observe opens and shorts — important for semiconductor manufacturing and chip design</p>
         </div>
-        {renderVisualization(true)}
-        {renderControls()}
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '20px', width: '100%', alignItems: isMobile ? 'center' : 'flex-start' }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+            {renderVisualization(true)}
+          </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            {renderControls()}
+          </div>
+        </div>
         <div style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px', margin: '16px 0' }}>
           <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 700 }}>Experiments to Try:</h4>
           <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0, fontWeight: 400 }}>
@@ -1114,43 +1120,49 @@ const OverlayErrorRenderer: React.FC<OverlayErrorRendererProps> = ({
           <h2 style={{ color: colors.warning, marginBottom: '8px', fontWeight: 700 }}>Explore Self-Aligned Tolerance</h2>
           <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>Adjust overlay and self-alignment reduction to compare tolerance</p>
         </div>
-        {renderTwistVisualization()}
-        <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '8px' }}>
-          <div>
-            <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 600 }}>
-              Overlay Error X: <span style={{ color: '#93c5fd', fontWeight: 700 }}>{twistOverlayX} nm</span>
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="20"
-              step="1"
-              value={twistOverlayX}
-              onChange={(e) => setTwistOverlayX(parseInt(e.target.value))}
-              style={sliderStyle}
-              aria-label="Overlay error X for self-aligned comparison"
-            />
-            <p style={{ color: colors.textMuted, fontSize: '12px', margin: '4px 0 0 0' }}>
-              <strong style={{ color: colors.textSecondary }}>Effect:</strong> Increasing overlay error X reduces contact overlap. Watch how the standard process (red) drops much faster than self-aligned (green).
-            </p>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '20px', width: '100%', alignItems: isMobile ? 'center' : 'flex-start' }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+            {renderTwistVisualization()}
           </div>
-          <div>
-            <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 600 }}>
-              Self-Aligned Reduction: <span style={{ color: '#86efac', fontWeight: 700 }}>{twistSelfAlignedReduction}%</span>
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="99"
-              step="5"
-              value={twistSelfAlignedReduction}
-              onChange={(e) => setTwistSelfAlignedReduction(parseInt(e.target.value))}
-              style={sliderStyle}
-              aria-label="Self-aligned error reduction percentage"
-            />
-            <p style={{ color: colors.textMuted, fontSize: '12px', margin: '4px 0 0 0' }}>
-              <strong style={{ color: colors.textSecondary }}>Effect:</strong> Self-alignment reduces effective overlay error by this percentage. At 90%, a 20nm error becomes only 2nm effective — allowing 10× larger overlay tolerance. The green curve flattens as reduction increases.
-            </p>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                  Overlay Error X: <span style={{ color: '#93c5fd', fontWeight: 700 }}>{twistOverlayX} nm</span>
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="20"
+                  step="1"
+                  value={twistOverlayX}
+                  onChange={(e) => setTwistOverlayX(parseInt(e.target.value))}
+                  style={sliderStyle}
+                  aria-label="Overlay error X for self-aligned comparison"
+                />
+                <p style={{ color: colors.textMuted, fontSize: '12px', margin: '4px 0 0 0' }}>
+                  <strong style={{ color: colors.textSecondary }}>Effect:</strong> Increasing overlay error X reduces contact overlap. Watch how the standard process (red) drops much faster than self-aligned (green).
+                </p>
+              </div>
+              <div>
+                <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                  Self-Aligned Reduction: <span style={{ color: '#86efac', fontWeight: 700 }}>{twistSelfAlignedReduction}%</span>
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="99"
+                  step="5"
+                  value={twistSelfAlignedReduction}
+                  onChange={(e) => setTwistSelfAlignedReduction(parseInt(e.target.value))}
+                  style={sliderStyle}
+                  aria-label="Self-aligned error reduction percentage"
+                />
+                <p style={{ color: colors.textMuted, fontSize: '12px', margin: '4px 0 0 0' }}>
+                  <strong style={{ color: colors.textSecondary }}>Effect:</strong> Self-alignment reduces effective overlay error by this percentage. At 90%, a 20nm error becomes only 2nm effective — allowing 10× larger overlay tolerance. The green curve flattens as reduction increases.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
         <div style={{ background: 'rgba(251, 191, 36, 0.15)', padding: '16px', borderRadius: '12px', borderLeft: `3px solid ${colors.warning}`, margin: '0 0 16px 0' }}>

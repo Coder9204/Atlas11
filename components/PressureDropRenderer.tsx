@@ -900,168 +900,183 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
             marginBottom: '16px',
           }}>
             <p style={{ ...typo.small, color: '#CBD5E1', margin: 0 }}>
-              Explore how pipe diameter and flow rate affect pressure drop. Notice that larger diameters
-              dramatically reduce pressure drop—try adjusting sliders to observe the V² relationship.
+              Explore how pipe diameter and flow rate affect pressure drop in real-world plumbing, HVAC, and industrial piping systems. Engineers use these principles daily to design efficient fluid distribution networks for hospitals, factories, and buildings.
             </p>
           </div>
 
-          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 24px' }}>
+          <div style={{ maxWidth: '900px', margin: '0 auto', padding: '0 24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Experiment: Pressure Drop
             </h2>
             <p style={{ ...typo.body, color: '#CBD5E1', textAlign: 'center', marginBottom: '24px' }}>
-              Adjust pipe diameter and flow rate to see how pressure drop changes. Observe the squared relationship.
+              Adjust pipe diameter and flow rate to see how pressure drop changes. Observe the squared relationship used in engineering design.
             </p>
 
-          {/* Main visualization */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            {/* Formula display */}
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '12px',
-              marginBottom: '16px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.small, color: colors.textMuted, margin: '0 0 4px 0' }}>Darcy-Weisbach Equation</p>
-              <p style={{ ...typo.h3, color: colors.accent, fontFamily: 'monospace', margin: 0 }}>
-                ΔP = f × (L/D) × (ρV²/2)
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <PipeVisualization />
-            </div>
-
-            {/* Diameter slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: '#CBD5E1' }}>Pipe Diameter</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{pipeDiameter}" ({(pipeDiameter * 25.4).toFixed(0)}mm)</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="8"
-                step="0.5"
-                value={pipeDiameter}
-                onChange={(e) => setPipeDiameter(parseFloat(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  accentColor: '#3b82f6',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                }}
-              />
-            </div>
-
-            {/* Flow rate slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: '#CBD5E1' }}>Flow Rate</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{flowRate} GPM</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                step="5"
-                value={flowRate}
-                onChange={(e) => setFlowRate(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  accentColor: '#3b82f6',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                }}
-              />
-            </div>
-
-            {/* Results display */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px',
-            }}>
+          {/* Side-by-side layout: SVG left, controls right */}
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '20px', width: '100%', alignItems: isMobile ? 'center' : 'flex-start' }}>
+            {/* SVG panel */}
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-                borderTop: `3px solid ${colors.accent}`,
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '16px',
               }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{pressureData.velocity.toFixed(1)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Velocity (ft/s)</div>
+                {/* Formula display */}
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  marginBottom: '16px',
+                  textAlign: 'center',
+                }}>
+                  <p style={{ ...typo.small, color: colors.textMuted, margin: '0 0 4px 0' }}>Darcy-Weisbach Equation</p>
+                  <p style={{ ...typo.h3, color: colors.accent, fontFamily: 'monospace', margin: 0 }}>
+                    ΔP = f × (L/D) × (ρV²/2)
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <PipeVisualization />
+                </div>
               </div>
+
+              {/* Results display */}
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-                borderTop: `3px solid ${colors.warning}`,
-              }}>
-                <div style={{ ...typo.h3, color: colors.warning }}>{pressureData.pipeDrop.toFixed(2)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Pressure Drop (PSI)</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-                borderTop: `3px solid ${pressureData.totalDrop > 2 ? colors.error : colors.success}`,
+                display: 'grid',
+                gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(3, 1fr)',
+                gap: '12px',
+                marginBottom: '16px',
               }}>
                 <div style={{
-                  ...typo.h3,
-                  color: pressureData.totalDrop > 2 ? colors.error : colors.success
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '12px',
+                  textAlign: 'center',
+                  borderTop: `3px solid ${colors.accent}`,
                 }}>
-                  {pressureData.totalDrop > 2 ? 'HIGH' : pressureData.totalDrop > 1 ? 'MED' : 'LOW'}
+                  <div style={{ ...typo.h3, color: colors.accent }}>{pressureData.velocity.toFixed(1)}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Velocity (ft/s)</div>
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Drop Rating</div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '12px',
+                  textAlign: 'center',
+                  borderTop: `3px solid ${colors.warning}`,
+                }}>
+                  <div style={{ ...typo.h3, color: colors.warning }}>{pressureData.pipeDrop.toFixed(2)}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Pressure Drop (PSI)</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '12px',
+                  textAlign: 'center',
+                  borderTop: `3px solid ${pressureData.totalDrop > 2 ? colors.error : colors.success}`,
+                }}>
+                  <div style={{
+                    ...typo.h3,
+                    color: pressureData.totalDrop > 2 ? colors.error : colors.success
+                  }}>
+                    {pressureData.totalDrop > 2 ? 'HIGH' : pressureData.totalDrop > 1 ? 'MED' : 'LOW'}
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Drop Rating</div>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Why it matters */}
-          <div style={{
-            background: `${colors.accent}11`,
-            border: `1px solid ${colors.accent}33`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-          }}>
-            <p style={{ ...typo.small, color: '#CBD5E1', margin: 0 }}>
-              <strong style={{ color: colors.accent }}>Why this matters:</strong> Pressure drop
-              determines pump sizing, pipe costs, and energy use. As you saw from the experiment,
-              the relationship is non-linear—small diameter increases have dramatic effects.
-            </p>
-          </div>
+            {/* Controls panel */}
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '20px',
+                marginBottom: '16px',
+              }}>
+                {/* Diameter slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: '#CBD5E1' }}>Pipe Diameter</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{pipeDiameter}" ({(pipeDiameter * 25.4).toFixed(0)}mm)</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="8"
+                    step="0.5"
+                    value={pipeDiameter}
+                    onChange={(e) => setPipeDiameter(parseFloat(e.target.value))}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      accentColor: '#3b82f6',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none',
+                    }}
+                  />
+                </div>
 
-          {/* Discovery prompt */}
-          {pipeDiameter >= 6 && flowRate <= 40 && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                Notice how a larger diameter dramatically reduces pressure drop—even at the same flow rate!
-              </p>
+                {/* Flow rate slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: '#CBD5E1' }}>Flow Rate</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{flowRate} GPM</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="100"
+                    step="5"
+                    value={flowRate}
+                    onChange={(e) => setFlowRate(parseInt(e.target.value))}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      accentColor: '#3b82f6',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none',
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Why it matters */}
+              <div style={{
+                background: `${colors.accent}11`,
+                border: `1px solid ${colors.accent}33`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <p style={{ ...typo.small, color: '#CBD5E1', margin: 0 }}>
+                  <strong style={{ color: colors.accent }}>Why this matters:</strong> Pressure drop
+                  determines pump sizing, pipe costs, and energy use in real-world engineering applications. The
+                  relationship is non-linear—small diameter increases have dramatic effects on system efficiency.
+                </p>
+              </div>
+
+              {/* Discovery prompt */}
+              {pipeDiameter >= 6 && flowRate <= 40 && (
+                <div style={{
+                  background: `${colors.success}22`,
+                  border: `1px solid ${colors.success}`,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  marginBottom: '16px',
+                  textAlign: 'center',
+                }}>
+                  <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                    Notice how a larger diameter dramatically reduces pressure drop—even at the same flow rate!
+                  </p>
+                </div>
+              )}
             </div>
-          )}
+          </div>
 
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
@@ -1390,7 +1405,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
             </p>
           </div>
 
-          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 24px' }}>
+          <div style={{ maxWidth: '900px', margin: '0 auto', padding: '0 24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Complete System Experiment
             </h2>
@@ -1398,166 +1413,181 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
               Explore how all factors combine: diameter, length, roughness, and filter loading
             </p>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <PipeVisualization />
-            </div>
-
-            {/* All sliders */}
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-              {/* Diameter */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: '#CBD5E1' }}>Pipe Diameter</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{pipeDiameter}"</span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="8"
-                  step="0.5"
-                  value={pipeDiameter}
-                  onChange={(e) => setPipeDiameter(parseFloat(e.target.value))}
-                  style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
-                />
-              </div>
-
-              {/* Flow rate */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: '#CBD5E1' }}>Flow Rate</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{flowRate} GPM</span>
-                </div>
-                <input
-                  type="range"
-                  min="10"
-                  max="100"
-                  step="5"
-                  value={flowRate}
-                  onChange={(e) => setFlowRate(parseInt(e.target.value))}
-                  style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
-                />
-              </div>
-
-              {/* Length */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: '#CBD5E1' }}>Pipe Length</span>
-                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{pipeLength} ft</span>
-                </div>
-                <input
-                  type="range"
-                  min="25"
-                  max="200"
-                  step="25"
-                  value={pipeLength}
-                  onChange={(e) => setPipeLength(parseInt(e.target.value))}
-                  style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
-                />
-              </div>
-
-              {/* Roughness */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: '#CBD5E1' }}>Pipe Roughness</span>
-                  <span style={{ ...typo.small, color: roughness > 2 ? colors.error : colors.success, fontWeight: 600 }}>
-                    {roughness <= 1.5 ? 'Smooth' : roughness <= 2.5 ? 'Moderate' : 'Rough'}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="3"
-                  step="0.5"
-                  value={roughness}
-                  onChange={(e) => setRoughness(parseFloat(e.target.value))}
-                  style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
-                />
-              </div>
-            </div>
-
-            {/* Filter loading slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: '#CBD5E1' }}>Filter Loading</span>
-                <span style={{
-                  ...typo.small,
-                  color: filterLoading > 0.7 ? colors.error : filterLoading > 0.4 ? colors.warning : colors.success,
-                  fontWeight: 600
-                }}>
-                  {(filterLoading * 100).toFixed(0)}% loaded
-                </span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={filterLoading}
-                onChange={(e) => setFilterLoading(parseFloat(e.target.value))}
-                style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
-              />
-            </div>
-
-            {/* Results breakdown */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}>
+          {/* Side-by-side layout: SVG left, controls right */}
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '20px', width: '100%', alignItems: isMobile ? 'center' : 'flex-start' }}>
+            {/* SVG panel */}
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '16px',
               }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{pressureData.pipeDrop.toFixed(2)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Pipe Drop (PSI)</div>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <PipeVisualization />
+                </div>
               </div>
+
+              {/* Results breakdown */}
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.warning }}>{pressureData.filterDrop.toFixed(2)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Filter Drop (PSI)</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                marginBottom: '16px',
               }}>
                 <div style={{
-                  ...typo.h3,
-                  color: pressureData.totalDrop > 3 ? colors.error : colors.success
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
                 }}>
-                  {pressureData.totalDrop.toFixed(2)}
+                  <div style={{ ...typo.h3, color: colors.accent }}>{pressureData.pipeDrop.toFixed(2)}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Pipe Drop (PSI)</div>
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Total Drop (PSI)</div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.warning }}>{pressureData.filterDrop.toFixed(2)}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Filter Drop (PSI)</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{
+                    ...typo.h3,
+                    color: pressureData.totalDrop > 3 ? colors.error : colors.success
+                  }}>
+                    {pressureData.totalDrop.toFixed(2)}
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Total Drop (PSI)</div>
+                </div>
               </div>
+
+              {/* Warning for high drop */}
+              {pressureData.totalDrop > 3 && (
+                <div style={{
+                  background: `${colors.error}22`,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  marginBottom: '16px',
+                  textAlign: 'center',
+                }}>
+                  <p style={{ ...typo.small, color: colors.error, margin: 0 }}>
+                    Warning: High pressure drop! Consider larger pipes, lower flow, or filter replacement.
+                  </p>
+                </div>
+              )}
             </div>
 
-            {/* Warning for high drop */}
-            {pressureData.totalDrop > 3 && (
+            {/* Controls panel */}
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
               <div style={{
-                background: `${colors.error}22`,
-                borderRadius: '8px',
-                padding: '12px',
-                marginTop: '16px',
-                textAlign: 'center',
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '20px',
+                marginBottom: '16px',
               }}>
-                <p style={{ ...typo.small, color: colors.error, margin: 0 }}>
-                  Warning: High pressure drop! Consider larger pipes, lower flow, or filter replacement.
-                </p>
+                {/* All sliders - stacked in 280px panel */}
+                {/* Diameter */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: '#CBD5E1' }}>Pipe Diameter</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{pipeDiameter}"</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="8"
+                    step="0.5"
+                    value={pipeDiameter}
+                    onChange={(e) => setPipeDiameter(parseFloat(e.target.value))}
+                    style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
+                  />
+                </div>
+
+                {/* Flow rate */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: '#CBD5E1' }}>Flow Rate</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{flowRate} GPM</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="100"
+                    step="5"
+                    value={flowRate}
+                    onChange={(e) => setFlowRate(parseInt(e.target.value))}
+                    style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
+                  />
+                </div>
+
+                {/* Length */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: '#CBD5E1' }}>Pipe Length</span>
+                    <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{pipeLength} ft</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="25"
+                    max="200"
+                    step="25"
+                    value={pipeLength}
+                    onChange={(e) => setPipeLength(parseInt(e.target.value))}
+                    style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
+                  />
+                </div>
+
+                {/* Roughness */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: '#CBD5E1' }}>Pipe Roughness</span>
+                    <span style={{ ...typo.small, color: roughness > 2 ? colors.error : colors.success, fontWeight: 600 }}>
+                      {roughness <= 1.5 ? 'Smooth' : roughness <= 2.5 ? 'Moderate' : 'Rough'}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="3"
+                    step="0.5"
+                    value={roughness}
+                    onChange={(e) => setRoughness(parseFloat(e.target.value))}
+                    style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
+                  />
+                </div>
+
+                {/* Filter loading slider */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: '#CBD5E1' }}>Filter Loading</span>
+                    <span style={{
+                      ...typo.small,
+                      color: filterLoading > 0.7 ? colors.error : filterLoading > 0.4 ? colors.warning : colors.success,
+                      fontWeight: 600
+                    }}>
+                      {(filterLoading * 100).toFixed(0)}% loaded
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={filterLoading}
+                    onChange={(e) => setFilterLoading(parseFloat(e.target.value))}
+                    style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
+                  />
+                </div>
               </div>
-            )}
+            </div>
           </div>
 
             <button

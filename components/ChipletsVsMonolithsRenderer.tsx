@@ -1570,22 +1570,29 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
             </p>
           </div>
 
-          {renderVisualization(true)}
-          {renderControls()}
+          {/* Side-by-side layout: SVG left, controls right on desktop */}
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '20px', width: '100%', alignItems: isMobile ? 'center' : 'flex-start', padding: '0 16px' }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {renderVisualization(true)}
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {renderControls()}
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Start small (100mm) - monolithic usually wins</li>
-              <li>Go large (600mm) - watch chiplets take over</li>
-              <li>Increase defect density - chiplet advantage grows</li>
-              <li>Increase packaging cost - monolithic becomes competitive</li>
-            </ul>
+              <div style={{
+                background: colors.bgCard,
+                margin: '16px 0',
+                padding: '16px',
+                borderRadius: '12px',
+              }}>
+                <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
+                <ul style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.8, paddingLeft: '16px', margin: 0 }}>
+                  <li>Start small (100mm) - monolithic usually wins</li>
+                  <li>Go large (600mm) - watch chiplets take over</li>
+                  <li>Increase defect density - chiplet advantage grows</li>
+                  <li>Increase packaging cost - monolithic becomes competitive</li>
+                </ul>
+              </div>
+            </div>
           </div>
 
           <div style={{
@@ -1778,22 +1785,29 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
             </p>
           </div>
 
-          {renderVisualization(true, true)}
-          {renderControls(true)}
+          {/* Side-by-side layout: SVG left, controls right on desktop */}
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '20px', width: '100%', alignItems: isMobile ? 'center' : 'flex-start', padding: '0 16px' }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {renderVisualization(true, true)}
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {renderControls(true)}
 
-          <div style={{
-            background: 'rgba(245, 158, 11, 0.2)',
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-            borderLeft: `3px solid ${colors.warning}`,
-          }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Advanced packaging reduces the latency/power penalty of chiplets (making them more
-              competitive with monolithic on performance), but increases cost (raising the break-even
-              point). The optimal choice depends on whether cost or performance is the priority.
-            </p>
+              <div style={{
+                background: 'rgba(245, 158, 11, 0.2)',
+                margin: '16px 0',
+                padding: '16px',
+                borderRadius: '12px',
+                borderLeft: `3px solid ${colors.warning}`,
+              }}>
+                <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
+                <p style={{ color: colors.textSecondary, fontSize: '13px' }}>
+                  Advanced packaging reduces the latency/power penalty of chiplets (making them more
+                  competitive with monolithic on performance), but increases cost (raising the break-even
+                  point). The optimal choice depends on whether cost or performance is the priority.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
         {renderBottomBar(false, true, 'See the Explanation')}

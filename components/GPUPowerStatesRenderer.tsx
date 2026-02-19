@@ -1357,141 +1357,143 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
             </p>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px' }}>
-            {renderPowerStateVisualization()}
-          </div>
-
-          {/* Observation guidance */}
-          <div style={{
-            background: 'rgba(249, 115, 22, 0.15)',
-            margin: '16px',
-            padding: '12px 16px',
-            borderRadius: '8px',
-            borderLeft: `3px solid ${colors.accent}`,
-          }}>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
-              Try adjusting the workload slider and observe how the GPU automatically adjusts clock speed and voltage. Notice what happens when you hit the power or thermal limits.
-            </p>
-          </div>
-
-          {/* Real-world relevance */}
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '8px',
-          }}>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
-              <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Real-world relevance:</strong> This same power management technology enables laptops to last 10+ hours on battery while still delivering gaming performance when plugged in. Data centers use these techniques to save millions in electricity costs annually.
-            </p>
-          </div>
-
-          <div style={{ padding: '16px' }}>
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-                GPU Workload: {workload}%
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={workload}
-                onChange={(e) => setWorkload(parseInt(e.target.value))}
-                onInput={(e) => setWorkload(parseInt((e.target as HTMLInputElement).value))}
-                style={{ width: '100%', accentColor: colors.accent, height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as const, cursor: 'pointer' }}
-              />
-            </div>
-
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-                Power Limit (TDP): {powerLimit}W
-              </label>
-              <input
-                type="range"
-                min="100"
-                max="450"
-                step="10"
-                value={powerLimit}
-                onChange={(e) => setPowerLimit(parseInt(e.target.value))}
-                onInput={(e) => setPowerLimit(parseInt((e.target as HTMLInputElement).value))}
-                style={{ width: '100%', accentColor: colors.accent, height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as const, cursor: 'pointer' }}
-              />
-            </div>
-
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-                Thermal Limit: {thermalLimit}C
-              </label>
-              <input
-                type="range"
-                min="70"
-                max="95"
-                value={thermalLimit}
-                onChange={(e) => setThermalLimit(parseInt(e.target.value))}
-                onInput={(e) => setThermalLimit(parseInt((e.target as HTMLInputElement).value))}
-                style={{ width: '100%', accentColor: colors.accent, height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as const, cursor: 'pointer' }}
-              />
-            </div>
-
-            {/* Cause-effect explanation */}
-            <div style={{
-              background: 'rgba(59, 130, 246, 0.15)',
-              padding: '12px 16px',
-              borderRadius: '8px',
-              marginBottom: '16px',
-              borderLeft: `3px solid ${colors.clock}`,
-            }}>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
-                <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Observe:</strong> When you increase the workload, the GPU automatically raises voltage and clock speed. As these values rise, power consumption increases exponentially due to the V-squared relationship. When you hit the power or thermal limit, the GPU throttles by reducing clocks to stay within safe operating parameters.
-              </p>
-            </div>
-
-            {/* Before/After Comparison */}
-            <div style={{
-              display: 'flex',
-              flexDirection: 'row',
-              gap: '12px',
-              marginBottom: '16px',
-            }}>
-              <div style={{
-                flex: 1,
-                background: 'rgba(59, 130, 246, 0.1)',
-                padding: '12px',
-                borderRadius: '8px',
-                border: '1px solid rgba(59, 130, 246, 0.3)',
-              }}>
-                <div style={{ color: colors.clock, fontSize: '12px', fontWeight: 700, marginBottom: '6px' }}>Reference: Idle Baseline</div>
-                <div style={{ color: colors.textSecondary, fontSize: '13px' }}>Clock: 300 MHz</div>
-                <div style={{ color: colors.textSecondary, fontSize: '13px' }}>Voltage: 0.75V</div>
-                <div style={{ color: colors.textSecondary, fontSize: '13px' }}>Power: 15W</div>
+          {/* Side-by-side layout: SVG left, controls right */}
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '20px', width: '100%', alignItems: isMobile ? 'center' : 'flex-start', padding: '0 16px' }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                {renderPowerStateVisualization()}
               </div>
+
+              {/* Observation guidance */}
               <div style={{
-                flex: 1,
-                background: 'rgba(249, 115, 22, 0.1)',
-                padding: '12px',
+                background: 'rgba(249, 115, 22, 0.15)',
+                marginTop: '12px',
+                padding: '12px 16px',
                 borderRadius: '8px',
-                border: `1px solid rgba(249, 115, 22, 0.3)`,
+                borderLeft: `3px solid ${colors.accent}`,
               }}>
-                <div style={{ color: colors.accent, fontSize: '12px', fontWeight: 700, marginBottom: '6px' }}>Current State</div>
-                <div style={{ color: colors.textPrimary, fontSize: '13px' }}>Clock: {currentClock.toFixed(0)} MHz</div>
-                <div style={{ color: colors.textPrimary, fontSize: '13px' }}>Voltage: {currentVoltage.toFixed(2)}V</div>
-                <div style={{ color: colors.textPrimary, fontSize: '13px' }}>Power: {currentPower.toFixed(0)}W ({(currentPower / 15).toFixed(1)}x vs baseline)</div>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+                  Try adjusting the workload slider and observe how the GPU automatically adjusts clock speed and voltage. Notice what happens when you hit the power or thermal limits.
+                </p>
+              </div>
+
+              {/* Real-world relevance */}
+              <div style={{
+                background: colors.bgCard,
+                marginTop: '12px',
+                padding: '16px',
+                borderRadius: '8px',
+              }}>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
+                  <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Real-world relevance:</strong> This same power management technology enables laptops to last 10+ hours on battery while still delivering gaming performance when plugged in. Data centers use these techniques to save millions in electricity costs annually.
+                </p>
               </div>
             </div>
 
-            <div style={{
-              background: colors.bgCard,
-              padding: '16px',
-              borderRadius: '8px',
-              marginTop: '16px',
-            }}>
-              <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 700 }}>Power Formula: P = CV squared f</h4>
-              <ul style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, paddingLeft: '20px', fontWeight: 400 }}>
-                <li><strong style={{ fontWeight: 700 }}>C:</strong> Capacitance (fixed by chip design)</li>
-                <li><strong style={{ fontWeight: 700 }}>V:</strong> Voltage - reducing this saves the most power!</li>
-                <li><strong style={{ fontWeight: 700 }}>f:</strong> Frequency (clock speed)</li>
-                <li>Halving voltage reduces power by 75%</li>
-              </ul>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+                  GPU Workload: {workload}%
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={workload}
+                  onChange={(e) => setWorkload(parseInt(e.target.value))}
+                  onInput={(e) => setWorkload(parseInt((e.target as HTMLInputElement).value))}
+                  style={{ width: '100%', accentColor: colors.accent, height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as const, cursor: 'pointer' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+                  Power Limit (TDP): {powerLimit}W
+                </label>
+                <input
+                  type="range"
+                  min="100"
+                  max="450"
+                  step="10"
+                  value={powerLimit}
+                  onChange={(e) => setPowerLimit(parseInt(e.target.value))}
+                  onInput={(e) => setPowerLimit(parseInt((e.target as HTMLInputElement).value))}
+                  style={{ width: '100%', accentColor: colors.accent, height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as const, cursor: 'pointer' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+                  Thermal Limit: {thermalLimit}C
+                </label>
+                <input
+                  type="range"
+                  min="70"
+                  max="95"
+                  value={thermalLimit}
+                  onChange={(e) => setThermalLimit(parseInt(e.target.value))}
+                  onInput={(e) => setThermalLimit(parseInt((e.target as HTMLInputElement).value))}
+                  style={{ width: '100%', accentColor: colors.accent, height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as const, cursor: 'pointer' }}
+                />
+              </div>
+
+              {/* Cause-effect explanation */}
+              <div style={{
+                background: 'rgba(59, 130, 246, 0.15)',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                marginBottom: '16px',
+                borderLeft: `3px solid ${colors.clock}`,
+              }}>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
+                  <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Observe:</strong> When you increase the workload, the GPU automatically raises voltage and clock speed. As these values rise, power consumption increases exponentially due to the V-squared relationship. When you hit the power or thermal limit, the GPU throttles by reducing clocks to stay within safe operating parameters.
+                </p>
+              </div>
+
+              {/* Before/After Comparison */}
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                marginBottom: '16px',
+              }}>
+                <div style={{
+                  background: 'rgba(59, 130, 246, 0.1)',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(59, 130, 246, 0.3)',
+                }}>
+                  <div style={{ color: colors.clock, fontSize: '12px', fontWeight: 700, marginBottom: '6px' }}>Reference: Idle Baseline</div>
+                  <div style={{ color: colors.textSecondary, fontSize: '13px' }}>Clock: 300 MHz</div>
+                  <div style={{ color: colors.textSecondary, fontSize: '13px' }}>Voltage: 0.75V</div>
+                  <div style={{ color: colors.textSecondary, fontSize: '13px' }}>Power: 15W</div>
+                </div>
+                <div style={{
+                  background: 'rgba(249, 115, 22, 0.1)',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: `1px solid rgba(249, 115, 22, 0.3)`,
+                }}>
+                  <div style={{ color: colors.accent, fontSize: '12px', fontWeight: 700, marginBottom: '6px' }}>Current State</div>
+                  <div style={{ color: colors.textPrimary, fontSize: '13px' }}>Clock: {currentClock.toFixed(0)} MHz</div>
+                  <div style={{ color: colors.textPrimary, fontSize: '13px' }}>Voltage: {currentVoltage.toFixed(2)}V</div>
+                  <div style={{ color: colors.textPrimary, fontSize: '13px' }}>Power: {currentPower.toFixed(0)}W ({(currentPower / 15).toFixed(1)}x vs baseline)</div>
+                </div>
+              </div>
+
+              <div style={{
+                background: colors.bgCard,
+                padding: '16px',
+                borderRadius: '8px',
+              }}>
+                <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 700 }}>Power Formula: P = CV squared f</h4>
+                <ul style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, paddingLeft: '20px', fontWeight: 400 }}>
+                  <li><strong style={{ fontWeight: 700 }}>C:</strong> Capacitance (fixed by chip design)</li>
+                  <li><strong style={{ fontWeight: 700 }}>V:</strong> Voltage - reducing this saves the most power!</li>
+                  <li><strong style={{ fontWeight: 700 }}>f:</strong> Frequency (clock speed)</li>
+                  <li>Halving voltage reduces power by 75%</li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
@@ -1707,95 +1709,99 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
             </p>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px' }}>
-            {renderPowerStateVisualization()}
-          </div>
+          {/* Side-by-side layout: SVG left, controls right */}
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '20px', width: '100%', alignItems: isMobile ? 'center' : 'flex-start', padding: '0 16px' }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                {renderPowerStateVisualization()}
+              </div>
 
-          {/* Observation guidance */}
-          <div style={{
-            background: 'rgba(249, 115, 22, 0.15)',
-            margin: '16px',
-            padding: '12px 16px',
-            borderRadius: '8px',
-            borderLeft: `3px solid ${colors.accent}`,
-          }}>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
-              Experiment with lowering the power limit or thermal limit to see which one causes throttling first. Notice how the GPU color and status change when limits are hit.
-            </p>
-          </div>
+              {/* Observation guidance */}
+              <div style={{
+                background: 'rgba(249, 115, 22, 0.15)',
+                marginTop: '12px',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                borderLeft: `3px solid ${colors.accent}`,
+              }}>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
+                  Experiment with lowering the power limit or thermal limit to see which one causes throttling first. Notice how the GPU color and status change when limits are hit.
+                </p>
+              </div>
 
-          {/* Real-world relevance */}
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '8px',
-          }}>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
-              <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Real-world relevance:</strong> Overclocking enthusiasts and data center operators tune these limits daily. Understanding which constraint is active helps optimize for either maximum performance or energy efficiency.
-            </p>
-          </div>
-
-          <div style={{ padding: '16px' }}>
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-                Workload: {workload}%
-              </label>
-              <input
-                type="range"
-                min="50"
-                max="100"
-                value={workload}
-                onChange={(e) => setWorkload(parseInt(e.target.value))}
-                onInput={(e) => setWorkload(parseInt((e.target as HTMLInputElement).value))}
-                style={{ width: '100%', accentColor: colors.accent, height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as const, cursor: 'pointer' }}
-              />
+              {/* Real-world relevance */}
+              <div style={{
+                background: colors.bgCard,
+                marginTop: '12px',
+                padding: '16px',
+                borderRadius: '8px',
+              }}>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
+                  <strong style={{ color: colors.textPrimary, fontWeight: 700 }}>Real-world relevance:</strong> Overclocking enthusiasts and data center operators tune these limits daily. Understanding which constraint is active helps optimize for either maximum performance or energy efficiency.
+                </p>
+              </div>
             </div>
 
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-                Power Limit: {powerLimit}W (try lowering to see power throttling)
-              </label>
-              <input
-                type="range"
-                min="150"
-                max="400"
-                step="10"
-                value={powerLimit}
-                onChange={(e) => setPowerLimit(parseInt(e.target.value))}
-                onInput={(e) => setPowerLimit(parseInt((e.target as HTMLInputElement).value))}
-                style={{ width: '100%', accentColor: colors.accent, height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as const, cursor: 'pointer' }}
-              />
-            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+                  Workload: {workload}%
+                </label>
+                <input
+                  type="range"
+                  min="50"
+                  max="100"
+                  value={workload}
+                  onChange={(e) => setWorkload(parseInt(e.target.value))}
+                  onInput={(e) => setWorkload(parseInt((e.target as HTMLInputElement).value))}
+                  style={{ width: '100%', accentColor: colors.accent, height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as const, cursor: 'pointer' }}
+                />
+              </div>
 
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-                Thermal Limit: {thermalLimit}C (try lowering to see thermal throttling)
-              </label>
-              <input
-                type="range"
-                min="65"
-                max="95"
-                value={thermalLimit}
-                onChange={(e) => setThermalLimit(parseInt(e.target.value))}
-                onInput={(e) => setThermalLimit(parseInt((e.target as HTMLInputElement).value))}
-                style={{ width: '100%', accentColor: colors.accent, height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as const, cursor: 'pointer' }}
-              />
-            </div>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+                  Power Limit: {powerLimit}W (try lowering to see power throttling)
+                </label>
+                <input
+                  type="range"
+                  min="150"
+                  max="400"
+                  step="10"
+                  value={powerLimit}
+                  onChange={(e) => setPowerLimit(parseInt(e.target.value))}
+                  onInput={(e) => setPowerLimit(parseInt((e.target as HTMLInputElement).value))}
+                  style={{ width: '100%', accentColor: colors.accent, height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as const, cursor: 'pointer' }}
+                />
+              </div>
 
-            <div style={{
-              background: 'rgba(245, 158, 11, 0.2)',
-              padding: '16px',
-              borderRadius: '8px',
-              marginTop: '16px',
-              borderLeft: `3px solid ${colors.warning}`,
-            }}>
-              <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Current Status:</h4>
-              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 400 }}>
-                {limitingFactor === 'none' && 'GPU running freely - neither limit reached'}
-                {limitingFactor === 'power' && `Power limited at ${powerLimit}W - would run hotter with more power`}
-                {limitingFactor === 'thermal' && `Thermal limited at ${thermalLimit}C - needs better cooling to use full power`}
-              </p>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+                  Thermal Limit: {thermalLimit}C (try lowering to see thermal throttling)
+                </label>
+                <input
+                  type="range"
+                  min="65"
+                  max="95"
+                  value={thermalLimit}
+                  onChange={(e) => setThermalLimit(parseInt(e.target.value))}
+                  onInput={(e) => setThermalLimit(parseInt((e.target as HTMLInputElement).value))}
+                  style={{ width: '100%', accentColor: colors.accent, height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as const, cursor: 'pointer' }}
+                />
+              </div>
+
+              <div style={{
+                background: 'rgba(245, 158, 11, 0.2)',
+                padding: '16px',
+                borderRadius: '8px',
+                borderLeft: `3px solid ${colors.warning}`,
+              }}>
+                <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Current Status:</h4>
+                <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 400 }}>
+                  {limitingFactor === 'none' && 'GPU running freely - neither limit reached'}
+                  {limitingFactor === 'power' && `Power limited at ${powerLimit}W - would run hotter with more power`}
+                  {limitingFactor === 'thermal' && `Thermal limited at ${thermalLimit}C - needs better cooling to use full power`}
+                </p>
+              </div>
             </div>
           </div>
         </div>

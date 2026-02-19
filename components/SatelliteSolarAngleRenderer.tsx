@@ -1127,126 +1127,132 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
               padding: '24px',
               marginBottom: '24px',
             }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <SatelliteVisualization showEclipse={false} />
-            </div>
-
-            {/* Orbit position slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Orbit Position</span>
-                <span style={{ ...typo.small, color: colors.earth, fontWeight: 600 }}>{orbitPosition.toFixed(0)}°</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="360"
-                step="10"
-                value={orbitPosition}
-                onChange={(e) => setOrbitPosition(parseFloat(e.target.value))}
-                style={sliderStyle}
-              />
-            </div>
-
-            {/* Panel angle slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Panel Angle</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{panelAngle.toFixed(0)}°</span>
-              </div>
-              <input
-                type="range"
-                min="-90"
-                max="90"
-                step="5"
-                value={panelAngle}
-                onChange={(e) => setPanelAngle(parseFloat(e.target.value))}
-                disabled={sunTrackingEnabled}
-                style={{
-                  ...sliderStyle,
-                  cursor: sunTrackingEnabled ? 'not-allowed' : 'pointer',
-                  opacity: sunTrackingEnabled ? 0.5 : 1,
-                }}
-              />
-            </div>
-
-            {/* Sun tracking toggle */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '12px',
-              marginBottom: '24px',
-            }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>Manual Control</span>
-              <button
-                onClick={() => setSunTrackingEnabled(!sunTrackingEnabled)}
-                style={{
-                  width: '60px',
-                  height: '30px',
-                  borderRadius: '15px',
-                  border: 'none',
-                  background: sunTrackingEnabled ? colors.success : colors.border,
-                  cursor: 'pointer',
-                  position: 'relative',
-                  transition: 'background 0.3s',
-                }}
-              >
-                <div style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: 'white',
-                  position: 'absolute',
-                  top: '3px',
-                  left: sunTrackingEnabled ? '33px' : '3px',
-                  transition: 'left 0.3s',
-                }} />
-              </button>
-              <span style={{ ...typo.small, color: sunTrackingEnabled ? colors.success : colors.textSecondary, fontWeight: sunTrackingEnabled ? 600 : 400 }}>
-                Sun Tracking
-              </span>
-            </div>
-
-            {/* Power output display */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: isInEclipse ? colors.error : colors.accent }}>
-                  {currentPower.toFixed(0)}%
+            <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '20px', width: '100%', alignItems: isMobile ? 'center' : 'flex-start' }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: isMobile ? '12px' : '0' }}>
+                  <SatelliteVisualization showEclipse={false} />
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Current Power</div>
               </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.warning }}>{incidenceAngle.toFixed(0)}°</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Incidence Angle</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
+
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Orbit position slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Orbit Position</span>
+                    <span style={{ ...typo.small, color: colors.earth, fontWeight: 600 }}>{orbitPosition.toFixed(0)}°</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="360"
+                    step="10"
+                    value={orbitPosition}
+                    onChange={(e) => setOrbitPosition(parseFloat(e.target.value))}
+                    style={sliderStyle}
+                  />
+                </div>
+
+                {/* Panel angle slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Panel Angle</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{panelAngle.toFixed(0)}°</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="-90"
+                    max="90"
+                    step="5"
+                    value={panelAngle}
+                    onChange={(e) => setPanelAngle(parseFloat(e.target.value))}
+                    disabled={sunTrackingEnabled}
+                    style={{
+                      ...sliderStyle,
+                      cursor: sunTrackingEnabled ? 'not-allowed' : 'pointer',
+                      opacity: sunTrackingEnabled ? 0.5 : 1,
+                    }}
+                  />
+                </div>
+
+                {/* Sun tracking toggle */}
                 <div style={{
-                  ...typo.h3,
-                  color: currentPower > 95 ? colors.success : currentPower > 70 ? colors.warning : colors.error
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '12px',
+                  marginBottom: '24px',
                 }}>
-                  {currentPower > 95 ? 'Optimal' : currentPower > 70 ? 'Good' : 'Poor'}
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Manual Control</span>
+                  <button
+                    onClick={() => setSunTrackingEnabled(!sunTrackingEnabled)}
+                    style={{
+                      width: '60px',
+                      height: '30px',
+                      borderRadius: '15px',
+                      border: 'none',
+                      background: sunTrackingEnabled ? colors.success : colors.border,
+                      cursor: 'pointer',
+                      position: 'relative',
+                      transition: 'background 0.3s',
+                    }}
+                  >
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      background: 'white',
+                      position: 'absolute',
+                      top: '3px',
+                      left: sunTrackingEnabled ? '33px' : '3px',
+                      transition: 'left 0.3s',
+                    }} />
+                  </button>
+                  <span style={{ ...typo.small, color: sunTrackingEnabled ? colors.success : colors.textSecondary, fontWeight: sunTrackingEnabled ? 600 : 400 }}>
+                    Sun Tracking
+                  </span>
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Efficiency</div>
+
+                {/* Power output display */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : '1fr',
+                  gap: '12px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: isInEclipse ? colors.error : colors.accent }}>
+                      {currentPower.toFixed(0)}%
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Current Power</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.warning }}>{incidenceAngle.toFixed(0)}°</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Incidence Angle</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{
+                      ...typo.h3,
+                      color: currentPower > 95 ? colors.success : currentPower > 70 ? colors.warning : colors.error
+                    }}>
+                      {currentPower > 95 ? 'Optimal' : currentPower > 70 ? 'Good' : 'Poor'}
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Efficiency</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1542,92 +1548,98 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <SatelliteVisualization showEclipse={true} />
-            </div>
-
-            {/* Beta angle slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Beta Angle</span>
-                <span style={{
-                  ...typo.small,
-                  color: betaAngle > 70 ? colors.success : betaAngle > 30 ? colors.warning : colors.error,
-                  fontWeight: 600
-                }}>
-                  {betaAngle}°
-                </span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="90"
-                value={betaAngle}
-                onChange={(e) => setBetaAngle(parseInt(e.target.value))}
-                style={sliderStyle}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>0° (max eclipse)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>90° (no eclipse)</span>
-              </div>
-            </div>
-
-            {/* Orbit position slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Orbit Position</span>
-                <span style={{ ...typo.small, color: colors.earth, fontWeight: 600 }}>{orbitPosition.toFixed(0)}°</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="360"
-                step="5"
-                value={orbitPosition}
-                onChange={(e) => setOrbitPosition(parseFloat(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Stats */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: isInEclipse ? colors.error : colors.success }}>
-                  {isInEclipse ? 'Eclipse' : 'Sunlit'}
+            <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '20px', width: '100%', alignItems: isMobile ? 'center' : 'flex-start' }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: isMobile ? '12px' : '0' }}>
+                  <SatelliteVisualization showEclipse={true} />
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Status</div>
               </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.warning }}>{eclipsePercent.toFixed(0)}%</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Orbit in Eclipse</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{currentPower.toFixed(0)}%</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Current Power</div>
+
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Beta angle slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Beta Angle</span>
+                    <span style={{
+                      ...typo.small,
+                      color: betaAngle > 70 ? colors.success : betaAngle > 30 ? colors.warning : colors.error,
+                      fontWeight: 600
+                    }}>
+                      {betaAngle}°
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="90"
+                    value={betaAngle}
+                    onChange={(e) => setBetaAngle(parseInt(e.target.value))}
+                    style={sliderStyle}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>0° (max eclipse)</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>90° (no eclipse)</span>
+                  </div>
+                </div>
+
+                {/* Orbit position slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Orbit Position</span>
+                    <span style={{ ...typo.small, color: colors.earth, fontWeight: 600 }}>{orbitPosition.toFixed(0)}°</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="360"
+                    step="5"
+                    value={orbitPosition}
+                    onChange={(e) => setOrbitPosition(parseFloat(e.target.value))}
+                    style={{
+                      width: '100%',
+                      height: '8px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                    }}
+                  />
+                </div>
+
+                {/* Stats */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : '1fr',
+                  gap: '12px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: isInEclipse ? colors.error : colors.success }}>
+                      {isInEclipse ? 'Eclipse' : 'Sunlit'}
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Status</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.warning }}>{eclipsePercent.toFixed(0)}%</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Orbit in Eclipse</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.accent }}>{currentPower.toFixed(0)}%</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Current Power</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

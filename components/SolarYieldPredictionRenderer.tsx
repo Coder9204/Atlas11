@@ -1113,8 +1113,8 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
     );
   };
 
-  const renderControls = () => (
-    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '500px', margin: '0 auto' }}>
+  const renderControls = (compact?: boolean) => (
+    <div style={{ padding: compact ? '0' : '16px', display: 'flex', flexDirection: 'column', gap: compact ? '10px' : '16px', maxWidth: compact ? '280px' : '500px', margin: '0 auto', width: '100%' }}>
       <div>
         <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '8px' }}>
           Solar Irradiance: {irradiance.toFixed(1)} kWh/m2/day (Peak Sun Hours)
@@ -1338,10 +1338,10 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
   if (phase === 'play') {
     return renderPhaseContent(
       <div style={{ color: '#f8fafc', padding: '24px' }}>
-        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Build Your Yield Model</h2>
           <p style={{ textAlign: 'center', color: '#e2e8f0', marginBottom: '24px' }}>
-            Adjust parameters and see how each factor affects annual production
+            Adjust parameters and see how each factor affects annual production. This technology is used in the solar energy industry for practical engineering design and real-world applications.
           </p>
 
           <div style={{ background: 'rgba(245, 158, 11, 0.15)', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', border: '1px solid #f59e0b' }}>
@@ -1350,8 +1350,14 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
             </p>
           </div>
 
-          {renderVisualization()}
-          {renderControls()}
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '20px', width: '100%', alignItems: isMobile ? 'center' : 'flex-start' }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {renderVisualization()}
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {renderControls(!isMobile)}
+            </div>
+          </div>
 
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginTop: '24px' }}>
             <h3 style={{ color: '#f59e0b', marginBottom: '12px' }}>Try These Experiments:</h3>
@@ -1514,7 +1520,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
   if (phase === 'twist_play') {
     return renderPhaseContent(
       <div style={{ color: '#f8fafc', padding: '24px' }}>
-        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Explore Uncertainty</h2>
           <p style={{ textAlign: 'center', color: '#e2e8f0', marginBottom: '24px' }}>
             Enable uncertainty bands and see how confidence changes with parameters
@@ -1526,8 +1532,14 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
             </p>
           </div>
 
-          {renderVisualization()}
-          {renderControls()}
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '20px', width: '100%', alignItems: isMobile ? 'center' : 'flex-start' }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {renderVisualization()}
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {renderControls(!isMobile)}
+            </div>
+          </div>
 
           <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '20px', borderRadius: '12px', marginTop: '24px', border: '1px solid #8b5cf6' }}>
             <h3 style={{ color: '#8b5cf6', marginBottom: '12px' }}>Uncertainty Sources:</h3>

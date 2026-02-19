@@ -1514,152 +1514,162 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
       <h2 className="text-2xl font-bold text-white mb-4">Magnetic Field Lab</h2>
 
       {/* Observation guidance */}
-      <div style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #1e293b 100%)', borderRadius: '12px', padding: '12px 16px', marginBottom: '16px', maxWidth: '600px', border: '1px solid #334155' }}>
+      <div style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #1e293b 100%)', borderRadius: '12px', padding: '12px 16px', marginBottom: '16px', maxWidth: '800px', width: '100%', border: '1px solid #334155' }}>
         <p style={{ color: '#93c5fd', fontSize: '14px', margin: 0 }}>
           Try adjusting the sliders below and observe how the magnetic field strength changes. Experiment with different current values and distances to see the relationship between B, I, and r.
         </p>
         <p style={{ color: '#a5b4fc', fontSize: '13px', margin: '8px 0 0 0' }}>
-          When you increase the current, the magnetic field strength increases proportionally. This is important because electric motors, MRI machines, and many real-world technologies rely on controlling magnetic field strength by adjusting current.
+          When you increase the current, the magnetic field strength increases proportionally. This is important because electric motors, MRI machines, and many real-world technologies rely on controlling magnetic field strength by adjusting current. Understanding these relationships is essential for engineering applications like power generation, medical imaging, and transportation systems.
         </p>
       </div>
 
-      {/* Demo selector */}
-      <div className="flex gap-2 mb-4">
-        <button
-          onClick={() => setSelectedDemo('wire')}
-          style={{ position: 'relative', zIndex: 10 }}
-          className={`px-4 py-2 rounded-lg font-medium transition-all ${
-            selectedDemo === 'wire' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'
-          }`}
-        >
-          Straight Wire
-        </button>
-        <button
-          onClick={() => setSelectedDemo('solenoid')}
-          style={{ position: 'relative', zIndex: 10 }}
-          className={`px-4 py-2 rounded-lg font-medium transition-all ${
-            selectedDemo === 'solenoid' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'
-          }`}
-        >
-          Solenoid
-        </button>
-      </div>
-
-      <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '16px', border: '1px solid #334155' }}>
-        {selectedDemo === 'wire'
-          ? renderFieldVisualization(isMobile ? 320 : 400, isMobile ? 280 : 320)
-          : renderSolenoidVisualization(isMobile ? 320 : 400, isMobile ? 280 : 320)
-        }
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-2xl mb-4">
-        <button
-          onClick={() => setIsAnimating(!isAnimating)}
-          style={{ position: 'relative', zIndex: 10 }}
-          className={`p-3 rounded-xl font-semibold transition-colors ${
-            isAnimating ? 'bg-red-600 hover:bg-red-500' : 'bg-blue-600 hover:bg-blue-500'
-          } text-white`}
-        >
-          {isAnimating ? 'Stop' : 'Animate'}
-        </button>
-
-        <button
-          onClick={() => setShowFieldLines(!showFieldLines)}
-          style={{ position: 'relative', zIndex: 10 }}
-          className={`p-3 rounded-xl font-medium transition-colors ${
-            showFieldLines ? 'bg-cyan-600' : 'bg-slate-600'
-          } text-white`}
-        >
-          Lines: {showFieldLines ? 'ON' : 'OFF'}
-        </button>
-
-        {selectedDemo === 'wire' ? (
-          <>
-            <div className="p-3 bg-slate-700/50 rounded-xl text-center">
-              <div className="text-sm text-slate-400">Current (A)</div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'rgba(148,163,184,0.7)' }}>
-                <span>Low 1</span><span>Strong 20</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="20"
-                value={wireCurrent}
-                onChange={(e) => setWireCurrent(parseFloat(e.target.value))}
-                className="w-full"
-                style={{ width: '100%', height: '20px', accentColor: '#3b82f6', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none' }}
-              />
-              <div className="text-cyan-400 font-bold">{wireCurrent.toFixed(1)}</div>
-            </div>
-
-            <div className="p-3 bg-slate-700/50 rounded-xl text-center">
-              <div className="text-sm text-slate-400">Distance (cm)</div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'rgba(148,163,184,0.7)' }}>
-                <span>Min 1</span><span>Max 20</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="20"
-                value={wireDistance * 100}
-                onChange={(e) => setWireDistance(parseFloat(e.target.value) / 100)}
-                className="w-full"
-                style={{ width: '100%', height: '20px', accentColor: '#3b82f6', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none' }}
-              />
-              <div className="text-cyan-400 font-bold">{(wireDistance * 100).toFixed(1)}</div>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="p-3 bg-slate-700/50 rounded-xl text-center">
-              <div className="text-sm text-slate-400">Current (A)</div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'rgba(148,163,184,0.7)' }}>
-                <span>Low 0.5</span><span>Strong 10</span>
-              </div>
-              <input
-                type="range"
-                min="0.5"
-                max="10"
-                step="0.5"
-                value={electromagnetCurrent}
-                onChange={(e) => setElectromagnetCurrent(parseFloat(e.target.value))}
-                className="w-full"
-                style={{ width: '100%', height: '20px', accentColor: '#3b82f6', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none' }}
-              />
-              <div className="text-cyan-400 font-bold">{electromagnetCurrent.toFixed(1)}</div>
-            </div>
-
-            <div className="p-3 bg-slate-700/50 rounded-xl text-center">
-              <div className="text-sm text-slate-400">Turns</div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'rgba(148,163,184,0.7)' }}>
-                <span>Min 10</span><span>Max 200</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="200"
-                step="10"
-                value={electromagnetCoils}
-                onChange={(e) => setElectromagnetCoils(parseInt(e.target.value))}
-                className="w-full"
-                style={{ width: '100%', height: '20px', accentColor: '#3b82f6', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none' }}
-              />
-              <div className="text-cyan-400 font-bold">{electromagnetCoils}</div>
-            </div>
-          </>
-        )}
-      </div>
-
-      <div className="bg-slate-800/70 rounded-xl p-4 max-w-2xl">
-        <h3 className="text-lg font-semibold text-cyan-400 mb-3">Key Equations:</h3>
-        <div className="grid md:grid-cols-2 gap-4 text-sm text-slate-300">
-          <div>
-            <div className="font-mono text-white bg-slate-700 px-3 py-2 rounded mb-2">B = u0*I / (2*pi*r)</div>
-            <p>Field from straight wire decreases with distance</p>
+      {/* Side-by-side layout: SVG left, Controls right */}
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '20px', width: '100%', maxWidth: '800px', alignItems: isMobile ? 'center' : 'flex-start' }}>
+        {/* SVG panel */}
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          {/* Demo selector */}
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', justifyContent: 'center' }}>
+            <button
+              onClick={() => setSelectedDemo('wire')}
+              style={{ position: 'relative', zIndex: 10 }}
+              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                selectedDemo === 'wire' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'
+              }`}
+            >
+              Straight Wire
+            </button>
+            <button
+              onClick={() => setSelectedDemo('solenoid')}
+              style={{ position: 'relative', zIndex: 10 }}
+              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                selectedDemo === 'solenoid' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'
+              }`}
+            >
+              Solenoid
+            </button>
           </div>
-          <div>
-            <div className="font-mono text-white bg-slate-700 px-3 py-2 rounded mb-2">B = u0*n*I</div>
-            <p>Solenoid field depends on turns per length</p>
+
+          <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', border: '1px solid #334155' }}>
+            {selectedDemo === 'wire'
+              ? renderFieldVisualization(isMobile ? 320 : 400, isMobile ? 280 : 320)
+              : renderSolenoidVisualization(isMobile ? 320 : 400, isMobile ? 280 : 320)
+            }
+          </div>
+        </div>
+
+        {/* Controls panel */}
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px', marginBottom: '12px' }}>
+            <button
+              onClick={() => setIsAnimating(!isAnimating)}
+              style={{ position: 'relative', zIndex: 10 }}
+              className={`p-3 rounded-xl font-semibold transition-colors ${
+                isAnimating ? 'bg-red-600 hover:bg-red-500' : 'bg-blue-600 hover:bg-blue-500'
+              } text-white`}
+            >
+              {isAnimating ? 'Stop' : 'Animate'}
+            </button>
+
+            <button
+              onClick={() => setShowFieldLines(!showFieldLines)}
+              style={{ position: 'relative', zIndex: 10 }}
+              className={`p-3 rounded-xl font-medium transition-colors ${
+                showFieldLines ? 'bg-cyan-600' : 'bg-slate-600'
+              } text-white`}
+            >
+              Lines: {showFieldLines ? 'ON' : 'OFF'}
+            </button>
+
+            {selectedDemo === 'wire' ? (
+              <>
+                <div className="p-3 bg-slate-700/50 rounded-xl text-center">
+                  <div className="text-sm text-slate-400">Current (A)</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'rgba(148,163,184,0.7)' }}>
+                    <span>Low 1</span><span>Strong 20</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="20"
+                    value={wireCurrent}
+                    onChange={(e) => setWireCurrent(parseFloat(e.target.value))}
+                    className="w-full"
+                    style={{ width: '100%', height: '20px', accentColor: '#3b82f6', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none' }}
+                  />
+                  <div className="text-cyan-400 font-bold">{wireCurrent.toFixed(1)}</div>
+                </div>
+
+                <div className="p-3 bg-slate-700/50 rounded-xl text-center">
+                  <div className="text-sm text-slate-400">Distance (cm)</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'rgba(148,163,184,0.7)' }}>
+                    <span>Min 1</span><span>Max 20</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="20"
+                    value={wireDistance * 100}
+                    onChange={(e) => setWireDistance(parseFloat(e.target.value) / 100)}
+                    className="w-full"
+                    style={{ width: '100%', height: '20px', accentColor: '#3b82f6', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none' }}
+                  />
+                  <div className="text-cyan-400 font-bold">{(wireDistance * 100).toFixed(1)}</div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="p-3 bg-slate-700/50 rounded-xl text-center">
+                  <div className="text-sm text-slate-400">Current (A)</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'rgba(148,163,184,0.7)' }}>
+                    <span>Low 0.5</span><span>Strong 10</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="10"
+                    step="0.5"
+                    value={electromagnetCurrent}
+                    onChange={(e) => setElectromagnetCurrent(parseFloat(e.target.value))}
+                    className="w-full"
+                    style={{ width: '100%', height: '20px', accentColor: '#3b82f6', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none' }}
+                  />
+                  <div className="text-cyan-400 font-bold">{electromagnetCurrent.toFixed(1)}</div>
+                </div>
+
+                <div className="p-3 bg-slate-700/50 rounded-xl text-center">
+                  <div className="text-sm text-slate-400">Turns</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'rgba(148,163,184,0.7)' }}>
+                    <span>Min 10</span><span>Max 200</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="200"
+                    step="10"
+                    value={electromagnetCoils}
+                    onChange={(e) => setElectromagnetCoils(parseInt(e.target.value))}
+                    className="w-full"
+                    style={{ width: '100%', height: '20px', accentColor: '#3b82f6', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none' }}
+                  />
+                  <div className="text-cyan-400 font-bold">{electromagnetCoils}</div>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Key equations in controls panel */}
+          <div style={{ background: 'rgba(30,41,59,0.7)', borderRadius: '12px', padding: '12px' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#22d3ee', marginBottom: '8px' }}>Key Equations:</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', color: '#cbd5e1' }}>
+              <div>
+                <div className="font-mono text-white bg-slate-700 px-3 py-2 rounded mb-1" style={{ fontSize: '12px' }}>B = u0*I / (2*pi*r)</div>
+                <p style={{ margin: 0, fontSize: '11px' }}>Wire field decreases with distance</p>
+              </div>
+              <div>
+                <div className="font-mono text-white bg-slate-700 px-3 py-2 rounded mb-1" style={{ fontSize: '12px' }}>B = u0*n*I</div>
+                <p style={{ margin: 0, fontSize: '11px' }}>Solenoid field: turns per length</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1855,73 +1865,83 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-purple-400 mb-4">Electromagnet Simulator</h2>
 
-      <div className="bg-slate-800/50 rounded-2xl p-4 mb-4">
-        {renderElectromagnetVisualization(isMobile ? 320 : 400, isMobile ? 250 : 280)}
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 w-full max-w-md mb-4">
-        <div className="p-4 bg-slate-700/50 rounded-xl text-center">
-          <div className="text-sm text-slate-400 mb-2">Current (Amperes)</div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'rgba(148,163,184,0.7)' }}>
-            <span>Zero 0</span><span>Strong 5</span>
+      {/* Side-by-side layout: SVG left, Controls right */}
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '20px', width: '100%', maxWidth: '800px', alignItems: isMobile ? 'center' : 'flex-start' }}>
+        {/* SVG panel */}
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          <div className="bg-slate-800/50 rounded-2xl p-4">
+            {renderElectromagnetVisualization(isMobile ? 320 : 400, isMobile ? 250 : 280)}
           </div>
-          <input
-            type="range"
-            min="0"
-            max="5"
-            step="0.5"
-            value={electromagnetCurrent}
-            onChange={(e) => setElectromagnetCurrent(parseFloat(e.target.value))}
-            className="w-full mb-2"
-            style={{ width: '100%', height: '20px', accentColor: '#3b82f6', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none' }}
-          />
-          <div className="text-cyan-400 font-bold text-xl">{electromagnetCurrent.toFixed(1)} A</div>
         </div>
 
-        <div className="p-4 bg-slate-700/50 rounded-xl text-center">
-          <div className="text-sm text-slate-400 mb-2">Number of Coils</div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'rgba(148,163,184,0.7)' }}>
-            <span>Min 10</span><span>Max 100</span>
+        {/* Controls panel */}
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px', marginBottom: '12px' }}>
+            <div className="p-4 bg-slate-700/50 rounded-xl text-center">
+              <div className="text-sm text-slate-400 mb-2">Current (Amperes)</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'rgba(148,163,184,0.7)' }}>
+                <span>Zero 0</span><span>Strong 5</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="5"
+                step="0.5"
+                value={electromagnetCurrent}
+                onChange={(e) => setElectromagnetCurrent(parseFloat(e.target.value))}
+                className="w-full mb-2"
+                style={{ width: '100%', height: '20px', accentColor: '#3b82f6', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none' }}
+              />
+              <div className="text-cyan-400 font-bold text-xl">{electromagnetCurrent.toFixed(1)} A</div>
+            </div>
+
+            <div className="p-4 bg-slate-700/50 rounded-xl text-center">
+              <div className="text-sm text-slate-400 mb-2">Number of Coils</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'rgba(148,163,184,0.7)' }}>
+                <span>Min 10</span><span>Max 100</span>
+              </div>
+              <input
+                type="range"
+                min="10"
+                max="100"
+                step="10"
+                value={electromagnetCoils}
+                onChange={(e) => setElectromagnetCoils(parseInt(e.target.value))}
+                className="w-full mb-2"
+                style={{ width: '100%', height: '20px', accentColor: '#3b82f6', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none' }}
+              />
+              <div className="text-cyan-400 font-bold text-xl">{electromagnetCoils} turns</div>
+            </div>
+
+            <button
+              onClick={() => setShowFieldLines(!showFieldLines)}
+              style={{ position: 'relative', zIndex: 10 }}
+              className={`p-3 rounded-xl font-medium transition-colors ${
+                showFieldLines ? 'bg-cyan-600' : 'bg-slate-600'
+              } text-white`}
+            >
+              Field Lines: {showFieldLines ? 'ON' : 'OFF'}
+            </button>
           </div>
-          <input
-            type="range"
-            min="10"
-            max="100"
-            step="10"
-            value={electromagnetCoils}
-            onChange={(e) => setElectromagnetCoils(parseInt(e.target.value))}
-            className="w-full mb-2"
-            style={{ width: '100%', height: '20px', accentColor: '#3b82f6', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none' }}
-          />
-          <div className="text-cyan-400 font-bold text-xl">{electromagnetCoils} turns</div>
+
+          {/* Explanation in controls panel */}
+          <div style={{ background: 'linear-gradient(135deg, rgba(88,28,135,0.4), rgba(157,23,77,0.4))', borderRadius: '12px', padding: '12px' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#c084fc', marginBottom: '8px' }}>What You're Seeing:</h3>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: '#cbd5e1' }}>
+              <li>- <strong>More current</strong> = stronger field</li>
+              <li>- <strong>More coils</strong> = stronger field</li>
+              <li>- <strong>Iron core</strong> concentrates field (~1000x)</li>
+              <li>- <strong>Zero current</strong> = no field</li>
+              <li>- B = u0 * n * I</li>
+            </ul>
+          </div>
         </div>
       </div>
-
-      <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-6 max-w-xl mb-6">
-        <h3 className="text-lg font-bold text-purple-400 mb-3">What You're Seeing:</h3>
-        <ul className="space-y-2 text-slate-300 text-sm">
-          <li>- <strong>More current</strong> = stronger magnetic field</li>
-          <li>- <strong>More coils</strong> = stronger magnetic field</li>
-          <li>- <strong>Iron core</strong> concentrates the field (about 1000x stronger!)</li>
-          <li>- <strong>Zero current</strong> = no magnetic field (unlike permanent magnets)</li>
-          <li>- Field strength: B = u0 * n * I</li>
-        </ul>
-      </div>
-
-      <button
-        onClick={() => setShowFieldLines(!showFieldLines)}
-        style={{ position: 'relative', zIndex: 10 }}
-        className={`mb-4 px-4 py-2 rounded-lg font-medium transition-colors ${
-          showFieldLines ? 'bg-cyan-600' : 'bg-slate-600'
-        } text-white`}
-      >
-        Field Lines: {showFieldLines ? 'ON' : 'OFF'}
-      </button>
 
       <button
         onClick={() => goToPhase('twist_review')}
         style={{ position: 'relative', zIndex: 10 }}
-        className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
+        className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
       >
         Review Electromagnets
       </button>

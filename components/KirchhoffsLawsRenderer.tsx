@@ -1046,7 +1046,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: '#e2e8f0', marginBottom: '8px', textAlign: 'center' }}>
             Interactive Circuit Lab
           </h2>
@@ -1080,131 +1080,145 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
             </p>
           </div>
 
-          {/* Main visualization */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <CircuitVisualization />
-            </div>
-
-            {/* Voltage slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Source Voltage</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{voltage}V</span>
-              </div>
-              <input
-                type="range"
-                min="5"
-                max="24"
-                value={voltage}
-                onChange={(e) => setVoltage(parseInt(e.target.value))}
-                style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
-              />
-            </div>
-
-            {/* Resistance sliders */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '20px' }}>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ ...typo.small, color: '#60a5fa' }}>R1</span>
-                  <span style={{ ...typo.small, color: '#60a5fa', fontWeight: 600 }}>{resistance1}ohm</span>
-                </div>
-                <input
-                  type="range"
-                  min="100"
-                  max="1000"
-                  step="50"
-                  value={resistance1}
-                  onChange={(e) => setResistance1(parseInt(e.target.value))}
-                  style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
-                />
-              </div>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ ...typo.small, color: '#fbbf24' }}>R2</span>
-                  <span style={{ ...typo.small, color: '#fbbf24', fontWeight: 600 }}>{resistance2}ohm</span>
-                </div>
-                <input
-                  type="range"
-                  min="100"
-                  max="1000"
-                  step="50"
-                  value={resistance2}
-                  onChange={(e) => setResistance2(parseInt(e.target.value))}
-                  style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
-                />
-              </div>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ ...typo.small, color: '#c084fc' }}>R3</span>
-                  <span style={{ ...typo.small, color: '#c084fc', fontWeight: 600 }}>{resistance3}ohm</span>
-                </div>
-                <input
-                  type="range"
-                  min="100"
-                  max="1000"
-                  step="50"
-                  value={resistance3}
-                  onChange={(e) => setResistance3(parseInt(e.target.value))}
-                  style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
-                />
-              </div>
-            </div>
-
-            {/* Show current flow button */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <button
-                onClick={() => {
-                  setShowCurrentFlow(!showCurrentFlow);
-                  playSound('click');
-                }}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: showCurrentFlow ? colors.warning : colors.bgSecondary,
-                  color: showCurrentFlow ? 'white' : '#e2e8f0',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  minHeight: '44px',
-                }}
-              >
-                {showCurrentFlow ? 'Hide Current Flow' : 'Show Current Flow'}
-              </button>
-            </div>
-
-            {/* KCL/KVL verification */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          {/* Side-by-side layout: SVG left, controls right */}
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '20px', width: '100%', alignItems: isMobile ? 'center' : 'flex-start', marginBottom: '24px' }}>
+            {/* SVG panel */}
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-                border: `1px solid ${colors.accent}`,
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
               }}>
-                <div style={{ ...typo.small, color: colors.accent, marginBottom: '4px' }}>KCL at Node A</div>
-                <div style={{ ...typo.body, color: '#e2e8f0' }}>
-                  I_total = I1 + I23 = {currents.totalCurrent.toFixed(3)}A
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <CircuitVisualization />
                 </div>
-                <div style={{ ...typo.small, color: colors.success }}>Current conserved!</div>
               </div>
+            </div>
+
+            {/* Controls panel */}
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-                border: `1px solid ${colors.warning}`,
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '20px',
               }}>
-                <div style={{ ...typo.small, color: colors.warning, marginBottom: '4px' }}>KVL around Loop</div>
-                <div style={{ ...typo.body, color: '#e2e8f0' }}>
-                  V - V_R1 = {voltage}V - {voltage}V = 0
+                {/* Voltage slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Source Voltage</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{voltage}V</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="5"
+                    max="24"
+                    value={voltage}
+                    onChange={(e) => setVoltage(parseInt(e.target.value))}
+                    style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+                  />
                 </div>
-                <div style={{ ...typo.small, color: colors.success }}>Voltage balanced!</div>
+
+                {/* Resistance sliders */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '20px' }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ ...typo.small, color: '#60a5fa' }}>R1</span>
+                      <span style={{ ...typo.small, color: '#60a5fa', fontWeight: 600 }}>{resistance1}ohm</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="100"
+                      max="1000"
+                      step="50"
+                      value={resistance1}
+                      onChange={(e) => setResistance1(parseInt(e.target.value))}
+                      style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+                    />
+                  </div>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ ...typo.small, color: '#fbbf24' }}>R2</span>
+                      <span style={{ ...typo.small, color: '#fbbf24', fontWeight: 600 }}>{resistance2}ohm</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="100"
+                      max="1000"
+                      step="50"
+                      value={resistance2}
+                      onChange={(e) => setResistance2(parseInt(e.target.value))}
+                      style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+                    />
+                  </div>
+                </div>
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ ...typo.small, color: '#c084fc' }}>R3</span>
+                    <span style={{ ...typo.small, color: '#c084fc', fontWeight: 600 }}>{resistance3}ohm</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="100"
+                    max="1000"
+                    step="50"
+                    value={resistance3}
+                    onChange={(e) => setResistance3(parseInt(e.target.value))}
+                    style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+                  />
+                </div>
+
+                {/* Show current flow button */}
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+                  <button
+                    onClick={() => {
+                      setShowCurrentFlow(!showCurrentFlow);
+                      playSound('click');
+                    }}
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: showCurrentFlow ? colors.warning : colors.bgSecondary,
+                      color: showCurrentFlow ? 'white' : '#e2e8f0',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      minHeight: '44px',
+                      width: '100%',
+                    }}
+                  >
+                    {showCurrentFlow ? 'Hide Current Flow' : 'Show Current Flow'}
+                  </button>
+                </div>
+
+                {/* KCL/KVL verification */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                    border: `1px solid ${colors.accent}`,
+                  }}>
+                    <div style={{ ...typo.small, color: colors.accent, marginBottom: '4px' }}>KCL at Node A</div>
+                    <div style={{ ...typo.body, color: '#e2e8f0', fontSize: '14px' }}>
+                      I_total = I1 + I23 = {currents.totalCurrent.toFixed(3)}A
+                    </div>
+                    <div style={{ ...typo.small, color: colors.success }}>Current conserved!</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                    border: `1px solid ${colors.warning}`,
+                  }}>
+                    <div style={{ ...typo.small, color: colors.warning, marginBottom: '4px' }}>KVL around Loop</div>
+                    <div style={{ ...typo.body, color: '#e2e8f0', fontSize: '14px' }}>
+                      V - V_R1 = {voltage}V - {voltage}V = 0
+                    </div>
+                    <div style={{ ...typo.small, color: colors.success }}>Voltage balanced!</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1478,7 +1492,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Multi-Loop Circuit Lab
           </h2>
@@ -1486,90 +1500,105 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
             See how currents from different loops combine at shared nodes
           </p>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <MultiLoopVisualization />
-            </div>
-
-            {/* Control sliders */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '20px' }}>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>V1 (Loop 1)</span>
-                  <span style={{ ...typo.small, color: '#60a5fa', fontWeight: 600 }}>{voltage}V</span>
+          {/* Side-by-side layout: SVG left, controls right */}
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '20px', width: '100%', alignItems: isMobile ? 'center' : 'flex-start', marginBottom: '24px' }}>
+            {/* SVG panel */}
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <MultiLoopVisualization />
                 </div>
-                <input
-                  type="range"
-                  min="5"
-                  max="20"
-                  value={voltage}
-                  onChange={(e) => setVoltage(parseFloat(e.target.value))}
-                  style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
-                />
-              </div>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>V2 (Loop 2)</span>
-                  <span style={{ ...typo.small, color: '#c084fc', fontWeight: 600 }}>{voltage2}V</span>
-                </div>
-                <input
-                  type="range"
-                  min="5"
-                  max="15"
-                  value={voltage2}
-                  onChange={(e) => setVoltage2(parseFloat(e.target.value))}
-                  style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
-                />
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ ...typo.small, color: '#60a5fa' }}>R1</span>
-                  <span style={{ ...typo.small, color: '#60a5fa' }}>{loopR1}ohm</span>
+            {/* Controls panel */}
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '20px',
+              }}>
+                {/* Control sliders */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '20px' }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>V1 (Loop 1)</span>
+                      <span style={{ ...typo.small, color: '#60a5fa', fontWeight: 600 }}>{voltage}V</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="5"
+                      max="20"
+                      value={voltage}
+                      onChange={(e) => setVoltage(parseFloat(e.target.value))}
+                      style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+                    />
+                  </div>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>V2 (Loop 2)</span>
+                      <span style={{ ...typo.small, color: '#c084fc', fontWeight: 600 }}>{voltage2}V</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="5"
+                      max="15"
+                      value={voltage2}
+                      onChange={(e) => setVoltage2(parseFloat(e.target.value))}
+                      style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+                    />
+                  </div>
                 </div>
-                <input type="range" min="50" max="300" step="25" value={loopR1}
-                  onChange={(e) => setLoopR1(parseInt(e.target.value))} style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }} />
-              </div>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ ...typo.small, color: '#fbbf24' }}>R2 (shared)</span>
-                  <span style={{ ...typo.small, color: '#fbbf24' }}>{loopR2}ohm</span>
-                </div>
-                <input type="range" min="50" max="300" step="25" value={loopR2}
-                  onChange={(e) => setLoopR2(parseInt(e.target.value))} style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }} />
-              </div>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ ...typo.small, color: '#c084fc' }}>R3</span>
-                  <span style={{ ...typo.small, color: '#c084fc' }}>{loopR3}ohm</span>
-                </div>
-                <input type="range" min="50" max="300" step="25" value={loopR3}
-                  onChange={(e) => setLoopR3(parseInt(e.target.value))} style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }} />
-              </div>
-            </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-              <button
-                onClick={() => { setShowMultiLoopFlow(!showMultiLoopFlow); playSound('click'); }}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: showMultiLoopFlow ? colors.warning : colors.bgSecondary,
-                  color: showMultiLoopFlow ? 'white' : colors.textSecondary,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                {showMultiLoopFlow ? 'Hide Current Flow' : 'Show Current Flow'}
-              </button>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '20px' }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ ...typo.small, color: '#60a5fa' }}>R1</span>
+                      <span style={{ ...typo.small, color: '#60a5fa' }}>{loopR1}ohm</span>
+                    </div>
+                    <input type="range" min="50" max="300" step="25" value={loopR1}
+                      onChange={(e) => setLoopR1(parseInt(e.target.value))} style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }} />
+                  </div>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ ...typo.small, color: '#fbbf24' }}>R2 (shared)</span>
+                      <span style={{ ...typo.small, color: '#fbbf24' }}>{loopR2}ohm</span>
+                    </div>
+                    <input type="range" min="50" max="300" step="25" value={loopR2}
+                      onChange={(e) => setLoopR2(parseInt(e.target.value))} style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }} />
+                  </div>
+                </div>
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ ...typo.small, color: '#c084fc' }}>R3</span>
+                    <span style={{ ...typo.small, color: '#c084fc' }}>{loopR3}ohm</span>
+                  </div>
+                  <input type="range" min="50" max="300" step="25" value={loopR3}
+                    onChange={(e) => setLoopR3(parseInt(e.target.value))} style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }} />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <button
+                    onClick={() => { setShowMultiLoopFlow(!showMultiLoopFlow); playSound('click'); }}
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: showMultiLoopFlow ? colors.warning : colors.bgSecondary,
+                      color: showMultiLoopFlow ? 'white' : colors.textSecondary,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      width: '100%',
+                    }}
+                  >
+                    {showMultiLoopFlow ? 'Hide Current Flow' : 'Show Current Flow'}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 

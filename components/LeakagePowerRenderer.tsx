@@ -753,7 +753,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
 
   // Controls for simulation
   const renderControls = () => (
-    <div style={{ padding: typo.pagePadding, display: 'flex', flexDirection: 'column', gap: typo.sectionGap, maxWidth: '500px', margin: '0 auto' }}>
+    <div style={{ padding: isMobile ? typo.pagePadding : '0', display: 'flex', flexDirection: 'column', gap: isMobile ? typo.sectionGap : '12px', maxWidth: isMobile ? '500px' : 'none', margin: '0 auto' }}>
       <div>
         <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontSize: typo.body }}>
           CPU Load: {loadPercent}%
@@ -833,8 +833,8 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
 
   // Power saving mode controls
   const renderPowerSavingControls = () => (
-    <div style={{ padding: typo.pagePadding, display: 'flex', flexDirection: 'column', gap: typo.elementGap, maxWidth: '500px', margin: '0 auto' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+    <div style={{ padding: isMobile ? typo.pagePadding : '0', display: 'flex', flexDirection: 'column', gap: isMobile ? typo.elementGap : '8px', maxWidth: isMobile ? '500px' : 'none', margin: '0 auto' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: isMobile ? '12px' : '6px' }}>
         <button
           onClick={() => { setClockGating(!clockGating); playSound('click'); }}
           style={{
@@ -1121,17 +1121,32 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
   if (phase === 'play') {
     return wrapPhaseContent(
       <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
-        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px', fontSize: typo.heading }}>Explore Power Breakdown</h2>
           <p style={{ textAlign: 'center', color: colors.textMuted, marginBottom: '24px', fontSize: typo.body }}>
             Adjust parameters and observe how power is consumed
           </p>
 
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            {renderPowerVisualization()}
-          </div>
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '20px', width: '100%', alignItems: isMobile ? 'center' : 'flex-start' }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                {renderPowerVisualization()}
+              </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {renderControls()}
 
-          {renderControls()}
+              <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '16px', borderRadius: '12px', marginTop: '12px', marginLeft: isMobile ? undefined : '0', marginRight: isMobile ? undefined : '0' }}>
+                <h3 style={{ color: colors.accent, marginBottom: '8px', fontSize: typo.small }}>Experiments to Try:</h3>
+                <ul style={{ color: colors.textSecondary, lineHeight: 1.7, paddingLeft: '16px', fontSize: typo.label }}>
+                  <li>Set load to 0% - notice power is NOT zero</li>
+                  <li>Increase temperature - watch leakage power explode</li>
+                  <li>Decrease process node - smaller = more leakage</li>
+                  <li>Reduce voltage - see V^2 effect on dynamic power</li>
+                </ul>
+              </div>
+            </div>
+          </div>
 
           {/* Before vs After comparison */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '16px' }}>
@@ -1143,16 +1158,6 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
               <div style={{ color: colors.static, fontWeight: 700, fontSize: typo.small, marginBottom: '6px' }}>After: 0% Load</div>
               <div style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.5 }}>Leakage becomes dominant. Power is NOT zero &mdash; never will be!</div>
             </div>
-          </div>
-
-          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginTop: '16px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px', fontSize: typo.body }}>Experiments to Try:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', fontSize: typo.body }}>
-              <li>Set load to 0% - notice power is NOT zero</li>
-              <li>Increase temperature - watch leakage power explode</li>
-              <li>Decrease process node - smaller = more leakage</li>
-              <li>Reduce voltage - see V^2 effect on dynamic power</li>
-            </ul>
           </div>
 
           <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '20px', borderRadius: '12px', marginTop: '16px', borderLeft: `4px solid ${colors.accent}` }}>
@@ -1323,17 +1328,22 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
   if (phase === 'twist_play') {
     return wrapPhaseContent(
       <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
-        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '8px', fontSize: typo.heading }}>Power-Saving Modes</h2>
           <p style={{ textAlign: 'center', color: colors.textMuted, marginBottom: '24px', fontSize: typo.body }}>
             Toggle each mode and observe the effect on power consumption
           </p>
 
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            {renderPowerVisualization()}
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '20px', width: '100%', alignItems: isMobile ? 'center' : 'flex-start' }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                {renderPowerVisualization()}
+              </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {renderPowerSavingControls()}
+            </div>
           </div>
-
-          {renderPowerSavingControls()}
 
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '12px', marginTop: '16px' }}>
             <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px' }}>
