@@ -785,7 +785,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto' }}>
             {/* Hero */}
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
@@ -813,10 +813,10 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
+              padding: '16px',
               border: `1px solid ${colors.border}`,
               textAlign: 'center',
-              marginBottom: '24px',
+              marginBottom: '20px',
             }}>
               {renderRocketSVG()}
               <p style={{ ...typo.small, color: colors.textMuted, marginTop: '12px' }}>
@@ -826,7 +826,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
             </div>
 
             {/* Key insight cards */}
-            <div style={{ display: 'grid', gap: '12px', marginBottom: '24px' }}>
+            <div style={{ display: 'grid', gap: '12px', marginBottom: '20px' }}>
               {[
                 {
                   title: 'The Mass Fraction Challenge',
@@ -910,7 +910,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <div style={{
@@ -937,7 +937,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
               borderRadius: '16px',
               padding: '20px',
               border: `1px solid ${colors.border}`,
-              marginBottom: '24px',
+              marginBottom: '20px',
             }}>
               <div style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '8px' }}>Context</div>
               <p style={{ ...typo.small, color: colors.textSecondary, margin: '0 0 8px 0' }}>
@@ -1025,7 +1025,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <div style={{
@@ -1052,7 +1052,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
+              padding: '16px',
               border: `1px solid ${colors.border}`,
               marginBottom: '20px',
             }}>
@@ -1118,6 +1118,8 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
               border: `1px solid ${colors.border}`,
               textAlign: 'center',
               marginBottom: '20px',
+              maxHeight: '50vh',
+              overflow: 'hidden',
             }}>
               <div style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>Rocket Cross-Section</div>
               {renderRocketSVG()}
@@ -1210,7 +1212,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <div style={{
@@ -1365,7 +1367,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <div style={{
@@ -1393,7 +1395,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
               borderRadius: '16px',
               padding: '20px',
               border: `1px solid ${colors.border}`,
-              marginBottom: '24px',
+              marginBottom: '20px',
             }}>
               <div style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '8px' }}>The Hydrogen Challenge</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -1479,7 +1481,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <div style={{
@@ -1498,6 +1500,22 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
               <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
                 Now using LH2/LOX (Isp = 450s). Notice how the fuel tank is much larger
                 and how the higher Isp affects delta-v at each mass fraction.
+              </p>
+            </div>
+
+            {/* Educational panel */}
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}>
+                <strong style={{ color: colors.accent }}>What you&apos;re seeing:</strong> Switching from RP-1 kerosene to liquid hydrogen dramatically changes the rocket&apos;s tank geometry and structural demands. The hydrogen tank must be ~12x larger by volume, increasing wall thickness and insulation mass under extreme cryogenic conditions (-253&deg;C).
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}>
+                <strong style={{ color: colors.success }}>Cause and Effect:</strong> As you adjust the structural mass fraction slider and toggle between propellants, observe how the higher Isp of hydrogen boosts delta-v while the enormous tank volume penalizes structural mass -- revealing why many rockets use kerosene first stages with hydrogen upper stages.
               </p>
             </div>
 
@@ -1548,7 +1566,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
+              padding: '16px',
               border: `1px solid ${colors.border}`,
               marginBottom: '20px',
             }}>
@@ -1607,6 +1625,8 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
               border: `1px solid ${colors.border}`,
               textAlign: 'center',
               marginBottom: '20px',
+              maxHeight: '50vh',
+              overflow: 'hidden',
             }}>
               <div style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '8px' }}>
                 {useLH2 ? 'LH2/LOX Rocket (Larger Tanks!)' : 'RP-1/LOX Rocket'}
@@ -1676,7 +1696,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <div style={{
@@ -1814,7 +1834,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <div style={{
@@ -1888,7 +1908,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
+              padding: '16px',
               border: `1px solid ${app.color}40`,
               marginBottom: '16px',
             }}>
@@ -1986,11 +2006,17 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
               {!completedApps[selectedApp] && (
                 <button
                   onClick={() => {
-                    playSound('success');
-                    const updated = [...completedApps];
-                    updated[selectedApp] = true;
-                    setCompletedApps(updated);
+                    playSound('click');
+                    const newCompleted = [...completedApps];
+                    newCompleted[selectedApp] = true;
+                    setCompletedApps(newCompleted);
                     emitEvent('button_clicked', { action: 'app_completed', app: app.title });
+                    const nextIdx = newCompleted.findIndex(c => !c);
+                    if (nextIdx === -1) {
+                      setTimeout(() => goToPhase('test'), 400);
+                    } else {
+                      setSelectedApp(nextIdx);
+                    }
                   }}
                   style={{
                     ...primaryButtonStyle,
@@ -2082,7 +2108,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
       return (
         <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {renderProgressBar()}
-          <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+          <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
             <div style={{ maxWidth: '640px', margin: '0 auto' }}>
               {currentQuestion === 0 && !testAnswers[0] && (
                 <>
@@ -2242,7 +2268,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <div style={{
@@ -2373,7 +2399,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
     return (
       <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <div style={{
@@ -2406,9 +2432,9 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
+              padding: '16px',
               border: `1px solid ${colors.accent}40`,
-              marginBottom: '24px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
@@ -2428,7 +2454,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
             </div>
 
             {/* Learning points */}
-            <div style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: '20px' }}>
               <div style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
                 Key Takeaways
               </div>
@@ -2457,7 +2483,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
+              padding: '16px',
               border: `1px solid ${colors.border}`,
               textAlign: 'center',
               marginBottom: '16px',
@@ -2482,7 +2508,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
             <div style={{
               background: `linear-gradient(135deg, ${colors.accent}15, ${colors.success}15)`,
               borderRadius: '16px',
-              padding: '24px',
+              padding: '16px',
               border: `1px solid ${colors.accent}30`,
               textAlign: 'center',
             }}>

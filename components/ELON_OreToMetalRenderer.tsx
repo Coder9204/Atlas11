@@ -869,10 +869,10 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -881,7 +881,7 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
         }}>
           <div style={{
             fontSize: '64px',
-            marginBottom: '24px',
+            marginBottom: '20px',
             animation: 'pulse 2s infinite',
           }}>
             {'\u26CF\uFE0F\uD83D\uDD25'}
@@ -905,8 +905,8 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '32px',
+            padding: '16px',
+            marginBottom: '20px',
             maxWidth: '500px',
             border: `1px solid ${colors.border}`,
           }}>
@@ -971,17 +971,17 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
               background: `${colors.accent}22`,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.accent}44`,
             }}>
               <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
@@ -989,7 +989,7 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
               </p>
             </div>
 
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '20px' }}>
               To produce 1 ton of copper, how much ore must be processed?
             </h2>
 
@@ -997,8 +997,8 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}>
               <svg width="100%" height="200" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: 400 }}>
@@ -1117,10 +1117,10 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1145,7 +1145,7 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
               background: colors.bgCard,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.border}`,
             }}>
               <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
@@ -1168,10 +1168,10 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
                 <OreProcessVisualization />
               </div>
 
@@ -1284,16 +1284,16 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '12px', textAlign: 'center' }}>
               The Scale of Ore Processing
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '20px' }}>
               {prediction === 'c'
                 ? 'Correct! Your prediction was right — at typical grades of 0.5%, about 200 tonnes of ore must be crushed, ground, and processed to yield just 1 tonne of copper.'
                 : 'As you explored in the experiment, the result confirms that about 200 tonnes of ore are needed. Your observation from the simulator shows that at typical modern grades of 0.5% Cu, with 85% recovery, approximately 200 tonnes of rock must be processed for every tonne of copper produced.'}
@@ -1302,8 +1302,8 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               <div style={{ ...typo.body, color: colors.textSecondary }}>
                 <p style={{ marginBottom: '16px' }}>
@@ -1323,7 +1323,7 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
               border: `1px solid ${colors.accent}33`,
               borderRadius: '12px',
               padding: '20px',
-              marginBottom: '24px',
+              marginBottom: '20px',
             }}>
               <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
                 The Processing Stages
@@ -1337,7 +1337,7 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
               background: colors.bgCard,
               borderRadius: '12px',
               padding: '20px',
-              marginBottom: '24px',
+              marginBottom: '20px',
             }}>
               <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '12px' }}>
                 Energy Breakdown by Stage
@@ -1417,17 +1417,17 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
               background: `${colors.warning}22`,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginBottom: '20px',
               border: `1px solid ${colors.warning}44`,
             }}>
               <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
@@ -1435,7 +1435,7 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
               </p>
             </div>
 
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '20px' }}>
               Bioleaching uses bacteria instead of smelting to extract copper from ore. The tradeoff is...
             </h2>
 
@@ -1443,8 +1443,8 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
               textAlign: 'center',
             }}>
               <svg width="100%" height="140" viewBox="0 0 400 140" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: 400 }}>
@@ -1577,28 +1577,44 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Bioleaching vs Smelting Explorer
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '20px' }}>
               Explore the tradeoff between energy use and processing time
             </p>
 
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              padding: '16px',
+              marginBottom: '20px',
             }}>
               {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', maxHeight: '50vh', overflow: 'hidden' }}>
                 <BioleachVisualization />
+              </div>
+
+              {/* Educational panel */}
+              <div style={{
+                background: `${colors.accent}11`,
+                border: `1px solid ${colors.accent}33`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <p style={{ ...typo.body, color: colors.textSecondary, lineHeight: '1.6' }}>
+                  <strong style={{ color: colors.accent }}>What you're seeing:</strong> The visualization compares conventional smelting at 1250C against bioleaching, where bacteria dissolve copper from ore at ambient temperature over months rather than hours.
+                </p>
+                <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', lineHeight: '1.6' }}>
+                  <strong style={{ color: colors.success }}>Cause and Effect:</strong> As you shift the slider toward bioleaching, energy consumption drops dramatically (up to 90%) but processing time extends from hours to months — revealing the fundamental speed-vs-efficiency tradeoff in metallurgy.
+                </p>
               </div>
 
               {/* Bioleach proportion slider */}
@@ -1717,13 +1733,13 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '20px', textAlign: 'center' }}>
               The Bioleaching Revolution
             </h2>
 
@@ -1801,10 +1817,10 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1813,7 +1829,7 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
             <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
               Explore each application to continue
             </p>
-            <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '24px', fontWeight: 600 }}>
+            <p style={{ ...typo.small, color: colors.accent, textAlign: 'center', marginBottom: '20px', fontWeight: 600 }}>
               Application {completedApps.filter(c => c).length + 1} of {realWorldApps.length}
             </p>
 
@@ -1822,7 +1838,7 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
               <div key={idx} style={{
                 background: colors.bgCard,
                 borderRadius: '16px',
-                padding: '24px',
+                padding: '16px',
                 marginBottom: '16px',
                 borderLeft: `4px solid ${app.color}`,
               }}>
@@ -1863,7 +1879,12 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
                       const newCompleted = [...completedApps];
                       newCompleted[idx] = true;
                       setCompletedApps(newCompleted);
-                      setSelectedApp(idx);
+                      const nextIdx = newCompleted.findIndex(c => !c);
+                      if (nextIdx === -1) {
+                        setTimeout(() => goToPhase('test'), 400);
+                      } else {
+                        setSelectedApp(nextIdx);
+                      }
                     }}
                     style={{
                       background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
@@ -1933,13 +1954,13 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
           <div style={{
             flex: '1 1 0%',
             overflowY: 'auto',
-            paddingTop: '48px',
-            paddingBottom: '100px',
-            paddingLeft: '24px',
-            paddingRight: '24px',
+            paddingTop: '44px',
+            paddingBottom: '80px',
+            paddingLeft: '16px',
+            paddingRight: '16px',
           }}>
             <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-              <div style={{ fontSize: '80px', marginBottom: '24px' }}>
+              <div style={{ fontSize: '80px', marginBottom: '20px' }}>
                 {passed ? '\uD83C\uDFC6' : '\uD83D\uDCDA'}
               </div>
               <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
@@ -1999,16 +2020,16 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Knowledge Test: Ore to Metal
             </h2>
-            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '20px' }}>
               Apply your understanding of ore processing, comminution energy, flotation vs leaching, electrorefining, tailings management, and water intensity. Consider the mass balance relationships and the impact of declining ore grades as you work through each scenario.
             </p>
             {/* Progress */}
@@ -2179,17 +2200,17 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
-          paddingBottom: '100px',
-          paddingLeft: '24px',
-          paddingRight: '24px',
+          paddingTop: '44px',
+          paddingBottom: '80px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           textAlign: 'center',
         }}>
-          <div style={{ fontSize: '100px', marginBottom: '24px', animation: 'bounce 1s infinite' }}>
+          <div style={{ fontSize: '100px', marginBottom: '20px', animation: 'bounce 1s infinite' }}>
             {'\uD83C\uDFC6'}
           </div>
           <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
@@ -2205,8 +2226,8 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '32px',
+            padding: '16px',
+            marginBottom: '20px',
             maxWidth: '400px',
           }}>
             <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
