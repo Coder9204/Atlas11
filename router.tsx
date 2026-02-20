@@ -7,11 +7,15 @@ const PricingPage = lazy(() => import('./components/PricingPage'));
 const GamesPage = lazy(() => import('./components/GamesPage'));
 const OnboardingFlow = lazy(() => import('./components/OnboardingFlow'));
 const ProgressDashboard = lazy(() => import('./components/ProgressDashboard'));
+const LearningPathPage = lazy(() => import('./components/LearningPathPage'));
+const CustomGameBuilder = lazy(() => import('./components/CustomGameBuilder'));
+const AdminPanel = lazy(() => import('./components/AdminPanel'));
 
-// Lazy load all game renderers for code splitting
+// Lazy load GameShell and all game renderers for code splitting
+const GameShellModule = () => import('./components/GameShell');
 const gameModules = import.meta.glob('./components/*Renderer.tsx');
 
-// Generate routes dynamically from game renderers
+// Generate routes dynamically from game renderers — wrapped in GameShell
 const gameRoutes = Object.keys(gameModules).map((path) => {
   const name = path.replace('./components/', '').replace('Renderer.tsx', '');
   const slug = name.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '');
@@ -19,8 +23,19 @@ const gameRoutes = Object.keys(gameModules).map((path) => {
   return {
     path: `/games/${slug}`,
     lazy: async () => {
-      const module = await gameModules[path]() as { default: React.ComponentType };
-      return { Component: module.default };
+      const [rendererMod, shellMod] = await Promise.all([
+        gameModules[path]() as Promise<{ default: React.ComponentType }>,
+        GameShellModule(),
+      ]);
+      const Renderer = rendererMod.default;
+      const GameShell = shellMod.default;
+      return {
+        Component: () => (
+          <GameShell>
+            <Renderer />
+          </GameShell>
+        ),
+      };
     },
   };
 });
@@ -85,6 +100,30 @@ export const router = createBrowserRouter([
     element: (
       <Suspense fallback={<PageLoader />}>
         <ProgressDashboard />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/paths',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <LearningPathPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/build',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <CustomGameBuilder />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/admin',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <AdminPanel />
       </Suspense>
     ),
   },

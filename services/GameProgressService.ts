@@ -29,6 +29,13 @@ export interface GameRecord {
   lastPlayedAt: number;
   timeSpentMs: number;
   attempts: number;
+  // SM-2 spaced repetition fields
+  nextReviewDate: number | null;
+  easeFactor: number;
+  consecutiveCorrect: number;
+  // Grading
+  letterGrade: string;
+  masteryLabel: string;
 }
 
 export interface AnalyticsSummary {
@@ -143,6 +150,11 @@ export function saveGameProgress(slug: string, updates: Partial<GameRecord>): vo
     lastPlayedAt: now,
     timeSpentMs: 0,
     attempts: 0,
+    nextReviewDate: null,
+    easeFactor: 2.5,
+    consecutiveCorrect: 0,
+    letterGrade: '',
+    masteryLabel: '',
     ...existing,
     ...updates,
   };

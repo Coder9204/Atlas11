@@ -6,6 +6,9 @@
  * useGameProgress(slug, category?, difficulty?)
  *   - Tracks progress for a single game session
  *   - Provides phase updates, test submission, and time tracking
+ *   - Difficulty-adaptive pass thresholds (beginner:60, intermediate:70, advanced:80)
+ *   - SM-2 spaced repetition integration
+ *   - Letter grades and mastery level labels
  *
  * useAnalytics()
  *   - Provides aggregate analytics summary across all games
@@ -19,9 +22,47 @@ import {
   getAllGameProgress,
   getAnalyticsSummary,
   recordActivity,
+  getLearnerProfile,
   GameRecord,
   AnalyticsSummary,
 } from '../services/GameProgressService';
+import { PASS_THRESHOLDS } from '../components/GameShell';
+import { LearningScienceEngine } from '../services/LearningScienceEngine';
+import { trackGameTestSubmitted, trackGamePhaseEntered, trackGamePhaseCompleted } from '../services/AnalyticsService';
+import type { Concept } from '../types';
+
+// ============================================================
+// GRADING HELPERS
+// ============================================================
+
+/** Returns a letter grade for a mastery percentage. */
+export function getLetterGrade(mastery: number): string {
+  if (mastery >= 90) return 'A';
+  if (mastery >= 80) return 'B';
+  if (mastery >= 70) return 'C';
+  if (mastery >= 60) return 'D';
+  return 'F';
+}
+
+/** Returns a human-readable mastery level label. */
+export function getMasteryLabel(mastery: number): string {
+  if (mastery >= 96) return 'Master';
+  if (mastery >= 81) return 'Expert';
+  if (mastery >= 61) return 'Proficient';
+  if (mastery >= 31) return 'Developing';
+  return 'Novice';
+}
+
+/** Returns the pass threshold for the current learner's difficulty level. */
+function getPassThreshold(): number {
+  try {
+    const profile = getLearnerProfile();
+    const level = profile?.level || 'intermediate';
+    return PASS_THRESHOLDS[level] || 70;
+  } catch {
+    return 70;
+  }
+}
 
 // ============================================================
 // useGameProgress
@@ -75,10 +116,17 @@ export function useGameProgress(
 
   /**
    * Save the current phase. If phase is 'mastery', also sets completedAt.
+   * Tracks phase transitions via AnalyticsService.
    */
   const updatePhase = useCallback(
     (phase: string) => {
       try {
+        // Track previous phase completion and new phase entry
+        if (record?.lastPhase && record.lastPhase !== phase) {
+          trackGamePhaseCompleted(slug, record.lastPhase);
+        }
+        trackGamePhaseEntered(slug, phase);
+
         const updates: Partial<GameRecord> = {
           lastPhase: phase,
           category: category || record?.category || '',
@@ -102,7 +150,9 @@ export function useGameProgress(
   /**
    * Submit test results:
    * - Calculates masteryLevel as Math.round((score / total) * 100)
-   * - Sets passed to true if mastery >= 70
+   * - Uses difficulty-adaptive pass threshold from learner profile
+   * - Computes letter grade (A-F) and mastery label
+   * - Runs SM-2 spaced repetition to compute next review date
    * - Increments attempts count
    * - Sets completedAt if not already set
    */
@@ -110,8 +160,27 @@ export function useGameProgress(
     (score: number, total: number) => {
       try {
         const masteryLevel = total > 0 ? Math.round((score / total) * 100) : 0;
-        const passed = masteryLevel >= 70;
+        const threshold = getPassThreshold();
+        const passed = masteryLevel >= threshold;
         const currentAttempts = record?.attempts ?? 0;
+        const letterGrade = getLetterGrade(masteryLevel);
+        const masteryLabel = getMasteryLabel(masteryLevel);
+
+        // SM-2 integration: compute next review schedule
+        const performanceRating = masteryToSM2Rating(masteryLevel);
+        const concept: Concept = {
+          id: slug,
+          name: slug,
+          mastery: record?.masteryLevel || 0,
+          exposure: record?.passed ? 'practiced' : 'explained',
+          lastReviewed: record?.lastPlayedAt || Date.now(),
+          nextReview: record?.nextReviewDate || Date.now(),
+          prerequisites: [],
+          easeFactor: record?.easeFactor ?? 2.5,
+          consecutiveCorrect: record?.consecutiveCorrect ?? 0,
+        };
+
+        const updatedConcept = LearningScienceEngine.calculateNextReview(concept, performanceRating);
 
         const updates: Partial<GameRecord> = {
           testScore: score,
@@ -121,6 +190,11 @@ export function useGameProgress(
           attempts: currentAttempts + 1,
           category: category || record?.category || '',
           difficulty: difficulty || record?.difficulty || '',
+          letterGrade,
+          masteryLabel,
+          nextReviewDate: updatedConcept.nextReview,
+          easeFactor: updatedConcept.easeFactor || 2.5,
+          consecutiveCorrect: updatedConcept.consecutiveCorrect || 0,
         };
 
         // Set completedAt on first completion
@@ -131,6 +205,9 @@ export function useGameProgress(
         saveGameProgress(slug, updates);
         const updated = getGameProgress(slug);
         setRecord(updated);
+
+        // Track analytics
+        trackGameTestSubmitted(slug, score, total, passed);
       } catch {
         // Silently fail
       }
@@ -177,6 +254,18 @@ export function useGameProgress(
     startTimer,
     stopTimer,
   };
+}
+
+/**
+ * Converts mastery percentage (0-100) to SM-2 performance rating (0-5).
+ */
+function masteryToSM2Rating(mastery: number): number {
+  if (mastery >= 95) return 5;
+  if (mastery >= 80) return 4;
+  if (mastery >= 60) return 3;
+  if (mastery >= 40) return 2;
+  if (mastery >= 20) return 1;
+  return 0;
 }
 
 // ============================================================

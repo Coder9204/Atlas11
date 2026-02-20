@@ -756,8 +756,9 @@ const GamesPage: React.FC = () => {
           <span style={{ fontSize: '18px', fontWeight: 700, color: colors.textPrimary }}>Atlas Coach</span>
         </a>
         <nav style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+          <a href="/paths" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>Learning Paths</a>
           <a href="/progress" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>My Progress</a>
-          <a href="/pricing" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>Pricing</a>
+          <a href="/build" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>Build</a>
           <button style={{
             background: colors.accent, color: 'white', border: 'none',
             padding: '8px 18px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '14px',

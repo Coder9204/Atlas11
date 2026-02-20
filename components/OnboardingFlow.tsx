@@ -2,6 +2,13 @@
 
 import React, { useState, useCallback, useMemo } from 'react';
 import { saveLearnerProfile as saveProfile } from '../services/GameProgressService';
+import { createPathFromTemplate } from '../services/LearningPathService';
+import {
+  trackOnboardingStarted,
+  trackOnboardingStepCompleted,
+  trackOnboardingCompleted,
+  trackPathEnrolled,
+} from '../services/AnalyticsService';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ONBOARDING FLOW - 4-step onboarding for Atlas Coach learning platform
@@ -310,15 +317,24 @@ const OnboardingFlow: React.FC = () => {
   const [level, setLevel] = useState('intermediate');
   const [transitioning, setTransitioning] = useState(false);
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const [trackedStart, setTrackedStart] = useState(false);
 
-  // Animate step transitions
+  // Track onboarding start once
+  if (!trackedStart) {
+    trackOnboardingStarted();
+    setTrackedStart(true);
+  }
+
+  // Animate step transitions + track step completion
   const goToStep = useCallback((nextStep: number) => {
+    const stepNames = ['', 'goals', 'interests', 'level', 'recommendations'];
+    trackOnboardingStepCompleted(step, stepNames[step] || `step_${step}`);
     setTransitioning(true);
     setTimeout(() => {
       setStep(nextStep);
       setTransitioning(false);
     }, 250);
-  }, []);
+  }, [step]);
 
   // Toggle multi-select
   const toggleSelection = useCallback((list: string[], setList: React.Dispatch<React.SetStateAction<string[]>>, item: string) => {
@@ -352,37 +368,102 @@ const OnboardingFlow: React.FC = () => {
     return results;
   }, [interests, level]);
 
-  // Save profile and navigate
+  // Save profile, auto-create paths, and navigate
   const completeOnboarding = useCallback((targetUrl: string) => {
-    saveLearnerProfileLocal({
+    const profileInterests = interests.length > 0 ? interests : Object.keys(categories);
+    const profile = {
       goals,
-      interests: interests.length > 0 ? interests : Object.keys(categories),
+      interests: profileInterests,
       level,
       completedOnboarding: true,
       createdAt: Date.now(),
-    });
-    window.location.href = targetUrl;
+    };
+    saveLearnerProfileLocal(profile);
+
+    // Track completion
+    trackOnboardingCompleted({ goals, interests: profileInterests, level });
+
+    // Auto-generate 1-3 learning paths from best-matching templates
+    try {
+      import('../src/data/pathTemplates').then(mod => {
+        const templates = mod.pathTemplates || mod.default || [];
+        if (templates.length === 0) {
+          window.location.href = targetUrl;
+          return;
+        }
+
+        // Score templates by interest + difficulty match
+        const scored = templates.map((t: { id: string; title: string; category: string; difficulty: string; gameSequence: string[] }) => {
+          let score = 0;
+          // Interest match
+          if (profileInterests.some((i: string) =>
+            t.category.toLowerCase().includes(i.toLowerCase()) ||
+            i.toLowerCase().includes(t.category.toLowerCase())
+          )) {
+            score += 30;
+          }
+          // Difficulty match (non-overlapping bonuses)
+          if (t.difficulty === level) {
+            score += 20;
+          } else if (
+            (level === 'intermediate' && t.difficulty === 'beginner') ||
+            (level === 'advanced' && t.difficulty === 'intermediate')
+          ) {
+            score += 5; // Adjacent difficulty level
+          }
+          return { template: t, score };
+        });
+
+        scored.sort((a: { score: number }, b: { score: number }) => b.score - a.score);
+
+        // Create top 1-3 paths (at least 1, up to 3 if they score well)
+        const topTemplates = scored.slice(0, 3).filter((s: { score: number }) => s.score > 0);
+        const toCreate = topTemplates.length > 0 ? topTemplates : scored.slice(0, 1);
+
+        for (const { template } of toCreate) {
+          const path = createPathFromTemplate(
+            template.id,
+            template.title,
+            template.gameSequence,
+            template.difficulty as 'beginner' | 'intermediate' | 'advanced'
+          );
+          trackPathEnrolled(path.id, template.id);
+        }
+
+        // Redirect to /paths so user sees their personalized curriculum
+        window.location.href = '/paths';
+      }).catch(() => {
+        window.location.href = targetUrl;
+      });
+    } catch {
+      window.location.href = targetUrl;
+    }
   }, [goals, interests, level]);
 
   // ─────────────────────────────────────────────────────────────────────────
   // Progress dots
   // ─────────────────────────────────────────────────────────────────────────
   const ProgressDots = () => (
-    <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '40px' }}>
-      {[1, 2, 3, 4].map(i => (
-        <div
-          key={i}
-          style={{
-            width: '10px',
-            height: '10px',
-            borderRadius: '50%',
-            background: i <= step ? theme.accent : theme.border,
-            transition: 'background 0.3s ease',
-            cursor: i < step ? 'pointer' : 'default',
-          }}
-          onClick={() => { if (i < step) goToStep(i); }}
-        />
-      ))}
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', marginBottom: '40px' }}>
+      <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+        {[1, 2, 3, 4].map(i => (
+          <div
+            key={i}
+            style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              background: i <= step ? theme.accent : theme.border,
+              transition: 'background 0.3s ease',
+              cursor: i < step ? 'pointer' : 'default',
+            }}
+            onClick={() => { if (i < step) goToStep(i); }}
+          />
+        ))}
+      </div>
+      <span style={{ fontSize: '12px', color: theme.textMuted, fontFamily: theme.fontStack }}>
+        Step {step} of 4
+      </span>
     </div>
   );
 
@@ -518,6 +599,51 @@ const OnboardingFlow: React.FC = () => {
         onClick={() => goToStep(2)}
         disabled={goals.length === 0}
       />
+      <button
+        onClick={() => {
+          // Quick Start: skip onboarding, create beginner profile + path, jump into first game
+          const quickInterests = Object.keys(categories);
+          saveLearnerProfileLocal({
+            goals: ['curiosity'],
+            interests: quickInterests,
+            level: 'beginner',
+            completedOnboarding: true,
+            createdAt: Date.now(),
+          });
+          trackOnboardingCompleted({ goals: ['curiosity'], interests: quickInterests, level: 'beginner', quickStart: true });
+          // Auto-create a beginner path so /paths isn't empty
+          try {
+            import('../src/data/pathTemplates').then(mod => {
+              const templates = mod.pathTemplates || mod.default || [];
+              const beginnerTemplate = templates.find((t: { difficulty: string }) => t.difficulty === 'beginner') || templates[0];
+              if (beginnerTemplate) {
+                const path = createPathFromTemplate(
+                  beginnerTemplate.id,
+                  beginnerTemplate.title,
+                  beginnerTemplate.gameSequence,
+                  'beginner'
+                );
+                trackPathEnrolled(path.id, beginnerTemplate.id);
+              }
+            }).catch(() => {});
+          } catch {}
+          window.location.href = '/games/pendulum-period';
+        }}
+        style={{
+          display: 'block',
+          margin: '16px auto 0',
+          padding: '10px 24px',
+          background: 'transparent',
+          color: theme.textMuted,
+          border: 'none',
+          fontSize: '13px',
+          fontFamily: theme.fontStack,
+          cursor: 'pointer',
+          textDecoration: 'underline',
+        }}
+      >
+        Skip setup, jump into a game
+      </button>
     </div>
   );
 
@@ -871,8 +997,8 @@ const OnboardingFlow: React.FC = () => {
 
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
         <PrimaryButton
-          label="Browse All Games →"
-          onClick={() => completeOnboarding('/games')}
+          label="Start My Paths →"
+          onClick={() => completeOnboarding('/paths')}
         />
         <button
           onClick={() => {
