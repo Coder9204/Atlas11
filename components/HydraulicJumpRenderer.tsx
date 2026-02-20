@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // GAME 107: HYDRAULIC JUMP
@@ -1416,6 +1417,19 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (validPhase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Hydraulic Jump"
+        applications={transferApplications}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+      />
+    );
+  }
+
   if (validPhase === 'transfer') {
     const allCompleted = transferCompleted.size >= transferApplications.length;
 

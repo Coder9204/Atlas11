@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // =============================================================================
 // DISPERSION RENDERER - THE CD RAINBOW
@@ -1305,6 +1306,20 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
         </div>
         {renderBottomBar(true, true, 'See Real-World Applications →')}
       </div>
+    );
+  }
+
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Dispersion"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
     );
   }
 

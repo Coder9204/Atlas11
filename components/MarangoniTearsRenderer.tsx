@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // GAME 108: MARANGONI TEARS OF WINE
@@ -1576,6 +1577,19 @@ const MarangoniTearsRenderer: React.FC<MarangoniTearsRendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Marangoni Tears"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const allCompleted = transferCompleted.size >= transferApplications.length;
 

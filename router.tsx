@@ -5,6 +5,8 @@ import App from './App';
 // Lazy load pages for code splitting
 const PricingPage = lazy(() => import('./components/PricingPage'));
 const GamesPage = lazy(() => import('./components/GamesPage'));
+const OnboardingFlow = lazy(() => import('./components/OnboardingFlow'));
+const ProgressDashboard = lazy(() => import('./components/ProgressDashboard'));
 
 // Lazy load all game renderers for code splitting
 const gameModules = import.meta.glob('./components/*Renderer.tsx');
@@ -67,6 +69,22 @@ export const router = createBrowserRouter([
     element: (
       <Suspense fallback={<PageLoader />}>
         <GamesPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/onboarding',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <OnboardingFlow />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/progress',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <ProgressDashboard />
       </Suspense>
     ),
   },

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
@@ -1777,6 +1778,19 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Hotspots"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>

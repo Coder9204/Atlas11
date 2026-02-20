@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 type GameEventType =
   | 'phase_change'
@@ -2729,6 +2730,17 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
         {phase === 'twist_predict' && renderTwistPredictPhase()}
         {phase === 'twist_play' && renderTwistPlayPhase()}
         {phase === 'twist_review' && renderTwistReviewPhase()}
+        {phase === 'transfer' && (
+          <TransferPhaseView
+            conceptName="Eddy Currents"
+            applications={realWorldApps}
+            onComplete={() => goToPhase('test')}
+            isMobile={isMobile}
+            colors={colors}
+            typo={typo}
+            playSound={playSound}
+          />
+        )}
         {phase === 'transfer' && renderTransferPhase()}
         {phase === 'test' && renderTestPhase()}
         {phase === 'mastery' && renderMasteryPhase()}

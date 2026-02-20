@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 const realWorldApps = [
    {
@@ -1288,6 +1289,19 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Silicon Texturing"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     return (
       <div style={{ height: '100dvh', minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>

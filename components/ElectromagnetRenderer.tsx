@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES & INTERFACES
@@ -2148,6 +2149,20 @@ export default function ElectromagnetRenderer({
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
+      if (phase === 'transfer') {
+        return (
+          <TransferPhaseView
+            conceptName="Electromagnet"
+            applications={realWorldApps}
+            onComplete={() => goToPhase('test')}
+            isMobile={isMobile}
+            colors={colors}
+            typo={typo}
+            playSound={playSound}
+          />
+        );
+      }
+
       case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();

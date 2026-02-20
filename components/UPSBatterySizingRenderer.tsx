@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // -----------------------------------------------------------------------------
 // UPS Battery Sizing - Complete 10-Phase Game
@@ -1454,6 +1455,20 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="U P S Battery Sizing"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);

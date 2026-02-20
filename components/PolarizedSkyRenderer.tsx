@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // -----------------------------------------------------------------------------
 // Polarized Sky - Complete 10-Phase Game
@@ -1582,6 +1583,20 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Polarized Sky"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const completedCount = completedApps.filter(Boolean).length;

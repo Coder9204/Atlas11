@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -1514,6 +1515,19 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="C M P Planarization"
+        applications={transferApplications}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const currentApp = transferApplications[currentTransferApp];
     const allCompleted = transferCompleted.size >= transferApplications.length;

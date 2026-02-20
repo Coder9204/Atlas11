@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Html, Billboard, Line, Sphere } from '@react-three/drei';
 import * as THREE from 'three';
+import TransferPhaseView from './TransferPhaseView';
 
 // ResizeObserver polyfill
 if (typeof window !== 'undefined' && !window.ResizeObserver) {
@@ -1909,6 +1910,20 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Molecular Orbitals"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);

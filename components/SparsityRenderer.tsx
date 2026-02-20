@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SPARSITY IN NEURAL NETWORKS - Complete 10-Phase Game
@@ -1998,6 +1999,20 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Sparsity"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);

@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // --- GAME EVENT INTERFACE FOR AI COACH INTEGRATION ---
 export interface GameEvent {
@@ -1400,6 +1401,19 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
           </div>
           {renderBottomBar(true, true, 'Apply This Knowledge')}
         </>
+      );
+    }
+
+    if (phase === 'transfer') {
+      return (
+        <TransferPhaseView
+          conceptName="Verification Harness"
+          applications={transferApplications}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+        />
       );
     }
 

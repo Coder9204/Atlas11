@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 interface StableLevitationRendererProps {
   phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
@@ -1417,6 +1418,18 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Stable Levitation"
+        applications={realWorldApps}
+        onComplete={() => setCurrentPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const app = realWorldApps[currentTransferApp];
     const isCompleted = transferCompleted.has(currentTransferApp);

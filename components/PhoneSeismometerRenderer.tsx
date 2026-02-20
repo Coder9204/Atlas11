@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // -----------------------------------------------------------------------------
 // Phone Seismometer - Complete 10-Phase Game
@@ -1708,6 +1709,20 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Phone Seismometer"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const viewedCount = completedApps.filter(c => c).length;

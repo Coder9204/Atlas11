@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Solar Panel Temperature Coefficient - Complete 10-Phase Self-Managing Game
@@ -1397,6 +1398,18 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
   }
 
   // ── TRANSFER ──────────────────────────────────────────────────────────────────
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Solar Temp Coefficient"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>

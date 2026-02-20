@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // Game event interface for AI coach integration
 export interface GameEvent {
@@ -953,6 +954,18 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
           return !!prediction;
         case 'twist_predict':
           return !!twistPrediction;
+        if (phase === 'transfer') {
+          return (
+            <TransferPhaseView
+              conceptName="Ask For Assumptions"
+              applications={transferApplications}
+              onComplete={() => goToPhase('test')}
+              isMobile={isMobile}
+              colors={colors}
+            />
+          );
+        }
+
         case 'transfer':
           return transferCompleted.size >= 4;
         case 'test':

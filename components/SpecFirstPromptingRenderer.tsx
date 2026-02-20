@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 interface SpecFirstPromptingRendererProps {
   gamePhase?: string;
@@ -1272,6 +1273,19 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Spec First Prompting"
+        applications={transferApplications}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MPPT (Maximum Power Point Tracking) - Complete 10-Phase Game
@@ -1588,6 +1589,20 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="M P P T"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);

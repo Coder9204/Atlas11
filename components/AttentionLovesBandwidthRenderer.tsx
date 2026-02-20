@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // Phase type for internal state management
 type BandwidthPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
@@ -1197,6 +1198,18 @@ const AttentionLovesBandwidthRenderer: React.FC<AttentionLovesBandwidthRendererP
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Attention Loves Bandwidth"
+        applications={transferApplications}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const allCompleted = transferCompleted.size >= transferApplications.length;
     return renderPhaseContent(

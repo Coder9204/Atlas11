@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // RESONANCE - Premium Apple/Airbnb Design System
@@ -1409,6 +1410,20 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
   }
 
   // TRANSFER - Real-world applications with substantial content
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Resonance"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const app = realWorldApps[activeApp];
     const allAppsCompleted = completedApps.size >= realWorldApps.length;

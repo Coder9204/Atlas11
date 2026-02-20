@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 interface CycloidMotionRendererProps {
   phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
@@ -1552,6 +1553,19 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Cycloid Motion"
+        applications={transferApplications}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const currentApp = transferApplications[currentTransferApp];
     const completedCount = transferCompleted.size;

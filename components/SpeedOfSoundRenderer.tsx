@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // -----------------------------------------------------------------------------
 // Speed of Sound - Complete 10-Phase Game
@@ -826,6 +827,20 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
       case 'twist_predict': return twistPrediction !== null;
       case 'twist_play': return true;
       case 'twist_review': return true;
+      if (phase === 'transfer') {
+        return (
+          <TransferPhaseView
+            conceptName="Speed Of Sound"
+            applications={realWorldApps}
+            onComplete={() => goToPhase('test')}
+            isMobile={isMobile}
+            colors={colors}
+            typo={typo}
+            playSound={playSound}
+          />
+        );
+      }
+
       case 'transfer': return completedApps.every(c => c);
       case 'test': return false; // handled separately
       case 'mastery': return false;

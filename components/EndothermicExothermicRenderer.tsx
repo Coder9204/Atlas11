@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // ENDOTHERMIC/EXOTHERMIC RENDERER - Game 138
@@ -1048,6 +1049,19 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
   // ============================================================================
   // TRANSFER PHASE
   // ============================================================================
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Endothermic Exothermic"
+        applications={applications}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const app = applications[activeApp];
     return (

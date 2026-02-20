@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // =============================================================================
 // TOTAL INTERNAL REFLECTION RENDERER - LIGHT TRAPPED IN WATER
@@ -2813,6 +2814,17 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
         {phase === 'twist_predict' && renderTwistPredict()}
         {phase === 'twist_play' && renderTwistPlay()}
         {phase === 'twist_review' && renderTwistReview()}
+        {phase === 'transfer' && (
+          <TransferPhaseView
+            conceptName="Total Internal Reflection"
+            applications={realWorldApps}
+            onComplete={() => goToPhase('test')}
+            isMobile={isMobile}
+            colors={colors}
+            typo={typo}
+            playSound={playSound}
+          />
+        )}
         {phase === 'transfer' && renderTransfer()}
         {phase === 'test' && testComplete && (
           <div style={{ textAlign: 'center', padding: '24px', fontFamily: defined.typography.fontFamily }}>

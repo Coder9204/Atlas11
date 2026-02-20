@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // EGGDROP RENDERER - CRUMPLE ZONES & IMPULSE PHYSICS
@@ -1436,6 +1437,19 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
   }
 
   // TRANSFER
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Egg Drop"
+        applications={applications}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const applications = [
       {

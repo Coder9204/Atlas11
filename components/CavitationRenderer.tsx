@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // Types
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
@@ -1277,6 +1278,17 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, g
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
+      if (phase === 'transfer') {
+        return (
+          <TransferPhaseView
+            conceptName="Cavitation"
+            applications={applications}
+            onComplete={() => goToPhase('test')}
+            isMobile={isMobile}
+          />
+        );
+      }
+
       case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();

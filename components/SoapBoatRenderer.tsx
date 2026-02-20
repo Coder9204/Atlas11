@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 const realWorldApps = [
   {
@@ -2293,6 +2294,20 @@ export default function SoapBoatRenderer({
       // ───────────────────────────────────────────────────
       // TRANSFER
       // ───────────────────────────────────────────────────
+      if (phase === 'transfer') {
+        return (
+          <TransferPhaseView
+            conceptName="Soap Boat"
+            applications={realWorldApps}
+            onComplete={() => goToPhase('test')}
+            isMobile={isMobile}
+            colors={colors}
+            typo={typo}
+            playSound={playSound}
+          />
+        );
+      }
+
       case 'transfer':
         const app = realWorldApps[activeApp];
 

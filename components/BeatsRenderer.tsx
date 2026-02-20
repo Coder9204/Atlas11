@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // BEATS - Premium Apple/Airbnb Design System
@@ -2188,6 +2189,20 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
   }
 
   // TRANSFER - Tabbed applications with sequential navigation
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Beats"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const app = applications[activeApp];
     const allAppsCompleted = completedApps.size >= applications.length;

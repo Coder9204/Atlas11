@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ===============================================================================
 // TYPES & INTERFACES
@@ -2238,6 +2239,20 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Faraday Cage"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     return (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>

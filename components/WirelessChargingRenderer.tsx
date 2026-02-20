@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { flushSync } from 'react-dom';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // WIRELESS CHARGING ALIGNMENT GAME
@@ -3183,6 +3184,20 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
+      if (phase === 'transfer') {
+        return (
+          <TransferPhaseView
+            conceptName="Wireless Charging"
+            applications={realWorldApps}
+            onComplete={() => goToPhase('test')}
+            isMobile={isMobile}
+            colors={colors}
+            typo={typo}
+            playSound={playSound}
+          />
+        );
+      }
+
       case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();

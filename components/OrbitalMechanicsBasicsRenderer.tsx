@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 interface OrbitalMechanicsBasicsRendererProps {
   gamePhase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
@@ -1072,6 +1073,17 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Orbital Mechanics Basics"
+        applications={transferApplications}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const transferApplications = [
       {

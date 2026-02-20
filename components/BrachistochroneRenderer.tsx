@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // GAME 114: BRACHISTOCHRONE
@@ -1145,6 +1146,19 @@ const BrachistochroneRenderer: React.FC<BrachistochroneRendererProps> = ({
           </div>
         </div>
       </div>
+    );
+  }
+
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Brachistochrone"
+        applications={transferApplications}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+      />
     );
   }
 

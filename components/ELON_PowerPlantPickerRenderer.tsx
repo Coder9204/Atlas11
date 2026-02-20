@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // -----------------------------------------------------------------------------
 // ELON GAME #6: POWER PLANT PICKER - Complete 10-Phase Game
@@ -1850,6 +1851,20 @@ const ELON_PowerPlantPickerRenderer: React.FC<ELON_PowerPlantPickerRendererProps
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="E L O N_ Power Plant Picker"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const allAppsCompleted = completedApps.every(c => c);
 

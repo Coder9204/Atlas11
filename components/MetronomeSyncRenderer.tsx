@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // GAME 116: METRONOME SYNCHRONIZATION
@@ -915,6 +916,18 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
         </div>
         {renderNavBar(true, true, 'See Real Applications')}
       </div>
+    );
+  }
+
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Metronome Sync"
+        applications={transferApplications}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+      />
     );
   }
 

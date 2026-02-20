@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // -----------------------------------------------------------------------------
 // ELON GAME #22: OPTICAL LINK - Complete 10-Phase Game
@@ -1756,6 +1757,20 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="E L O N_ Optical Link"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const allAppsCompleted = completedApps.every(c => c);
 

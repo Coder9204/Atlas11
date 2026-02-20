@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 const realWorldApps = [
   {
@@ -1581,6 +1582,19 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
   }
 
   // TRANSFER PHASE
+  if (currentPhase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Sound Interference"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+      />
+    );
+  }
+
   if (currentPhase === 'transfer') {
     const allAppsCompleted = transferCompleted.size >= realWorldApps.length;
     return (

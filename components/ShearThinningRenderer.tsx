@@ -13,6 +13,7 @@
  */
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================
 // THEME COLORS (matching evaluation framework requirements)
@@ -2316,6 +2317,20 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
   // ============================================================
   // TRANSFER PHASE
   // ============================================================
+
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Shear Thinning"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
 
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];

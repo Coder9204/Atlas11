@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // GAME 109: BOTTLE TORNADO (VORTEX)
@@ -1469,6 +1470,19 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Bottle Tornado"
+        applications={realWorldApps}
+        onComplete={() => nextPhase()}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const allCompleted = transferCompleted.size >= 4;
 

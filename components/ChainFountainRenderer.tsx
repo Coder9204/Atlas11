@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // GAME 112: CHAIN FOUNTAIN (MOULD EFFECT)
@@ -1872,6 +1873,19 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (currentPhase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Chain Fountain"
+        applications={transferApplications}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+      />
+    );
+  }
+
   if (currentPhase === 'transfer') {
     const allCompleted = transferCompleted.size >= 4;
 

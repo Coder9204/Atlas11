@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 const realWorldApps = [
   {
@@ -1994,6 +1995,19 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
         </div>
         {renderBottomBar(false, true, 'Apply This Knowledge')}
       </div>
+    );
+  }
+
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Rolling Shutter"
+        applications={realWorldApps}
+        onComplete={() => nextPhase()}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+      />
     );
   }
 

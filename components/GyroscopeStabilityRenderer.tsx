@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -1699,6 +1700,20 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
+      if (phase === 'transfer') {
+        return (
+          <TransferPhaseView
+            conceptName="Gyroscope Stability"
+            applications={realWorldApps}
+            onComplete={() => goToPhase('test')}
+            isMobile={isMobile}
+            colors={colors}
+            typo={typo}
+            playSound={playSound}
+          />
+        );
+      }
+
       case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();

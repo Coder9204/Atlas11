@@ -1,6 +1,7 @@
 const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {};
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 const realWorldApps = [
    {
@@ -1651,6 +1652,20 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Process Variation"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>

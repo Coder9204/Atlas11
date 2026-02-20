@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { playSound } from '../lib/audio';
+import TransferPhaseView from './TransferPhaseView';
 
 // ────────────────────────────────────────────────────────────────────────────
 // REAL-WORLD APPLICATIONS DATA
@@ -1733,6 +1734,20 @@ export default function MakeMicrophoneRenderer({
   }
 
   // TRANSFER PHASE
+  if (currentPhase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Make Microphone"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (currentPhase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);

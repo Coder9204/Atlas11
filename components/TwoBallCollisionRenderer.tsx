@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TWOBALLCOLLISION RENDERER - ENERGY VS MOMENTUM CONSERVATION
@@ -2673,6 +2674,17 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
           {phase === 'twist_predict' && renderTwistPredict()}
           {phase === 'twist_play' && renderTwistPlay()}
           {phase === 'twist_review' && renderTwistReview()}
+          {phase === 'transfer' && (
+            <TransferPhaseView
+              conceptName="Two Ball Collision"
+              applications={realWorldApps}
+              onComplete={() => goToPhase('test')}
+              isMobile={isMobile}
+              colors={colors}
+              typo={typo}
+              playSound={playSound}
+            />
+          )}
           {phase === 'transfer' && renderTransfer()}
           {phase === 'test' && renderTest()}
           {phase === 'mastery' && renderMastery()}

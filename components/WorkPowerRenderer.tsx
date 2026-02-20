@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // WORK & POWER RENDERER - PREMIUM PHYSICS GAME
@@ -2557,6 +2558,20 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
   // ============================================================================
   // PHASE: TRANSFER (Real World Applications)
   // ============================================================================
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Work Power"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const app = applications[activeApp];
     const allRead = completedApps.size >= applications.length;

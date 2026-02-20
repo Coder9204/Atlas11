@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // -----------------------------------------------------------------------------
 // ORE TO METAL - Complete 10-Phase Game (ELON Game #15 of 36)
@@ -1841,6 +1842,20 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="E L O N_ Ore To Metal"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const allAppsCompleted = completedApps.every(c => c);
 

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // SUPERCOOLING RENDERER - Game 139
@@ -2273,6 +2274,19 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
   }
 
   // Render transfer phase
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Supercooling"
+        applications={realWorldApps}
+        onComplete={() => nextPhase()}
+        isMobile={isMobile}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', background: '#0a0f1a', color: 'white' }}>

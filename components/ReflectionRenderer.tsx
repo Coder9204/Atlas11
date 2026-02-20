@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // =============================================================================
 // REFLECTION RENDERER - Complete 10-Phase Educational Game
@@ -1538,6 +1539,20 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
   // =============================================================================
   // TRANSFER PHASE (with "Got It" button and App X of Y progress)
   // =============================================================================
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Reflection"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);

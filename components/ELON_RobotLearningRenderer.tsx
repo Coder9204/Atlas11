@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // -----------------------------------------------------------------------------
 // ELON ROBOT LEARNING - Complete 10-Phase Game (#31 of 36)
@@ -1845,6 +1846,20 @@ const ELON_RobotLearningRenderer: React.FC<ELON_RobotLearningRendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="E L O N_ Robot Learning"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const allAppsCompleted = completedApps.every(c => c);
 

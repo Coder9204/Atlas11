@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 interface SuperhydrophobicRendererProps {
   phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
@@ -1776,6 +1777,19 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (internalPhase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Superhydrophobic"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+      />
+    );
+  }
+
   if (internalPhase === 'transfer') {
     const app = realWorldApps[currentTransferApp];
     return (

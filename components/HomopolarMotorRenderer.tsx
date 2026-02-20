@@ -13,6 +13,7 @@
  */
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================
 // THEME COLORS (matching Wave Particle Duality)
@@ -1989,6 +1990,20 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
   }
 
   // TRANSFER PHASE (Rich, sequential applications)
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Homopolar Motor"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const currentApp = realWorldApps[selectedApp];
     const isCurrentCompleted = completedApps[selectedApp];

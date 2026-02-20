@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // -----------------------------------------------------------------------------
 // BATTERY ENERGY STORAGE SYSTEM (BESS) - Complete 10-Phase Game
@@ -1834,6 +1835,20 @@ const ELON_BatterySystemRenderer: React.FC<ELON_BatterySystemRendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="E L O N_ Battery System"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const allAppsCompleted = completedApps.every(c => c);
 

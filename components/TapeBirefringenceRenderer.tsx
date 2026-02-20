@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 interface TapeBirefringenceRendererProps {
   gamePhase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
@@ -1286,6 +1287,19 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
         </div>
         {renderBottomBar(true, 'Apply This Knowledge')}
       </div>
+    );
+  }
+
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Tape Birefringence"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+      />
     );
   }
 

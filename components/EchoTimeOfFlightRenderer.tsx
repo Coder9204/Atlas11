@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // ECHO TIME OF FLIGHT RENDERER - Premium 10-Phase Learning Experience
@@ -2834,6 +2835,17 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
           {phase === 'twist_predict' && renderTwistPredictPhase()}
           {phase === 'twist_play' && renderTwistPlayPhase()}
           {phase === 'twist_review' && renderTwistReviewPhase()}
+          {phase === 'transfer' && (
+            <TransferPhaseView
+              conceptName="Echo Time Of Flight"
+              applications={realWorldApps}
+              onComplete={() => goToPhase('test')}
+              isMobile={isMobile}
+              colors={colors}
+              typo={typo}
+              playSound={playSound}
+            />
+          )}
           {phase === 'transfer' && renderTransferPhase()}
           {phase === 'test' && renderTestPhase()}
           {phase === 'mastery' && renderMasteryPhase()}

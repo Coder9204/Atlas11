@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // GAME 111: STICK-SLIP EARTHQUAKES
@@ -1370,6 +1371,19 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Stick Slip"
+        applications={realWorldApps}
+        onComplete={() => nextPhase()}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const allCompleted = transferCompleted.size >= transferApplications.length;
 

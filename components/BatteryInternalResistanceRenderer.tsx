@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Battery Internal Resistance - Complete 10-Phase Learning Game
@@ -851,6 +852,20 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
       case 'twist_predict': canProceed = !!twistPrediction; nextLabel = 'Continue to Experiment'; break;
       case 'twist_play': nextLabel = 'Continue to Explanation'; break;
       case 'twist_review': nextLabel = 'Continue to Applications'; break;
+      if (phase === 'transfer') {
+        return (
+          <TransferPhaseView
+            conceptName="Battery Internal Resistance"
+            applications={realWorldApps}
+            onComplete={() => goToPhase('test')}
+            isMobile={isMobile}
+            colors={colors}
+            typo={typo}
+            playSound={playSound}
+          />
+        );
+      }
+
       case 'transfer': canProceed = expandedApp !== null; nextLabel = 'Continue to Test'; break;
       case 'test': canProceed = testSubmitted && testScore >= 8; nextLabel = testSubmitted ? (testScore >= 8 ? 'Continue to Mastery' : 'Review & Retry') : 'Submit Test'; break;
       case 'mastery': nextLabel = 'Complete Lesson'; break;

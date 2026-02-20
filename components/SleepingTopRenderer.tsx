@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 const realWorldApps = [
   {
@@ -1689,6 +1690,19 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
   // ============================================================
   // TRANSFER PHASE
   // ============================================================
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Sleeping Top"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const app = realWorldApps[currentApp];
     const appCompleted = transferCompleted.has(currentApp);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // --- GAME EVENT INTERFACE FOR AI COACH INTEGRATION ---
 export interface GameEvent {
@@ -1397,6 +1398,20 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
   }
 
   // TRANSFER Screen
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Microphone"
+        applications={applications}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const currentApp = transferApps[selectedApp];
     const allAppsCompleted = completedApps.every(Boolean);

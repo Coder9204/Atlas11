@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // CARNOT CYCLE RENDERER - THERMODYNAMIC EFFICIENCY & HEAT ENGINES
@@ -1721,6 +1722,18 @@ const CarnotCycleRenderer: React.FC<Props> = ({
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
+      if (phase === 'transfer') {
+        return (
+          <TransferPhaseView
+            conceptName="Carnot Cycle"
+            applications={realWorldApplications}
+            onComplete={() => goToPhase('test')}
+            isMobile={isMobile}
+            playSound={playSound}
+          />
+        );
+      }
+
       case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();

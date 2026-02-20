@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { isOnboardingComplete, getAllGameProgress, GameRecord } from '../services/GameProgressService';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GAMES LIBRARY PAGE - Browse all 340+ interactive games
@@ -18,6 +19,83 @@ const gameCategories = {
   semiconductor: { name: 'Semiconductor', icon: '🔬', color: '#14B8A6', description: 'Chip design and fabrication' },
   solar: { name: 'Solar & PV', icon: '☀️', color: '#FBBF24', description: 'Solar cells and photovoltaics' },
   elon: { name: 'ELON', icon: '🚀', color: '#F97316', description: 'Systems thinking across energy, space, chips' },
+};
+
+// Search keywords/tags for better discoverability
+const searchTags: Record<string, string[]> = {
+  'center-of-mass': ['balance', 'gravity', 'equilibrium', 'COM'],
+  'momentum-conservation': ['collision', 'crash', 'impact', 'p=mv'],
+  'angular-momentum': ['spin', 'rotation', 'L=Iw'],
+  'angular-momentum-transfer': ['spin', 'rotation', 'ice skater'],
+  'projectile-independence': ['throw', 'launch', 'trajectory', 'horizontal vertical'],
+  'torque': ['lever', 'wrench', 'rotation', 'moment'],
+  'inclined-plane': ['ramp', 'slope', 'angle', 'friction'],
+  'hookes-law': ['spring', 'elastic', 'F=kx', 'stretch'],
+  'pendulum-period': ['swing', 'clock', 'T=2pi', 'SHM'],
+  'inertia': ['mass', 'resistance', 'Newton first law'],
+  'newtons-third-law': ['action reaction', 'equal opposite', 'N3L'],
+  'static-kinetic-friction': ['slip', 'slide', 'mu', 'coefficient'],
+  'rolling-vs-sliding': ['wheel', 'tire', 'roll', 'slide'],
+  'moment-of-inertia': ['rotational mass', 'I=mr2', 'flywheel'],
+  'gyroscopic-precession': ['gyro', 'spin', 'wobble', 'bicycle'],
+  'two-ball-collision': ['elastic', 'bounce', 'billiard'],
+  'inelastic-collisions': ['sticky', 'deform', 'energy loss'],
+  'ballistic-pendulum': ['bullet', 'projectile', 'momentum energy'],
+  'egg-drop': ['impact', 'cushion', 'protection', 'force'],
+  'orbital-mechanics': ['orbit', 'satellite', 'Kepler', 'gravity'],
+  'orbital-mechanics-basics': ['orbit', 'satellite', 'Kepler', 'gravity'],
+  'tidal-forces': ['moon', 'ocean', 'gravity gradient', 'bulge'],
+  'tidal-locking': ['moon', 'synchronous', 'rotation period'],
+  'coriolis-effect': ['rotation', 'wind', 'hurricane', 'deflection'],
+  'bottle-tornado': ['vortex', 'spin', 'water'],
+  'brownian-motion': ['random walk', 'particles', 'diffusion', 'pollen'],
+  'centripetal-force': ['circular', 'radius', 'spin', 'orbit'],
+  'carnot-cycle': ['engine', 'efficiency', 'heat engine', 'PV diagram'],
+  'entropy': ['disorder', 'second law', 'thermodynamics', 'S'],
+  'thermal-expansion': ['heat', 'expand', 'contract', 'coefficient'],
+  'thermal-contact': ['heat transfer', 'conduction', 'temperature'],
+  'newton-cooling': ['cooling curve', 'temperature', 'exponential'],
+  'convection': ['heat flow', 'rising', 'fluid circulation'],
+  'gas-laws': ['PV=nRT', 'ideal gas', 'Boyle', 'Charles'],
+  'phase-change-energy': ['melting', 'freezing', 'boiling', 'latent heat'],
+  'latent-heat': ['melting', 'boiling', 'phase change', 'energy'],
+  'kinetic-theory-gases': ['molecules', 'speed', 'temperature', 'pressure'],
+  'wave-interference': ['constructive', 'destructive', 'superposition'],
+  'wave-speed-tension': ['string', 'frequency', 'wavelength'],
+  'diffraction': ['slit', 'grating', 'pattern', 'bending'],
+  'snells-law': ['refraction', 'angle', 'n1 sin', 'glass'],
+  'doppler-effect': ['frequency shift', 'ambulance', 'redshift'],
+  'resonance': ['natural frequency', 'amplitude', 'oscillation'],
+  'photoelectric-effect': ['photon', 'electron', 'Einstein', 'threshold'],
+  'coulombs-law': ['charge', 'force', 'electrostatic', 'q1q2'],
+  'electric-field': ['charge', 'force field', 'E=F/q'],
+  'magnetic-field': ['magnet', 'compass', 'B field', 'Tesla'],
+  'electromagnetic-induction': ['Faraday', 'EMF', 'generator', 'flux'],
+  'kirchhoffs-laws': ['circuit', 'KVL', 'KCL', 'voltage current'],
+  'circuits': ['resistor', 'series', 'parallel', 'Ohm'],
+  'r-c-time-constant': ['capacitor', 'charge', 'discharge', 'tau'],
+  'transformer': ['voltage', 'turns ratio', 'step up', 'step down'],
+  'bernoulli': ['pressure', 'velocity', 'fluid flow', 'airplane'],
+  'buoyancy': ['float', 'sink', 'Archimedes', 'density'],
+  'pascal-law': ['pressure', 'hydraulic', 'piston'],
+  'hydrostatic-pressure': ['depth', 'water', 'rho g h'],
+  'venturi-effect': ['constriction', 'pressure drop', 'flow speed'],
+  'laminar-turbulent': ['Reynolds', 'flow', 'smooth', 'chaotic'],
+  'solar-cell': ['photovoltaic', 'PV', 'electricity', 'sunlight'],
+  'm-o-s-f-e-t-switching': ['transistor', 'gate', 'switch', 'MOSFET'],
+  's-r-a-m-cell': ['memory', 'flip-flop', 'cache', 'SRAM'],
+  'power-factor': ['AC', 'reactive', 'real power', 'cosine'],
+  'tensor-core': ['matrix', 'GPU', 'AI', 'multiply'],
+  'systolic-array': ['TPU', 'matrix', 'pipeline', 'parallel'],
+  'k-v-cache': ['transformer', 'attention', 'LLM', 'inference'],
+  'energy-per-token': ['LLM', 'AI', 'power', 'efficiency'],
+  'attention-memory': ['transformer', 'self-attention', 'LLM', 'QKV'],
+  'sparsity': ['pruning', 'sparse', 'efficiency', 'zero'],
+  'quantization-precision': ['int8', 'fp16', 'model compression', 'bits'],
+  'photolithography': ['mask', 'wafer', 'UV', 'pattern'],
+  'e-s-d-protection': ['static', 'discharge', 'ESD', 'zap'],
+  'electromigration': ['current', 'wire', 'failure', 'atoms'],
+  'process-variation': ['manufacturing', 'sigma', 'yield', 'variation'],
 };
 
 const games: { name: string; slug: string; category: string; difficulty: string }[] = [
@@ -414,11 +492,78 @@ const featuredSlugs = [
   'e-l-o-n_-grid-balance', 'tensor-core', 'photolithography', 'buoyancy',
 ];
 
+// Highlight matching text in search results
+const highlightText = (text: string, query: string): React.ReactNode => {
+  if (!query) return text;
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return text;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <span style={{ background: 'rgba(59,130,246,0.3)', borderRadius: '2px', padding: '0 1px' }}>
+        {text.slice(idx, idx + query.length)}
+      </span>
+      {text.slice(idx + query.length)}
+    </>
+  );
+};
+
+// Simple fuzzy match: checks if all characters of query appear in order in target
+const fuzzyMatch = (query: string, target: string): number => {
+  const q = query.toLowerCase();
+  const t = target.toLowerCase();
+  // Exact substring match = highest score
+  if (t.includes(q)) return 100;
+  // Word-start match (e.g. "rc" matches "RC Time Constant")
+  const words = t.split(/[\s\-_]+/);
+  const initials = words.map(w => w[0] || '').join('').toLowerCase();
+  if (initials.includes(q)) return 80;
+  // Fuzzy: all chars appear in order
+  let qi = 0;
+  for (let ti = 0; ti < t.length && qi < q.length; ti++) {
+    if (t[ti] === q[qi]) qi++;
+  }
+  if (qi === q.length) return 50;
+  return 0;
+};
+
 const GamesPage: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null);
+  // Parse URL query params for initial state
+  const getInitialParams = () => {
+    if (typeof window === 'undefined') return { q: '', cat: null as string | null, diff: null as string | null };
+    const params = new URLSearchParams(window.location.search);
+    return {
+      q: params.get('q') || '',
+      cat: params.get('category') || null,
+      diff: params.get('difficulty') || null,
+    };
+  };
+
+  const initial = getInitialParams();
+  const [searchQuery, setSearchQuery] = useState(initial.q);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(initial.cat);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(initial.diff);
   const searchRef = useRef<HTMLInputElement>(null);
+  const [highlightIndex, setHighlightIndex] = useState(-1);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [progressMap, setProgressMap] = useState<Map<string, GameRecord>>(new Map());
+
+  // Onboarding redirect
+  useEffect(() => {
+    if (!isOnboardingComplete()) {
+      window.location.href = '/onboarding';
+    }
+  }, []);
+
+  // Load game progress on mount
+  useEffect(() => {
+    const records = getAllGameProgress();
+    const map = new Map<string, GameRecord>();
+    for (const r of records) {
+      map.set(r.slug, r);
+    }
+    setProgressMap(map);
+  }, []);
 
   const colors = {
     bgPrimary: '#0a0a0f',
@@ -431,7 +576,24 @@ const GamesPage: React.FC = () => {
     border: '#2a2a3a',
   };
 
-  // Keyboard shortcut: Ctrl+K or Cmd+K to focus search
+  // Sync filters to URL params (without page reload)
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (searchQuery) params.set('q', searchQuery);
+    if (selectedCategory) params.set('category', selectedCategory);
+    if (selectedDifficulty) params.set('difficulty', selectedDifficulty);
+    const qs = params.toString();
+    const newUrl = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+    window.history.replaceState(null, '', newUrl);
+  }, [searchQuery, selectedCategory, selectedDifficulty]);
+
+  // Auto-focus search on page load
+  useEffect(() => {
+    const t = setTimeout(() => searchRef.current?.focus(), 100);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -442,6 +604,7 @@ const GamesPage: React.FC = () => {
       if (e.key === 'Escape' && document.activeElement === searchRef.current) {
         setSearchQuery('');
         searchRef.current?.blur();
+        setHighlightIndex(-1);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -458,20 +621,83 @@ const GamesPage: React.FC = () => {
     });
   }, []);
 
+  // Relevance-ranked, fuzzy search with tag support
   const filteredGames = useMemo(() => {
-    const q = searchQuery.toLowerCase();
-    return uniqueGames.filter((game) => {
-      const cat = gameCategories[game.category as keyof typeof gameCategories];
-      const matchesSearch = !q ||
-        game.name.toLowerCase().includes(q) ||
-        game.category.toLowerCase().includes(q) ||
-        (cat && cat.name.toLowerCase().includes(q)) ||
-        (cat && cat.description.toLowerCase().includes(q));
-      const matchesCategory = !selectedCategory || game.category === selectedCategory;
-      const matchesDifficulty = !selectedDifficulty || game.difficulty === selectedDifficulty;
-      return matchesSearch && matchesCategory && matchesDifficulty;
-    });
+    const q = searchQuery.trim().toLowerCase();
+    const matchesCategory = (game: typeof games[0]) => !selectedCategory || game.category === selectedCategory;
+    const matchesDifficulty = (game: typeof games[0]) => !selectedDifficulty || game.difficulty === selectedDifficulty;
+
+    if (!q) {
+      return uniqueGames
+        .filter(g => matchesCategory(g) && matchesDifficulty(g))
+        .sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    // Score each game for relevance
+    const scored = uniqueGames
+      .filter(g => matchesCategory(g) && matchesDifficulty(g))
+      .map(game => {
+        const cat = gameCategories[game.category as keyof typeof gameCategories];
+        const tags = searchTags[game.slug] || [];
+        const tagString = tags.join(' ').toLowerCase();
+        // Decode slug for searching (e.g., "m-o-s-f-e-t" → "mosfet")
+        const decodedSlug = game.slug.replace(/-/g, '').toLowerCase();
+
+        let score = 0;
+        // Exact name match (highest priority)
+        if (game.name.toLowerCase() === q) score = 1000;
+        // Name starts with query
+        else if (game.name.toLowerCase().startsWith(q)) score = 500;
+        // Name contains query as substring
+        else if (game.name.toLowerCase().includes(q)) score = 400;
+        // Decoded slug contains query (handles "mosfet", "gpu", "sram", etc.)
+        else if (decodedSlug.includes(q.replace(/[\s\-]/g, ''))) score = 350;
+        // Tag exact match
+        else if (tags.some(t => t.toLowerCase() === q)) score = 300;
+        // Tag substring match
+        else if (tagString.includes(q)) score = 250;
+        // Category name match
+        else if (cat && cat.name.toLowerCase().includes(q)) score = 200;
+        // Category description match
+        else if (cat && cat.description.toLowerCase().includes(q)) score = 150;
+        // Fuzzy match on name
+        else {
+          const fs = fuzzyMatch(q, game.name);
+          if (fs > 0) score = fs;
+        }
+
+        return { game, score };
+      })
+      .filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score || a.game.name.localeCompare(b.game.name));
+
+    return scored.map(s => s.game);
   }, [searchQuery, selectedCategory, selectedDifficulty, uniqueGames]);
+
+  // Reset highlight when results change
+  useEffect(() => { setHighlightIndex(-1); }, [filteredGames]);
+
+  // Arrow key navigation through results
+  const handleSearchKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlightIndex(i => Math.min(i + 1, filteredGames.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightIndex(i => Math.max(i - 1, -1));
+    } else if (e.key === 'Enter' && highlightIndex >= 0 && highlightIndex < filteredGames.length) {
+      e.preventDefault();
+      window.location.href = `/games/${filteredGames[highlightIndex].slug}`;
+    }
+  }, [filteredGames, highlightIndex]);
+
+  // Scroll highlighted item into view
+  useEffect(() => {
+    if (highlightIndex >= 0 && gridRef.current) {
+      const cards = gridRef.current.querySelectorAll('a[data-game-card]');
+      cards[highlightIndex]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }, [highlightIndex]);
 
   const featuredGames = useMemo(() => {
     return featuredSlugs
@@ -530,6 +756,7 @@ const GamesPage: React.FC = () => {
           <span style={{ fontSize: '18px', fontWeight: 700, color: colors.textPrimary }}>Atlas Coach</span>
         </a>
         <nav style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+          <a href="/progress" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>My Progress</a>
           <a href="/pricing" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>Pricing</a>
           <button style={{
             background: colors.accent, color: 'white', border: 'none',
@@ -560,9 +787,10 @@ const GamesPage: React.FC = () => {
           <input
             ref={searchRef}
             type="text"
-            placeholder={`Search ${uniqueGames.length} games by name, topic, or category...`}
+            placeholder={`Search ${uniqueGames.length} games... (name, topic, or keyword)`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
             style={{
               width: '100%', padding: '16px 100px 16px 44px',
               borderRadius: '14px', border: `2px solid ${searchQuery ? colors.accent : colors.border}`,
@@ -692,9 +920,20 @@ const GamesPage: React.FC = () => {
 
       {/* ─── Games Grid ─── */}
       <section style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px 80px' }}>
-        <p style={{ color: colors.textMuted, marginBottom: '16px', fontSize: '13px' }}>
-          Showing {filteredGames.length} of {uniqueGames.length} games
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <p style={{ color: colors.textMuted, fontSize: '13px', margin: 0 }}>
+            {searchQuery ? (
+              <>Found <strong style={{ color: colors.textSecondary }}>{filteredGames.length}</strong> result{filteredGames.length !== 1 ? 's' : ''} for &quot;{searchQuery}&quot;</>
+            ) : (
+              <>Showing {filteredGames.length} of {uniqueGames.length} games</>
+            )}
+          </p>
+          {highlightIndex >= 0 && filteredGames[highlightIndex] && (
+            <span style={{ color: colors.textMuted, fontSize: '12px' }}>
+              Press Enter to open <strong style={{ color: colors.textSecondary }}>{filteredGames[highlightIndex].name}</strong>
+            </span>
+          )}
+        </div>
 
         {filteredGames.length === 0 ? (
           <div style={{
@@ -717,25 +956,39 @@ const GamesPage: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-            gap: '12px',
-          }}>
-            {filteredGames.map((game) => {
+          <div
+            ref={gridRef}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+              gap: '12px',
+            }}
+          >
+            {filteredGames.map((game, idx) => {
               const category = gameCategories[game.category as keyof typeof gameCategories];
+              const isHighlighted = idx === highlightIndex;
+              const tags = searchTags[game.slug];
+              const matchedTag = searchQuery && tags
+                ? tags.find(t => t.toLowerCase().includes(searchQuery.toLowerCase()))
+                : null;
               return (
                 <a
                   key={game.slug}
                   href={`/games/${game.slug}`}
+                  data-game-card
                   style={{
-                    background: colors.bgCard, borderRadius: '10px', padding: '16px',
-                    border: `1px solid ${colors.border}`, textDecoration: 'none',
-                    color: 'inherit', transition: 'all 0.2s', display: 'block',
+                    background: isHighlighted ? `${category.color}18` : colors.bgCard,
+                    borderRadius: '10px', padding: '16px',
+                    border: `1px solid ${isHighlighted ? category.color : colors.border}`,
+                    textDecoration: 'none',
+                    color: 'inherit', transition: 'all 0.15s', display: 'block',
+                    outline: isHighlighted ? `2px solid ${category.color}` : 'none',
+                    outlineOffset: '-1px',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.borderColor = category.color;
                     e.currentTarget.style.transform = 'translateY(-2px)';
+                    setHighlightIndex(idx);
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.borderColor = colors.border;
@@ -754,11 +1007,56 @@ const GamesPage: React.FC = () => {
                     </span>
                   </div>
                   <h3 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '3px', lineHeight: '1.3' }}>
-                    {game.name}
+                    {searchQuery ? highlightText(game.name, searchQuery) : game.name}
                   </h3>
                   <p style={{ fontSize: '12px', color: colors.textMuted, margin: 0 }}>
                     {category.name}
+                    {matchedTag && (
+                      <span style={{ marginLeft: '6px', color: colors.accent, fontSize: '11px' }}>
+                        — {matchedTag}
+                      </span>
+                    )}
                   </p>
+                  {/* Progress badges */}
+                  {(() => {
+                    const progress = progressMap.get(game.slug);
+                    if (!progress) return null;
+                    return (
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginTop: '8px' }}>
+                        {progress.completedAt !== null && (
+                          <span style={{
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            width: '18px', height: '18px', borderRadius: '50%',
+                            background: '#10B981', color: 'white', fontSize: '11px', fontWeight: 700,
+                            flexShrink: 0,
+                          }}>
+                            &#10003;
+                          </span>
+                        )}
+                        {progress.testScore !== null && progress.testTotal !== null && progress.testTotal > 0 && (
+                          <span style={{
+                            fontSize: '11px', fontWeight: 600, color: 'white',
+                            background: colors.accent, borderRadius: '100px',
+                            padding: '2px 8px', lineHeight: '1.4',
+                          }}>
+                            {Math.round((progress.testScore / progress.testTotal) * 100)}%
+                          </span>
+                        )}
+                        {progress.completedAt === null && (
+                          <span style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '4px',
+                            fontSize: '11px', color: '#F59E0B',
+                          }}>
+                            <span style={{
+                              display: 'inline-block', width: '8px', height: '8px',
+                              borderRadius: '50%', background: '#F59E0B', flexShrink: 0,
+                            }} />
+                            In Progress
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </a>
               );
             })}

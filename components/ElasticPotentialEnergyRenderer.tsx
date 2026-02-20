@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // GOLD STANDARD: GAME EVENT TYPE AND INTERFACE
@@ -2141,6 +2142,17 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
         {phase === 'twist_predict' && renderTwistPredict()}
         {phase === 'twist_play' && renderTwistPlay()}
         {phase === 'twist_review' && renderTwistReview()}
+        {phase === 'transfer' && (
+          <TransferPhaseView
+            conceptName="Elastic Potential Energy"
+            applications={realWorldApps}
+            onComplete={() => goToPhase('test')}
+            isMobile={isMobile}
+            colors={colors}
+            typo={typo}
+            playSound={playSound}
+          />
+        )}
         {phase === 'transfer' && renderTransfer()}
         {phase === 'test' && renderTest()}
         {phase === 'mastery' && renderMastery()}

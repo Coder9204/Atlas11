@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // =============================================================================
 // LASER SPECKLE RENDERER - Coherence Makes "Grainy Light"
@@ -2447,6 +2448,20 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
         return renderTwistPlay();
       case 'twist_review':
         return renderTwistReview();
+      if (phase === 'transfer') {
+        return (
+          <TransferPhaseView
+            conceptName="Laser Speckle"
+            applications={realWorldApps}
+            onComplete={() => setCurrentPhase('test')}
+            isMobile={isMobile}
+            colors={colors}
+            typo={typo}
+            playSound={playSound}
+          />
+        );
+      }
+
       case 'transfer':
         return renderTransfer();
       case 'test':

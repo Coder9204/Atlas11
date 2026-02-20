@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // PHOTOELASTICITY RENDERER - Self-Managing Game Component
@@ -807,6 +808,18 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
     switch (currentPhase) {
       case 'predict': return !!prediction;
       case 'twist_predict': return !!twistPrediction;
+      if (phase === 'transfer') {
+        return (
+          <TransferPhaseView
+            conceptName="Photoelasticity"
+            applications={transferApplications}
+            onComplete={() => goToPhase('test')}
+            isMobile={isMobile}
+            colors={colors}
+          />
+        );
+      }
+
       case 'transfer': return completedApps.size >= 1;
       case 'test': return testSubmitted ? true : false;
       default: return true;

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // GAS LAWS RENDERER - Complete 10-Phase Learning Game
@@ -1455,6 +1456,20 @@ const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhas
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Gas Laws"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const currentApp = realWorldApps[selectedApp];
     const allAppsVisited = appsVisited.size >= realWorldApps.length;

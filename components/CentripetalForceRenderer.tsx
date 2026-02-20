@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Centripetal Force - Complete 10-Phase Learning Game
@@ -1470,6 +1471,20 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
     }
 
     // TRANSFER PHASE
+    if (phase === 'transfer') {
+      return (
+        <TransferPhaseView
+          conceptName="Centripetal Force"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
+        />
+      );
+    }
+
     if (phase === 'transfer') {
       const app = realWorldApps[selectedApp];
       const allAppsCompleted = completedApps.every(c => c);

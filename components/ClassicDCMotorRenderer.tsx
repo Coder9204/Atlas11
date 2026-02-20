@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================
 // THEME COLORS
@@ -1117,6 +1118,18 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Classic D C Motor"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const currentApp = realWorldApps[selectedApp];
     const isCurrentCompleted = completedApps[selectedApp];

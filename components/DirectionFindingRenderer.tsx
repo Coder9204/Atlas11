@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // Phase types following standard game flow
 type GamePhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
@@ -1153,6 +1154,19 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (currentPhase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Direction Finding"
+        applications={transferApplications}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+      />
+    );
+  }
+
   if (currentPhase === 'transfer') {
     const currentApp = transferApplications[transferAppIndex];
     const completedCount = transferCompleted.size;

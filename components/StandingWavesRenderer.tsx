@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // STANDING WAVES - Premium Design System
@@ -2055,6 +2056,19 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
     }
 
     // TRANSFER
+    if (phase === 'transfer') {
+      return (
+        <TransferPhaseView
+          conceptName="Standing Waves"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          typo={typo}
+          playSound={playSound}
+        />
+      );
+    }
+
     if (phase === 'transfer') {
       const app = realWorldApps[activeApp];
       const allAppsCompleted = completedApps.size === realWorldApps.length;

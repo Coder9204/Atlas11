@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // Premium Design System
 const premiumDesign = {
@@ -2716,6 +2717,17 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
         {phase === 'twist_predict' && renderTwistPredictPhase()}
         {phase === 'twist_play' && renderTwistPlayPhase()}
         {phase === 'twist_review' && renderTwistReviewPhase()}
+        {phase === 'transfer' && (
+          <TransferPhaseView
+            conceptName="Convection Currents"
+            applications={realWorldApps}
+            onComplete={() => goToPhase('test')}
+            isMobile={isMobile}
+            colors={colors}
+            typo={typo}
+            playSound={playSound}
+          />
+        )}
         {phase === 'transfer' && renderTransferPhase()}
         {phase === 'test' && renderTestPhase()}
         {phase === 'mastery' && renderMasteryPhase()}

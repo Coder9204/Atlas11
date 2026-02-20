@@ -14,6 +14,7 @@
  */
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================
 // THEME COLORS
@@ -1210,6 +1211,20 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
   }
 
   // Transfer phase
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Capillary Action"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allCompleted = completedApps.every(c => c);

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DC-DC Converter Physics - Complete 10-Phase Learning Game
@@ -1034,6 +1035,20 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
       case 'twist_review':
         nextLabel = 'Real World Applications';
         break;
+      if (phase === 'transfer') {
+        return (
+          <TransferPhaseView
+            conceptName="D C D C Converter"
+            applications={realWorldApps}
+            onComplete={() => goToPhase('test')}
+            isMobile={isMobile}
+            colors={colors}
+            typo={typo}
+            playSound={playSound}
+          />
+        );
+      }
+
       case 'transfer':
         canProceed = completedApps.every(c => c);
         nextLabel = 'Take the Test';

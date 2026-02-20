@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // --- GAME EVENT INTERFACE ---
 export interface GameEvent {
@@ -1496,6 +1497,19 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Solar Cell"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const allComplete = completedApps.every(c => c);
     const currentApp = realWorldApps[transferApp];

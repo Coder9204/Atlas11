@@ -1,6 +1,7 @@
 const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {};
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 
 interface GameEvent {
@@ -1789,6 +1790,20 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="S R A M Yield Redundancy"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>

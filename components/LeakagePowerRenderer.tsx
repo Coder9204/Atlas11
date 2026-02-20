@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // Game event interface for AI coach integration
 interface GameEvent {
@@ -1432,6 +1433,20 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Leakage Power"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const totalApps = realWorldApps.length;
     const app = realWorldApps[currentTransferApp];

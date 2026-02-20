@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
@@ -1088,6 +1089,19 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
   }
 
   // ── TRANSFER ──
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Encapsulation U V Aging"
+        applications={transferApplications}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     return (
       <div style={outerStyle}>

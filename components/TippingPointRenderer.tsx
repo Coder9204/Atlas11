@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 interface TippingPointRendererProps {
   phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
@@ -1765,6 +1766,19 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (validPhase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Tipping Point"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+      />
+    );
+  }
+
   if (validPhase === 'transfer') {
     const currentApp = transferApplications[currentAppIndex];
     const isCurrentCompleted = transferCompleted.has(currentAppIndex);

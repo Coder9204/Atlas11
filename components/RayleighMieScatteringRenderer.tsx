@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // RAYLEIGH VS MIE SCATTERING RENDERER - PREMIUM PHYSICS GAME
@@ -2389,6 +2390,20 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
   // ============================================================================
   // PHASE: TRANSFER (Real World Applications) - SEQUENTIAL NAVIGATION
   // ============================================================================
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Rayleigh Mie Scattering"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const app = applications[selectedApp];
     const allCompleted = completedApps.every(c => c);

@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // --- GAME EVENT INTERFACE FOR AI COACH INTEGRATION ---
 export interface GameEvent {
@@ -1364,6 +1365,19 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
     }
 
     // TRANSFER PHASE
+    if (phase === 'transfer') {
+      return (
+        <TransferPhaseView
+          conceptName="Patch Discipline"
+          applications={transferApplications}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+        />
+      );
+    }
+
     if (phase === 'transfer') {
       return (
         <div style={{ overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', minHeight: '100vh' }}>

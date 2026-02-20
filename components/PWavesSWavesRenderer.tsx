@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // P-WAVES VS S-WAVES RENDERER - Premium Apple/Airbnb Design
@@ -2400,6 +2401,20 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
    }
 
    // TRANSFER PHASE - GOLD STANDARD with completedApps tracking
+   if (phase === 'transfer') {
+     return (
+       <TransferPhaseView
+         conceptName="P Waves S Waves"
+         applications={realWorldApps}
+         onComplete={() => goToPhase('test')}
+         isMobile={isMobile}
+         colors={colors}
+         typo={typo}
+         playSound={playSound}
+       />
+     );
+   }
+
    if (phase === 'transfer') {
       const app = realWorldApps[activeApp];
       const allAppsCompleted = completedApps.size >= realWorldApps.length;

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // --- GAME EVENT INTERFACE FOR AI COACH INTEGRATION ---
 export interface GameEvent {
@@ -2310,6 +2311,20 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
    }
 
    // TRANSFER Screen - Sequential Real-world applications
+   if (phase === 'transfer') {
+     return (
+       <TransferPhaseView
+         conceptName="Wave Particle Duality"
+         applications={realWorldApps}
+         onComplete={() => goToPhase('test')}
+         isMobile={isMobile}
+         colors={colors}
+         typo={typo}
+         playSound={playSound}
+       />
+     );
+   }
+
    if (phase === 'transfer') {
       const realWorldApps = [
          {

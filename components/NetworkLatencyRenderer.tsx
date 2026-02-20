@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // Real-world applications for network latency physics
 const realWorldApps = [
@@ -1657,6 +1658,19 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Network Latency"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const totalApps = realWorldApps.length;
     const allCompleted = transferCompleted.size >= totalApps;

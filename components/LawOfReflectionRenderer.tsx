@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // =============================================================================
 // LAW OF REFLECTION RENDERER - Complete 10-Phase Educational Game
@@ -1530,6 +1531,20 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
   // =============================================================================
   // TRANSFER PHASE
   // =============================================================================
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Law Of Reflection"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allAppsCompleted = completedApps.every(c => c);

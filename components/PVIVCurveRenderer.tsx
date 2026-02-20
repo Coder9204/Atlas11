@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 const realWorldApps = [
    {
@@ -1624,6 +1625,20 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
             </div>
           </>
         );
+
+      if (phase === 'transfer') {
+        return (
+          <TransferPhaseView
+            conceptName="P V I V Curve"
+            applications={realWorldApps}
+            onComplete={() => goToPhase('test')}
+            isMobile={isMobile}
+            colors={colors}
+            typo={typo}
+            playSound={playSound}
+          />
+        );
+      }
 
       case 'transfer':
         return (

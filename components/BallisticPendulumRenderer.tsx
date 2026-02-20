@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // GAME 115: BALLISTIC PENDULUM
@@ -1262,6 +1263,19 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
         </div>
         {renderBottomBar(true, true, 'See Applications →')}
       </div>
+    );
+  }
+
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Ballistic Pendulum"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+      />
     );
   }
 

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // GOLD STANDARD: CORIOLIS EFFECT RENDERER
@@ -1661,6 +1662,20 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
             </button>
           </div>
         );
+
+      if (phase === 'transfer') {
+        return (
+          <TransferPhaseView
+            conceptName="Coriolis Effect"
+            applications={realWorldApps}
+            onComplete={() => goToPhase('test')}
+            isMobile={isMobile}
+            colors={colors}
+            typo={typo}
+            playSound={playSound}
+          />
+        );
+      }
 
       case 'transfer':
         return (

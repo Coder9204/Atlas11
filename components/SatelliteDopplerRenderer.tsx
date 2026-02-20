@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 const realWorldApps = [
    {
@@ -1504,6 +1505,19 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
             </button>
           </div>
         );
+
+      if (phase === 'transfer') {
+        return (
+          <TransferPhaseView
+            conceptName="Satellite Doppler"
+            applications={realWorldApps}
+            onComplete={() => goToPhase('test')}
+            isMobile={isMobile}
+            typo={typo}
+            playSound={playSound}
+          />
+        );
+      }
 
       case 'transfer':
         return (

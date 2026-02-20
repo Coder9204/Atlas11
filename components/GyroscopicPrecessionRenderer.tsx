@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // --- GAME EVENT INTERFACE ---
 export interface GameEvent {
@@ -1486,6 +1487,19 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   }
 
   // TRANSFER
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Gyroscopic Precession"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const isLastApp = selectedApp === realWorldApps.length - 1;

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // SNELL'S LAW - Premium Apple/Airbnb Design System
@@ -1334,6 +1335,20 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
             </div>
           </div>
         );
+
+      if (phase === 'transfer') {
+        return (
+          <TransferPhaseView
+            conceptName="Snells Law"
+            applications={realWorldApps}
+            onComplete={() => goToPhase('test')}
+            isMobile={isMobile}
+            colors={colors}
+            typo={typo}
+            playSound={playSound}
+          />
+        );
+      }
 
       case 'transfer':
         const app = realWorldApps[activeApp];

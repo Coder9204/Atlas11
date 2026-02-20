@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // --- GAME EVENT INTERFACE ---
 export interface GameEvent {
@@ -2226,6 +2227,20 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
    }
 
    // TRANSFER Screen
+   if (phase === 'transfer') {
+     return (
+       <TransferPhaseView
+         conceptName="Phase Change Energy"
+         applications={realWorldApps}
+         onComplete={() => goToPhase('test')}
+         isMobile={isMobile}
+         colors={colors}
+         typo={typo}
+         playSound={playSound}
+       />
+     );
+   }
+
    if (phase === 'transfer') {
       const realWorldApps = [
          {

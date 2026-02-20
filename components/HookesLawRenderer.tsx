@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // HOOKE'S LAW RENDERER - PREMIUM PHYSICS GAME
@@ -1495,6 +1496,20 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, game
   // ============================================================================
   // PHASE: TRANSFER (Real World Applications)
   // ============================================================================
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Hookes Law"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allCompleted = completedApps.size >= realWorldApps.length;

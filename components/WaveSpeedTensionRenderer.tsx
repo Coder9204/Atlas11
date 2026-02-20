@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // WAVE SPEED & TENSION - Premium Design System
@@ -1351,6 +1352,19 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     }
 
     // TRANSFER
+    if (phase === 'transfer') {
+      return (
+        <TransferPhaseView
+          conceptName="Wave Speed Tension"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          typo={typo}
+          playSound={playSound}
+        />
+      );
+    }
+
     if (phase === 'transfer') {
       const app = realWorldApps[activeApp];
       const allAppsCompleted = completedApps.size === realWorldApps.length;

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // =============================================================================
 // LAMINAR FLOW RENDERER - Complete 10-Phase Learning Game
@@ -1340,6 +1341,20 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Laminar Flow"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const isLastApp = selectedApp === realWorldApps.length - 1;

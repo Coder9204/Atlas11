@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // DRAG FORCE - Premium Design with 10-Phase Learning Structure
@@ -1337,6 +1338,19 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
   // ============================================================================
   // TRANSFER PHASE
   // ============================================================================
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Drag Force"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const currentApp = realWorldApps[activeAppTab];
     return (

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 const realWorldApps = [
   {
@@ -1591,6 +1592,18 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Wagon Wheel Aliasing"
+        applications={realWorldApps}
+        onComplete={() => setCurrentPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     return (
       <div style={pageStyle}>

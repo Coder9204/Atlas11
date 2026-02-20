@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // Phase type for internal state management
 type EMIPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
@@ -1502,6 +1503,19 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     }
 
     // TRANSFER PHASE
+    if (phase === 'transfer') {
+      return (
+        <TransferPhaseView
+          conceptName="E M I Shielding"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+        />
+      );
+    }
+
     if (phase === 'transfer') {
       return (
         <>

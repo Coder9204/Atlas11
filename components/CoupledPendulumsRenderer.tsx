@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 interface CoupledPendulumsRendererProps {
   gamePhase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
@@ -1593,6 +1594,19 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (currentPhase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Coupled Pendulums"
+        applications={transferApplications}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+      />
+    );
+  }
+
   if (currentPhase === 'transfer') {
     const currentApp = transferApplications[transferAppIndex];
     const isCurrentCompleted = transferCompleted.has(transferAppIndex);

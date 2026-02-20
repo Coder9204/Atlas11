@@ -1,6 +1,7 @@
 const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {};
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 
 interface GameEvent {
@@ -1621,6 +1622,20 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Flip Chip Wirebond"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const rwApp = realWorldApps[currentApp];
     const isCompleted = transferCompleted.has(currentApp);

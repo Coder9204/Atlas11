@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ─── GameEvent Interface ───────────────────────────────────────────────────────
 export interface GameEvent {
@@ -2719,6 +2720,20 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
       return renderTwistPlay();
     case 'twist_review':
       return renderTwistReview();
+    if (phase === 'transfer') {
+      return (
+        <TransferPhaseView
+          conceptName="E L O N_ Precision Budget"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
+        />
+      );
+    }
+
     case 'transfer':
       return renderTransfer();
     case 'test':

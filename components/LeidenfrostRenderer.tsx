@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // LEIDENFROST RENDERER - Game 140
@@ -1970,6 +1971,19 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
   }
 
   // Render transfer phase
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Leidenfrost"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const currentApp = realWorldApps[activeAppTab];
     return (

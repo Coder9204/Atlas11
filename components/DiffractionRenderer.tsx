@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // =============================================================================
 // DIFFRACTION RENDERER - SINGLE & DOUBLE SLIT PATTERNS
@@ -3213,6 +3214,17 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
         {phase === 'twist_predict' && renderTwistPredict()}
         {phase === 'twist_play' && renderTwistPlay()}
         {phase === 'twist_review' && renderTwistReview()}
+        {phase === 'transfer' && (
+          <TransferPhaseView
+            conceptName="Diffraction"
+            applications={realWorldApps}
+            onComplete={() => setPhase('test')}
+            isMobile={isMobile}
+            colors={colors}
+            typo={typo}
+            playSound={playSound}
+          />
+        )}
         {phase === 'transfer' && renderTransfer()}
         {phase === 'test' && testComplete && (
           <div style={{ textAlign: 'center', padding: '24px', fontFamily: defined.typography.fontFamily }}>

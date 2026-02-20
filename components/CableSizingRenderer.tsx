@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ────────────────────────────────────────────────────────────────────────────
 // TYPE DEFINITIONS
@@ -1809,6 +1810,17 @@ export default function CableSizingRenderer({
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
+      if (phase === 'transfer') {
+        return (
+          <TransferPhaseView
+            conceptName="Cable Sizing"
+            applications={applications}
+            onComplete={() => goToPhase('test')}
+            isMobile={isMobile}
+          />
+        );
+      }
+
       case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();

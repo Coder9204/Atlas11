@@ -12,6 +12,7 @@
  */
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================
 // THEME COLORS
@@ -1508,6 +1509,18 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
           </button>
         </div>
       </div>
+    );
+  }
+
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Fluid Inertia"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+      />
     );
   }
 

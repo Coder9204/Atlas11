@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REACTIONTIME RENDERER - RULER DROP TEST
@@ -2377,6 +2378,17 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
             {phase === 'twist_predict' && renderTwistPredict()}
             {phase === 'twist_play' && renderTwistPlay()}
             {phase === 'twist_review' && renderTwistReview()}
+            {phase === 'transfer' && (
+              <TransferPhaseView
+                conceptName="Reaction Time"
+                applications={realWorldApps}
+                onComplete={() => goToPhase('test')}
+                isMobile={isMobile}
+                colors={colors}
+                typo={typo}
+                playSound={playSound}
+              />
+            )}
             {phase === 'transfer' && renderTransfer()}
             {phase === 'test' && renderTest()}
             {phase === 'mastery' && renderMastery()}

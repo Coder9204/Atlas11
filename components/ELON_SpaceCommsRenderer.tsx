@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // -----------------------------------------------------------------------------
 // ELON SPACE COMMS - Game #23 of 36 ELON Games
@@ -2114,6 +2115,20 @@ const ELON_SpaceCommsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =>
       return renderTwistPlay();
     case 'twist_review':
       return renderTwistReview();
+    if (phase === 'transfer') {
+      return (
+        <TransferPhaseView
+          conceptName="E L O N_ Space Comms"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
+        />
+      );
+    }
+
     case 'transfer':
       return renderTransfer();
     case 'test':

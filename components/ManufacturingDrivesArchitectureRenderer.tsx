@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // Real-world applications for manufacturing drives architecture
 const realWorldApps = [
@@ -1626,6 +1627,19 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Manufacturing Drives Architecture"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     return renderPhaseContent(
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>

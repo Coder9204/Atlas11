@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
@@ -1253,6 +1254,18 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
   // ─────────────────────────────────────────────────────────────────────────
   // TRANSFER PHASE
   // ─────────────────────────────────────────────────────────────────────────
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Design To Fab Translation"
+        applications={transferApplications}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const allCompleted = transferCompleted.size >= 4;
     return renderPhaseContainer(

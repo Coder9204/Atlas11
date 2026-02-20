@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 const realWorldApps = [
   {
@@ -1290,6 +1291,19 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
         </div>
         {renderBottomBar(false, true, 'Apply This Knowledge')}
       </div>
+    );
+  }
+
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Retroreflection"
+        applications={realWorldApps}
+        onComplete={() => setCurrentPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+      />
     );
   }
 

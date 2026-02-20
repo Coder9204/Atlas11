@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // =============================================================================
 // ADIABATIC HEATING RENDERER - Compression Heats, Expansion Cools
@@ -1968,6 +1969,19 @@ const AdiabaticHeatingRenderer: React.FC<AdiabaticHeatingRendererProps> = ({
         return renderTwistPlay();
       case 'twist_review':
         return renderTwistReview();
+      if (phase === 'transfer') {
+        return (
+          <TransferPhaseView
+            conceptName="Adiabatic Heating"
+            applications={realWorldApps}
+            onComplete={() => goToPhase('test')}
+            isMobile={isMobile}
+            typo={typo}
+            playSound={playSound}
+          />
+        );
+      }
+
       case 'transfer':
         return renderTransfer();
       case 'test':

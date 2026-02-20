@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // BIMETAL THERMOSTAT RENDERER - GAME 137
@@ -1513,6 +1514,20 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Bimetal Thermostat"
+        applications={applications}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const app = transferApps[selectedApp];
 

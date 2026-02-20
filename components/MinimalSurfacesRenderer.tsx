@@ -14,6 +14,7 @@
  */
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================
 // THEME COLORS
@@ -1280,6 +1281,20 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
   }
 
   // Transfer phase
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Minimal Surfaces"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allCompleted = completedApps.every(c => c);

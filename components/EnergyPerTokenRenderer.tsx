@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 type EnergyPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
@@ -1315,6 +1316,18 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Energy Per Token"
+        applications={transferApplications}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     return renderPhaseContent(
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>

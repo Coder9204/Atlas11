@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // Real-world applications for LLM-to-SPICE design workflow
 const realWorldApps = [
@@ -1318,6 +1319,20 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
   }
 
   // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="L L M To S P I C E"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     return renderPhaseContent(
       <div style={{ color: '#ffffff', padding: '24px' }}>

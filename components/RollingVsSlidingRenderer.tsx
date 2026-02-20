@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // ROLLING VS SLIDING RENDERER - Complete 10-Phase Learning Game
@@ -542,6 +543,15 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
             transition: 'all 0.2s ease'
           }}
         >
+        {phase === 'transfer' && (
+          <TransferPhaseView
+            conceptName="Rolling Vs Sliding"
+            applications={realWorldApps}
+            onComplete={() => goToPhase('test')}
+            isMobile={isMobile}
+            playSound={playSound}
+          />
+        )}
           {phase === 'transfer' && viewedApps.size < realWorldApps.length ? 'Next →' :
            phase === 'test' && answeredQuestions.size < 10 ? 'Next →' :
            'Next →'}

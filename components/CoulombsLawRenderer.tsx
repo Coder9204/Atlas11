@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================================
 // COULOMB'S LAW RENDERER - SPEC-COMPLIANT IMPLEMENTATION
@@ -2406,6 +2407,20 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
   }
 
   // TRANSFER
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Coulombs Law"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const app = transferApps[activeAppIndex];
     const allComplete = completedApps.every(c => c);

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
@@ -1048,6 +1049,19 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
   }
 
   // TRANSFER
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Viscoelasticity"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        playSound={playSound}
+      />
+    );
+  }
+
   if (phase === 'transfer') {
     const currentApp = realWorldApps[transferIndex];
     const isCompleted = transferCompleted.has(transferIndex);

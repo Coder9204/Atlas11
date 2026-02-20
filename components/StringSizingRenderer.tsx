@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ────────────────────────────────────────────────────────────────────────────
 // TYPE DEFINITIONS
@@ -2122,6 +2123,20 @@ export default function StringSizingRenderer({
             {renderBottomBar(true, true, 'Applications')}
           </>
         );
+      if (phase === 'transfer') {
+        return (
+          <TransferPhaseView
+            conceptName="String Sizing"
+            applications={realWorldApps}
+            onComplete={() => goToPhase('test')}
+            isMobile={isMobile}
+            colors={colors}
+            typo={typo}
+            playSound={playSound}
+          />
+        );
+      }
+
       case 'transfer':
         return (
           <>

@@ -13,6 +13,7 @@
  */
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import TransferPhaseView from './TransferPhaseView';
 
 // ============================================================
 // THEME COLORS
@@ -1688,6 +1689,20 @@ const ViscosityTemperatureRenderer: React.FC<ViscosityTemperatureRendererProps> 
 
   // Transfer, Test, and Mastery phases follow the same pattern as previous games
   // (abbreviated here for length - full implementation follows identical structure)
+
+  if (phase === 'transfer') {
+    return (
+      <TransferPhaseView
+        conceptName="Viscosity Temperature"
+        applications={realWorldApps}
+        onComplete={() => goToPhase('test')}
+        isMobile={isMobile}
+        colors={colors}
+        typo={typo}
+        playSound={playSound}
+      />
+    );
+  }
 
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
