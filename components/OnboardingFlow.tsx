@@ -514,7 +514,7 @@ const OnboardingFlow: React.FC = () => {
       </div>
 
       <PrimaryButton
-        label="Continue \u2192"
+        label="Continue →"
         onClick={() => goToStep(2)}
         disabled={goals.length === 0}
       />
@@ -645,7 +645,7 @@ const OnboardingFlow: React.FC = () => {
           Skip
         </button>
         <PrimaryButton
-          label="Continue \u2192"
+          label="Continue →"
           onClick={() => goToStep(3)}
           disabled={interests.length === 0}
         />
@@ -747,7 +747,7 @@ const OnboardingFlow: React.FC = () => {
       </div>
 
       <PrimaryButton
-        label="See My Path \u2192"
+        label="See My Path →"
         onClick={() => goToStep(4)}
       />
     </div>
@@ -871,7 +871,7 @@ const OnboardingFlow: React.FC = () => {
 
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
         <PrimaryButton
-          label="Browse All Games \u2192"
+          label="Browse All Games →"
           onClick={() => completeOnboarding('/games')}
         />
         <button
